@@ -1,0 +1,224 @@
+.container {
+  position: fixed;
+  top: 100px; /* Below BossHealthBar */
+  left: 1rem;
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem;
+  z-index: 1400;
+  box-shadow: var(--shadow-md);
+  min-width: 140px;
+  transition: all 0.3s ease;
+}
+
+.container.expanded {
+  min-width: 240px;
+}
+
+/* Collapsed View */
+.collapsedView {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.icon {
+  font-size: 0.9rem;
+}
+
+.value {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  color: var(--color-text-40);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.toggleButton {
+  width: 100%;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-60);
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  margin-top: 0.25rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggleButton:hover {
+  background: var(--color-bg-hover);
+}
+
+/* Expanded View */
+.expandedView {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.section {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.sectionHeader {
+  font-size: 0.7rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.375rem;
+}
+
+.bigValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.dps {
+  font-size: 0.75rem;
+  color: var(--color-success);
+  margin-top: 0.125rem;
+}
+
+.cycleInfo {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+  margin-top: 0.125rem;
+}
+
+/* Damage Breakdown */
+.damageList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.damageEntry {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.bossNum {
+  color: var(--color-text-40);
+  min-width: 1.25rem;
+}
+
+.bossEmoji {
+  font-size: 0.8rem;
+}
+
+.bossName {
+  color: var(--color-text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80px;
+}
+
+.dmgValue {
+  color: var(--color-danger);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.statusKilled {
+  color: var(--color-success);
+  font-size: 0.7rem;
+}
+
+.statusNotKilled {
+  color: var(--color-danger);
+  font-size: 0.7rem;
+}
+
+/* Milestones */
+.milestoneList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.milestoneItem {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.milestoneItem.achieved {
+  opacity: 1;
+}
+
+.milestoneCheck {
+  font-size: 0.85rem;
+}
+
+.milestoneLabel {
+  color: var(--color-text);
+  flex: 1;
+}
+
+.progressBar {
+  width: 40px;
+  height: 4px;
+  background: var(--color-bg-surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    top: 90px;
+    left: 0.5rem;
+    padding: 0.5rem;
+    min-width: 120px;
+  }
+
+  .container.expanded {
+    min-width: 200px;
+  }
+
+  .value {
+    font-size: 0.85rem;
+  }
+
+  .bigValue {
+    font-size: 1rem;
+  }
+}

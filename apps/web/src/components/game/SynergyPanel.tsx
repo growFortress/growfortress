@@ -1,0 +1,107 @@
+import type { JSX } from 'preact';
+import { activeSynergies, selectedFortressClass } from '../../state/index.js';
+import styles from './SynergyPanel.module.css';
+
+// Class colors
+const CLASS_COLORS: Record<string, string> = {
+  natural: '#228b22',
+  ice: '#00bfff',
+  fire: '#ff4500',
+  lightning: '#9932cc',
+  poison: '#9acd32',
+  magic: '#8a2be2',
+  tech: '#00f0ff',
+};
+
+// Class icons
+const CLASS_ICONS: Record<string, string> = {
+  natural: '🌿',
+  ice: '❄️',
+  fire: '🔥',
+  lightning: '⚡',
+  poison: '☠️',
+  magic: '✨',
+  tech: '🔧',
+};
+
+interface SynergyPanelProps {
+  compact?: boolean;
+}
+
+export function SynergyPanel({ compact = false }: SynergyPanelProps) {
+  const fortressClass = selectedFortressClass.value;
+  const synergies = activeSynergies.value;
+
+  if (!fortressClass) return null;
+
+  const classColor = CLASS_COLORS[fortressClass];
+  const classIcon = CLASS_ICONS[fortressClass];
+
+  return (
+    <div
+      class={`${styles.synergyPanel} ${compact ? styles.compact : ''}`}
+      style={{ '--class-color': classColor } as JSX.CSSProperties}
+    >
+      {/* Current class indicator - only show in full mode, compact uses FortressClassBadge */}
+      {!compact && (
+        <div class={styles.classIndicator}>
+          <span class={styles.classIcon}>{classIcon}</span>
+          <span class={styles.className}>{fortressClass}</span>
+        </div>
+      )}
+
+      {/* Synergy list */}
+      {synergies.length > 0 ? (
+        <div class={styles.synergyList}>
+          {synergies.map((synergy, index) => (
+            <div
+              key={index}
+              class={`${styles.synergyItem} ${synergy.active ? styles.active : styles.inactive}`}
+            >
+              <div class={styles.synergyHeader}>
+                <span class={styles.synergyIcon}>
+                  {synergy.type === 'hero-fortress' && '🦸'}
+                  {synergy.type === 'turret-fortress' && '🗼'}
+                  {synergy.type === 'full' && '⭐'}
+                </span>
+                {!compact && (
+                  <span class={styles.synergyName}>{synergy.description}</span>
+                )}
+              </div>
+
+              {!compact && (
+                <div class={styles.bonusList}>
+                  {synergy.bonuses.map((bonus, i) => (
+                    <span key={i} class={styles.bonus}>{bonus}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class={styles.noSynergy}>
+          <span class={styles.noSynergyText}>
+            {compact ? 'No synergy' : 'Match hero/turret classes for bonuses'}
+          </span>
+        </div>
+      )}
+
+      {/* Synergy tips */}
+      {!compact && synergies.length < 3 && (
+        <div class={styles.tips}>
+          {synergies.every(s => s.type !== 'hero-fortress') && (
+            <div class={styles.tip}>
+              Deploy {fortressClass} heroes for +30% DMG
+            </div>
+          )}
+          {synergies.every(s => s.type !== 'turret-fortress') && (
+            <div class={styles.tip}>
+              Build {fortressClass} turrets for +25% AS
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

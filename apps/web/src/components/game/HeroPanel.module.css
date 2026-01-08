@@ -1,0 +1,190 @@
+.heroPanel {
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  min-width: 200px;
+  box-shadow: var(--shadow-md);
+}
+
+.heroPanel.compact {
+  padding: 8px;
+  min-width: 150px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: var(--border-neutral);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.count {
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.heroGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.heroSlot {
+  position: relative;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+}
+
+.heroSlot.filled {
+  border-color: var(--hero-color, var(--color-neutral));
+}
+
+.heroSlot.filled:hover {
+  background: var(--color-bg-elevated);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm), 0 0 10px var(--hero-color, var(--color-neutral));
+  box-shadow: var(--shadow-sm), 0 0 10px color-mix(in srgb, var(--hero-color) 30%, transparent);
+}
+
+.heroSlot.empty {
+  border-style: dashed;
+  opacity: 0.5;
+  cursor: default;
+  justify-content: center;
+}
+
+.heroIcon {
+  font-size: 24px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.emptyIcon {
+  font-size: 20px;
+  color: var(--color-text-60);
+}
+
+.emptyText {
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.heroName {
+  flex: 1;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tierBadge {
+  background: var(--color-primary);
+  color: var(--color-bg);
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.hpBar {
+  position: absolute;
+  bottom: 2px;
+  left: 8px;
+  right: 8px;
+  height: 3px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.hpFill {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width var(--duration-normal) var(--ease-standard);
+}
+
+.stateIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 6px currentColor;
+}
+
+.cooldownOverlay {
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.cooldownText {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+/* Compact mode */
+.compact .heroGrid {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.compact .heroSlot {
+  width: 40px;
+  height: 40px;
+  padding: 4px;
+  justify-content: center;
+}
+
+.compact .heroIcon {
+  font-size: 20px;
+}
+
+.compact .heroName,
+.compact .tierBadge {
+  display: none;
+}
+
+.compact .hpBar {
+  left: 4px;
+  right: 4px;
+}
+
+/* Command selection state - shows when hero is selected for tactical orders */
+.heroSlot.selected {
+  box-shadow: 0 0 0 3px #00ffff, 0 0 15px rgba(0, 255, 255, 0.5);
+  animation: pulseSelect 1s infinite;
+  border-color: #00ffff;
+}
+
+@keyframes pulseSelect {
+  0%, 100% {
+    box-shadow: 0 0 0 3px #00ffff, 0 0 15px rgba(0, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 5px #00ffff, 0 0 25px rgba(0, 255, 255, 0.7);
+  }
+}

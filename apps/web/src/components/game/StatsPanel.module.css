@@ -1,0 +1,199 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-bg-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.panel {
+  background-color: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  width: 800px;
+  max-width: 95vw;
+  height: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-bg-elevated);
+  border-bottom: var(--border-neutral);
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: var(--glow-primary);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--color-text-60);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color var(--duration-normal) var(--ease-standard);
+  padding: 0;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  color: var(--color-text);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section {
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+}
+
+.sectionTitle {
+  margin: 0 0 1rem 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--color-primary);
+  border-bottom: var(--border-neutral);
+  padding-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Charts */
+.chartContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chartRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.label {
+  width: 120px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-60);
+}
+
+.barContainer {
+  flex: 1;
+  height: 20px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.bar {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width var(--duration-slow) var(--ease-standard);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 5px;
+}
+
+.barValue {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  text-shadow: var(--text-shadow);
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+/* Economy Table */
+.economyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.economyItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.economyLabel {
+  color: var(--color-text-60);
+}
+
+.economyValue {
+  font-weight: bold;
+}
+
+.gold { color: var(--color-primary); }
+.dust { color: var(--color-primary-70); }
+
+/* Colors for bars */
+.barHero { background: var(--color-primary); }
+.barTurret { background: var(--color-neutral-light); }
+.barFortress { background: var(--color-accent); }
+.barSkill { background: var(--color-primary-70); }
+
+/* Toggle Button in HUD */
+.statsButton {
+  position: absolute;
+  top: 1rem;
+  right: 8rem;
+  width: 48px;
+  height: 48px;
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  z-index: 100;
+  font-size: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.statsButton:hover {
+  transform: scale(var(--hover-scale));
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}

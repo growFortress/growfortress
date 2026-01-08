@@ -1,0 +1,342 @@
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-overlay);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--duration-slow) var(--ease-standard), visibility var(--duration-slow) var(--ease-standard);
+  z-index: 200;
+}
+
+.modal:global(.visible) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.container {
+  max-width: 950px;
+  width: 100%;
+  padding: 24px 32px;
+  box-sizing: border-box;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-lg);
+  border: var(--border-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--color-primary);
+  margin: 0;
+  text-shadow: var(--glow-primary), var(--text-shadow);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: var(--color-text-60);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: var(--transition-interactive-normal);
+}
+
+.closeButton:hover {
+  color: var(--color-accent);
+}
+
+.resourceBar {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: var(--border-neutral);
+}
+
+.resource {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.goldIcon, .dustIcon {
+  font-size: 1.4rem;
+}
+
+.errorMessage {
+  background: var(--color-accent-10);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 16px;
+  color: var(--color-accent);
+  text-align: center;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.heroCard {
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--rarity-color, var(--color-neutral));
+  border-radius: var(--radius-lg);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-interactive-normal);
+}
+
+.heroCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--rarity-color, var(--color-primary));
+}
+
+.heroCard:hover {
+  transform: var(--hover-lift);
+  box-shadow: var(--shadow-lg), 0 0 20px color-mix(in srgb, var(--rarity-color) 30%, transparent);
+  border-color: var(--rarity-color);
+}
+
+.heroCard.unlocked {
+  opacity: 0.7;
+  filter: grayscale(30%);
+}
+
+.heroCard.unlocked::after {
+  content: '\2713';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: var(--color-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--color-bg);
+  font-weight: bold;
+}
+
+/* Locked state - hero not available at current fortress level */
+.heroCard.locked {
+  opacity: 0.5;
+  filter: grayscale(80%);
+  pointer-events: none;
+}
+
+.heroCard.locked:hover {
+  transform: none;
+  box-shadow: var(--shadow-md);
+}
+
+.lockedBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-neutral-20);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--color-text-60);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: auto;
+}
+
+.lockIcon {
+  font-size: 14px;
+}
+
+.rarityBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--rarity-color);
+  color: white;
+  font-weight: bold;
+}
+
+.heroIcon {
+  font-size: 42px;
+  margin: 16px 0 8px 0;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.heroName {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--color-text);
+  margin-bottom: 4px;
+  text-shadow: var(--text-shadow);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.heroRole {
+  font-size: 10px;
+  color: var(--rarity-color, var(--color-primary));
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.unlockedBadge {
+  background: var(--color-secondary-20);
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--color-secondary);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: auto;
+}
+
+.costSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.cost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.cost.insufficient {
+  color: var(--color-accent);
+}
+
+.freeLabel {
+  color: var(--color-secondary);
+  font-weight: bold;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.recruitButton {
+  margin-top: auto;
+  padding: 8px 16px;
+  background: var(--color-primary-20);
+  border: var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+.recruitButton:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
+
+.recruitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .heroGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .heroGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .heroCard {
+    padding: 12px 10px;
+  }
+
+  .heroIcon {
+    font-size: 32px;
+  }
+
+  .heroName {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .container {
+    padding: 16px;
+  }
+}

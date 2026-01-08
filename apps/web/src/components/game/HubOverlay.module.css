@@ -1,0 +1,149 @@
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Fortress upgrade button */
+.fortressButton {
+  position: absolute;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--color-primary-20);
+  border: var(--border-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.fortressButton:hover {
+  background: var(--color-primary-30);
+  transform: translateX(-50%) scale(var(--hover-scale));
+  box-shadow: var(--shadow-sm), var(--glow-primary-strong);
+}
+
+.fortressIcon {
+  font-size: 24px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.fortressLabel {
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: var(--text-shadow);
+}
+
+.heroArea,
+.turretArea {
+  position: absolute;
+  pointer-events: auto;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+}
+
+/* Hero area */
+.heroArea {
+  width: 70px;
+  height: 70px;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-full);
+  border: var(--border-primary);
+  background: var(--color-primary-20);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.heroArea:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-30);
+  box-shadow: var(--shadow-sm), var(--glow-primary-strong);
+}
+
+.heroArea .label {
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: var(--text-shadow);
+}
+
+/* Turret area - base styles */
+.turretArea {
+  width: 80px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-sm);
+}
+
+/* Occupied turret slot */
+.turretArea.occupied {
+  border: var(--border-primary);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.turretArea.occupied:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-20);
+  box-shadow: var(--shadow-sm), var(--glow-primary-strong);
+}
+
+.turretArea.occupied .label {
+  color: var(--color-primary);
+  font-size: 9px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: var(--text-shadow);
+}
+
+/* Empty turret slot - invisible overlay, canvas handles visuals */
+.turretArea.empty {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.turretArea.empty:hover {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.turretArea.empty .label {
+  display: none;
+}
+
+.addIcon {
+  display: none; /* Canvas renders the slot visuals */
+}
+
+@keyframes pulseEmpty {
+  0%, 100% {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-primary-50);
+  }
+  50% {
+    box-shadow: var(--shadow-sm), var(--glow-primary);
+    border-color: var(--color-primary);
+  }
+}

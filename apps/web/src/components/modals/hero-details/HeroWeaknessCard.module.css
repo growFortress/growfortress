@@ -1,0 +1,16 @@
+.weaknessCard {
+  min-width: 200px;
+}
+
+.weaknessList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.noWeaknesses {
+  text-align: center;
+  padding: 20px;
+  color: var(--color-text-60);
+  font-size: 12px;
+}

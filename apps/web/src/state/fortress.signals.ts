@@ -1,0 +1,205 @@
+import { signal, computed } from '@preact/signals';
+import type { FortressClass, ActiveHero, ActiveTurret, TurretSlot } from '@arcade/sim-core';
+import { getHeroById } from '@arcade/sim-core';
+
+// --- FORTRESS CLASS ---
+
+/**
+ * Currently selected fortress class (null = not selected yet)
+ */
+export const selectedFortressClass = signal<FortressClass | null>(null);
+
+/**
+ * Whether the class selection modal is visible
+ */
+export const classSelectionVisible = signal(false);
+
+// --- HEROES ---
+
+/**
+ * Active heroes in the current session
+ */
+export const activeHeroes = signal<ActiveHero[]>([]);
+
+/**
+ * Unlocked hero IDs (meta-progression)
+ * Populated from server profile, initially empty
+ */
+export const unlockedHeroIds = signal<string[]>([]);
+
+/**
+ * Unlocked turret IDs (meta-progression)
+ * Populated from server profile, initially empty
+ */
+export const unlockedTurretIds = signal<string[]>([]);
+
+/**
+ * Currently selected hero for upgrade/info panel
+ */
+export const selectedHeroId = signal<string | null>(null);
+
+/**
+ * Whether the hero panel is visible
+ */
+export const heroPanelVisible = signal(false);
+
+/**
+ * Max hero slots available
+ */
+export const maxHeroSlots = signal(3);
+
+// --- TURRETS ---
+
+/**
+ * Fixed point scale (65536 = 1.0 unit, using Q16.16 format)
+ */
+const FP_SCALE = 1 << 16; // 65536
+
+/**
+ * Default turret slots configuration.
+ * Positions are in fixed-point format matching the simulation.
+ * Field is 40 units wide, path height is 15 units (y: 0-15)
+ * Slots are positioned at terrain edges for clear visibility
+ */
+export const DEFAULT_TURRET_SLOTS: TurretSlot[] = [
+  // Top row - 3px from top yellow edge, positioned left and closer together
+  { index: 1, x: 6 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: true },
+  { index: 2, x: 11 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: true },
+  { index: 3, x: 16 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: true },
+  // Bottom row - 3px from bottom yellow edge, positioned left and closer together
+  { index: 4, x: 6 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: true },
+  { index: 5, x: 11 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: true },
+  { index: 6, x: 16 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: true },
+];
+
+/**
+ * Turret slots configuration
+ */
+export const turretSlots = signal<TurretSlot[]>([...DEFAULT_TURRET_SLOTS]);
+
+/**
+ * Active turrets in slots
+ */
+export const activeTurrets = signal<ActiveTurret[]>([]);
+
+/**
+ * Currently selected turret slot for placing/upgrading
+ */
+export const selectedTurretSlot = signal<number | null>(null);
+
+/**
+ * Whether the turret panel is visible
+ */
+export const turretPanelVisible = signal(false);
+
+/**
+ * Whether the turret placement modal is visible (for empty slots)
+ */
+export const turretPlacementModalVisible = signal(false);
+
+/**
+ * Slot index where new turret will be placed
+ */
+export const turretPlacementSlotIndex = signal<number | null>(null);
+
+/**
+ * Whether the hero recruitment modal is visible
+ */
+export const heroRecruitmentModalVisible = signal(false);
+
+// --- SYNERGY ---
+
+export interface SynergyBonus {
+  type: 'hero-fortress' | 'turret-fortress' | 'full';
+  description: string;
+  bonuses: string[];
+  active: boolean;
+}
+
+/**
+ * Active synergy bonuses
+ */
+export const activeSynergies = computed<SynergyBonus[]>(() => {
+  const fortressClass = selectedFortressClass.value;
+  const heroes = activeHeroes.value;
+  const turrets = activeTurrets.value;
+
+  if (!fortressClass) return [];
+
+  const synergies: SynergyBonus[] = [];
+
+  // Check hero-fortress synergy - heroes whose class matches fortress class
+  const heroesMatchingClass = heroes.filter(hero => {
+    const def = getHeroById(hero.definitionId);
+    return def && def.class === fortressClass;
+  });
+
+  if (heroesMatchingClass.length > 0) {
+    synergies.push({
+      type: 'hero-fortress',
+      description: `${heroesMatchingClass.length} Hero${heroesMatchingClass.length > 1 ? 'es' : ''} matching ${fortressClass}`,
+      bonuses: ['+30% DMG', '+15% AS'],
+      active: true,
+    });
+  }
+
+  // Check turret-fortress synergy
+  const turretsMatchingClass = turrets.filter(t => t.currentClass === fortressClass);
+  if (turretsMatchingClass.length > 0) {
+    synergies.push({
+      type: 'turret-fortress',
+      description: 'Turret-Fortress Synergy',
+      bonuses: ['+25% AS', '+15% DMG'],
+      active: true,
+    });
+  }
+
+  // Check full synergy
+  if (heroesMatchingClass.length >= 2 && turretsMatchingClass.length >= 3) {
+    synergies.push({
+      type: 'full',
+      description: 'Full Class Synergy',
+      bonuses: ['+50% DMG', '+15% crit', '-20% CD'],
+      active: true,
+    });
+  }
+
+  return synergies;
+});
+
+// --- UPGRADE PANEL ---
+
+export type UpgradeTarget =
+  | { type: 'hero'; heroId: string }
+  | { type: 'turret'; slotIndex: number }
+  | { type: 'fortress' }
+  | null;
+
+/**
+ * Currently selected upgrade target
+ */
+export const upgradeTarget = signal<UpgradeTarget>(null);
+
+/**
+ * Whether the upgrade panel is visible
+ */
+export const upgradePanelVisible = signal(false);
+
+// --- HUB STATE (for idle phase rendering) ---
+
+/**
+ * Hub heroes - heroes to display in the hub before session starts
+ * These are initialized from defaultLoadout
+ */
+export const hubHeroes = signal<ActiveHero[]>([]);
+
+/**
+ * Hub turrets - turrets to display in the hub before session starts
+ * These are initialized from defaultLoadout
+ */
+export const hubTurrets = signal<ActiveTurret[]>([]);
+
+/**
+ * Whether the hub is initialized with default loadout
+ */
+export const hubInitialized = signal(false);

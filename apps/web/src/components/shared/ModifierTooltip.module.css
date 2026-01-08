@@ -1,0 +1,103 @@
+.tooltip {
+  background: var(--color-bg-elevated);
+  border: var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  min-width: 160px;
+  box-shadow: var(--shadow-md);
+}
+
+.compact {
+  padding: 6px 8px;
+  min-width: 120px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: var(--border-neutral);
+}
+
+.modifiers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modifier {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.modName {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-60);
+}
+
+.modValue {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.positive {
+  color: var(--color-primary);
+}
+
+.negative {
+  color: var(--color-accent);
+}
+
+/* Stat display */
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.statIcon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+}
+
+.statLabel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-60);
+  flex: 1;
+}
+
+.statValue {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.highlight .statValue {
+  color: var(--color-primary);
+}
+
+/* Compact mode */
+.compact .title {
+  font-size: 10px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+}
+
+.compact .modName,
+.compact .modValue {
+  font-size: 10px;
+}

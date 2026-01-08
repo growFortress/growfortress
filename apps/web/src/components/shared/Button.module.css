@@ -1,0 +1,105 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text);
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  overflow: hidden;
+  user-select: none;
+  outline: none;
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.btn:hover:not(:disabled) {
+  transform: scale(var(--hover-scale));
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(1);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+/* Primary Variant */
+.primary {
+  border: var(--border-primary);
+  color: var(--color-primary);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-primary-20);
+  box-shadow: var(--shadow-sm), var(--glow-primary-strong);
+}
+
+/* Secondary Variant - Muted, less prominent */
+.secondary {
+  border: var(--border-neutral);
+  color: var(--color-text-80);
+  font-size: 14px;
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+  box-shadow: var(--shadow-sm), 0 0 10px var(--color-secondary-30);
+}
+
+/* Danger Variant */
+.danger {
+  border: var(--border-accent);
+  color: var(--color-accent);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--color-accent-30);
+  box-shadow: var(--shadow-sm), var(--glow-accent-strong);
+}
+
+/* Skill Variant (circular buttons) */
+.skill {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  padding: 0;
+  border: var(--border-primary);
+  color: var(--color-primary);
+}
+
+.skill:hover:not(:disabled) {
+  background: var(--color-primary-20);
+  box-shadow: var(--shadow-sm), var(--glow-primary-strong);
+}
+
+/* Fortress Variant */
+.fortress {
+  border: var(--border-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-10);
+}
+
+.fortress:hover:not(:disabled) {
+  background: var(--color-primary-30);
+  box-shadow: var(--shadow-md), var(--glow-primary-strong);
+}

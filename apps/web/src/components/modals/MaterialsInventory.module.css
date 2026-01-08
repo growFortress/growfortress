@@ -1,0 +1,224 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn var(--duration-normal) var(--ease-standard);
+}
+
+.modal {
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  min-width: 400px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: var(--border-neutral);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: var(--glow-primary);
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-60);
+  font-size: 24px;
+  cursor: pointer;
+  transition: color var(--duration-normal) var(--ease-standard);
+  padding: 4px 8px;
+}
+
+.closeBtn:hover {
+  color: var(--color-text);
+}
+
+.stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.materialCard {
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--rarity-color, var(--color-neutral));
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  box-shadow: var(--shadow-sm);
+}
+
+.materialCard:hover {
+  background: var(--color-bg-elevated);
+  transform: var(--hover-lift);
+  box-shadow: var(--shadow-md), 0 0 15px var(--rarity-color, var(--color-primary));
+  box-shadow: var(--shadow-md), 0 0 15px color-mix(in srgb, var(--rarity-color) 40%, transparent);
+}
+
+.materialIcon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 6px var(--rarity-color));
+}
+
+.materialName {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rarity-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.materialAmount {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-text-60);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* Rarity filters */
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  color: var(--color-text-60);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+}
+
+.filterBtn:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+.filterBtn.active {
+  background: var(--color-primary-20);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Tooltip for material details */
+.tooltip {
+  position: absolute;
+  background: var(--color-bg-panel);
+  border: var(--border-width) solid var(--rarity-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  min-width: 200px;
+  max-width: 280px;
+  z-index: 3000;
+  pointer-events: none;
+  box-shadow: var(--shadow-lg);
+}
+
+.tooltipName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rarity-color);
+  margin-bottom: 8px;
+}
+
+.tooltipDesc {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.tooltipLore {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--color-text-40);
+  border-top: var(--border-neutral);
+  padding-top: 8px;
+  line-height: 1.4;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

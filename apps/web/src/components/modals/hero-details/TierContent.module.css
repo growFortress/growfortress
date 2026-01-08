@@ -1,0 +1,122 @@
+.tierContent {
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  position: relative;
+  overflow: visible;
+  transition: var(--transition-interactive-normal);
+  box-shadow: var(--shadow-sm);
+}
+
+.tierContent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--tier-color);
+}
+
+.tierContent.locked {
+  opacity: 0.7;
+}
+
+/* Locked Overlay */
+.lockedOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-bg-overlay);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.lockedIcon {
+  font-size: 32px;
+  opacity: 0.8;
+}
+
+.lockedText {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Tier Header */
+.tierHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: var(--border-neutral);
+}
+
+.tierInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tierBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-bg);
+}
+
+.tierName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.currentBadge {
+  font-size: 9px;
+  padding: 4px 10px;
+  background: var(--color-success);
+  color: var(--color-bg);
+  border-radius: var(--radius-sm);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: currentGlow 2s var(--ease-standard) infinite;
+}
+
+@keyframes currentGlow {
+  0%, 100% { box-shadow: 0 0 4px var(--color-success); }
+  50% { box-shadow: 0 0 16px var(--color-success); }
+}
+
+/* Sections */
+.section {
+  margin-bottom: 16px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+/* Skills List */
+.skillsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}

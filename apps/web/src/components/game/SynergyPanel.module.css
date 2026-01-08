@@ -1,0 +1,145 @@
+.synergyPanel {
+  background: var(--color-bg-panel);
+  border: var(--border-width) solid var(--class-color, var(--color-neutral));
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  min-width: 180px;
+  box-shadow: var(--shadow-md);
+}
+
+.synergyPanel.compact {
+  padding: 8px;
+  min-width: 120px;
+}
+
+.classIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: var(--border-width) solid var(--class-color, var(--color-neutral));
+}
+
+.classIcon {
+  font-size: 20px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.className {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--class-color, var(--color-text));
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.synergyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.synergyItem {
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  transition: var(--transition-interactive-normal);
+}
+
+.synergyItem.active {
+  border-left: var(--border-width) solid var(--class-color, var(--color-primary));
+  background: var(--color-bg-elevated);
+}
+
+.synergyItem.inactive {
+  opacity: 0.5;
+  border-left: var(--border-width) solid transparent;
+}
+
+.synergyHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.synergyIcon {
+  font-size: 14px;
+}
+
+.synergyName {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.bonusList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.bonus {
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--class-color, var(--color-primary));
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 9px;
+  color: var(--class-color, var(--color-primary));
+  font-weight: bold;
+}
+
+.noSynergy {
+  text-align: center;
+  padding: 12px;
+}
+
+.noSynergyText {
+  font-size: 11px;
+  color: var(--color-text-60);
+  font-style: italic;
+}
+
+.tips {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: var(--border-width) dashed var(--color-neutral);
+}
+
+.tip {
+  font-size: 10px;
+  color: var(--color-text-60);
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Compact mode */
+.compact .classIndicator {
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.compact .classIcon {
+  font-size: 16px;
+}
+
+.compact .className {
+  font-size: 11px;
+}
+
+.compact .synergyItem {
+  padding: 4px 6px;
+}
+
+.compact .synergyIcon {
+  font-size: 12px;
+}
+
+.compact .bonusList,
+.compact .tips {
+  display: none;
+}

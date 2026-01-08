@@ -1,0 +1,194 @@
+.container {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 0.75rem 1rem;
+  z-index: 1500;
+  box-shadow: var(--shadow-lg);
+}
+
+.bossInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bossEmoji {
+  font-size: 1.25rem;
+}
+
+.bossName {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cycleInfo {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Health Bar */
+.healthBarContainer {
+  position: relative;
+  height: 28px;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.healthBarContainer.lowHp {
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+  }
+}
+
+.healthBarFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  transition: width 0.15s ease-out, background-color 0.3s;
+}
+
+.hpGreen {
+  background: linear-gradient(180deg, #4ade80, #22c55e);
+}
+
+.hpYellow {
+  background: linear-gradient(180deg, #facc15, #eab308);
+}
+
+.hpRed {
+  background: linear-gradient(180deg, #f87171, #ef4444);
+}
+
+.healthBarText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Intermission */
+.intermissionBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--color-bg-surface) 0%,
+    var(--color-primary) 50%,
+    var(--color-bg-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.intermissionText {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.1em;
+}
+
+/* Pillar Row */
+.pillarRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.pillarName {
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detailsToggle {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+
+.detailsToggle:hover {
+  background: var(--color-bg-hover);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    width: 95%;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .bossName {
+    font-size: 1rem;
+  }
+
+  .cycleInfo {
+    font-size: 0.75rem;
+  }
+
+  .healthBarContainer {
+    height: 24px;
+  }
+
+  .healthBarText {
+    font-size: 0.8rem;
+  }
+}

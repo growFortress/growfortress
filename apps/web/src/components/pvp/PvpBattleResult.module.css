@@ -1,0 +1,181 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2100;
+}
+
+.modal {
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  max-width: 500px;
+  width: 95%;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+/* Result Header */
+.resultHeader {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(100, 100, 100, 0.2), rgba(50, 50, 50, 0.2));
+}
+
+.resultWin {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.2));
+}
+
+.resultLoss {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2));
+}
+
+.resultDraw {
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.3), rgba(107, 114, 128, 0.2));
+}
+
+.resultIcon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.resultText {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.25rem;
+}
+
+.resultReason {
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+}
+
+/* Battle Summary */
+.battleSummary {
+  display: flex;
+  align-items: stretch;
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.side {
+  flex: 1;
+  padding: 1rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+}
+
+.sideWinner {
+  border-color: var(--color-success);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+}
+
+.sideName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  text-align: center;
+}
+
+.sidePower {
+  font-size: 0.85rem;
+  color: var(--color-gold);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.sideStats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.statLabel {
+  color: var(--color-text-60);
+}
+
+.statValue {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* VS Divider */
+.vsDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.vsDivider span {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Duration */
+.duration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.durationLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.durationValue {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1.5rem;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.actions button {
+  min-width: 140px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .battleSummary {
+    flex-direction: column;
+  }
+
+  .vsDivider {
+    padding: 0.5rem 0;
+  }
+}

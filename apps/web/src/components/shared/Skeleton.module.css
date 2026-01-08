@@ -1,0 +1,36 @@
+.skeleton {
+  background: var(--color-neutral-dark);
+  animation: pulse 1.5s var(--ease-standard) infinite;
+}
+
+.rect {
+  border-radius: var(--radius-sm);
+}
+
+.text {
+  height: 1em;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5em;
+}
+
+.text:last-child {
+  margin-bottom: 0;
+}
+
+.circle {
+  border-radius: var(--radius-full);
+}
+
+.textContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

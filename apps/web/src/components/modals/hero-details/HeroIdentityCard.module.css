@@ -1,0 +1,137 @@
+.identityCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-left: var(--border-width) solid var(--class-color);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.identityCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--class-color) 10%, transparent), transparent);
+  pointer-events: none;
+}
+
+/* Avatar */
+.avatarContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.avatarGlow {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-full);
+  animation: avatarPulse 3s var(--ease-standard) infinite;
+}
+
+@keyframes avatarPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* Hero Name */
+.heroName {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--color-text);
+  text-align: center;
+  margin: 0;
+  text-shadow: var(--text-shadow);
+}
+
+/* Badges */
+.badgesRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Tier Display */
+.tierDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 16px 24px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  width: 100%;
+}
+
+.tierLabel {
+  font-size: 10px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.tierNumber {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: bold;
+  line-height: 1;
+  transition: var(--transition-interactive-normal);
+}
+
+.tierName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.tierBadge {
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-bg);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Level Display */
+.levelDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  width: 100%;
+  justify-content: center;
+}
+
+.levelLabel {
+  font-size: 11px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+}
+
+.levelValue {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-primary);
+}

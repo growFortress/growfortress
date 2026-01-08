@@ -1,0 +1,62 @@
+.pillarDisplay {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-bg-panel);
+  border: var(--border-width) solid var(--pillar-color, var(--color-primary));
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.icon {
+  font-size: 24px;
+  line-height: 1;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.textContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pillar-color, var(--color-primary));
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: var(--text-shadow);
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Transition animation when pillar changes */
+.pillarDisplay.changing {
+  animation: pillarPulse 0.5s var(--ease-standard);
+}
+
+@keyframes pillarPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: var(--shadow-md);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md), 0 0 20px var(--pillar-color, var(--color-primary));
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: var(--shadow-md);
+  }
+}

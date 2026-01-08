@@ -1,0 +1,140 @@
+.skillBar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.classIcon {
+  font-size: 14px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.skillList {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.skillSlot {
+  position: relative;
+  min-width: 32px;
+  height: 32px;
+  padding: 2px 6px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
+  cursor: default;
+  transition: var(--transition-interactive-normal);
+}
+
+.skillSlot:hover {
+  border-color: var(--color-primary-50);
+  transform: scale(var(--hover-scale));
+}
+
+.skillSlot.ready {
+  border-color: var(--color-primary);
+  box-shadow: var(--glow-primary);
+}
+
+.cooldownFill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-primary-30);
+  transition: height 0.1s linear;
+}
+
+.skillIcon {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.skillName {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-shadow: var(--text-shadow);
+  white-space: nowrap;
+}
+
+.cooldownText {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-shadow: var(--text-shadow);
+  z-index: 2;
+}
+
+/* Compact mode */
+.compact .skillSlot {
+  min-width: 24px;
+  height: 24px;
+  padding: 2px;
+}
+
+.compact .skillIcon {
+  font-size: 12px;
+}
+
+.compact .cooldownText {
+  font-size: 7px;
+}
+
+.compact .classIcon {
+  font-size: 11px;
+}
+
+.compact .title {
+  font-size: 9px;
+}
+
+/* Ready pulse animation */
+.skillSlot.ready::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: var(--border-width) solid var(--color-primary);
+  border-radius: calc(var(--radius-sm) + 2px);
+  animation: readyPulse 1.5s var(--ease-standard) infinite;
+}
+
+@keyframes readyPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}

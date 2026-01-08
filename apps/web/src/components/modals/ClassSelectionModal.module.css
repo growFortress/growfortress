@@ -1,0 +1,229 @@
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  transition: opacity var(--duration-slow) var(--ease-standard), visibility var(--duration-slow) var(--ease-standard);
+  z-index: 200;
+  cursor: default !important;
+}
+
+/* Hidden state */
+.modal:not(:global(.visible)) {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Visible state */
+.modal:global(.visible) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.container {
+  max-width: 1100px;
+  width: 100%;
+  padding: 24px 32px;
+  box-sizing: border-box;
+  cursor: default !important;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  text-align: center;
+  margin: 0 0 12px 0;
+  text-shadow: var(--glow-primary), var(--text-shadow);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+
+.subtitle {
+  color: var(--color-text-60);
+  font-size: 1rem;
+  margin: 0 auto 32px auto;
+  text-align: center;
+  max-width: 600px;
+}
+
+.classGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1000px;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.classCard {
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--class-color, var(--color-neutral));
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer !important;
+  transition: var(--transition-interactive-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  width: 220px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-md);
+}
+
+.classCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--class-color, var(--color-primary));
+}
+
+.classCard:hover {
+  transform: var(--hover-lift);
+  box-shadow: var(--shadow-lg), 0 0 20px var(--class-color, var(--color-primary));
+  box-shadow: var(--shadow-lg), 0 0 20px color-mix(in srgb, var(--class-color) 30%, transparent);
+  border-color: var(--class-color);
+}
+
+.classCard:active {
+  transform: translateY(-2px);
+}
+
+.classIcon {
+  font-size: 40px;
+  margin-bottom: 8px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.className {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--class-color, var(--color-text));
+  margin-bottom: 6px;
+  text-shadow: var(--text-shadow);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.classDescription {
+  font-size: 11px;
+  color: var(--color-text-60);
+  line-height: 1.4;
+  margin-bottom: 12px;
+  min-height: 40px;
+}
+
+.bonusList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.bonus {
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--class-color, var(--color-primary));
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--class-color, var(--color-primary));
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Locked state */
+.locked {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  filter: grayscale(0.5);
+}
+
+.locked::before {
+  background: var(--color-text-40);
+}
+
+.locked:hover {
+  transform: none;
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-text-40);
+}
+
+.locked .classIcon {
+  filter: grayscale(1);
+}
+
+.locked .className {
+  color: var(--color-text-60);
+}
+
+.lockedInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  color: var(--color-text-60);
+  font-size: 12px;
+}
+
+.lockIcon {
+  font-size: 24px;
+  filter: none;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .classCard {
+    width: 180px;
+    padding: 12px;
+  }
+
+  .classIcon {
+    font-size: 32px;
+  }
+
+  .className {
+    font-size: 1rem;
+  }
+
+  .classDescription {
+    font-size: 10px;
+    min-height: 36px;
+  }
+
+  .bonus {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .classCard {
+    width: 160px;
+    padding: 10px;
+  }
+
+  .classGrid {
+    gap: 10px;
+  }
+}

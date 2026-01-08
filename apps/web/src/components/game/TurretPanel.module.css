@@ -1,0 +1,222 @@
+.turretPanel {
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  min-width: 220px;
+  box-shadow: var(--shadow-md);
+}
+
+.turretPanel.compact {
+  padding: 8px;
+  min-width: 150px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: var(--border-neutral);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.count {
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.slotLayout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.slotRow {
+  display: flex;
+  gap: 8px;
+}
+
+.fortressIndicator {
+  font-size: 24px;
+  color: var(--color-primary);
+  opacity: 0.5;
+  margin: 4px 0;
+}
+
+.turretSlot {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+}
+
+.turretSlot.filled {
+  border-color: var(--turret-color, var(--color-neutral));
+}
+
+.turretSlot.filled:hover {
+  background: var(--color-bg-elevated);
+  transform: scale(var(--hover-scale));
+  box-shadow: var(--shadow-sm), 0 0 12px var(--turret-color, var(--color-primary));
+  box-shadow: var(--shadow-sm), 0 0 12px color-mix(in srgb, var(--turret-color) 40%, transparent);
+}
+
+.turretSlot.synergy {
+  box-shadow: 0 0 8px var(--turret-color);
+}
+
+.turretSlot.synergy::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: var(--border-width) solid var(--turret-color);
+  border-radius: calc(var(--radius-sm) + 2px);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.turretSlot.empty {
+  border-style: dashed;
+  opacity: 0.5;
+}
+
+.turretSlot.empty:hover {
+  opacity: 0.8;
+  background: var(--color-bg-elevated);
+}
+
+.turretIcon {
+  font-size: 24px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+}
+
+.emptyIcon {
+  font-size: 20px;
+  color: var(--color-text-60);
+}
+
+.slotNumber {
+  font-size: 10px;
+  color: var(--color-text-60);
+  position: absolute;
+  bottom: 2px;
+}
+
+.turretInfo {
+  display: none;
+}
+
+.turretName {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.turretClass {
+  font-size: 8px;
+  color: var(--turret-color);
+  text-transform: uppercase;
+}
+
+.tierBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--color-primary);
+  color: var(--color-bg);
+  font-size: 8px;
+  font-weight: bold;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+}
+
+.synergyBadge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 10px;
+  animation: glow 1s infinite alternate;
+}
+
+@keyframes glow {
+  from { filter: drop-shadow(0 0 2px var(--color-primary)); }
+  to { filter: drop-shadow(0 0 6px var(--color-primary)); }
+}
+
+.killsCounter {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: var(--color-accent);
+  color: var(--color-text);
+  font-size: 8px;
+  font-weight: bold;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Expanded/detailed view */
+.turretPanel:not(.compact) .turretSlot.filled {
+  width: auto;
+  min-width: 56px;
+  height: auto;
+  padding: 8px;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.turretPanel:not(.compact) .turretInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Compact mode */
+.compact .slotRow {
+  gap: 4px;
+}
+
+.compact .turretSlot {
+  width: 40px;
+  height: 40px;
+}
+
+.compact .turretIcon {
+  font-size: 18px;
+}
+
+.compact .tierBadge {
+  font-size: 7px;
+  padding: 1px 3px;
+}
+
+.compact .fortressIndicator {
+  font-size: 16px;
+  margin: 2px 0;
+}

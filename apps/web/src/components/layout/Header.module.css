@@ -1,0 +1,182 @@
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 16px 24px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.header > * {
+  pointer-events: auto;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--color-primary);
+  text-shadow: var(--glow-primary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Game Bars (HP/MP) */
+.gameBars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barLabel {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--color-text);
+  width: 28px;
+  text-transform: uppercase;
+  text-shadow: var(--text-shadow);
+}
+
+.barTrack {
+  width: 180px;
+  height: 18px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+}
+
+.barFill {
+  height: 100%;
+  transition: width var(--duration-normal) var(--ease-standard);
+  border-radius: var(--radius-sm);
+}
+
+.hpBar {
+  background-color: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success);
+}
+
+.mpBar {
+  background-color: var(--color-primary);
+  box-shadow: var(--glow-primary);
+}
+
+.barValue {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text);
+  min-width: 50px;
+  font-weight: bold;
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--color-bg-panel);
+  border: var(--border-neutral);
+  padding: 8px 24px;
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-sm);
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-60);
+  /* Liczniki bez uppercase - normal case dla lepszej czytelności */
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+.stat span {
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 18px;
+  font-family: var(--font-display);
+  text-shadow: var(--text-shadow);
+}
+
+.playerName span {
+  color: var(--color-primary);
+}
+
+.settingsBtn {
+  margin-left: 12px;
+  background: transparent;
+  border: var(--border-neutral);
+  color: var(--color-text-60);
+  padding: 8px 12px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settingsBtn:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-text-40);
+  color: var(--color-text);
+}
+
+/* Level with XP progress */
+.levelStat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.levelLabel {
+  font-size: 14px;
+  color: var(--color-text-60);
+  /* ALL CAPS tylko dla skrótów (Lv) */
+  text-transform: none;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+}
+
+.levelValue {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 20px;
+  font-family: var(--font-display);
+}
+
+.xpTrack {
+  width: 100px;
+  height: 8px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+}
+
+.xpFill {
+  height: 100%;
+  background: var(--color-primary);
+  box-shadow: var(--glow-primary);
+  transition: width var(--duration-normal) var(--ease-standard);
+  border-radius: var(--radius-sm);
+}
