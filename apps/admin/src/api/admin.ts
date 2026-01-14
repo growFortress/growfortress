@@ -1,10 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Basic fetch wrapper
 async function fetchWithAuth(path: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('adminToken');
+  const token = localStorage.getItem("adminToken");
   const headers = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
@@ -16,7 +16,7 @@ async function fetchWithAuth(path: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'API Error');
+    throw new Error(error.message || "API Error");
   }
 
   return response.json();
@@ -26,7 +26,7 @@ export interface PlayerSummary {
   id: string;
   username: string;
   displayName: string;
-  role: 'USER' | 'ADMIN';
+  role: "USER" | "ADMIN";
   banned: boolean;
   createdAt: string;
   lastIdleClaimAt: string;
@@ -61,7 +61,11 @@ export interface AuditLogResponse {
   totalPages: number;
 }
 
-export async function getPlayers(page = 1, limit = 20, search = ''): Promise<PlayerListResponse> {
+export async function getPlayers(
+  page = 1,
+  limit = 20,
+  search = "",
+): Promise<PlayerListResponse> {
   const query = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
@@ -74,27 +78,37 @@ export async function getPlayer(id: string): Promise<PlayerDetails> {
   return fetchWithAuth(`/users/${id}`);
 }
 
-export async function banPlayer(id: string, banned: boolean): Promise<PlayerSummary> {
+export async function banPlayer(
+  id: string,
+  banned: boolean,
+): Promise<PlayerSummary> {
   return fetchWithAuth(`/users/${id}/ban`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ banned }),
   });
 }
 
 export async function resetPlayer(id: string): Promise<any> {
   return fetchWithAuth(`/users/${id}/reset`, {
-    method: 'POST',
+    method: "POST",
   });
 }
 
-export async function grantRewards(id: string, gold: number, dust: number): Promise<any> {
+export async function grantRewards(
+  id: string,
+  gold: number,
+  dust: number,
+): Promise<any> {
   return fetchWithAuth(`/users/${id}/grant`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ gold, dust }),
   });
 }
 
-export async function getAuditLogs(page = 1, limit = 50): Promise<AuditLogResponse> {
+export async function getAuditLogs(
+  page = 1,
+  limit = 50,
+): Promise<AuditLogResponse> {
   const query = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),

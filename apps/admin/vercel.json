@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @arcade/protocol build && pnpm --filter @arcade/sim-core build && pnpm --filter @arcade/web build",
-  "outputDirectory": "apps/web/dist",
-  "installCommand": "pnpm install --ignore-scripts && pnpm --filter @arcade/server exec prisma generate",
+  "buildCommand": "pnpm -C ../.. --filter @arcade/protocol build && pnpm -C ../.. --filter @arcade/sim-core build && pnpm -C ../.. --filter @arcade/admin build",
+  "outputDirectory": "dist",
+  "installCommand": "pnpm -C ../.. install --ignore-scripts",
   "framework": null,
   "rewrites": [
     {
