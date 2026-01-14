@@ -213,49 +213,57 @@ export function useGameLoop(
       }
     };
 
-    // Initialize renderer asynchronously
-    renderer.init().then(() => {
-      if (destroyed) return;
+    // Initialize renderer asynchronously with proper error handling
+    renderer.init()
+      .then(() => {
+        if (destroyed) return;
 
-      // Set up hero click handler for hub mode
-      renderer.setOnHeroClick((heroId: string) => {
-        upgradeTarget.value = { type: 'hero', heroId };
-        upgradePanelVisible.value = true;
+        console.log('[GameLoop] Renderer initialized successfully');
+
+        // Set up hero click handler for hub mode
+        renderer.setOnHeroClick((heroId: string) => {
+          upgradeTarget.value = { type: 'hero', heroId };
+          upgradePanelVisible.value = true;
+        });
+
+        // Set up turret click handler for hub mode
+        renderer.setOnTurretClick((turretId: string, slotIndex: number) => {
+          upgradeTarget.value = { type: 'turret', turretId, slotIndex };
+          upgradePanelVisible.value = true;
+        });
+
+        // Set up field click handler for tactical commands during waves
+        renderer.setOnFieldClick((worldX: number, worldY: number) => {
+          // Only handle if a hero is selected for command
+          if (!commandSelectedHeroId.value) return;
+
+          // Convert world coordinates to fixed-point
+          const fpX = FP.fromFloat(worldX);
+          const fpY = FP.fromFloat(worldY);
+
+          // Set the target position
+          setCommandTarget(fpX, fpY);
+
+          // Issue command to game
+          if (game) {
+            game.issueHeroCommand(commandSelectedHeroId.value, fpX, fpY);
+          }
+
+          // Clear selection after issuing command
+          cancelCommand();
+        });
+
+        // Initial sync
+        syncGameState(game);
+
+        // Start hub rendering loop
+        startHubLoop();
+      })
+      .catch((error) => {
+        console.error('[GameLoop] Failed to initialize renderer:', error);
+        // Still try to start the hub loop - some rendering is better than none
+        startHubLoop();
       });
-
-      // Set up turret click handler for hub mode
-      renderer.setOnTurretClick((turretId: string, slotIndex: number) => {
-        upgradeTarget.value = { type: 'turret', turretId, slotIndex };
-        upgradePanelVisible.value = true;
-      });
-
-      // Set up field click handler for tactical commands during waves
-      renderer.setOnFieldClick((worldX: number, worldY: number) => {
-        // Only handle if a hero is selected for command
-        if (!commandSelectedHeroId.value) return;
-
-        // Convert world coordinates to fixed-point
-        const fpX = FP.fromFloat(worldX);
-        const fpY = FP.fromFloat(worldY);
-
-        // Set the target position
-        setCommandTarget(fpX, fpY);
-
-        // Issue command to game
-        if (game) {
-          game.issueHeroCommand(commandSelectedHeroId.value, fpX, fpY);
-        }
-
-        // Clear selection after issuing command
-        cancelCommand();
-      });
-
-      // Initial sync
-      syncGameState(game);
-
-      // Start hub rendering loop
-      startHubLoop();
-    });
 
     return () => {
       destroyed = true;

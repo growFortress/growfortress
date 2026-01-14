@@ -19,7 +19,7 @@ export interface RendererInfo {
 }
 
 /**
- * Detect if WebGPU is available in the browser
+ * Detect if WebGPU is available in the browser (with timeout)
  */
 async function isWebGPUAvailable(): Promise<boolean> {
   if (!navigator.gpu) {
@@ -27,7 +27,12 @@ async function isWebGPUAvailable(): Promise<boolean> {
   }
 
   try {
-    const adapter = await navigator.gpu.requestAdapter();
+    // Add timeout to prevent hanging on WebGPU detection
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
+    const adapter = await Promise.race([
+      navigator.gpu.requestAdapter(),
+      timeout,
+    ]);
     return adapter !== null;
   } catch {
     return false;
@@ -168,10 +173,14 @@ export class GameApp {
   }
 
   async init() {
+    console.log('[GameApp] Starting initialization...');
+
     // Check WebGPU availability
     const webgpuAvailable = await isWebGPUAvailable();
+    console.log(`[GameApp] WebGPU available: ${webgpuAvailable}`);
 
     // Initialize with preference for WebGPU if available
+    console.log('[GameApp] Initializing PixiJS Application...');
     await this.app.init({
       canvas: this.canvas,
       resizeTo: window,
@@ -183,6 +192,7 @@ export class GameApp {
       // But we can explicitly set preference here
       preference: webgpuAvailable ? 'webgpu' : 'webgl',
     });
+    console.log('[GameApp] PixiJS Application initialized');
 
     // Get and store renderer info
     this.rendererInfo = getRendererInfo(this.app);

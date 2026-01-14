@@ -307,10 +307,20 @@ export class LightingSystem {
    * Draw all light sources
    */
   private drawLights() {
-    this.graphics.clear();
+    // Safety check: ensure Graphics object has valid context
+    if (!this.graphics || this.graphics.destroyed) {
+      return;
+    }
 
-    for (const light of this.lightSources.values()) {
-      this.drawRadialGlow(light.x, light.y, light.color, light.radius, light.intensity);
+    try {
+      this.graphics.clear();
+
+      for (const light of this.lightSources.values()) {
+        this.drawRadialGlow(light.x, light.y, light.color, light.radius, light.intensity);
+      }
+    } catch (e) {
+      // Silently fail if context is invalid
+      console.warn('Failed to draw lights:', e);
     }
   }
 
@@ -347,6 +357,27 @@ export class LightingSystem {
 
     // Bright core
     this.graphics.circle(x, y, radius * 0.15).fill({ color: 0xffffff, alpha: intensity * 0.4 });
+  }
+
+  /**
+   * Recreate Graphics object with fresh context (called on resize)
+   */
+  public recreateGraphics() {
+    // Destroy old graphics
+    if (this.graphics) {
+      this.graphics.destroy();
+    }
+
+    // Create new graphics with fresh context
+    this.graphics = new Graphics();
+    this.graphics.blendMode = 'add';
+
+    // Re-add to container
+    this.container.removeChildren();
+    this.container.addChild(this.graphics);
+
+    // Redraw lights
+    this.drawLights();
   }
 
   /**

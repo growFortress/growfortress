@@ -125,6 +125,21 @@ export class ParallaxBackground {
     this.width = width;
     this.height = height;
 
+    // Recreate Graphics objects to ensure valid context after resize
+    this.starsLayer.destroy();
+    this.cloudsLayer.destroy();
+    this.dustLayer.destroy();
+
+    this.starsLayer = new Graphics();
+    this.cloudsLayer = new Graphics();
+    this.dustLayer = new Graphics();
+
+    // Re-add to container in correct order
+    this.container.removeChildren();
+    this.container.addChild(this.starsLayer);
+    this.container.addChild(this.cloudsLayer);
+    this.container.addChild(this.dustLayer);
+
     // Generate stars
     this.stars = [];
     for (let i = 0; i < this.starCount; i++) {
@@ -263,26 +278,36 @@ export class ParallaxBackground {
    * Draw twinkling stars
    */
   private drawStars() {
-    this.starsLayer.clear();
+    // Safety check: ensure Graphics object has valid context
+    if (!this.starsLayer || this.starsLayer.destroyed) {
+      return;
+    }
 
-    for (const star of this.stars) {
-      // Calculate twinkle
-      const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
-      const alpha = star.baseAlpha * twinkle;
+    try {
+      this.starsLayer.clear();
 
-      // Main star
-      this.starsLayer.circle(star.x, star.y, star.size).fill({
-        color: COLORS.stars,
-        alpha,
-      });
+      for (const star of this.stars) {
+        // Calculate twinkle
+        const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
+        const alpha = star.baseAlpha * twinkle;
 
-      // Larger stars get a subtle glow
-      if (star.size > 1.5) {
-        this.starsLayer.circle(star.x, star.y, star.size * 2).fill({
+        // Main star
+        this.starsLayer.circle(star.x, star.y, star.size).fill({
           color: COLORS.stars,
-          alpha: alpha * 0.2,
+          alpha,
         });
+
+        // Larger stars get a subtle glow
+        if (star.size > 1.5) {
+          this.starsLayer.circle(star.x, star.y, star.size * 2).fill({
+            color: COLORS.stars,
+            alpha: alpha * 0.2,
+          });
+        }
       }
+    } catch (e) {
+      // Silently fail if context is invalid
+      console.warn('Failed to draw stars:', e);
     }
   }
 
@@ -290,39 +315,49 @@ export class ParallaxBackground {
    * Draw drifting clouds
    */
   private drawClouds() {
-    this.cloudsLayer.clear();
+    // Safety check: ensure Graphics object has valid context
+    if (!this.cloudsLayer || this.cloudsLayer.destroyed) {
+      return;
+    }
 
-    for (const cloud of this.clouds) {
-      // Main cloud body
-      this.cloudsLayer.ellipse(cloud.x, cloud.y, cloud.width, cloud.height).fill({
-        color: COLORS.clouds,
-        alpha: cloud.alpha,
-      });
+    try {
+      this.cloudsLayer.clear();
 
-      // Secondary wisps
-      this.cloudsLayer
-        .ellipse(
-          cloud.x - cloud.width * 0.3,
-          cloud.y - cloud.height * 0.3,
-          cloud.width * 0.5,
-          cloud.height * 0.7
-        )
-        .fill({
+      for (const cloud of this.clouds) {
+        // Main cloud body
+        this.cloudsLayer.ellipse(cloud.x, cloud.y, cloud.width, cloud.height).fill({
           color: COLORS.clouds,
-          alpha: cloud.alpha * 0.6,
+          alpha: cloud.alpha,
         });
 
-      this.cloudsLayer
-        .ellipse(
-          cloud.x + cloud.width * 0.4,
-          cloud.y + cloud.height * 0.2,
-          cloud.width * 0.4,
-          cloud.height * 0.6
-        )
-        .fill({
-          color: COLORS.clouds,
-          alpha: cloud.alpha * 0.5,
-        });
+        // Secondary wisps
+        this.cloudsLayer
+          .ellipse(
+            cloud.x - cloud.width * 0.3,
+            cloud.y - cloud.height * 0.3,
+            cloud.width * 0.5,
+            cloud.height * 0.7
+          )
+          .fill({
+            color: COLORS.clouds,
+            alpha: cloud.alpha * 0.6,
+          });
+
+        this.cloudsLayer
+          .ellipse(
+            cloud.x + cloud.width * 0.4,
+            cloud.y + cloud.height * 0.2,
+            cloud.width * 0.4,
+            cloud.height * 0.6
+          )
+          .fill({
+            color: COLORS.clouds,
+            alpha: cloud.alpha * 0.5,
+          });
+      }
+    } catch (e) {
+      // Silently fail if context is invalid
+      console.warn('Failed to draw clouds:', e);
     }
   }
 
@@ -330,13 +365,23 @@ export class ParallaxBackground {
    * Draw floating dust particles
    */
   private drawDust() {
-    this.dustLayer.clear();
+    // Safety check: ensure Graphics object has valid context
+    if (!this.dustLayer || this.dustLayer.destroyed) {
+      return;
+    }
 
-    for (const dust of this.dustParticles) {
-      this.dustLayer.circle(dust.x, dust.y, dust.size).fill({
-        color: COLORS.dust,
-        alpha: dust.alpha,
-      });
+    try {
+      this.dustLayer.clear();
+
+      for (const dust of this.dustParticles) {
+        this.dustLayer.circle(dust.x, dust.y, dust.size).fill({
+          color: COLORS.dust,
+          alpha: dust.alpha,
+        });
+      }
+    } catch (e) {
+      // Silently fail if context is invalid
+      console.warn('Failed to draw dust:', e);
     }
   }
 

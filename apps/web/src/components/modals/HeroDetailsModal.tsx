@@ -11,6 +11,7 @@ import {
   getUpgradeCost,
   getStatBonusPercent,
   getStatMultiplier,
+  ARTIFACT_DEFINITIONS,
 } from '@arcade/sim-core';
 import {
   upgradeTarget,
@@ -174,11 +175,15 @@ interface ArtifactApiResponse {
   error?: string;
 }
 
-async function equipArtifactToHero(artifactInstanceId: string, heroId: string): Promise<ArtifactApiResponse> {
+async function equipArtifactToHero(
+  artifactInstanceId: string,
+  heroId: string,
+  slotType: 'weapon' | 'armor' | 'accessory'
+): Promise<ArtifactApiResponse> {
   const response = await fetch('/api/v1/artifacts/equip', {
     method: 'POST',
     headers: createAuthHeaders(),
-    body: JSON.stringify({ artifactInstanceId, heroId }),
+    body: JSON.stringify({ artifactInstanceId, heroId, slotType }),
   });
   return response.json();
 }
@@ -282,8 +287,22 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
   const handleEquipArtifact = async (artifactInstanceId: string) => {
     setEquipmentLoading(true);
     try {
+      // Find the artifact instance to get its artifactId
+      const artifactInstance = availableArtifacts.find(a => a.id === artifactInstanceId);
+      if (!artifactInstance) {
+        showErrorToast(t('heroDetails.artifactNotFound'));
+        return;
+      }
+
+      // Find artifact definition to get slotType
+      const artifactDef = ARTIFACT_DEFINITIONS.find(def => def.id === artifactInstance.artifactId);
+      if (!artifactDef) {
+        showErrorToast(t('heroDetails.artifactDefNotFound'));
+        return;
+      }
+
       const result = await withTimeout(
-        equipArtifactToHero(artifactInstanceId, hero.definitionId),
+        equipArtifactToHero(artifactInstanceId, hero.definitionId, artifactDef.slotType),
         ASYNC_TIMEOUT_MS,
         t('heroDetails.operationTimeout')
       );

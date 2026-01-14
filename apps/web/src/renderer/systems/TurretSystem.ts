@@ -59,6 +59,10 @@ export class TurretSystem {
   private slotVisuals: Map<number, Container> = new Map();
   private turretVisuals: Map<number, TurretVisual> = new Map();
   private onTurretClick: ((turretId: string, slotIndex: number) => void) | null = null;
+  private lastViewWidth: number = 0;
+  private lastViewHeight: number = 0;
+  private stableDimensionsCount: number = 0;
+  private needsRecreate: boolean = false;
 
   constructor() {
     this.container = new Container();
@@ -69,6 +73,29 @@ export class TurretSystem {
   }
 
   public update(state: GameState, viewWidth: number, viewHeight: number) {
+    // Detect resize - if dimensions changed, mark that we need to recreate
+    const resized = this.lastViewWidth !== viewWidth || this.lastViewHeight !== viewHeight;
+
+    if (resized && this.lastViewWidth !== 0) {
+      console.log(`[TurretSystem] Resize detected: ${this.lastViewWidth}x${this.lastViewHeight} -> ${viewWidth}x${viewHeight}`);
+      this.needsRecreate = true;
+      this.stableDimensionsCount = 0; // Reset stability counter
+    } else if (this.needsRecreate) {
+      // Dimensions are stable - increment counter
+      this.stableDimensionsCount++;
+
+      // After 3 stable frames (roughly 50ms), recreate Graphics
+      if (this.stableDimensionsCount >= 3) {
+        console.log(`[TurretSystem] Dimensions stable, recreating ${state.turretSlots.length} slots`);
+        this.recreateAllSlotsAndTurrets(state.turretSlots, state.turrets);
+        this.needsRecreate = false;
+        this.stableDimensionsCount = 0;
+      }
+    }
+
+    this.lastViewWidth = viewWidth;
+    this.lastViewHeight = viewHeight;
+
     // Get set of slot indices that have turrets
     const occupiedSlots = new Set(state.turrets.map(t => t.slotIndex));
 
@@ -86,7 +113,9 @@ export class TurretSystem {
       currentSlotIds.add(slot.index);
 
       let visual = this.slotVisuals.get(slot.index);
+
       if (!visual) {
+        // Create new visual
         visual = this.createSlotVisual(slot);
         this.container.addChild(visual);
         this.slotVisuals.set(slot.index, visual);
@@ -119,22 +148,24 @@ export class TurretSystem {
 
   private createSlotVisual(slot: TurretSlot): Container {
     const container = new Container();
+    const size = SIZES.slotSize / 2;
+
+    // Helper function to generate hexagon points
+    const getHexPoints = (): number[] => {
+      const pts: number[] = [];
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 2;
+        pts.push(Math.cos(angle) * size, Math.sin(angle) * size);
+      }
+      return pts;
+    };
 
     // Base platform
     const base = new Graphics();
     base.label = 'base';
-
-    // Hexagonal platform
-    const size = SIZES.slotSize / 2;
-    const points: number[] = [];
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI / 3) * i - Math.PI / 2;
-      points.push(Math.cos(angle) * size, Math.sin(angle) * size);
-    }
-    base.poly(points)
+    base.poly(getHexPoints())
       .fill({ color: 0x1a1a2e })
       .stroke({ width: 2, color: 0x00ccff, alpha: 0.5 });
-
     container.addChild(base);
 
     // Slot number indicator
@@ -150,15 +181,19 @@ export class TurretSystem {
     slotNum.position.y = size + 10;
     container.addChild(slotNum);
 
-    // Lock overlay
+    // Lock overlay - MUST be positioned at 0,0 (center of slot)
     const lockOverlay = new Graphics();
     lockOverlay.label = 'lock';
-    lockOverlay.poly(points)
-      .fill({ color: 0x000000, alpha: 0.7 });
-    // Lock icon
+    lockOverlay.position.set(0, 0); // Explicitly set to center
+
+    // Draw hexagonal background (use fresh points array)
+    lockOverlay.poly(getHexPoints()).fill({ color: 0x000000, alpha: 0.7 });
+
+    // Draw lock icon on top
     lockOverlay.rect(-8, -8, 16, 16)
       .fill({ color: 0x666666 })
       .stroke({ width: 2, color: 0x888888 });
+
     lockOverlay.visible = !slot.isUnlocked;
     container.addChild(lockOverlay);
 
@@ -177,7 +212,9 @@ export class TurretSystem {
       if (!slot) continue;
 
       let visual = this.turretVisuals.get(turret.slotIndex);
+
       if (!visual) {
+        // Create new visual
         visual = this.createTurretVisual(turret);
         this.container.addChild(visual.container);
         this.turretVisuals.set(turret.slotIndex, visual);
@@ -1098,6 +1135,41 @@ export class TurretSystem {
       rangeCircle.arc(0, 0, rangeInPixels * 0.7, startAngle, endAngle)
         .stroke({ width: 1, color: colors.secondary, alpha: 0.2 });
     }
+  }
+
+  /**
+   * Recreate all slots and turrets (called on resize to ensure fresh Graphics context)
+   */
+  private recreateAllSlotsAndTurrets(_slots: TurretSlot[], _turrets: ActiveTurret[]) {
+    // CRITICAL: Destroy all Graphics objects BEFORE removing from parent
+    // This ensures all WebGPU/WebGL resources are properly released
+    for (const [_slotIndex, visual] of this.slotVisuals) {
+      // Destroy all Graphics children first
+      for (const child of visual.children) {
+        if (child instanceof Graphics) {
+          child.destroy({ children: true });
+        }
+      }
+      // Then remove and destroy container
+      this.container.removeChild(visual);
+      visual.destroy({ children: true });
+    }
+    this.slotVisuals.clear();
+
+    // Clear all existing turret visuals
+    for (const [_slotIndex, visual] of this.turretVisuals) {
+      // Destroy all Graphics children first
+      for (const child of visual.container.children) {
+        if (child instanceof Graphics) {
+          child.destroy({ children: true });
+        }
+      }
+      this.container.removeChild(visual.container);
+      visual.container.destroy({ children: true });
+    }
+    this.turretVisuals.clear();
+
+    // Next update() will recreate them all
   }
 
   // --- Color manipulation helpers ---

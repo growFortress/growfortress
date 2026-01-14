@@ -154,12 +154,36 @@ export class GameScene {
     // Initialize parallax with new dimensions
     this.parallax.initialize(width, height);
 
+    // Recreate lighting graphics to ensure valid context
+    this.lighting.recreateGraphics();
+
+    // Recreate static graphics to ensure valid context
+    if (this.staticGraphics) {
+      this.staticGraphics.destroy();
+    }
+    this.staticGraphics = new Graphics();
+    this.container.addChildAt(this.staticGraphics, 1); // Add after parallax
+
+    // Recreate interactive layer to ensure valid context
+    if (this.interactiveLayer) {
+      this.interactiveLayer.off('pointerdown', this.handleFieldClick.bind(this));
+      this.interactiveLayer.destroy();
+    }
+    this.interactiveLayer = new Graphics();
+    this.interactiveLayer.eventMode = 'static';
+    this.interactiveLayer.cursor = 'pointer';
+    this.interactiveLayer.on('pointerdown', this.handleFieldClick.bind(this));
+    this.container.addChild(this.interactiveLayer);
+
     // Redraw static elements on resize
     this.redrawStaticLayer();
 
     // Update interactive layer hit area
-    this.interactiveLayer.clear();
-    this.interactiveLayer.rect(0, 0, width, height).fill({ color: 0x000000, alpha: 0 });
+    try {
+      this.interactiveLayer.rect(0, 0, width, height).fill({ color: 0x000000, alpha: 0 });
+    } catch (e) {
+      console.warn('Failed to draw interactive layer:', e);
+    }
   }
 
   /**
@@ -192,7 +216,18 @@ export class GameScene {
 
   private redrawStaticLayer() {
     const g = this.staticGraphics;
-    g.clear();
+
+    // Safety check: ensure Graphics object has valid context
+    if (!g || g.destroyed) {
+      return;
+    }
+
+    try {
+      g.clear();
+    } catch (e) {
+      console.warn('Failed to clear static graphics:', e);
+      return;
+    }
 
     if (this.width === 0 || this.height === 0) return;
 
@@ -206,7 +241,14 @@ export class GameScene {
     void alpha;
 
     // Clear dynamic graphics (if any usages are added later)
-    this.graphics.clear();
+    // Safety check: ensure Graphics object has valid context
+    if (this.graphics && !this.graphics.destroyed) {
+      try {
+        this.graphics.clear();
+      } catch (e) {
+        // Silently fail if context is invalid
+      }
+    }
 
     // Ensure we have dimensions
     if (this.width === 0 || this.height === 0) return;

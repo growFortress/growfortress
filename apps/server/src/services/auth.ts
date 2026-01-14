@@ -130,15 +130,16 @@ export async function registerUser(
 
   // Grant Founders Medal artifact (special launch artifact)
   try {
-    await prisma.playerArtifact.create({
+    const artifact = await prisma.playerArtifact.create({
       data: {
         userId: user.id,
         artifactId: 'founders_medal',
         level: 1,
       },
     });
-  } catch {
-    // Ignore if artifact creation fails (shouldn't happen for new users)
+    console.log(`[Auth] Granted founders_medal to user ${user.id}, artifact id: ${artifact.id}`);
+  } catch (error) {
+    console.error(`[Auth] Failed to grant founders_medal to user ${user.id}:`, error);
   }
 
   // Send welcome message with gift info

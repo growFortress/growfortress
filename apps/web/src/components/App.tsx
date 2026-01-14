@@ -20,13 +20,15 @@ import { GuildPreviewModal } from './modals/GuildPreviewModal.js';
 import { DailyQuestsModal } from './modals/DailyQuestsModal.js';
 import { ShopModal } from './modals/ShopModal.js';
 import { LegalModal } from './modals/LegalModal.js';
+import { ArtifactsModal } from './modals/ArtifactsModal.js';
 import { AdminBroadcastPanel, AdminModerationPanel } from './admin/index.js';
 import { ErrorBoundary } from './shared/ErrorBoundary.js';
 import { LoadingScreen } from './shared/LoadingScreen.js';
 import { ScreenReaderAnnouncer } from './shared/ScreenReaderAnnouncer.js';
+import { MinimumScreenSize } from './shared/MinimumScreenSize.js';
 import { syncManager } from '../storage/sync.js';
 import { getActiveSession, clearActiveSession, type ActiveSessionSnapshot } from '../storage/idb.js';
-import { login, register, getProfile, getLeaderboard, getPowerSummary, refreshTokensApi } from '../api/client.js';
+import { login, register, getProfile, getLeaderboard, getPowerSummary, refreshTokensApi, getArtifacts } from '../api/client.js';
 import {
   isAuthenticated as isAuthSignal,
   authLoading,
@@ -46,6 +48,8 @@ import {
   cleanupMessagesWebSocket,
   refreshUnreadCounts,
   fetchDailyQuests,
+  updateArtifacts,
+  updateItems,
 } from '../state/index.js';
 import {
   isAuthenticated as checkAuth,
@@ -79,9 +83,11 @@ const LOADING_MESSAGE = 'Ładowanie...';
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppContent />
-    </QueryClientProvider>
+    <MinimumScreenSize>
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+      </QueryClientProvider>
+    </MinimumScreenSize>
   );
 }
 
@@ -93,7 +99,7 @@ function AppContent() {
   const [internalAuth, setInternalAuth] = useState(checkAuth());
 
   // Profile Query
-  const { data: profile } = useQuery({
+  const { data: profile, refetch: refetchProfile } = useQuery({
     queryKey: ['profile'],
     queryFn: getProfile,
     enabled: internalAuth,
@@ -114,6 +120,13 @@ function AppContent() {
     enabled: internalAuth,
   });
 
+  // Artifacts Query
+  const { data: artifactsData } = useQuery({
+    queryKey: ['artifacts'],
+    queryFn: getArtifacts,
+    enabled: internalAuth,
+  });
+
   // Sync Profile to Signals
   useEffect(() => {
     if (profile) {
@@ -131,7 +144,10 @@ function AppContent() {
       }
 
       // Po krótkiej chwili na inicjalizację - gotowe
-      const timer = setTimeout(() => setLoadingStage('ready'), 150);
+      const timer = setTimeout(() => {
+        setLoadingStage('ready');
+        authLoading.value = false; // Clear loading state after profile is loaded
+      }, 150);
       return () => clearTimeout(timer);
     }
     return undefined;
@@ -150,6 +166,14 @@ function AppContent() {
       setPowerSummary(powerData);
     }
   }, [powerData]);
+
+  // Sync Artifacts to Signals
+  useEffect(() => {
+    if (artifactsData) {
+      updateArtifacts(artifactsData.artifacts);
+      updateItems(artifactsData.items);
+    }
+  }, [artifactsData]);
 
   // Initialize WebSocket for real-time messaging when authenticated
   useEffect(() => {
@@ -250,6 +274,8 @@ function AppContent() {
       await login({ username, password });
       setInternalAuth(true);
       setLoadingStage('loading_profile');
+      // Force refetch profile immediately after successful login
+      await refetchProfile();
     } catch (error) {
       if (error instanceof Error && 'status' in error) {
         const status = (error as { status: number }).status;
@@ -263,7 +289,6 @@ function AppContent() {
       } else {
         authError.value = 'Nie udało się połączyć z serwerem. Spróbuj ponownie.';
       }
-    } finally {
       authLoading.value = false;
     }
   };
@@ -276,6 +301,8 @@ function AppContent() {
       await register({ username, password });
       setInternalAuth(true);
       setLoadingStage('loading_profile');
+      // Force refetch profile immediately after successful registration
+      await refetchProfile();
     } catch (error) {
       if (error instanceof Error && 'status' in error && (error as { status: number }).status === 409) {
         authError.value = 'Ta nazwa jest już zajęta';
@@ -284,7 +311,6 @@ function AppContent() {
       } else {
         authError.value = 'Nie udało się połączyć z serwerem. Spróbuj ponownie.';
       }
-    } finally {
       authLoading.value = false;
     }
   };
@@ -413,6 +439,7 @@ function AppContent() {
       <GuildPreviewModal />
       <DailyQuestsModal />
       <ShopModal />
+      <ArtifactsModal />
       <LegalModal />
       <AdminBroadcastPanel />
       <AdminModerationPanel />
