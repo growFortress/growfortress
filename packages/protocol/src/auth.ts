@@ -1,28 +1,29 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Username validation: 3-20 chars, alphanumeric and underscores
-const usernameSchema = z.string()
-  .min(3, 'Nazwa musi mieć min. 3 znaki')
-  .max(20, 'Nazwa może mieć max. 20 znaków')
-  .regex(/^[a-zA-Z0-9_]+$/, 'Tylko litery, cyfry i podkreślenia');
+const usernameSchema = z
+  .string()
+  .min(3, "Nazwa musi mieć min. 3 znaki")
+  .max(20, "Nazwa może mieć max. 20 znaków")
+  .regex(/^[a-zA-Z0-9_]+$/, "Tylko litery, cyfry i podkreślenia");
 
 // Password validation: min 6 chars
-const passwordSchema = z.string()
-  .min(6, 'Hasło musi mieć min. 6 znaków')
-  .max(100, 'Hasło może mieć max. 100 znaków');
+const passwordSchema = z
+  .string()
+  .min(6, "Hasło musi mieć min. 6 znaków")
+  .max(100, "Hasło może mieć max. 100 znaków");
 
 // Register
 export const AuthRegisterRequestSchema = z.object({
   username: usernameSchema,
   password: passwordSchema,
-  email: z.string().email('Nieprawidłowy adres email').optional(),
+  email: z.string().email("Nieprawidłowy adres email").optional(),
 });
 
 export type AuthRegisterRequest = z.infer<typeof AuthRegisterRequestSchema>;
 
 export const AuthRegisterResponseSchema = z.object({
   accessToken: z.string(),
-  refreshToken: z.string(),
   userId: z.string(),
   displayName: z.string(),
   expiresAt: z.number(),
@@ -40,7 +41,6 @@ export type AuthLoginRequest = z.infer<typeof AuthLoginRequestSchema>;
 
 export const AuthLoginResponseSchema = z.object({
   accessToken: z.string(),
-  refreshToken: z.string(),
   userId: z.string(),
   displayName: z.string(),
   expiresAt: z.number(),
@@ -50,14 +50,13 @@ export type AuthLoginResponse = z.infer<typeof AuthLoginResponseSchema>;
 
 // Refresh token
 export const AuthRefreshRequestSchema = z.object({
-  refreshToken: z.string(),
+  refreshToken: z.string().optional(),
 });
 
 export type AuthRefreshRequest = z.infer<typeof AuthRefreshRequestSchema>;
 
 export const AuthRefreshResponseSchema = z.object({
   accessToken: z.string(),
-  refreshToken: z.string(),
   displayName: z.string(),
   expiresAt: z.number(),
 });
@@ -86,27 +85,52 @@ export type Progression = z.infer<typeof ProgressionSchema>;
 
 // Fortress class types
 export const FortressClassSchema = z.enum([
-  'natural', 'ice', 'fire', 'lightning', 'tech', 'void', 'plasma'
+  "natural",
+  "ice",
+  "fire",
+  "lightning",
+  "tech",
+  "void",
+  "plasma",
 ]);
 export type FortressClassType = z.infer<typeof FortressClassSchema>;
 
 // Hero IDs (Unit IDs)
 export const HeroIdSchema = z.enum([
-  'storm', 'forge', 'titan', 'vanguard', 'rift', 'frost',
+  "storm",
+  "forge",
+  "titan",
+  "vanguard",
+  "rift",
+  "frost",
   // Exclusive units:
-  'spectre', 'omega',
+  "spectre",
+  "omega",
   // Future units:
-  'spider_sentinel', 'flame_phoenix', 'venom_assassin',
-  'arcane_sorcerer', 'frost_giant', 'cosmic_guardian'
+  "spider_sentinel",
+  "flame_phoenix",
+  "venom_assassin",
+  "arcane_sorcerer",
+  "frost_giant",
+  "cosmic_guardian",
 ]);
 export type HeroIdType = z.infer<typeof HeroIdSchema>;
 
 // Turret types (new Sci-Fi IDs with legacy aliases)
 export const TurretTypeSchema = z.enum([
-  'railgun', 'artillery', 'arc', 'cryo',  // Core turrets (new IDs)
-  'arrow', 'cannon', 'tesla', 'frost',     // Legacy aliases (backwards compatibility)
+  "railgun",
+  "artillery",
+  "arc",
+  "cryo", // Core turrets (new IDs)
+  "arrow",
+  "cannon",
+  "tesla",
+  "frost", // Legacy aliases (backwards compatibility)
   // Future turrets:
-  'sniper', 'flame', 'support', 'poison'
+  "sniper",
+  "flame",
+  "support",
+  "poison",
 ]);
 export type TurretTypeType = z.infer<typeof TurretTypeSchema>;
 
@@ -119,7 +143,7 @@ export const DefaultLoadoutSchema = z.object({
 export type DefaultLoadout = z.infer<typeof DefaultLoadoutSchema>;
 
 // User role schema
-export const UserRoleSchema = z.enum(['USER', 'ADMIN']);
+export const UserRoleSchema = z.enum(["USER", "ADMIN"]);
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
 export const ProfileResponseSchema = z.object({
@@ -148,7 +172,9 @@ export const CompleteOnboardingRequestSchema = z.object({
   turretType: TurretTypeSchema,
 });
 
-export type CompleteOnboardingRequest = z.infer<typeof CompleteOnboardingRequestSchema>;
+export type CompleteOnboardingRequest = z.infer<
+  typeof CompleteOnboardingRequestSchema
+>;
 
 // Complete onboarding response
 export const CompleteOnboardingResponseSchema = z.object({
@@ -156,11 +182,13 @@ export const CompleteOnboardingResponseSchema = z.object({
   defaultLoadout: DefaultLoadoutSchema,
 });
 
-export type CompleteOnboardingResponse = z.infer<typeof CompleteOnboardingResponseSchema>;
+export type CompleteOnboardingResponse = z.infer<
+  typeof CompleteOnboardingResponseSchema
+>;
 
 // Password reset request
 export const ForgotPasswordRequestSchema = z.object({
-  email: z.string().email('Nieprawidłowy adres email'),
+  email: z.string().email("Nieprawidłowy adres email"),
 });
 
 export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;

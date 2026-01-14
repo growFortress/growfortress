@@ -1,27 +1,40 @@
-import * as jose from 'jose';
-import type { SimConfig } from '@arcade/sim-core';
-import { config } from '../config.js';
+import * as jose from "jose";
+import type { SimConfig } from "@arcade/sim-core";
+import { config } from "../config.js";
 
 // JWT for access/refresh tokens
 const jwtSecret = new TextEncoder().encode(config.JWT_SECRET);
 
 export interface AccessTokenPayload {
   sub: string; // userId
-  type: 'access';
+  type: "access";
 }
 
 export interface RefreshTokenPayload {
   sub: string; // userId
   sessionId: string;
-  type: 'refresh';
+  type: "refresh";
+}
+
+export interface AdminAccessTokenPayload {
+  sub: string; // userId
+  type: "admin_access";
+}
+
+export interface AdminRefreshTokenPayload {
+  sub: string; // userId
+  sessionId: string;
+  type: "admin_refresh";
 }
 
 /**
  * Create access token
  */
 export async function createAccessToken(userId: string): Promise<string> {
-  const token = await new jose.SignJWT({ type: 'access' } as unknown as jose.JWTPayload)
-    .setProtectedHeader({ alg: 'HS256' })
+  const token = await new jose.SignJWT({
+    type: "access",
+  } as unknown as jose.JWTPayload)
+    .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(config.JWT_ACCESS_EXPIRY)
@@ -33,9 +46,51 @@ export async function createAccessToken(userId: string): Promise<string> {
 /**
  * Create refresh token
  */
-export async function createRefreshToken(userId: string, sessionId: string): Promise<string> {
-  const token = await new jose.SignJWT({ type: 'refresh', sessionId } as unknown as jose.JWTPayload)
-    .setProtectedHeader({ alg: 'HS256' })
+export async function createRefreshToken(
+  userId: string,
+  sessionId: string,
+): Promise<string> {
+  const token = await new jose.SignJWT({
+    type: "refresh",
+    sessionId,
+  } as unknown as jose.JWTPayload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuedAt()
+    .setExpirationTime(config.JWT_REFRESH_EXPIRY)
+    .sign(jwtSecret);
+
+  return token;
+}
+
+/**
+ * Create admin access token
+ */
+export async function createAdminAccessToken(userId: string): Promise<string> {
+  const token = await new jose.SignJWT({
+    type: "admin_access",
+  } as unknown as jose.JWTPayload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuedAt()
+    .setExpirationTime(config.JWT_ACCESS_EXPIRY)
+    .sign(jwtSecret);
+
+  return token;
+}
+
+/**
+ * Create admin refresh token
+ */
+export async function createAdminRefreshToken(
+  userId: string,
+  sessionId: string,
+): Promise<string> {
+  const token = await new jose.SignJWT({
+    type: "admin_refresh",
+    sessionId,
+  } as unknown as jose.JWTPayload)
+    .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(config.JWT_REFRESH_EXPIRY)
@@ -47,13 +102,15 @@ export async function createRefreshToken(userId: string, sessionId: string): Pro
 /**
  * Verify access token
  */
-export async function verifyAccessToken(token: string): Promise<AccessTokenPayload | null> {
+export async function verifyAccessToken(
+  token: string,
+): Promise<AccessTokenPayload | null> {
   try {
     const { payload } = await jose.jwtVerify(token, jwtSecret);
-    if (payload.type !== 'access') return null;
+    if (payload.type !== "access") return null;
     return {
       sub: payload.sub as string,
-      type: 'access',
+      type: "access",
     };
   } catch {
     return null;
@@ -63,14 +120,53 @@ export async function verifyAccessToken(token: string): Promise<AccessTokenPaylo
 /**
  * Verify refresh token
  */
-export async function verifyRefreshToken(token: string): Promise<RefreshTokenPayload | null> {
+export async function verifyRefreshToken(
+  token: string,
+): Promise<RefreshTokenPayload | null> {
   try {
     const { payload } = await jose.jwtVerify(token, jwtSecret);
-    if (payload.type !== 'refresh') return null;
+    if (payload.type !== "refresh") return null;
     return {
       sub: payload.sub as string,
       sessionId: payload.sessionId as string,
-      type: 'refresh',
+      type: "refresh",
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Verify admin access token
+ */
+export async function verifyAdminAccessToken(
+  token: string,
+): Promise<AdminAccessTokenPayload | null> {
+  try {
+    const { payload } = await jose.jwtVerify(token, jwtSecret);
+    if (payload.type !== "admin_access") return null;
+    return {
+      sub: payload.sub as string,
+      type: "admin_access",
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Verify admin refresh token
+ */
+export async function verifyAdminRefreshToken(
+  token: string,
+): Promise<AdminRefreshTokenPayload | null> {
+  try {
+    const { payload } = await jose.jwtVerify(token, jwtSecret);
+    if (payload.type !== "admin_refresh") return null;
+    return {
+      sub: payload.sub as string,
+      sessionId: payload.sessionId as string,
+      type: "admin_refresh",
     };
   } catch {
     return null;
@@ -78,22 +174,22 @@ export async function verifyRefreshToken(token: string): Promise<RefreshTokenPay
 }
 
 // Run Token (HMAC for run verification)
-const runTokenSecret = new TextEncoder().encode(config.RUN_TOKEN_SECRET);       
+const runTokenSecret = new TextEncoder().encode(config.RUN_TOKEN_SECRET);
 
 export type SimConfigSnapshot = Pick<
   SimConfig,
-  | 'fortressClass'
-  | 'startingHeroes'
-  | 'startingTurrets'
-  | 'commanderLevel'
-  | 'progressionDamageBonus'
-  | 'progressionGoldBonus'
-  | 'startingGold'
-  | 'maxHeroSlots'
-  | 'fortressBaseHp'
-  | 'fortressBaseDamage'
-  | 'waveIntervalTicks'
-  | 'equippedArtifacts'
+  | "fortressClass"
+  | "startingHeroes"
+  | "startingTurrets"
+  | "commanderLevel"
+  | "progressionDamageBonus"
+  | "progressionGoldBonus"
+  | "startingGold"
+  | "maxHeroSlots"
+  | "fortressBaseHp"
+  | "fortressBaseDamage"
+  | "waveIntervalTicks"
+  | "equippedArtifacts"
 >;
 
 export interface RunTokenPayload {
@@ -112,7 +208,9 @@ export interface RunTokenPayload {
 /**
  * Create run token (HMAC signed)
  */
-export async function createRunToken(payload: Omit<RunTokenPayload, 'issuedAt' | 'exp'>): Promise<string> {
+export async function createRunToken(
+  payload: Omit<RunTokenPayload, "issuedAt" | "exp">,
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const fullPayload: RunTokenPayload = {
     ...payload,
@@ -120,8 +218,10 @@ export async function createRunToken(payload: Omit<RunTokenPayload, 'issuedAt' |
     exp: now + config.RUN_TOKEN_EXPIRY_SECONDS,
   };
 
-  const token = await new jose.SignJWT(fullPayload as unknown as jose.JWTPayload)
-    .setProtectedHeader({ alg: 'HS256' })
+  const token = await new jose.SignJWT(
+    fullPayload as unknown as jose.JWTPayload,
+  )
+    .setProtectedHeader({ alg: "HS256" })
     .sign(runTokenSecret);
 
   return token;
@@ -130,7 +230,9 @@ export async function createRunToken(payload: Omit<RunTokenPayload, 'issuedAt' |
 /**
  * Verify run token
  */
-export async function verifyRunToken(token: string): Promise<RunTokenPayload | null> {
+export async function verifyRunToken(
+  token: string,
+): Promise<RunTokenPayload | null> {
   try {
     const { payload } = await jose.jwtVerify(token, runTokenSecret);
 
@@ -162,7 +264,9 @@ export interface SessionTokenPayload {
 /**
  * Create session token (HMAC signed)
  */
-export async function createSessionToken(payload: Omit<SessionTokenPayload, 'issuedAt' | 'exp'>): Promise<string> {
+export async function createSessionToken(
+  payload: Omit<SessionTokenPayload, "issuedAt" | "exp">,
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const fullPayload: SessionTokenPayload = {
     ...payload,
@@ -170,8 +274,10 @@ export async function createSessionToken(payload: Omit<SessionTokenPayload, 'iss
     exp: now + config.RUN_TOKEN_EXPIRY_SECONDS, // Same TTL as run token
   };
 
-  const token = await new jose.SignJWT(fullPayload as unknown as jose.JWTPayload)
-    .setProtectedHeader({ alg: 'HS256' })
+  const token = await new jose.SignJWT(
+    fullPayload as unknown as jose.JWTPayload,
+  )
+    .setProtectedHeader({ alg: "HS256" })
     .sign(runTokenSecret);
 
   return token;
@@ -180,7 +286,9 @@ export async function createSessionToken(payload: Omit<SessionTokenPayload, 'iss
 /**
  * Verify session token
  */
-export async function verifySessionToken(token: string): Promise<SessionTokenPayload | null> {
+export async function verifySessionToken(
+  token: string,
+): Promise<SessionTokenPayload | null> {
   try {
     const { payload } = await jose.jwtVerify(token, runTokenSecret);
 
@@ -203,7 +311,7 @@ export async function verifySessionToken(token: string): Promise<SessionTokenPay
 export interface BossRushTokenPayload {
   sessionId: string;
   simVersion: number;
-  mode: 'boss_rush';
+  mode: "boss_rush";
   issuedAt: number;
   exp: number;
 }
@@ -211,7 +319,9 @@ export interface BossRushTokenPayload {
 /**
  * Create Boss Rush session token (HMAC signed)
  */
-export async function createBossRushToken(payload: Omit<BossRushTokenPayload, 'issuedAt' | 'exp'>): Promise<string> {
+export async function createBossRushToken(
+  payload: Omit<BossRushTokenPayload, "issuedAt" | "exp">,
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const fullPayload: BossRushTokenPayload = {
     ...payload,
@@ -219,8 +329,10 @@ export async function createBossRushToken(payload: Omit<BossRushTokenPayload, 'i
     exp: now + config.RUN_TOKEN_EXPIRY_SECONDS,
   };
 
-  const token = await new jose.SignJWT(fullPayload as unknown as jose.JWTPayload)
-    .setProtectedHeader({ alg: 'HS256' })
+  const token = await new jose.SignJWT(
+    fullPayload as unknown as jose.JWTPayload,
+  )
+    .setProtectedHeader({ alg: "HS256" })
     .sign(runTokenSecret);
 
   return token;
@@ -229,7 +341,9 @@ export async function createBossRushToken(payload: Omit<BossRushTokenPayload, 'i
 /**
  * Verify Boss Rush session token
  */
-export async function verifyBossRushToken(token: string): Promise<BossRushTokenPayload | null> {
+export async function verifyBossRushToken(
+  token: string,
+): Promise<BossRushTokenPayload | null> {
   try {
     const { payload } = await jose.jwtVerify(token, runTokenSecret);
 
@@ -240,7 +354,7 @@ export async function verifyBossRushToken(token: string): Promise<BossRushTokenP
     }
 
     // Verify it's a boss rush token
-    if (payload.mode !== 'boss_rush') {
+    if (payload.mode !== "boss_rush") {
       return null;
     }
 

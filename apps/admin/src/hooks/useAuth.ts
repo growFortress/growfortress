@@ -1,18 +1,48 @@
-import { signal } from '@preact/signals';
+import { signal } from "@preact/signals";
 
-// Auth state
-export const adminToken = signal<string | null>(localStorage.getItem('adminToken'));
-export const isAuthenticated = signal(!!adminToken.value);
+// Auth state (memory only)
+export const adminToken = signal<string | null>(null);
+export const isAuthenticated = signal(false);
+
+async function refreshSession(): Promise<boolean> {
+  try {
+    const response = await fetch("/api/v1/admin/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      adminToken.value = null;
+      isAuthenticated.value = false;
+      return false;
+    }
+
+    const data = await response.json();
+    adminToken.value = data.accessToken;
+    isAuthenticated.value = true;
+    return true;
+  } catch {
+    adminToken.value = null;
+    isAuthenticated.value = false;
+    return false;
+  }
+}
 
 export function useAuth() {
   const login = (token: string) => {
-    localStorage.setItem('adminToken', token);
     adminToken.value = token;
     isAuthenticated.value = true;
   };
 
-  const logout = () => {
-    localStorage.removeItem('adminToken');
+  const logout = async () => {
+    try {
+      await fetch("/api/v1/admin/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // Ignore logout failures
+    }
     adminToken.value = null;
     isAuthenticated.value = false;
   };
@@ -21,6 +51,7 @@ export function useAuth() {
     adminToken,
     isAuthenticated,
     login,
-    logout
+    logout,
+    refreshSession,
   };
 }

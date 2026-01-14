@@ -1,6 +1,6 @@
-import { adminToken } from '../hooks/useAuth';
+import { adminToken, isAuthenticated } from "../hooks/useAuth";
 
-const API_BASE = '/api/admin';
+const API_BASE = "/api/admin";
 
 export interface ActiveSession {
   id: string;
@@ -14,7 +14,7 @@ export interface PlayerSummary {
   id: string;
   username: string;
   displayName: string;
-  role: 'USER' | 'ADMIN';
+  role: "USER" | "ADMIN";
   banned: boolean;
   createdAt: string;
   lastIdleClaimAt: string;
@@ -24,7 +24,7 @@ export interface PlayerDetails extends PlayerSummary {
   inventory: any;
   progression: any;
   sessions: any[]; // Web sessions (logins)
-  runs: any[];     // Standard runs
+  runs: any[]; // Standard runs
   gameSessions: any[]; // Endless sessions
   highestWave: number;
 }
@@ -74,31 +74,81 @@ export interface BugReportListResponse {
   totalPages: number;
 }
 
-async function fetchWithAuth(url: string, options: RequestInit = {}) {
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function refreshAdminToken(): Promise<boolean> {
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch("/api/v1/admin/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        adminToken.value = null;
+        isAuthenticated.value = false;
+        return false;
+      }
+
+      const data = await response.json();
+      adminToken.value = data.accessToken;
+      isAuthenticated.value = true;
+      return true;
+    } catch {
+      adminToken.value = null;
+      isAuthenticated.value = false;
+      return false;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {},
+  retry = true,
+) {
   const token = adminToken.value;
   if (!token) {
-    throw new Error('Not authenticated');
+    isAuthenticated.value = false;
+    throw new Error("Not authenticated");
   }
 
   const response = await fetch(url, {
     ...options,
     headers: {
       ...options.headers,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
+    credentials: "include",
   });
 
   if (response.status === 401 || response.status === 403) {
-    // Token expired or invalid
-    localStorage.removeItem('adminToken');
+    if (retry && (await refreshAdminToken())) {
+      return fetchWithAuth(url, options, false);
+    }
+
     adminToken.value = null;
-    throw new Error('Session expired. Please login again.');
+    isAuthenticated.value = false;
+    throw new Error("Session expired. Please login again.");
   }
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.error || `Request failed with status ${response.status}`);
+    throw new Error(
+      data.error || `Request failed with status ${response.status}`,
+    );
   }
 
   return response.json();
@@ -113,9 +163,13 @@ export const adminApi = {
     // I will comment out or keep it but it might 404.
   },
 
-  async executeAction(sessionId: string, action: string, payload?: Record<string, unknown>) {
+  async executeAction(
+    sessionId: string,
+    action: string,
+    payload?: Record<string, unknown>,
+  ) {
     return fetchWithAuth(`${API_BASE}/sessions/${sessionId}/${action}`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(payload || {}),
     });
   },
@@ -129,7 +183,11 @@ export const adminApi = {
   },
 
   // New Methods
-  async getPlayers(page = 1, limit = 20, search = ''): Promise<PlayerListResponse> {
+  async getPlayers(
+    page = 1,
+    limit = 20,
+    search = "",
+  ): Promise<PlayerListResponse> {
     const query = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -144,31 +202,35 @@ export const adminApi = {
 
   async banPlayer(id: string, banned: boolean): Promise<PlayerSummary> {
     return fetchWithAuth(`${API_BASE}/users/${id}/ban`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ banned }),
     });
   },
 
   async resetPlayer(id: string): Promise<any> {
     return fetchWithAuth(`${API_BASE}/users/${id}/reset`, {
-      method: 'POST',
+      method: "POST",
     });
   },
 
   async grantRewards(id: string, gold: number, dust: number): Promise<any> {
     return fetchWithAuth(`${API_BASE}/users/${id}/grant`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ gold, dust }),
     });
   },
-  
+
   async getConfig(): Promise<Record<string, any>> {
     return fetchWithAuth(`${API_BASE}/config`);
   },
 
-  async updateConfig(key: string, value: any, description?: string): Promise<any> {
+  async updateConfig(
+    key: string,
+    value: any,
+    description?: string,
+  ): Promise<any> {
     return fetchWithAuth(`${API_BASE}/config/${key}`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ value, description }),
     });
   },
@@ -202,24 +264,24 @@ export const adminApi = {
     endsAt: string;
   }): Promise<any> {
     return fetchWithAuth(`${API_BASE}/events`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(data),
     });
   },
 
   async updateEvent(id: string, data: any): Promise<any> {
     return fetchWithAuth(`${API_BASE}/events/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(data),
     });
   },
 
   async deleteEvent(id: string): Promise<any> {
     return fetchWithAuth(`${API_BASE}/events/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
-  
+
   async getBulkRewards(): Promise<any[]> {
     return fetchWithAuth(`${API_BASE}/bulk-rewards`);
   },
@@ -232,7 +294,7 @@ export const adminApi = {
     expiresAt?: string;
   }): Promise<any> {
     return fetchWithAuth(`${API_BASE}/bulk-rewards`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(data),
     });
   },
@@ -250,7 +312,8 @@ export const adminApi = {
   },
 
   async getSessionStateAtTick(sessionId: string, tick: number): Promise<any> {
-    return fetchWithAuth(`${API_BASE}/debug/session/${sessionId}/state?tick=${tick}`);
-  }
+    return fetchWithAuth(
+      `${API_BASE}/debug/session/${sessionId}/state?tick=${tick}`,
+    );
+  },
 };
-

@@ -3,8 +3,8 @@
  * All API clients should use these utilities instead of implementing their own.
  */
 
-import { CONFIG } from '../config.js';
-import { getAccessToken, getRefreshToken, setTokens, setDisplayName, clearTokens } from './auth.js';
+import { CONFIG } from "../config.js";
+import { getAccessToken, setAuthData, clearTokens } from "./auth.js";
 
 // ============================================================================
 // ERROR CLASSES
@@ -18,10 +18,10 @@ export class ApiError extends Error {
     public status: number,
     message: string,
     public code?: string,
-    public data?: unknown
+    public data?: unknown,
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
@@ -44,18 +44,12 @@ export async function tryRefreshToken(): Promise<boolean> {
     return refreshPromise;
   }
 
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return false;
-  }
-
   isRefreshing = true;
   refreshPromise = (async () => {
     try {
       const response = await fetch(`${CONFIG.API_URL}/v1/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
+        method: "POST",
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -64,8 +58,7 @@ export async function tryRefreshToken(): Promise<boolean> {
       }
 
       const data = await response.json();
-      setTokens(data.accessToken, data.refreshToken);
-      setDisplayName(data.displayName);
+      setAuthData(data.accessToken, undefined, data.displayName);
       return true;
     } catch {
       clearTokens();
@@ -106,7 +99,7 @@ export interface RequestOptions extends RequestInit {
 export async function request<T>(
   path: string,
   options: RequestOptions = {},
-  retry = true
+  retry = true,
 ): Promise<T> {
   const url = `${CONFIG.API_URL}${path}`;
 
@@ -117,19 +110,20 @@ export async function request<T>(
   };
 
   if (fetchOptions.body) {
-    headers['Content-Type'] = 'application/json';
+    headers["Content-Type"] = "application/json";
   }
 
   if (!skipAuth) {
     const token = getAccessToken();
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
   }
 
   const response = await fetch(url, {
     ...fetchOptions,
     headers,
+    credentials: fetchOptions.credentials ?? "include",
   });
 
   if (!response.ok) {
@@ -144,15 +138,15 @@ export async function request<T>(
     const data = await response.json().catch(() => ({}));
     throw new ApiError(
       response.status,
-      data.error || 'Request failed',
+      data.error || "Request failed",
       data.code,
-      data
+      data,
     );
   }
 
   // Handle empty responses (204 No Content)
-  const contentType = response.headers.get('content-type');
-  if (response.status === 204 || !contentType?.includes('application/json')) {
+  const contentType = response.headers.get("content-type");
+  if (response.status === 204 || !contentType?.includes("application/json")) {
     return {} as T;
   }
 
@@ -172,7 +166,12 @@ export async function request<T>(
  */
 export function createDomainError(name: string) {
   return class DomainApiError extends ApiError {
-    constructor(status: number, message: string, code?: string, data?: unknown) {
+    constructor(
+      status: number,
+      message: string,
+      code?: string,
+      data?: unknown,
+    ) {
       super(status, message, code, data);
       this.name = name;
     }

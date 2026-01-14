@@ -8,15 +8,15 @@
  * - Event handling for different message types
  */
 
-import type { ServerEvent } from '@arcade/protocol';
-import { getAccessToken } from './auth.js';
+import type { ServerEvent } from "@arcade/protocol";
+import { getAccessToken } from "./auth.js";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 type EventHandler<T = unknown> = (data: T) => void;
-type EventType = ServerEvent['type'];
+type EventType = ServerEvent["type"];
 
 interface PendingMessage {
   type: string;
@@ -49,7 +49,7 @@ class WebSocketClient {
 
     const token = getAccessToken();
     if (!token) {
-      console.warn('[WebSocket] No access token available, cannot connect');
+      console.warn("[WebSocket] No access token available, cannot connect");
       return;
     }
 
@@ -57,15 +57,16 @@ class WebSocketClient {
     this.isManualClose = false;
 
     // Construct WebSocket URL
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/api/ws?token=${encodeURIComponent(token)}`;
+    const wsUrl = `${protocol}//${host}/api/ws`;
+    const authProtocol = `access.${token}`;
 
     try {
-      this.ws = new WebSocket(wsUrl);
+      this.ws = new WebSocket(wsUrl, [authProtocol]);
 
       this.ws.onopen = () => {
-        console.log('[WebSocket] Connected');
+        console.log("[WebSocket] Connected");
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.reconnectDelay = 1000;
@@ -78,7 +79,7 @@ class WebSocketClient {
       };
 
       this.ws.onclose = (event) => {
-        console.log('[WebSocket] Disconnected:', event.code, event.reason);
+        console.log("[WebSocket] Disconnected:", event.code, event.reason);
         this.cleanup();
 
         // Attempt to reconnect if not manual close
@@ -88,7 +89,7 @@ class WebSocketClient {
       };
 
       this.ws.onerror = (error) => {
-        console.error('[WebSocket] Error:', error);
+        console.error("[WebSocket] Error:", error);
         this.isConnecting = false;
       };
 
@@ -97,11 +98,11 @@ class WebSocketClient {
           const message = JSON.parse(event.data) as ServerEvent;
           this.handleMessage(message);
         } catch (error) {
-          console.error('[WebSocket] Failed to parse message:', error);
+          console.error("[WebSocket] Failed to parse message:", error);
         }
       };
     } catch (error) {
-      console.error('[WebSocket] Failed to connect:', error);
+      console.error("[WebSocket] Failed to connect:", error);
       this.isConnecting = false;
       this.scheduleReconnect();
     }
@@ -115,7 +116,7 @@ class WebSocketClient {
     this.cleanup();
 
     if (this.ws) {
-      this.ws.close(1000, 'Client disconnect');
+      this.ws.close(1000, "Client disconnect");
       this.ws = null;
     }
   }
@@ -175,7 +176,7 @@ class WebSocketClient {
         try {
           handler(message.data);
         } catch (error) {
-          console.error('[WebSocket] Handler error:', error);
+          console.error("[WebSocket] Handler error:", error);
         }
       }
     }
@@ -184,7 +185,7 @@ class WebSocketClient {
   private startPingInterval(): void {
     this.stopPingInterval();
     this.pingInterval = setInterval(() => {
-      this.send('ping');
+      this.send("ping");
     }, 30000); // Every 30 seconds
   }
 
@@ -202,16 +203,18 @@ class WebSocketClient {
 
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('[WebSocket] Max reconnect attempts reached');
+      console.log("[WebSocket] Max reconnect attempts reached");
       return;
     }
 
     const delay = Math.min(
       this.reconnectDelay * Math.pow(2, this.reconnectAttempts),
-      this.maxReconnectDelay
+      this.maxReconnectDelay,
     );
 
-    console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
+    console.log(
+      `[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1})`,
+    );
 
     setTimeout(() => {
       this.reconnectAttempts++;
@@ -256,7 +259,7 @@ export function disconnectWebSocket(): void {
  */
 export function onWebSocketEvent<T = unknown>(
   type: EventType,
-  handler: EventHandler<T>
+  handler: EventHandler<T>,
 ): () => void {
   return wsClient.on(type, handler);
 }

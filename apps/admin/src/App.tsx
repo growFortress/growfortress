@@ -1,17 +1,18 @@
-import Router from 'preact-router';
-import { Login } from './pages/Login';
-import { PlayersPage } from './pages/PlayersPage.js';
-import { PlayerDetailsPage } from './pages/PlayerDetailsPage.js';
-import { ConfigPage } from './pages/ConfigPage.js';
-import { ReplayPage } from './pages/ReplayPage.js';
-import { DashboardPage } from './pages/DashboardPage.js';
-import { EventsPage } from './pages/EventsPage.js';
-import { BulkRewardsPage } from './pages/BulkRewardsPage.js';
-import { BugReportsPage } from './pages/BugReportsPage.js';
-import { SessionDebuggerPage } from './pages/SessionDebuggerPage.js';
-import { useAuth } from './hooks/useAuth';
-import { DashboardLayout } from './layouts/DashboardLayout';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Router from "preact-router";
+import { useEffect, useState } from "preact/hooks";
+import { Login } from "./pages/Login";
+import { PlayersPage } from "./pages/PlayersPage.js";
+import { PlayerDetailsPage } from "./pages/PlayerDetailsPage.js";
+import { ConfigPage } from "./pages/ConfigPage.js";
+import { ReplayPage } from "./pages/ReplayPage.js";
+import { DashboardPage } from "./pages/DashboardPage.js";
+import { EventsPage } from "./pages/EventsPage.js";
+import { BulkRewardsPage } from "./pages/BulkRewardsPage.js";
+import { BugReportsPage } from "./pages/BugReportsPage.js";
+import { SessionDebuggerPage } from "./pages/SessionDebuggerPage.js";
+import { useAuth } from "./hooks/useAuth";
+import { DashboardLayout } from "./layouts/DashboardLayout";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,12 +25,23 @@ const queryClient = new QueryClient({
 });
 
 export function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshSession } = useAuth();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    refreshSession().finally(() => setCheckingAuth(false));
+  }, [refreshSession]);
+
+  if (checkingAuth) {
+    return (
+      <div style={{ padding: "40px", color: "#fff" }}>Checking session...</div>
+    );
+  }
 
   if (!isAuthenticated.value) {
     return <Login />;
   }
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <DashboardLayout>

@@ -1,32 +1,35 @@
-import { randomBytes } from 'crypto';
-import bcrypt from 'bcrypt';
-import { prisma } from '../lib/prisma.js';
+import { randomBytes, createHash } from "crypto";
+import bcrypt from "bcrypt";
+import { prisma } from "../lib/prisma.js";
 import {
   createAccessToken,
   createRefreshToken,
+  createAdminAccessToken,
+  createAdminRefreshToken,
   verifyRefreshToken,
-} from '../lib/tokens.js';
-import { parseDuration, config } from '../config.js';
+  verifyAdminRefreshToken,
+} from "../lib/tokens.js";
+import { parseDuration, config } from "../config.js";
 import {
   getXpForLevel,
   getProgressionBonuses,
   type ProgressionBonuses,
   createDefaultPlayerPowerData,
-} from '@arcade/sim-core';
-import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from '@arcade/protocol';
-import { sendPasswordResetEmail } from './email.js';
-import { createSystemMessage } from './messages.js';
+} from "@arcade/sim-core";
+import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from "@arcade/protocol";
+import { sendPasswordResetEmail } from "./email.js";
+import { createSystemMessage } from "./messages.js";
 
 const SALT_ROUNDS = 12;
 
 // Map legacy hero IDs to new canonical IDs
 const LEGACY_HERO_ID_MAP: Record<string, string> = {
-  shield_captain: 'vanguard',
-  thunderlord: 'storm',
-  scarlet_mage: 'rift',
-  iron_sentinel: 'forge',
-  jade_titan: 'titan',
-  frost_archer: 'frost_unit',
+  shield_captain: "vanguard",
+  thunderlord: "storm",
+  scarlet_mage: "rift",
+  iron_sentinel: "forge",
+  jade_titan: "titan",
+  frost_archer: "frost_unit",
 };
 
 /**
@@ -34,6 +37,10 @@ const LEGACY_HERO_ID_MAP: Record<string, string> = {
  */
 function normalizeHeroId(heroId: string): string {
   return LEGACY_HERO_ID_MAP[heroId] ?? heroId;
+}
+
+function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 interface AuthResult {
@@ -50,7 +57,7 @@ interface AuthResult {
 export async function registerUser(
   username: string,
   password: string,
-  email?: string
+  email?: string,
 ): Promise<AuthResult> {
   // Check if username already exists
   const existingUsername = await prisma.user.findUnique({
@@ -58,7 +65,7 @@ export async function registerUser(
   });
 
   if (existingUsername) {
-    throw new Error('USERNAME_TAKEN');
+    throw new Error("USERNAME_TAKEN");
   }
 
   // Check if email already exists (if provided)
@@ -68,7 +75,7 @@ export async function registerUser(
     });
 
     if (existingEmail) {
-      throw new Error('EMAIL_TAKEN');
+      throw new Error("EMAIL_TAKEN");
     }
   }
 
@@ -77,8 +84,8 @@ export async function registerUser(
 
   // Starter pack for new players
   const STARTER_PACK = {
-    gold: 1000,   // Enough for early power upgrades
-    dust: 100,    // Premium currency - reduced starting amount
+    gold: 1000, // Enough for early power upgrades
+    dust: 100, // Premium currency - reduced starting amount
   };
 
   // Create user with initial inventory and progression (username = displayName)
@@ -103,10 +110,12 @@ export async function registerUser(
       },
       powerUpgrades: {
         create: {
-          fortressUpgrades: JSON.stringify(createDefaultPlayerPowerData().fortressUpgrades),
-          heroUpgrades: '[]',
-          turretUpgrades: '[]',
-          itemTiers: '[]',
+          fortressUpgrades: JSON.stringify(
+            createDefaultPlayerPowerData().fortressUpgrades,
+          ),
+          heroUpgrades: "[]",
+          turretUpgrades: "[]",
+          itemTiers: "[]",
           cachedTotalPower: 0,
           fortressPrestige: { level: 0, xp: 0 },
           turretPrestige: [],
@@ -119,8 +128,10 @@ export async function registerUser(
   const session = await prisma.session.create({
     data: {
       userId: user.id,
-      refreshToken: randomBytes(32).toString('hex'),
-      expiresAt: new Date(Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY)),
+      refreshToken: randomBytes(32).toString("hex"),
+      expiresAt: new Date(
+        Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY),
+      ),
     },
   });
 
@@ -133,13 +144,18 @@ export async function registerUser(
     const artifact = await prisma.playerArtifact.create({
       data: {
         userId: user.id,
-        artifactId: 'founders_medal',
+        artifactId: "founders_medal",
         level: 1,
       },
     });
-    console.log(`[Auth] Granted founders_medal to user ${user.id}, artifact id: ${artifact.id}`);
+    console.log(
+      `[Auth] Granted founders_medal to user ${user.id}, artifact id: ${artifact.id}`,
+    );
   } catch (error) {
-    console.error(`[Auth] Failed to grant founders_medal to user ${user.id}:`, error);
+    console.error(
+      `[Auth] Failed to grant founders_medal to user ${user.id}:`,
+      error,
+    );
   }
 
   // Send welcome message with gift info
@@ -161,8 +177,8 @@ Powodzenia w obronie Fortecy! 🏰⚔️
   try {
     await createSystemMessage(
       user.id,
-      '🎉 Witaj w Grow Fortress!',
-      welcomeMessage
+      "🎉 Witaj w Grow Fortress!",
+      welcomeMessage,
     );
   } catch {
     // Ignore if message creation fails (non-critical)
@@ -187,7 +203,7 @@ Powodzenia w obronie Fortecy! 🏰⚔️
  */
 export async function loginUser(
   username: string,
-  password: string
+  password: string,
 ): Promise<AuthResult | null> {
   // Find user by username
   const user = await prisma.user.findUnique({
@@ -205,21 +221,70 @@ export async function loginUser(
   }
 
   if (user.banned) {
-    throw new Error('USER_BANNED');
+    throw new Error("USER_BANNED");
   }
 
   // Create session
   const session = await prisma.session.create({
     data: {
       userId: user.id,
-      refreshToken: randomBytes(32).toString('hex'),
-      expiresAt: new Date(Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY)),
+      refreshToken: randomBytes(32).toString("hex"),
+      expiresAt: new Date(
+        Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY),
+      ),
     },
   });
 
   // Generate tokens
   const accessToken = await createAccessToken(user.id);
   const refreshToken = await createRefreshToken(user.id, session.id);
+  const expiresAt = Date.now() + parseDuration(config.JWT_ACCESS_EXPIRY);
+
+  return {
+    userId: user.id,
+    displayName: user.displayName,
+    accessToken,
+    refreshToken,
+    expiresAt,
+  };
+}
+
+/**
+ * Login admin user
+ */
+export async function loginAdmin(
+  username: string,
+  password: string,
+): Promise<AuthResult | null> {
+  const user = await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+  });
+
+  if (!user || user.role !== "ADMIN") {
+    return null;
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    return null;
+  }
+
+  if (user.banned) {
+    throw new Error("USER_BANNED");
+  }
+
+  const session = await prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshToken: randomBytes(32).toString("hex"),
+      expiresAt: new Date(
+        Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY),
+      ),
+    },
+  });
+
+  const accessToken = await createAdminAccessToken(user.id);
+  const refreshToken = await createAdminRefreshToken(user.id, session.id);
   const expiresAt = Date.now() + parseDuration(config.JWT_ACCESS_EXPIRY);
 
   return {
@@ -261,6 +326,10 @@ export async function refreshTokens(refreshTokenStr: string): Promise<{
     return null;
   }
 
+  if (session.user.banned) {
+    throw new Error("USER_BANNED");
+  }
+
   // Revoke old session
   await prisma.session.update({
     where: { id: session.id },
@@ -271,8 +340,10 @@ export async function refreshTokens(refreshTokenStr: string): Promise<{
   const newSession = await prisma.session.create({
     data: {
       userId: session.userId,
-      refreshToken: randomBytes(32).toString('hex'),
-      expiresAt: new Date(Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY)),
+      refreshToken: randomBytes(32).toString("hex"),
+      expiresAt: new Date(
+        Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY),
+      ),
     },
   });
 
@@ -290,15 +361,83 @@ export async function refreshTokens(refreshTokenStr: string): Promise<{
 }
 
 /**
+ * Refresh admin tokens
+ */
+export async function refreshAdminTokens(refreshTokenStr: string): Promise<{
+  accessToken: string;
+  refreshToken: string;
+  displayName: string;
+  expiresAt: number;
+} | null> {
+  const payload = await verifyAdminRefreshToken(refreshTokenStr);
+  if (!payload) {
+    return null;
+  }
+
+  const session = await prisma.session.findUnique({
+    where: { id: payload.sessionId },
+    include: { user: true },
+  });
+
+  if (!session || session.revoked || session.expiresAt < new Date()) {
+    return null;
+  }
+
+  if (session.userId !== payload.sub || session.user.role !== "ADMIN") {
+    return null;
+  }
+
+  if (session.user.banned) {
+    throw new Error("USER_BANNED");
+  }
+
+  await prisma.session.update({
+    where: { id: session.id },
+    data: { revoked: true },
+  });
+
+  const newSession = await prisma.session.create({
+    data: {
+      userId: session.userId,
+      refreshToken: randomBytes(32).toString("hex"),
+      expiresAt: new Date(
+        Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY),
+      ),
+    },
+  });
+
+  const accessToken = await createAdminAccessToken(session.userId);
+  const refreshToken = await createAdminRefreshToken(
+    session.userId,
+    newSession.id,
+  );
+  const expiresAt = Date.now() + parseDuration(config.JWT_ACCESS_EXPIRY);
+
+  return {
+    accessToken,
+    refreshToken,
+    displayName: session.user.displayName,
+    expiresAt,
+  };
+}
+
+/**
  * Get user profile
  */
 export async function getUserProfile(userId: string): Promise<{
   userId: string;
   displayName: string;
   description: string;
-  role: 'USER' | 'ADMIN';
+  role: "USER" | "ADMIN";
   inventory: { gold: number; dust: number; materials?: Record<string, number> };
-  progression: { level: number; xp: number; totalXp: number; xpToNextLevel: number; purchasedHeroSlots: number; purchasedTurretSlots: number };
+  progression: {
+    level: number;
+    xp: number;
+    totalXp: number;
+    xpToNextLevel: number;
+    purchasedHeroSlots: number;
+    purchasedTurretSlots: number;
+  };
   currentWave: number;
   highestWave: number;
   onboardingCompleted: boolean;
@@ -368,7 +507,7 @@ export async function getUserProfile(userId: string): Promise<{
   return {
     userId: user.id,
     displayName: user.displayName,
-    description: user.description || '',
+    description: user.description || "",
     role: user.role,
     inventory: {
       gold: user.inventory.gold,
@@ -379,7 +518,8 @@ export async function getUserProfile(userId: string): Promise<{
       level: user.progression.level,
       xp: user.progression.xp,
       totalXp: user.progression.totalXp,
-      xpToNextLevel: getXpForLevel(user.progression.level) - user.progression.xp,
+      xpToNextLevel:
+        getXpForLevel(user.progression.level) - user.progression.xp,
       purchasedHeroSlots: user.progression.purchasedHeroSlots,
       purchasedTurretSlots: user.progression.purchasedTurretSlots,
     },
@@ -403,7 +543,7 @@ export async function completeOnboarding(
   userId: string,
   fortressClass: string,
   heroId: string,
-  turretType: string
+  turretType: string,
 ): Promise<{
   success: boolean;
   defaultLoadout: {
@@ -443,7 +583,7 @@ export async function updateDefaultLoadout(
     turretType?: string;
     displayName?: string;
     description?: string;
-  }
+  },
 ): Promise<{
   fortressClass: string | null;
   heroId: string | null;
@@ -454,11 +594,15 @@ export async function updateDefaultLoadout(
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
-      ...(updates.fortressClass && { defaultFortressClass: updates.fortressClass }),
+      ...(updates.fortressClass && {
+        defaultFortressClass: updates.fortressClass,
+      }),
       ...(updates.heroId && { defaultHeroId: updates.heroId }),
       ...(updates.turretType && { defaultTurretType: updates.turretType }),
       ...(updates.displayName && { displayName: updates.displayName }),
-      ...(updates.description !== undefined && { description: updates.description }),
+      ...(updates.description !== undefined && {
+        description: updates.description,
+      }),
     },
   });
 
@@ -482,6 +626,26 @@ export async function logoutUser(refreshTokenStr: string): Promise<boolean> {
   }
 
   // Revoke the session
+  try {
+    await prisma.session.update({
+      where: { id: payload.sessionId },
+      data: { revoked: true },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Logout admin - revoke refresh token
+ */
+export async function logoutAdmin(refreshTokenStr: string): Promise<boolean> {
+  const payload = await verifyAdminRefreshToken(refreshTokenStr);
+  if (!payload) {
+    return false;
+  }
+
   try {
     await prisma.session.update({
       where: { id: payload.sessionId },
@@ -521,13 +685,14 @@ export async function requestPasswordReset(email: string): Promise<boolean> {
   }
 
   // Generate a random token
-  const token = randomBytes(32).toString('hex');
+  const token = randomBytes(32).toString("hex");
+  const tokenHash = hashResetToken(token);
   const expiresAt = new Date(Date.now() + 3600000); // 1 hour
 
-  // Store the token
+  // Store the token hash
   await prisma.passwordResetToken.create({
     data: {
-      token,
+      token: tokenHash,
       userId: user.id,
       expiresAt,
     },
@@ -542,9 +707,13 @@ export async function requestPasswordReset(email: string): Promise<boolean> {
 /**
  * Reset password using a token
  */
-export async function resetPassword(token: string, password: string): Promise<boolean> {
+export async function resetPassword(
+  token: string,
+  password: string,
+): Promise<boolean> {
+  const tokenHash = hashResetToken(token);
   const resetToken = await prisma.passwordResetToken.findUnique({
-    where: { token },
+    where: { token: tokenHash },
     include: { user: true },
   });
 

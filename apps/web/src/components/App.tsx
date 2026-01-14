@@ -46,36 +46,15 @@ import {
   getPowerSummary,
   refreshTokensApi,
   getArtifacts,
+  logout,
 } from "../api/client.js";
-import {
-  isAuthenticated as isAuthSignal,
-  authLoading,
-  authError,
-  updateFromProfile,
-  updateLeaderboard,
-  syncStatus,
-  showOnboardingModal,
-  showSessionRecoveryModal,
-  pendingSessionSnapshot,
-  initializeHubFromLoadout,
-  setPowerSummary,
-  checkIdleRewards,
-  unlockNotifications,
-  dismissUnlockNotification,
-  initMessagesWebSocket,
-  cleanupMessagesWebSocket,
-  refreshUnreadCounts,
-  fetchDailyQuests,
-  updateArtifacts,
-  updateItems,
-} from "../state/index.js";
 import {
   isAuthenticated as checkAuth,
   clearTokens,
   setDisplayName,
-  getRefreshToken,
   onAuthInvalidated,
 } from "../api/auth.js";
+
 import {
   useQuery,
   QueryClient,
@@ -258,29 +237,22 @@ function AppContent() {
   useEffect(() => {
     const init = async () => {
       try {
-        if (!checkAuth()) {
-          const refreshToken = getRefreshToken();
-          if (refreshToken) {
-            // Mamy refresh token - weryfikujemy
-            setLoadingStage("verifying_tokens");
-            const refreshed = await refreshTokensApi(refreshToken);
-            if (refreshed) {
-              setInternalAuth(true);
-              setLoadingStage("loading_profile");
-            } else {
-              // Nie udało się odświeżyć - pokaż auth screen
-              setLoadingStage("ready");
-            }
-          } else {
-            // Brak tokenów - pokaż auth screen
-            await clearActiveSession();
-            setSavedSession(null);
-            pendingSessionSnapshot.value = null;
-            setLoadingStage("ready");
-          }
-        } else {
-          // Mamy ważne tokeny - ładujemy profil
+        if (checkAuth()) {
           setLoadingStage("loading_profile");
+          return;
+        }
+
+        setLoadingStage("verifying_tokens");
+        const refreshed = await refreshTokensApi();
+
+        if (refreshed) {
+          setInternalAuth(true);
+          setLoadingStage("loading_profile");
+        } else {
+          await clearActiveSession();
+          setSavedSession(null);
+          pendingSessionSnapshot.value = null;
+          setLoadingStage("ready");
         }
       } catch {
         clearTokens();
@@ -307,6 +279,8 @@ function AppContent() {
         const status = (error as { status: number }).status;
         if (status === 401) {
           authError.value = "Nieprawidłowa nazwa użytkownika lub hasło";
+        } else if (status === 403) {
+          authError.value = "Twoje konto zostało zablokowane";
         } else if (status === 400) {
           authError.value =
             "Sprawdź poprawność danych (max 20 znaków, tylko litery, cyfry i _)";
@@ -336,9 +310,10 @@ function AppContent() {
       if (
         error instanceof Error &&
         "status" in error &&
-        (error as { status: number }).status === 409
+        (error as { status: number }).status === 400
       ) {
-        authError.value = "Ta nazwa jest już zajęta";
+        authError.value =
+          "Rejestracja nieudana. Sprawdź dane i spróbuj ponownie.";
       } else if (
         error instanceof Error &&
         error.message.includes("Validation")
@@ -352,8 +327,8 @@ function AppContent() {
     }
   };
 
-  const handleLogout = () => {
-    clearTokens();
+  const handleLogout = async () => {
+    await logout();
     isAuthSignal.value = false;
     setInternalAuth(false);
   };

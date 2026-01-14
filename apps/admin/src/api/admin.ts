@@ -1,8 +1,10 @@
+import { adminToken, isAuthenticated } from "../hooks/useAuth";
+
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Basic fetch wrapper
 async function fetchWithAuth(path: string, options: RequestInit = {}) {
-  const token = localStorage.getItem("adminToken");
+  const token = adminToken.value;
   const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -12,9 +14,16 @@ async function fetchWithAuth(path: string, options: RequestInit = {}) {
   const response = await fetch(`${API_URL}/admin${path}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      adminToken.value = null;
+      isAuthenticated.value = false;
+      throw new Error("Session expired. Please login again.");
+    }
+
     const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "API Error");
   }
