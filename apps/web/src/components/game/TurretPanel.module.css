@@ -39,12 +39,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--slot-gap);
 }
 
 .slotRow {
   display: flex;
-  gap: 8px;
+  gap: var(--slot-gap);
 }
 
 .fortressIndicator {
@@ -56,8 +56,8 @@
 
 .turretSlot {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: var(--slot-size);
+  height: var(--slot-size);
   background: var(--color-bg);
   border: var(--border-neutral);
   border-radius: var(--radius-sm);
@@ -108,13 +108,33 @@
   background: var(--color-bg-elevated);
 }
 
+.turretSlot.locked {
+  border-style: dashed;
+  border-color: var(--color-text-30);
+  opacity: 0.35;
+  filter: grayscale(0.5);
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.lockIcon {
+  font-size: 1.25rem;
+  filter: grayscale(1);
+}
+
+.unlockLevel {
+  font-size: 0.65rem;
+  color: var(--color-text-40);
+  margin-top: 2px;
+}
+
 .turretIcon {
-  font-size: 24px;
+  font-size: var(--icon-size-lg);
   filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
 }
 
 .emptyIcon {
-  font-size: 20px;
+  font-size: var(--icon-size-md);
   color: var(--color-text-60);
 }
 
@@ -148,7 +168,7 @@
   right: 2px;
   background: var(--color-primary);
   color: var(--color-bg);
-  font-size: 8px;
+  font-size: var(--font-size-badge);
   font-weight: bold;
   padding: 1px 4px;
   border-radius: var(--radius-sm);
@@ -199,24 +219,24 @@
 
 /* Compact mode */
 .compact .slotRow {
-  gap: 4px;
+  gap: calc(var(--slot-gap) * 0.5);
 }
 
 .compact .turretSlot {
-  width: 40px;
-  height: 40px;
+  width: var(--slot-size-compact);
+  height: var(--slot-size-compact);
 }
 
 .compact .turretIcon {
-  font-size: 18px;
+  font-size: var(--icon-size-sm);
 }
 
 .compact .tierBadge {
-  font-size: 7px;
+  font-size: calc(var(--font-size-badge) * 0.9);
   padding: 1px 3px;
 }
 
 .compact .fortressIndicator {
-  font-size: 16px;
+  font-size: var(--icon-size-md);
   margin: 2px 0;
 }

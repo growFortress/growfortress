@@ -46,7 +46,39 @@ export const heroPanelVisible = signal(false);
 /**
  * Max hero slots available
  */
-export const maxHeroSlots = signal(3);
+export const maxHeroSlots = signal(2);
+
+/**
+ * Purchased hero slots count (new slot purchase system)
+ */
+export const purchasedHeroSlots = signal(2);
+
+/**
+ * Purchased turret slots count (new slot purchase system)
+ */
+export const purchasedTurretSlots = signal(1);
+
+/**
+ * Next hero slot available for purchase (null if at max or can't afford)
+ */
+export const nextHeroSlotInfo = signal<{
+  slot: number;
+  levelRequired: number;
+  goldCost: number;
+  canPurchase: boolean;
+  reason?: string;
+} | null>(null);
+
+/**
+ * Next turret slot available for purchase
+ */
+export const nextTurretSlotInfo = signal<{
+  slot: number;
+  levelRequired: number;
+  goldCost: number;
+  canPurchase: boolean;
+  reason?: string;
+} | null>(null);
 
 // --- TURRETS ---
 
@@ -60,16 +92,17 @@ const FP_SCALE = 1 << 16; // 65536
  * Positions are in fixed-point format matching the simulation.
  * Field is 40 units wide, path height is 15 units (y: 0-15)
  * Slots are positioned at terrain edges for clear visibility
+ * isUnlocked is set to false by default - actual unlock is based on getMaxTurretSlots(level)
  */
 export const DEFAULT_TURRET_SLOTS: TurretSlot[] = [
   // Top row - 3px from top yellow edge, positioned left and closer together
-  { index: 1, x: 6 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: true },
-  { index: 2, x: 11 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: true },
-  { index: 3, x: 16 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: true },
+  { index: 1, x: 6 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: true },  // Starter slot
+  { index: 2, x: 11 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: false }, // Lvl 5
+  { index: 3, x: 16 * FP_SCALE, y: 2 * FP_SCALE, isUnlocked: false }, // Lvl 15
   // Bottom row - 3px from bottom yellow edge, positioned left and closer together
-  { index: 4, x: 6 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: true },
-  { index: 5, x: 11 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: true },
-  { index: 6, x: 16 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: true },
+  { index: 4, x: 6 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: false }, // Lvl 25
+  { index: 5, x: 11 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: false }, // Lvl 35
+  { index: 6, x: 16 * FP_SCALE, y: 13 * FP_SCALE, isUnlocked: false }, // Lvl 40
 ];
 
 /**
@@ -171,7 +204,7 @@ export const activeSynergies = computed<SynergyBonus[]>(() => {
 
 export type UpgradeTarget =
   | { type: 'hero'; heroId: string }
-  | { type: 'turret'; slotIndex: number }
+  | { type: 'turret'; turretId: string; slotIndex: number }
   | { type: 'fortress' }
   | null;
 
@@ -203,3 +236,28 @@ export const hubTurrets = signal<ActiveTurret[]>([]);
  * Whether the hub is initialized with default loadout
  */
 export const hubInitialized = signal(false);
+
+// --- OPTIMIZED COMPUTED SIGNALS ---
+
+/**
+ * HeroPanel data - single computed signal instead of multiple subscriptions.
+ * Reduces re-renders by batching all hero panel state into one subscription.
+ */
+export const heroPanelData = computed(() => ({
+  heroes: activeHeroes.value,
+  slots: maxHeroSlots.value,
+  selectedId: selectedHeroId.value,
+  isUpgradePanelVisible: upgradePanelVisible.value,
+  upgradeTarget: upgradeTarget.value,
+}));
+
+/**
+ * TurretPanel data - single computed signal for turret panel state.
+ */
+export const turretPanelData = computed(() => ({
+  turrets: activeTurrets.value,
+  slots: turretSlots.value,
+  selectedSlot: selectedTurretSlot.value,
+  isPlacementModalVisible: turretPlacementModalVisible.value,
+  placementSlotIndex: turretPlacementSlotIndex.value,
+}));

@@ -9,17 +9,21 @@ import {
   upgradePanelVisible,
   turretPlacementModalVisible,
   turretPlacementSlotIndex,
+  baseLevel,
 } from '../../state/index.js';
+import { getMaxTurretSlots } from '@arcade/sim-core';
+import { audioManager } from '../../game/AudioManager.js';
+import { useCoordinates } from '../../hooks/useCoordinates.js';
 import styles from './HubOverlay.module.css';
 
-// Layout constants matching the renderer
-const LAYOUT = {
-  fieldWidth: 40,
-  fieldHeight: 15,
-  fieldCenterY: 7.5, // Center Y coordinate in game units
-  turretLaneHeight: 0.06, // Turret lane height as % of screen
-  pathTopPercent: 0.35,  // Path starts at 35% from top
-  pathBottomPercent: 0.65, // Path ends at 65% from top (was 70%, now 30% height)
+// Turret slot unlock levels (slot index 1-6 -> required fortress level)
+const SLOT_UNLOCK_LEVELS: Record<number, number> = {
+  1: 1,
+  2: 5,
+  3: 15,
+  4: 25,
+  5: 35,
+  6: 40,
 };
 
 /**
@@ -29,6 +33,9 @@ const LAYOUT = {
 export function HubOverlay() {
   // Track canvas dimensions for accurate positioning
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+
+  // Use centralized coordinate conversion
+  const { toScreenX, toScreenY } = useCoordinates(canvasSize.width, canvasSize.height);
 
   useEffect(() => {
     const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -51,12 +58,19 @@ export function HubOverlay() {
 
   const turrets = hubTurrets.value;
   const slots = turretSlots.value;
+  const fortressLevel = baseLevel.value;
+  const maxUnlockedSlots = getMaxTurretSlots(fortressLevel);
 
   const handleTurretClick = (slotIndex: number) => {
+    audioManager.playSfx('ui_click');
     const turret = turrets.find(t => t.slotIndex === slotIndex);
     if (turret) {
       // Open upgrade panel for existing turret
-      upgradeTarget.value = { type: 'turret', slotIndex };
+      upgradeTarget.value = {
+        type: 'turret',
+        slotIndex,
+        turretId: turret.definitionId
+      };
       upgradePanelVisible.value = true;
     } else {
       // Open placement modal for empty slot
@@ -65,41 +79,37 @@ export function HubOverlay() {
     }
   };
 
-  // Convert fixed-point coordinates to screen pixels
-  // These formulas match HeroSystem.ts and TurretSystem.ts exactly
-  // Using Q16.16 fixed point format (65536 = 1.0 unit)
-  const FP_SCALE = 65536;
-  const toScreenX = (fpX: number): number => {
-    const unitX = fpX / FP_SCALE;
-    return (unitX / LAYOUT.fieldWidth) * canvasSize.width;
-  };
-
-  const toScreenY = (fpY: number): number => {
-    const unitY = fpY / FP_SCALE;
-    const turretLaneH = canvasSize.height * LAYOUT.turretLaneHeight;
-    const pathTop = canvasSize.height * LAYOUT.pathTopPercent;
-    const pathBottom = canvasSize.height * LAYOUT.pathBottomPercent;
-
-    // Position turret slots in dedicated turret lanes (outside the enemy path)
-    if (unitY < LAYOUT.fieldCenterY) {
-      // Top turret lane (above path)
-      const topLaneY = pathTop - turretLaneH;
-      const topLaneCenterY = topLaneY + turretLaneH / 2;
-      return topLaneCenterY;
-    } else {
-      // Bottom turret lane (below path)
-      const bottomLaneCenterY = pathBottom + turretLaneH / 2;
-      return bottomLaneCenterY;
-    }
-  };
-
   return (
     <div class={styles.overlay}>
-      {/* Turret slot click areas - only show empty slots (turrets render on canvas) */}
-      {slots.filter(slot => slot.isUnlocked).map((slot) => {
+      {/* Turret slot click areas */}
+      {slots.map((slot) => {
         const hasTurret = turrets.some(t => t.slotIndex === slot.index);
         // Skip occupied slots - turrets are rendered on canvas
         if (hasTurret) return null;
+
+        // Check if slot is unlocked based on fortress level
+        const isUnlocked = slot.index <= maxUnlockedSlots;
+        const unlockLevel = SLOT_UNLOCK_LEVELS[slot.index] ?? 50;
+
+        // Locked slot
+        if (!isUnlocked) {
+          return (
+            <div
+              key={slot.index}
+              class={`${styles.turretArea} ${styles.locked}`}
+              style={{
+                left: `${toScreenX(slot.x)}px`,
+                top: `${toScreenY(slot.y)}px`,
+              } as JSX.CSSProperties}
+              title={`Odblokuj na poziomie ${unlockLevel}`}
+            >
+              <span class={styles.lockIcon}>🔒</span>
+              <span class={styles.unlockLabel}>Poz. {unlockLevel}</span>
+            </div>
+          );
+        }
+
+        // Empty unlocked slot
         return (
           <button
             key={slot.index}

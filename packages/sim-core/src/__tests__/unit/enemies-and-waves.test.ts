@@ -160,7 +160,7 @@ describe('Boss Enemies', () => {
 
   it('bosses give more dust than common enemies', () => {
     for (const boss of bossTypes) {
-      expect(ENEMY_ARCHETYPES[boss].dustReward).toBeGreaterThanOrEqual(5);
+      expect(ENEMY_ARCHETYPES[boss].dustReward).toBeGreaterThanOrEqual(3);  // Threshold reduced after economy rebalance
     }
   });
 });
@@ -288,18 +288,19 @@ describe('Pillar System', () => {
 
 describe('Wave Composition', () => {
   describe('enemy count formula', () => {
-    it('wave 1: 5 + 1*3 = 8 base enemies', () => {
+    // Formula: 10 + wave * 6 (doubled from original for intense waves)
+    it('wave 1: 10 + 1*6 = 16 base enemies', () => {
       const comp = getWaveComposition(1, 30);
       const total = comp.enemies.reduce((sum, e) => sum + e.count, 0);
-      // Distributed as floor(8*0.6) + floor(8*0.4) = 4 + 3 = 7
-      expect(total).toBe(7);
+      // Distributed as floor(16*0.6) + floor(16*0.4) = 9 + 6 = 15
+      expect(total).toBe(15);
     });
 
-    it('wave 10: 5 + 10*3 = 35 base enemies (boss wave)', () => {
+    it('wave 10: 10 + 10*6 = 70 base enemies (boss wave)', () => {
       const comp = getWaveComposition(10, 30);
       const total = comp.enemies.reduce((sum, e) => sum + e.count, 0);
       // Boss wave distribution is different
-      expect(total).toBeGreaterThan(10);
+      expect(total).toBeGreaterThan(20);
     });
   });
 
@@ -325,17 +326,18 @@ describe('Wave Composition', () => {
   });
 
   describe('spawn interval formula', () => {
-    it('wave 1: tickHz - 1*2 = 28 ticks', () => {
-      expect(getWaveComposition(1, 30).spawnIntervalTicks).toBe(28);
+    // Formula: (tickHz - effectiveWave * 2) * 0.6, min tickHz/3, further reduced by cycle
+    it('wave 1: (30 - 1*2) * 0.6 = 16.8 ticks', () => {
+      expect(getWaveComposition(1, 30).spawnIntervalTicks).toBe(16);
     });
 
-    it('wave 5: tickHz - 5*2 = 20 ticks', () => {
-      expect(getWaveComposition(5, 30).spawnIntervalTicks).toBe(20);
+    it('wave 5: (30 - 5*2) * 0.6 = 12 ticks', () => {
+      expect(getWaveComposition(5, 30).spawnIntervalTicks).toBe(12);
     });
 
-    it('high waves: minimum tickHz/2 = 15 ticks', () => {
-      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(15);
-      expect(getWaveComposition(50, 30).spawnIntervalTicks).toBe(15);
+    it('high waves: minimum tickHz/3 = 10 ticks', () => {
+      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(10);
+      expect(getWaveComposition(50, 30).spawnIntervalTicks).toBe(10);
     });
   });
 
@@ -623,38 +625,53 @@ describe('Leech Enemy', () => {
 // ============================================================================
 
 describe('Enemy Rewards System', () => {
-  it('elite enemies give 3x rewards', () => {
-    const normal = getEnemyRewards('runner', false, 1.0, 1.0);
-    const elite = getEnemyRewards('runner', true, 1.0, 1.0);
+  // Note: Base rewards are halved (economyBalanceMult = 0.5) since enemy count is doubled
+  // With floor() and economyBalanceMult, exact multiplier relationships may not hold
+  // Use enemies with higher base rewards to avoid floor() rounding issues
+  it('elite enemies give approximately 3x rewards', () => {
+    // Use mafia_boss which has higher rewards (gold=25, dust=10)
+    // to avoid floor() issues with small numbers
+    const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
+    const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0);
 
-    expect(elite.gold).toBe(normal.gold * 3);
-    expect(elite.dust).toBe(normal.dust * 3);
+    // With economyBalanceMult=0.5: normal gold = floor(25*0.5)=12, elite gold = floor(25*3*0.5)=37
+    // Elite should give significantly more (close to 3x)
+    expect(elite.gold).toBeGreaterThan(normal.gold * 2);
+    expect(elite.gold).toBeLessThanOrEqual(normal.gold * 3 + 1); // Allow for rounding
+    expect(elite.dust).toBeGreaterThan(normal.dust * 2);
+    expect(elite.dust).toBeLessThanOrEqual(normal.dust * 3 + 1);
   });
 
   it('gold multiplier affects rewards', () => {
-    const base = getEnemyRewards('bruiser', false, 1.0, 1.0);
-    const boosted = getEnemyRewards('bruiser', false, 2.0, 1.0);
+    // Use mafia_boss for higher base values
+    const base = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
+    const boosted = getEnemyRewards('mafia_boss', false, 2.0, 1.0);
 
-    expect(boosted.gold).toBe(base.gold * 2);
+    // With floor(), 2x multiplier should roughly double the rewards
+    expect(boosted.gold).toBeGreaterThan(base.gold);
+    expect(boosted.gold).toBeLessThanOrEqual(base.gold * 2 + 1);
   });
 
   it('dust multiplier affects rewards', () => {
-    const base = getEnemyRewards('bruiser', false, 1.0, 1.0);
-    const boosted = getEnemyRewards('bruiser', false, 1.0, 2.0);
+    const base = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
+    const boosted = getEnemyRewards('mafia_boss', false, 1.0, 2.0);
 
-    expect(boosted.dust).toBe(base.dust * 2);
+    expect(boosted.dust).toBeGreaterThan(base.dust);
+    expect(boosted.dust).toBeLessThanOrEqual(base.dust * 2 + 1);
   });
 
-  it('boss enemies give substantial rewards', () => {
+  it('boss enemies give substantial rewards (halved for economy balance)', () => {
     const bossReward = getEnemyRewards('god', false, 1.0, 1.0);
-    expect(bossReward.gold).toBe(100);
-    expect(bossReward.dust).toBe(50);
+    // Base: gold=100, dust=25 * 0.5 = gold=50, dust=12
+    expect(bossReward.gold).toBe(50);
+    expect(bossReward.dust).toBe(12);
   });
 
-  it('elite boss gives massive rewards', () => {
+  it('elite boss gives massive rewards (halved for economy balance)', () => {
     const eliteBoss = getEnemyRewards('god', true, 1.0, 1.0);
-    expect(eliteBoss.gold).toBe(300); // 100 * 3
-    expect(eliteBoss.dust).toBe(150); // 50 * 3
+    // Base: gold=100, dust=25 * 3 (elite) * 0.5 = gold=150, dust=37
+    expect(eliteBoss.gold).toBe(150);
+    expect(eliteBoss.dust).toBe(37);
   });
 });
 

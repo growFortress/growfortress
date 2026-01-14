@@ -132,8 +132,21 @@
   color: var(--color-success);
 }
 
+/* WCAG: Add non-color indicator (checkmark) for met requirements */
+.requirement.met::before {
+  content: "✓ ";
+  font-size: 10px;
+}
+
 .requirement.notMet {
   color: var(--color-accent);
+  opacity: 0.8;
+}
+
+/* WCAG: Add non-color indicator (X) for unmet requirements */
+.requirement.notMet::before {
+  content: "✗ ";
+  font-size: 10px;
 }
 
 .reqIcon {
@@ -153,6 +166,26 @@
   font-family: var(--font-body);
   font-size: 12px;
   color: var(--color-text);
+}
+
+/* WCAG compliant cost indicators */
+.cost.met {
+  color: var(--color-success);
+}
+
+.cost.met::before {
+  content: "✓ ";
+  font-size: 10px;
+}
+
+.cost.notMet {
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
+.cost.notMet::before {
+  content: "✗ ";
+  font-size: 10px;
 }
 
 .costIcon {

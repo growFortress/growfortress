@@ -16,6 +16,12 @@ import leaderboardRoutes from '../../routes/leaderboard.js';
 import upgradesRoutes from '../../routes/upgrades.js';
 import materialsRoutes from '../../routes/materials.js';
 import artifactsRoutes from '../../routes/artifacts.js';
+import heroesRoutes from '../../routes/heroes.js';
+import bossRushRoutes from '../../routes/boss-rush.js';
+import guildRoutes from '../../routes/guilds.js';
+import pvpRoutes from '../../routes/pvp.js';
+import hubPreviewRoutes from '../../routes/hubPreview.js';
+import guildPreviewRoutes from '../../routes/guildPreview.js';
 
 /**
  * Build a test app with mocked dependencies
@@ -43,6 +49,12 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await fastify.register(upgradesRoutes);
   await fastify.register(materialsRoutes);
   await fastify.register(artifactsRoutes);
+  await fastify.register(heroesRoutes);
+  await fastify.register(bossRushRoutes);
+  await fastify.register(guildRoutes);
+  await fastify.register(pvpRoutes);
+  await fastify.register(hubPreviewRoutes);
+  await fastify.register(guildPreviewRoutes);
 
   return fastify;
 }

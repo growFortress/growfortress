@@ -1,10 +1,12 @@
 import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import { verifyAccessToken } from '../lib/tokens.js';
+import { prisma } from '../lib/prisma.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
     userId?: string;
+    isAdmin?: boolean;
   }
   interface FastifyContextConfig {
     public?: boolean;
@@ -13,6 +15,7 @@ declare module 'fastify' {
 
 const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest('userId', undefined);
+  fastify.decorateRequest('isAdmin', false);
 
   fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     // Skip auth for routes marked as public in route config
@@ -38,6 +41,13 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     }
 
     request.userId = payload.sub;
+
+    // Check if user is admin
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { role: true },
+    });
+    request.isAdmin = user?.role === 'ADMIN';
   });
 };
 

@@ -2,7 +2,7 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 100%;
+  width: calc(100% - 420px);
   padding: 32px;
   box-sizing: border-box;
   display: flex;
@@ -16,3 +16,158 @@
 .controls > * {
   pointer-events: auto;
 }
+
+/* Grouped navigation layout */
+.navContainer {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.navGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 20, 40, 0.8);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 12px;
+  pointer-events: auto;
+}
+
+.navGroup[data-group="management"] {
+  border-color: rgba(0, 200, 255, 0.3);
+}
+
+.navGroup[data-group="modes"] {
+  border-color: rgba(255, 180, 0, 0.4);
+  background: rgba(30, 30, 60, 0.85);
+  padding: 10px 16px;
+  box-shadow: 0 0 15px rgba(255, 180, 0, 0.15);
+}
+
+.mainAction {
+  pointer-events: auto;
+}
+
+.groupLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: rgba(0, 20, 40, 0.95);
+  padding: 0 6px;
+}
+
+.navGroupWrapper {
+  position: relative;
+}
+
+.endButtonWrapper {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  pointer-events: auto;
+  z-index: 20;
+}
+
+.endButton {
+  min-width: 120px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.endButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+/* ========== RESPONSIVE BREAKPOINTS ========== */
+
+/* Tablet: side panel smaller */
+@media (max-width: 1024px) {
+  .controls {
+    width: calc(100% - 320px);
+    padding: 24px;
+    gap: 16px;
+  }
+
+  .navContainer {
+    gap: 20px;
+  }
+
+  .navGroup {
+    gap: 6px;
+    padding: 6px 10px;
+  }
+}
+
+/* Small tablet / Large phone */
+@media (max-width: 768px) {
+  .controls {
+    width: 100%;
+    padding: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .navContainer {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .navGroup {
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .navGroup[data-group="modes"] {
+    padding: 8px 12px;
+  }
+
+  .groupLabel {
+    font-size: 0.55rem;
+    top: -6px;
+    left: 8px;
+    padding: 0 4px;
+  }
+
+  .endButtonWrapper {
+    bottom: 16px;
+    right: 16px;
+  }
+}
+
+/* Phone */
+@media (max-width: 480px) {
+  .controls {
+    padding: 12px 8px;
+    gap: 8px;
+  }
+
+  .navContainer {
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .navGroup {
+    gap: 3px;
+    padding: 4px 6px;
+  }
+
+  .navGroup[data-group="modes"] {
+    padding: 6px 10px;
+  }
+
+  .endButtonWrapper {
+    bottom: 12px;
+    right: 12px;
+  }
+}
+

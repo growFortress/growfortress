@@ -65,6 +65,19 @@ describe('Sessions Schemas', () => {
           maxHeroSlots: 2,
           maxTurretSlots: 6,
         },
+        fortressBaseHp: 100,
+        fortressBaseDamage: 10,
+        waveIntervalTicks: 450,
+        powerData: {
+          fortressUpgrades: {
+            statUpgrades: { hp: 0, damage: 0, attackSpeed: 0, range: 0, critChance: 0, critMultiplier: 0, armor: 0, dodge: 0 },
+          },
+          heroUpgrades: [],
+          turretUpgrades: [],
+          itemTiers: [],
+          heroTiers: {},
+          turretTiers: {},
+        },
       });
 
       expect(result.success).toBe(true);
@@ -88,6 +101,9 @@ describe('Sessions Schemas', () => {
           maxHeroSlots: 1,
           maxTurretSlots: 6,
         },
+        fortressBaseHp: 100,
+        fortressBaseDamage: 10,
+        waveIntervalTicks: 450,
       });
 
       expect(result.success).toBe(false);
@@ -237,6 +253,8 @@ describe('Sessions Schemas', () => {
         totalGoldEarned: 500,
         totalDustEarned: 50,
         totalXpEarned: 250,
+        newInventory: { gold: 1500, dust: 150 },
+        newProgression: { level: 5, xp: 100, totalXp: 1000, xpToNextLevel: 400 },
       });
 
       expect(result.success).toBe(true);
@@ -248,6 +266,21 @@ describe('Sessions Schemas', () => {
         totalGoldEarned: 0,
         totalDustEarned: 0,
         totalXpEarned: 0,
+        newInventory: { gold: 0, dust: 0 },
+        newProgression: { level: 1, xp: 0, totalXp: 0, xpToNextLevel: 200 },
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('validates level-up progression', () => {
+      const result = SessionEndResponseSchema.safeParse({
+        finalWave: 50,
+        totalGoldEarned: 5000,
+        totalDustEarned: 500,
+        totalXpEarned: 2500,
+        newInventory: { gold: 10000, dust: 1000 },
+        newProgression: { level: 10, xp: 150, totalXp: 5000, xpToNextLevel: 1850 },
       });
 
       expect(result.success).toBe(true);

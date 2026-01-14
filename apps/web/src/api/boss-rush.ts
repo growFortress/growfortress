@@ -9,108 +9,16 @@ import type {
   BossRushLeaderboardResponse,
   BossRushHistoryResponse,
 } from '@arcade/protocol';
-import { CONFIG } from '../config.js';
-import { getAccessToken, getRefreshToken, setTokens, setDisplayName, clearTokens } from './auth.js';
+import { ApiError, request } from './base.js';
 
-export class BossRushApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public data?: unknown
-  ) {
-    super(message);
+/**
+ * Boss Rush specific API error for backwards compatibility
+ */
+export class BossRushApiError extends ApiError {
+  constructor(status: number, message: string, data?: unknown) {
+    super(status, message, undefined, data);
     this.name = 'BossRushApiError';
   }
-}
-
-let isRefreshing = false;
-let refreshPromise: Promise<boolean> | null = null;
-
-async function tryRefreshToken(): Promise<boolean> {
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise;
-  }
-
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return false;
-  }
-
-  isRefreshing = true;
-  refreshPromise = (async () => {
-    try {
-      const response = await fetch(`${CONFIG.API_URL}/v1/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!response.ok) {
-        clearTokens();
-        return false;
-      }
-
-      const data = await response.json();
-      setTokens(data.accessToken, data.refreshToken);
-      setDisplayName(data.displayName);
-      return true;
-    } catch {
-      clearTokens();
-      return false;
-    } finally {
-      isRefreshing = false;
-      refreshPromise = null;
-    }
-  })();
-
-  return refreshPromise;
-}
-
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-  retry = true
-): Promise<T> {
-  const url = `${CONFIG.API_URL}${path}`;
-
-  const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string>),
-  };
-
-  if (options.body) {
-    headers['Content-Type'] = 'application/json';
-  }
-
-  const token = getAccessToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    // Try to refresh token on 401
-    if (response.status === 401 && retry) {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) {
-        return request<T>(path, options, false);
-      }
-    }
-
-    const data = await response.json().catch(() => ({}));
-    throw new BossRushApiError(response.status, data.error || 'Request failed', data);
-  }
-
-  // Handle empty responses (204 No Content)
-  const contentType = response.headers.get('content-type');
-  if (response.status === 204 || !contentType?.includes('application/json')) {
-    return {} as T;
-  }
-
-  return response.json();
 }
 
 // ============================================================================

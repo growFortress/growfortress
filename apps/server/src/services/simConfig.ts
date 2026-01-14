@@ -6,6 +6,23 @@ import {
 } from '@arcade/sim-core';
 import type { SimConfigSnapshot } from '../lib/tokens.js';
 
+// Map legacy hero IDs to new canonical IDs
+const LEGACY_HERO_ID_MAP: Record<string, string> = {
+  shield_captain: 'vanguard',
+  thunderlord: 'storm',
+  scarlet_mage: 'rift',
+  iron_sentinel: 'forge',
+  jade_titan: 'titan',
+  frost_archer: 'frost_unit',
+};
+
+/**
+ * Normalize a hero ID, mapping legacy IDs to their canonical versions
+ */
+function normalizeHeroId(heroId: string): string {
+  return LEGACY_HERO_ID_MAP[heroId] ?? heroId;
+}
+
 export interface LoadoutDefaults {
   fortressClass: string | null;
   heroId: string | null;
@@ -68,9 +85,11 @@ export function buildSimConfigSnapshot(
     ? (requestedClass as FortressClass)
     : 'natural';
 
-  const requestedHeroes =
+  // Normalize hero IDs to handle legacy IDs from client or defaults
+  const requestedHeroes = (
     params.requested?.startingHeroes ??
-    (params.defaults?.heroId ? [params.defaults.heroId] : []);
+    (params.defaults?.heroId ? [params.defaults.heroId] : [])
+  ).map(normalizeHeroId);
   const startingHeroes = requestedHeroes
     .filter((id) => params.unlockedHeroes.includes(id))
     .slice(0, maxHeroSlots);

@@ -68,6 +68,11 @@ export function createGameState(overrides: Partial<GameState> = {}): GameState {
     turretSlots: [],
     projectiles: [],
     nextProjectileId: 1,
+    // Crystal system (ancient artifacts)
+    crystalFragments: [],
+    collectedCrystals: [],
+    matrixState: null,
+    // Legacy aliases
     infinityStoneFragments: [],
     collectedStones: [],
     gauntletState: null,

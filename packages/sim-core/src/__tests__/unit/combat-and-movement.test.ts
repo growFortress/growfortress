@@ -21,7 +21,7 @@ function advanceUntilEnemiesSpawn(sim: Simulation, maxTicks = 200): boolean {
 describe('Enemy Attacks on Heroes', () => {
   it('enemy should damage hero when in melee range', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan']; // Tank hero with high HP
+    config.startingHeroes = ['titan']; // Tank hero with high HP
 
     const sim = new Simulation(12345, config);
 
@@ -60,7 +60,7 @@ describe('Enemy Attacks on Heroes', () => {
 
   it('enemy should not attack hero when out of melee range', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan'];
+    config.startingHeroes = ['titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -93,7 +93,7 @@ describe('Enemy Attacks on Heroes', () => {
 
   it('enemy should not attack idle heroes', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan'];
+    config.startingHeroes = ['titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -124,7 +124,7 @@ describe('Enemy Attacks on Heroes', () => {
 
   it('enemy should not attack dead heroes', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan'];
+    config.startingHeroes = ['titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -154,7 +154,7 @@ describe('Enemy Attacks on Heroes', () => {
 
   it('enemy attack respects attack interval (30 ticks)', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan'];
+    config.startingHeroes = ['titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -192,7 +192,7 @@ describe('Enemy Attacks on Heroes', () => {
 describe('Leech Enemy Healing', () => {
   it('leech should heal 20% max HP when attacking hero', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan'];
+    config.startingHeroes = ['titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -212,7 +212,8 @@ describe('Leech Enemy Healing', () => {
     leech.hp = 50;
 
     const hero = sim.state.heroes[0];
-    hero.state = 'combat';
+    // Use 'returning' state - enemies can attack hero, but hero won't counter-attack
+    hero.state = 'returning';
     hero.currentHp = 500;
     hero.maxHp = 500;
 
@@ -231,7 +232,7 @@ describe('Leech Enemy Healing', () => {
 
   it('leech healing should not exceed max HP', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan'];
+    config.startingHeroes = ['titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -245,7 +246,8 @@ describe('Leech Enemy Healing', () => {
     leech.hp = 95;
 
     const hero = sim.state.heroes[0];
-    hero.state = 'combat';
+    // Use 'returning' state - enemies can attack hero, but hero won't counter-attack
+    hero.state = 'returning';
     hero.currentHp = 500;
 
     leech.x = hero.x;
@@ -285,7 +287,7 @@ describe('Leech Enemy Healing', () => {
 
   it('non-leech enemies should NOT heal on attack', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan'];
+    config.startingHeroes = ['titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -299,7 +301,8 @@ describe('Leech Enemy Healing', () => {
     runner.hp = 50;
 
     const hero = sim.state.heroes[0];
-    hero.state = 'combat';
+    // Use 'returning' state - enemies can attack hero, but hero won't counter-attack
+    hero.state = 'returning';
     hero.currentHp = 500;
 
     runner.x = hero.x;
@@ -373,7 +376,7 @@ describe('All Heroes Movement', () => {
 
   it('multiple heroes should all move independently', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord', 'jade_titan'];
+    config.startingHeroes = ['storm', 'titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -395,12 +398,12 @@ describe('All Heroes Movement', () => {
   });
 
   it('faster heroes should move further in same time', () => {
-    // Frost Archer (0.1) is faster than Jade Titan (0.06)
+    // Unit-5 "Frost" (0.1) is faster than Unit-1 "Titan" (0.06)
     const configFast = getDefaultConfig();
-    configFast.startingHeroes = ['frost_archer'];
+    configFast.startingHeroes = ['frost'];
 
     const configSlow = getDefaultConfig();
-    configSlow.startingHeroes = ['jade_titan'];
+    configSlow.startingHeroes = ['titan'];
 
     const simFast = new Simulation(12345, configFast);
     const simSlow = new Simulation(12345, configSlow);
@@ -433,7 +436,7 @@ describe('All Heroes Movement', () => {
 describe('Collision and Separation Force', () => {
   it('heroes should not stack on same position', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord', 'jade_titan'];
+    config.startingHeroes = ['storm', 'titan'];
 
     const sim = new Simulation(12345, config);
 
@@ -588,7 +591,7 @@ describe('Collision and Separation Force', () => {
 describe('Hero State Machine', () => {
   it('hero starts in idle state', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -597,7 +600,7 @@ describe('Hero State Machine', () => {
 
   it('hero transitions idle -> deploying when enemies appear', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -616,7 +619,7 @@ describe('Hero State Machine', () => {
 
   it('hero transitions deploying -> combat when in attack range', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -639,7 +642,7 @@ describe('Hero State Machine', () => {
 
   it('hero transitions combat -> returning when HP is low', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -665,15 +668,16 @@ describe('Hero State Machine', () => {
 
   it('hero transitions returning -> cooldown when reaches fortress', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
     const hero = sim.state.heroes[0];
     hero.state = 'returning';
 
-    // Position hero at fortress
-    hero.x = FP.add(config.fortressX, FP.ONE);
+    // Position hero at formation position (for single hero: fortressX + 4, y = 7.5)
+    // Formation uses SLOT_X[0] = 4 for single hero, centerY = 7.5
+    hero.x = FP.add(config.fortressX, FP.fromInt(4));
     hero.y = FP.fromFloat(7.5);
 
     // Run ticks
@@ -690,7 +694,7 @@ describe('Hero State Machine', () => {
 
   it('hero regenerates HP in cooldown state', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -715,7 +719,7 @@ describe('Hero State Machine', () => {
 
   it('dead hero does not transition states', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -735,7 +739,7 @@ describe('Hero State Machine', () => {
 
   it('all state transitions follow correct order', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['jade_titan']; // Tank with high HP
+    config.startingHeroes = ['titan']; // Tank with high HP
 
     const sim = new Simulation(12345, config);
 

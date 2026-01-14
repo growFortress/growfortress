@@ -1,31 +1,19 @@
+/* ClassSelectionModal uses the shared Modal component for visibility */
+/* This class provides additional fullscreen styling */
 .modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  width: 95vw !important;
+  height: 95vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  background: var(--color-bg);
+}
+
+/* Body styles - centers content vertically */
+.body {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg);
-  transition: opacity var(--duration-slow) var(--ease-standard), visibility var(--duration-slow) var(--ease-standard);
-  z-index: 200;
-  cursor: default !important;
-}
-
-/* Hidden state */
-.modal:not(:global(.visible)) {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* Visible state */
-.modal:global(.visible) {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  flex: 1;
 }
 
 .container {

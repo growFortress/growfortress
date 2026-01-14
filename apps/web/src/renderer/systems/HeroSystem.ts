@@ -4,21 +4,36 @@ import { FP } from '@arcade/sim-core';
 import { Tween, TweenManager } from '../animation/Tween.js';
 import { easeOutQuad, easeOutElastic, easeOutCubic, easeInOutSine } from '../animation/easing.js';
 import type { VFXSystem } from './VFXSystem.js';
+import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
 
-// Hero-specific colors (based on Marvel inspirations)
+// Unit-specific colors (configuration-based)
 const HERO_COLORS: Record<string, { primary: number; secondary: number; accent: number }> = {
-  thunderlord: { primary: 0x1e90ff, secondary: 0x87ceeb, accent: 0xffd700 }, // Thor blue + gold
-  iron_sentinel: { primary: 0xb22222, secondary: 0xffd700, accent: 0x00ffff }, // Iron Man red/gold
-  jade_titan: { primary: 0x228b22, secondary: 0x32cd32, accent: 0x9932cc }, // Hulk green
-  spider_sentinel: { primary: 0xff0000, secondary: 0x0000ff, accent: 0xffffff }, // Spider-Man
-  shield_captain: { primary: 0x0000cd, secondary: 0xff0000, accent: 0xffffff }, // Cap blue/red/white
-  scarlet_mage: { primary: 0xdc143c, secondary: 0x8b0000, accent: 0xff69b4 }, // Scarlet Witch
-  frost_archer: { primary: 0x4b0082, secondary: 0x00bfff, accent: 0xffffff }, // Hawkeye + Ice
-  flame_phoenix: { primary: 0xff4500, secondary: 0xffd700, accent: 0xff0000 }, // Phoenix
-  venom_assassin: { primary: 0x1a1a1a, secondary: 0x8b0000, accent: 0x00ff00 }, // Black Widow + Poison
-  arcane_sorcerer: { primary: 0x4b0082, secondary: 0xff4500, accent: 0x00ff00 }, // Doctor Strange
-  frost_giant: { primary: 0x00ced1, secondary: 0x228b22, accent: 0xffd700 }, // Loki
-  cosmic_guardian: { primary: 0x8b4513, secondary: 0xff4500, accent: 0xffd700 }, // Star-Lord
+  // Premium heroes
+  inferno: { primary: 0xff4500, secondary: 0xff8c00, accent: 0xffd700 }, // Fire DPS - orange/gold
+  glacier: { primary: 0x1e90ff, secondary: 0xb0e0e6, accent: 0x87ceeb }, // Ice Tank - blue
+  // New unit IDs
+  storm: { primary: 0x9932cc, secondary: 0xdda0dd, accent: 0xffff00 }, // Elektryczna - purple/yellow
+  forge: { primary: 0x00f0ff, secondary: 0xff00aa, accent: 0xccff00 }, // Kwantowa - cyan/pink
+  titan: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 }, // Standardowa - green
+  vanguard: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 }, // Standardowa - green
+  rift: { primary: 0xff4500, secondary: 0xff8c00, accent: 0xffd700 }, // Termiczna - orange/gold
+  frost_unit: { primary: 0x00bfff, secondary: 0xe0ffff, accent: 0x87ceeb }, // Kriogeniczna - blue
+  // Exclusive heroes
+  spectre: { primary: 0x00ffff, secondary: 0xff00ff, accent: 0xffffff }, // Plasma - cyan/magenta/white
+  omega: { primary: 0xffd700, secondary: 0x1a1a2a, accent: 0xffaa00 }, // Legendary - gold/black/orange
+  // Legacy IDs for backwards compatibility
+  thunderlord: { primary: 0x9932cc, secondary: 0xdda0dd, accent: 0xffff00 },
+  iron_sentinel: { primary: 0x00f0ff, secondary: 0xff00aa, accent: 0xccff00 },
+  jade_titan: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 },
+  spider_sentinel: { primary: 0xff0000, secondary: 0x0000ff, accent: 0xffffff },
+  shield_captain: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 },
+  scarlet_mage: { primary: 0xff4500, secondary: 0xff8c00, accent: 0xffd700 },
+  frost_archer: { primary: 0x00bfff, secondary: 0xe0ffff, accent: 0x87ceeb },
+  flame_phoenix: { primary: 0xff4500, secondary: 0xffd700, accent: 0xff0000 },
+  venom_assassin: { primary: 0x1a1a1a, secondary: 0x8b0000, accent: 0x00ff00 },
+  arcane_sorcerer: { primary: 0x4b0082, secondary: 0xff4500, accent: 0x00ff00 },
+  frost_giant: { primary: 0x00ced1, secondary: 0x228b22, accent: 0xffd700 },
+  cosmic_guardian: { primary: 0x8b4513, secondary: 0xff4500, accent: 0xffd700 },
 };
 
 // State colors
@@ -99,18 +114,32 @@ interface HeroAnimationState {
   offsetY: number;
 }
 
+/**
+ * Dirty flags for optimized rendering
+ * Only redraw components when they actually change
+ */
+interface DirtyFlags {
+  body: boolean;      // Tier, class, or visual state changed
+  hpBar: boolean;     // HP value changed
+  stateIndicator: boolean;  // Combat state changed
+  tierBadge: boolean; // Tier level changed
+}
+
 interface HeroVisual {
   container: Container;
   lastState: HeroState;
   heroId: string;
   animation: HeroAnimationState;
   lastHp: number;
+  lastTier: 1 | 2 | 3;  // Track tier for dirty flagging
   tweenManager: TweenManager;
   scaleTween: Tween<number> | null;
   alphaTween: Tween<number> | null;
   hpTween: Tween<number> | null;
   // Track skill cooldowns to detect skill usage
   lastSkillCooldowns: Record<string, number>;
+  // Dirty flags for optimized rendering
+  dirty: DirtyFlags;
 }
 
 export class HeroSystem {
@@ -155,6 +184,16 @@ export class HeroSystem {
       if (visual.lastState !== hero.state) {
         this.onStateChange(visual, visual.lastState, hero.state);
         visual.lastState = hero.state;
+        visual.dirty.stateIndicator = true;
+        visual.dirty.body = true; // Body glow changes with combat state
+      }
+
+      // Handle tier changes
+      const currentTier = hero.tier as 1 | 2 | 3;
+      if (visual.lastTier !== currentTier) {
+        visual.lastTier = currentTier;
+        visual.dirty.tierBadge = true;
+        visual.dirty.body = true; // Body size changes with tier
       }
 
       // Handle HP changes
@@ -162,12 +201,13 @@ export class HeroSystem {
       if (Math.abs(visual.lastHp - hpPercent) > 0.01) {
         this.startHpTransition(visual, visual.lastHp, hpPercent);
         visual.lastHp = hpPercent;
+        visual.dirty.hpBar = true;
       }
 
       // Detect skill usage and trigger VFX
       if (vfx && hero.skillCooldowns) {
-        const screenX = this.toScreenX(hero.x, viewWidth);
-        const screenY = this.toScreenY(hero.y, viewHeight);
+        const screenX = fpXToScreen(hero.x, viewWidth);
+        const screenY = fpYToScreen(hero.y, viewHeight);
         this.detectAndTriggerSkillVFX(visual, hero, screenX, screenY, state, viewWidth, viewHeight, vfx);
       }
 
@@ -178,8 +218,8 @@ export class HeroSystem {
       this.updateAnimationState(visual, hero, deltaMs, time);
 
       // Update position
-      const screenX = this.toScreenX(hero.x, viewWidth);
-      const screenY = this.toScreenY(hero.y, viewHeight);
+      const screenX = fpXToScreen(hero.x, viewWidth);
+      const screenY = fpYToScreen(hero.y, viewHeight);
 
       // Update visuals (which may apply animation offsets)
       const offset = this.updateHeroVisual(visual, hero, time);
@@ -258,6 +298,7 @@ export class HeroSystem {
       lastState: hero.state,
       heroId: hero.definitionId,
       lastHp: hpPercent,
+      lastTier: hero.tier as 1 | 2 | 3,
       tweenManager: new TweenManager(),
       scaleTween: null,
       alphaTween: null,
@@ -276,6 +317,13 @@ export class HeroSystem {
         combatIntensity: 0,
         offsetX: 0,
         offsetY: 0,
+      },
+      // Initialize all as dirty to force initial draw
+      dirty: {
+        body: true,
+        hpBar: true,
+        stateIndicator: true,
+        tierBadge: true,
       },
     };
   }
@@ -469,12 +517,6 @@ export class HeroSystem {
 
     if (!body || !hpBar || !stateIndicator || !tierBadge) return offset;
 
-    // Clear and redraw
-    body.clear();
-    hpBar.clear();
-    stateIndicator.clear();
-    tierBadge.clear();
-
     const colors = HERO_COLORS[hero.definitionId] || { primary: 0x888888, secondary: 0xaaaaaa, accent: 0xffffff };
     const tierKey = hero.tier as 1 | 2 | 3;
     const size = SIZES.heroBase * SIZES.tierMultiplier[tierKey];
@@ -483,17 +525,45 @@ export class HeroSystem {
     visual.container.scale.set(anim.scale || 1);
     visual.container.alpha = anim.alpha || 1;
 
-    // Draw hero body
-    this.drawHeroBody(body, hero, size, colors, time, anim);
+    // Body needs redraw if dirty, in combat (animated), spawning, or dying
+    // Combat state has continuous animation (glow, shake, tier 3 particles)
+    const needsBodyRedraw = visual.dirty.body ||
+                            hero.state === 'combat' ||
+                            anim.isSpawning ||
+                            anim.isDying ||
+                            hero.tier === 3; // Tier 3 has rotating particles
 
-    // Draw HP bar with animated HP
-    this.drawHpBar(hpBar, anim.hpPercent);
+    if (needsBodyRedraw) {
+      body.clear();
+      this.drawHeroBody(body, hero, size, colors, time, anim);
+      visual.dirty.body = false;
+    }
 
-    // Draw state indicator with transition effect
-    this.drawStateIndicator(stateIndicator, hero.state, anim);
+    // HP bar only redraws when HP is transitioning or dirty
+    const isHpAnimating = visual.hpTween && !visual.hpTween.isComplete();
+    if (visual.dirty.hpBar || isHpAnimating) {
+      hpBar.clear();
+      this.drawHpBar(hpBar, anim.hpPercent);
+      if (!isHpAnimating) {
+        visual.dirty.hpBar = false;
+      }
+    }
 
-    // Draw tier badge
-    this.drawTierBadge(tierBadge, hero.tier);
+    // State indicator only redraws when state changes or transitioning
+    if (visual.dirty.stateIndicator || anim.isTransitioning || hero.state === 'combat') {
+      stateIndicator.clear();
+      this.drawStateIndicator(stateIndicator, hero.state, anim);
+      if (!anim.isTransitioning && hero.state !== 'combat') {
+        visual.dirty.stateIndicator = false;
+      }
+    }
+
+    // Tier badge is static - only redraw on tier change
+    if (visual.dirty.tierBadge) {
+      tierBadge.clear();
+      this.drawTierBadge(tierBadge, hero.tier);
+      visual.dirty.tierBadge = false;
+    }
 
     return offset;
   }
@@ -506,63 +576,312 @@ export class HeroSystem {
     time: number,
     anim: HeroAnimationState
   ) {
-    // Outer glow (based on tier and state)
-    const glowSize = size * (1 + hero.tier * 0.1);
-    let glowAlpha = 0.2 + hero.tier * 0.1;
+    const heroId = hero.definitionId;
 
-    // Enhanced glow during combat
-    if (hero.state === 'combat') {
-      glowAlpha += Math.sin(time * 10) * 0.1;
+    // === LAYER 1: Pulsating Ring (Tier 2+) ===
+    if (hero.tier >= 2) {
+      const ringRadius = size * (1.05 + Math.sin(time * 4) * 0.03);
+      const ringAlpha = 0.4 + Math.sin(time * 6) * 0.1;
+      g.circle(0, 0, ringRadius).stroke({ width: 2, color: colors.secondary, alpha: ringAlpha });
     }
 
-    // Spawn glow
-    if (anim.isSpawning && anim.spawnProgress < 1) {
-      glowAlpha += (1 - anim.spawnProgress) * 0.3;
+    // === LAYER 3: Class-Specific Body Shape ===
+    this.drawHeroShape(g, heroId, size, colors, time);
+
+    // === LAYER 4: Inner Core/Emblem ===
+    const coreSize = size * 0.35;
+    const corePulse = 1 + Math.sin(time * 5) * 0.05;
+    g.circle(0, 0, coreSize * corePulse).fill({ color: colors.accent, alpha: 0.9 });
+
+    // Inner detail - energy lines
+    for (let i = 0; i < 3; i++) {
+      const angle = time * 2 + (i * Math.PI * 2) / 3;
+      const lineLength = coreSize * 0.8;
+      g.moveTo(0, 0)
+        .lineTo(Math.cos(angle) * lineLength, Math.sin(angle) * lineLength)
+        .stroke({ width: 1, color: 0xffffff, alpha: 0.5 });
     }
 
-    g.circle(0, 0, glowSize)
-      .fill({ color: colors.accent, alpha: glowAlpha });
-
-    // Main body - circular with hero colors
-    g.circle(0, 0, size * 0.9)
-      .fill({ color: colors.primary })
-      .stroke({ width: 3, color: colors.secondary });
-
-    // Inner emblem
-    g.circle(0, 0, size * 0.4)
-      .fill({ color: colors.accent, alpha: 0.8 });
-
-    // Class-specific effect for Tier 3
+    // === LAYER 5: Tier 3 Rotating Particles ===
     if (hero.tier === 3) {
-      // Rotating particle ring
-      for (let i = 0; i < 6; i++) {
-        const angle = time * 2 + (i * Math.PI) / 3;
-        const px = Math.cos(angle) * size * 1.3;
-        const py = Math.sin(angle) * size * 1.3;
-        g.circle(px, py, 3)
-          .fill({ color: colors.accent, alpha: 0.6 });
+      const particleCount = 8;
+      for (let i = 0; i < particleCount; i++) {
+        const angle = time * 2.5 + (i * Math.PI * 2) / particleCount;
+        const orbitRadius = size * 1.4;
+        const particleSize = 3 + Math.sin(time * 8 + i) * 1;
+        const px = Math.cos(angle) * orbitRadius;
+        const py = Math.sin(angle) * orbitRadius;
+
+        // Particle trail
+        const trailAngle = angle - 0.3;
+        g.moveTo(Math.cos(trailAngle) * orbitRadius, Math.sin(trailAngle) * orbitRadius)
+          .lineTo(px, py)
+          .stroke({ width: 2, color: colors.accent, alpha: 0.4 });
+
+        g.circle(px, py, particleSize).fill({ color: colors.accent, alpha: 0.8 });
       }
     }
 
-    // Combat indicator - weapon flash
+    // === LAYER 6: Combat Effects ===
     if (hero.state === 'combat') {
-      const flashAlpha = (Math.sin(time * 15) + 1) / 2 * anim.combatIntensity;
-      g.circle(size * 0.7, -size * 0.7, 6)
-        .fill({ color: 0xffff00, alpha: flashAlpha * 0.8 });
+      // Energy burst effect
+      const burstAlpha = (Math.sin(time * 12) + 1) / 4 * anim.combatIntensity;
+      const burstSize = size * (0.5 + Math.sin(time * 15) * 0.1);
+      g.star(0, 0, 4, burstSize, burstSize * 0.5, time * 3)
+        .fill({ color: colors.accent, alpha: burstAlpha });
+
+      // Weapon flash indicator
+      const flashAlpha = (Math.sin(time * 15) + 1) / 2 * anim.combatIntensity * 0.8;
+      g.circle(size * 0.6, -size * 0.6, 5).fill({ color: 0xffff00, alpha: flashAlpha });
     }
 
-    // Death effect - cracks
+    // === LAYER 7: Death Effect ===
     if (anim.isDying && anim.deathProgress > 0) {
-      const crackAlpha = anim.deathProgress * 0.8;
-      for (let i = 0; i < 5; i++) {
-        const angle = (i / 5) * Math.PI * 2 + time;
-        const innerR = size * 0.2 * (1 + anim.deathProgress);
-        const outerR = size * 0.8 * (1 + anim.deathProgress * 0.5);
+      const crackAlpha = anim.deathProgress * 0.9;
+      const crackExpand = 1 + anim.deathProgress * 0.5;
+
+      // Fragmentation cracks
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + time * 0.5;
+        const innerR = size * 0.15 * crackExpand;
+        const outerR = size * 0.9 * crackExpand;
         g.moveTo(Math.cos(angle) * innerR, Math.sin(angle) * innerR)
           .lineTo(Math.cos(angle) * outerR, Math.sin(angle) * outerR)
-          .stroke({ width: 2, color: 0xff0000, alpha: crackAlpha });
+          .stroke({ width: 2, color: 0xff3333, alpha: crackAlpha });
+      }
+
+      // Dissolve particles
+      for (let i = 0; i < 4; i++) {
+        const pAngle = time * 3 + i * 1.5;
+        const pDist = size * anim.deathProgress * 1.5;
+        g.circle(Math.cos(pAngle) * pDist, Math.sin(pAngle) * pDist, 2)
+          .fill({ color: colors.primary, alpha: 1 - anim.deathProgress });
       }
     }
+  }
+
+  /**
+   * Draw class-specific hero shape
+   */
+  private drawHeroShape(
+    g: Graphics,
+    heroId: string,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    const bodySize = size * 0.85;
+
+    switch (heroId) {
+      // Tank classes - Hexagonal shield shape
+      case 'titan':
+      case 'jade_titan':
+      case 'vanguard':
+      case 'shield_captain':
+      case 'glacier':
+        this.drawHexagon(g, bodySize, colors);
+        break;
+
+      // Fire classes - Star/Flame shape
+      case 'inferno':
+        this.drawFlameShape(g, bodySize, colors, time);
+        break;
+
+      // Mage classes - Diamond/Crystal shape
+      case 'rift':
+      case 'scarlet_mage':
+      case 'arcane_sorcerer':
+        this.drawDiamond(g, bodySize, colors, time);
+        break;
+
+      // Tech classes - Octagonal gear shape
+      case 'forge':
+      case 'iron_sentinel':
+        this.drawOctagonGear(g, bodySize, colors, time);
+        break;
+
+      // Electric classes - Lightning bolt inner shape
+      case 'storm':
+      case 'thunderlord':
+        this.drawLightningShape(g, bodySize, colors, time);
+        break;
+
+      // Ice classes - Crystal/Snowflake shape
+      case 'frost_unit':
+      case 'frost_archer':
+      case 'frost_giant':
+        this.drawFrostShape(g, bodySize, colors, time);
+        break;
+
+      // Default - Enhanced circle
+      default:
+        g.circle(0, 0, bodySize)
+          .fill({ color: colors.primary })
+          .stroke({ width: 3, color: colors.secondary });
+    }
+  }
+
+  private drawHexagon(g: Graphics, size: number, colors: { primary: number; secondary: number; accent: number }): void {
+    const points: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 - Math.PI / 2;
+      points.push(Math.cos(angle) * size, Math.sin(angle) * size);
+    }
+    g.poly(points).fill({ color: colors.primary }).stroke({ width: 4, color: colors.secondary });
+
+    // Inner hexagon highlight
+    const innerPoints: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 - Math.PI / 2;
+      innerPoints.push(Math.cos(angle) * size * 0.6, Math.sin(angle) * size * 0.6);
+    }
+    g.poly(innerPoints).stroke({ width: 2, color: colors.accent, alpha: 0.5 });
+  }
+
+  private drawDiamond(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    const stretch = 1.2;
+    const points = [0, -size * stretch, size, 0, 0, size * stretch, -size, 0];
+    g.poly(points).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Inner crystal facets
+    const facetAlpha = 0.4 + Math.sin(time * 4) * 0.1;
+    g.moveTo(0, -size * stretch * 0.7).lineTo(size * 0.5, 0).lineTo(0, size * stretch * 0.7);
+    g.stroke({ width: 1, color: 0xffffff, alpha: facetAlpha });
+    g.moveTo(0, -size * stretch * 0.7).lineTo(-size * 0.5, 0).lineTo(0, size * stretch * 0.7);
+    g.stroke({ width: 1, color: 0xffffff, alpha: facetAlpha });
+  }
+
+  private drawOctagonGear(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    // Octagon base
+    const points: number[] = [];
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4 + time * 0.5;
+      const r = i % 2 === 0 ? size : size * 0.85;
+      points.push(Math.cos(angle) * r, Math.sin(angle) * r);
+    }
+    g.poly(points).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Rotating inner gear
+    const gearAngle = time * -1;
+    for (let i = 0; i < 4; i++) {
+      const angle = gearAngle + (i * Math.PI) / 2;
+      g.moveTo(0, 0)
+        .lineTo(Math.cos(angle) * size * 0.6, Math.sin(angle) * size * 0.6)
+        .stroke({ width: 2, color: colors.accent, alpha: 0.6 });
+    }
+  }
+
+  private drawLightningShape(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    // Circle base
+    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Lightning bolt inner design
+    const boltAlpha = 0.7 + Math.sin(time * 10) * 0.2;
+    const boltScale = size * 0.5;
+    g.moveTo(0, -boltScale)
+      .lineTo(-boltScale * 0.3, 0)
+      .lineTo(boltScale * 0.2, 0)
+      .lineTo(0, boltScale)
+      .stroke({ width: 3, color: colors.accent, alpha: boltAlpha });
+
+    // Electric arcs
+    for (let i = 0; i < 3; i++) {
+      const arcAngle = time * 5 + i * 2;
+      const arcR = size * 0.8;
+      g.circle(Math.cos(arcAngle) * arcR, Math.sin(arcAngle) * arcR, 2)
+        .fill({ color: colors.accent, alpha: 0.5 + Math.sin(time * 15 + i) * 0.3 });
+    }
+  }
+
+  private drawFrostShape(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    // Circle base with icy gradient feel
+    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Snowflake/crystal arms
+    const armCount = 6;
+    const armAlpha = 0.6 + Math.sin(time * 3) * 0.1;
+    for (let i = 0; i < armCount; i++) {
+      const angle = (i * Math.PI * 2) / armCount;
+      const armLength = size * 0.7;
+      const endX = Math.cos(angle) * armLength;
+      const endY = Math.sin(angle) * armLength;
+
+      // Main arm
+      g.moveTo(0, 0).lineTo(endX, endY).stroke({ width: 2, color: colors.accent, alpha: armAlpha });
+
+      // Crystal branches
+      const branchLength = armLength * 0.4;
+      const branchAngle1 = angle + Math.PI / 6;
+      const branchAngle2 = angle - Math.PI / 6;
+      const midX = endX * 0.6;
+      const midY = endY * 0.6;
+      g.moveTo(midX, midY)
+        .lineTo(midX + Math.cos(branchAngle1) * branchLength, midY + Math.sin(branchAngle1) * branchLength)
+        .stroke({ width: 1, color: colors.accent, alpha: armAlpha * 0.7 });
+      g.moveTo(midX, midY)
+        .lineTo(midX + Math.cos(branchAngle2) * branchLength, midY + Math.sin(branchAngle2) * branchLength)
+        .stroke({ width: 1, color: colors.accent, alpha: armAlpha * 0.7 });
+    }
+  }
+
+  private drawFlameShape(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    // Circle base with fire gradient
+    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Animated flame tongues
+    const flameCount = 5;
+    const flameAlpha = 0.7 + Math.sin(time * 4) * 0.2;
+    for (let i = 0; i < flameCount; i++) {
+      const baseAngle = (i * Math.PI * 2) / flameCount - Math.PI / 2;
+      const flickerOffset = Math.sin(time * 8 + i * 2) * 0.15;
+      const angle = baseAngle + flickerOffset;
+      const flameHeight = size * (0.6 + Math.sin(time * 6 + i * 1.5) * 0.15);
+
+      // Flame tongue points (teardrop shape pointing outward)
+      const baseX = Math.cos(angle) * size * 0.5;
+      const baseY = Math.sin(angle) * size * 0.5;
+      const tipX = Math.cos(angle) * (size * 0.5 + flameHeight);
+      const tipY = Math.sin(angle) * (size * 0.5 + flameHeight);
+      const perpAngle = angle + Math.PI / 2;
+      const width = size * 0.2;
+
+      const points = [
+        baseX + Math.cos(perpAngle) * width, baseY + Math.sin(perpAngle) * width,
+        tipX, tipY,
+        baseX - Math.cos(perpAngle) * width, baseY - Math.sin(perpAngle) * width,
+      ];
+
+      g.poly(points).fill({ color: colors.accent, alpha: flameAlpha * (0.6 + i * 0.08) });
+    }
+
+    // Inner glow circle
+    g.circle(0, 0, size * 0.4)
+      .fill({ color: colors.accent, alpha: 0.4 + Math.sin(time * 5) * 0.1 });
   }
 
   private drawHpBar(g: Graphics, hpPercent: number) {
@@ -629,22 +948,44 @@ export class HeroSystem {
 
   private drawTierBadge(g: Graphics, tier: 1 | 2 | 3) {
     const tierColors = {
-      1: 0xcd7f32, // Bronze
-      2: 0xc0c0c0, // Silver
-      3: 0xffd700, // Gold
+      1: { main: 0xcd7f32, light: 0xe8a95e, dark: 0x8b5a2b }, // Bronze
+      2: { main: 0xc0c0c0, light: 0xe8e8e8, dark: 0x808080 }, // Silver
+      3: { main: 0xffd700, light: 0xffec8b, dark: 0xdaa520 }, // Gold
     };
 
-    const color = tierColors[tier];
+    const colors = tierColors[tier];
+    const size = 10;
 
-    // Star shape for tier
-    g.circle(0, 0, 8)
-      .fill({ color })
-      .stroke({ width: 1, color: 0xffffff });
+    // Outer glow
+    g.circle(0, 0, size + 3).fill({ color: colors.main, alpha: 0.3 });
 
-    // Number inside (using simple graphics)
-    for (let i = 0; i < tier; i++) {
-      g.circle(-3 + i * 3, 0, 1.5)
-        .fill({ color: 0xffffff });
+    // Base circle with metallic gradient simulation
+    g.circle(0, 0, size).fill({ color: colors.main });
+
+    // Highlight (top-left)
+    g.arc(0, 0, size * 0.7, -Math.PI, -Math.PI / 2)
+      .stroke({ width: 2, color: colors.light, alpha: 0.6 });
+
+    // Shadow (bottom-right)
+    g.arc(0, 0, size * 0.7, 0, Math.PI / 2)
+      .stroke({ width: 2, color: colors.dark, alpha: 0.4 });
+
+    // Border
+    g.circle(0, 0, size).stroke({ width: 2, color: colors.light });
+
+    // Tier indicator - Roman numeral style
+    if (tier === 1) {
+      // I
+      g.rect(-1, -5, 2, 10).fill({ color: 0xffffff });
+    } else if (tier === 2) {
+      // II
+      g.rect(-4, -5, 2, 10).fill({ color: 0xffffff });
+      g.rect(2, -5, 2, 10).fill({ color: 0xffffff });
+    } else {
+      // III
+      g.rect(-6, -5, 2, 10).fill({ color: 0xffffff });
+      g.rect(-1, -5, 2, 10).fill({ color: 0xffffff });
+      g.rect(4, -5, 2, 10).fill({ color: 0xffffff });
     }
   }
 
@@ -669,18 +1010,26 @@ export class HeroSystem {
 
   private getHeroDisplayName(definitionId: string): string {
     const names: Record<string, string> = {
-      thunderlord: 'Thor',
-      iron_sentinel: 'Iron',
-      jade_titan: 'Hulk',
+      // New unit IDs
+      storm: 'Storm',
+      forge: 'Forge',
+      titan: 'Titan',
+      vanguard: 'Vanguard',
+      rift: 'Rift',
+      frost_unit: 'Frost',
+      // Legacy IDs for backwards compatibility
+      thunderlord: 'Storm',
+      iron_sentinel: 'Forge',
+      jade_titan: 'Titan',
       spider_sentinel: 'Spider',
-      shield_captain: 'Cap',
-      scarlet_mage: 'Scarlet',
-      frost_archer: 'Hawk',
+      shield_captain: 'Vanguard',
+      scarlet_mage: 'Rift',
+      frost_archer: 'Frost',
       flame_phoenix: 'Phoenix',
       venom_assassin: 'Widow',
-      arcane_sorcerer: 'Strange',
-      frost_giant: 'Loki',
-      cosmic_guardian: 'Star',
+      arcane_sorcerer: 'Sorcerer',
+      frost_giant: 'Giant',
+      cosmic_guardian: 'Guardian',
     };
     return names[definitionId] || definitionId.substring(0, 6);
   }
@@ -740,8 +1089,8 @@ export class HeroSystem {
 
       if (!nearest || dist < nearest.dist) {
         nearest = {
-          x: this.toScreenX(enemy.x, viewWidth),
-          y: this.toScreenY(enemy.y, viewHeight),
+          x: fpXToScreen(enemy.x, viewWidth),
+          y: fpYToScreen(enemy.y, viewHeight),
           dist,
         };
       }
@@ -763,28 +1112,31 @@ export class HeroSystem {
     vfx: VFXSystem
   ): void {
     switch (heroId) {
-      // === THUNDERLORD (THOR) ===
-      case 'thunderlord':
+      // === UNIT-7 "STORM" ===
+      case 'storm':
         switch (skillId) {
-          case 'hammer_throw':
-          case 'mjolnir':
-          case 'stormbreaker':
-            vfx.spawnHammerThrow(heroX, heroY, targetX, targetY);
+          case 'arc_strike':
+            // Cast effect at hero - projectile carries the damage
+            vfx.spawnClassImpact(heroX, heroY, 'lightning');
             break;
-          case 'godblast':
-            vfx.spawnGodblast(heroX, heroY);
+          case 'chain_lightning':
+            // Cast effect at hero - projectile carries the damage
+            vfx.spawnClassImpact(heroX, heroY, 'lightning');
+            break;
+          case 'ion_cannon':
+            vfx.spawnEmpBlast(heroX, heroY);
             break;
           default:
-            // Generic lightning effect
-            vfx.spawnLightningStrike(targetX, targetY);
+            // Generic cast effect at hero
+            vfx.spawnClassImpact(heroX, heroY, 'lightning');
         }
         break;
 
-      // === IRON SENTINEL (IRON MAN) ===
-      case 'iron_sentinel':
+      // === UNIT-3 "FORGE" ===
+      case 'forge':
         switch (skillId) {
-          case 'repulsor':
-            vfx.spawnRepulsorBeam(heroX, heroY, targetX, targetY);
+          case 'laser_burst':
+            vfx.spawnLaserBeam(heroX, heroY, targetX, targetY);
             break;
           case 'missile_barrage': {
             // Generate spread of targets
@@ -799,41 +1151,35 @@ export class HeroSystem {
             break;
           }
           case 'nano_swarm':
-            vfx.spawnRepulsorBeam(heroX, heroY, targetX, targetY);
-            break;
-          case 'proton_cannon':
-            vfx.spawnProtonCannon(heroX, heroY, targetX, targetY);
+            vfx.spawnLaserBeam(heroX, heroY, targetX, targetY);
             break;
           default:
             vfx.spawnClassImpact(targetX, targetY, 'tech');
         }
         break;
 
-      // === JADE TITAN (HULK) ===
-      case 'jade_titan':
+      // === UNIT-1 "TITAN" ===
+      case 'titan':
         switch (skillId) {
           case 'smash':
             vfx.spawnGroundSmash(heroX, heroY, 80);
             break;
-          case 'worldbreaker_stomp':
+          case 'seismic_stomp':
             vfx.spawnGroundSmash(heroX, heroY, 120);
             break;
-          case 'gamma_burst':
-            vfx.spawnGammaBurst(heroX, heroY, 100);
-            break;
-          case 'worldbreaker_ultimate':
-            vfx.spawnWorldbreaker(heroX, heroY);
+          case 'kinetic_burst':
+            vfx.spawnKineticBurst(heroX, heroY, 100);
             break;
           default:
             vfx.spawnGroundSmash(heroX, heroY, 60);
         }
         break;
 
-      // === SHIELD CAPTAIN (CAPTAIN AMERICA) ===
-      case 'shield_captain':
+      // === UNIT-0 "VANGUARD" ===
+      case 'vanguard':
         switch (skillId) {
-          case 'shield_throw':
-          case 'dual_shields': {
+          case 'barrier_pulse':
+          case 'dual_barrier': {
             // Create bounce path from hero to target and back
             const shieldPath = [
               { x: heroX, y: heroY },
@@ -844,14 +1190,9 @@ export class HeroSystem {
             vfx.spawnShieldThrow(shieldPath);
             break;
           }
-          case 'mjolnir_cap':
-            // Cap wielding Mjolnir - lightning + hammer!
+          case 'kinetic_hammer':
+            // Kinetic hammer - thrown projectile (impact VFX triggers on hit)
             vfx.spawnHammerThrow(heroX, heroY, targetX, targetY);
-            vfx.spawnLightningStrike(targetX, targetY);
-            break;
-          case 'assemble':
-            // Assemble with placeholder hero positions (would need actual hero positions)
-            vfx.spawnAvengersAssemble(heroX, heroY, []);
             break;
           default: {
             const defaultPath = [
@@ -863,30 +1204,29 @@ export class HeroSystem {
         }
         break;
 
-      // === SCARLET MAGE (SCARLET WITCH) ===
-      case 'scarlet_mage':
+      // === UNIT-9 "RIFT" ===
+      case 'rift':
         switch (skillId) {
-          case 'hex_bolt':
-            vfx.spawnHexBolt(heroX, heroY, targetX, targetY);
+          case 'plasma_bolt':
+            vfx.spawnPlasmaBolt(heroX, heroY, targetX, targetY);
             break;
-          case 'chaos_wave':
-            vfx.spawnChaosImpact(targetX, targetY, 100);
+          case 'plasma_wave':
+            // Cast effect at hero - projectile carries the damage
+            vfx.spawnThermalImpact(heroX, heroY, 60);
             break;
-          case 'hex_sphere':
-            vfx.spawnChaosImpact(heroX, heroY, 60);
-            break;
-          case 'no_more_enemies':
-            vfx.spawnRealityWarp(heroX, heroY);
+          case 'plasma_shield':
+            // Shield spawns at hero position - not a projectile
+            vfx.spawnThermalImpact(heroX, heroY, 60);
             break;
           default:
-            vfx.spawnHexBolt(heroX, heroY, targetX, targetY);
+            vfx.spawnPlasmaBolt(heroX, heroY, targetX, targetY);
         }
         break;
 
-      // === FROST ARCHER (HAWKEYE) ===
-      case 'frost_archer':
+      // === UNIT-5 "FROST" ===
+      case 'frost':
         switch (skillId) {
-          case 'frost_arrow':
+          case 'cryo_shot':
             vfx.spawnFrostArrow(heroX, heroY, targetX, targetY);
             break;
           case 'multi_shot': {
@@ -900,11 +1240,8 @@ export class HeroSystem {
             break;
           }
           case 'shatter_shot':
+            // Frost arrow travels - freeze impact happens when projectile hits
             vfx.spawnFrostArrow(heroX, heroY, targetX, targetY);
-            vfx.spawnFreezeImpact(targetX, targetY, 60);
-            break;
-          case 'blizzard_barrage':
-            vfx.spawnBlizzardBarrage(targetX, targetY, 150);
             break;
           default:
             vfx.spawnFrostArrow(heroX, heroY, targetX, targetY);
@@ -915,20 +1252,5 @@ export class HeroSystem {
         // Unknown hero - use generic class effect based on projectile class
         vfx.spawnSkillActivation(heroX, heroY, 'natural');
     }
-  }
-
-  // --- Helpers ---
-  private toScreenX(fpX: number, viewWidth: number): number {
-    const unitX = FP.toFloat(fpX);
-    const fieldWidth = 40;
-    return (unitX / fieldWidth) * viewWidth;
-  }
-
-  private toScreenY(fpY: number, viewHeight: number): number {
-    const unitY = FP.toFloat(fpY);
-    const fieldHeight = 15;
-    const pathTop = viewHeight * 0.35;
-    const pathBottom = viewHeight * 0.65; // Path is 30% of screen (35% to 65%)
-    return pathTop + (unitY / fieldHeight) * (pathBottom - pathTop);
   }
 }

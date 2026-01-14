@@ -4,7 +4,7 @@ import { Simulation, getDefaultConfig, FP, steerTowards } from '../../index.js';
 describe('Hero Movement', () => {
   it('hero should move towards enemies after they spawn', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -41,7 +41,7 @@ describe('Hero Movement', () => {
 
   it('hero state transitions from idle to deploying when enemies appear', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];

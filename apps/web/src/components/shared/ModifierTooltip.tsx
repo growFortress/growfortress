@@ -1,56 +1,79 @@
 import type { ModifierSet } from '@arcade/sim-core';
 import styles from './ModifierTooltip.module.css';
 
-// Modifier display names and formatting
+// Modifier display names and formatting (using actual ModifierSet keys)
 const MODIFIER_CONFIG: Record<keyof ModifierSet, { name: string; format: 'percent' | 'flat' | 'count'; positive: boolean }> = {
-  damageMultiplier: { name: 'Damage', format: 'percent', positive: true },
-  splashRadius: { name: 'Splash Radius', format: 'flat', positive: true },
-  splashDamage: { name: 'Splash Damage', format: 'percent', positive: true },
+  // Additive bonuses
+  damageBonus: { name: 'Damage', format: 'percent', positive: true },
+  attackSpeedBonus: { name: 'Attack Speed', format: 'percent', positive: true },
+  cooldownReduction: { name: 'Cooldown', format: 'percent', positive: true },
+  goldBonus: { name: 'Gold', format: 'percent', positive: true },
+  dustBonus: { name: 'Dust', format: 'percent', positive: true },
+  maxHpBonus: { name: 'Max HP', format: 'percent', positive: true },
+  eliteDamageBonus: { name: 'Elite Damage', format: 'percent', positive: true },
+
+  // Secondary stats
+  splashRadiusBonus: { name: 'Splash Radius', format: 'flat', positive: true },
+  splashDamagePercent: { name: 'Splash Damage', format: 'percent', positive: true },
   pierceCount: { name: 'Pierce', format: 'count', positive: true },
   chainChance: { name: 'Chain Chance', format: 'percent', positive: true },
   chainCount: { name: 'Chain Targets', format: 'count', positive: true },
-  chainDamage: { name: 'Chain Damage', format: 'percent', positive: true },
+  chainDamagePercent: { name: 'Chain Damage', format: 'percent', positive: true },
   executeThreshold: { name: 'Execute Threshold', format: 'percent', positive: true },
-  executeDamage: { name: 'Execute Damage', format: 'percent', positive: true },
+  executeBonusDamage: { name: 'Execute Damage', format: 'percent', positive: true },
   critChance: { name: 'Crit Chance', format: 'percent', positive: true },
-  critDamage: { name: 'Crit Damage', format: 'percent', positive: true },
-  goldMultiplier: { name: 'Gold', format: 'percent', positive: true },
-  dustMultiplier: { name: 'Dust', format: 'percent', positive: true },
-  maxHpMultiplier: { name: 'Max HP', format: 'percent', positive: true },
+  critDamageBonus: { name: 'Crit Damage', format: 'percent', positive: true },
+
+  // Defense
   hpRegen: { name: 'HP Regen', format: 'flat', positive: true },
-  cooldownMultiplier: { name: 'Cooldown', format: 'percent', positive: false },
-  attackSpeedMultiplier: { name: 'Attack Speed', format: 'percent', positive: true },
-  eliteDamageMultiplier: { name: 'Elite Damage', format: 'percent', positive: true },
-  waveDamageBonus: { name: 'Wave Damage Bonus', format: 'percent', positive: true },
-  lowHpDamageMultiplier: { name: 'Low HP Damage', format: 'percent', positive: true },
+  incomingDamageReduction: { name: 'Damage Reduction', format: 'percent', positive: true },
+
+  // Physics defense
+  massBonus: { name: 'Mass', format: 'percent', positive: true },
+  knockbackResistance: { name: 'Knockback Resist', format: 'percent', positive: true },
+  ccResistance: { name: 'CC Resist', format: 'percent', positive: true },
+
+  // Luck (meta-rewards)
+  dropRateBonus: { name: 'Drop Rate', format: 'percent', positive: true },
+  relicQualityBonus: { name: 'Relic Quality', format: 'percent', positive: true },
+  goldFindBonus: { name: 'Gold Find', format: 'percent', positive: true },
+
+  // Conditional
+  waveDamageBonus: { name: 'Wave Damage', format: 'percent', positive: true },
+  lowHpDamageBonus: { name: 'Low HP Damage', format: 'percent', positive: true },
   lowHpThreshold: { name: 'Low HP Threshold', format: 'percent', positive: false },
-  luckMultiplier: { name: 'Luck', format: 'percent', positive: true },
 };
 
 // Priority order for display
 const MODIFIER_PRIORITY: (keyof ModifierSet)[] = [
-  'damageMultiplier',
+  'damageBonus',
   'critChance',
-  'critDamage',
-  'attackSpeedMultiplier',
+  'critDamageBonus',
+  'attackSpeedBonus',
   'pierceCount',
-  'splashDamage',
-  'splashRadius',
+  'splashDamagePercent',
+  'splashRadiusBonus',
   'chainChance',
   'chainCount',
-  'chainDamage',
+  'chainDamagePercent',
   'executeThreshold',
-  'executeDamage',
-  'eliteDamageMultiplier',
-  'maxHpMultiplier',
-  'hpRegen',
-  'cooldownMultiplier',
-  'goldMultiplier',
-  'dustMultiplier',
-  'luckMultiplier',
+  'executeBonusDamage',
+  'eliteDamageBonus',
   'waveDamageBonus',
-  'lowHpDamageMultiplier',
+  'lowHpDamageBonus',
   'lowHpThreshold',
+  'maxHpBonus',
+  'hpRegen',
+  'incomingDamageReduction',
+  'massBonus',
+  'knockbackResistance',
+  'ccResistance',
+  'cooldownReduction',
+  'goldBonus',
+  'dustBonus',
+  'dropRateBonus',
+  'relicQualityBonus',
+  'goldFindBonus',
 ];
 
 interface ModifierTooltipProps {
@@ -66,8 +89,6 @@ export function ModifierTooltip({ modifiers, title, showZero = false, compact = 
       const value = modifiers[key];
       if (value === undefined) return false;
       if (!showZero && value === 0) return false;
-      // For multipliers, filter out 1.0 (no change)
-      if (key.includes('Multiplier') && value === 1) return false;
       return true;
     })
     .map(key => {

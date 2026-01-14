@@ -51,6 +51,12 @@ beforeEach(() => {
   resetPrismaMock();
   resetRedisMock();
   vi.clearAllMocks();
+
+  // Set default mocks for commonly used Prisma models
+  // gameConfig is used by many services via getGameConfig()
+  mockPrisma.gameConfig.findMany.mockResolvedValue([]);
+  // scheduledEvent is used by getActiveMultipliers()
+  mockPrisma.scheduledEvent.findMany.mockResolvedValue([]);
 });
 
 // Cleanup after each test

@@ -4,10 +4,12 @@ import { getCurrentWeekKey } from '../lib/queue.js';
 
 const LEADERBOARD_CACHE_KEY = 'leaderboard:weekly:';
 const CACHE_TTL = 300; // 5 minutes
+const MAX_CACHED_ENTRIES = 100; // Cache top 100, paginate in memory
 
 export interface LeaderboardEntry {
   rank: number;
   userId: string;
+  displayName: string;
   score: number;
   wavesCleared: number;
   createdAt: string;
@@ -56,12 +58,14 @@ export async function upsertLeaderboardEntry(
     },
   });
 
-  // Invalidate cache
-  await redis.del(LEADERBOARD_CACHE_KEY + weekKey);
+  // Invalidate cache (use :full suffix to match new cache key format)
+  await redis.del(`${LEADERBOARD_CACHE_KEY}${weekKey}:full`);
 }
 
 /**
  * Get weekly leaderboard
+ * Uses a single cache key per week (top 100), then paginates in memory
+ * This prevents cache key explosion from offset-based keys
  */
 export async function getWeeklyLeaderboard(
   weekKey: string = getCurrentWeekKey(),
@@ -72,56 +76,76 @@ export async function getWeeklyLeaderboard(
   entries: LeaderboardEntry[];
   total: number;
 }> {
-  // Try cache first
-  const cacheKey = `${LEADERBOARD_CACHE_KEY}${weekKey}:${limit}:${offset}`;
+  // Single cache key per week (no offset/limit in key)
+  const cacheKey = `${LEADERBOARD_CACHE_KEY}${weekKey}:full`;
   const cached = await redis.get(cacheKey);
 
-  if (cached) {
-    return JSON.parse(cached);
-  }
+  let allEntries: LeaderboardEntry[];
+  let total: number;
 
-  // Get entries from database
-  const [entries, total] = await Promise.all([
-    prisma.leaderboardEntry.findMany({
-      where: { weekKey },
-      orderBy: { score: 'desc' },
-      skip: offset,
-      take: limit,
-      include: {
-        user: {
-          include: {
-            runs: {
-              where: { verified: true },
-              orderBy: { score: 'desc' },
-              take: 1,
-              select: { summaryJson: true },
-            },
+  if (cached) {
+    const parsedCache = JSON.parse(cached) as { entries: LeaderboardEntry[]; total: number };
+    allEntries = parsedCache.entries;
+    total = parsedCache.total;
+  } else {
+    // Get top entries from database with user display names (no N+1)
+    const [dbEntries, count] = await Promise.all([
+      prisma.leaderboardEntry.findMany({
+        where: { weekKey },
+        orderBy: { score: 'desc' },
+        take: MAX_CACHED_ENTRIES,
+        select: {
+          userId: true,
+          score: true,
+          createdAt: true,
+          runId: true,
+          user: {
+            select: { displayName: true },
           },
         },
-      },
-    }),
-    prisma.leaderboardEntry.count({ where: { weekKey } }),
-  ]);
+      }),
+      prisma.leaderboardEntry.count({ where: { weekKey } }),
+    ]);
 
-  const result = {
-    weekKey,
-    entries: entries.map((entry, index) => {
-      const summary = entry.user.runs[0]?.summaryJson as { wavesCleared?: number } | null;
+    // Batch fetch run summaries (single query instead of N+1)
+    // Skip query if no entries to avoid unnecessary database round-trip
+    const runIds = dbEntries.map(e => e.runId);
+    const runs = runIds.length > 0
+      ? await prisma.run.findMany({
+          where: { id: { in: runIds } },
+          select: { id: true, summaryJson: true },
+        })
+      : [];
+    const runMap = new Map(runs.map(r => [r.id, r.summaryJson]));
+
+    allEntries = dbEntries.map((entry, index) => {
+      const summary = runMap.get(entry.runId) as { wavesCleared?: number } | null;
       return {
-        rank: offset + index + 1,
+        rank: index + 1,
         userId: entry.userId,
+        displayName: entry.user.displayName,
         score: entry.score,
         wavesCleared: summary?.wavesCleared ?? 0,
         createdAt: entry.createdAt.toISOString(),
       };
-    }),
+    });
+    total = count;
+
+    // Cache full result
+    await redis.setex(cacheKey, CACHE_TTL, JSON.stringify({ entries: allEntries, total }));
+  }
+
+  // Paginate in memory
+  const paginatedEntries = allEntries.slice(offset, offset + limit).map((entry, index) => ({
+    ...entry,
+    rank: offset + index + 1,
+  }));
+
+  return {
+    weekKey,
+    entries: paginatedEntries,
     total,
   };
-
-  // Cache result
-  await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(result));
-
-  return result;
 }
 
 /**

@@ -267,6 +267,7 @@ export interface PowerBreakdown {
   basePower: number;
   upgradeMultiplier: number;
   tierMultiplier: number;
+  artifactPower?: number;  // Power z wyposażonego artefaktu
   totalPower: number;
 }
 

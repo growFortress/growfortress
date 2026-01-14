@@ -5,9 +5,6 @@ import type {
   AuthLoginResponse,
   AuthRefreshResponse,
   ProfileResponse,
-  RunStartResponse,
-  RunFinishRequest,
-  RunFinishResponse,
   LeaderboardResponse,
   SessionStartRequest,
   SessionStartResponse,
@@ -15,8 +12,11 @@ import type {
   SegmentSubmitResponse,
   PartialRewards,
   SessionEndResponse,
+  ActiveSessionResponse,
   CompleteOnboardingRequest,
   CompleteOnboardingResponse,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
   UpgradeHeroRequest,
   UpgradeHeroResponse,
   UpgradeTurretRequest,
@@ -36,119 +36,22 @@ import type {
   UnlockHeroResponse,
   UnlockTurretRequest,
   UnlockTurretResponse,
+  // Consolidated types from protocol
+  MaterialsResponse,
+  AddMaterialsResponse,
+  RemoveMaterialsResponse,
+  PendingIdleRewardsResponse,
+  ClaimIdleRewardsResponse,
+  IdleRewardsConfigResponse,
+  BulkReward,
+  ClaimBulkRewardResponse,
 } from '@arcade/protocol';
-import { CONFIG } from '../config.js';
-import { getAccessToken, getRefreshToken, setTokens, setDisplayName, clearTokens } from './auth.js';
+import { setTokens, setDisplayName, clearTokens } from './auth.js';
+import { ApiError, request } from './base.js';
+import { resetAllState } from '../state/index.js';
 
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public data?: unknown
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
-let isRefreshing = false;
-let refreshPromise: Promise<boolean> | null = null;
-
-async function tryRefreshToken(): Promise<boolean> {
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise;
-  }
-
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return false;
-  }
-
-  isRefreshing = true;
-  refreshPromise = (async () => {
-    try {
-      const response = await fetch(`${CONFIG.API_URL}/v1/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!response.ok) {
-        clearTokens();
-        return false;
-      }
-
-      const data: AuthRefreshResponse = await response.json();
-      setTokens(data.accessToken, data.refreshToken);
-      setDisplayName(data.displayName);
-      return true;
-    } catch {
-      clearTokens();
-      return false;
-    } finally {
-      isRefreshing = false;
-      refreshPromise = null;
-    }
-  })();
-
-  return refreshPromise;
-}
-
-interface RequestOptions extends RequestInit {
-  skipAuth?: boolean;
-  skipAuthRefresh?: boolean;
-}
-
-async function request<T>(
-  path: string,
-  options: RequestOptions = {},
-  retry = true
-): Promise<T> {
-  const url = `${CONFIG.API_URL}${path}`;
-
-  const { skipAuth, skipAuthRefresh, ...fetchOptions } = options;
-
-  const headers: Record<string, string> = {
-    ...fetchOptions.headers as Record<string, string>,
-  };
-
-  if (fetchOptions.body) {
-    headers['Content-Type'] = 'application/json';
-  }
-
-  if (!skipAuth) {
-    const token = getAccessToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-  }
-
-  const response = await fetch(url, {
-    ...fetchOptions,
-    headers,
-  });
-
-  if (!response.ok) {
-    // Try to refresh token on 401
-    if (response.status === 401 && retry && !skipAuthRefresh) {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) {
-        return request<T>(path, options, false);
-      }
-    }
-
-    const data = await response.json().catch(() => ({}));
-    throw new ApiError(response.status, data.error || 'Request failed', data);
-  }
-
-  // Handle empty responses (204 No Content)
-  const contentType = response.headers.get('content-type');
-  if (response.status === 204 || !contentType?.includes('application/json')) {
-    return {} as T;
-  }
-
-  return response.json();
-}
+// Re-export ApiError for backwards compatibility
+export { ApiError } from './base.js';
 
 // Auth
 export async function register(data: AuthRegisterRequest): Promise<AuthRegisterResponse> {
@@ -161,6 +64,24 @@ export async function register(data: AuthRegisterRequest): Promise<AuthRegisterR
   setTokens(response.accessToken, response.refreshToken);
   setDisplayName(response.displayName);
   return response;
+}
+
+export async function forgotPassword(data: ForgotPasswordRequest): Promise<{ message: string }> {
+  return request<{ message: string }>('/v1/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
+    skipAuthRefresh: true,
+  });
+}
+
+export async function resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
+  return request<{ message: string }>('/v1/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
+    skipAuthRefresh: true,
+  });
 }
 
 export async function login(data: AuthLoginRequest): Promise<AuthLoginResponse> {
@@ -208,23 +129,6 @@ export async function completeOnboarding(
   });
 }
 
-// Runs
-export async function startRun(): Promise<RunStartResponse> {
-  return request<RunStartResponse>('/v1/runs/start', {
-    method: 'POST',
-  });
-}
-
-export async function finishRun(
-  runId: string,
-  payload: RunFinishRequest
-): Promise<RunFinishResponse> {
-  return request<RunFinishResponse>(`/v1/runs/${encodeURIComponent(runId)}/finish`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
 // Leaderboard
 export async function getLeaderboard(
   week?: string,
@@ -237,7 +141,7 @@ export async function getLeaderboard(
   return request<LeaderboardResponse>(`/v1/leaderboards/weekly?${params}`);
 }
 
-// Re-export session types for backwards compatibility
+// Re-export types for backwards compatibility
 export type {
   SessionStartRequest,
   SessionStartResponse,
@@ -246,6 +150,17 @@ export type {
   PartialRewards,
   SessionEndResponse,
   UpdateLoadoutRequest,
+  // Materials
+  MaterialsResponse,
+  AddMaterialsResponse,
+  RemoveMaterialsResponse,
+  // Idle Rewards
+  PendingIdleRewardsResponse,
+  ClaimIdleRewardsResponse,
+  IdleRewardsConfigResponse,
+  // Bulk Rewards
+  BulkReward,
+  ClaimBulkRewardResponse,
 } from '@arcade/protocol';
 
 export async function startSession(data: SessionStartRequest = {}): Promise<SessionStartResponse> {
@@ -253,13 +168,6 @@ export async function startSession(data: SessionStartRequest = {}): Promise<Sess
     method: 'POST',
     body: JSON.stringify(data),
   });
-}
-
-// Active session response type
-export interface ActiveSessionResponse {
-  sessionId: string;
-  currentWave: number;
-  startedAt: string;
 }
 
 export async function getActiveSession(): Promise<ActiveSessionResponse | null> {
@@ -311,6 +219,9 @@ export async function upgradeTurret(data: UpgradeTurretRequest): Promise<Upgrade
 
 // Auth - Logout
 export function logout(): void {
+  // Clear all application state first
+  resetAllState();
+  // Then clear auth tokens
   clearTokens();
 }
 
@@ -322,21 +233,23 @@ export async function updateDefaultLoadout(data: UpdateLoadoutRequest): Promise<
   });
 }
 
-// Materials
-export interface MaterialsResponse {
-  materials: Record<string, number>;
-  totalCount: number;
-  uniqueCount: number;
+// Profile - Update player description
+export async function updatePlayerDescription(description: string): Promise<{ description: string }> {
+  return request<{ description: string }>('/v1/profile/description', {
+    method: 'PATCH',
+    body: JSON.stringify({ description }),
+  });
 }
 
+// Materials
 export async function getMaterials(): Promise<MaterialsResponse> {
   return request<MaterialsResponse>('/v1/inventory/materials');
 }
 
 export async function addMaterials(
   materials: Record<string, number>
-): Promise<{ success: boolean; materials: Record<string, number> }> {
-  return request('/v1/inventory/materials/add', {
+): Promise<AddMaterialsResponse> {
+  return request<AddMaterialsResponse>('/v1/inventory/materials/add', {
     method: 'POST',
     body: JSON.stringify({ materials }),
   });
@@ -344,8 +257,8 @@ export async function addMaterials(
 
 export async function removeMaterials(
   materials: Record<string, number>
-): Promise<{ success: boolean; materials: Record<string, number> }> {
-  return request('/v1/inventory/materials/remove', {
+): Promise<RemoveMaterialsResponse> {
+  return request<RemoveMaterialsResponse>('/v1/inventory/materials/remove', {
     method: 'POST',
     body: JSON.stringify({ materials }),
   });
@@ -405,36 +318,6 @@ export async function unlockTurret(data: UnlockTurretRequest): Promise<UnlockTur
 }
 
 // Idle Rewards
-export interface PendingIdleRewardsResponse {
-  hoursOffline: number;
-  cappedHours: number;
-  pendingMaterials: Record<string, number>;
-  pendingDust: number;
-  canClaim: boolean;
-  minutesUntilNextClaim: number;
-}
-
-export interface ClaimIdleRewardsResponse {
-  success: boolean;
-  claimed?: {
-    materials: Record<string, number>;
-    dust: number;
-  };
-  newInventory?: {
-    materials: Record<string, number>;
-    dust: number;
-  };
-  error?: string;
-}
-
-export interface IdleRewardsConfigResponse {
-  commanderLevel: number;
-  maxAccrualHours: number;
-  expectedMaterialsPerHour: number;
-  expectedMaterialsMax: number;
-  legendaryChance: number;
-}
-
 export async function getPendingIdleRewards(): Promise<PendingIdleRewardsResponse> {
   return request<PendingIdleRewardsResponse>('/v1/idle/pending');
 }
@@ -450,22 +333,12 @@ export async function getIdleRewardsConfig(): Promise<IdleRewardsConfigResponse>
 }
 
 // Bulk Rewards
-export interface BulkReward {
-  id: string;
-  title: string;
-  description: string;
-  type: string;
-  value: string;
-  createdAt: string;
-  expiresAt: string | null;
-}
-
 export async function getBulkRewards(): Promise<BulkReward[]> {
   return request<BulkReward[]>('/v1/rewards');
 }
 
-export async function claimBulkReward(rewardId: string): Promise<{ success: boolean; rewardId: string }> {
-  return request<{ success: boolean; rewardId: string }>(`/v1/rewards/${encodeURIComponent(rewardId)}/claim`, {
+export async function claimBulkReward(rewardId: string): Promise<ClaimBulkRewardResponse> {
+  return request<ClaimBulkRewardResponse>(`/v1/rewards/${encodeURIComponent(rewardId)}/claim`, {
     method: 'POST',
   });
 }

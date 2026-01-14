@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { upsertLeaderboardEntry, getWeeklyLeaderboard, getUserRank } from '../../../services/leaderboard.js';
-import { mockPrisma, createMockLeaderboardEntry, createMockUser } from '../../mocks/prisma.js';
+import { mockPrisma, createMockLeaderboardEntry } from '../../mocks/prisma.js';
 import { mockRedis, setMockRedisValue } from '../../mocks/redis.js';
 
 // Mock the queue module
@@ -82,7 +82,7 @@ describe('Leaderboard Service', () => {
 
       await upsertLeaderboardEntry('user-123', 'run-123', 5000, '2024-W01');
 
-      expect(mockRedis.del).toHaveBeenCalledWith('leaderboard:weekly:2024-W01');
+      expect(mockRedis.del).toHaveBeenCalledWith('leaderboard:weekly:2024-W01:full');
     });
 
     it('uses default week key if not provided', async () => {
@@ -106,35 +106,38 @@ describe('Leaderboard Service', () => {
 
   describe('getWeeklyLeaderboard', () => {
     it('returns cached result if available', async () => {
-      const cached = {
-        weekKey: '2024-W01',
+      // New cache format: { entries: [...], total: number }
+      const cachedData = {
         entries: [
           { rank: 1, userId: 'user-1', score: 10000, wavesCleared: 15, createdAt: '2024-01-01' },
         ],
         total: 1,
       };
-      setMockRedisValue('leaderboard:weekly:2024-W01:10:0', JSON.stringify(cached));
+      setMockRedisValue('leaderboard:weekly:2024-W01:full', JSON.stringify(cachedData));
 
       const result = await getWeeklyLeaderboard('2024-W01', 10, 0);
 
-      expect(result).toEqual(cached);
+      expect(result.weekKey).toBe('2024-W01');
+      expect(result.entries.length).toBe(1);
+      expect(result.total).toBe(1);
       expect(mockPrisma.leaderboardEntry.findMany).not.toHaveBeenCalled();
     });
 
     it('fetches from database if not cached', async () => {
-      const mockEntry = createMockLeaderboardEntry({ score: 5000 });
-      const mockUser = createMockUser();
-
+      // New service uses separate queries for entries and runs
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([
         {
-          ...mockEntry,
-          user: {
-            ...mockUser,
-            runs: [{ summaryJson: { wavesCleared: 10 } }],
-          },
+          userId: 'user-123',
+          score: 5000,
+          createdAt: new Date('2024-01-01'),
+          runId: 'run-123',
+          user: { displayName: 'TestPlayer' },
         },
       ]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(1);
+      mockPrisma.run.findMany.mockResolvedValue([
+        { id: 'run-123', summaryJson: { wavesCleared: 10 } },
+      ]);
 
       const result = await getWeeklyLeaderboard('2024-W01', 10, 0);
 
@@ -142,6 +145,7 @@ describe('Leaderboard Service', () => {
       expect(result.entries.length).toBe(1);
       expect(result.entries[0].rank).toBe(1);
       expect(result.entries[0].score).toBe(5000);
+      expect(result.entries[0].displayName).toBe('TestPlayer');
       expect(result.entries[0].wavesCleared).toBe(10);
       expect(result.total).toBe(1);
     });
@@ -149,41 +153,47 @@ describe('Leaderboard Service', () => {
     it('caches result after fetching', async () => {
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
+      mockPrisma.run.findMany.mockResolvedValue([]);
 
       await getWeeklyLeaderboard('2024-W01', 10, 0);
 
       expect(mockRedis.setex).toHaveBeenCalledWith(
-        'leaderboard:weekly:2024-W01:10:0',
+        'leaderboard:weekly:2024-W01:full',
         300, // 5 minutes TTL
         expect.any(String)
       );
     });
 
     it('handles pagination correctly', async () => {
+      // Service now fetches MAX_CACHED_ENTRIES (100) and paginates in memory
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(50);
+      mockPrisma.run.findMany.mockResolvedValue([]);
 
       await getWeeklyLeaderboard('2024-W01', 10, 20);
 
+      // The service now uses take: MAX_CACHED_ENTRIES (100) instead of limit
       expect(mockPrisma.leaderboardEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          skip: 20,
-          take: 10,
+          where: { weekKey: '2024-W01' },
+          take: 100, // MAX_CACHED_ENTRIES
         })
       );
     });
 
     it('calculates rank based on offset', async () => {
-      const mockEntry = createMockLeaderboardEntry({ score: 3000 });
-      const mockUser = createMockUser();
+      // Create 25 entries to test pagination
+      const entries = Array.from({ length: 25 }, (_, i) => ({
+        userId: `user-${i}`,
+        score: 10000 - i * 100,
+        createdAt: new Date('2024-01-01'),
+        runId: `run-${i}`,
+        user: { displayName: `Player${i}` },
+      }));
 
-      mockPrisma.leaderboardEntry.findMany.mockResolvedValue([
-        {
-          ...mockEntry,
-          user: { ...mockUser, runs: [] },
-        },
-      ]);
+      mockPrisma.leaderboardEntry.findMany.mockResolvedValue(entries);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(25);
+      mockPrisma.run.findMany.mockResolvedValue([]);
 
       const result = await getWeeklyLeaderboard('2024-W01', 10, 20);
 
@@ -191,16 +201,17 @@ describe('Leaderboard Service', () => {
     });
 
     it('defaults to 0 wavesCleared if no runs', async () => {
-      const mockEntry = createMockLeaderboardEntry({ score: 5000 });
-      const mockUser = createMockUser();
-
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([
         {
-          ...mockEntry,
-          user: { ...mockUser, runs: [] },
+          userId: 'user-123',
+          score: 5000,
+          createdAt: new Date('2024-01-01'),
+          runId: 'run-123',
+          user: { displayName: 'TestPlayer' },
         },
       ]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(1);
+      mockPrisma.run.findMany.mockResolvedValue([]); // No runs found
 
       const result = await getWeeklyLeaderboard('2024-W01');
 
@@ -210,14 +221,14 @@ describe('Leaderboard Service', () => {
     it('uses default parameters', async () => {
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
+      mockPrisma.run.findMany.mockResolvedValue([]);
 
       await getWeeklyLeaderboard();
 
       expect(mockPrisma.leaderboardEntry.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { weekKey: '2024-W01' },
-          skip: 0,
-          take: 10,
+          take: 100, // MAX_CACHED_ENTRIES
         })
       );
     });

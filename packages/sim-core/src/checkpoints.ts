@@ -308,20 +308,20 @@ export function computeCheckpointHash(state: GameState): number {
     appendSkillEffects(data, projectile.effects);
   }
 
-  // Infinity Stones
-  appendNumber(data, state.infinityStoneFragments.length);
-  for (const fragment of state.infinityStoneFragments) {
-    appendString(data, fragment.stoneType);
+  // Crystal system (ancient artifacts)
+  appendNumber(data, state.crystalFragments.length);
+  for (const fragment of state.crystalFragments) {
+    appendString(data, fragment.crystalType);
     appendNumber(data, fragment.count);
   }
-  appendStringArray(data, state.collectedStones);
-  appendBool(data, !!state.gauntletState);
-  if (state.gauntletState) {
-    appendBool(data, state.gauntletState.isAssembled);
-    appendOptionalString(data, state.gauntletState.heroId);
-    appendStringArray(data, state.gauntletState.stonesCollected);
-    appendNumber(data, state.gauntletState.snapCooldown);
-    appendNumber(data, state.gauntletState.snapUsedCount);
+  appendStringArray(data, state.collectedCrystals);
+  appendBool(data, !!state.matrixState);
+  if (state.matrixState) {
+    appendBool(data, state.matrixState.isAssembled);
+    appendOptionalString(data, state.matrixState.heroId);
+    appendStringArray(data, state.matrixState.crystalsCollected);
+    appendNumber(data, state.matrixState.annihilationCooldown);
+    appendNumber(data, state.matrixState.annihilationUsedCount);
   }
 
   // Materials

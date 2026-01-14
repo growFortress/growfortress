@@ -31,6 +31,13 @@ import {
   commandSelectedHeroId,
   setCommandTarget,
   cancelCommand,
+  baseGold,
+  baseDust,
+  baseLevel,
+  baseXp,
+  baseTotalXp,
+  baseXpToNextLevel,
+  currentWave,
   type GameEndState,
 } from '../state/index.js';
 import { FP } from '@arcade/sim-core';
@@ -47,7 +54,7 @@ interface UseGameLoopReturn {
   resumeSession: (snapshot: ActiveSessionSnapshot) => Promise<SessionStartResponse | null>;
   endSession: () => Promise<void>;
   chooseRelic: (index: number) => void;
-  activateSnap: () => void;
+  activateAnnihilation: () => void;
   reset: () => void;
   startBossRush: (options?: StartSessionOptions) => Promise<BossRushStartResponse | null>;
   endBossRush: () => Promise<void>;
@@ -69,6 +76,9 @@ export function useGameLoop(
 
     let destroyed = false;
     let hubRafId: number | null = null;
+    let lastHubStateKey = ''; // Track state changes to avoid unnecessary renders
+    let hubIdleFrames = 0; // Count idle frames to throttle when nothing changes
+    const HUB_THROTTLE_THRESHOLD = 5; // After 5 idle frames, slow down to 10fps
     const renderer = new GameApp(canvas);
     rendererRef.current = renderer;
 
@@ -79,7 +89,12 @@ export function useGameLoop(
       onChoiceRequired: (options: string[]) => {
         showChoice(options);
       },
-      onGameEnd: (won: boolean) => {
+      onGameEnd: (
+        won: boolean,
+        newInventory?: { gold: number; dust: number },
+        newProgression?: { level: number; xp: number; totalXp: number; xpToNextLevel: number },
+        finalWave?: number
+      ) => {
         const state = game.getState();
         const endState: GameEndState | null = state
           ? {
@@ -93,6 +108,25 @@ export function useGameLoop(
             }
           : null;
         showEndScreenWithStats(won, endState);
+
+        // Update inventory from session end response
+        if (newInventory) {
+          baseGold.value = newInventory.gold;
+          baseDust.value = newInventory.dust;
+        }
+
+        // Update progression from session end response
+        if (newProgression) {
+          baseLevel.value = newProgression.level;
+          baseXp.value = newProgression.xp;
+          baseTotalXp.value = newProgression.totalXp;
+          baseXpToNextLevel.value = newProgression.xpToNextLevel;
+        }
+
+        // Update wave from session end response
+        if (finalWave !== undefined) {
+          currentWave.value = finalWave;
+        }
 
         // Reinitialize hub state from loadout for proper display
         initializeHubFromLoadout();
@@ -121,10 +155,13 @@ export function useGameLoop(
     });
     loopRef.current = loop;
 
-    // Hub rendering loop for idle phase
-    const renderHub = () => {
+    // Hub rendering loop for idle phase - with throttling for performance
+    let lastHubRenderTime = 0;
+    const renderHub = (timestamp: number = 0) => {
       if (destroyed || loop.isRunning()) {
         hubRafId = null;
+        lastHubStateKey = '';
+        hubIdleFrames = 0;
         return;
       }
 
@@ -137,6 +174,29 @@ export function useGameLoop(
           }
         : undefined;
 
+      // Create a simple state key to detect changes
+      const stateKey = hubState
+        ? `${hubState.heroes.length}-${hubState.turrets.length}-${hubState.turretSlots}`
+        : 'none';
+
+      const stateChanged = stateKey !== lastHubStateKey;
+      lastHubStateKey = stateKey;
+
+      // Throttle when nothing changes - render at ~10fps instead of 60fps
+      if (!stateChanged) {
+        hubIdleFrames++;
+        if (hubIdleFrames > HUB_THROTTLE_THRESHOLD) {
+          const elapsed = timestamp - lastHubRenderTime;
+          if (elapsed < 100) { // 100ms = 10fps
+            hubRafId = requestAnimationFrame(renderHub);
+            return;
+          }
+        }
+      } else {
+        hubIdleFrames = 0;
+      }
+
+      lastHubRenderTime = timestamp;
       renderer.render(null, 0, hubState);
       hubRafId = requestAnimationFrame(renderHub);
     };
@@ -160,6 +220,12 @@ export function useGameLoop(
       // Set up hero click handler for hub mode
       renderer.setOnHeroClick((heroId: string) => {
         upgradeTarget.value = { type: 'hero', heroId };
+        upgradePanelVisible.value = true;
+      });
+
+      // Set up turret click handler for hub mode
+      renderer.setOnTurretClick((turretId: string, slotIndex: number) => {
+        upgradeTarget.value = { type: 'turret', turretId, slotIndex };
         upgradePanelVisible.value = true;
       });
 
@@ -245,10 +311,10 @@ export function useGameLoop(
     game.chooseRelic(index);
   }, []);
 
-  const activateSnap = useCallback((): void => {
+  const activateAnnihilation = useCallback((): void => {
     const game = gameRef.current;
     if (!game) return;
-    game.activateSnap();
+    game.activateAnnihilation();
   }, []);
 
   const reset = useCallback((): void => {
@@ -293,7 +359,7 @@ export function useGameLoop(
     resumeSession,
     endSession,
     chooseRelic,
-    activateSnap,
+    activateAnnihilation,
     reset,
     startBossRush,
     endBossRush,

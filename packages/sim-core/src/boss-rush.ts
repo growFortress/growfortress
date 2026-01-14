@@ -179,9 +179,9 @@ export function getBossRushBossRewards(
   const cycle = Math.floor(bossIndex / BOSS_RUSH_CYCLE_LENGTH);
   const boss = BOSS_RUSH_SEQUENCE[sequenceIndex];
 
-  // Base rewards scale with boss position
+  // Base rewards scale with boss position (dust reduced by 50%)
   const baseGold = 50 + bossIndex * 20;
-  const baseDust = 25 + bossIndex * 10;
+  const baseDust = 12 + bossIndex * 5;
   const baseXp = 30 + bossIndex * 15;
 
   // Cycle bonus (+50% per cycle)

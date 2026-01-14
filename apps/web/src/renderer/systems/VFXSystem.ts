@@ -1,16 +1,28 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import type { FortressClass } from '@arcade/sim-core';
+import { graphicsSettings } from '../../state/settings.signals.js';
+import { filterManager } from '../effects/FilterManager';
 
-// Class-specific colors for VFX (simplified: 5 classes)
+// Class-specific colors for VFX (7 classes)
 const CLASS_VFX_COLORS: Record<FortressClass, { primary: number; secondary: number; glow: number }> = {
   natural: { primary: 0x228b22, secondary: 0x32cd32, glow: 0x44ff44 },
   ice: { primary: 0x00bfff, secondary: 0x87ceeb, glow: 0xadd8e6 },
   fire: { primary: 0xff4500, secondary: 0xff6600, glow: 0xffaa00 },
   lightning: { primary: 0x9932cc, secondary: 0xda70d6, glow: 0xffffff },
   tech: { primary: 0x00f0ff, secondary: 0x00ffff, glow: 0xffffff },
+  void: { primary: 0x4b0082, secondary: 0x8b008b, glow: 0x9400d3 },
+  plasma: { primary: 0x00ffff, secondary: 0xff00ff, glow: 0xffffff },
 };
 
-type ParticleShape = 'circle' | 'square' | 'spark' | 'ring' | 'diamond' | 'star' | 'smoke';
+type ParticleShape = 'circle' | 'square' | 'spark' | 'ring' | 'diamond' | 'star' | 'smoke' | 'confetti';
+
+export interface FloatingText {
+  text: Text;
+  life: number;
+  maxLife: number;
+  vy: number;
+}
+
 
 interface Particle {
   x: number;
@@ -94,6 +106,7 @@ class ParticlePool {
 export class VFXSystem {
   public container: Container;
   private particles: Particle[] = [];
+  private floatingTexts: FloatingText[] = [];
   private graphics: Graphics;
   private pool: ParticlePool;
   private screenShakeCallback: ScreenShakeCallback | null = null;
@@ -115,6 +128,20 @@ export class VFXSystem {
     this.pool = new ParticlePool(2000);
   }
 
+  // --- SETTINGS INTEGRATION ---
+  private get particleMultiplier(): number {
+    const { particles, quality } = graphicsSettings.value;
+    
+    // Combine explicit particle setting with quality preset fallbacks if needed
+    // (Current implementation uses explicit multiplier, but we could add logic here)
+    if (quality === 'low') return Math.min(particles, 0.5);
+    
+    return particles;
+  }
+
+
+
+
   public setScreenShakeCallback(callback: ScreenShakeCallback) {
     this.screenShakeCallback = callback;
   }
@@ -130,6 +157,23 @@ export class VFXSystem {
 
     // Update staged effects
     this.updateStagedEffects(dt);
+
+    // Update Floating Texts
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.life -= dt;
+      
+      // Move up
+      ft.text.y += ft.vy * dt;
+      // Fade out
+      ft.text.alpha = Math.max(0, ft.life / ft.maxLife);
+
+      if (ft.life <= 0) {
+        this.container.removeChild(ft.text);
+        ft.text.destroy();
+        this.floatingTexts.splice(i, 1);
+      }
+    }
 
     // Update particles using swap-and-pop for performance
     let i = this.particles.length;
@@ -155,7 +199,11 @@ export class VFXSystem {
       }
 
       // Apply rotation if specified
-      if (p.rotation !== undefined && p.rotationSpeed) {
+      // For confetti: chaotic rotation
+      if (p.shape === 'confetti') {
+        p.rotation = (p.rotation || 0) + (p.rotationSpeed || 5) * dt;
+        p.scaleX = Math.cos(p.rotation); // Flip effect
+      } else if (p.rotation !== undefined && p.rotationSpeed) {
         p.rotation += p.rotationSpeed * dt;
       }
 
@@ -416,7 +464,7 @@ export class VFXSystem {
     intensity: number,
     fortressClass: FortressClass
   ) {
-    const particleCount = Math.floor(25 * intensity);
+    const particleCount = Math.floor(25 * intensity * this.particleMultiplier);
 
     for (let i = 0; i < particleCount; i++) {
       const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.4;
@@ -473,7 +521,7 @@ export class VFXSystem {
     colors: { primary: number; secondary: number; glow: number },
     intensity: number
   ) {
-    const particleCount = Math.floor(12 * intensity);
+    const particleCount = Math.floor(12 * intensity * this.particleMultiplier);
 
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -498,7 +546,7 @@ export class VFXSystem {
 
   // --- SMOKE ---
   private spawnSmoke(x: number, y: number, intensity: number) {
-    const particleCount = Math.floor(8 * intensity);
+    const particleCount = Math.floor(8 * intensity * this.particleMultiplier);
 
     for (let i = 0; i < particleCount; i++) {
       const p = this.pool.acquire();
@@ -526,7 +574,7 @@ export class VFXSystem {
   // --- PUBLIC API ---
 
   public spawnExplosion(x: number, y: number, color: number = 0xffaa00) {
-    const particleCount = 12;
+    const particleCount = Math.floor(12 * this.particleMultiplier);
 
     for (let i = 0; i < particleCount; i++) {
       const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.5;
@@ -547,8 +595,9 @@ export class VFXSystem {
     }
   }
 
-  public spawnShockwave(_x: number, _y: number) {
-    // Disabled - ShockwaveFilter has compatibility issues with PixiJS v8
+  public spawnShockwave(x: number, y: number) {
+    // Use FilterManager for shockwave effect
+    filterManager.applyScreenShockwave(x, y, 600);
   }
 
   // --- ENHANCED CLASS-SPECIFIC VFX ---
@@ -568,6 +617,19 @@ export class VFXSystem {
     if (intensity >= 1) {
       this.triggerScreenShake(3 * intensity, 150);
     }
+
+    // Apply filter effects for dramatic explosions
+    if (intensity >= 1.5) {
+      // Large explosions get shockwave
+      filterManager.applyScreenShockwave(x, y, 800);
+    }
+    if (intensity >= 1) {
+      // Screen flash based on class
+      const flashColor = fortressClass === 'fire' ? 'yellow' :
+                        fortressClass === 'ice' ? 'white' :
+                        fortressClass === 'lightning' ? 'white' : 'white';
+      filterManager.applyScreenFlash(flashColor, 150, 0.3 * intensity);
+    }
   }
 
   /**
@@ -583,7 +645,7 @@ export class VFXSystem {
    */
   public spawnClassImpact(x: number, y: number, fortressClass: FortressClass) {
     const colors = CLASS_VFX_COLORS[fortressClass];
-    const particleCount = 8;
+    const particleCount = Math.floor(8 * this.particleMultiplier);
 
     // Small flash
     this.spawnFlash(x, y, colors.glow, 12);
@@ -721,7 +783,7 @@ export class VFXSystem {
     this.particles.push(p);
 
     // Ground particles
-    const particleCount = Math.floor(radius / 5);
+    const particleCount = Math.floor((radius / 5) * this.particleMultiplier);
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const dist = Math.random() * radius * 0.8;
@@ -739,6 +801,70 @@ export class VFXSystem {
       gp.alpha = 0.6;
 
       this.particles.push(gp);
+    }
+  }
+
+  // --- FLOATING TEXT ---
+  public spawnFloatingText(x: number, y: number, text: string, color: number = 0xffffff) {
+    if (!graphicsSettings.value.damageNumbers) return;
+
+    const style = new TextStyle({
+      fontFamily: 'monospace',
+      fontSize: 20,
+      fontWeight: 'bold',
+      fill: color,
+      stroke: { width: 3, color: '#000000' }, // PixiJS v8 style
+      dropShadow: {
+        color: '#000000',
+        blur: 2,
+        angle: Math.PI / 4,
+        distance: 2,
+      },
+    });
+
+    const pixiText = new Text({ text, style });
+    pixiText.x = x;
+    pixiText.y = y;
+    pixiText.anchor.set(0.5);
+    pixiText.scale.set(0.5); // Start small
+
+    this.container.addChild(pixiText);
+    this.floatingTexts.push({
+      text: pixiText,
+      life: 0.8,
+      maxLife: 0.8,
+      vy: -50, // Float up speed
+    });
+  }
+
+  // --- CONFETTI ---
+  public spawnConfetti(x: number, y: number) {
+    const particleCount = Math.floor(50 * this.particleMultiplier);
+    const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 100 + Math.random() * 200;
+      
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 100; // Upward bias
+      
+      p.life = 1.5 + Math.random();
+      p.maxLife = p.life;
+      p.size = 4 + Math.random() * 4;
+      p.color = colors[Math.floor(Math.random() * colors.length)];
+      p.shape = 'confetti';
+      p.gravity = 100;
+      p.drag = 0.95;
+      
+      p.rotation = Math.random() * Math.PI * 2;
+      p.rotationSpeed = (Math.random() - 0.5) * 10;
+      
+      this.particles.push(p);
     }
   }
 
@@ -1101,10 +1227,10 @@ export class VFXSystem {
   // HERO-SPECIFIC SKILL VFX
   // ============================================================
 
-  // --- THUNDERLORD (THOR) - LIGHTNING CLASS ---
+  // --- UNIT-7 "STORM" - LIGHTNING CLASS ---
 
   /**
-   * Thor's Hammer Throw - spinning hammer with lightning trail
+   * Storm's Plasma Hammer Throw - spinning hammer with lightning trail
    */
   public spawnHammerThrow(startX: number, startY: number, targetX: number, targetY: number) {
     const colors = { primary: 0x4169e1, secondary: 0x87ceeb, glow: 0xffff00 };
@@ -1266,9 +1392,9 @@ export class VFXSystem {
   }
 
   /**
-   * Thor's Godblast Ultimate - massive lightning storm
+   * Storm's EMP Blast Ultimate - massive electromagnetic pulse
    */
-  public spawnGodblast(x: number, y: number) {
+  public spawnEmpBlast(x: number, y: number) {
     // Massive screen shake
     this.triggerScreenShake(12, 400);
 
@@ -1324,12 +1450,12 @@ export class VFXSystem {
     }
   }
 
-  // --- IRON SENTINEL (IRON MAN) - TECH CLASS ---
+  // --- UNIT-3 "FORGE" - TECH CLASS ---
 
   /**
-   * Repulsor Beam - energy blast from hand
+   * Laser Beam - energy blast from hand
    */
-  public spawnRepulsorBeam(startX: number, startY: number, targetX: number, targetY: number) {
+  public spawnLaserBeam(startX: number, startY: number, targetX: number, targetY: number) {
     const colors = CLASS_VFX_COLORS.tech;
     const angle = Math.atan2(targetY - startY, targetX - startX);
     const dist = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
@@ -1575,7 +1701,7 @@ export class VFXSystem {
     }
   }
 
-  // --- JADE TITAN (HULK) - NATURAL CLASS ---
+  // --- UNIT-1 "TITAN" - NATURAL CLASS ---
 
   /**
    * Ground Smash - powerful ground pound
@@ -1669,9 +1795,9 @@ export class VFXSystem {
   }
 
   /**
-   * Gamma Burst - green gamma radiation explosion
+   * Kinetic Burst - green kinetic energy explosion
    */
-  public spawnGammaBurst(x: number, y: number, intensity: number = 1) {
+  public spawnKineticBurst(x: number, y: number, intensity: number = 1) {
     const colors = CLASS_VFX_COLORS.natural;
 
     // Screen shake
@@ -1681,7 +1807,7 @@ export class VFXSystem {
     this.spawnFlash(x, y, 0xffffff, 50 * intensity);
     this.spawnFlash(x, y, colors.glow, 80 * intensity);
 
-    // Gamma radiation rings
+    // Kinetic energy rings
     for (let i = 0; i < 4; i++) {
       const ring = this.pool.acquire();
       ring.x = x;
@@ -1700,7 +1826,7 @@ export class VFXSystem {
       this.particles.push(ring);
     }
 
-    // Gamma particles radiating
+    // Kinetic particles radiating
     for (let i = 0; i < 35 * intensity; i++) {
       const angle = (Math.PI * 2 * i) / 35;
       const speed = 150 + Math.random() * 150;
@@ -1749,9 +1875,9 @@ export class VFXSystem {
     // Multiple ground smashes
     this.spawnGroundSmash(x, y, 1.5);
 
-    // Gamma burst overlay
+    // Kinetic burst overlay
     setTimeout(() => {
-      this.spawnGammaBurst(x, y, 1.3);
+      this.spawnKineticBurst(x, y, 1.3);
     }, 150);
 
     // Additional debris waves
@@ -1779,7 +1905,7 @@ export class VFXSystem {
     }
   }
 
-  // --- SHIELD CAPTAIN (CAPTAIN AMERICA) - NATURAL CLASS ---
+  // --- UNIT-0 "VANGUARD" - NATURAL CLASS ---
 
   /**
    * Shield Throw - spinning shield bouncing between enemies
@@ -1895,12 +2021,12 @@ export class VFXSystem {
   }
 
   /**
-   * Avengers Assemble Ultimate - buff all heroes
+   * Rally Ultimate - buff all units
    */
-  public spawnAvengersAssemble(x: number, y: number, heroPositions: { x: number; y: number }[]) {
+  public spawnRallyUltimate(x: number, y: number, heroPositions: { x: number; y: number }[]) {
     const colors = { gold: 0xffd700, white: 0xffffff, blue: 0x4169e1 };
 
-    // Central burst from Cap
+    // Central burst from Vanguard
     this.spawnFlash(x, y, colors.gold, 60);
     this.triggerScreenShake(6, 300);
 
@@ -1973,12 +2099,12 @@ export class VFXSystem {
     }
   }
 
-  // --- SCARLET MAGE (SCARLET WITCH) - FIRE/CHAOS CLASS ---
+  // --- UNIT-9 "RIFT" - FIRE CLASS ---
 
   /**
-   * Hex Bolt - chaos magic projectile
+   * Plasma Bolt - high-temperature plasma projectile
    */
-  public spawnHexBolt(startX: number, startY: number, targetX: number, targetY: number) {
+  public spawnPlasmaBolt(startX: number, startY: number, targetX: number, targetY: number) {
     const colors = { primary: 0xdc143c, secondary: 0xff69b4, dark: 0x8b0000 };
     const angle = Math.atan2(targetY - startY, targetX - startX);
     const dist = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
@@ -2001,7 +2127,7 @@ export class VFXSystem {
       this.particles.push(cast);
     }
 
-    // Hex bolt path
+    // Plasma bolt path
     const steps = Math.floor(dist / 10);
     for (let i = 0; i < steps; i++) {
       const progress = i / steps;
@@ -2010,7 +2136,7 @@ export class VFXSystem {
       const x = startX + Math.cos(angle) * dist * progress + Math.cos(perpAngle) * wobble;
       const y = startY + Math.sin(angle) * dist * progress + Math.sin(perpAngle) * wobble;
 
-      // Core hex energy
+      // Core plasma energy
       const hex = this.pool.acquire();
       hex.x = x;
       hex.y = y;
@@ -2057,19 +2183,19 @@ export class VFXSystem {
     }
 
     // Impact
-    this.spawnChaosImpact(targetX, targetY, 1);
+    this.spawnThermalImpact(targetX, targetY, 1);
   }
 
   /**
-   * Chaos Impact - reality-warping explosion
+   * Thermal Impact - high-temperature explosion
    */
-  public spawnChaosImpact(x: number, y: number, intensity: number = 1) {
+  public spawnThermalImpact(x: number, y: number, intensity: number = 1) {
     const colors = { primary: 0xdc143c, secondary: 0xff69b4, dark: 0x8b0000 };
 
     // Flash
     this.spawnFlash(x, y, colors.secondary, 30 * intensity);
 
-    // Chaos rings - distorted
+    // Thermal rings - distorted
     for (let i = 0; i < 3; i++) {
       const ring = this.pool.acquire();
       ring.x = x + (Math.random() - 0.5) * 10;
@@ -2088,7 +2214,7 @@ export class VFXSystem {
       this.particles.push(ring);
     }
 
-    // Chaos particles
+    // Thermal particles
     for (let i = 0; i < 20 * intensity; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 60 + Math.random() * 80;
@@ -2166,7 +2292,7 @@ export class VFXSystem {
       this.particles.push(ring);
     }
 
-    // Swirling hex symbols
+    // Swirling plasma orbs
     for (let i = 0; i < 30; i++) {
       const orbitAngle = Math.random() * Math.PI * 2;
       const orbitDist = 50 + Math.random() * 100;
@@ -2187,7 +2313,7 @@ export class VFXSystem {
     }
   }
 
-  // --- FROST ARCHER (HAWKEYE) - ICE CLASS ---
+  // --- UNIT-5 "FROST" - ICE CLASS ---
 
   /**
    * Frost Arrow - ice arrow with freezing trail
@@ -2438,5 +2564,524 @@ export class VFXSystem {
     freezeCloud.endAlpha = 0;
     freezeCloud.shape = 'circle';
     this.particles.push(freezeCloud);
+  }
+
+  // ============================================================
+  // UNIT-4 "SPECTRE" - PLASMA CLASS (EXCLUSIVE)
+  // ============================================================
+
+  /**
+   * Spectre's Plasma Burst - focused energy blast
+   */
+  public spawnPlasmaBurst(x: number, y: number, targetX: number, targetY: number) {
+    const colors = CLASS_VFX_COLORS.plasma;
+
+    // Calculate distance
+    const dist = Math.sqrt((targetX - x) ** 2 + (targetY - y) ** 2);
+
+    // Charging effect at source
+    for (let i = 0; i < 15; i++) {
+      const chargeAngle = (Math.PI * 2 * i) / 15;
+      const chargeDist = 30 + Math.random() * 20;
+      const p = this.pool.acquire();
+      p.x = x + Math.cos(chargeAngle) * chargeDist;
+      p.y = y + Math.sin(chargeAngle) * chargeDist;
+      p.vx = -Math.cos(chargeAngle) * 150;
+      p.vy = -Math.sin(chargeAngle) * 150;
+      p.life = 0.2;
+      p.maxLife = 0.2;
+      p.size = 3 + Math.random() * 2;
+      p.color = i % 2 === 0 ? colors.primary : colors.secondary;
+      p.shape = 'circle';
+      p.startAlpha = 0.8;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+
+    // Main beam trail
+    const steps = Math.floor(dist / 10);
+    for (let i = 0; i < steps; i++) {
+      const progress = i / steps;
+      const beamX = x + (targetX - x) * progress;
+      const beamY = y + (targetY - y) * progress;
+      const delay = i * 0.01;
+
+      // Core beam particle
+      const core = this.pool.acquire();
+      core.x = beamX;
+      core.y = beamY;
+      core.vx = (Math.random() - 0.5) * 20;
+      core.vy = (Math.random() - 0.5) * 20;
+      core.life = 0.3 - delay;
+      core.maxLife = 0.3;
+      core.size = 6 - progress * 2;
+      core.color = 0xffffff;
+      core.shape = 'circle';
+      core.startAlpha = 1.0;
+      core.endAlpha = 0;
+      this.particles.push(core);
+
+      // Plasma glow
+      const glow = this.pool.acquire();
+      glow.x = beamX + (Math.random() - 0.5) * 10;
+      glow.y = beamY + (Math.random() - 0.5) * 10;
+      glow.vx = (Math.random() - 0.5) * 40;
+      glow.vy = (Math.random() - 0.5) * 40;
+      glow.life = 0.25 - delay;
+      glow.maxLife = 0.25;
+      glow.size = 4 + Math.random() * 3;
+      glow.color = colors.primary;
+      glow.shape = 'circle';
+      glow.startAlpha = 0.7;
+      glow.endAlpha = 0;
+      this.particles.push(glow);
+
+      // Secondary plasma (magenta)
+      if (i % 3 === 0) {
+        const secondary = this.pool.acquire();
+        secondary.x = beamX + (Math.random() - 0.5) * 15;
+        secondary.y = beamY + (Math.random() - 0.5) * 15;
+        secondary.vx = (Math.random() - 0.5) * 60;
+        secondary.vy = (Math.random() - 0.5) * 60;
+        secondary.life = 0.2;
+        secondary.maxLife = 0.2;
+        secondary.size = 3;
+        secondary.color = colors.secondary;
+        secondary.shape = 'spark';
+        this.particles.push(secondary);
+      }
+    }
+
+    // Impact explosion at target
+    setTimeout(() => {
+      this.spawnPlasmaImpact(targetX, targetY);
+    }, steps * 10);
+
+    // Source flash
+    this.spawnFlash(x, y, colors.primary, 25);
+  }
+
+  /**
+   * Plasma impact explosion
+   */
+  public spawnPlasmaImpact(x: number, y: number) {
+    const colors = CLASS_VFX_COLORS.plasma;
+
+    // Central flash
+    this.spawnFlash(x, y, colors.glow, 35);
+
+    // Expanding plasma rings
+    for (let i = 0; i < 3; i++) {
+      const ring = this.pool.acquire();
+      ring.x = x;
+      ring.y = y;
+      ring.vx = 0;
+      ring.vy = 0;
+      ring.life = 0.4 + i * 0.1;
+      ring.maxLife = ring.life;
+      ring.startSize = 15;
+      ring.endSize = 60 + i * 20;
+      ring.size = 15;
+      ring.color = i % 2 === 0 ? colors.primary : colors.secondary;
+      ring.startAlpha = 0.6;
+      ring.endAlpha = 0;
+      ring.shape = 'ring';
+      this.particles.push(ring);
+    }
+
+    // Radial plasma sparks
+    for (let i = 0; i < 20; i++) {
+      const angle = (Math.PI * 2 * i) / 20;
+      const speed = 100 + Math.random() * 80;
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 0.3 + Math.random() * 0.2;
+      p.maxLife = 0.5;
+      p.size = 4 + Math.random() * 3;
+      p.color = Math.random() > 0.5 ? colors.primary : colors.secondary;
+      p.shape = 'spark';
+      p.drag = 0.93;
+      this.particles.push(p);
+    }
+
+    // Screen shake
+    this.triggerScreenShake(5, 150);
+  }
+
+  /**
+   * Plasma glow aura effect (for passive/buff)
+   */
+  public spawnPlasmaGlow(x: number, y: number, intensity: number = 1) {
+    const colors = CLASS_VFX_COLORS.plasma;
+
+    // Orbiting plasma particles
+    for (let i = 0; i < 4; i++) {
+      const angle = (Math.PI * 2 * i) / 4 + Date.now() * 0.003;
+      const dist = 15 + Math.sin(Date.now() * 0.005 + i) * 5;
+      const p = this.pool.acquire();
+      p.x = x + Math.cos(angle) * dist;
+      p.y = y + Math.sin(angle) * dist;
+      p.vx = (Math.random() - 0.5) * 20;
+      p.vy = (Math.random() - 0.5) * 20 - 10;
+      p.life = 0.3;
+      p.maxLife = 0.3;
+      p.size = (2 + Math.random() * 2) * intensity;
+      p.color = i % 2 === 0 ? colors.primary : colors.secondary;
+      p.shape = 'circle';
+      p.startAlpha = 0.6;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+
+    // Occasional energy spark
+    if (Math.random() > 0.6) {
+      const spark = this.pool.acquire();
+      spark.x = x + (Math.random() - 0.5) * 20;
+      spark.y = y + (Math.random() - 0.5) * 20;
+      spark.vx = (Math.random() - 0.5) * 80;
+      spark.vy = (Math.random() - 0.5) * 80;
+      spark.life = 0.15;
+      spark.maxLife = 0.15;
+      spark.size = 3 * intensity;
+      spark.color = colors.glow;
+      spark.shape = 'spark';
+      this.particles.push(spark);
+    }
+  }
+
+  /**
+   * Stealth activation effect
+   */
+  public spawnStealthActivation(x: number, y: number) {
+    const colors = CLASS_VFX_COLORS.plasma;
+
+    // Fading shimmer effect
+    for (let i = 0; i < 15; i++) {
+      const shimmer = this.pool.acquire();
+      shimmer.x = x + (Math.random() - 0.5) * 30;
+      shimmer.y = y + (Math.random() - 0.5) * 40;
+      shimmer.vx = (Math.random() - 0.5) * 30;
+      shimmer.vy = -20 - Math.random() * 20;
+      shimmer.life = 0.5 + Math.random() * 0.3;
+      shimmer.maxLife = shimmer.life;
+      shimmer.size = 3 + Math.random() * 4;
+      shimmer.color = Math.random() > 0.5 ? colors.primary : 0xffffff;
+      shimmer.shape = 'diamond';
+      shimmer.startAlpha = 0.7;
+      shimmer.endAlpha = 0;
+      shimmer.rotation = Math.random() * Math.PI;
+      shimmer.rotationSpeed = (Math.random() - 0.5) * 5;
+      this.particles.push(shimmer);
+    }
+
+    // Central distortion ring
+    const ring = this.pool.acquire();
+    ring.x = x;
+    ring.y = y;
+    ring.vx = 0;
+    ring.vy = 0;
+    ring.life = 0.4;
+    ring.maxLife = 0.4;
+    ring.startSize = 40;
+    ring.endSize = 10;
+    ring.size = 40;
+    ring.color = colors.primary;
+    ring.startAlpha = 0.5;
+    ring.endAlpha = 0;
+    ring.shape = 'ring';
+    this.particles.push(ring);
+  }
+
+  // ============================================================
+  // UNIT-X "OMEGA" - VOID CLASS (LEGENDARY EXCLUSIVE)
+  // ============================================================
+
+  /**
+   * Omega's Execute Strike - devastating golden slash
+   */
+  public spawnExecuteStrike(startX: number, startY: number, targetX: number, targetY: number) {
+    const colors = { primary: 0xffd700, secondary: 0x1a1a2a, glow: 0xffaa00 };
+
+    // Calculate direction
+    const angle = Math.atan2(targetY - startY, targetX - startX);
+    const perpAngle = angle + Math.PI / 2;
+
+    // Dash trail with afterimages
+    const dist = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
+    const steps = Math.floor(dist / 8);
+
+    for (let i = 0; i < steps; i++) {
+      const progress = i / steps;
+      const x = startX + (targetX - startX) * progress;
+      const y = startY + (targetY - startY) * progress;
+
+      // Dark void trail
+      const void_p = this.pool.acquire();
+      void_p.x = x + (Math.random() - 0.5) * 10;
+      void_p.y = y + (Math.random() - 0.5) * 10;
+      void_p.vx = (Math.random() - 0.5) * 30;
+      void_p.vy = (Math.random() - 0.5) * 30;
+      void_p.life = 0.3;
+      void_p.maxLife = 0.3;
+      void_p.size = 8 - progress * 4;
+      void_p.color = colors.secondary;
+      void_p.shape = 'circle';
+      void_p.startAlpha = 0.6;
+      void_p.endAlpha = 0;
+      this.particles.push(void_p);
+
+      // Gold spark trail
+      if (i % 2 === 0) {
+        const gold = this.pool.acquire();
+        gold.x = x;
+        gold.y = y;
+        gold.vx = Math.cos(perpAngle) * (Math.random() > 0.5 ? 1 : -1) * 50;
+        gold.vy = Math.sin(perpAngle) * (Math.random() > 0.5 ? 1 : -1) * 50;
+        gold.life = 0.2;
+        gold.maxLife = 0.2;
+        gold.size = 3;
+        gold.color = colors.primary;
+        gold.shape = 'spark';
+        this.particles.push(gold);
+      }
+    }
+
+    // Slash arc at impact
+    this.spawnGoldenSlash(targetX, targetY, angle);
+
+    // Screen shake
+    this.triggerScreenShake(6, 180);
+  }
+
+  /**
+   * Golden slash arc effect
+   */
+  public spawnGoldenSlash(x: number, y: number, angle: number) {
+    const colors = { primary: 0xffd700, secondary: 0x1a1a2a, glow: 0xffaa00 };
+
+    // Main slash arc particles
+    const slashAngle = angle + Math.PI / 4;
+    const slashLength = 50;
+
+    for (let i = 0; i < 20; i++) {
+      const progress = i / 20;
+      const arcAngle = slashAngle - Math.PI / 3 + progress * (Math.PI * 2 / 3);
+      const dist = slashLength * (0.8 + Math.sin(progress * Math.PI) * 0.4);
+      const px = x + Math.cos(arcAngle) * dist;
+      const py = y + Math.sin(arcAngle) * dist;
+
+      // Golden slash particle
+      const slash = this.pool.acquire();
+      slash.x = px;
+      slash.y = py;
+      slash.vx = Math.cos(arcAngle) * 80;
+      slash.vy = Math.sin(arcAngle) * 80;
+      slash.life = 0.25;
+      slash.maxLife = 0.25;
+      slash.size = 6 - Math.abs(progress - 0.5) * 8;
+      slash.color = colors.primary;
+      slash.shape = 'spark';
+      slash.startAlpha = 1.0;
+      slash.endAlpha = 0;
+      this.particles.push(slash);
+    }
+
+    // Central impact flash
+    this.spawnFlash(x, y, colors.primary, 40);
+
+    // Void particles swirling
+    for (let i = 0; i < 12; i++) {
+      const voidAngle = (Math.PI * 2 * i) / 12;
+      const void_p = this.pool.acquire();
+      void_p.x = x + Math.cos(voidAngle) * 20;
+      void_p.y = y + Math.sin(voidAngle) * 20;
+      void_p.vx = Math.cos(voidAngle + Math.PI / 2) * 60;
+      void_p.vy = Math.sin(voidAngle + Math.PI / 2) * 60;
+      void_p.life = 0.35;
+      void_p.maxLife = 0.35;
+      void_p.size = 4;
+      void_p.color = colors.secondary;
+      void_p.shape = 'circle';
+      void_p.startAlpha = 0.7;
+      void_p.endAlpha = 0;
+      this.particles.push(void_p);
+    }
+
+    // Cross-shaped golden glint
+    for (let i = 0; i < 4; i++) {
+      const glintAngle = (Math.PI / 2 * i);
+      const glint = this.pool.acquire();
+      glint.x = x;
+      glint.y = y;
+      glint.vx = Math.cos(glintAngle) * 120;
+      glint.vy = Math.sin(glintAngle) * 120;
+      glint.life = 0.15;
+      glint.maxLife = 0.15;
+      glint.size = 4;
+      glint.color = 0xffffff;
+      glint.shape = 'spark';
+      this.particles.push(glint);
+    }
+  }
+
+  /**
+   * Gold sparks aura effect (for passive/crit)
+   */
+  public spawnGoldSparks(x: number, y: number, intensity: number = 1) {
+    const colors = { primary: 0xffd700, secondary: 0x1a1a2a, glow: 0xffaa00 };
+
+    // Rising gold sparks
+    for (let i = 0; i < 3; i++) {
+      const spark = this.pool.acquire();
+      spark.x = x + (Math.random() - 0.5) * 25;
+      spark.y = y + (Math.random() - 0.5) * 15;
+      spark.vx = (Math.random() - 0.5) * 40;
+      spark.vy = -50 - Math.random() * 30;
+      spark.life = 0.4 + Math.random() * 0.2;
+      spark.maxLife = spark.life;
+      spark.size = (2 + Math.random() * 2) * intensity;
+      spark.color = Math.random() > 0.3 ? colors.primary : colors.glow;
+      spark.shape = 'spark';
+      spark.gravity = -20;
+      spark.startAlpha = 0.9;
+      spark.endAlpha = 0;
+      this.particles.push(spark);
+    }
+
+    // Dark void wisps
+    if (Math.random() > 0.5) {
+      const wisp = this.pool.acquire();
+      wisp.x = x + (Math.random() - 0.5) * 20;
+      wisp.y = y;
+      wisp.vx = (Math.random() - 0.5) * 20;
+      wisp.vy = -30;
+      wisp.life = 0.3;
+      wisp.maxLife = 0.3;
+      wisp.size = 5 * intensity;
+      wisp.color = colors.secondary;
+      wisp.shape = 'circle';
+      wisp.startAlpha = 0.4;
+      wisp.endAlpha = 0;
+      this.particles.push(wisp);
+    }
+  }
+
+  /**
+   * Omega critical hit - enhanced crit with gold explosion
+   */
+  public spawnOmegaCritical(x: number, y: number) {
+    const colors = { primary: 0xffd700, secondary: 0x1a1a2a, glow: 0xffaa00 };
+
+    // Large golden flash
+    this.spawnFlash(x, y, colors.primary, 45);
+
+    // Void explosion ring
+    const voidRing = this.pool.acquire();
+    voidRing.x = x;
+    voidRing.y = y;
+    voidRing.vx = 0;
+    voidRing.vy = 0;
+    voidRing.life = 0.3;
+    voidRing.maxLife = 0.3;
+    voidRing.startSize = 10;
+    voidRing.endSize = 80;
+    voidRing.size = 10;
+    voidRing.color = colors.secondary;
+    voidRing.startAlpha = 0.5;
+    voidRing.endAlpha = 0;
+    voidRing.shape = 'ring';
+    this.particles.push(voidRing);
+
+    // Radial gold sparks
+    for (let i = 0; i < 16; i++) {
+      const angle = (Math.PI * 2 * i) / 16;
+      const spark = this.pool.acquire();
+      spark.x = x;
+      spark.y = y;
+      spark.vx = Math.cos(angle) * 180;
+      spark.vy = Math.sin(angle) * 180;
+      spark.life = 0.25;
+      spark.maxLife = 0.25;
+      spark.size = 5;
+      spark.color = colors.primary;
+      spark.shape = 'spark';
+      spark.drag = 0.92;
+      this.particles.push(spark);
+    }
+
+    // Golden star burst
+    const star = this.pool.acquire();
+    star.x = x;
+    star.y = y;
+    star.vx = 0;
+    star.vy = 0;
+    star.life = 0.2;
+    star.maxLife = 0.2;
+    star.startSize = 8;
+    star.endSize = 35;
+    star.size = 8;
+    star.color = colors.primary;
+    star.shape = 'star';
+    star.rotation = 0;
+    star.rotationSpeed = 15;
+    this.particles.push(star);
+
+    // Heal effect (Lethal Precision restores HP on crit)
+    setTimeout(() => {
+      this.spawnHealEffect(x, y, 'heal');
+    }, 150);
+
+    // Strong screen shake
+    this.triggerScreenShake(8, 200);
+  }
+
+  /**
+   * Execute bonus damage indicator (when target < 30% HP)
+   */
+  public spawnExecuteBonus(x: number, y: number) {
+    const colors = { primary: 0xffd700, secondary: 0xff0000, glow: 0xffaa00 };
+
+    // Red/gold warning flash
+    this.spawnFlash(x, y, colors.secondary, 30);
+
+    // Skull-like warning particles (X shape)
+    for (let i = 0; i < 8; i++) {
+      const isX = i < 4;
+      const angle = isX
+        ? Math.PI / 4 + (i % 2) * Math.PI / 2 + Math.floor(i / 2) * Math.PI
+        : Math.PI / 4 * (2 * (i - 4) + 1);
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * 100;
+      p.vy = Math.sin(angle) * 100;
+      p.life = 0.3;
+      p.maxLife = 0.3;
+      p.size = 6;
+      p.color = i % 2 === 0 ? colors.primary : colors.secondary;
+      p.shape = 'spark';
+      p.drag = 0.9;
+      this.particles.push(p);
+    }
+
+    // "EXECUTE" text effect (rising particles in pattern)
+    for (let i = 0; i < 10; i++) {
+      const execP = this.pool.acquire();
+      execP.x = x + (Math.random() - 0.5) * 40;
+      execP.y = y;
+      execP.vx = 0;
+      execP.vy = -80 - Math.random() * 40;
+      execP.life = 0.5;
+      execP.maxLife = 0.5;
+      execP.size = 3;
+      execP.color = colors.primary;
+      execP.shape = 'diamond';
+      execP.startAlpha = 1.0;
+      execP.endAlpha = 0;
+      this.particles.push(execP);
+    }
   }
 }

@@ -16,11 +16,21 @@ import {
   getMaxHeroSlots,
   getMaxTurretSlots,
   getUnlockedSkills,
+  getUnlockedClasses,
+  isClassUnlockedAtLevel,
+  getClassUnlockLevel,
+  getUnlockedHeroes,
+  isHeroUnlockedAtLevel,
+  getHeroUnlockLevel,
+  getUnlockedTurretTypes,
+  isTurretUnlockedAtLevel,
+  getTurretUnlockLevel,
   isPillarUnlockedAtLevel,
   checkLevelUp,
   getProgressionBonuses,
   calculateTotalHpBonus,
   calculateTotalDamageBonus,
+  getRewardsForLevel,
   FORTRESS_LEVELS,
   MAX_FORTRESS_LEVEL,
   XP_SOURCES,
@@ -228,9 +238,9 @@ describe('XP Earning Functions', () => {
 
 describe('Level-Based Unlocks', () => {
   describe('getMaxHeroSlots', () => {
-    it('returns 1 slot for levels 1-9', () => {
-      expect(getMaxHeroSlots(1)).toBe(1);
-      expect(getMaxHeroSlots(9)).toBe(1);
+    it('returns 2 slots for levels 1-9 (base)', () => {
+      expect(getMaxHeroSlots(1)).toBe(2);
+      expect(getMaxHeroSlots(9)).toBe(2);
     });
 
     it('returns 2 slots for levels 10-29', () => {
@@ -243,7 +253,7 @@ describe('Level-Based Unlocks', () => {
       expect(getMaxHeroSlots(44)).toBe(3);
     });
 
-    it('returns 4 slots for level 45+', () => {
+    it('returns 4 slots for level 45+ (max)', () => {
       expect(getMaxHeroSlots(45)).toBe(4);
       expect(getMaxHeroSlots(50)).toBe(4);
       expect(getMaxHeroSlots(100)).toBe(4);
@@ -251,7 +261,7 @@ describe('Level-Based Unlocks', () => {
   });
 
   describe('getMaxTurretSlots', () => {
-    it('returns 1 slot for levels 1-4', () => {
+    it('returns 1 slot for levels 1-4 (base)', () => {
       expect(getMaxTurretSlots(1)).toBe(1);
       expect(getMaxTurretSlots(4)).toBe(1);
     });
@@ -362,8 +372,8 @@ describe('Progression Bonuses', () => {
       expect(bonuses.damageMultiplier).toBe(1);
       expect(bonuses.goldMultiplier).toBe(1);
       expect(bonuses.startingGold).toBe(0);
-      expect(bonuses.maxHeroSlots).toBe(1);
-      expect(bonuses.maxTurretSlots).toBe(1);
+      expect(bonuses.maxHeroSlots).toBe(2); // 2 slots at start
+      expect(bonuses.maxTurretSlots).toBe(1); // 1 slot at start, 2nd at level 5
     });
 
     it('includes starting gold bonus at level 5', () => {
@@ -453,5 +463,495 @@ describe('FORTRESS_LEVELS data', () => {
   it('level 50 has pillar unlocks', () => {
     const level50 = FORTRESS_LEVELS.find(l => l.level === 50);
     expect(level50?.rewards.some(r => r.type === 'pillar_unlock')).toBe(true);
+  });
+});
+
+// ============================================================================
+// CLASS UNLOCK TESTS
+// ============================================================================
+
+describe('Class Unlocks', () => {
+  describe('getUnlockedClasses', () => {
+    it('returns only natural at level 1', () => {
+      const classes = getUnlockedClasses(1);
+      expect(classes).toEqual(['natural']);
+    });
+
+    it('does not include ice before level 20', () => {
+      expect(getUnlockedClasses(19)).not.toContain('ice');
+    });
+
+    it('includes ice exactly at level 20', () => {
+      expect(getUnlockedClasses(20)).toContain('ice');
+    });
+
+    it('includes ice at level 21', () => {
+      expect(getUnlockedClasses(21)).toContain('ice');
+    });
+
+    it('includes fire exactly at level 40', () => {
+      expect(getUnlockedClasses(39)).not.toContain('fire');
+      expect(getUnlockedClasses(40)).toContain('fire');
+    });
+
+    it('includes lightning exactly at level 60', () => {
+      expect(getUnlockedClasses(59)).not.toContain('lightning');
+      expect(getUnlockedClasses(60)).toContain('lightning');
+    });
+
+    it('includes void exactly at level 80', () => {
+      expect(getUnlockedClasses(79)).not.toContain('void');
+      expect(getUnlockedClasses(80)).toContain('void');
+    });
+
+    it('includes tech exactly at level 100', () => {
+      expect(getUnlockedClasses(99)).not.toContain('tech');
+      expect(getUnlockedClasses(100)).toContain('tech');
+    });
+
+    it('returns all 6 classes at level 100', () => {
+      const classes = getUnlockedClasses(100);
+      expect(classes).toHaveLength(6);
+      expect(classes).toContain('natural');
+      expect(classes).toContain('ice');
+      expect(classes).toContain('fire');
+      expect(classes).toContain('lightning');
+      expect(classes).toContain('void');
+      expect(classes).toContain('tech');
+    });
+
+    it('natural is always first (starter kit)', () => {
+      expect(getUnlockedClasses(1)[0]).toBe('natural');
+      expect(getUnlockedClasses(100)[0]).toBe('natural');
+    });
+  });
+
+  describe('isClassUnlockedAtLevel', () => {
+    it('returns true for natural at any level', () => {
+      expect(isClassUnlockedAtLevel('natural', 1)).toBe(true);
+      expect(isClassUnlockedAtLevel('natural', 50)).toBe(true);
+      expect(isClassUnlockedAtLevel('natural', 100)).toBe(true);
+    });
+
+    it('returns false for ice at level 19', () => {
+      expect(isClassUnlockedAtLevel('ice', 19)).toBe(false);
+    });
+
+    it('returns true for ice at level 20', () => {
+      expect(isClassUnlockedAtLevel('ice', 20)).toBe(true);
+    });
+
+    it('returns false for void at level 79', () => {
+      expect(isClassUnlockedAtLevel('void', 79)).toBe(false);
+    });
+
+    it('returns true for void at level 80', () => {
+      expect(isClassUnlockedAtLevel('void', 80)).toBe(true);
+    });
+
+    it('returns false for tech at level 99', () => {
+      expect(isClassUnlockedAtLevel('tech', 99)).toBe(false);
+    });
+
+    it('returns true for tech at level 100', () => {
+      expect(isClassUnlockedAtLevel('tech', 100)).toBe(true);
+    });
+
+    it('returns false for unknown class', () => {
+      expect(isClassUnlockedAtLevel('unknown', 100)).toBe(false);
+    });
+  });
+
+  describe('getClassUnlockLevel', () => {
+    it('returns 1 for natural', () => {
+      expect(getClassUnlockLevel('natural')).toBe(1);
+    });
+
+    it('returns 20 for ice', () => {
+      expect(getClassUnlockLevel('ice')).toBe(20);
+    });
+
+    it('returns 40 for fire', () => {
+      expect(getClassUnlockLevel('fire')).toBe(40);
+    });
+
+    it('returns 60 for lightning', () => {
+      expect(getClassUnlockLevel('lightning')).toBe(60);
+    });
+
+    it('returns 80 for void', () => {
+      expect(getClassUnlockLevel('void')).toBe(80);
+    });
+
+    it('returns 100 for tech', () => {
+      expect(getClassUnlockLevel('tech')).toBe(100);
+    });
+
+    it('returns 999 for unknown class', () => {
+      expect(getClassUnlockLevel('unknown')).toBe(999);
+    });
+  });
+});
+
+// ============================================================================
+// HERO UNLOCK TESTS
+// ============================================================================
+
+describe('Hero Unlocks', () => {
+  describe('getUnlockedHeroes', () => {
+    it('returns starters and exclusive heroes at level 1', () => {
+      const heroes = getUnlockedHeroes(1);
+      expect(heroes).toContain('vanguard');
+      expect(heroes).toContain('storm');
+      expect(heroes).toContain('spectre'); // Exclusive rare
+      expect(heroes).toContain('omega');   // Exclusive legendary
+      expect(heroes).toHaveLength(4);
+    });
+
+    it('includes forge at level 10', () => {
+      expect(getUnlockedHeroes(9)).not.toContain('forge');
+      expect(getUnlockedHeroes(10)).toContain('forge');
+    });
+
+    it('includes frost at level 20', () => {
+      expect(getUnlockedHeroes(19)).not.toContain('frost');
+      expect(getUnlockedHeroes(20)).toContain('frost');
+    });
+
+    it('includes rift at level 30', () => {
+      expect(getUnlockedHeroes(29)).not.toContain('rift');
+      expect(getUnlockedHeroes(30)).toContain('rift');
+    });
+
+    it('includes titan at level 40', () => {
+      expect(getUnlockedHeroes(39)).not.toContain('titan');
+      expect(getUnlockedHeroes(40)).toContain('titan');
+    });
+
+    it('returns all 8 heroes at level 50', () => {
+      const heroes = getUnlockedHeroes(50);
+      expect(heroes).toHaveLength(8);
+      expect(heroes).toContain('vanguard');
+      expect(heroes).toContain('storm');
+      expect(heroes).toContain('spectre');
+      expect(heroes).toContain('omega');
+      expect(heroes).toContain('forge');
+      expect(heroes).toContain('frost');
+      expect(heroes).toContain('rift');
+      expect(heroes).toContain('titan');
+    });
+
+    it('vanguard is always first (starter kit)', () => {
+      expect(getUnlockedHeroes(1)[0]).toBe('vanguard');
+      expect(getUnlockedHeroes(50)[0]).toBe('vanguard');
+    });
+  });
+
+  describe('isHeroUnlockedAtLevel', () => {
+    it('returns true for vanguard at any level', () => {
+      expect(isHeroUnlockedAtLevel('vanguard', 1)).toBe(true);
+      expect(isHeroUnlockedAtLevel('vanguard', 100)).toBe(true);
+    });
+
+    it('returns true for storm at any level (starter hero)', () => {
+      expect(isHeroUnlockedAtLevel('storm', 1)).toBe(true);
+      expect(isHeroUnlockedAtLevel('storm', 100)).toBe(true);
+    });
+
+    it('returns false for unknown hero', () => {
+      expect(isHeroUnlockedAtLevel('unknown_hero', 100)).toBe(false);
+    });
+  });
+
+  describe('getHeroUnlockLevel', () => {
+    it('returns 1 for vanguard', () => {
+      expect(getHeroUnlockLevel('vanguard')).toBe(1);
+    });
+
+    it('returns 1 for storm (starter hero)', () => {
+      expect(getHeroUnlockLevel('storm')).toBe(1);
+    });
+
+    it('returns 10 for forge', () => {
+      expect(getHeroUnlockLevel('forge')).toBe(10);
+    });
+
+    it('returns 20 for frost', () => {
+      expect(getHeroUnlockLevel('frost')).toBe(20);
+    });
+
+    it('returns 30 for rift', () => {
+      expect(getHeroUnlockLevel('rift')).toBe(30);
+    });
+
+    it('returns 40 for titan', () => {
+      expect(getHeroUnlockLevel('titan')).toBe(40);
+    });
+
+    it('returns 99 for unknown hero', () => {
+      expect(getHeroUnlockLevel('unknown_hero')).toBe(99);
+    });
+  });
+});
+
+// ============================================================================
+// TURRET UNLOCK TESTS
+// ============================================================================
+
+describe('Turret Unlocks', () => {
+  describe('getUnlockedTurretTypes', () => {
+    it('returns only railgun at level 1', () => {
+      const turrets = getUnlockedTurretTypes(1);
+      expect(turrets).toEqual(['railgun']);
+    });
+
+    it('includes cryo at level 5', () => {
+      expect(getUnlockedTurretTypes(4)).not.toContain('cryo');
+      expect(getUnlockedTurretTypes(5)).toContain('cryo');
+    });
+
+    it('includes cannon at level 15', () => {
+      expect(getUnlockedTurretTypes(14)).not.toContain('cannon');
+      expect(getUnlockedTurretTypes(15)).toContain('cannon');
+    });
+
+    it('includes arc at level 30', () => {
+      expect(getUnlockedTurretTypes(29)).not.toContain('arc');
+      expect(getUnlockedTurretTypes(30)).toContain('arc');
+    });
+
+    it('includes laser at level 45', () => {
+      expect(getUnlockedTurretTypes(44)).not.toContain('laser');
+      expect(getUnlockedTurretTypes(45)).toContain('laser');
+    });
+
+    it('returns all 5 turrets at level 50', () => {
+      const turrets = getUnlockedTurretTypes(50);
+      expect(turrets).toHaveLength(5);
+      expect(turrets).toContain('railgun');
+      expect(turrets).toContain('cryo');
+      expect(turrets).toContain('cannon');
+      expect(turrets).toContain('arc');
+      expect(turrets).toContain('laser');
+    });
+
+    it('railgun is always first (starter kit)', () => {
+      expect(getUnlockedTurretTypes(1)[0]).toBe('railgun');
+      expect(getUnlockedTurretTypes(50)[0]).toBe('railgun');
+    });
+  });
+
+  describe('isTurretUnlockedAtLevel', () => {
+    it('returns true for railgun at any level', () => {
+      expect(isTurretUnlockedAtLevel('railgun', 1)).toBe(true);
+      expect(isTurretUnlockedAtLevel('railgun', 100)).toBe(true);
+    });
+
+    it('returns false for cryo at level 4', () => {
+      expect(isTurretUnlockedAtLevel('cryo', 4)).toBe(false);
+    });
+
+    it('returns true for cryo at level 5', () => {
+      expect(isTurretUnlockedAtLevel('cryo', 5)).toBe(true);
+    });
+
+    it('returns false for unknown turret', () => {
+      expect(isTurretUnlockedAtLevel('unknown_turret', 100)).toBe(false);
+    });
+  });
+
+  describe('getTurretUnlockLevel', () => {
+    it('returns 1 for railgun', () => {
+      expect(getTurretUnlockLevel('railgun')).toBe(1);
+    });
+
+    it('returns 5 for cryo', () => {
+      expect(getTurretUnlockLevel('cryo')).toBe(5);
+    });
+
+    it('returns 15 for cannon', () => {
+      expect(getTurretUnlockLevel('cannon')).toBe(15);
+    });
+
+    it('returns 30 for arc', () => {
+      expect(getTurretUnlockLevel('arc')).toBe(30);
+    });
+
+    it('returns 45 for laser', () => {
+      expect(getTurretUnlockLevel('laser')).toBe(45);
+    });
+
+    it('returns 99 for unknown turret', () => {
+      expect(getTurretUnlockLevel('unknown_turret')).toBe(99);
+    });
+  });
+});
+
+// ============================================================================
+// SLOT EDGE CASES TESTS
+// ============================================================================
+
+describe('Slot Edge Cases', () => {
+  describe('getMaxHeroSlots - Edge Cases', () => {
+    it('returns 2 slots at level 9 (before threshold)', () => {
+      expect(getMaxHeroSlots(9)).toBe(2);
+    });
+
+    it('returns 2 slots at level 10 (exact threshold)', () => {
+      expect(getMaxHeroSlots(10)).toBe(2);
+    });
+
+    it('returns 2 slots at level 11 (just after threshold)', () => {
+      expect(getMaxHeroSlots(11)).toBe(2);
+    });
+
+    it('returns 3 slots at level 30', () => {
+      expect(getMaxHeroSlots(30)).toBe(3);
+    });
+
+    it('returns 4 slots at level 45 (MAX)', () => {
+      expect(getMaxHeroSlots(45)).toBe(4);
+    });
+
+    it('returns 4 slots at level 100 (caps at MAX)', () => {
+      expect(getMaxHeroSlots(100)).toBe(4);
+    });
+
+    it('slot count never decreases with level', () => {
+      let previousSlots = 0;
+      for (let level = 1; level <= 100; level++) {
+        const currentSlots = getMaxHeroSlots(level);
+        expect(currentSlots).toBeGreaterThanOrEqual(previousSlots);
+        previousSlots = currentSlots;
+      }
+    });
+  });
+
+  describe('getMaxTurretSlots - Edge Cases', () => {
+    it('returns 1 slot at level 1', () => {
+      expect(getMaxTurretSlots(1)).toBe(1);
+    });
+
+    it('returns 1 slot at level 4', () => {
+      expect(getMaxTurretSlots(4)).toBe(1);
+    });
+
+    it('returns 2 slots at level 5', () => {
+      expect(getMaxTurretSlots(5)).toBe(2);
+    });
+
+    it('returns 3 slots at level 15', () => {
+      expect(getMaxTurretSlots(15)).toBe(3);
+    });
+
+    it('returns 4 slots at level 25', () => {
+      expect(getMaxTurretSlots(25)).toBe(4);
+    });
+
+    it('returns 6 slots at level 40 (MAX)', () => {
+      expect(getMaxTurretSlots(40)).toBe(6);
+    });
+
+    it('returns 6 slots at level 100 (caps at MAX)', () => {
+      expect(getMaxTurretSlots(100)).toBe(6);
+    });
+
+    it('slot count never decreases with level', () => {
+      let previousSlots = 0;
+      for (let level = 1; level <= 100; level++) {
+        const currentSlots = getMaxTurretSlots(level);
+        expect(currentSlots).toBeGreaterThanOrEqual(previousSlots);
+        previousSlots = currentSlots;
+      }
+    });
+  });
+});
+
+// ============================================================================
+// REWARDS CONSISTENCY TESTS
+// ============================================================================
+
+describe('Rewards Consistency', () => {
+  it('class unlock rewards match unlock functions', () => {
+    // Classes unlocked within FORTRESS_LEVELS (1-50)
+    const level20 = FORTRESS_LEVELS.find(l => l.level === 20);
+    const iceReward = level20?.rewards.find(r => r.type === 'class_unlock' && r.classId === 'ice');
+    expect(iceReward).toBeDefined();
+    expect(getClassUnlockLevel('ice')).toBe(20);
+
+    const level40 = FORTRESS_LEVELS.find(l => l.level === 40);
+    const fireReward = level40?.rewards.find(r => r.type === 'class_unlock' && r.classId === 'fire');
+    expect(fireReward).toBeDefined();
+    expect(getClassUnlockLevel('fire')).toBe(40);
+
+    // Classes unlocked beyond level 50 (use getRewardsForLevel directly)
+    const rewards60 = getRewardsForLevel(60);
+    const lightningReward = rewards60.find(r => r.type === 'class_unlock' && r.classId === 'lightning');
+    expect(lightningReward).toBeDefined();
+    expect(getClassUnlockLevel('lightning')).toBe(60);
+
+    const rewards80 = getRewardsForLevel(80);
+    const voidReward = rewards80.find(r => r.type === 'class_unlock' && r.classId === 'void');
+    expect(voidReward).toBeDefined();
+    expect(getClassUnlockLevel('void')).toBe(80);
+
+    const rewards100 = getRewardsForLevel(100);
+    const techReward = rewards100.find(r => r.type === 'class_unlock' && r.classId === 'tech');
+    expect(techReward).toBeDefined();
+    expect(getClassUnlockLevel('tech')).toBe(100);
+  });
+
+  it('all class rewards in FORTRESS_LEVELS match unlock functions', () => {
+    const classRewardLevels: Record<string, number> = {};
+
+    for (const levelInfo of FORTRESS_LEVELS) {
+      for (const reward of levelInfo.rewards) {
+        if (reward.type === 'class_unlock' && reward.classId) {
+          classRewardLevels[reward.classId] = levelInfo.level;
+        }
+      }
+    }
+
+    for (const [classId, level] of Object.entries(classRewardLevels)) {
+      expect(getClassUnlockLevel(classId)).toBe(level);
+      expect(isClassUnlockedAtLevel(classId, level)).toBe(true);
+      expect(isClassUnlockedAtLevel(classId, level - 1)).toBe(false);
+    }
+  });
+
+  it('all hero rewards match unlock functions', () => {
+    const heroRewardLevels: Record<string, number> = {};
+
+    for (const levelInfo of FORTRESS_LEVELS) {
+      for (const reward of levelInfo.rewards) {
+        if (reward.type === 'hero_unlock' && reward.heroId) {
+          heroRewardLevels[reward.heroId] = levelInfo.level;
+        }
+      }
+    }
+
+    for (const [heroId, level] of Object.entries(heroRewardLevels)) {
+      expect(getHeroUnlockLevel(heroId)).toBe(level);
+      expect(isHeroUnlockedAtLevel(heroId, level)).toBe(true);
+      expect(isHeroUnlockedAtLevel(heroId, level - 1)).toBe(false);
+    }
+  });
+
+  it('all turret rewards match unlock functions', () => {
+    const turretRewardLevels: Record<string, number> = {};
+
+    for (const levelInfo of FORTRESS_LEVELS) {
+      for (const reward of levelInfo.rewards) {
+        if (reward.type === 'turret_unlock' && reward.turretType) {
+          turretRewardLevels[reward.turretType] = levelInfo.level;
+        }
+      }
+    }
+
+    for (const [turretType, level] of Object.entries(turretRewardLevels)) {
+      expect(getTurretUnlockLevel(turretType)).toBe(level);
+      expect(isTurretUnlockedAtLevel(turretType, level)).toBe(true);
+      expect(isTurretUnlockedAtLevel(turretType, level - 1)).toBe(false);
+    }
   });
 });

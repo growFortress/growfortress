@@ -15,8 +15,8 @@ import { calculateHeroStoneCooldownReduction } from '../../systems.js';
 // ============================================================================
 
 describe('Hero Base Stats', () => {
-  it('all 6 heroes should be defined', () => {
-    expect(HEROES.length).toBe(6);
+  it('all 10 heroes should be defined', () => {
+    expect(HEROES.length).toBe(10);
   });
 
   it.each(HEROES.map(h => h.id))('hero %s should have valid base stats', (heroId) => {
@@ -47,16 +47,16 @@ describe('Hero Base Stats', () => {
 
   it.each(HEROES.map(h => h.id))('hero %s should have valid class and role', (heroId) => {
     const hero = getHeroById(heroId);
-    const validClasses = ['lightning', 'tech', 'natural', 'fire', 'ice'];
-    const validRoles = ['tank', 'dps', 'support'];
+    const validClasses = ['lightning', 'tech', 'natural', 'fire', 'ice', 'void', 'plasma'];
+    const validRoles = ['tank', 'dps', 'support', 'crowd_control', 'assassin'];
 
     expect(validClasses).toContain(hero!.class);
     expect(validRoles).toContain(hero!.role);
   });
 
   // Specific hero stat tests
-  describe('Thunderlord stats', () => {
-    const hero = getHeroById('thunderlord')!;
+  describe('Unit Storm stats', () => {
+    const hero = getHeroById('storm')!;
 
     it('has correct base stats', () => {
       expect(hero.baseStats.hp).toBe(150);
@@ -70,8 +70,8 @@ describe('Hero Base Stats', () => {
     });
   });
 
-  describe('Jade Titan stats', () => {
-    const hero = getHeroById('jade_titan')!;
+  describe('Unit-1 "Titan" stats', () => {
+    const hero = getHeroById('titan')!;
 
     it('has highest HP (tank)', () => {
       expect(hero.baseStats.hp).toBe(300);
@@ -83,8 +83,8 @@ describe('Hero Base Stats', () => {
     });
   });
 
-  describe('Frost Archer stats', () => {
-    const hero = getHeroById('frost_archer')!;
+  describe('Unit-5 "Frost" stats', () => {
+    const hero = getHeroById('frost')!;
 
     it('has highest attack speed among remaining heroes', () => {
       expect(hero.baseStats.attackSpeed).toBe(1.8);
@@ -101,23 +101,23 @@ describe('Hero Base Stats', () => {
 // ============================================================================
 
 describe('calculateHeroStats', () => {
-  const thunderlord = getHeroById('thunderlord')!;
+  const storm = getHeroById('storm')!;
 
   describe('tier multipliers', () => {
     it('tier 1 has 1.0x multiplier', () => {
-      const stats = calculateHeroStats(thunderlord, 1, 1);
+      const stats = calculateHeroStats(storm, 1, 1);
       expect(stats.hp).toBe(150); // 150 * 1.0 * 1.0
       expect(stats.damage).toBe(25); // 25 * 1.0 * 1.0
     });
 
     it('tier 2 has 1.5x multiplier', () => {
-      const stats = calculateHeroStats(thunderlord, 2, 1);
+      const stats = calculateHeroStats(storm, 2, 1);
       expect(stats.hp).toBe(225); // 150 * 1.5 * 1.0
       expect(stats.damage).toBe(37); // floor(25 * 1.5 * 1.0) = 37
     });
 
     it('tier 3 has 2.0x multiplier', () => {
-      const stats = calculateHeroStats(thunderlord, 3, 1);
+      const stats = calculateHeroStats(storm, 3, 1);
       expect(stats.hp).toBe(300); // 150 * 2.0 * 1.0
       expect(stats.damage).toBe(50); // 25 * 2.0 * 1.0
     });
@@ -125,24 +125,24 @@ describe('calculateHeroStats', () => {
 
   describe('level bonuses (+2% per level)', () => {
     it('level 1 has no bonus', () => {
-      const stats = calculateHeroStats(thunderlord, 1, 1);
+      const stats = calculateHeroStats(storm, 1, 1);
       expect(stats.hp).toBe(150);
     });
 
     it('level 2 has +2% bonus', () => {
-      const stats = calculateHeroStats(thunderlord, 1, 2);
+      const stats = calculateHeroStats(storm, 1, 2);
       // 150 * 1.0 * 1.02 = 153
       expect(stats.hp).toBe(153);
     });
 
     it('level 10 has +18% bonus', () => {
-      const stats = calculateHeroStats(thunderlord, 1, 10);
+      const stats = calculateHeroStats(storm, 1, 10);
       // 150 * 1.0 * 1.18 = 177
       expect(stats.hp).toBe(177);
     });
 
     it('level 20 has +38% bonus', () => {
-      const stats = calculateHeroStats(thunderlord, 1, 20);
+      const stats = calculateHeroStats(storm, 1, 20);
       // 150 * 1.0 * 1.38 = 207 (may be 206 due to floating point)
       expect(stats.hp).toBeGreaterThanOrEqual(206);
       expect(stats.hp).toBeLessThanOrEqual(207);
@@ -151,7 +151,7 @@ describe('calculateHeroStats', () => {
 
   describe('combined tier and level', () => {
     it('tier 2 level 10 combines multipliers', () => {
-      const stats = calculateHeroStats(thunderlord, 2, 10);
+      const stats = calculateHeroStats(storm, 2, 10);
       // HP: 150 * 1.5 * 1.18 = 265.5 -> 265
       expect(stats.hp).toBe(265);
       // Damage: 25 * 1.5 * 1.18 = 44.25 -> 44
@@ -159,7 +159,7 @@ describe('calculateHeroStats', () => {
     });
 
     it('tier 3 level 25 combines multipliers', () => {
-      const stats = calculateHeroStats(thunderlord, 3, 25);
+      const stats = calculateHeroStats(storm, 3, 25);
       // HP: 150 * 2.0 * 1.48 = 444
       expect(stats.hp).toBe(444);
       // Damage: 25 * 2.0 * 1.48 = 74
@@ -169,9 +169,9 @@ describe('calculateHeroStats', () => {
 
   describe('attack speed scales with tier only', () => {
     it('tier affects attack speed', () => {
-      const stats1 = calculateHeroStats(thunderlord, 1, 1);
-      const stats2 = calculateHeroStats(thunderlord, 2, 1);
-      const stats3 = calculateHeroStats(thunderlord, 3, 1);
+      const stats1 = calculateHeroStats(storm, 1, 1);
+      const stats2 = calculateHeroStats(storm, 2, 1);
+      const stats3 = calculateHeroStats(storm, 3, 1);
 
       expect(stats1.attackSpeed).toBeCloseTo(1.2, 2);
       expect(stats2.attackSpeed).toBeCloseTo(1.8, 2); // 1.2 * 1.5
@@ -179,8 +179,8 @@ describe('calculateHeroStats', () => {
     });
 
     it('level does NOT affect attack speed', () => {
-      const stats1 = calculateHeroStats(thunderlord, 1, 1);
-      const stats10 = calculateHeroStats(thunderlord, 1, 10);
+      const stats1 = calculateHeroStats(storm, 1, 1);
+      const stats10 = calculateHeroStats(storm, 1, 10);
 
       expect(stats1.attackSpeed).toBe(stats10.attackSpeed);
     });
@@ -188,18 +188,18 @@ describe('calculateHeroStats', () => {
 
   describe('range and moveSpeed are unchanged', () => {
     it('range is constant across tiers and levels', () => {
-      const stats1 = calculateHeroStats(thunderlord, 1, 1);
-      const stats2 = calculateHeroStats(thunderlord, 2, 10);
-      const stats3 = calculateHeroStats(thunderlord, 3, 25);
+      const stats1 = calculateHeroStats(storm, 1, 1);
+      const stats2 = calculateHeroStats(storm, 2, 10);
+      const stats3 = calculateHeroStats(storm, 3, 25);
 
       expect(stats1.range).toBe(stats2.range);
       expect(stats2.range).toBe(stats3.range);
     });
 
     it('moveSpeed is constant across tiers and levels', () => {
-      const stats1 = calculateHeroStats(thunderlord, 1, 1);
-      const stats2 = calculateHeroStats(thunderlord, 2, 10);
-      const stats3 = calculateHeroStats(thunderlord, 3, 25);
+      const stats1 = calculateHeroStats(storm, 1, 1);
+      const stats2 = calculateHeroStats(storm, 2, 10);
+      const stats3 = calculateHeroStats(storm, 3, 25);
 
       expect(stats1.moveSpeed).toBe(stats2.moveSpeed);
       expect(stats2.moveSpeed).toBe(stats3.moveSpeed);
@@ -212,27 +212,27 @@ describe('calculateHeroStats', () => {
 // ============================================================================
 
 describe('Tier System', () => {
-  const thunderlord = getHeroById('thunderlord')!;
+  const storm = getHeroById('storm')!;
 
   describe('getHeroTier', () => {
     it('returns correct tier data', () => {
       // getHeroTier takes heroId string, not hero object
-      const tier1 = getHeroTier('thunderlord', 1);
-      const tier2 = getHeroTier('thunderlord', 2);
-      const tier3 = getHeroTier('thunderlord', 3);
+      const tier1 = getHeroTier('storm', 1);
+      const tier2 = getHeroTier('storm', 2);
+      const tier3 = getHeroTier('storm', 3);
 
       expect(tier1).toBeDefined();
       expect(tier2).toBeDefined();
       expect(tier3).toBeDefined();
-      expect(tier1!.name).toBe('Thunderlord');
-      expect(tier2!.name).toBe('God of Thunder');
-      expect(tier3!.name).toBe('Rune King');
+      expect(tier1!.name).toBe('Unit-7 "Storm"');
+      expect(tier2!.name).toBe('Unit-7 "Storm" Mk.II');
+      expect(tier3!.name).toBe('Unit-7 "Storm" APEX');
     });
 
     it('tier multipliers increase with tier', () => {
-      const tier1 = getHeroTier('thunderlord', 1);
-      const tier2 = getHeroTier('thunderlord', 2);
-      const tier3 = getHeroTier('thunderlord', 3);
+      const tier1 = getHeroTier('storm', 1);
+      const tier2 = getHeroTier('storm', 2);
+      const tier3 = getHeroTier('storm', 3);
 
       expect(tier1!.statMultiplier).toBe(1.0);
       expect(tier2!.statMultiplier).toBe(1.5);
@@ -242,19 +242,19 @@ describe('Tier System', () => {
 
   describe('canUpgradeTier', () => {
     it('cannot upgrade from tier 3', () => {
-      expect(canUpgradeTier(thunderlord, 3, 99)).toBe(false);
+      expect(canUpgradeTier(storm, 3, 99)).toBe(false);
     });
 
     it('can upgrade tier 1 -> 2 at level 10', () => {
-      expect(canUpgradeTier(thunderlord, 1, 9)).toBe(false);
-      expect(canUpgradeTier(thunderlord, 1, 10)).toBe(true);
-      expect(canUpgradeTier(thunderlord, 1, 15)).toBe(true);
+      expect(canUpgradeTier(storm, 1, 9)).toBe(false);
+      expect(canUpgradeTier(storm, 1, 10)).toBe(true);
+      expect(canUpgradeTier(storm, 1, 15)).toBe(true);
     });
 
     it('can upgrade tier 2 -> 3 at level 20', () => {
-      expect(canUpgradeTier(thunderlord, 2, 19)).toBe(false);
-      expect(canUpgradeTier(thunderlord, 2, 20)).toBe(true);
-      expect(canUpgradeTier(thunderlord, 2, 25)).toBe(true);
+      expect(canUpgradeTier(storm, 2, 19)).toBe(false);
+      expect(canUpgradeTier(storm, 2, 20)).toBe(true);
+      expect(canUpgradeTier(storm, 2, 25)).toBe(true);
     });
   });
 
@@ -329,31 +329,31 @@ describe('Skill Definitions', () => {
     expect(hasUltimate).toBe(true);
   });
 
-  describe('Thunderlord skills', () => {
-    const hero = getHeroById('thunderlord')!;
+  describe('Unit Storm skills', () => {
+    const hero = getHeroById('storm')!;
 
-    it('tier 1 has Hammer Throw and Storm passive', () => {
+    it('tier 1 has Arc Strike and Storm Protocol passive', () => {
       const tier1Skills = hero.tiers[0].skills;
-      const hammerThrow = tier1Skills.find(s => s.id === 'hammer_throw');
+      const arcStrike = tier1Skills.find(s => s.id === 'arc_strike');
       const stormPassive = tier1Skills.find(s => s.id === 'storm_passive');
 
-      expect(hammerThrow).toBeDefined();
-      expect(hammerThrow!.cooldownTicks).toBe(180);
-      expect(hammerThrow!.isPassive).toBe(false);
+      expect(arcStrike).toBeDefined();
+      expect(arcStrike!.cooldownTicks).toBe(180);
+      expect(arcStrike!.isPassive).toBe(false);
 
       expect(stormPassive).toBeDefined();
       expect(stormPassive!.isPassive).toBe(true);
       expect(stormPassive!.cooldownTicks).toBe(0);
     });
 
-    it('tier 3 has Godblast ultimate', () => {
+    it('tier 3 has EMP Storm ultimate', () => {
       const tier3Skills = hero.tiers[2].skills;
-      const godblast = tier3Skills.find(s => s.id === 'godblast');
+      const empStorm = tier3Skills.find(s => s.id === 'emp_storm');
 
-      expect(godblast).toBeDefined();
-      expect(godblast!.isUltimate).toBe(true);
-      expect(godblast!.cooldownTicks).toBe(900); // 30 seconds
-      expect(godblast!.effects.length).toBe(2); // damage + stun
+      expect(empStorm).toBeDefined();
+      expect(empStorm!.isUltimate).toBe(true);
+      expect(empStorm!.cooldownTicks).toBe(900); // 30 seconds
+      expect(empStorm!.effects.length).toBe(2); // damage + stun
     });
   });
 
@@ -387,7 +387,7 @@ describe('Skill Definitions', () => {
 describe('Skill Cooldowns', () => {
   it('skill cooldown decreases each tick', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
@@ -404,7 +404,7 @@ describe('Skill Cooldowns', () => {
 
   it('skill cooldown stops at 0', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
@@ -420,12 +420,12 @@ describe('Skill Cooldowns', () => {
     expect(hero.skillCooldowns['hammer_throw']).toBe(0);
   });
 
-  describe('cooldown reduction from Infinity Stone', () => {
-    it('no stone returns 1.0 multiplier', () => {
+  describe('cooldown reduction from Crystal (Chrono Crystal)', () => {
+    it('no crystal returns 1.0 multiplier', () => {
       expect(calculateHeroStoneCooldownReduction(undefined)).toBe(1.0);
     });
 
-    it('unknown stone type returns 1.0 multiplier', () => {
+    it('unknown crystal type returns 1.0 multiplier', () => {
       expect(calculateHeroStoneCooldownReduction('unknown' as any)).toBe(1.0);
     });
   });
@@ -449,7 +449,7 @@ describe('Skill Effects in Combat', () => {
 
   it('damage skill reduces enemy HP', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
@@ -478,7 +478,7 @@ describe('Skill Effects in Combat', () => {
 
   it('stun effect stops enemy movement', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
 
@@ -535,7 +535,7 @@ describe('Skill Effects in Combat', () => {
 describe('Buff System', () => {
   it('buffs are added with correct expiration', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
@@ -543,7 +543,7 @@ describe('Buff System', () => {
     // Add a buff manually
     hero.buffs.push({
       id: 'test_buff',
-      stat: 'damageMultiplier',
+      stat: 'damageBonus',
       amount: 0.5, // +50% damage
       expirationTick: sim.state.tick + 150,
     });
@@ -554,7 +554,7 @@ describe('Buff System', () => {
 
   it('expired buffs are removed', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
@@ -562,7 +562,7 @@ describe('Buff System', () => {
     // Add buff that expires in 10 ticks
     hero.buffs.push({
       id: 'test_buff',
-      stat: 'damageMultiplier',
+      stat: 'damageBonus',
       amount: 0.5,
       expirationTick: sim.state.tick + 10,
     });
@@ -580,21 +580,21 @@ describe('Buff System', () => {
 
   it('multiple buffs can be active', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
 
     hero.buffs.push({
       id: 'buff1',
-      stat: 'damageMultiplier',
+      stat: 'damageBonus',
       amount: 0.3,
       expirationTick: sim.state.tick + 100,
     });
 
     hero.buffs.push({
       id: 'buff2',
-      stat: 'attackSpeedMultiplier',
+      stat: 'attackSpeedBonus',
       amount: 0.2,
       expirationTick: sim.state.tick + 100,
     });
@@ -610,7 +610,7 @@ describe('Buff System', () => {
 describe('Heal Effect', () => {
   it('heal increases hero HP', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
@@ -629,7 +629,7 @@ describe('Heal Effect', () => {
 
   it('heal does not exceed max HP', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
@@ -652,11 +652,11 @@ describe('Heal Effect', () => {
 describe('Skill Level Requirements', () => {
   it('skills require minimum level to unlock', () => {
     const config = getDefaultConfig();
-    config.startingHeroes = ['thunderlord'];
+    config.startingHeroes = ['storm'];
 
     const sim = new Simulation(12345, config);
     const hero = sim.state.heroes[0];
-    const heroDef = getHeroById('thunderlord')!;
+    const heroDef = getHeroById('storm')!;
 
     // At level 1, only level 1 skills should be available
     hero.level = 1;
@@ -670,18 +670,18 @@ describe('Skill Level Requirements', () => {
     }
   });
 
-  it('hammer_throw unlocks at level 5', () => {
-    const heroDef = getHeroById('thunderlord')!;
-    const hammerThrow = heroDef.tiers[0].skills.find(s => s.id === 'hammer_throw');
+  it('arc_strike unlocks at level 5', () => {
+    const heroDef = getHeroById('storm')!;
+    const arcStrike = heroDef.tiers[0].skills.find(s => s.id === 'arc_strike');
 
-    expect(hammerThrow!.unlockedAtLevel).toBe(5);
+    expect(arcStrike!.unlockedAtLevel).toBe(5);
   });
 
-  it('godblast ultimate unlocks at level 25', () => {
-    const heroDef = getHeroById('thunderlord')!;
-    const godblast = heroDef.tiers[2].skills.find(s => s.id === 'godblast');
+  it('emp_storm ultimate unlocks at level 25', () => {
+    const heroDef = getHeroById('storm')!;
+    const empStorm = heroDef.tiers[2].skills.find(s => s.id === 'emp_storm');
 
-    expect(godblast!.unlockedAtLevel).toBe(25);
+    expect(empStorm!.unlockedAtLevel).toBe(25);
   });
 });
 

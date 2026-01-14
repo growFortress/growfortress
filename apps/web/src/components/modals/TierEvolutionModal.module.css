@@ -1,0 +1,556 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Current Status Section */
+.currentStatus {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-success-30);
+}
+
+.currentTierIcon {
+  font-size: 40px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-success);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-success) 30%, transparent);
+}
+
+.currentInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.currentTierName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-success);
+}
+
+.currentLevel {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-60);
+}
+
+.tierBadge {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  background: var(--color-success);
+  color: var(--color-bg-base);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tier Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 0;
+}
+
+.tierNode {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  opacity: 0;
+  animation: nodeEnter 0.3s ease-out forwards;
+}
+
+.tierNode:nth-child(1) { animation-delay: 0.1s; }
+.tierNode:nth-child(2) { animation-delay: 0.2s; }
+.tierNode:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes nodeEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Connector line between nodes */
+.connector {
+  position: absolute;
+  left: 23px;
+  top: -12px;
+  width: 2px;
+  height: 24px;
+  background: var(--color-bg-elevated);
+}
+
+.connectorCompleted {
+  background: var(--color-success);
+}
+
+.connectorCurrent {
+  background: linear-gradient(to bottom, var(--color-success) 0%, var(--color-bg-elevated) 100%);
+}
+
+/* Node circle */
+.nodeCircle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-bg-elevated);
+  transition: all var(--duration-normal) var(--ease-standard);
+  flex-shrink: 0;
+}
+
+.completed .nodeCircle {
+  background: var(--color-success-20);
+  border-color: var(--color-success);
+}
+
+.current .nodeCircle {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-success) 50%, transparent);
+}
+
+.locked .nodeCircle {
+  opacity: 0.5;
+}
+
+.nodeIcon {
+  font-size: 20px;
+}
+
+.current .nodeIcon {
+  filter: brightness(0) invert(1);
+}
+
+/* Node info */
+.nodeInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nodeName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.completed .nodeName {
+  color: var(--color-success);
+}
+
+.locked .nodeName {
+  color: var(--color-text-40);
+}
+
+.nodeLevel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-40);
+}
+
+/* Progress bar in current node */
+.nodeProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+}
+
+.nodeProgressBar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.nodeProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success-40) 0%, var(--color-success) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.nodeProgressText {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-success);
+  min-width: 32px;
+  text-align: right;
+}
+
+.maxBadge {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  background: var(--color-legendary);
+  color: var(--color-bg-base);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Tier description */
+.tierDescription {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-60);
+  line-height: 1.5;
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-success);
+}
+
+/* Slots Purchase Section */
+.slotsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slotsSectionTitle {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0;
+  padding: 0 4px;
+}
+
+.purchaseError {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-error);
+  background: var(--color-error-20);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-error-30);
+}
+
+.slotsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slotItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.slotItem:hover {
+  border-color: var(--color-primary-30);
+  background: var(--color-bg-elevated);
+}
+
+.slotIcon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.slotInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.slotName {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.slotCount {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-60);
+}
+
+.slotPurchase {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.slotCost {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.slotCostGold {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-gold);
+}
+
+.slotCostLevel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text-40);
+}
+
+.slotReason {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-warning);
+  max-width: 120px;
+  text-align: right;
+}
+
+.slotMaxed {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  background: var(--color-legendary);
+  color: var(--color-bg-base);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Unlocks Section */
+.unlocksSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.unlocksSectionTitle {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0;
+  padding: 0 4px;
+}
+
+.unlocksList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.unlocksList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.unlocksList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.unlocksList::-webkit-scrollbar-thumb {
+  background: var(--color-primary-30);
+  border-radius: 10px;
+}
+
+.unlockItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-standard);
+  opacity: 0;
+  animation: unlockEnter 0.3s ease-out forwards;
+}
+
+.unlockItem:nth-child(1) { animation-delay: 0.1s; }
+.unlockItem:nth-child(2) { animation-delay: 0.15s; }
+.unlockItem:nth-child(3) { animation-delay: 0.2s; }
+.unlockItem:nth-child(4) { animation-delay: 0.25s; }
+.unlockItem:nth-child(5) { animation-delay: 0.3s; }
+.unlockItem:nth-child(n+6) { animation-delay: 0.35s; }
+
+@keyframes unlockEnter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.unlockItem:hover {
+  border-color: var(--color-primary-30);
+  background: var(--color-bg-elevated);
+}
+
+.unlockLevel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+  padding: 4px 6px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary-20);
+}
+
+.unlockLevelLabel {
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.unlockLevelValue {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.unlockRewards {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.unlockReward {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unlockRewardIcon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+}
+
+.unlockRewardText {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+/* Max Level Message */
+.maxLevelMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--color-legendary-20) 0%, var(--color-bg) 100%);
+  border: 1px solid var(--color-legendary-40);
+  border-radius: var(--radius-md);
+}
+
+.maxLevelIcon {
+  font-size: 32px;
+}
+
+.maxLevelText {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-legendary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tierNode,
+  .unlockItem {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .nodeProgressFill {
+    transition: none;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .currentStatus {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .currentInfo {
+    align-items: center;
+  }
+
+  .nodeProgress {
+    min-width: 80px;
+  }
+
+  .unlocksList {
+    max-height: 150px;
+  }
+}

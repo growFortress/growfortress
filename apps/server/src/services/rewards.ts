@@ -27,10 +27,10 @@ export function calculateRewards(
   // Gold = earned during run
   const gold = summary.goldEarned;
 
-  // Dust = earned during run + bonus for completion
+  // Dust = earned during run + bonus for completion (premium currency - reduced)
   let dust = summary.dustEarned;
   if (summary.won) {
-    dust += 35; // Win bonus (rebalanced from 50)
+    dust += 5; // Win bonus (premium currency - reduced from 10)
   }
 
   // XP calculation (post-run bonuses according to unified system)
@@ -62,7 +62,7 @@ export async function applyRewards(
   userId: string,
   rewards: RunRewards
 ): Promise<{
-  newInventory: { gold: number; dust: number; sigils: number };
+  newInventory: { gold: number; dust: number };
   newProgression: { level: number; xp: number; totalXp: number; xpToNextLevel: number };
   levelUp: boolean;
   newLevel?: number;
@@ -120,7 +120,6 @@ export async function applyRewards(
     newInventory: {
       gold: newGold,
       dust: newDust,
-      sigils: user.inventory.sigils,
     },
     newProgression: {
       level: newLevel,

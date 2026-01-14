@@ -2,26 +2,28 @@ import { useState } from 'preact/hooks';
 import { showOnboardingModal, selectedFortressClass, initializeHubFromLoadout } from '../../state/index.js';
 import { completeOnboarding, getProfile } from '../../api/client.js';
 import { updateFromProfile } from '../../state/actions.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { Modal } from '../shared/Modal.js';
 import styles from './OnboardingModal.module.css';
 
 // Starter Kit - automatyczny zestaw dla nowych graczy
 const STARTER_KIT = {
   fortressClass: 'natural' as const,
-  heroId: 'shield_captain' as const,
-  turretType: 'arrow' as const,
+  heroId: 'vanguard' as const,
+  turretType: 'railgun' as const,
 };
 
-// Starter Kit display info
-const STARTER_KIT_INFO = {
-  class: { name: 'Twierdza Natury', icon: '🌿', description: 'Zbalansowana obrona i regeneracja' },
-  hero: { name: 'Shield Captain', icon: '🛡️', description: 'Wytrzymały bohater z tarczą ochronną' },
-  turret: { name: 'Wieża Łucznicza', icon: '🏹', description: 'Szybkie i precyzyjne strzały' },
+// Icons for starter kit
+const STARTER_KIT_ICONS = {
+  class: '🌿',
+  hero: '🛡️',
+  turret: '⚡',
 };
 
 type OnboardingStep = 'welcome' | 'kit' | 'ready';
 
 export function OnboardingModal() {
+  const { t } = useTranslation('modals');
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export function OnboardingModal() {
       // Close modal
       showOnboardingModal.value = false;
     } catch (err) {
-      setError('Wystąpił błąd. Spróbuj ponownie.');
+      setError(t('onboarding.error'));
       console.error('Onboarding error:', err);
     } finally {
       setLoading(false);
@@ -92,26 +94,26 @@ export function OnboardingModal() {
         {step === 'welcome' && (
           <div class={styles.welcomeStep}>
             <div class={styles.welcomeIcon}>🏰</div>
-            <h2 class={styles.title}>Witaj, Obrońco!</h2>
+            <h2 class={styles.title}>{t('onboarding.welcome.title')}</h2>
             <p class={styles.subtitle}>
-              Twoja twierdza potrzebuje ochrony przed nadciągającymi hordami wrogów.
+              {t('onboarding.welcome.subtitle')}
             </p>
             <div class={styles.features}>
               <div class={styles.feature}>
                 <span class={styles.featureIcon}>⚔️</span>
-                <span>Buduj obronę</span>
+                <span>{t('onboarding.welcome.buildDefense')}</span>
               </div>
               <div class={styles.feature}>
                 <span class={styles.featureIcon}>🦸</span>
-                <span>Rekrutuj bohaterów</span>
+                <span>{t('onboarding.welcome.recruitHeroes')}</span>
               </div>
               <div class={styles.feature}>
                 <span class={styles.featureIcon}>💎</span>
-                <span>Zbieraj nagrody</span>
+                <span>{t('onboarding.welcome.collectRewards')}</span>
               </div>
             </div>
             <button class={styles.nextButton} onClick={handleNext}>
-              Dalej →
+              {t('onboarding.next')}
             </button>
           </div>
         )}
@@ -119,44 +121,44 @@ export function OnboardingModal() {
         {/* Step 2: Starter Kit */}
         {step === 'kit' && (
           <div class={styles.kitStep}>
-            <h2 class={styles.title}>Twój Starter Kit</h2>
+            <h2 class={styles.title}>{t('onboarding.starterKit.title')}</h2>
             <p class={styles.subtitle}>
-              Otrzymujesz zestaw startowy, który pomoże Ci w pierwszych bitwach.
+              {t('onboarding.starterKit.subtitle')}
             </p>
 
             <div class={styles.kitGrid}>
               <div class={styles.kitItem}>
-                <div class={styles.kitIcon}>{STARTER_KIT_INFO.class.icon}</div>
-                <div class={styles.kitLabel}>Klasa</div>
-                <div class={styles.kitName}>{STARTER_KIT_INFO.class.name}</div>
-                <div class={styles.kitDesc}>{STARTER_KIT_INFO.class.description}</div>
+                <div class={styles.kitIcon}>{STARTER_KIT_ICONS.class}</div>
+                <div class={styles.kitLabel}>{t('onboarding.starterKit.class')}</div>
+                <div class={styles.kitName}>{t('onboarding.starterKit.className')}</div>
+                <div class={styles.kitDesc}>{t('onboarding.starterKit.classDesc')}</div>
               </div>
 
               <div class={styles.kitItem}>
-                <div class={styles.kitIcon}>{STARTER_KIT_INFO.hero.icon}</div>
-                <div class={styles.kitLabel}>Bohater</div>
-                <div class={styles.kitName}>{STARTER_KIT_INFO.hero.name}</div>
-                <div class={styles.kitDesc}>{STARTER_KIT_INFO.hero.description}</div>
+                <div class={styles.kitIcon}>{STARTER_KIT_ICONS.hero}</div>
+                <div class={styles.kitLabel}>{t('onboarding.starterKit.hero')}</div>
+                <div class={styles.kitName}>{t('onboarding.starterKit.heroName')}</div>
+                <div class={styles.kitDesc}>{t('onboarding.starterKit.heroDesc')}</div>
               </div>
 
               <div class={styles.kitItem}>
-                <div class={styles.kitIcon}>{STARTER_KIT_INFO.turret.icon}</div>
-                <div class={styles.kitLabel}>Wieżyczka</div>
-                <div class={styles.kitName}>{STARTER_KIT_INFO.turret.name}</div>
-                <div class={styles.kitDesc}>{STARTER_KIT_INFO.turret.description}</div>
+                <div class={styles.kitIcon}>{STARTER_KIT_ICONS.turret}</div>
+                <div class={styles.kitLabel}>{t('onboarding.starterKit.turret')}</div>
+                <div class={styles.kitName}>{t('onboarding.starterKit.turretName')}</div>
+                <div class={styles.kitDesc}>{t('onboarding.starterKit.turretDesc')}</div>
               </div>
             </div>
 
             <p class={styles.hint}>
-              Więcej klas, bohaterów i wieżyczek odblokujesz w miarę postępów!
+              {t('onboarding.starterKit.hint')}
             </p>
 
             <div class={styles.buttonRow}>
               <button class={styles.backButton} onClick={handleBack}>
-                ← Wstecz
+                {t('onboarding.back')}
               </button>
               <button class={styles.nextButton} onClick={handleNext}>
-                Dalej →
+                {t('onboarding.next')}
               </button>
             </div>
           </div>
@@ -166,32 +168,32 @@ export function OnboardingModal() {
         {step === 'ready' && (
           <div class={styles.readyStep}>
             <div class={styles.readyIcon}>🎮</div>
-            <h2 class={styles.title}>Gotowy do walki!</h2>
+            <h2 class={styles.title}>{t('onboarding.ready.title')}</h2>
             <p class={styles.subtitle}>
-              Twoja twierdza jest gotowa. Czas odpierać ataki wrogów!
+              {t('onboarding.ready.subtitle')}
             </p>
 
             <div class={styles.tips}>
               <div class={styles.tip}>
                 <span class={styles.tipIcon}>💡</span>
-                <span>Kliknij <strong>BOMB</strong> aby użyć umiejętności specjalnej</span>
+                <span dangerouslySetInnerHTML={{ __html: t('onboarding.ready.tipBomb') }} />
               </div>
               <div class={styles.tip}>
                 <span class={styles.tipIcon}>💡</span>
-                <span>Twój bohater i wieżyczki atakują automatycznie</span>
+                <span>{t('onboarding.ready.tipAuto')}</span>
               </div>
               <div class={styles.tip}>
                 <span class={styles.tipIcon}>💡</span>
-                <span>Po każdej fali wybierz relikt, który wzmocni obronę</span>
+                <span>{t('onboarding.ready.tipRelic')}</span>
               </div>
             </div>
 
             <div class={styles.buttonRow}>
               <button class={styles.backButton} onClick={handleBack} disabled={loading}>
-                ← Wstecz
+                {t('onboarding.back')}
               </button>
               <button class={styles.startButton} onClick={handleStart} disabled={loading}>
-                {loading ? 'Przygotowywanie...' : 'Rozpocznij przygodę!'}
+                {loading ? t('onboarding.preparing') : t('onboarding.startAdventure')}
               </button>
             </div>
           </div>

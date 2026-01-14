@@ -13,15 +13,11 @@ import {
 
 function createTestBuild(overrides: Partial<ArenaBuildConfig> = {}): ArenaBuildConfig {
   return {
-    oderId: 'test-player-1',
-    odername: 'Test Player 1',
+    ownerId: 'test-player-1',
+    ownerName: 'Test Player 1',
     fortressClass: 'fire',
     commanderLevel: 30,
-    heroIds: ['thunderlord', 'iron_sentinel'],
-    turrets: [
-      { definitionId: 'arrow', slotIndex: 0, class: 'fire' },
-      { definitionId: 'cannon', slotIndex: 1, class: 'fire' },
-    ],
+    heroIds: ['storm', 'forge'],
     ...overrides,
   };
 }
@@ -33,8 +29,8 @@ function createTestBuild(overrides: Partial<ArenaBuildConfig> = {}): ArenaBuildC
 describe('Arena Simulation', () => {
   describe('Initialization', () => {
     it('creates valid arena state', () => {
-      const leftBuild = createTestBuild({ oderId: 'left-player' });
-      const rightBuild = createTestBuild({ oderId: 'right-player' });
+      const leftBuild = createTestBuild({ ownerId: 'left-player' });
+      const rightBuild = createTestBuild({ ownerId: 'right-player' });
 
       const state = createArenaState(12345, leftBuild, rightBuild);
 
@@ -42,8 +38,8 @@ describe('Arena Simulation', () => {
       expect(state.tick).toBe(0);
       expect(state.ended).toBe(false);
       expect(state.winner).toBeNull();
-      expect(state.left.oderId).toBe('left-player');
-      expect(state.right.oderId).toBe('right-player');
+      expect(state.left.ownerId).toBe('left-player');
+      expect(state.right.ownerId).toBe('right-player');
     });
 
     it('initializes fortresses with correct HP', () => {
@@ -59,31 +55,14 @@ describe('Arena Simulation', () => {
     });
 
     it('initializes heroes for both sides', () => {
-      const leftBuild = createTestBuild({ heroIds: ['thunderlord', 'iron_sentinel'] });
-      const rightBuild = createTestBuild({ heroIds: ['thunderlord'] });
+      const leftBuild = createTestBuild({ heroIds: ['storm', 'forge'] });
+      const rightBuild = createTestBuild({ heroIds: ['storm'] });
 
       const state = createArenaState(12345, leftBuild, rightBuild);
 
       expect(state.left.heroes.length).toBe(2);
       expect(state.right.heroes.length).toBe(1);
-      expect(state.left.heroes[0].definitionId).toBe('thunderlord');
-    });
-
-    it('initializes turrets for both sides', () => {
-      const leftBuild = createTestBuild({
-        turrets: [
-          { definitionId: 'arrow', slotIndex: 0, class: 'fire' },
-          { definitionId: 'cannon', slotIndex: 1, class: 'fire' },
-        ],
-      });
-      const rightBuild = createTestBuild({
-        turrets: [{ definitionId: 'tesla', slotIndex: 0, class: 'lightning' }],
-      });
-
-      const state = createArenaState(12345, leftBuild, rightBuild);
-
-      expect(state.left.turrets.length).toBe(2);
-      expect(state.right.turrets.length).toBe(1);
+      expect(state.left.heroes[0].definitionId).toBe('storm');
     });
 
     it('positions fortresses symmetrically', () => {
@@ -105,8 +84,8 @@ describe('Arena Simulation', () => {
   describe('Determinism', () => {
     it('produces same result with same seed and builds', () => {
       const seed = 42424242;
-      const leftBuild = createTestBuild({ oderId: 'left' });
-      const rightBuild = createTestBuild({ oderId: 'right' });
+      const leftBuild = createTestBuild({ ownerId: 'left' });
+      const rightBuild = createTestBuild({ ownerId: 'right' });
 
       const result1 = runArenaBattle(seed, leftBuild, rightBuild);
       const result2 = runArenaBattle(seed, leftBuild, rightBuild);
@@ -123,10 +102,10 @@ describe('Arena Simulation', () => {
     it('produces different results with different seeds (when RNG affects outcome)', () => {
       // Create builds with some crit chance to enable RNG variation
       const leftBuild = createTestBuild({
-        damageMultiplier: 1.0,
+        damageBonus: 0,
       });
       const rightBuild = createTestBuild({
-        damageMultiplier: 1.0,
+        damageBonus: 0,
       });
 
       // Note: With default modifiers (critChance: 0), simulation is fully deterministic
@@ -226,8 +205,8 @@ describe('Arena Simulation', () => {
 
   describe('Debug Battle', () => {
     it('shows battle details', () => {
-      const leftBuild = createTestBuild({ oderId: 'left' });
-      const rightBuild = createTestBuild({ oderId: 'right' });
+      const leftBuild = createTestBuild({ ownerId: 'left' });
+      const rightBuild = createTestBuild({ ownerId: 'right' });
 
       const sim = new ArenaSimulation(12345, leftBuild, rightBuild);
       const initialState = sim.getState();
@@ -310,19 +289,18 @@ describe('Arena Simulation', () => {
     it('stronger build wins more often', () => {
       // Create a significantly stronger left build
       const strongBuild = createTestBuild({
-        oderId: 'strong',
+        ownerId: 'strong',
         commanderLevel: 50,
-        damageMultiplier: 2.0,
-        hpMultiplier: 2.0,
-        heroIds: ['thunderlord', 'iron_sentinel'],
+        damageBonus: 1.0,
+        hpBonus: 1.0,
+        heroIds: ['storm', 'forge'],
       });
 
       // Create a weaker right build
       const weakBuild = createTestBuild({
-        oderId: 'weak',
+        ownerId: 'weak',
         commanderLevel: 10,
-        heroIds: ['thunderlord'],
-        turrets: [],
+        heroIds: ['storm'],
       });
 
       // Run 20 battles
@@ -339,8 +317,8 @@ describe('Arena Simulation', () => {
     it('identical builds produce consistent outcomes (deterministic)', () => {
       // With identical builds and deterministic simulation,
       // outcomes depend only on initial positions and RNG (crits)
-      const build1 = createTestBuild({ oderId: 'player1' });
-      const build2 = createTestBuild({ oderId: 'player2' });
+      const build1 = createTestBuild({ ownerId: 'player1' });
+      const build2 = createTestBuild({ ownerId: 'player2' });
 
       const results = [];
       for (let seed = 1; seed <= 10; seed++) {

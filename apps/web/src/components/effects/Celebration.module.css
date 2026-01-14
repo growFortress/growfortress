@@ -1,0 +1,343 @@
+/* Celebration overlay container */
+.container {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-celebration, 10000);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Screen flash effect */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  animation: flashPulse 0.6s ease-out forwards;
+}
+
+@keyframes flashPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+/* Variant flashes */
+.flashGold {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 215, 0, 0.6) 0%,
+    rgba(255, 215, 0, 0) 70%
+  );
+}
+
+.flashPrimary {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 255, 255, 0.5) 0%,
+    rgba(0, 255, 255, 0) 70%
+  );
+}
+
+.flashAccent {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 100, 100, 0.5) 0%,
+    rgba(255, 100, 100, 0) 70%
+  );
+}
+
+/* Starburst rays container */
+.starburst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+/* Individual ray */
+.ray {
+  position: absolute;
+  width: 4px;
+  height: 200px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform-origin: center top;
+  opacity: 0;
+  animation: rayBurst 0.8s ease-out forwards;
+}
+
+@keyframes rayBurst {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--ray-angle)) scaleY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: rotate(var(--ray-angle)) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--ray-angle)) scaleY(1.5);
+  }
+}
+
+/* Confetti container */
+.confettiContainer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Individual confetti piece */
+.confetti {
+  position: absolute;
+  width: var(--confetti-size, 10px);
+  height: var(--confetti-size, 10px);
+  background: var(--confetti-color, #ff0);
+  border-radius: var(--confetti-radius, 2px);
+  opacity: 1;
+  animation: confettiFall var(--confetti-duration, 3s) var(--confetti-delay, 0s) ease-out forwards;
+  transform-origin: center;
+}
+
+/* Confetti shapes */
+.confettiSquare {
+  border-radius: 2px;
+}
+
+.confettiCircle {
+  border-radius: 50%;
+}
+
+.confettiRect {
+  width: calc(var(--confetti-size, 10px) * 0.4);
+  height: var(--confetti-size, 10px);
+  border-radius: 1px;
+}
+
+.confettiStar {
+  background: transparent;
+  width: 0;
+  height: 0;
+  border-left: calc(var(--confetti-size, 10px) / 2) solid transparent;
+  border-right: calc(var(--confetti-size, 10px) / 2) solid transparent;
+  border-bottom: var(--confetti-size, 10px) solid var(--confetti-color, #ff0);
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform:
+      translateY(var(--confetti-fall-distance, 100vh))
+      translateX(var(--confetti-drift, 0px))
+      rotate(var(--confetti-rotation, 720deg))
+      scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Sparkle/particle burst */
+.sparkleContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+.sparkle {
+  position: absolute;
+  width: var(--sparkle-size, 6px);
+  height: var(--sparkle-size, 6px);
+  background: var(--sparkle-color, #fff);
+  border-radius: 50%;
+  box-shadow: 0 0 calc(var(--sparkle-size, 6px) * 2) var(--sparkle-color, #fff);
+  animation: sparkleBurst var(--sparkle-duration, 1s) ease-out forwards;
+}
+
+@keyframes sparkleBurst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform:
+      translate(
+        calc(cos(var(--sparkle-angle)) * var(--sparkle-distance, 150px)),
+        calc(sin(var(--sparkle-angle)) * var(--sparkle-distance, 150px))
+      )
+      scale(0);
+    opacity: 0;
+  }
+}
+
+/* Ring burst effect */
+.ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid var(--ring-color, rgba(255, 255, 255, 0.8));
+  border-radius: 50%;
+  opacity: 0;
+  animation: ringExpand 0.8s ease-out forwards;
+}
+
+@keyframes ringExpand {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(20);
+    opacity: 0;
+  }
+}
+
+/* Multiple rings with stagger */
+.ring:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.ring:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+/* Text burst (for level up, etc) */
+.textBurst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--color-text);
+  text-shadow:
+    0 0 20px var(--color-primary),
+    0 0 40px var(--color-primary-60),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  animation: textPop 1s var(--ease-spring) forwards;
+}
+
+@keyframes textPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    transform: translate(-50%, -60%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Achievement badge animation */
+.badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 16px 32px;
+  background: var(--glass-bg);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  box-shadow:
+    var(--elevation-3),
+    0 0 30px var(--color-primary-40);
+  animation: badgeReveal 0.6s var(--ease-spring) forwards;
+}
+
+@keyframes badgeReveal {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.1) rotate(2deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.badgeIcon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.badgeTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.badgeSubtitle {
+  font-size: 14px;
+  color: var(--color-text-60);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .flash,
+  .ray,
+  .confetti,
+  .sparkle,
+  .ring,
+  .textBurst,
+  .badge {
+    animation: fadeOnly 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeOnly {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}

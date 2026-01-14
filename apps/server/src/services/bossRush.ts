@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
 import { createBossRushToken, verifyBossRushToken } from '../lib/tokens.js';
 import {
@@ -5,12 +6,16 @@ import {
   getProgressionBonuses,
   getXpForLevel,
   computeChainHash,
+  replayBossRush,
+  type BossRushTurretConfig,
+  type FortressClass,
 } from '@arcade/sim-core';
-import type { BossRushStartRequest, BossRushFinishRequest, Checkpoint } from '@arcade/protocol';
-import { BOSS_RUSH_REJECTION_REASONS } from '@arcade/protocol';
+import type { BossRushStartRequest, BossRushFinishRequest, Checkpoint, GameEvent } from '@arcade/protocol';
+import { BOSS_RUSH_REJECTION_REASONS, GameEventSchema } from '@arcade/protocol';
 import { getUserProfile } from './auth.js';
 import { upsertBossRushLeaderboardEntry, getUserBossRushRank } from './bossRushLeaderboard.js';
 import { getCurrentWeekKey } from '../lib/queue.js';
+import { updateQuestsFromRun } from './dailyQuests.js';
 
 /** Simulation tick rate */
 const TICK_HZ = 30;
@@ -98,9 +103,71 @@ function verifyBossRushSubmission(
     return BOSS_RUSH_REJECTION_REASONS.INVALID_SUMMARY_DATA;
   }
 
-  // TODO: Full server-side replay verification
-  // This would require implementing a Boss Rush specific replay function
-  // that recreates the simulation and compares checkpoints/final hash
+  // Full server-side replay verification
+  // Parse and validate events
+  const parsedEvents: GameEvent[] = [];
+  for (const event of events) {
+    const result = GameEventSchema.safeParse(event);
+    if (!result.success) {
+      // Skip invalid events - could be older client version
+      continue;
+    }
+    parsedEvents.push(result.data);
+  }
+
+  // Build loadout config from session
+  const loadout = _session.loadoutJson as {
+    fortressClass?: string;
+    heroIds?: string[];
+    turretTypes?: string[];
+  };
+
+  // Convert turret types to turret configs
+  const fortressClass = (loadout.fortressClass || 'natural') as FortressClass;
+  const turretConfigs: BossRushTurretConfig[] = (loadout.turretTypes || []).map(
+    (type, index) => ({
+      definitionId: type,
+      slotIndex: index,
+      class: fortressClass,
+    })
+  );
+
+  // Run replay verification
+  const replayResult = replayBossRush({
+    seed: _session.seed,
+    events: parsedEvents,
+    expectedCheckpoints: checkpoints as Checkpoint[],
+    expectedFinalHash: data.finalHash,
+    loadout: {
+      fortressClass,
+      heroIds: loadout.heroIds || ['vanguard'],
+      turrets: turretConfigs,
+    },
+  });
+
+  if (!replayResult.success) {
+    // Map replay failure reasons to protocol rejection reasons
+    switch (replayResult.reason) {
+      case 'TICKS_NOT_MONOTONIC':
+        return BOSS_RUSH_REJECTION_REASONS.TICKS_NOT_MONOTONIC;
+      case 'CHECKPOINT_MISMATCH':
+      case 'CHECKPOINT_CHAIN_MISMATCH':
+        return BOSS_RUSH_REJECTION_REASONS.CHECKPOINT_HASH_MISMATCH;
+      case 'FINAL_HASH_MISMATCH':
+        return BOSS_RUSH_REJECTION_REASONS.FINAL_HASH_MISMATCH;
+      default:
+        return BOSS_RUSH_REJECTION_REASONS.SIMULATION_MISMATCH;
+    }
+  }
+
+  // Verify summary matches replay result
+  const replaySummary = replayResult.summary;
+  if (
+    Math.abs(replaySummary.totalDamageDealt - summary.totalDamageDealt) > 1000 ||
+    replaySummary.bossesKilled !== summary.bossesKilled
+  ) {
+    return BOSS_RUSH_REJECTION_REASONS.SIMULATION_MISMATCH;
+  }
 
   return null;
 }
@@ -162,14 +229,14 @@ export async function startBossRushSession(
   const commanderLevel = user.progression?.level ?? 1;
   const progressionBonuses = getProgressionBonuses(commanderLevel);
 
-  // Generate random seed
-  const seed = Math.floor(Math.random() * 2147483647);
+  // Generate cryptographically secure seed
+  const seed = randomInt(2147483647);
 
   // Build loadout snapshot
   const loadoutJson = {
     fortressClass: options.fortressClass ?? user.defaultFortressClass ?? 'natural',
-    heroIds: options.heroIds ?? (user.defaultHeroId ? [user.defaultHeroId] : ['shield_captain']),
-    turretTypes: options.turretTypes ?? (user.defaultTurretType ? [user.defaultTurretType] : ['arrow']),
+    heroIds: options.heroIds ?? (user.defaultHeroId ? [user.defaultHeroId] : ['vanguard']),
+    turretTypes: options.turretTypes ?? (user.defaultTurretType ? [user.defaultTurretType] : ['railgun']),
   };
 
   // Create session
@@ -285,7 +352,7 @@ export async function finishBossRushSession(
   const { summary } = data;
   const rewards = {
     gold: summary.goldEarned,
-    dust: summary.dustEarned,
+    dust: Math.floor(summary.dustEarned * 0.25), // Premium currency - 25% of earned dust
     xp: Math.floor(summary.bossesKilled * 30 + summary.totalDamageDealt / 1000),
     materials: summary.materialsEarned,
     levelUp: false,
@@ -365,6 +432,11 @@ export async function finishBossRushSession(
 
   // Get user's rank
   const rankInfo = await getUserBossRushRank(userId, weekKey);
+
+  // Update daily quest progress for boss_rush_daily quest
+  await updateQuestsFromRun(userId, {
+    bossesKilled: summary.bossesKilled,
+  });
 
   return {
     verified: true,

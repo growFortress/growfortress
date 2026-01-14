@@ -21,12 +21,14 @@ export const RerollRelicsEventSchema = BaseEventSchema.extend({
 
 export type RerollRelicsEvent = z.infer<typeof RerollRelicsEventSchema>;
 
-// Activate SNAP ability (Infinity Gauntlet)
+// Activate Annihilation Wave ability (Crystal Matrix)
+// Note: Event type kept as 'ACTIVATE_SNAP' for backwards compatibility with saved sessions
 export const ActivateSnapEventSchema = BaseEventSchema.extend({
   type: z.literal('ACTIVATE_SNAP'),
 });
 
 export type ActivateSnapEvent = z.infer<typeof ActivateSnapEventSchema>;
+export type ActivateAnnihilationEvent = ActivateSnapEvent; // Alias
 
 // Hero command event (player-issued tactical orders)
 export const HeroCommandEventSchema = BaseEventSchema.extend({

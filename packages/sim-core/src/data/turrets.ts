@@ -19,10 +19,25 @@ import { FortressClass, FP } from '../types';
 // ============================================================================
 
 export type TurretType =
-  | 'arrow'    // Fast, single-target DPS
-  | 'frost'    // Crowd control, slow
-  | 'cannon'   // AOE damage
-  | 'tesla';   // Chain lightning
+  | 'railgun'    // Fast, single-target DPS (formerly arrow)
+  | 'cryo'       // Crowd control, slow (formerly frost)
+  | 'artillery'  // AOE damage (formerly cannon)
+  | 'arc';       // Chain lightning (formerly tesla)
+
+// Legacy aliases for backwards compatibility
+export type LegacyTurretType = 'arrow' | 'frost' | 'cannon' | 'tesla';
+export const TURRET_ID_MAP: Record<LegacyTurretType, TurretType> = {
+  'arrow': 'railgun',
+  'frost': 'cryo',
+  'cannon': 'artillery',
+  'tesla': 'arc',
+};
+export const REVERSE_TURRET_ID_MAP: Record<TurretType, LegacyTurretType> = {
+  'railgun': 'arrow',
+  'cryo': 'frost',
+  'artillery': 'cannon',
+  'arc': 'tesla',
+};
 
 export type TurretRole = 'dps' | 'aoe' | 'crowd_control';
 
@@ -152,10 +167,10 @@ export const TURRET_CLASS_MODIFIERS: TurretClassModifier[] = [
 // DEFINICJE WIEŻYCZEK
 // ============================================================================
 
-const ARROW_TOWER: TurretDefinition = {
-  id: 'arrow',
-  name: 'Wieża Łucznicza',
-  description: 'Szybka wieża strzelająca strzałami. Idealna do eliminacji pojedynczych celów.',
+const RAILGUN_TOWER: TurretDefinition = {
+  id: 'railgun',
+  name: 'Wieża Railgun',
+  description: 'Szybka wieża strzelająca pociskami elektromagnetycznymi. Idealna do eliminacji pojedynczych celów.',
   role: 'dps',
 
   baseStats: {
@@ -169,7 +184,7 @@ const ARROW_TOWER: TurretDefinition = {
 
   baseCost: { gold: 3000 },
   tierCostMultiplier: 32768 as FP, // 2.0
-  classChangeCost: { gold: 150, dust: 20 },
+  classChangeCost: { gold: 150, dust: 15 },
 
   ability: {
     id: 'rapid_fire',
@@ -186,15 +201,15 @@ const ARROW_TOWER: TurretDefinition = {
   projectileType: 'arrow',
 
   colors: {
-    primary: 0x8B4513,   // SaddleBrown
-    secondary: 0xD2691E, // Chocolate
-    projectile: 0xFFD700, // Gold (strzała)
+    primary: 0x4A5568,   // Slate Gray (Sci-Fi)
+    secondary: 0x718096, // Gray-blue
+    projectile: 0x00BFFF, // Deep Sky Blue (energy projectile)
   },
 };
 
-const CANNON_TOWER: TurretDefinition = {
-  id: 'cannon',
-  name: 'Wieża Armatnia',
+const ARTILLERY_TOWER: TurretDefinition = {
+  id: 'artillery',
+  name: 'Wieża Artyleryjska',
   description: 'Powolna ale potężna wieża z obrażeniami obszarowymi.',
   role: 'aoe',
 
@@ -207,9 +222,9 @@ const CANNON_TOWER: TurretDefinition = {
     hp: 200,                     // Medium durability
   },
 
-  baseCost: { gold: 5500 },
+  baseCost: { gold: 8000 },  // Increased from 5500 for economy balance
   tierCostMultiplier: 32768 as FP,
-  classChangeCost: { gold: 150, dust: 20 },
+  classChangeCost: { gold: 150, dust: 15 },
 
   ability: {
     id: 'explosive_shell',
@@ -237,10 +252,10 @@ const CANNON_TOWER: TurretDefinition = {
   },
 };
 
-const TESLA_TOWER: TurretDefinition = {
-  id: 'tesla',
-  name: 'Wieża Tesli',
-  description: 'Elektryczna wieża, której pioruny przeskakują między wrogami.',
+const ARC_TOWER: TurretDefinition = {
+  id: 'arc',
+  name: 'Wieża Łukowa',
+  description: 'Elektryczna wieża, której łuki energetyczne przeskakują między wrogami.',
   role: 'aoe',
 
   baseStats: {
@@ -254,7 +269,7 @@ const TESLA_TOWER: TurretDefinition = {
 
   baseCost: { gold: 7000 },
   tierCostMultiplier: 32768 as FP,
-  classChangeCost: { gold: 150, dust: 20 },
+  classChangeCost: { gold: 150, dust: 15 },
 
   ability: {
     id: 'overload',
@@ -271,7 +286,7 @@ const TESLA_TOWER: TurretDefinition = {
   colors: {
     primary: 0x4B0082,   // Indigo
     secondary: 0x9932CC, // DarkOrchid
-    projectile: 0x00FFFF, // Cyan (błyskawica)
+    projectile: 0x00FFFF, // Cyan (energy arc)
   },
 
   specialEffects: {
@@ -280,10 +295,10 @@ const TESLA_TOWER: TurretDefinition = {
   },
 };
 
-const FROST_TOWER: TurretDefinition = {
-  id: 'frost',
-  name: 'Wieża Mrozu',
-  description: 'Lodowa wieża spowalniająca wrogów i zamrażająca ich na miejscu.',
+const CRYO_TOWER: TurretDefinition = {
+  id: 'cryo',
+  name: 'Wieża Kriogeniczna',
+  description: 'Kriogeniczna wieża spowalniająca wrogów i zamrażająca ich na miejscu.',
   role: 'crowd_control',
 
   baseStats: {
@@ -297,7 +312,7 @@ const FROST_TOWER: TurretDefinition = {
 
   baseCost: { gold: 3500 },
   tierCostMultiplier: 32768 as FP,
-  classChangeCost: { gold: 150, dust: 20 },
+  classChangeCost: { gold: 150, dust: 15 },
 
   ability: {
     id: 'flash_freeze',
@@ -329,11 +344,17 @@ const FROST_TOWER: TurretDefinition = {
 // ============================================================================
 
 export const TURRET_DEFINITIONS: TurretDefinition[] = [
-  ARROW_TOWER,
-  FROST_TOWER,
-  CANNON_TOWER,
-  TESLA_TOWER,
+  RAILGUN_TOWER,
+  CRYO_TOWER,
+  ARTILLERY_TOWER,
+  ARC_TOWER,
 ];
+
+// Legacy exports for backwards compatibility
+export const ARROW_TOWER = RAILGUN_TOWER;
+export const FROST_TOWER = CRYO_TOWER;
+export const CANNON_TOWER = ARTILLERY_TOWER;
+export const TESLA_TOWER = ARC_TOWER;
 
 // ============================================================================
 // SLOTY WIEŻYCZEK
@@ -370,11 +391,27 @@ export const EXTRA_TURRET_SLOTS: TurretSlot[] = [
 // ============================================================================
 
 /**
+ * Normalizes turret ID from legacy to new format
+ */
+export function normalizeTurretId(id: string): TurretType | undefined {
+  if (id in TURRET_ID_MAP) {
+    return TURRET_ID_MAP[id as LegacyTurretType];
+  }
+  if (['railgun', 'cryo', 'artillery', 'arc'].includes(id)) {
+    return id as TurretType;
+  }
+  return undefined;
+}
+
+/**
  * Pobiera definicję wieżyczki po ID
  * Przyjmuje string dla kompatybilności z typami runtime - zwraca undefined dla nieznanych ID
+ * Supports both legacy IDs (arrow, frost, cannon, tesla) and new IDs (railgun, cryo, artillery, arc)
  */
 export function getTurretById(id: string): TurretDefinition | undefined {
-  return TURRET_DEFINITIONS.find(t => t.id === id);
+  const normalizedId = normalizeTurretId(id);
+  if (!normalizedId) return undefined;
+  return TURRET_DEFINITIONS.find(t => t.id === normalizedId);
 }
 
 /**
@@ -460,8 +497,8 @@ export function getAvailableSlots(unlockedExtraSlots: number[] = []): TurretSlot
  * Koszt odblokowania dodatkowego slotu
  */
 export const EXTRA_SLOT_UNLOCK_COST = {
-  slot7: { dust: 1000 },
-  slot8: { dust: 1000 },
+  slot7: { dust: 700 },
+  slot8: { dust: 700 },
 };
 
 /**

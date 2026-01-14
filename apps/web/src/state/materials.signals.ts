@@ -88,3 +88,12 @@ export function showMaterialsModal(): void {
 export function hideMaterialsModal(): void {
   materialsModalVisible.value = false;
 }
+
+/**
+ * Reset all materials state (on logout)
+ */
+export function resetMaterialsState(): void {
+  playerMaterials.value = {};
+  recentDrops.value = [];
+  materialsModalVisible.value = false;
+}

@@ -1,47 +1,37 @@
-import { useState } from 'preact/hooks';
 import {
   gameState,
   gamePhase,
-  currentScore,
   currentWave as profileWave,
   selectedFortressClass,
   classSelectionVisible,
   hubInitialized,
-  openPowerUpgradeModal,
+  displayGold,
+  displayDust,
+  openSettingsMenu,
+  openGuildPanel,
+  openMessagesModal,
+  openLeaderboardModal,
+  showDailyQuestsPanel,
+  showShopModal,
 } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { WaveProgress } from './WaveProgress.js';
-import { HeroPanel } from './HeroPanel.js';
-import { TurretPanel } from './TurretPanel.js';
-import { SynergyPanel } from './SynergyPanel.js';
 import { PillarDisplay } from './PillarDisplay.js';
-import { InfinityStones } from './InfinityStones.js';
 import { HeroSkillBar } from './HeroSkillBar.js';
 import { TurretSkillBar } from './TurretSkillBar.js';
 import { FortressSkillBar } from './FortressSkillBar.js';
-import { StatsPanel } from './StatsPanel.js';
-import { TutorialOverlay } from './TutorialOverlay.js';
 import { FortressInfoPanel } from './FortressInfoPanel.js';
 import { hasUnclaimedRewards, showRewardsModal } from '../modals/RewardsModal.js';
 import styles from './Hud.module.css';
 
-interface HudProps {
-  onSnapClick?: () => void;
-}
-
-export function Hud({ onSnapClick }: HudProps) {
+export function Hud() {
+  const { t } = useTranslation('game');
   // Wave display: show game wave during session, profile wave when idle
   const waveDisplay = gameState.value?.wave ?? profileWave.value;
-  const killsDisplay = gameState.value?.kills ?? 0;
   const isPlaying = gamePhase.value !== 'idle';
   const isIdle = gamePhase.value === 'idle';
   const hasClass = selectedFortressClass.value !== null;
   const showHubUI = isIdle && hubInitialized.value;
-
-  const [statsOpen, setStatsOpen] = useState(false);
-
-  const handlePowerClick = () => {
-    openPowerUpgradeModal('hero');
-  };
 
   // Hide HUD during class selection
   if (classSelectionVisible.value) {
@@ -50,93 +40,79 @@ export function Hud({ onSnapClick }: HudProps) {
 
   return (
     <div class={styles.hud}>
-      {/* Left section - Wave panel + Fortress button */}
+      {/* Left section - Wave display with integrated progress */}
       <div class={styles.leftSection}>
-        <div class={`${styles.panel} ${styles.left}`}>
-          <div class={styles.statItem}>
-            <span class={styles.label}>Fala</span>
-            <span class={styles.value}>{waveDisplay}</span>
-          </div>
-          {isPlaying && <WaveProgress />}
-          {isPlaying && <PillarDisplay />}
-          {isPlaying && <InfinityStones onSnapClick={onSnapClick} />}
+        <div class={styles.waveDisplay}>
+          <span class={styles.waveLabel}>{t('hud.wave')}</span>
+          <span class={styles.waveNumber}>{waveDisplay}</span>
+          {isPlaying && (
+            <div class={styles.waveProgressIntegrated}>
+              <WaveProgress />
+            </div>
+          )}
         </div>
 
-        {showHubUI && (
-          <div class={styles.hubButtons}>
-            <button class={styles.powerButton} onClick={handlePowerClick} title="Ulepszenia statystyk">
-              <span class={styles.powerIcon}>⚡</span>
-              <span class={styles.powerLabel}>MOC</span>
-            </button>
-            <button class={styles.rewardButton} onClick={() => showRewardsModal()} title="Nagrody">
-              <span class={styles.rewardIcon}>🎁</span>
-              {hasUnclaimedRewards.value && <div class={styles.rewardBadge} />}
-            </button>
-          </div>
+
+        {showHubUI && hasUnclaimedRewards.value && (
+          <button class={styles.rewardButton} onClick={() => showRewardsModal()}>
+            <span class={styles.rewardLabel}>{t('hud.rewards')}</span>
+            <div class={styles.rewardBadge} />
+          </button>
         )}
       </div>
 
+
+      {/* Right panel - Resources and buttons (only during gameplay) */}
       {isPlaying && (
-        <>
-          <button 
-            class={styles.statsButton} 
-            onClick={() => setStatsOpen(true)}
-            title="Statystyki Bitwy"
-          >
-            📊
-          </button>
-          <StatsPanel isOpen={statsOpen} onClose={() => setStatsOpen(false)} />
-        </>
+        <div class={styles.rightGamePanel}>
+          <div class={styles.gameResources}>
+            <div class={styles.resourceItem}>
+              <span class={styles.resourceIcon}>🪙</span>
+              <span class={styles.resourceValue}>{displayGold.value}</span>
+            </div>
+            <div class={styles.resourceItem}>
+              <span class={styles.resourceIcon}>✨</span>
+              <span class={styles.resourceValue}>{displayDust.value}</span>
+            </div>
+          </div>
+
+          <div class={styles.gameButtons}>
+            <button onClick={() => showDailyQuestsPanel()} title={t('navigation.dailyQuests', { ns: 'common' })}></button>
+            <button onClick={() => openLeaderboardModal()} title={t('navigation.leaderboards', { ns: 'common' })}></button>
+            <button onClick={() => openMessagesModal()} title={t('navigation.messages', { ns: 'common' })}></button>
+            <button onClick={() => openGuildPanel()} title={t('navigation.guild', { ns: 'common' })}></button>
+            <button onClick={() => showShopModal()} title={t('navigation.shop', { ns: 'common' })}></button>
+            <button onClick={openSettingsMenu} title={t('navigation.settings', { ns: 'common' })}></button>
+          </div>
+        </div>
       )}
 
-      {/* Center panels - Heroes, Turrets & Skills (only during gameplay) */}
+      {/* Pillar display - separate panel below resources (only during gameplay) */}
+      {isPlaying && (
+        <div class={styles.pillarSection}>
+          <PillarDisplay />
+        </div>
+      )}
+
+      {/* Right panel - Fortress info (only in hub) */}
+      {showHubUI && (
+        <div class={styles.rightSection}>
+          {hasClass && <FortressInfoPanel />}
+        </div>
+      )}
+
+      {/* Skills section - Bottom left (only during gameplay) */}
       {isPlaying && hasClass && (
-        <div class={styles.centerPanels}>
-          <div class={styles.sidePanel}>
-            <HeroPanel compact />
-          </div>
-          <div class={styles.sidePanel}>
-            <TurretPanel compact />
-          </div>
-          <div class={styles.sidePanel}>
+        <div class={styles.skillsSectionBottomLeft}>
+          <div class={styles.skillsHeader}>{t('hud.skills')}</div>
+          <div class={styles.skillsRow}>
             <HeroSkillBar compact />
-          </div>
-          <div class={styles.sidePanel}>
             <TurretSkillBar compact />
-          </div>
-          <div class={styles.sidePanel}>
             <FortressSkillBar compact />
           </div>
         </div>
       )}
 
-      {/* Right panel - Score & Synergies (only during gameplay) */}
-      {isPlaying && (
-        <div class={`${styles.panel} ${styles.right}`}>
-          <div class={styles.statsGroup}>
-            <div class={styles.statItem}>
-              <span class={styles.label}>Zabicia</span>
-              <span class={styles.value}>{killsDisplay}</span>
-            </div>
-            <div class={styles.statItem}>
-              <span class={styles.label}>Wynik</span>
-              <span class={styles.value}>{currentScore.value}</span>
-            </div>
-          </div>
-
-          {hasClass && <SynergyPanel compact />}
-        </div>
-      )}
-
-      {/* Right panel - Fortress info (only in hub) */}
-      {showHubUI && hasClass && (
-        <div class={styles.rightSection}>
-          <FortressInfoPanel />
-        </div>
-      )}
-
-      {/* Tutorial for new players (Wave 1-3) */}
-      {isPlaying && <TutorialOverlay />}
     </div>
   );
 }

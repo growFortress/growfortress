@@ -93,7 +93,7 @@ describe('calculateHeroPower', () => {
 
   it('returns positive power for valid hero', () => {
     const upgrades = createEmptyStats();
-    const result = calculateHeroPower('thunderlord', upgrades, 1);
+    const result = calculateHeroPower('storm', upgrades, 1);
 
     expect(result.basePower).toBeGreaterThan(0);
     expect(result.totalPower).toBeGreaterThan(0);
@@ -101,9 +101,9 @@ describe('calculateHeroPower', () => {
 
   it('scales with hero tier', () => {
     const upgrades = createEmptyStats();
-    const tier1 = calculateHeroPower('thunderlord', upgrades, 1);
-    const tier2 = calculateHeroPower('thunderlord', upgrades, 2);
-    const tier3 = calculateHeroPower('thunderlord', upgrades, 3);
+    const tier1 = calculateHeroPower('storm', upgrades, 1);
+    const tier2 = calculateHeroPower('storm', upgrades, 2);
+    const tier3 = calculateHeroPower('storm', upgrades, 3);
 
     expect(tier2.tierMultiplier).toBeGreaterThan(tier1.tierMultiplier);
     expect(tier3.tierMultiplier).toBeGreaterThan(tier2.tierMultiplier);
@@ -114,8 +114,8 @@ describe('calculateHeroPower', () => {
     const upgrades = createEmptyStats();
     upgrades.damage = 10;
 
-    const withoutUpgrades = calculateHeroPower('thunderlord', createEmptyStats(), 1);
-    const withUpgrades = calculateHeroPower('thunderlord', upgrades, 1);
+    const withoutUpgrades = calculateHeroPower('storm', createEmptyStats(), 1);
+    const withUpgrades = calculateHeroPower('storm', upgrades, 1);
 
     expect(withUpgrades.upgradeMultiplier).toBeGreaterThan(withoutUpgrades.upgradeMultiplier);
     expect(withUpgrades.totalPower).toBeGreaterThan(withoutUpgrades.totalPower);
@@ -194,13 +194,13 @@ describe('calculateItemPower', () => {
 describe('calculateTotalPower', () => {
   it('calculates total from all sources', () => {
     const powerData = createTestPowerData({
-      heroUpgrades: [{ heroId: 'thunderlord', statUpgrades: createEmptyStats() }],
+      heroUpgrades: [{ heroId: 'storm', statUpgrades: createEmptyStats() }],
       turretUpgrades: [{ turretType: 'arrow', statUpgrades: createEmptyStats() }],
       itemTiers: [{ itemId: 'item1', tier: 'common' }],
     });
 
     const tiers = {
-      heroTiers: { thunderlord: 1 as const },
+      heroTiers: { storm: 1 as const },
       turretTiers: { arrow: 1 as const },
     };
 
@@ -220,16 +220,16 @@ describe('calculateTotalPower', () => {
 
   it('uses provided tier maps', () => {
     const powerData = createTestPowerData({
-      heroUpgrades: [{ heroId: 'thunderlord', statUpgrades: createEmptyStats() }],
+      heroUpgrades: [{ heroId: 'storm', statUpgrades: createEmptyStats() }],
     });
 
     const tier1Result = calculateTotalPower(powerData, 1, {
-      heroTiers: { thunderlord: 1 },
+      heroTiers: { storm: 1 },
       turretTiers: {},
     });
 
     const tier3Result = calculateTotalPower(powerData, 1, {
-      heroTiers: { thunderlord: 3 },
+      heroTiers: { storm: 3 },
       turretTiers: {},
     });
 
@@ -256,7 +256,7 @@ describe('calculateQuickTotalPower', () => {
 
   it('uses default tiers when not provided', () => {
     const powerData = createTestPowerData({
-      heroUpgrades: [{ heroId: 'thunderlord', statUpgrades: createEmptyStats() }],
+      heroUpgrades: [{ heroId: 'storm', statUpgrades: createEmptyStats() }],
     });
 
     const defaultTier = calculateQuickTotalPower(powerData, 1, 1, 1);

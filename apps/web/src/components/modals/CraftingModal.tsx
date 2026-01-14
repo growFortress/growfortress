@@ -14,6 +14,7 @@ import {
 } from '../../state/index.js';
 import { baseGold, playerMaterials } from '../../state/index.js';
 import { craftArtifact } from '../../api/client.js';
+import { Modal } from '../shared/Modal.js';
 import styles from './CraftingModal.module.css';
 
 // Filter state
@@ -61,8 +62,6 @@ export function CraftingModal() {
   const materials = playerMaterials.value;
   const currentlyCrafting = crafting.value;
 
-  if (!isVisible) return null;
-
   // Get craftable artifacts
   const craftableArtifacts = ARTIFACT_DEFINITIONS.filter(
     (a) => a.source.type === 'craft'
@@ -73,12 +72,6 @@ export function CraftingModal() {
     slotFilter === 'all'
       ? craftableArtifacts
       : craftableArtifacts.filter((a) => a.slot === slotFilter);
-
-  const handleOverlayClick = (e: MouseEvent) => {
-    if ((e.target as HTMLElement).classList.contains(styles.overlay)) {
-      hideCraftingModal();
-    }
-  };
 
   const canCraftArtifact = (artifact: ArtifactDefinition): boolean => {
     if (hasArtifact(artifact.id)) return false;
@@ -120,100 +113,95 @@ export function CraftingModal() {
   };
 
   return (
-    <div class={styles.overlay} onClick={handleOverlayClick}>
-      <div class={styles.modal}>
-        <div class={styles.header}>
-          <h2 class={styles.title}>⚒️ Crafting</h2>
-          <button class={styles.closeBtn} onClick={hideCraftingModal}>
-            ×
+    <Modal
+      visible={isVisible}
+      title="⚒️ Crafting"
+      onClose={hideCraftingModal}
+      class={styles.modalContent}
+      ariaLabel="Crafting Menu"
+    >
+      <div class={styles.filters}>
+        {SLOT_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            class={`${styles.filterBtn} ${slotFilter === f.value ? styles.active : ''}`}
+            onClick={() => (activeSlotFilter.value = f.value)}
+          >
+            {f.label}
           </button>
-        </div>
+        ))}
+      </div>
 
-        <div class={styles.filters}>
-          {SLOT_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              class={`${styles.filterBtn} ${slotFilter === f.value ? styles.active : ''}`}
-              onClick={() => (activeSlotFilter.value = f.value)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      {filteredArtifacts.length === 0 ? (
+        <div class={styles.empty}>No craftable artifacts in this category.</div>
+      ) : (
+        <div class={styles.recipeList}>
+          {filteredArtifacts.map((artifact) => {
+            const cost = calculateArtifactCraftCost(artifact.id);
+            const owned = hasArtifact(artifact.id);
+            const canCraft = canCraftArtifact(artifact);
+            const isCrafting = currentlyCrafting === artifact.id;
 
-        {filteredArtifacts.length === 0 ? (
-          <div class={styles.empty}>No craftable artifacts in this category.</div>
-        ) : (
-          <div class={styles.recipeList}>
-            {filteredArtifacts.map((artifact) => {
-              const cost = calculateArtifactCraftCost(artifact.id);
-              const owned = hasArtifact(artifact.id);
-              const canCraft = canCraftArtifact(artifact);
-              const isCrafting = currentlyCrafting === artifact.id;
+            return (
+              <div
+                key={artifact.id}
+                class={`${styles.recipeCard} ${styles[artifact.rarity]} ${owned ? styles.owned : ''} ${canCraft ? styles.canCraft : ''}`}
+              >
+                <span class={styles.recipeIcon}>
+                  {SLOT_ICONS[artifact.slot] || '📦'}
+                </span>
 
-              return (
-                <div
-                  key={artifact.id}
-                  class={`${styles.recipeCard} ${styles[artifact.rarity]} ${owned ? styles.owned : ''} ${canCraft ? styles.canCraft : ''}`}
-                >
-                  <span class={styles.recipeIcon}>
-                    {SLOT_ICONS[artifact.slot] || '📦'}
-                  </span>
+                <div class={styles.recipeInfo}>
+                  <div class={styles.recipeName}>{artifact.polishName}</div>
+                  <div class={styles.recipeDesc}>{artifact.description}</div>
 
-                  <div class={styles.recipeInfo}>
-                    <div class={styles.recipeName}>{artifact.polishName}</div>
-                    <div class={styles.recipeDesc}>{artifact.description}</div>
+                  {cost && (
+                    <>
+                      <div class={styles.requirements}>
+                        {cost.materials.map(({ material, amount }) => {
+                          const playerAmount = materials[material] ?? 0;
+                          const met = playerAmount >= amount;
 
-                    {cost && (
-                      <>
-                        <div class={styles.requirements}>
-                          {cost.materials.map(({ material, amount }) => {
-                            const playerAmount = materials[material] ?? 0;
-                            const met = playerAmount >= amount;
+                          return (
+                            <div
+                              key={material}
+                              class={`${styles.requirement} ${met ? styles.met : styles.notMet}`}
+                            >
+                              <span class={styles.reqIcon}>
+                                {MATERIAL_ICONS[material] || '📦'}
+                              </span>
+                              {playerAmount}/{amount}
+                            </div>
+                          );
+                        })}
+                      </div>
 
-                            return (
-                              <div
-                                key={material}
-                                class={`${styles.requirement} ${met ? styles.met : styles.notMet}`}
-                              >
-                                <span class={styles.reqIcon}>
-                                  {MATERIAL_ICONS[material] || '📦'}
-                                </span>
-                                {playerAmount}/{amount}
-                              </div>
-                            );
-                          })}
+                      <div class={styles.costs}>
+                        <div class={`${styles.cost} ${gold >= cost.gold ? styles.met : styles.notMet}`}>
+                          <span class={styles.costIcon}>🪙</span>
+                          <span>{cost.gold}</span>
                         </div>
-
-                        <div class={styles.costs}>
-                          <div class={styles.cost}>
-                            <span class={styles.costIcon}>🪙</span>
-                            <span style={{ color: gold >= cost.gold ? '#22c55e' : '#ef4444' }}>
-                              {cost.gold}
-                            </span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {owned ? (
-                    <span class={styles.ownedBadge}>Owned</span>
-                  ) : (
-                    <button
-                      class={styles.craftBtn}
-                      disabled={!canCraft || isCrafting}
-                      onClick={() => handleCraft(artifact.id)}
-                    >
-                      {isCrafting ? 'Crafting...' : 'Craft'}
-                    </button>
+                      </div>
+                    </>
                   )}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+
+                {owned ? (
+                  <span class={styles.ownedBadge}>Owned</span>
+                ) : (
+                  <button
+                    class={styles.craftBtn}
+                    disabled={!canCraft || isCrafting}
+                    onClick={() => handleCraft(artifact.id)}
+                  >
+                    {isCrafting ? 'Crafting...' : 'Craft'}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Modal>
   );
 }

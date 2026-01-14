@@ -244,7 +244,7 @@ describe('Artifacts Service', () => {
     it('returns error when artifact instance not found', async () => {
       mockPrisma.playerArtifact.findFirst.mockResolvedValue(null);
 
-      const result = await equipArtifact('user-123', 'artifact-123', 'hero-1');
+      const result = await equipArtifact('user-123', 'artifact-123', 'hero-1', 'weapon');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Artifact not found');
@@ -299,43 +299,43 @@ describe('Artifacts Service', () => {
     });
 
     it('returns error for non-craftable artifact (drop-only)', async () => {
-      // 'mjolnir' exists but has source.type: 'drop', not 'craft'
-      const result = await craftArtifact('user-123', 'mjolnir');
+      // 'plasma_hammer' exists but has source.type: 'drop', not 'craft'
+      const result = await craftArtifact('user-123', 'plasma_hammer');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Artifact is not craftable');
     });
 
     it('returns error when player already owns craftable artifact', async () => {
-      // 'stormbreaker' exists and is craftable
-      const existing = createMockPlayerArtifact('stormbreaker');
+      // 'storm_cleaver' exists and is craftable
+      const existing = createMockPlayerArtifact('storm_cleaver');
       mockPrisma.playerArtifact.findUnique.mockResolvedValue(existing);
 
-      const result = await craftArtifact('user-123', 'stormbreaker');
+      const result = await craftArtifact('user-123', 'storm_cleaver');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('You already own this artifact');
     });
 
     it('returns error when inventory not found', async () => {
-      // 'stormbreaker' is craftable
+      // 'storm_cleaver' is craftable
       mockPrisma.playerArtifact.findUnique.mockResolvedValue(null);
       mockPrisma.inventory.findUnique.mockResolvedValue(null);
 
-      const result = await craftArtifact('user-123', 'stormbreaker');
+      const result = await craftArtifact('user-123', 'storm_cleaver');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Inventory not found');
     });
 
     it('returns error when not enough gold', async () => {
-      // 'stormbreaker' is craftable and has a gold cost
+      // 'storm_cleaver' is craftable and has a gold cost
       mockPrisma.playerArtifact.findUnique.mockResolvedValue(null);
       mockPrisma.inventory.findUnique.mockResolvedValue(
         createMockInventory({ gold: 0, materials: {} })
       );
 
-      const result = await craftArtifact('user-123', 'stormbreaker');
+      const result = await craftArtifact('user-123', 'storm_cleaver');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Not enough gold');

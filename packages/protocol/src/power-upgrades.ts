@@ -37,6 +37,47 @@ export const TurretUpgradableStatSchema = z.enum(['damage', 'attackSpeed']);
 export type TurretUpgradableStat = z.infer<typeof TurretUpgradableStatSchema>;
 
 // ============================================================================
+// PRESTIGE SCHEMAS
+// ============================================================================
+
+/**
+ * Max prestige level for stats
+ * Each prestige gives +5% permanent bonus, max 5 prestiges = +25%
+ */
+export const MAX_PRESTIGE_LEVEL = 5;
+export const PRESTIGE_BONUS_PER_LEVEL = 0.05; // 5%
+
+/**
+ * Prestige costs (gold + dust)
+ * Base: 5000 gold + 500 dust, scales x1.5 per prestige level
+ */
+export const PRESTIGE_COSTS = {
+  baseGold: 5000,
+  baseDust: 500,
+  scalingMultiplier: 1.5,
+} as const;
+
+/**
+ * Fortress prestige levels (one per stat)
+ */
+export const FortressPrestigeSchema = z.object({
+  hp: z.number().int().min(0).max(MAX_PRESTIGE_LEVEL).default(0),
+  damage: z.number().int().min(0).max(MAX_PRESTIGE_LEVEL).default(0),
+  armor: z.number().int().min(0).max(MAX_PRESTIGE_LEVEL).default(0),
+});
+export type FortressPrestige = z.infer<typeof FortressPrestigeSchema>;
+
+/**
+ * Turret prestige levels
+ */
+export const TurretPrestigeSchema = z.object({
+  turretType: z.string(),
+  damage: z.number().int().min(0).max(MAX_PRESTIGE_LEVEL).default(0),
+  attackSpeed: z.number().int().min(0).max(MAX_PRESTIGE_LEVEL).default(0),
+});
+export type TurretPrestige = z.infer<typeof TurretPrestigeSchema>;
+
+// ============================================================================
 // REQUEST SCHEMAS
 // ============================================================================
 
@@ -46,6 +87,23 @@ export type TurretUpgradableStat = z.infer<typeof TurretUpgradableStatSchema>;
 export const UpgradeFortressStatRequestSchema = z.object({
   stat: FortressUpgradableStatSchema,
 });
+
+/**
+ * Prestige fortress stat request
+ */
+export const PrestigeFortressStatRequestSchema = z.object({
+  stat: FortressUpgradableStatSchema,
+});
+export type PrestigeFortressStatRequest = z.infer<typeof PrestigeFortressStatRequestSchema>;
+
+/**
+ * Prestige turret stat request
+ */
+export const PrestigeTurretStatRequestSchema = z.object({
+  turretType: z.string().min(1),
+  stat: TurretUpgradableStatSchema,
+});
+export type PrestigeTurretStatRequest = z.infer<typeof PrestigeTurretStatRequestSchema>;
 export type UpgradeFortressStatRequest = z.infer<typeof UpgradeFortressStatRequestSchema>;
 
 /**
@@ -91,6 +149,21 @@ export const PowerUpgradeResponseSchema = z.object({
   error: z.string().optional(),
 });
 export type PowerUpgradeResponse = z.infer<typeof PowerUpgradeResponseSchema>;
+
+/**
+ * Prestige upgrade response
+ */
+export const PrestigeUpgradeResponseSchema = z.object({
+  success: z.boolean(),
+  newPrestigeLevel: z.number().int().min(0).max(MAX_PRESTIGE_LEVEL),
+  goldSpent: z.number().int().min(0),
+  dustSpent: z.number().int().min(0),
+  newGold: z.number().int().min(0),
+  newDust: z.number().int().min(0),
+  statReset: z.boolean(), // Whether stat level was reset to 0
+  error: z.string().optional(),
+});
+export type PrestigeUpgradeResponse = z.infer<typeof PrestigeUpgradeResponseSchema>;
 
 /**
  * Power breakdown for a single entity

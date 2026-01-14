@@ -169,7 +169,7 @@ describe('UpgradeFortressStatRequestSchema', () => {
 
 describe('UpgradeHeroStatRequestSchema', () => {
   it('accepts valid request', () => {
-    const valid = { heroId: 'thunderlord', stat: 'damage' };
+    const valid = { heroId: 'storm', stat: 'damage' };
     const result = UpgradeHeroStatRequestSchema.safeParse(valid);
     expect(result.success).toBe(true);
   });
@@ -181,7 +181,7 @@ describe('UpgradeHeroStatRequestSchema', () => {
   });
 
   it('rejects missing stat', () => {
-    const invalid = { heroId: 'thunderlord' };
+    const invalid = { heroId: 'storm' };
     const result = UpgradeHeroStatRequestSchema.safeParse(invalid);
     expect(result.success).toBe(false);
   });
@@ -278,7 +278,7 @@ describe('PowerBreakdownSchema', () => {
 describe('EntityPowerSchema', () => {
   it('accepts valid entity power', () => {
     const valid = {
-      id: 'thunderlord',
+      id: 'storm',
       power: {
         basePower: 200,
         upgradeMultiplier: 1.3,
@@ -302,7 +302,7 @@ describe('PowerSummaryResponseSchema', () => {
       },
       heroPower: [
         {
-          id: 'thunderlord',
+          id: 'storm',
           power: {
             basePower: 200,
             upgradeMultiplier: 1.2,
@@ -326,7 +326,7 @@ describe('PowerSummaryResponseSchema', () => {
       },
       heroUpgrades: [
         {
-          heroId: 'thunderlord',
+          heroId: 'storm',
           statUpgrades: {
             hp: 0,
             damage: 5,

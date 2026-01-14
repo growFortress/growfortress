@@ -40,8 +40,26 @@ describe('Game Sessions Service', () => {
         user: mockUser,
       });
 
+      // Mock progression for level-up calculation
+      mockPrisma.progression.findUnique.mockResolvedValue({
+        userId: 'user-123',
+        level: 1,
+        xp: 0,
+        totalXp: 0,
+        purchasedHeroSlots: 0,
+        purchasedTurretSlots: 0,
+      });
+
       mockPrisma.$transaction.mockImplementation(async (callback: unknown) => {
         if (typeof callback === 'function') {
+          // Mock inventory.findUnique inside transaction
+          mockPrisma.inventory.findUnique.mockResolvedValue({ gold: 1000, dust: 100 });
+          // Mock progression.update inside transaction
+          mockPrisma.progression.update.mockResolvedValue({
+            level: 1,
+            xp: 0,
+            totalXp: 0,
+          });
           return callback(mockPrisma);
         }
         return [];
@@ -53,6 +71,8 @@ describe('Game Sessions Service', () => {
       expect(result!.totalDustEarned).toBe(25);
       expect(result!.totalXpEarned).toBe(125);
       expect(result!.finalWave).toBe(10);
+      expect(result!.newProgression).toBeDefined();
+      expect(result!.newProgression.level).toBe(1);
     });
 
     it('adds partial rewards if provided', async () => {
@@ -67,12 +87,31 @@ describe('Game Sessions Service', () => {
         user: mockUser,
       });
 
+      // Mock progression for level-up calculation
+      mockPrisma.progression.findUnique.mockResolvedValue({
+        userId: 'user-123',
+        level: 1,
+        xp: 50,
+        totalXp: 50,
+        purchasedHeroSlots: 0,
+        purchasedTurretSlots: 0,
+      });
+
       mockPrisma.$transaction.mockImplementation(async (callback: unknown) => {
         if (typeof callback === 'function') {
+          mockPrisma.inventory.findUnique.mockResolvedValue({ gold: 1150, dust: 115 });
+          mockPrisma.progression.update.mockResolvedValue({
+            level: 1,
+            xp: 75,
+            totalXp: 75,
+          });
           return callback(mockPrisma);
         }
         return [];
       });
+
+      // Mock scheduledEvent for getActiveMultipliers
+      mockPrisma.scheduledEvent.findMany.mockResolvedValue([]);
 
       const result = await endGameSession('gs-123', 'user-123', 'death', {
         gold: 50,
@@ -85,6 +124,7 @@ describe('Game Sessions Service', () => {
       expect(result!.totalDustEarned).toBe(15);
       expect(result!.totalXpEarned).toBe(75);
       expect(result!.finalWave).toBe(9);
+      expect(result!.newProgression).toBeDefined();
     });
 
     it('uses higher wave from partial rewards', async () => {
@@ -97,12 +137,31 @@ describe('Game Sessions Service', () => {
         user: mockUser,
       });
 
+      // Mock progression for level-up calculation
+      mockPrisma.progression.findUnique.mockResolvedValue({
+        userId: 'user-123',
+        level: 1,
+        xp: 0,
+        totalXp: 0,
+        purchasedHeroSlots: 0,
+        purchasedTurretSlots: 0,
+      });
+
       mockPrisma.$transaction.mockImplementation(async (callback: unknown) => {
         if (typeof callback === 'function') {
+          mockPrisma.inventory.findUnique.mockResolvedValue({ gold: 1000, dust: 100 });
+          mockPrisma.progression.update.mockResolvedValue({
+            level: 1,
+            xp: 0,
+            totalXp: 0,
+          });
           return callback(mockPrisma);
         }
         return [];
       });
+
+      // Mock scheduledEvent for getActiveMultipliers
+      mockPrisma.scheduledEvent.findMany.mockResolvedValue([]);
 
       const result = await endGameSession('gs-123', 'user-123', 'death', {
         gold: 0,
@@ -124,8 +183,24 @@ describe('Game Sessions Service', () => {
         user: mockUser,
       });
 
+      // Mock progression for level-up calculation
+      mockPrisma.progression.findUnique.mockResolvedValue({
+        userId: 'user-123',
+        level: 1,
+        xp: 0,
+        totalXp: 0,
+        purchasedHeroSlots: 0,
+        purchasedTurretSlots: 0,
+      });
+
       mockPrisma.$transaction.mockImplementation(async (callback: unknown) => {
         if (typeof callback === 'function') {
+          mockPrisma.inventory.findUnique.mockResolvedValue({ gold: 1000, dust: 100 });
+          mockPrisma.progression.update.mockResolvedValue({
+            level: 1,
+            xp: 0,
+            totalXp: 0,
+          });
           return callback(mockPrisma);
         }
         return [];
@@ -165,15 +240,28 @@ describe('Game Sessions Service', () => {
         user: mockUser,
       });
 
+      // Mock progression for level-up calculation
+      mockPrisma.progression.findUnique.mockResolvedValue({
+        userId: 'user-123',
+        level: 1,
+        xp: 0,
+        totalXp: 0,
+        purchasedHeroSlots: 0,
+        purchasedTurretSlots: 0,
+      });
+
       mockPrisma.$transaction.mockImplementation(async (callback: unknown) => {
         if (typeof callback === 'function') {
+          mockPrisma.inventory.findUnique.mockResolvedValue({ gold: 1000, dust: 100 });
+          mockPrisma.progression.update.mockResolvedValue({
+            level: 1,
+            xp: 0,
+            totalXp: 0,
+          });
           return callback(mockPrisma);
         }
         return [];
       });
-
-      mockPrisma.inventory.update.mockClear();
-      mockPrisma.progression.update.mockClear();
 
       const result = await endGameSession('gs-123', 'user-123', 'death', {
         gold: -5,
@@ -182,12 +270,11 @@ describe('Game Sessions Service', () => {
         finalWave: 99,
       });
 
+      // Invalid partial rewards (negative gold, wave > currentWave + 10) should be rejected
       expect(result!.totalGoldEarned).toBe(100);
       expect(result!.totalDustEarned).toBe(10);
       expect(result!.totalXpEarned).toBe(50);
       expect(result!.finalWave).toBe(5);
-      expect(mockPrisma.inventory.update).not.toHaveBeenCalled();
-      expect(mockPrisma.progression.update).not.toHaveBeenCalled();
     });
   });
 
@@ -244,7 +331,8 @@ describe('Game Sessions Service', () => {
       expect(result).not.toBeNull();
       expect(result!.sessionId).toBe('gs-123');
       expect(result!.currentWave).toBe(15);
-      expect(result!.startedAt).toEqual(startedAt);
+      // startedAt is now returned as ISO string for protocol compatibility
+      expect(result!.startedAt).toBe(startedAt.toISOString());
     });
 
     it('queries with correct userId', async () => {

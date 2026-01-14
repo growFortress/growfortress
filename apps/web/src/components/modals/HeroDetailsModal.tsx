@@ -1,7 +1,17 @@
 import type { JSX } from 'preact';
 import type { FortressClass } from '@arcade/sim-core';
 import { useState } from 'preact/hooks';
-import { getHeroById, calculateHeroStats } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
+import {
+  getHeroById,
+  calculateHeroStats,
+  calculateHeroPower,
+  createDefaultStatUpgrades,
+  HERO_STAT_UPGRADES,
+  getUpgradeCost,
+  getStatBonusPercent,
+  getStatMultiplier,
+} from '@arcade/sim-core';
 import {
   upgradeTarget,
   upgradePanelVisible,
@@ -10,26 +20,186 @@ import {
   gamePhase,
   displayGold,
   displayDust,
+  powerState,
+  baseGold,
+  updateHeroStatLevel,
+  updateTotalPower,
+  showErrorToast,
 } from '../../state/index.js';
+import {
+  type PowerStatUpgrades,
+} from '@arcade/protocol';
 import { Modal } from '../shared/Modal.js';
 import {
   HeroIdentityCard,
-  HeroStatsCard,
-  HeroWeaknessCard,
-  TierTabs,
-  TierContent,
-  TierComparison,
+  SkillCard,
   UpgradeSection,
+  TierPreviewModal,
+  ArtifactPickerModal,
 } from './hero-details/index.js';
+import {
+  getArtifactForHero,
+  unequippedArtifacts,
+  updateArtifact,
+} from '../../state/artifacts.signals.js';
+import { getAccessToken } from '../../api/auth.js';
 import styles from './HeroDetailsModal.module.css';
 
-// Class colors (simplified: 5 classes)
+// Timeout for async operations (10 seconds)
+const ASYNC_TIMEOUT_MS = 10000;
+
+/**
+ * Wraps a promise with a timeout
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
+    ),
+  ]);
+}
+
+// Class colors (7 classes)
 const CLASS_COLORS: Record<FortressClass, string> = {
   natural: '#228b22',
   ice: '#00bfff',
   fire: '#ff4500',
   lightning: '#9932cc',
   tech: '#00f0ff',
+  void: '#4b0082',
+  plasma: '#00ffff',
+};
+
+// Stat icons
+const STAT_ICONS: Record<string, string> = {
+  hp: '❤️',
+  damage: '⚔️',
+};
+
+// Inline stat row component
+interface HeroStatRowProps {
+  icon: string;
+  label: string;
+  value: string | number;
+  upgradeLevel?: number;
+  maxLevel?: number;
+  bonusPercent?: string;
+  upgradeCost?: number;
+  canAfford?: boolean;
+  onUpgrade?: () => void;
+  isLoading?: boolean;
+}
+
+function HeroStatRow({
+  icon,
+  label,
+  value,
+  upgradeLevel,
+  maxLevel,
+  bonusPercent,
+  upgradeCost,
+  canAfford,
+  onUpgrade,
+  isLoading,
+}: HeroStatRowProps) {
+  const hasUpgrade = upgradeLevel !== undefined && maxLevel !== undefined;
+  const isMaxed = hasUpgrade && upgradeLevel >= maxLevel;
+
+  return (
+    <div class={styles.statRow}>
+      <span class={styles.statIcon}>{icon}</span>
+      <span class={styles.statLabel}>{label}</span>
+      <span class={styles.statValue}>{value}</span>
+      {hasUpgrade && (
+        <>
+          <span class={styles.statLevel}>Lv {upgradeLevel}{maxLevel !== Infinity && `/${maxLevel}`}</span>
+          <span class={styles.statBonus}>+{bonusPercent}%</span>
+          {isMaxed ? (
+            <span class={styles.maxBadge}>MAX</span>
+          ) : (
+            <button
+              class={styles.upgradeBtn}
+              disabled={!canAfford || isLoading}
+              onClick={onUpgrade}
+            >
+              {isLoading ? '...' : `${upgradeCost}`}
+              <span class={styles.goldIcon}>💰</span>
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// Helper to create auth headers
+function createAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = getAccessToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+// API functions
+async function upgradeHeroStat(heroId: string, stat: string): Promise<{
+  success: boolean;
+  newLevel?: number;
+  goldSpent?: number;
+  newGold?: number;
+  newTotalPower?: number;
+  error?: string;
+}> {
+  const response = await fetch('/api/v1/power/hero', {
+    method: 'POST',
+    headers: createAuthHeaders(),
+    body: JSON.stringify({ heroId, stat }),
+  });
+  return response.json();
+}
+
+interface ArtifactApiResponse {
+  success: boolean;
+  artifact?: {
+    id: string;
+    artifactId: string;
+    level: number;
+    equippedSlot: 'weapon' | 'armor' | 'accessory' | null;
+    equippedToHeroId: string | null;
+    acquiredAt: string;
+    upgradedAt?: string | null;
+  };
+  error?: string;
+}
+
+async function equipArtifactToHero(artifactInstanceId: string, heroId: string): Promise<ArtifactApiResponse> {
+  const response = await fetch('/api/v1/artifacts/equip', {
+    method: 'POST',
+    headers: createAuthHeaders(),
+    body: JSON.stringify({ artifactInstanceId, heroId }),
+  });
+  return response.json();
+}
+
+async function unequipArtifactFromHero(artifactInstanceId: string): Promise<ArtifactApiResponse> {
+  const response = await fetch('/api/v1/artifacts/unequip', {
+    method: 'POST',
+    headers: createAuthHeaders(),
+    body: JSON.stringify({ artifactInstanceId }),
+  });
+  return response.json();
+}
+
+// Artifact slot icons
+const SLOT_ICONS: Record<string, string> = {
+  weapon: '⚔️',
+  armor: '🛡️',
+  accessory: '💍',
+  gadget: '🔧',
+  book: '📖',
+  special: '⭐',
 };
 
 interface HeroDetailsModalProps {
@@ -37,13 +207,16 @@ interface HeroDetailsModalProps {
 }
 
 export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
+  const { t } = useTranslation('common');
   const target = upgradeTarget.value;
   const visible = upgradePanelVisible.value;
   const gold = displayGold.value;
   const dust = displayDust.value;
 
-  // Local state for selected tier tab
-  const [selectedTier, setSelectedTier] = useState<1 | 2 | 3>(1);
+  const [loadingStat, setLoadingStat] = useState<string | null>(null);
+  const [showTierPreview, setShowTierPreview] = useState(false);
+  const [showArtifactPicker, setShowArtifactPicker] = useState(false);
+  const [equipmentLoading, setEquipmentLoading] = useState(false);
 
   const handleClose = () => {
     upgradePanelVisible.value = false;
@@ -68,94 +241,278 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
 
   const classColor = CLASS_COLORS[heroDef.class];
   const currentStats = calculateHeroStats(heroDef, hero.tier, hero.level);
+  const heroUpgrades = powerState.value.heroUpgrades.find(h => h.heroId === hero.definitionId);
+  const currentTierDef = heroDef.tiers[hero.tier - 1];
 
-  // Sync selected tier with current tier on mount
-  if (selectedTier !== hero.tier && selectedTier === 1) {
-    setSelectedTier(hero.tier);
-  }
-
-  const handleTierSelect = (tier: 1 | 2 | 3) => {
-    setSelectedTier(tier);
-  };
+  // XP progress calculation
+  const xpForNextLevel = Math.floor(100 * Math.pow(1.5, hero.level - 1));
+  const xpProgress = Math.min((hero.xp / xpForNextLevel) * 100, 100);
 
   const handleUpgrade = () => {
     onUpgrade({ type: 'hero', id: hero.definitionId });
   };
 
-  // Get selected tier definition
-  const selectedTierDef = heroDef.tiers[selectedTier - 1];
+  const handleStatUpgrade = async (stat: string) => {
+    setLoadingStat(stat);
+    try {
+      const result = await withTimeout(
+        upgradeHeroStat(hero.definitionId, stat),
+        ASYNC_TIMEOUT_MS,
+        t('heroDetails.operationTimeout')
+      );
+      if (result.success && result.newLevel !== undefined) {
+        updateHeroStatLevel(hero.definitionId, stat as keyof PowerStatUpgrades, result.newLevel);
+        if (result.newGold !== undefined) baseGold.value = result.newGold;
+        if (result.newTotalPower !== undefined) updateTotalPower(result.newTotalPower);
+      } else if (result.error) {
+        showErrorToast(result.error);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('heroDetails.upgradeStatFailed');
+      showErrorToast(message);
+    } finally {
+      setLoadingStat(null);
+    }
+  };
+
+  // Equipment handlers
+  const equippedArtifact = getArtifactForHero(hero.definitionId);
+  const availableArtifacts = unequippedArtifacts.value;
+
+  const handleEquipArtifact = async (artifactInstanceId: string) => {
+    setEquipmentLoading(true);
+    try {
+      const result = await withTimeout(
+        equipArtifactToHero(artifactInstanceId, hero.definitionId),
+        ASYNC_TIMEOUT_MS,
+        t('heroDetails.operationTimeout')
+      );
+      if (result.success && result.artifact) {
+        updateArtifact(result.artifact);
+        setShowArtifactPicker(false);
+      } else if (result.error) {
+        showErrorToast(result.error);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('heroDetails.equipArtifactFailed');
+      showErrorToast(message);
+    } finally {
+      setEquipmentLoading(false);
+    }
+  };
+
+  const handleUnequipArtifact = async () => {
+    if (!equippedArtifact) return;
+    setEquipmentLoading(true);
+    try {
+      const result = await withTimeout(
+        unequipArtifactFromHero(equippedArtifact.id),
+        ASYNC_TIMEOUT_MS,
+        t('heroDetails.operationTimeout')
+      );
+      if (result.success && result.artifact) {
+        updateArtifact(result.artifact);
+      } else if (result.error) {
+        showErrorToast(result.error);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('heroDetails.unequipArtifactFailed');
+      showErrorToast(message);
+    } finally {
+      setEquipmentLoading(false);
+    }
+  };
+
+  // Get upgrade configs for HP and Damage
+  const hpConfig = HERO_STAT_UPGRADES.find(c => c.stat === 'hp');
+  const dmgConfig = HERO_STAT_UPGRADES.find(c => c.stat === 'damage');
+  const hpLevel = heroUpgrades?.statUpgrades.hp || 0;
+  const dmgLevel = heroUpgrades?.statUpgrades.damage || 0;
+
+  // Calculate upgraded stats (base stats * upgrade multiplier)
+  const hpMultiplier = hpConfig ? getStatMultiplier(hpConfig, hpLevel) : 1;
+  const dmgMultiplier = dmgConfig ? getStatMultiplier(dmgConfig, dmgLevel) : 1;
+  const upgradedHp = Math.floor(currentStats.hp * hpMultiplier);
+  const upgradedDamage = Math.floor(currentStats.damage * dmgMultiplier);
+
+  // Calculate hero power (with equipped artifact)
+  const heroPowerBreakdown = calculateHeroPower(
+    hero.definitionId,
+    heroUpgrades?.statUpgrades || createDefaultStatUpgrades(),
+    hero.tier,
+    equippedArtifact?.artifactId
+  );
 
   return (
-    <Modal visible={visible} class={styles.heroDetailsModal} onClick={handleBackdropClick}>
+    <Modal visible={visible} size="fullscreen" class={styles.heroDetailsModal} onClick={handleBackdropClick}>
       <div class={styles.heroDetailsPanel} style={{ '--class-color': classColor } as JSX.CSSProperties}>
         {/* Header */}
         <div class={styles.modalHeader}>
-          <h2 class={styles.modalTitle}>Szczegóły Bohatera</h2>
+          <h2 class={styles.modalTitle}>{t('heroDetails.title')}</h2>
           <button class={styles.closeButton} onClick={handleClose}>×</button>
         </div>
 
         {/* Main Content Grid */}
         <div class={styles.mainContent}>
-          {/* Left Column - Hero Identity & Upgrade */}
+          {/* Left Column - Hero Identity */}
           <div class={styles.leftColumn}>
             <HeroIdentityCard
               heroDefinition={heroDef}
               currentTier={hero.tier}
               level={hero.level}
+              weaknesses={heroDef.weaknesses}
+              power={heroPowerBreakdown.totalPower}
             />
+          </div>
+
+          {/* Right Column - Stats, Skills, Tier Upgrade */}
+          <div class={styles.rightColumn}>
+            {/* Stats Section */}
+            <div class={styles.section}>
+              <h4 class={styles.sectionTitle}>{t('heroDetails.stats')}</h4>
+              <div class={styles.statList}>
+                {/* HP with upgrade */}
+                {hpConfig && (
+                  <HeroStatRow
+                    icon={STAT_ICONS.hp}
+                    label="HP"
+                    value={upgradedHp}
+                    upgradeLevel={hpLevel}
+                    maxLevel={hpConfig.maxLevel}
+                    bonusPercent={getStatBonusPercent(hpConfig, hpLevel).toFixed(1)}
+                    upgradeCost={getUpgradeCost(hpConfig, hpLevel)}
+                    canAfford={gold >= getUpgradeCost(hpConfig, hpLevel)}
+                    onUpgrade={() => handleStatUpgrade('hp')}
+                    isLoading={loadingStat === 'hp'}
+                  />
+                )}
+                {/* Damage with upgrade */}
+                {dmgConfig && (
+                  <HeroStatRow
+                    icon={STAT_ICONS.damage}
+                    label="DMG"
+                    value={upgradedDamage}
+                    upgradeLevel={dmgLevel}
+                    maxLevel={dmgConfig.maxLevel}
+                    bonusPercent={getStatBonusPercent(dmgConfig, dmgLevel).toFixed(1)}
+                    upgradeCost={getUpgradeCost(dmgConfig, dmgLevel)}
+                    canAfford={gold >= getUpgradeCost(dmgConfig, dmgLevel)}
+                    onUpgrade={() => handleStatUpgrade('damage')}
+                    isLoading={loadingStat === 'damage'}
+                  />
+                )}
+                {/* Attack Speed (no upgrade) */}
+                <HeroStatRow
+                  icon="⚡"
+                  label="AS"
+                  value={currentStats.attackSpeed.toFixed(2)}
+                />
+              </div>
+              {/* XP Progress */}
+              <div class={styles.xpRow}>
+                <span class={styles.xpLabel}>✨ XP</span>
+                <div class={styles.xpBarContainer}>
+                  <div class={styles.xpBar} style={{ width: `${xpProgress}%` }} />
+                </div>
+                <span class={styles.xpValue}>{hero.xp}/{xpForNextLevel}</span>
+              </div>
+            </div>
+
+            {/* Equipment Section */}
+            <div class={styles.equipmentSection}>
+              <h4 class={styles.sectionTitle}>{t('heroDetails.equipment')}</h4>
+              {equippedArtifact ? (
+                <div class={`${styles.artifactCard} ${styles[equippedArtifact.definition.rarity]}`}>
+                  <span class={styles.artifactIcon}>
+                    {SLOT_ICONS[equippedArtifact.definition.slot] || '📦'}
+                  </span>
+                  <div class={styles.artifactInfo}>
+                    <span class={styles.artifactName}>{equippedArtifact.definition.polishName}</span>
+                    <span class={styles.artifactSlot}>{equippedArtifact.definition.slot}</span>
+                    <div class={styles.artifactEffects}>
+                      {equippedArtifact.definition.effects.slice(0, 2).map((effect, idx) => (
+                        <span key={idx} class={styles.effectTag}>{effect.description}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <span class={styles.rarityBadge}>{equippedArtifact.definition.rarity}</span>
+                  <div class={styles.artifactActions}>
+                    <button
+                      class={styles.unequipBtn}
+                      onClick={handleUnequipArtifact}
+                      disabled={equipmentLoading}
+                    >
+                      {equipmentLoading ? '...' : t('heroDetails.unequip')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div class={styles.emptySlot}>
+                  <span class={styles.emptySlotIcon}>📦</span>
+                  <span class={styles.emptySlotText}>{t('heroDetails.noArtifact')}</span>
+                  <button
+                    class={styles.equipBtn}
+                    onClick={() => setShowArtifactPicker(true)}
+                    disabled={availableArtifacts.length === 0}
+                  >
+                    {availableArtifacts.length === 0 ? t('heroDetails.none') : t('heroDetails.equip')}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Skills Section */}
+            <div class={styles.section}>
+              <h4 class={styles.sectionTitle}>{t('heroDetails.skills')} (Tier {hero.tier})</h4>
+              <div class={styles.skillsList}>
+                {currentTierDef.skills.map(skill => (
+                  <SkillCard key={skill.id} skill={skill} />
+                ))}
+              </div>
+            </div>
+
+            {/* Tier Upgrade Section */}
             <UpgradeSection
               currentTier={hero.tier}
               playerGold={gold}
               playerDust={dust}
               onUpgrade={handleUpgrade}
+              onPreview={hero.tier < 3 ? () => setShowTierPreview(true) : undefined}
             />
-          </div>
-
-          {/* Right Side - Stats, Weaknesses, Tiers */}
-          <div class={styles.rightColumn}>
-            {/* Top Row - Stats & Weaknesses */}
-            <div class={styles.topRow}>
-              <HeroStatsCard
-                currentHp={hero.currentHp}
-                maxHp={hero.maxHp}
-                damage={currentStats.damage}
-                attackSpeed={currentStats.attackSpeed}
-                level={hero.level}
-                xp={hero.xp}
-              />
-              <HeroWeaknessCard weaknesses={heroDef.weaknesses} />
-            </div>
-
-            {/* Tier Tabs */}
-            <TierTabs
-              tiers={heroDef.tiers}
-              currentTier={hero.tier}
-              selectedTier={selectedTier}
-              onTierSelect={handleTierSelect}
-            />
-
-            {/* Selected Tier Content */}
-            <div class={styles.tierContentWrapper}>
-              <TierContent
-                tier={selectedTierDef}
-                isCurrentTier={selectedTier === hero.tier}
-                isLocked={selectedTier > hero.tier}
-                classColor={classColor}
-              />
-            </div>
-
-            {/* Tier Comparison */}
-            <div class={styles.comparisonWrapper}>
-              <TierComparison
-                heroDefinition={heroDef}
-                currentTier={hero.tier}
-                selectedTier={selectedTier}
-                level={hero.level}
-              />
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Tier Preview Modal */}
+      {(() => {
+        if (!showTierPreview || hero.tier >= 3) return null;
+        const nextTierIndex = hero.tier; // tier 1 -> index 1, tier 2 -> index 2
+        const nextTierDef = heroDef.tiers[nextTierIndex as 1 | 2];
+        if (!nextTierDef) return null;
+        return (
+          <TierPreviewModal
+            visible={showTierPreview}
+            heroDefinition={heroDef}
+            currentTier={hero.tier as 1 | 2}
+            nextTier={nextTierDef}
+            playerGold={gold}
+            playerDust={dust}
+            onClose={() => setShowTierPreview(false)}
+            onUpgrade={() => {
+              handleUpgrade();
+              setShowTierPreview(false);
+            }}
+          />
+        );
+      })()}
+
+      {/* Artifact Picker Modal */}
+      <ArtifactPickerModal
+        visible={showArtifactPicker}
+        heroId={hero.definitionId}
+        onClose={() => setShowArtifactPicker(false)}
+        onEquip={handleEquipArtifact}
+      />
     </Modal>
   );
 }

@@ -33,40 +33,48 @@ export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
 
   // Load user's best score on mount
   useEffect(() => {
-    if (showBossRushSetup.value) {
-      loadUserHistory();
-    }
-  }, [showBossRushSetup.value]);
+    let cancelled = false;
 
-  async function loadUserHistory() {
-    setLoadingHistory(true);
-    try {
-      const history = await getBossRushHistory(1);
-      if (history.sessions.length > 0) {
-        // Find best session
-        let bestDamage = 0;
-        let bestBosses = 0;
-        for (const session of history.sessions) {
-          if (session.totalDamageDealt > bestDamage) {
-            bestDamage = session.totalDamageDealt;
-            bestBosses = session.bossesKilled;
+    if (showBossRushSetup.value) {
+      (async () => {
+        setLoadingHistory(true);
+        try {
+          const history = await getBossRushHistory(1);
+          if (cancelled) return;
+
+          if (history.sessions.length > 0) {
+            let bestDamage = 0;
+            let bestBosses = 0;
+            for (const session of history.sessions) {
+              if (session.totalDamageDealt > bestDamage) {
+                bestDamage = session.totalDamageDealt;
+                bestBosses = session.bossesKilled;
+              }
+            }
+            userBestDamage.value = bestDamage;
+            userBestBossesKilled.value = bestBosses;
+          }
+
+          const leaderboard = await getBossRushLeaderboard(undefined, 1);
+          if (cancelled) return;
+
+          if (leaderboard.userTotalDamage && leaderboard.userTotalDamage > userBestDamage.value) {
+            userBestDamage.value = leaderboard.userTotalDamage;
+          }
+        } catch (error) {
+          console.warn('Failed to load boss rush history:', error);
+        } finally {
+          if (!cancelled) {
+            setLoadingHistory(false);
           }
         }
-        userBestDamage.value = bestDamage;
-        userBestBossesKilled.value = bestBosses;
-      }
-
-      // Also try to get leaderboard to find actual best
-      const leaderboard = await getBossRushLeaderboard(undefined, 1);
-      if (leaderboard.userTotalDamage && leaderboard.userTotalDamage > userBestDamage.value) {
-        userBestDamage.value = leaderboard.userTotalDamage;
-      }
-    } catch (error) {
-      console.warn('Failed to load boss rush history:', error);
-    } finally {
-      setLoadingHistory(false);
+      })();
     }
-  }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showBossRushSetup.value]);
 
   async function handleStart() {
     bossRushLoading.value = true;

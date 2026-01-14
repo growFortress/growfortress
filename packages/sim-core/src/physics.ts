@@ -7,6 +7,127 @@ import { FP } from './fixed';
 import type { FP as FPType } from './types';
 
 // ============================================================================
+// SPATIAL HASH - Optimized O(n) collision detection
+// ============================================================================
+
+/**
+ * Spatial hash grid for efficient neighbor queries.
+ * Instead of O(n²) pairwise checks, we only check bodies in nearby cells.
+ */
+export class SpatialHash<T extends { x: FPType; y: FPType }> {
+  private cellSize: number;
+  private cells: Map<number, T[]> = new Map();
+  private cellsPerRow: number;
+
+  constructor(cellSize: number = 4, fieldWidth: number = 40, _fieldHeight: number = 15) {
+    this.cellSize = cellSize;
+    this.cellsPerRow = Math.ceil(fieldWidth / cellSize);
+  }
+
+  /**
+   * Clear all cells
+   */
+  clear(): void {
+    this.cells.clear();
+  }
+
+  /**
+   * Get cell key from position
+   */
+  private getCellKey(x: number, y: number): number {
+    const cellX = Math.floor(x / this.cellSize);
+    const cellY = Math.floor(y / this.cellSize);
+    return cellY * this.cellsPerRow + cellX;
+  }
+
+  /**
+   * Insert a body into the spatial hash
+   */
+  insert(body: T): void {
+    const x = FP.toFloat(body.x);
+    const y = FP.toFloat(body.y);
+    const key = this.getCellKey(x, y);
+
+    let cell = this.cells.get(key);
+    if (!cell) {
+      cell = [];
+      this.cells.set(key, cell);
+    }
+    cell.push(body);
+  }
+
+  /**
+   * Insert multiple bodies
+   */
+  insertAll(bodies: T[]): void {
+    for (const body of bodies) {
+      this.insert(body);
+    }
+  }
+
+  /**
+   * Get all potential neighbors of a body (bodies in same and adjacent cells)
+   */
+  getNearby(body: T): T[] {
+    const x = FP.toFloat(body.x);
+    const y = FP.toFloat(body.y);
+    const cellX = Math.floor(x / this.cellSize);
+    const cellY = Math.floor(y / this.cellSize);
+
+    const nearby: T[] = [];
+
+    // Check 3x3 grid of cells around the body
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nx = cellX + dx;
+        const ny = cellY + dy;
+
+        // Bounds check
+        if (nx < 0 || ny < 0 || nx >= this.cellsPerRow) continue;
+
+        const key = ny * this.cellsPerRow + nx;
+        const cell = this.cells.get(key);
+        if (cell) {
+          for (const other of cell) {
+            if (other !== body) {
+              nearby.push(other);
+            }
+          }
+        }
+      }
+    }
+
+    return nearby;
+  }
+
+  /**
+   * Iterate over all unique pairs of nearby bodies.
+   * This is the optimized replacement for O(n²) nested loops.
+   */
+  forEachNearbyPair(callback: (a: T, b: T) => void): void {
+    // Track which pairs we've already processed
+    const processed = new Set<string>();
+
+    for (const [_key, cell] of this.cells) {
+      for (const body of cell) {
+        const nearby = this.getNearby(body);
+        for (const other of nearby) {
+          // Create a unique pair ID (order-independent)
+          const pairId = body < other
+            ? `${(body as any).id ?? body}-${(other as any).id ?? other}`
+            : `${(other as any).id ?? other}-${(body as any).id ?? body}`;
+
+          if (!processed.has(pairId)) {
+            processed.add(pairId);
+            callback(body, other);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -362,8 +483,27 @@ export function resolveCollision(
 /**
  * Apply separation force between nearby bodies
  * Prevents stacking by gently pushing apart
+ *
+ * NOTE: This is the O(n²) version, kept for compatibility.
+ * For better performance with many bodies, use applySeparationForceOptimized.
  */
 export function applySeparationForce(
+  bodies: PhysicsBody[],
+  separationRadius: FPType,
+  separationForce: FPType
+): void {
+  // For small arrays, the overhead of spatial hashing isn't worth it
+  if (bodies.length <= 20) {
+    applySeparationForceSimple(bodies, separationRadius, separationForce);
+  } else {
+    applySeparationForceOptimized(bodies, separationRadius, separationForce);
+  }
+}
+
+/**
+ * Simple O(n²) separation force - used for small numbers of bodies
+ */
+function applySeparationForceSimple(
   bodies: PhysicsBody[],
   separationRadius: FPType,
   separationForce: FPType
@@ -375,6 +515,70 @@ export function applySeparationForce(
 
     for (let j = i + 1; j < bodies.length; j++) {
       const b = bodies[j];
+
+      const dx = FP.sub(b.x, a.x);
+      const dy = FP.sub(b.y, a.y);
+      const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+
+      if (distSq > 0 && distSq < sepRadiusSq) {
+        const dist = FP.sqrt(distSq);
+
+        // Force decreases with distance (stronger when closer)
+        const strength = FP.mul(separationForce, FP.sub(FP.ONE, FP.div(dist, separationRadius)));
+
+        const nx = FP.div(dx, dist);
+        const ny = FP.div(dy, dist);
+
+        // Apply force in opposite directions
+        const forceX = FP.mul(nx, strength);
+        const forceY = FP.mul(ny, strength);
+
+        // Apply to velocities (mass-weighted)
+        const totalMass = FP.add(a.mass, b.mass);
+        const ratioA = FP.div(b.mass, totalMass);
+        const ratioB = FP.div(a.mass, totalMass);
+
+        a.vx = FP.sub(a.vx, FP.mul(forceX, ratioA));
+        a.vy = FP.sub(a.vy, FP.mul(forceY, ratioA));
+        b.vx = FP.add(b.vx, FP.mul(forceX, ratioB));
+        b.vy = FP.add(b.vy, FP.mul(forceY, ratioB));
+      }
+    }
+  }
+}
+
+// Reusable spatial hash instance to avoid allocations
+const separationSpatialHash = new SpatialHash<PhysicsBody>(4, 40, 15);
+
+/**
+ * Optimized O(n) separation force using spatial hashing
+ * Much faster for large numbers of bodies (50+)
+ */
+export function applySeparationForceOptimized(
+  bodies: PhysicsBody[],
+  separationRadius: FPType,
+  separationForce: FPType
+): void {
+  const sepRadiusSq = FP.mul(separationRadius, separationRadius);
+
+  // Build spatial hash
+  separationSpatialHash.clear();
+  separationSpatialHash.insertAll(bodies);
+
+  // Track processed pairs to avoid duplicates
+  const processed = new Set<string>();
+
+  for (const a of bodies) {
+    const nearby = separationSpatialHash.getNearby(a);
+
+    for (const b of nearby) {
+      // Skip if we've already processed this pair
+      const aId = (a as any).id ?? bodies.indexOf(a);
+      const bId = (b as any).id ?? bodies.indexOf(b);
+      const pairKey = aId < bId ? `${aId}-${bId}` : `${bId}-${aId}`;
+
+      if (processed.has(pairKey)) continue;
+      processed.add(pairKey);
 
       const dx = FP.sub(b.x, a.x);
       const dy = FP.sub(b.y, a.y);
@@ -546,4 +750,241 @@ export function getLaneY(laneIndex: number, config: PhysicsConfig): FPType {
  */
 export function getRandomLane(rng: () => number): number {
   return Math.floor(rng() * ENEMY_PHYSICS.numLanes);
+}
+
+// ============================================================================
+// PHYSICS-BASED DEFENSE
+// ============================================================================
+
+/**
+ * Calculate effective mass with mass bonus
+ * Higher mass = harder to push (more inertia)
+ * @param baseMass - Base mass in fixed-point
+ * @param massBonus - Additive bonus (0.5 = +50% mass)
+ */
+export function getEffectiveMass(baseMass: FPType, massBonus: number): FPType {
+  const multiplier = FP.fromFloat(1 + massBonus);
+  return FP.mul(baseMass, multiplier);
+}
+
+/**
+ * Apply knockback force to a body with resistance
+ * @param body - The physics body to knockback
+ * @param kbX - Knockback velocity X component (fixed-point)
+ * @param kbY - Knockback velocity Y component (fixed-point)
+ * @param knockbackResistance - Resistance value 0-0.9 (0.3 = 30% reduction)
+ */
+export function applyKnockbackWithResistance(
+  body: PhysicsBody,
+  kbX: FPType,
+  kbY: FPType,
+  knockbackResistance: number
+): void {
+  // Clamp resistance to valid range
+  const resistance = Math.min(Math.max(knockbackResistance, 0), 0.9);
+  const effectiveMultiplier = FP.fromFloat(1 - resistance);
+
+  // Apply reduced knockback
+  body.vx = FP.add(body.vx, FP.mul(kbX, effectiveMultiplier));
+  body.vy = FP.add(body.vy, FP.mul(kbY, effectiveMultiplier));
+}
+
+/**
+ * Calculate effective CC (crowd control) duration with resistance
+ * @param baseDuration - Base duration in ticks
+ * @param ccResistance - Resistance value 0-0.9 (0.4 = 40% shorter CC)
+ * @returns Reduced duration in ticks
+ */
+export function calculateCCDuration(baseDuration: number, ccResistance: number): number {
+  // Clamp resistance to valid range
+  const resistance = Math.min(Math.max(ccResistance, 0), 0.9);
+  return Math.floor(baseDuration * (1 - resistance));
+}
+
+/**
+ * Resolve collision with mass bonuses
+ * Extends resolveCollision to support massBonus modifiers
+ * @param a - First body
+ * @param b - Second body
+ * @param collision - Collision result
+ * @param massBonusA - Mass bonus for body A (0 = no bonus)
+ * @param massBonusB - Mass bonus for body B (0 = no bonus)
+ */
+export function resolveCollisionWithMass(
+  a: PhysicsBody,
+  b: PhysicsBody,
+  collision: CollisionResult,
+  massBonusA: number = 0,
+  massBonusB: number = 0
+): void {
+  const effectiveMassA = getEffectiveMass(a.mass, massBonusA);
+  const effectiveMassB = getEffectiveMass(b.mass, massBonusB);
+
+  const totalMass = FP.add(effectiveMassA, effectiveMassB);
+  if (totalMass === 0) return;
+
+  // Calculate how much each body should move (inverse mass ratio)
+  // Higher mass = less movement
+  const ratioA = FP.div(effectiveMassB, totalMass);
+  const ratioB = FP.div(effectiveMassA, totalMass);
+
+  // Push bodies apart
+  const pushX = FP.mul(collision.normalX, collision.overlap);
+  const pushY = FP.mul(collision.normalY, collision.overlap);
+
+  // Move A in negative normal direction (less if heavier)
+  a.x = FP.sub(a.x, FP.mul(pushX, ratioA));
+  a.y = FP.sub(a.y, FP.mul(pushY, ratioA));
+
+  // Move B in positive normal direction (less if heavier)
+  b.x = FP.add(b.x, FP.mul(pushX, ratioB));
+  b.y = FP.add(b.y, FP.mul(pushY, ratioB));
+
+  // Velocity exchange based on mass
+  const vDotN_A = FP.add(FP.mul(a.vx, collision.normalX), FP.mul(a.vy, collision.normalY));
+  const vDotN_B = FP.add(FP.mul(b.vx, collision.normalX), FP.mul(b.vy, collision.normalY));
+
+  // Remove velocity component in collision direction (dampen collision)
+  // Heavier objects lose less velocity
+  if (vDotN_A > 0) {
+    a.vx = FP.sub(a.vx, FP.mul(FP.mul(collision.normalX, vDotN_A), ratioA));
+    a.vy = FP.sub(a.vy, FP.mul(FP.mul(collision.normalY, vDotN_A), ratioA));
+  }
+  if (vDotN_B < 0) {
+    b.vx = FP.sub(b.vx, FP.mul(FP.mul(collision.normalX, vDotN_B), ratioB));
+    b.vy = FP.sub(b.vy, FP.mul(FP.mul(collision.normalY, vDotN_B), ratioB));
+  }
+}
+
+/**
+ * Apply separation force with mass bonuses
+ * Extends applySeparationForce to support massBonus modifiers
+ * Automatically uses spatial hashing optimization for large arrays
+ */
+export function applySeparationForceWithMass(
+  bodies: Array<PhysicsBody & { massBonus?: number }>,
+  separationRadius: FPType,
+  separationForce: FPType
+): void {
+  // For small arrays, the overhead of spatial hashing isn't worth it
+  if (bodies.length <= 20) {
+    applySeparationForceWithMassSimple(bodies, separationRadius, separationForce);
+  } else {
+    applySeparationForceWithMassOptimized(bodies, separationRadius, separationForce);
+  }
+}
+
+/**
+ * Simple O(n²) separation force with mass - used for small numbers of bodies
+ */
+function applySeparationForceWithMassSimple(
+  bodies: Array<PhysicsBody & { massBonus?: number }>,
+  separationRadius: FPType,
+  separationForce: FPType
+): void {
+  const sepRadiusSq = FP.mul(separationRadius, separationRadius);
+
+  for (let i = 0; i < bodies.length; i++) {
+    const a = bodies[i];
+    const effectiveMassA = getEffectiveMass(a.mass, a.massBonus ?? 0);
+
+    for (let j = i + 1; j < bodies.length; j++) {
+      const b = bodies[j];
+      const effectiveMassB = getEffectiveMass(b.mass, b.massBonus ?? 0);
+
+      const dx = FP.sub(b.x, a.x);
+      const dy = FP.sub(b.y, a.y);
+      const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+
+      if (distSq > 0 && distSq < sepRadiusSq) {
+        const dist = FP.sqrt(distSq);
+
+        // Force decreases with distance (stronger when closer)
+        const strength = FP.mul(separationForce, FP.sub(FP.ONE, FP.div(dist, separationRadius)));
+
+        const nx = FP.div(dx, dist);
+        const ny = FP.div(dy, dist);
+
+        // Apply force in opposite directions
+        const forceX = FP.mul(nx, strength);
+        const forceY = FP.mul(ny, strength);
+
+        // Apply to velocities (effective mass-weighted)
+        const totalMass = FP.add(effectiveMassA, effectiveMassB);
+        const ratioA = FP.div(effectiveMassB, totalMass);
+        const ratioB = FP.div(effectiveMassA, totalMass);
+
+        a.vx = FP.sub(a.vx, FP.mul(forceX, ratioA));
+        a.vy = FP.sub(a.vy, FP.mul(forceY, ratioA));
+        b.vx = FP.add(b.vx, FP.mul(forceX, ratioB));
+        b.vy = FP.add(b.vy, FP.mul(forceY, ratioB));
+      }
+    }
+  }
+}
+
+// Reusable spatial hash for mass-based separation
+const separationWithMassSpatialHash = new SpatialHash<PhysicsBody & { massBonus?: number }>(4, 40, 15);
+
+/**
+ * Optimized O(n) separation force with mass using spatial hashing
+ */
+function applySeparationForceWithMassOptimized(
+  bodies: Array<PhysicsBody & { massBonus?: number }>,
+  separationRadius: FPType,
+  separationForce: FPType
+): void {
+  const sepRadiusSq = FP.mul(separationRadius, separationRadius);
+
+  // Build spatial hash
+  separationWithMassSpatialHash.clear();
+  separationWithMassSpatialHash.insertAll(bodies);
+
+  // Track processed pairs to avoid duplicates
+  const processed = new Set<string>();
+
+  for (const a of bodies) {
+    const effectiveMassA = getEffectiveMass(a.mass, a.massBonus ?? 0);
+    const nearby = separationWithMassSpatialHash.getNearby(a);
+
+    for (const b of nearby) {
+      // Skip if we've already processed this pair
+      const aId = (a as any).id ?? bodies.indexOf(a);
+      const bId = (b as any).id ?? bodies.indexOf(b);
+      const pairKey = aId < bId ? `${aId}-${bId}` : `${bId}-${aId}`;
+
+      if (processed.has(pairKey)) continue;
+      processed.add(pairKey);
+
+      const effectiveMassB = getEffectiveMass(b.mass, b.massBonus ?? 0);
+
+      const dx = FP.sub(b.x, a.x);
+      const dy = FP.sub(b.y, a.y);
+      const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+
+      if (distSq > 0 && distSq < sepRadiusSq) {
+        const dist = FP.sqrt(distSq);
+
+        // Force decreases with distance (stronger when closer)
+        const strength = FP.mul(separationForce, FP.sub(FP.ONE, FP.div(dist, separationRadius)));
+
+        const nx = FP.div(dx, dist);
+        const ny = FP.div(dy, dist);
+
+        // Apply force in opposite directions
+        const forceX = FP.mul(nx, strength);
+        const forceY = FP.mul(ny, strength);
+
+        // Apply to velocities (effective mass-weighted)
+        const totalMass = FP.add(effectiveMassA, effectiveMassB);
+        const ratioA = FP.div(effectiveMassB, totalMass);
+        const ratioB = FP.div(effectiveMassA, totalMass);
+
+        a.vx = FP.sub(a.vx, FP.mul(forceX, ratioA));
+        a.vy = FP.sub(a.vy, FP.mul(forceY, ratioA));
+        b.vx = FP.add(b.vx, FP.mul(forceX, ratioB));
+        b.vy = FP.add(b.vy, FP.mul(forceY, ratioB));
+      }
+    }
+  }
 }

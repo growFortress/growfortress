@@ -20,7 +20,7 @@ import {
 
 /**
  * Apply fortress power upgrades to base modifiers
- * Returns a new ModifierSet with power upgrade bonuses applied
+ * Returns a new ModifierSet with power upgrade bonuses applied (additive system)
  */
 export function applyFortressPowerUpgrades(
   baseModifiers: ModifierSet,
@@ -28,35 +28,37 @@ export function applyFortressPowerUpgrades(
 ): ModifierSet {
   const mods = { ...baseModifiers };
 
-  // Apply each fortress upgrade
+  // Apply each fortress upgrade (convert multipliers to additive bonuses)
   for (const config of FORTRESS_STAT_UPGRADES) {
     const level = fortressUpgrades[config.stat] || 0;
     if (level <= 0) continue;
 
     const multiplier = getStatMultiplier(config, level);
+    // Convert multiplier to bonus: 1.1 -> 0.1
+    const bonus = multiplier - 1;
 
     switch (config.stat) {
       case 'hp':
-        mods.maxHpMultiplier *= multiplier;
+        mods.maxHpBonus += bonus;
         break;
       case 'damage':
-        mods.damageMultiplier *= multiplier;
+        mods.damageBonus += bonus;
         break;
       case 'attackSpeed':
-        mods.attackSpeedMultiplier *= multiplier;
+        mods.attackSpeedBonus += bonus;
         break;
       case 'critChance':
-        // Additive for crit chance (cap at 1.0)
-        mods.critChance = Math.min(1.0, mods.critChance + level * config.bonusPerLevel);
+        // Additive for crit chance (cap handled in computeModifiers)
+        mods.critChance += level * config.bonusPerLevel;
         break;
       case 'critMultiplier':
-        // Additive for crit damage
-        mods.critDamage += level * config.bonusPerLevel;
+        // Additive for crit damage bonus
+        mods.critDamageBonus += level * config.bonusPerLevel;
         break;
       case 'armor':
-        // Armor reduces damage taken - we don't have a direct armor modifier,
-        // so we increase HP as a proxy
-        mods.maxHpMultiplier *= multiplier;
+        // Armor reduces damage taken - we now use incomingDamageReduction
+        // Positive reduction = less damage taken
+        mods.incomingDamageReduction += bonus;
         break;
     }
   }

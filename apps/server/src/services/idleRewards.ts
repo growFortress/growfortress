@@ -1,15 +1,30 @@
+import { randomInt } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
 import { MATERIAL_DEFINITIONS, type MaterialDefinition } from '@arcade/sim-core';
 
 /**
+ * Generate a cryptographically secure random float between 0 and 1
+ */
+function secureRandomFloat(): number {
+  return randomInt(0, 1_000_000_000) / 1_000_000_000;
+}
+
+/**
  * Idle Rewards Configuration
  * Balance: ~6 materials per 8h at level 1, ~10 at level 50
+ * Dust: Premium currency - reduced rates
  */
 const IDLE_CONFIG = {
   maxAccrualHours: 8,
+  minClaimIntervalMinutes: 5,  // Minimum 5 minutes between claims to prevent abuse
+
+  // Material drops
   baseDropsPerHour: 0.75,      // ~6 materials at level 1 for 8h
   levelScalingPerLevel: 0.03,  // +0.24/8h per level
-  minClaimIntervalMinutes: 5,  // Minimum 5 minutes between claims to prevent abuse
+
+  // Dust rewards (premium currency - reduced rates)
+  baseDustPerHour: 1,          // 8 dust for full 8h at level 1 (premium)
+  dustLevelScaling: 0.05,      // +0.05 dust/hour per level (premium)
 
   // Rarity weights for idle drops (no common materials in idle)
   rarityWeights: {
@@ -96,7 +111,7 @@ function generateIdleDrops(
   adjustedWeights.rare = 1 - adjustedWeights.legendary - adjustedWeights.epic;
 
   for (let i = 0; i < expectedMaterials; i++) {
-    const roll = Math.random();
+    const roll = secureRandomFloat();
 
     let selectedRarity: string;
     if (roll < adjustedWeights.legendary && materialsByRarity.legendary?.length) {
@@ -112,7 +127,7 @@ function generateIdleDrops(
 
     const availableMaterials = materialsByRarity[selectedRarity];
     if (availableMaterials && availableMaterials.length > 0) {
-      const selectedMaterial = availableMaterials[Math.floor(Math.random() * availableMaterials.length)];
+      const selectedMaterial = availableMaterials[randomInt(0, availableMaterials.length)];
       drops[selectedMaterial.id] = (drops[selectedMaterial.id] || 0) + 1;
     }
   }
@@ -145,8 +160,9 @@ export async function calculatePendingIdleRewards(userId: string): Promise<Pendi
   // Generate pending materials based on time offline
   const pendingMaterials = generateIdleDrops(cappedHours, user.progression.level);
 
-  // Calculate bonus dust (10 dust per hour)
-  const pendingDust = Math.floor(cappedHours * 10);
+  // Calculate bonus dust (scales with level)
+  const dustPerHour = IDLE_CONFIG.baseDustPerHour + (user.progression.level - 1) * IDLE_CONFIG.dustLevelScaling;
+  const pendingDust = Math.floor(cappedHours * dustPerHour);
 
   return {
     hoursOffline: Math.round(hoursOffline * 100) / 100,
@@ -242,15 +258,20 @@ export function getIdleRewardsConfig(commanderLevel: number): {
   maxAccrualHours: number;
   expectedMaterialsPerHour: number;
   expectedMaterialsMax: number;
+  expectedDustPerHour: number;
+  expectedDustMax: number;
   legendaryChance: number;
 } {
   const materialsPerHour = IDLE_CONFIG.baseDropsPerHour + (commanderLevel - 1) * IDLE_CONFIG.levelScalingPerLevel;
+  const dustPerHour = IDLE_CONFIG.baseDustPerHour + (commanderLevel - 1) * IDLE_CONFIG.dustLevelScaling;
   const legendaryChance = Math.min(0.40, IDLE_CONFIG.rarityWeights.legendary + commanderLevel * IDLE_CONFIG.legendaryLevelBonus);
 
   return {
     maxAccrualHours: IDLE_CONFIG.maxAccrualHours,
     expectedMaterialsPerHour: Math.round(materialsPerHour * 100) / 100,
     expectedMaterialsMax: Math.floor(IDLE_CONFIG.maxAccrualHours * materialsPerHour),
+    expectedDustPerHour: Math.round(dustPerHour * 100) / 100,
+    expectedDustMax: Math.floor(IDLE_CONFIG.maxAccrualHours * dustPerHour),
     legendaryChance: Math.round(legendaryChance * 100),
   };
 }

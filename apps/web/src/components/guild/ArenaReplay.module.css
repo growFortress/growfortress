@@ -1,0 +1,462 @@
+/* Arena Replay Modal */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.modal {
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  width: 95%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-text);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-60);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.closeBtn:hover {
+  color: var(--color-text);
+}
+
+/* Battle Summary */
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.summaryTeam {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.teamLabel {
+  font-size: 0.7rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.teamName {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.teamAttacker {
+  color: #4da6ff;
+}
+
+.teamDefender {
+  color: #ff6b6b;
+}
+
+.summaryResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.resultText {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.resultWin {
+  color: var(--color-success);
+}
+
+.resultLoss {
+  color: var(--color-danger);
+}
+
+.resultDraw {
+  color: var(--color-warning);
+}
+
+.duration {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+}
+
+/* Arena View */
+.arenaContainer {
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  height: 280px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.arenaGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.centerLine {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  bottom: 10%;
+  width: 2px;
+  background: rgba(255,255,255,0.1);
+  transform: translateX(-50%);
+}
+
+/* Hero on Arena */
+.hero {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  transition: left 0.1s linear, top 0.1s linear, opacity 0.3s;
+}
+
+.heroDead {
+  opacity: 0.3;
+}
+
+.heroIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: var(--color-bg-surface);
+  position: relative;
+}
+
+.heroIconAttacker {
+  border-color: #4da6ff;
+  box-shadow: 0 0 8px rgba(77, 166, 255, 0.4);
+}
+
+.heroIconDefender {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+}
+
+.heroTier {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.6rem;
+  background: var(--color-bg);
+  padding: 0.1rem 0.25rem;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.tierOne { color: #9ca3af; }
+.tierTwo { color: #60a5fa; }
+.tierThree { color: #fbbf24; }
+
+.heroName {
+  font-size: 0.6rem;
+  color: var(--color-text-80);
+  margin-top: 0.2rem;
+  white-space: nowrap;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hpBar {
+  width: 40px;
+  height: 4px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.15rem;
+}
+
+.hpFill {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.1s linear;
+}
+
+.hpFillLow {
+  background: var(--color-danger);
+}
+
+/* Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.timelineBar {
+  position: relative;
+  height: 24px;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.timelineProgress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--color-primary);
+  opacity: 0.3;
+  border-radius: var(--radius-sm);
+  transition: width 0.1s linear;
+}
+
+.timelineMarker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.timelineMarker:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.markerKill {
+  background: var(--color-danger);
+}
+
+.markerCrit {
+  background: var(--color-warning);
+}
+
+.markerStart {
+  background: var(--color-success);
+}
+
+.markerEnd {
+  background: var(--color-primary);
+}
+
+.timelineTime {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+  padding: 0 0.25rem;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.controlBtn {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  color: var(--color-text);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.controlBtn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
+}
+
+.controlBtnActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.speedBtn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.speedBtnActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* Kill Feed */
+.killFeed {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.killFeedTitle {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.killEntry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.killEntry:last-child {
+  border-bottom: none;
+}
+
+.killEntryActive {
+  opacity: 1;
+}
+
+.killTime {
+  color: var(--color-text-40);
+  font-size: 0.7rem;
+  min-width: 35px;
+}
+
+.killIcon {
+  color: var(--color-danger);
+}
+
+.killerName {
+  color: #4da6ff;
+  font-weight: 500;
+}
+
+.victimName {
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+/* MVP Section */
+.mvp {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--radius-md);
+  margin-top: 0.75rem;
+}
+
+.mvpLabel {
+  font-size: 0.7rem;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.mvpInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.mvpName {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.mvpStats {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .modal {
+    padding: 1rem;
+  }
+
+  .arenaContainer {
+    height: 220px;
+  }
+
+  .heroIcon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .hpBar {
+    width: 32px;
+  }
+
+  .summary {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

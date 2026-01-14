@@ -1,46 +1,346 @@
+/* Tooltip wrapper */
 .wrapper {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
 }
 
+/* Interactive wrapper (has clickable/focusable content) */
+.wrapperInteractive {
+  cursor: pointer;
+}
+
+/* Tooltip container */
 .tooltip {
   position: absolute;
-  background: var(--color-bg-elevated);
-  border: var(--border-primary);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
+  z-index: var(--z-tooltip, 9999);
+  max-width: 280px;
+  padding: 8px 12px;
+
+  /* Glassmorphism */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+
+  /* Typography */
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--color-text);
-  white-space: nowrap;
-  z-index: 100;
-  box-shadow: var(--shadow-md);
+  text-align: left;
+
+  /* Animation */
+  opacity: 0;
+  transform-origin: var(--arrow-origin, center);
+  animation: tooltipEnter 0.2s var(--ease-spring) forwards;
+
+  /* Prevent text selection and clicks */
   pointer-events: none;
+  user-select: none;
 }
 
+@keyframes tooltipEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(var(--enter-y, 0)) translateX(var(--enter-x, 0));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0) translateX(0);
+  }
+}
+
+/* Allow interaction on tooltip (for links, copyable text) */
+.tooltipInteractive {
+  pointer-events: auto;
+  user-select: text;
+}
+
+/* Arrow base */
+.tooltip::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  border: inherit;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  z-index: -1;
+}
+
+/* Position: Top */
 .top {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  --arrow-origin: center bottom;
+  --enter-y: 4px;
 }
 
+.top::before {
+  bottom: -5px;
+  left: 50%;
+  margin-left: -5px;
+  border-top: none;
+  border-left: none;
+}
+
+/* Position: Top Start */
+.topStart {
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 10px;
+  --arrow-origin: left bottom;
+  --enter-y: 4px;
+}
+
+.topStart::before {
+  bottom: -5px;
+  left: 16px;
+  border-top: none;
+  border-left: none;
+}
+
+/* Position: Top End */
+.topEnd {
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 10px;
+  --arrow-origin: right bottom;
+  --enter-y: 4px;
+}
+
+.topEnd::before {
+  bottom: -5px;
+  right: 16px;
+  border-top: none;
+  border-left: none;
+}
+
+/* Position: Bottom */
 .bottom {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-top: 8px;
+  margin-top: 10px;
+  --arrow-origin: center top;
+  --enter-y: -4px;
 }
 
+.bottom::before {
+  top: -5px;
+  left: 50%;
+  margin-left: -5px;
+  border-bottom: none;
+  border-right: none;
+}
+
+/* Position: Bottom Start */
+.bottomStart {
+  top: 100%;
+  left: 0;
+  margin-top: 10px;
+  --arrow-origin: left top;
+  --enter-y: -4px;
+}
+
+.bottomStart::before {
+  top: -5px;
+  left: 16px;
+  border-bottom: none;
+  border-right: none;
+}
+
+/* Position: Bottom End */
+.bottomEnd {
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  --arrow-origin: right top;
+  --enter-y: -4px;
+}
+
+.bottomEnd::before {
+  top: -5px;
+  right: 16px;
+  border-bottom: none;
+  border-right: none;
+}
+
+/* Position: Left */
 .left {
   right: 100%;
   top: 50%;
   transform: translateY(-50%);
-  margin-right: 8px;
+  margin-right: 10px;
+  --arrow-origin: right center;
+  --enter-x: 4px;
 }
 
+.left::before {
+  right: -5px;
+  top: 50%;
+  margin-top: -5px;
+  border-bottom: none;
+  border-left: none;
+}
+
+/* Position: Right */
 .right {
   left: 100%;
   top: 50%;
   transform: translateY(-50%);
+  margin-left: 10px;
+  --arrow-origin: left center;
+  --enter-x: -4px;
+}
+
+.right::before {
+  left: -5px;
+  top: 50%;
+  margin-top: -5px;
+  border-top: none;
+  border-right: none;
+}
+
+/* No arrow variant */
+.noArrow::before {
+  display: none;
+}
+
+/* Title styling */
+.title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+
+/* Multiline content */
+.multiline {
+  white-space: normal;
+  text-wrap: pretty;
+}
+
+/* Size variants */
+.sizeSm {
+  padding: 6px 10px;
+  font-size: 12px;
+  max-width: 200px;
+}
+
+.sizeLg {
+  padding: 12px 16px;
+  font-size: 14px;
+  max-width: 360px;
+}
+
+/* Variant: Info */
+.variantInfo {
+  border-color: var(--color-primary-40);
+}
+
+.variantInfo .title {
+  color: var(--color-primary);
+}
+
+/* Variant: Warning */
+.variantWarning {
+  border-color: hsl(45, 90%, 55%, 0.4);
+}
+
+.variantWarning .title {
+  color: hsl(45, 90%, 55%);
+}
+
+/* Variant: Error */
+.variantError {
+  border-color: var(--color-accent-40);
+}
+
+.variantError .title {
+  color: var(--color-accent);
+}
+
+/* Variant: Success */
+.variantSuccess {
+  border-color: hsl(140, 70%, 45%, 0.4);
+}
+
+.variantSuccess .title {
+  color: hsl(140, 70%, 45%);
+}
+
+/* Keyboard shortcut badge */
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   margin-left: 8px;
+  padding: 2px 6px;
+  background: var(--color-bg-deep);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+}
+
+/* Touch indicator (shown on mobile) */
+.touchHint {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touchHint {
+    display: block;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--glass-border);
+    font-size: 11px;
+    color: var(--color-text-40);
+    text-align: center;
+  }
+}
+
+/* Exit animation class */
+.exiting {
+  animation: tooltipExit 0.15s ease-in forwards;
+}
+
+@keyframes tooltipExit {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    animation: none;
+    opacity: 1;
+  }
+
+  .exiting {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .tooltip {
+    border-width: 2px;
+    border-color: var(--color-text);
+  }
 }

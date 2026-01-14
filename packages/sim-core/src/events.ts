@@ -91,14 +91,14 @@ function validateActivateSnap(
   _event: { type: 'ACTIVATE_SNAP'; tick: number },
   state: GameState
 ): EventValidation {
-  // Must have Infinity Gauntlet assembled
-  if (!state.gauntletState?.isAssembled) {
-    return { valid: false, reason: 'Infinity Gauntlet not assembled' };
+  // Must have Crystal Matrix assembled
+  if (!state.matrixState?.isAssembled) {
+    return { valid: false, reason: 'Crystal Matrix not assembled' };
   }
 
   // Must not be on cooldown
-  if (state.gauntletState.snapCooldown > 0) {
-    return { valid: false, reason: 'SNAP is on cooldown' };
+  if (state.matrixState.annihilationCooldown > 0) {
+    return { valid: false, reason: 'Annihilation Wave is on cooldown' };
   }
 
   // Game must not be ended
@@ -106,9 +106,9 @@ function validateActivateSnap(
     return { valid: false, reason: 'Game has ended' };
   }
 
-  // Must have enemies to snap
+  // Must have enemies to annihilate
   if (state.enemies.length === 0) {
-    return { valid: false, reason: 'No enemies to snap' };
+    return { valid: false, reason: 'No enemies to annihilate' };
   }
 
   return { valid: true };
@@ -193,15 +193,13 @@ function applyChooseRelic(
   state.relics.push(activeRelic);
 
   // Recompute modifiers
-  const prevMaxHpMultiplier = state.modifiers.maxHpMultiplier || 1;
+  const prevMaxHpBonus = state.modifiers.maxHpBonus ?? 0;
   state.modifiers = computeModifiers(state.relics);
 
-  // Update max HP if changed
-  const safePrevMultiplier = prevMaxHpMultiplier > 0 ? prevMaxHpMultiplier : 1;
-  const baseHp = Math.floor(state.fortressMaxHp / safePrevMultiplier);
-  const newMaxHp = Math.floor(
-    baseHp * (state.modifiers.maxHpMultiplier || 1)
-  );
+  // Update max HP if changed (using additive bonus system)
+  const prevMultiplier = 1 + prevMaxHpBonus;
+  const baseHp = Math.floor(state.fortressMaxHp / (prevMultiplier > 0 ? prevMultiplier : 1));
+  const newMaxHp = Math.floor(baseHp * (1 + (state.modifiers.maxHpBonus ?? 0)));
   if (newMaxHp > state.fortressMaxHp) {
     const hpGain = newMaxHp - state.fortressMaxHp;
     state.fortressMaxHp = newMaxHp;

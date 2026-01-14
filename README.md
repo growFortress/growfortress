@@ -1,4 +1,4 @@
-# Arcade Roguelite Tower Defense
+# Grow Fortress - Arcade Roguelite Tower Defense
 
 A full-stack arcade roguelite tower defense game with deterministic simulation, server-side verification, and anti-cheat protection.
 
@@ -33,11 +33,28 @@ arcade/
 │   └── sim-core/         # Deterministic game simulation (SIM_VERSION)
 ├── apps/
 │   ├── server/           # Fastify backend (Prisma, Redis, BullMQ)
-│   └── web/              # Vite + Canvas2D frontend (IndexedDB)
+│   ├── web/              # Vite + Canvas2D frontend (IndexedDB)
+│   └── admin/            # Admin dashboard
 ├── docs/                 # Game documentation
 ├── docker-compose.yml    # PostgreSQL + Redis
 └── pnpm-workspace.yaml
 ```
+
+## Game Modes
+
+### 1. Endless Session (Main Mode)
+Defend your fortress against infinite waves of enemies. Pillars (thematic chapters) cycle every 100 waves.
+
+### 2. Boss Rush
+Endless boss-only mode with weekly leaderboards based on total damage dealt.
+
+### 3. PvP Arena
+Asynchronous 1v1 fortress battles with deterministic replays.
+
+### 4. Guild Battles
+Team vs team PvP for guilds with shared treasury and progression.
+
+See [docs/GAME_SYSTEMS.md](docs/GAME_SYSTEMS.md) for full details.
 
 ## Architecture
 
@@ -49,28 +66,33 @@ The game uses a fully deterministic simulation that produces identical results o
 - **Fixed 30Hz Tick Rate**: Simulation advances in fixed timesteps
 - **Q16.16 Fixed-Point Math**: Integer-based calculations for precision
 - **Checkpoint Hashing**: FNV-1a 32-bit hash of game state
-- **Replay Support**: Server can replay any run from events
+- **Replay Support**: Server can replay any session from events
 
 ### Anti-Cheat System
 
 Multiple layers prevent cheating and reward manipulation:
 
-1. **Run Token (HMAC SHA-256)**
-   - Server generates signed token with: `runId`, `userId`, `seed`, `simVersion`, `auditTicks`, `exp`
-   - Token required to finish run, expires after 10 minutes
+1. **Session Token (HMAC SHA-256)**
+   - Server generates signed token with: `sessionId`, `userId`, `seed`, `simVersion`, `auditTicks`, `exp`
+   - Token required for segment submission
 
-2. **Event Log with Tick Validation**
+2. **Segment-Based Verification**
+   - Endless sessions are split into segments (every 5 waves)
+   - Each segment submitted and verified independently
+   - Rewards granted per verified segment
+
+3. **Event Log with Tick Validation**
    - All player actions include tick number
    - Server validates: monotonic ticks, cooldowns, valid choices
-   - Events: `CHOOSE_RELIC`, `REROLL_RELICS`
+   - Events: `CHOOSE_RELIC`, `REROLL_RELICS`, `ACTIVATE_ANNIHILATION`
 
-3. **Checkpoint Chain**
+4. **Checkpoint Chain**
    - Hash chain: `chainHash = H(prevChain || tick || stateHash)`
    - Created every 300 ticks + at wave end
    - Server replays and compares all checkpoints
 
-4. **Audit Ticks**
-   - Server generates 3-5 random tick numbers on run start
+5. **Audit Ticks**
+   - Server generates random tick numbers per segment
    - Client MUST provide checkpoints at these exact ticks
    - Prevents "perfect play" injection after the fact
 
@@ -78,70 +100,88 @@ Multiple layers prevent cheating and reward manipulation:
 
 The web client works offline:
 
-- **IndexedDB Storage**: Pending finishes queued locally
-- **Sync Manager**: Monitors online/offline status
-- **Exponential Backoff**: Retries with increasing delays
-- **Max 5 Retries**: Gives up after persistent failures
+- **IndexedDB Storage**: Active session state saved locally
+- **Session Recovery**: Resume interrupted sessions
+- **Sync Manager**: Monitors online/offline status for telemetry
 
 ## Game Content Overview
 
-### Fortress Classes (5)
+> **Lore**: Rok 2347. Ludzkość odkryła Starożytne Kryształy - sześć artefaktów nieznanej energii pozostawionych przez wymarłą cywilizację. Aktywacja ostatniego Kryształu otworzyła Wyrwę - portal, przez który wdziera się niekończący się Rój obcych istot. Ostatnie ludzkie twierdze bronią się za pomocą elitarnych jednostek bojowych i odzyskanej technologii.
 
-| Class | Description | Bonuses |
-|-------|-------------|---------|
-| **Natural** | Balanced starter class | +10% DMG, +15% HP, +2 HP regen |
-| **Ice** | Crowd control & slow | +20% DMG, +25% crit DMG, -10% AS |
-| **Fire** | Maximum damage & DOT | +20% DMG, +8% crit, 25% splash |
-| **Lightning** | Fast attacks & chains | +40% AS, +25% chain, 2 chains |
-| **Tech** | Precision & economy | +2 pierce, +15% crit, +15% gold |
+### Fortress Configurations (5)
 
-### Heroes (6)
+| Configuration | Description | Bonuses |
+|---------------|-------------|---------|
+| **Standardowa** | Balanced starter config | +10% DMG, +15% HP, +2 HP regen |
+| **Kriogeniczna** | Crowd control & slow | +20% DMG, +25% crit DMG, -10% AS |
+| **Termiczna** | Maximum damage & DOT | +20% DMG, +8% crit, 25% splash |
+| **Elektryczna** | Fast attacks & chains | +40% AS, +25% chain, 2 chains |
+| **Kwantowa** | Precision & economy | +2 pierce, +15% crit, +15% gold |
 
-| Hero | Class | Role | Marvel Inspiration |
-|------|-------|------|-------------------|
-| **Thunderlord** | Lightning | DPS | Thor |
-| **Iron Sentinel** | Tech | Tank | Iron Man |
-| **Jade Titan** | Natural | Tank | Hulk |
-| **Shield Captain** | Natural | Tank | Captain America |
-| **Scarlet Mage** | Fire | DPS | Scarlet Witch |
-| **Frost Archer** | Ice | DPS | Hawkeye |
+### Sectors (6 Chapters)
 
-Each hero has 3 tiers with 2 skills per tier.
+| Sector | Waves | Theme |
+|--------|-------|-------|
+| **Streets** | 1-10 | Urban combat zones |
+| **Science** | 11-25 | Research facilities, drones |
+| **Mutants** | 26-40 | Bioengineered threats |
+| **Cosmos** | 41-60 | Orbital stations, alien tech |
+| **Magic** | 61-80 | Dimensional rifts, anomalies |
+| **Nexus** | 81-100 | Core breach, final defense |
 
-### Turrets (4)
+After wave 100, sectors cycle back (wave 101 = Streets).
 
-| Turret | Role | Description |
-|--------|------|-------------|
-| **Arrow Tower** | DPS | Fast, single-target damage |
-| **Frost Tower** | Crowd Control | Slows enemies |
-| **Cannon Tower** | AoE | Area damage |
-| **Tesla Tower** | Chain | Lightning chains between enemies |
+### Combat Units (6)
+
+| Unit | Class | Role | Specialty |
+|------|-------|------|-----------|
+| **Unit-7 "Storm"** | Lightning | DPS | Electrical attacks |
+| **Unit-3 "Forge"** | Tech | Tank | Shield systems |
+| **Unit-1 "Titan"** | Natural | Tank | Physical resilience |
+| **Unit-0 "Vanguard"** | Natural | Tank | Defensive protocols |
+| **Unit-9 "Rift"** | Fire | Support | Thermal attacks |
+| **Unit-5 "Frost"** | Ice | DPS | Cryo weapons |
+
+Each unit has 3 tiers: Base → Mk.II → APEX.
+
+### Defense Towers (4)
+
+| Tower | Role | Description |
+|-------|------|-------------|
+| **Wieża Railgun** | DPS | Fast, single-target kinetic damage |
+| **Wieża Kriogeniczna** | Crowd Control | Slows enemies with cryo field |
+| **Wieża Artyleryjska** | AoE | Area explosive damage |
+| **Wieża Łukowa** | Chain | Electric arcs between enemies |
 
 ### Relics (~25)
 
-Categories: Build-Defining, Standard, Class, Pillar, Synergy, Economy, Cursed
+Categories: Build-Defining, Standard, Class, Sector, Synergy, Economy, Cursed
 
 See [docs/RELICS.md](docs/RELICS.md) for full list.
 
-### Enemy Types
+### Ancient Crystals (6)
 
-| Type | HP | Speed | Damage | Special |
-|------|-----|-------|--------|---------|
-| Runner | 20 | Fast (3) | 5 | Quick but fragile |
-| Bruiser | 100 | Slow (1) | 15 | Tanky, hits hard |
-| Leech | 40 | Medium (2) | 3 | Heals 20% HP on hit |
+Endgame collectibles that drop from sector bosses. Collect all 6 + Crystal Matrix artifact for Annihilation Wave ability.
 
-- Elites spawn randomly (5-30% chance, scaling with wave)
-- Elites have 3x HP, 2x damage, gold border
+| Crystal | Effect | Drops From |
+|---------|--------|------------|
+| **Kryształ Mocy** | +50% damage | Cosmos bosses |
+| **Kryształ Próżni** | +100% range | Cosmos bosses |
+| **Kryształ Czasu** | -50% cooldowns | Magic bosses |
+| **Kryształ Materii** | Adaptive damage | Magic bosses |
+| **Kryształ Życia** | 30% lifesteal | Nexus bosses |
+| **Kryształ Umysłu** | +50% XP | Science bosses |
 
 ## Documentation
 
-- [Game Systems](docs/GAME_SYSTEMS.md) - Core mechanics overview
+- [Game Systems](docs/GAME_SYSTEMS.md) - Core mechanics and game modes
 - [Classes](docs/CLASSES.md) - Fortress class details
 - [Heroes](docs/HEROES.md) - Hero definitions and skills
 - [Turrets](docs/TURRETS.md) - Turret types and stats
 - [Relics](docs/RELICS.md) - All relics by category
 - [Progression](docs/PROGRESSION.md) - Level unlocks and bonuses
+- [PvP Arena](docs/pvp-arena.md) - PvP system documentation
+- [Guild System](docs/guild-system.md) - Guild features
 
 ## Versioning
 
@@ -155,7 +195,7 @@ Three-tier versioning ensures compatibility:
 
 When updating simulation logic:
 1. Increment `SIM_VERSION`
-2. Server stores version with each run
+2. Server stores version with each session
 3. Replay uses matching version logic
 
 ## Scripts
@@ -176,34 +216,43 @@ When updating simulation logic:
 
 ## API Endpoints
 
+### Auth
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/v1/auth/register` | No | Create account |
+| POST | `/v1/auth/login` | No | Login |
+| POST | `/v1/auth/refresh` | No | Rotate refresh token |
+| GET | `/v1/profile` | Yes | Get user profile |
+
+### Sessions (Endless Mode)
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/v1/sessions/start` | Yes | Start endless session |
+| POST | `/v1/sessions/:id/segment` | Yes | Submit segment for verification |
+| POST | `/v1/sessions/:id/end` | Yes | End session |
+| GET | `/v1/sessions/active` | Yes | Get active session |
+
+### Boss Rush
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/v1/boss-rush/start` | Yes | Start boss rush |
+| POST | `/v1/boss-rush/:id/finish` | Yes | Finish boss rush |
+| GET | `/v1/boss-rush/leaderboard` | Optional | Weekly leaderboard |
+
+### PvP Arena
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/v1/pvp/opponents` | Yes | List matchable opponents |
+| POST | `/v1/pvp/challenges` | Yes | Create challenge |
+| POST | `/v1/pvp/challenges/:id/accept` | Yes | Accept and fight |
+| GET | `/v1/pvp/replay/:id` | Yes | Get battle replay |
+
+### Other
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/health` | No | Health check |
-| POST | `/v1/auth/guest` | No | Create guest account |
-| POST | `/v1/auth/refresh` | No | Rotate refresh token |
-| GET | `/v1/profile` | Yes | Get user profile |
-| POST | `/v1/runs/start` | Yes | Start new run |
-| POST | `/v1/runs/:runId/finish` | Yes | Finish and verify run |
-| GET | `/v1/leaderboards/weekly` | Optional | Get weekly leaderboard |
-| POST | `/v1/unlocks/relic` | Yes | Unlock relic (spend dust) |
+| GET | `/v1/leaderboards/weekly` | Optional | Weekly leaderboard |
 | POST | `/v1/telemetry/batch` | Optional | Batch telemetry events |
-
-### Run Finish Flow
-
-1. Client sends: `{ runToken, events[], checkpoints[], finalHash, score, summary }`
-2. Server validates:
-   - Run token signature and expiry
-   - Event ticks are monotonic
-   - All audit tick checkpoints present
-3. Server replays simulation
-4. Compares checkpoint chain hashes
-5. Compares final hash
-6. If verified:
-   - Calculates rewards deterministically
-   - Updates inventory (gold, dust)
-   - Updates mastery (XP, level)
-   - Upserts leaderboard entry
-7. If rejected: saves reason, no rewards
 
 ## Testing
 
@@ -222,8 +271,8 @@ cd packages/sim-core && pnpm test
 - Same seed + events = identical final hash
 - Same seed + events = identical checkpoint chain
 
-**Replay Verification Tests:**
-- Valid run is verified successfully
+**Verification Tests:**
+- Valid segment is verified successfully
 - Tampered event tick is rejected
 - Missing audit tick checkpoint is rejected
 - Tampered checkpoint hash is rejected
@@ -245,13 +294,13 @@ JWT_SECRET="min-32-characters-secret-key-here"
 JWT_ACCESS_EXPIRY="15m"
 JWT_REFRESH_EXPIRY="7d"
 
-# Run Token (change in production!)
-RUN_TOKEN_SECRET="min-32-characters-secret-key-here"
-RUN_TOKEN_EXPIRY_SECONDS=600
+# Session Token (change in production!)
+SESSION_TOKEN_SECRET="min-32-characters-secret-key-here"
 
 # Server
 PORT=3000
 NODE_ENV="development"
+CORS_ORIGINS="http://localhost:5173"
 ```
 
 ## Rate Limiting
@@ -259,15 +308,16 @@ NODE_ENV="development"
 | Endpoint | Limit |
 |----------|-------|
 | Global | 100 req/min per IP |
-| `/v1/runs/start` | 10/min per user |
-| `/v1/runs/:id/finish` | 20/min per user |
+| `/v1/sessions/start` | 10/min per user |
+| `/v1/sessions/:id/segment` | 30/min per user |
+| `/v1/pvp/challenges` | 20/min per user |
 
 ## Background Jobs (BullMQ)
 
 | Job | Schedule | Description |
 |-----|----------|-------------|
 | `leaderboard-snapshot` | Hourly | Cache top 100 in Redis |
-| `cleanup-expired-runs` | Every 5 min | Mark expired runs as rejected |
+| `metrics-snapshot` | Every 5 min | Record system metrics |
 
 ## License
 

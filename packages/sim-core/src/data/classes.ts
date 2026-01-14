@@ -1,19 +1,21 @@
 /**
- * Fortress Class Definitions
- * 5 unique classes with 2 skills each
+ * Fortress Configuration Definitions
+ * 5 unique configurations with 2 skills each
+ *
+ * Rebranded to Military Sci-Fi theme (2347 lore)
  */
 
 import type { FortressClass, FortressClassDefinition, SkillDefinition } from '../types.js';
 
 // ============================================================================
-// SKILL DEFINITIONS FOR EACH CLASS (2 skills per class)
+// SKILL DEFINITIONS FOR EACH CONFIGURATION (2 skills per config)
 // ============================================================================
 
-const NATURAL_SKILLS: SkillDefinition[] = [
+const STANDARD_SKILLS: SkillDefinition[] = [
   {
     id: 'earthquake',
-    name: 'Trzęsienie Ziemi',
-    description: 'Zadaje obrażenia wszystkim wrogom w obszarze i spowalnia ich',
+    name: 'Fala Uderzeniowa',
+    description: 'Wysyła falę uderzeniową zadającą obrażenia i spowalniającą wrogów',
     cooldownTicks: 450, // 15s
     damage: 40,
     radius: 15,
@@ -25,8 +27,8 @@ const NATURAL_SKILLS: SkillDefinition[] = [
   },
   {
     id: 'vine_snare',
-    name: 'Pnącza Sidła',
-    description: 'Unieruchamia wrogów w obszarze',
+    name: 'Pole Grawitacyjne',
+    description: 'Tworzy pole unieruchamiające wrogów w obszarze',
     cooldownTicks: 600, // 20s
     damage: 0,
     radius: 8,
@@ -37,11 +39,11 @@ const NATURAL_SKILLS: SkillDefinition[] = [
   }
 ];
 
-const ICE_SKILLS: SkillDefinition[] = [
+const CRYO_SKILLS: SkillDefinition[] = [
   {
     id: 'blizzard',
-    name: 'Zamieć',
-    description: 'Lodowa burza zadająca obrażenia w czasie i spowalniająca',
+    name: 'Kriogeniczny Wir',
+    description: 'Pole kriogeniczne zadające obrażenia w czasie i spowalniające',
     cooldownTicks: 480, // 16s
     damage: 15,
     radius: 12,
@@ -54,7 +56,7 @@ const ICE_SKILLS: SkillDefinition[] = [
   },
   {
     id: 'ice_spike',
-    name: 'Lodowy Kolec',
+    name: 'Kriogeniczny Pocisk',
     description: 'Pojedynczy potężny atak zamrażający cel',
     cooldownTicks: 300, // 10s
     damage: 80,
@@ -66,11 +68,11 @@ const ICE_SKILLS: SkillDefinition[] = [
   }
 ];
 
-const FIRE_SKILLS: SkillDefinition[] = [
+const THERMAL_SKILLS: SkillDefinition[] = [
   {
     id: 'meteor_strike',
-    name: 'Uderzenie Meteoru',
-    description: 'Ogromny meteor zadający masowe obrażenia i podpalający',
+    name: 'Bombardowanie Orbitalne',
+    description: 'Uderzenie kinetyczne z orbity zadające masowe obrażenia termiczne',
     cooldownTicks: 540, // 18s
     damage: 100,
     radius: 10,
@@ -82,8 +84,8 @@ const FIRE_SKILLS: SkillDefinition[] = [
   },
   {
     id: 'flame_wave',
-    name: 'Fala Ognia',
-    description: 'Fala ognia przechodząca przez wszystkich wrogów',
+    name: 'Fala Termiczna',
+    description: 'Fala ciepła przechodząca przez wszystkich wrogów',
     cooldownTicks: 360, // 12s
     damage: 50,
     unlockedAtFortressLevel: 5,
@@ -94,11 +96,11 @@ const FIRE_SKILLS: SkillDefinition[] = [
   }
 ];
 
-const LIGHTNING_SKILLS: SkillDefinition[] = [
+const ELECTRIC_SKILLS: SkillDefinition[] = [
   {
     id: 'thunderstorm',
-    name: 'Burza z Piorunami',
-    description: 'Losowe uderzenia piorunów w obszarze',
+    name: 'Pole Jonizacyjne',
+    description: 'Generuje losowe wyładowania elektryczne w obszarze',
     cooldownTicks: 420, // 14s
     damage: 60,
     duration: 180,
@@ -110,8 +112,8 @@ const LIGHTNING_SKILLS: SkillDefinition[] = [
   },
   {
     id: 'chain_lightning',
-    name: 'Łańcuch Błyskawic',
-    description: 'Błyskawica skacząca między wrogami',
+    name: 'Łańcuch Łukowy',
+    description: 'Wyładowanie elektryczne skaczące między wrogami',
     cooldownTicks: 240, // 8s
     damage: 45,
     unlockedAtFortressLevel: 5,
@@ -122,11 +124,11 @@ const LIGHTNING_SKILLS: SkillDefinition[] = [
   }
 ];
 
-const TECH_SKILLS: SkillDefinition[] = [
+const QUANTUM_SKILLS: SkillDefinition[] = [
   {
     id: 'laser_barrage',
-    name: 'Salwa Laserowa',
-    description: 'Wiele precyzyjnych laserowych strzałów',
+    name: 'Salwa Kwantowa',
+    description: 'Wiele precyzyjnych wiązek fotonowych',
     cooldownTicks: 300, // 10s
     damage: 35,
     unlockedAtFortressLevel: 1,
@@ -136,28 +138,56 @@ const TECH_SKILLS: SkillDefinition[] = [
   },
   {
     id: 'emp_blast',
-    name: 'Impuls EMP',
-    description: 'Obniża obronę wrogów i zadaje obrażenia',
+    name: 'Impuls Destabilizacyjny',
+    description: 'Zakłóca pole ochronne wrogów i zadaje obrażenia',
     cooldownTicks: 480, // 16s
     damage: 40,
     unlockedAtFortressLevel: 5,
     effects: [
       { type: 'damage', amount: 40, target: 'all' },
-      { type: 'buff', stat: 'damageMultiplier', amount: 1.3, duration: 240 }
+      { type: 'buff', stat: 'damageBonus', amount: 0.3, duration: 240 }
+    ]
+  }
+];
+
+const VOID_SKILLS: SkillDefinition[] = [
+  {
+    id: 'dimensional_tear',
+    name: 'Rozdarcie Wymiarowe',
+    description: 'Otwiera portal zadający obrażenia w obszarze',
+    cooldownTicks: 420, // 14s
+    damage: 70,
+    radius: 8,
+    unlockedAtFortressLevel: 1,
+    effects: [
+      { type: 'damage', amount: 70, target: 'area' },
+      { type: 'slow', percent: 35, duration: 120 }
+    ]
+  },
+  {
+    id: 'void_collapse',
+    name: 'Kolaps Próżni',
+    description: 'Implozja energii próżniowej wciągająca wrogów',
+    cooldownTicks: 540, // 18s
+    damage: 90,
+    unlockedAtFortressLevel: 5,
+    effects: [
+      { type: 'damage', amount: 90, target: 'all' },
+      { type: 'stun', duration: 45 }
     ]
   }
 ];
 
 // ============================================================================
-// CLASS DEFINITIONS (5 classes)
+// CONFIGURATION DEFINITIONS (6 configs)
 // ============================================================================
 
 export const FORTRESS_CLASSES: FortressClassDefinition[] = [
-  // NATURAL - Base class, balanced with regeneration
+  // STANDARD - Base configuration, balanced with regeneration
   {
     id: 'natural',
-    name: 'Twierdza Natury',
-    description: 'Surowa siła fizyczna i regeneracja. Zbalansowana klasa startowa.',
+    name: 'Konfiguracja Standardowa',
+    description: 'Zbalansowany profil z regeneracją tarczy. Rekomendowana dla nowych dowódców.',
     colors: {
       primary: 0x228b22,     // Forest Green
       secondary: 0x8fbc8f,   // Dark Sea Green
@@ -165,20 +195,19 @@ export const FORTRESS_CLASSES: FortressClassDefinition[] = [
       projectile: 0x32cd32   // Lime Green
     },
     passiveModifiers: {
-      damageMultiplier: 1.1,        // +10% damage
-      maxHpMultiplier: 1.15,        // +15% HP
+      damageBonus: 0.1,             // +10% damage
+      maxHpBonus: 0.15,             // +15% HP
       hpRegen: 2                    // +2 HP/5s
     },
-    skills: NATURAL_SKILLS,
+    skills: STANDARD_SKILLS,
     projectileType: 'physical',
-    unlockCost: { gold: 0, dust: 0 }  // Free, starting class
   },
 
-  // ICE - Crowd control and slow
+  // CRYO - Crowd control and slow
   {
     id: 'ice',
-    name: 'Lodowa Cytadela',
-    description: 'Kontrola terenu i spowolnienie wrogów. Wolniejsze ale mocniejsze ataki.',
+    name: 'Konfiguracja Kriogeniczna',
+    description: 'Kontrola pola walki i spowolnienie wrogów. Wolniejsze ale mocniejsze ataki.',
     colors: {
       primary: 0x00bfff,     // Deep Sky Blue
       secondary: 0xe0ffff,   // Light Cyan
@@ -186,20 +215,19 @@ export const FORTRESS_CLASSES: FortressClassDefinition[] = [
       projectile: 0xadd8e6   // Light Blue
     },
     passiveModifiers: {
-      attackSpeedMultiplier: 0.9,   // -10% attack speed
-      damageMultiplier: 1.2,        // +20% damage
-      critDamage: 1.75              // +25% crit damage (1.5 base)
+      attackSpeedBonus: -0.1,       // -10% attack speed
+      damageBonus: 0.2,             // +20% damage
+      critDamageBonus: 0.25         // +25% crit damage (0.5 base)
     },
-    skills: ICE_SKILLS,
+    skills: CRYO_SKILLS,
     projectileType: 'icicle',
-    unlockCost: { gold: 500, dust: 50 }
   },
 
-  // FIRE - Maximum damage and DOT
+  // THERMAL - Maximum damage and DOT
   {
     id: 'fire',
-    name: 'Ognista Forteca',
-    description: 'Maksymalne obrażenia i efekty podpalenia. Klasa dla agresywnych graczy.',
+    name: 'Konfiguracja Termiczna',
+    description: 'Maksymalne obrażenia i efekty termiczne. Dla agresywnych taktyk.',
     colors: {
       primary: 0xff4500,     // Orange Red
       secondary: 0xff8c00,   // Dark Orange
@@ -207,21 +235,20 @@ export const FORTRESS_CLASSES: FortressClassDefinition[] = [
       projectile: 0xff6347   // Tomato
     },
     passiveModifiers: {
-      damageMultiplier: 1.2,        // +20% damage
+      damageBonus: 0.2,             // +20% damage
       critChance: 0.08,             // +8% crit chance
-      splashDamage: 0.25,           // 25% splash damage
-      splashRadius: 2               // 2 unit splash radius
+      splashDamagePercent: 0.25,    // 25% splash damage
+      splashRadiusBonus: 2          // 2 unit splash radius
     },
-    skills: FIRE_SKILLS,
+    skills: THERMAL_SKILLS,
     projectileType: 'fireball',
-    unlockCost: { gold: 500, dust: 50 }
   },
 
-  // LIGHTNING - Fast attacks and chain
+  // ELECTRIC - Fast attacks and chain
   {
     id: 'lightning',
-    name: 'Bastion Burzy',
-    description: 'Szybkie ataki i efekty łańcuchowe. Doskonały przeciwko grupom wrogów.',
+    name: 'Konfiguracja Elektryczna',
+    description: 'Szybkie ataki i efekty łańcuchowe. Doskonała przeciwko grupom wrogów.',
     colors: {
       primary: 0x9932cc,     // Dark Orchid
       secondary: 0xdda0dd,   // Plum
@@ -229,21 +256,20 @@ export const FORTRESS_CLASSES: FortressClassDefinition[] = [
       projectile: 0xe6e6fa   // Lavender
     },
     passiveModifiers: {
-      attackSpeedMultiplier: 1.4,   // +40% attack speed
+      attackSpeedBonus: 0.4,        // +40% attack speed
       chainChance: 0.25,            // +25% chain chance
       chainCount: 2,                // +2 chain targets
-      chainDamage: 0.6              // 60% chain damage
+      chainDamagePercent: 0.6       // 60% chain damage
     },
-    skills: LIGHTNING_SKILLS,
+    skills: ELECTRIC_SKILLS,
     projectileType: 'bolt',
-    unlockCost: { gold: 750, dust: 75 }
   },
 
-  // TECH - Precision and economy
+  // QUANTUM - Precision and economy
   {
     id: 'tech',
-    name: 'Cyber Forteca',
-    description: 'Precyzja, przebicie i bonusy ekonomiczne. Dominuje w filarze Nauki.',
+    name: 'Konfiguracja Kwantowa',
+    description: 'Precyzja, przebicie i bonusy zasobowe. Zaawansowana technologia.',
     colors: {
       primary: 0x00f0ff,     // Cyan (game theme)
       secondary: 0xff00aa,   // Pink (game theme)
@@ -253,11 +279,31 @@ export const FORTRESS_CLASSES: FortressClassDefinition[] = [
     passiveModifiers: {
       pierceCount: 2,               // +2 pierce
       critChance: 0.15,             // +15% crit
-      goldMultiplier: 1.15          // +15% gold
+      goldBonus: 0.15               // +15% gold
     },
-    skills: TECH_SKILLS,
+    skills: QUANTUM_SKILLS,
     projectileType: 'laser',
-    unlockCost: { gold: 750, dust: 75 }
+  },
+
+  // VOID - Dimensional damage and control
+  {
+    id: 'void',
+    name: 'Konfiguracja Próżniowa',
+    description: 'Energia wymiarowa z efektami chaosu. Dla doświadczonych dowódców.',
+    colors: {
+      primary: 0x4b0082,     // Indigo
+      secondary: 0x8b008b,   // Dark Magenta
+      glow: 0x9400d3,        // Dark Violet
+      projectile: 0x7b68ee   // Medium Slate Blue
+    },
+    passiveModifiers: {
+      damageBonus: 0.15,            // +15% damage
+      maxHpBonus: 0.1,              // +10% HP
+      critChance: 0.1,              // +10% crit
+      cooldownReduction: 0.1        // +10% cooldown reduction
+    },
+    skills: VOID_SKILLS,
+    projectileType: 'bolt',
   }
 ];
 
@@ -292,25 +338,3 @@ export function getSkillById(classId: FortressClass, skillId: string): SkillDefi
   return classDef.skills.find(s => s.id === skillId);
 }
 
-/**
- * Check if a class is unlocked (has been purchased)
- */
-export function isClassUnlocked(classId: FortressClass, unlockedClasses: FortressClass[]): boolean {
-  if (classId === 'natural') return true; // Always unlocked
-  return unlockedClasses.includes(classId);
-}
-
-/**
- * Get all classes that can be unlocked
- */
-export function getUnlockableClasses(): FortressClassDefinition[] {
-  return FORTRESS_CLASSES.filter(c => c.id !== 'natural');
-}
-
-/**
- * Calculate total unlock cost for a class
- */
-export function getClassUnlockCost(classId: FortressClass): { gold: number; dust: number } {
-  const classDef = getClassById(classId);
-  return classDef?.unlockCost ?? { gold: 0, dust: 0 };
-}

@@ -4,6 +4,7 @@ import {
   claimIdleRewards as apiClaimIdleRewards,
 } from '../api/client.js';
 import { updatePlayerMaterials, addMaterialDrop } from './materials.signals.js';
+import { baseDust } from './profile.signals.js';
 import type { MaterialType } from '@arcade/sim-core';
 
 // Types
@@ -80,6 +81,11 @@ export async function claimIdleRewards(): Promise<boolean> {
       updatePlayerMaterials(response.newInventory.materials);
     }
 
+    // Update dust inventory
+    if (response.newInventory?.dust !== undefined) {
+      baseDust.value = response.newInventory.dust;
+    }
+
     // Show drop notifications for claimed materials
     if (response.claimed?.materials) {
       for (const [materialId, amount] of Object.entries(response.claimed.materials)) {
@@ -132,4 +138,15 @@ export function formatIdleTime(hours: number): string {
     return `${h}h`;
   }
   return `${h}h ${m}m`;
+}
+
+/**
+ * Reset all idle rewards state (on logout)
+ */
+export function resetIdleState(): void {
+  idleRewardsState.value = null;
+  idleRewardsLoading.value = false;
+  idleRewardsError.value = null;
+  idleRewardsModalVisible.value = false;
+  claimingRewards.value = false;
 }

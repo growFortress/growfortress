@@ -6,6 +6,9 @@ import { EnemySystem } from '../systems/EnemySystem.js';
 import { ProjectileSystem } from '../systems/ProjectileSystem.js';
 import { HeroSystem } from '../systems/HeroSystem.js';
 import { TurretSystem } from '../systems/TurretSystem.js';
+import { lightingSystem, LightingSystem } from '../effects/LightingSystem.js';
+import { parallaxBackground, ParallaxBackground } from '../effects/ParallaxBackground.js';
+import { LAYOUT, screenXToGameUnit, screenYToGameUnit, fpXToScreen } from '../CoordinateSystem.js';
 
 // Hub state type for idle phase rendering
 export interface HubState {
@@ -55,19 +58,7 @@ const THEME = {
   },
 };
 
-const LAYOUT = {
-  fieldWidth: 40,
-  fortressPositionX: 2,
-  enemyVerticalSpread: 40,
-  enemyVerticalLanes: 7,
-  fortressHpBarOffset: 20,
-  enemyHpBarOffset: 8,
-  // Terrain layout
-  turretLaneHeight: 0.06, // Turret lane takes 6% of screen height
-  groundY: 0.35, // Ground/path starts at 35% from top (after top turret lane)
-  pathHeight: 0.30, // Path takes 30% of screen height (was 35%)
-  gridSpacing: 80, // Pixels between grid lines
-};
+// LAYOUT imported from CoordinateSystem.js
 
 
 
@@ -80,6 +71,8 @@ export class GameScene {
   private projectileSystem: ProjectileSystem;
   private heroSystem: HeroSystem;
   private turretSystem: TurretSystem;
+  public lighting: LightingSystem;
+  public parallax: ParallaxBackground;
 
   private width = 0;
   private height = 0;
@@ -91,6 +84,10 @@ export class GameScene {
   constructor(_app: Application) {
     this.container = new Container();
     this.container.interactiveChildren = true;
+
+    // Parallax Background (behind everything)
+    this.parallax = parallaxBackground;
+    this.container.addChild(this.parallax.container);
 
     // Background / Fortress Graphics (Static Layer)
     this.staticGraphics = new Graphics();
@@ -120,6 +117,10 @@ export class GameScene {
     this.vfx = new VFXSystem();
     this.container.addChild(this.vfx.container);
 
+    // Initialize Lighting System (additive blend, on top of VFX)
+    this.lighting = lightingSystem;
+    this.container.addChild(this.lighting.container);
+
     // Interactive layer for click detection (on top)
     this.interactiveLayer = new Graphics();
     this.interactiveLayer.eventMode = 'static';
@@ -140,8 +141,8 @@ export class GameScene {
     const localY = event.global.y;
 
     // Convert to world coordinates
-    const worldX = this.toWorldX(localX);
-    const worldY = this.toWorldY(localY);
+    const worldX = screenXToGameUnit(localX, this.width);
+    const worldY = screenYToGameUnit(localY, this.height);
 
     this.onFieldClick(worldX, worldY);
   }
@@ -149,6 +150,9 @@ export class GameScene {
   public onResize(width: number, height: number) {
     this.width = width;
     this.height = height;
+
+    // Initialize parallax with new dimensions
+    this.parallax.initialize(width, height);
 
     // Redraw static elements on resize
     this.redrawStaticLayer();
@@ -163,6 +167,13 @@ export class GameScene {
    */
   public setOnHeroClick(callback: (heroId: string) => void) {
     this.heroSystem.setOnHeroClick(callback);
+  }
+
+  /**
+   * Set callback for turret click events in hub mode
+   */
+  public setOnTurretClick(callback: (turretId: string, slotIndex: number) => void) {
+    this.turretSystem.setOnTurretClick(callback);
   }
 
   /**
@@ -226,8 +237,14 @@ export class GameScene {
         this.clearCombatVisuals();
     }
 
+    // Update Parallax background
+    this.parallax.update(16.66);
+
     // Update VFX
     this.vfx.update(16.66);
+
+    // Update Lighting effects
+    this.lighting.update(16.66);
   }
 
   /**
@@ -263,7 +280,7 @@ export class GameScene {
 
   // Called by external controller when an enemy dies
   public onEnemyKilled(x: number, y: number, type: EnemyType = 'runner') {
-     const screenX = this.toScreenX(FP.fromInt(x)); // Assume we get FixedPoint x
+     const screenX = fpXToScreen(FP.fromInt(x), this.width); // Assume we get FixedPoint x
      void y;
      void type;
      // For now this method is unused by internal logic as we use polling in update()
@@ -308,36 +325,6 @@ export class GameScene {
    */
   public spawnTurretFire(x: number, y: number, angle: number, fortressClass: FortressClass) {
       this.vfx.spawnTurretFire(x, y, angle, fortressClass);
-  }
-
-  // --- HELPERS ---
-
-  private toScreenX(fpX: number): number {
-    const unitX = FP.toFloat(fpX);
-    return (unitX / LAYOUT.fieldWidth) * this.width;
-  }
-
-  /**
-   * Convert screen X coordinate to world X (for click detection)
-   */
-  private toWorldX(screenX: number): number {
-    return (screenX / this.width) * LAYOUT.fieldWidth;
-  }
-
-  /**
-   * Convert screen Y coordinate to world Y (for click detection)
-   * Maps the path area (groundY to groundY + pathHeight) to field height (0-15)
-   */
-  private toWorldY(screenY: number): number {
-    const pathTop = this.height * LAYOUT.groundY;
-    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
-    const fieldHeight = 15; // Standard field height from sim-core
-
-    // Clamp to path area
-    const clampedY = Math.max(pathTop, Math.min(pathBottom, screenY));
-
-    // Map to field coordinates
-    return ((clampedY - pathTop) / (pathBottom - pathTop)) * fieldHeight;
   }
 
   // --- DRAWING ---
@@ -482,7 +469,7 @@ export class GameScene {
    * Rysuje mostek dowodzenia Helicarriera (zamiast twierdzy)
    */
   private drawCommandBridge(g: Graphics) {
-    const x = this.toScreenX(FP.fromInt(LAYOUT.fortressPositionX)) + 50;
+    const x = fpXToScreen(FP.fromInt(LAYOUT.fortressPositionX), this.width) + 50;
     const pathTop = this.height * LAYOUT.groundY;
     const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
     const pathCenterY = (pathTop + pathBottom) / 2;

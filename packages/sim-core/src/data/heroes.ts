@@ -1,19 +1,20 @@
 /**
- * Hero Definitions (Simplified)
- * 6 Heroes with 3 tiers each, 2 skills per tier, 1 weakness
+ * Unit Definitions (Jednostki bojowe)
+ * 6 Units with 3 tiers each, 2 skills per tier, 1 weakness
+ *
+ * Rok 2347 - Elitarne jednostki bojowe broniące ludzkości przed Rojem
  */
 
 import type { HeroDefinition, HeroTier } from '../types.js';
 import { FP } from '../fixed.js';
 
 // ============================================================================
-// HERO 1: THUNDERLORD (Thor - Lightning/DPS)
+// UNIT 1: STORM (Unit-7 "Storm" - Electric/DPS)
 // ============================================================================
 
-const THUNDERLORD: HeroDefinition = {
-  id: 'thunderlord',
-  name: 'Thunderlord',
-  marvelInspiration: 'Thor',
+const UNIT_STORM: HeroDefinition = {
+  id: 'storm',
+  name: 'Unit-7 "Storm"',
   class: 'lightning',
   role: 'dps',
   rarity: 'starter',
@@ -38,13 +39,13 @@ const THUNDERLORD: HeroDefinition = {
   tiers: [
     {
       tier: 1,
-      name: 'Thunderlord',
+      name: 'Unit-7 "Storm"',
       statMultiplier: 1.0,
       skills: [
         {
-          id: 'hammer_throw',
-          name: 'Rzut Młotem',
-          description: 'Rzuca młotem zadając obrażenia',
+          id: 'arc_strike',
+          name: 'Uderzenie Łukowe',
+          description: 'Wystrzeliwuje łuk elektryczny zadający obrażenia',
           cooldownTicks: 180,
           isPassive: false,
           isUltimate: false,
@@ -53,7 +54,7 @@ const THUNDERLORD: HeroDefinition = {
         },
         {
           id: 'storm_passive',
-          name: 'Syn Burzy',
+          name: 'Protokół Burzowy',
           description: '+15% chain damage',
           cooldownTicks: 0,
           isPassive: true,
@@ -67,13 +68,13 @@ const THUNDERLORD: HeroDefinition = {
     },
     {
       tier: 2,
-      name: 'God of Thunder',
+      name: 'Unit-7 "Storm" Mk.II',
       statMultiplier: 1.5,
       skills: [
         {
-          id: 'mjolnir',
-          name: 'Mjolnir',
-          description: 'Potężniejszy rzut z łańcuchem błyskawic',
+          id: 'chain_lightning',
+          name: 'Łańcuch Błyskawic',
+          description: 'Potężniejszy atak z łańcuchem elektrycznym',
           cooldownTicks: 150,
           isPassive: false,
           isUltimate: false,
@@ -82,7 +83,7 @@ const THUNDERLORD: HeroDefinition = {
         },
         {
           id: 'storm_lord',
-          name: 'Władca Burz',
+          name: 'Władca Piorunów',
           description: '+30% chain damage, +10% chain chance',
           cooldownTicks: 0,
           isPassive: true,
@@ -92,17 +93,17 @@ const THUNDERLORD: HeroDefinition = {
         }
       ],
       visualChanges: { sizeMultiplier: 1.2, glowIntensity: 0.5, particleEffects: ['lightning_sparks'] },
-      unlockRequirements: { level: 10, gold: 500, dust: 50 }
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
     },
     {
       tier: 3,
-      name: 'Rune King',
+      name: 'Unit-7 "Storm" APEX',
       statMultiplier: 2.0,
       skills: [
         {
-          id: 'stormbreaker',
-          name: 'Stormbreaker',
-          description: 'Ultimate throwing weapon',
+          id: 'ion_cannon',
+          name: 'Działo Jonowe',
+          description: 'Ultimatywna broń energetyczna',
           cooldownTicks: 120,
           isPassive: false,
           isUltimate: false,
@@ -110,9 +111,9 @@ const THUNDERLORD: HeroDefinition = {
           effects: [{ type: 'damage', amount: 100, target: 'single' }]
         },
         {
-          id: 'godblast',
-          name: 'Godblast',
-          description: 'ULTIMATE: Massive AOE lightning destruction',
+          id: 'emp_storm',
+          name: 'Burza EMP',
+          description: 'ULTIMATE: Masywna eksplozja elektromagnetyczna',
           cooldownTicks: 900,
           isPassive: false,
           isUltimate: true,
@@ -129,19 +130,18 @@ const THUNDERLORD: HeroDefinition = {
         particleEffects: ['lightning_sparks', 'rune_glow'],
         colorShift: 0xffd700
       },
-      unlockRequirements: { level: 20, gold: 2000, dust: 200, material: 'uru' }
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'uru' }
     }
   ]
 };
 
 // ============================================================================
-// HERO 2: IRON SENTINEL (Iron Man - Tech/DPS)
+// UNIT 2: FORGE (Unit-3 "Forge" - Tech/DPS)
 // ============================================================================
 
-const IRON_SENTINEL: HeroDefinition = {
-  id: 'iron_sentinel',
-  name: 'Iron Sentinel',
-  marvelInspiration: 'Iron Man',
+const UNIT_FORGE: HeroDefinition = {
+  id: 'forge',
+  name: 'Unit-3 "Forge"',
   class: 'tech',
   role: 'dps',
   rarity: 'common',
@@ -166,13 +166,13 @@ const IRON_SENTINEL: HeroDefinition = {
   tiers: [
     {
       tier: 1,
-      name: 'Mark I',
+      name: 'Unit-3 "Forge"',
       statMultiplier: 1.0,
       skills: [
         {
-          id: 'repulsor',
-          name: 'Repulsor',
-          description: 'Strzał repulsorem',
+          id: 'laser_burst',
+          name: 'Impuls Laserowy',
+          description: 'Strzał z lasera precyzyjnego',
           cooldownTicks: 90,
           isPassive: false,
           isUltimate: false,
@@ -180,8 +180,8 @@ const IRON_SENTINEL: HeroDefinition = {
           effects: [{ type: 'damage', amount: 25, target: 'single' }]
         },
         {
-          id: 'flight',
-          name: 'Lot',
+          id: 'thrusters',
+          name: 'Silniki Odrzutowe',
           description: '+20% movement speed',
           cooldownTicks: 0,
           isPassive: true,
@@ -195,13 +195,13 @@ const IRON_SENTINEL: HeroDefinition = {
     },
     {
       tier: 2,
-      name: 'War Machine',
+      name: 'Unit-3 "Forge" Mk.II',
       statMultiplier: 1.5,
       skills: [
         {
           id: 'missile_barrage',
           name: 'Salwa Rakietowa',
-          description: 'Wiele rakiet w obszarze',
+          description: 'Wiele rakiet kierowanych w obszarze',
           cooldownTicks: 240,
           isPassive: false,
           isUltimate: false,
@@ -220,17 +220,17 @@ const IRON_SENTINEL: HeroDefinition = {
         }
       ],
       visualChanges: { sizeMultiplier: 1.3, glowIntensity: 0.4, particleEffects: ['jet_flames'] },
-      unlockRequirements: { level: 10, gold: 500, dust: 50 }
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
     },
     {
       tier: 3,
-      name: 'Bleeding Edge',
+      name: 'Unit-3 "Forge" APEX',
       statMultiplier: 2.0,
       skills: [
         {
           id: 'nano_swarm',
           name: 'Rój Nanorobotów',
-          description: 'Adaptacyjne nano-bronie',
+          description: 'Adaptacyjne nano-bronie bojowe',
           cooldownTicks: 180,
           isPassive: false,
           isUltimate: false,
@@ -241,9 +241,9 @@ const IRON_SENTINEL: HeroDefinition = {
           ]
         },
         {
-          id: 'proton_cannon',
-          name: 'Proton Cannon',
-          description: 'ULTIMATE: Ogromny promień energii',
+          id: 'orbital_strike',
+          name: 'Uderzenie Orbitalne',
+          description: 'ULTIMATE: Ogromny promień energii z orbity',
           cooldownTicks: 720,
           isPassive: false,
           isUltimate: true,
@@ -257,22 +257,21 @@ const IRON_SENTINEL: HeroDefinition = {
         particleEffects: ['nano_particles', 'arc_glow'],
         colorShift: 0x00ffff
       },
-      unlockRequirements: { level: 20, gold: 2000, dust: 200, material: 'extremis' }
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'extremis' }
     }
   ]
 };
 
 // ============================================================================
-// HERO 3: JADE TITAN (Hulk - Natural/Tank)
+// UNIT 3: TITAN (Unit-1 "Titan" - Void/Tank)
 // ============================================================================
 
-const JADE_TITAN: HeroDefinition = {
-  id: 'jade_titan',
-  name: 'Jade Titan',
-  marvelInspiration: 'Hulk',
-  class: 'natural',
+const UNIT_TITAN: HeroDefinition = {
+  id: 'titan',
+  name: 'Unit-1 "Titan"',
+  class: 'void',
   role: 'tank',
-  rarity: 'rare',
+  rarity: 'epic',
   baseStats: {
     hp: 300,
     damage: 35,
@@ -281,7 +280,7 @@ const JADE_TITAN: HeroDefinition = {
     moveSpeed: FP.fromFloat(0.06),
     deployCooldown: 360
   },
-  colors: { primary: 0x228b22, secondary: 0x32cd32, glow: 0x7fff00 },
+  colors: { primary: 0x4b0082, secondary: 0x8b008b, glow: 0x9400d3 },
   shape: 'square',
   weaknesses: [
     {
@@ -294,13 +293,13 @@ const JADE_TITAN: HeroDefinition = {
   tiers: [
     {
       tier: 1,
-      name: 'Jade Titan',
+      name: 'Unit-1 "Titan"',
       statMultiplier: 1.0,
       skills: [
         {
-          id: 'smash',
-          name: 'Roztrzaskanie',
-          description: 'Potężne uderzenie w ziemię',
+          id: 'void_strike',
+          name: 'Uderzenie Próżni',
+          description: 'Potężne uderzenie energią wymiarową',
           cooldownTicks: 240,
           isPassive: false,
           isUltimate: false,
@@ -311,9 +310,9 @@ const JADE_TITAN: HeroDefinition = {
           ]
         },
         {
-          id: 'rage',
-          name: 'Furia',
-          description: 'Damage scales with missing HP',
+          id: 'void_absorption',
+          name: 'Absorpcja Próżni',
+          description: 'Obrażenia rosną wraz z utratą HP',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
@@ -326,13 +325,13 @@ const JADE_TITAN: HeroDefinition = {
     },
     {
       tier: 2,
-      name: 'World Breaker',
+      name: 'Unit-1 "Titan" Mk.II',
       statMultiplier: 1.6,
       skills: [
         {
-          id: 'worldbreaker_stomp',
-          name: 'Stomp',
-          description: 'Trzęsienie ziemi',
+          id: 'dimensional_rift',
+          name: 'Szczelina Wymiarowa',
+          description: 'Otwiera rozdarcie w przestrzeni wciągające wrogów',
           cooldownTicks: 300,
           isPassive: false,
           isUltimate: false,
@@ -343,9 +342,9 @@ const JADE_TITAN: HeroDefinition = {
           ]
         },
         {
-          id: 'unlimited_rage',
-          name: 'Nieograniczona Furia',
-          description: '+100% damage below 30% HP',
+          id: 'void_resonance',
+          name: 'Rezonans Próżni',
+          description: '+100% obrażeń przy HP poniżej 30%',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
@@ -353,18 +352,18 @@ const JADE_TITAN: HeroDefinition = {
           effects: []
         }
       ],
-      visualChanges: { sizeMultiplier: 1.6, glowIntensity: 0.5, particleEffects: ['ground_cracks'] },
-      unlockRequirements: { level: 10, gold: 500, dust: 50 }
+      visualChanges: { sizeMultiplier: 1.6, glowIntensity: 0.5, particleEffects: ['void_particles'] },
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
     },
     {
       tier: 3,
-      name: 'Immortal Jade',
+      name: 'Unit-1 "Titan" APEX',
       statMultiplier: 2.2,
       skills: [
         {
-          id: 'gamma_burst',
-          name: 'Gamma Burst',
-          description: 'Eksplozja promieniowania',
+          id: 'void_burst',
+          name: 'Eksplozja Próżniowa',
+          description: 'Potężna eksplozja energii wymiarowej',
           cooldownTicks: 360,
           isPassive: false,
           isUltimate: false,
@@ -372,9 +371,9 @@ const JADE_TITAN: HeroDefinition = {
           effects: [{ type: 'damage', amount: 120, target: 'area' }]
         },
         {
-          id: 'worldbreaker_ultimate',
-          name: 'Worldbreaker',
-          description: 'ULTIMATE: Niszczy wszystko',
+          id: 'dimensional_collapse',
+          name: 'Kolaps Wymiarowy',
+          description: 'ULTIMATE: Tworzy czarną dziurę niszczącą wszystko',
           cooldownTicks: 900,
           isPassive: false,
           isUltimate: true,
@@ -388,22 +387,21 @@ const JADE_TITAN: HeroDefinition = {
       visualChanges: {
         sizeMultiplier: 2.0,
         glowIntensity: 0.9,
-        particleEffects: ['gamma_radiation', 'ground_cracks'],
-        colorShift: 0x00ff00
+        particleEffects: ['void_particles', 'dark_energy'],
+        colorShift: 0x9400d3
       },
-      unlockRequirements: { level: 20, gold: 2000, dust: 200, material: 'super_soldier_serum' }
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'dark_matter' }
     }
   ]
 };
 
 // ============================================================================
-// HERO 4: SHIELD CAPTAIN (Captain America - Natural/Tank)
+// UNIT 4: VANGUARD (Unit-0 "Vanguard" - Natural/Tank)
 // ============================================================================
 
-const SHIELD_CAPTAIN: HeroDefinition = {
-  id: 'shield_captain',
-  name: 'Shield Captain',
-  marvelInspiration: 'Captain America',
+const UNIT_VANGUARD: HeroDefinition = {
+  id: 'vanguard',
+  name: 'Unit-0 "Vanguard"',
   class: 'natural',
   role: 'tank',
   rarity: 'starter',
@@ -428,13 +426,13 @@ const SHIELD_CAPTAIN: HeroDefinition = {
   tiers: [
     {
       tier: 1,
-      name: 'Shield Captain',
+      name: 'Unit-0 "Vanguard"',
       statMultiplier: 1.0,
       skills: [
         {
-          id: 'shield_throw',
-          name: 'Rzut Tarczą',
-          description: 'Bouncing shield attack',
+          id: 'barrier_pulse',
+          name: 'Impuls Tarczy',
+          description: 'Wystrzeliwuje pole siłowe odbijające się od wrogów',
           cooldownTicks: 150,
           isPassive: false,
           isUltimate: false,
@@ -442,8 +440,8 @@ const SHIELD_CAPTAIN: HeroDefinition = {
           effects: [{ type: 'damage', amount: 30, target: 'area' }]
         },
         {
-          id: 'inspire',
-          name: 'Inspiracja',
+          id: 'command_aura',
+          name: 'Aura Dowodzenia',
           description: '+10% damage to allies',
           cooldownTicks: 0,
           isPassive: true,
@@ -457,13 +455,13 @@ const SHIELD_CAPTAIN: HeroDefinition = {
     },
     {
       tier: 2,
-      name: 'Nomad',
+      name: 'Unit-0 "Vanguard" Mk.II',
       statMultiplier: 1.4,
       skills: [
         {
-          id: 'dual_shields',
-          name: 'Podwójne Tarcze',
-          description: 'Two shield throw',
+          id: 'dual_barrier',
+          name: 'Podwójna Bariera',
+          description: 'Dwa pola siłowe wystrzeliwane jednocześnie',
           cooldownTicks: 180,
           isPassive: false,
           isUltimate: false,
@@ -487,17 +485,17 @@ const SHIELD_CAPTAIN: HeroDefinition = {
         particleEffects: ['stars'],
         colorShift: 0x2f2f2f
       },
-      unlockRequirements: { level: 10, gold: 500, dust: 50 }
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
     },
     {
       tier: 3,
-      name: 'Worthy',
+      name: 'Unit-0 "Vanguard" APEX',
       statMultiplier: 1.8,
       skills: [
         {
-          id: 'mjolnir_cap',
-          name: 'Mjolnir',
-          description: 'Wields the hammer',
+          id: 'kinetic_hammer',
+          name: 'Młot Kinetyczny',
+          description: 'Operuje bronią kinetyczną wysokiej mocy',
           cooldownTicks: 240,
           isPassive: false,
           isUltimate: false,
@@ -508,14 +506,14 @@ const SHIELD_CAPTAIN: HeroDefinition = {
           ]
         },
         {
-          id: 'assemble',
-          name: 'Avengers Assemble',
-          description: 'ULTIMATE: Buffs all heroes significantly',
+          id: 'rally_command',
+          name: 'Rozkaz Rajdu',
+          description: 'ULTIMATE: Znacząco wzmacnia wszystkie jednostki',
           cooldownTicks: 900,
           isPassive: false,
           isUltimate: true,
           unlockedAtLevel: 25,
-          effects: [{ type: 'buff', stat: 'damageMultiplier', amount: 1.5, duration: 300 }]
+          effects: [{ type: 'buff', stat: 'damageBonus', amount: 0.5, duration: 300 }]
         }
       ],
       visualChanges: {
@@ -524,22 +522,21 @@ const SHIELD_CAPTAIN: HeroDefinition = {
         particleEffects: ['lightning_sparks', 'stars'],
         colorShift: 0xffd700
       },
-      unlockRequirements: { level: 20, gold: 2000, dust: 200, material: 'vibranium' }
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'vibranium' }
     }
   ]
 };
 
 // ============================================================================
-// HERO 5: SCARLET MAGE (Scarlet Witch - Magic/Support)
+// UNIT 5: RIFT (Unit-9 "Rift" - Fire/Support)
 // ============================================================================
 
-const SCARLET_MAGE: HeroDefinition = {
-  id: 'scarlet_mage',
-  name: 'Scarlet Mage',
-  marvelInspiration: 'Scarlet Witch',
+const UNIT_RIFT: HeroDefinition = {
+  id: 'rift',
+  name: 'Unit-9 "Rift"',
   class: 'fire',
   role: 'support',
-  rarity: 'starter',
+  rarity: 'rare',
   baseStats: {
     hp: 90,
     damage: 35,
@@ -561,13 +558,13 @@ const SCARLET_MAGE: HeroDefinition = {
   tiers: [
     {
       tier: 1,
-      name: 'Scarlet Mage',
+      name: 'Unit-9 "Rift"',
       statMultiplier: 1.0,
       skills: [
         {
-          id: 'hex_bolt',
-          name: 'Hex Bolt',
-          description: 'Chaos magic projectile',
+          id: 'plasma_bolt',
+          name: 'Impuls Plazmowy',
+          description: 'Pocisk plazmowy wysokiej temperatury',
           cooldownTicks: 120,
           isPassive: false,
           isUltimate: false,
@@ -590,13 +587,13 @@ const SCARLET_MAGE: HeroDefinition = {
     },
     {
       tier: 2,
-      name: 'Chaos Witch',
+      name: 'Unit-9 "Rift" Mk.II',
       statMultiplier: 1.5,
       skills: [
         {
-          id: 'chaos_wave',
-          name: 'Fala Chaosu',
-          description: 'AOE chaos damage',
+          id: 'plasma_wave',
+          name: 'Fala Plazmowa',
+          description: 'Obszarowe obrażenia termiczne',
           cooldownTicks: 180,
           isPassive: false,
           isUltimate: false,
@@ -604,8 +601,8 @@ const SCARLET_MAGE: HeroDefinition = {
           effects: [{ type: 'damage', amount: 60, target: 'area' }]
         },
         {
-          id: 'reality_warp',
-          name: 'Reality Warp',
+          id: 'thermal_flux',
+          name: 'Fluktuacja Termiczna',
           description: 'Random buffs/debuffs',
           cooldownTicks: 0,
           isPassive: true,
@@ -619,17 +616,17 @@ const SCARLET_MAGE: HeroDefinition = {
         glowIntensity: 0.6,
         particleEffects: ['chaos_particles', 'red_glow']
       },
-      unlockRequirements: { level: 10, gold: 500, dust: 50 }
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
     },
     {
       tier: 3,
-      name: 'Nexus Being',
+      name: 'Unit-9 "Rift" APEX',
       statMultiplier: 2.0,
       skills: [
         {
-          id: 'hex_sphere',
-          name: 'Hex Sphere',
-          description: 'Protective chaos sphere',
+          id: 'plasma_shield',
+          name: 'Tarcza Plazmowa',
+          description: 'Ochronna sfera plazmowa',
           cooldownTicks: 240,
           isPassive: false,
           isUltimate: false,
@@ -637,9 +634,9 @@ const SCARLET_MAGE: HeroDefinition = {
           effects: [{ type: 'shield', amount: 100, duration: 240 }]
         },
         {
-          id: 'no_more_enemies',
-          name: 'No More Enemies',
-          description: 'ULTIMATE: Instantly damages 50% of all enemy current HP',
+          id: 'thermal_annihilation',
+          name: 'Anihilacja Termiczna',
+          description: 'ULTIMATE: Natychmiast zadaje 50% HP wszystkim wrogom',
           cooldownTicks: 1200,
           isPassive: false,
           isUltimate: true,
@@ -653,21 +650,20 @@ const SCARLET_MAGE: HeroDefinition = {
         particleEffects: ['chaos_particles', 'reality_tear'],
         colorShift: 0xff1493
       },
-      unlockRequirements: { level: 20, gold: 2000, dust: 200, material: 'darkforce' }
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'darkforce' }
     }
   ]
 };
 
 // ============================================================================
-// HERO 6: FROST ARCHER (Hawkeye - Ice/DPS)
+// UNIT 6: FROST (Unit-5 "Frost" - Ice/Crowd Control)
 // ============================================================================
 
-const FROST_ARCHER: HeroDefinition = {
-  id: 'frost_archer',
-  name: 'Frost Archer',
-  marvelInspiration: 'Hawkeye',
+const UNIT_FROST: HeroDefinition = {
+  id: 'frost',
+  name: 'Unit-5 "Frost"',
   class: 'ice',
-  role: 'dps',
+  role: 'crowd_control',
   rarity: 'common',
   baseStats: {
     hp: 80, damage: 28, attackSpeed: 1.8, range: FP.fromInt(12),
@@ -680,19 +676,19 @@ const FROST_ARCHER: HeroDefinition = {
       id: 'no_powers',
       name: 'Brak Mocy',
       description: '-40% HP',
-      effect: { type: 'stat_penalty', stat: 'maxHpMultiplier', amount: 0.6 }
+      effect: { type: 'stat_penalty', stat: 'maxHpBonus', amount: -0.4 }
     }
   ],
   tiers: [
     {
       tier: 1,
-      name: 'Frost Archer',
+      name: 'Unit-5 "Frost"',
       statMultiplier: 1.0,
       skills: [
         {
-          id: 'frost_arrow',
-          name: 'Lodowa Strzała',
-          description: 'Strzała spowalniająca wroga',
+          id: 'cryo_shot',
+          name: 'Strzał Kriogeniczny',
+          description: 'Pocisk kriogeniczny spowalniający cel',
           cooldownTicks: 120,
           isPassive: false,
           isUltimate: false,
@@ -718,13 +714,13 @@ const FROST_ARCHER: HeroDefinition = {
     },
     {
       tier: 2,
-      name: 'Ice Marksman',
+      name: 'Unit-5 "Frost" Mk.II',
       statMultiplier: 1.5,
       skills: [
         {
           id: 'multi_shot',
           name: 'Wielostrzał',
-          description: 'Strzela 3 strzałami jednocześnie',
+          description: 'Wystrzeliwuje 3 pociski jednocześnie',
           cooldownTicks: 180,
           isPassive: false,
           isUltimate: false,
@@ -743,16 +739,16 @@ const FROST_ARCHER: HeroDefinition = {
         }
       ],
       visualChanges: { sizeMultiplier: 1.1, glowIntensity: 0.5, particleEffects: ['frost_trail'] },
-      unlockRequirements: { level: 10, gold: 500, dust: 50 }
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
     },
     {
       tier: 3,
-      name: 'Absolute Zero Archer',
+      name: 'Unit-5 "Frost" APEX',
       statMultiplier: 2.0,
       skills: [
         {
           id: 'shatter_shot',
-          name: 'Roztrzaskujący Strzał',
+          name: 'Strzał Kruszący',
           description: 'Zadaje podwójne obrażenia zamrożonym celom',
           cooldownTicks: 150,
           isPassive: false,
@@ -775,23 +771,563 @@ const FROST_ARCHER: HeroDefinition = {
         }
       ],
       visualChanges: { sizeMultiplier: 1.2, glowIntensity: 0.9, particleEffects: ['frost_trail', 'ice_shards'], colorShift: 0x87ceeb },
-      unlockRequirements: { level: 20, gold: 2000, dust: 200 }
+      unlockRequirements: { level: 20, gold: 2000, dust: 140 }
     }
   ]
 };
 
 // ============================================================================
-// ALL HEROES EXPORT (6 Heroes)
+// UNIT 7: SPECTRE (Unit-4 "Spectre" - Plasma/DPS) - EXCLUSIVE
+// ============================================================================
+
+const UNIT_SPECTRE: HeroDefinition = {
+  id: 'spectre',
+  name: 'Unit-4 "Spectre"',
+  class: 'plasma',
+  role: 'dps',
+  rarity: 'rare', // Exclusive rare - costs only gold
+  baseStats: {
+    hp: 140,
+    damage: 33,
+    attackSpeed: 1.6,
+    range: FP.fromInt(9),
+    moveSpeed: FP.fromFloat(0.09),
+    deployCooldown: 240
+  },
+  colors: { primary: 0x00ffff, secondary: 0xff00ff, glow: 0x00ffff },
+  shape: 'diamond',
+  weaknesses: [
+    {
+      id: 'energy_instability',
+      name: 'Niestabilność Energii',
+      description: 'Void zadaje +35% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'void', multiplier: 1.35 }
+    }
+  ],
+  tiers: [
+    {
+      tier: 1,
+      name: 'Unit-4 "Spectre"',
+      statMultiplier: 1.0,
+      skills: [
+        {
+          id: 'plasma_burst',
+          name: 'Impuls Plazmowy',
+          description: 'Wystrzeliwuje koncentrowany impuls plazmy',
+          cooldownTicks: 120,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: [{ type: 'damage', amount: 45, target: 'single' }]
+        },
+        {
+          id: 'stealth_protocol',
+          name: 'Protokół Kamuflażu',
+          description: '+20% crit chance',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.5, particleEffects: ['plasma_glow'] },
+      unlockRequirements: { level: 1, gold: 0, dust: 0 }
+    },
+    {
+      tier: 2,
+      name: 'Unit-4 "Spectre" Mk.II',
+      statMultiplier: 1.6,
+      skills: [
+        {
+          id: 'plasma_lance',
+          name: 'Lanca Plazmowa',
+          description: 'Przebijający atak plazmowy trafiający wiele celów',
+          cooldownTicks: 150,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: [{ type: 'damage', amount: 65, target: 'area' }]
+        },
+        {
+          id: 'phase_shift',
+          name: 'Przesunięcie Fazowe',
+          description: '+30% crit chance, +15% attack speed',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.2, glowIntensity: 0.7, particleEffects: ['plasma_glow', 'phase_particles'] },
+      unlockRequirements: { level: 10, gold: 750, dust: 50 }
+    },
+    {
+      tier: 3,
+      name: 'Unit-4 "Spectre" APEX',
+      statMultiplier: 2.1,
+      skills: [
+        {
+          id: 'plasma_overload',
+          name: 'Przeciążenie Plazmowe',
+          description: 'Masywna eksplozja plazmy z wysokim crit',
+          cooldownTicks: 180,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 20,
+          effects: [{ type: 'damage', amount: 100, target: 'area' }]
+        },
+        {
+          id: 'ghost_protocol',
+          name: 'Protokół Widmo',
+          description: 'ULTIMATE: Staje się niewidzialny, następny atak zadaje 300% DMG',
+          cooldownTicks: 720,
+          isPassive: false,
+          isUltimate: true,
+          unlockedAtLevel: 25,
+          effects: [{ type: 'damage', amount: 150, target: 'single' }]
+        }
+      ],
+      visualChanges: {
+        sizeMultiplier: 1.3,
+        glowIntensity: 1.0,
+        particleEffects: ['plasma_glow', 'phase_particles', 'ghost_trail'],
+        colorShift: 0xff00ff
+      },
+      unlockRequirements: { level: 20, gold: 2500, dust: 175, material: 'cosmic_dust' }
+    }
+  ]
+};
+
+// ============================================================================
+// UNIT 8: OMEGA (Unit-X "Omega" - Void/Assassin) - LEGENDARY EXCLUSIVE
+// ============================================================================
+
+const UNIT_OMEGA: HeroDefinition = {
+  id: 'omega',
+  name: 'Unit-X "Omega"',
+  class: 'void',
+  role: 'assassin',
+  rarity: 'legendary', // Exclusive legendary - costs only dust
+  baseStats: {
+    hp: 110,
+    damage: 45,
+    attackSpeed: 1.1,
+    range: FP.fromInt(7),
+    moveSpeed: FP.fromFloat(0.11),
+    deployCooldown: 300
+  },
+  colors: { primary: 0xffd700, secondary: 0x1a1a2a, glow: 0xffd700 },
+  shape: 'star',
+  weaknesses: [
+    {
+      id: 'unstable_power',
+      name: 'Niestabilna Moc',
+      description: 'Otrzymuje +20% DMG gdy HP < 50%',
+      effect: { type: 'conditional', condition: 'low_hp', effect: '+20% damage taken when HP < 50%' }
+    }
+  ],
+  tiers: [
+    {
+      tier: 1,
+      name: 'Unit-X "Omega"',
+      statMultiplier: 1.0,
+      skills: [
+        {
+          id: 'execute_strike',
+          name: 'Egzekucja',
+          description: 'Zadaje 80 DMG + 100% bonus vs cele <30% HP',
+          cooldownTicks: 180,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: [{ type: 'damage', amount: 80, target: 'single' }]
+        },
+        {
+          id: 'lethal_precision',
+          name: 'Śmiertelna Precyzja',
+          description: '+25% crit damage, trafienia krytyczne leczą 10 HP',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.6, particleEffects: ['gold_sparks'] },
+      unlockRequirements: { level: 1, gold: 0, dust: 0 }
+    },
+    {
+      tier: 2,
+      name: 'Unit-X "Omega" Mk.II',
+      statMultiplier: 1.7,
+      skills: [
+        {
+          id: 'void_slash',
+          name: 'Cięcie Próżni',
+          description: 'Przechodzi przez wrogów zadając obrażenia wszystkim na ścieżce',
+          cooldownTicks: 150,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: [
+            { type: 'damage', amount: 100, target: 'area' },
+            { type: 'slow', percent: 30, duration: 90 }
+          ]
+        },
+        {
+          id: 'hunter_instinct',
+          name: 'Instynkt Łowcy',
+          description: '+40% crit damage, execute threshold 40%',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.2, glowIntensity: 0.8, particleEffects: ['gold_sparks', 'void_trail'] },
+      unlockRequirements: { level: 10, gold: 1000, dust: 70 }
+    },
+    {
+      tier: 3,
+      name: 'Unit-X "Omega" APEX',
+      statMultiplier: 2.3,
+      skills: [
+        {
+          id: 'death_mark',
+          name: 'Znak Śmierci',
+          description: 'Oznacza cel - otrzymuje +50% DMG przez 5s',
+          cooldownTicks: 240,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 20,
+          effects: [
+            { type: 'damage', amount: 120, target: 'single' },
+            { type: 'buff', stat: 'damageBonus', amount: 0.5, duration: 300 }
+          ]
+        },
+        {
+          id: 'omega_protocol',
+          name: 'Protokół Omega',
+          description: 'ULTIMATE: Natychmiastowa eliminacja celu <25% HP, inaczej 400 DMG',
+          cooldownTicks: 900,
+          isPassive: false,
+          isUltimate: true,
+          unlockedAtLevel: 25,
+          effects: [{ type: 'damage', amount: 400, target: 'single' }]
+        }
+      ],
+      visualChanges: {
+        sizeMultiplier: 1.4,
+        glowIntensity: 1.0,
+        particleEffects: ['gold_sparks', 'void_trail', 'omega_aura'],
+        colorShift: 0xffd700
+      },
+      unlockRequirements: { level: 20, gold: 3000, dust: 210, material: 'dark_matter' }
+    }
+  ]
+};
+
+// ============================================================================
+// UNIT 9: INFERNO (Unit-6 "Inferno" - Fire/DPS) - PREMIUM SHOP EXCLUSIVE
+// ============================================================================
+
+const UNIT_INFERNO: HeroDefinition = {
+  id: 'inferno',
+  name: 'Unit-6 "Inferno"',
+  class: 'fire',
+  role: 'dps',
+  rarity: 'epic',
+  baseStats: {
+    hp: 130,
+    damage: 42,
+    attackSpeed: 1.3,
+    range: FP.fromInt(7),
+    moveSpeed: FP.fromFloat(0.09),
+    deployCooldown: 270
+  },
+  colors: { primary: 0xff4500, secondary: 0xff8c00, glow: 0xffd700 },
+  shape: 'star',
+  weaknesses: [
+    {
+      id: 'thermal_instability',
+      name: 'Niestabilnosc Termiczna',
+      description: 'Ice zadaje +30% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'ice', multiplier: 1.3 }
+    }
+  ],
+  tiers: [
+    {
+      tier: 1,
+      name: 'Unit-6 "Inferno"',
+      statMultiplier: 1.0,
+      skills: [
+        {
+          id: 'flame_strike',
+          name: 'Plomien Uderzeniowy',
+          description: 'Ognisty atak zadajacy podpalenie',
+          cooldownTicks: 150,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: [
+            { type: 'damage', amount: 55, target: 'single' },
+            { type: 'burn', damagePerTick: 5, duration: 90 }
+          ]
+        },
+        {
+          id: 'burning_heart',
+          name: 'Gorace Serce',
+          description: '+20% DMG vs podpalone cele',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.5, particleEffects: ['fire_sparks'] },
+      unlockRequirements: { level: 1, gold: 0, dust: 0 }
+    },
+    {
+      tier: 2,
+      name: 'Unit-6 "Inferno" Mk.II',
+      statMultiplier: 1.6,
+      skills: [
+        {
+          id: 'plasma_explosion',
+          name: 'Eksplozja Plazmowa',
+          description: 'Obszarowa eksplozja podpalajaca wszystkich wrogow',
+          cooldownTicks: 210,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: [
+            { type: 'damage', amount: 75, target: 'area' },
+            { type: 'burn', damagePerTick: 8, duration: 120 }
+          ]
+        },
+        {
+          id: 'fire_mastery',
+          name: 'Mistrz Ognia',
+          description: '+35% fire DMG, +15% szansa na kryt',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.2, glowIntensity: 0.7, particleEffects: ['fire_sparks', 'flame_trail'] },
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
+    },
+    {
+      tier: 3,
+      name: 'Unit-6 "Inferno" APEX',
+      statMultiplier: 2.2,
+      skills: [
+        {
+          id: 'pillar_of_fire',
+          name: 'Filar Ognia',
+          description: 'Tworzy slup ognia zadajacy ciagle obrazenia',
+          cooldownTicks: 270,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 20,
+          effects: [
+            { type: 'damage', amount: 120, target: 'area' },
+            { type: 'burn', damagePerTick: 15, duration: 180 }
+          ]
+        },
+        {
+          id: 'thermal_apocalypse',
+          name: 'Apokalipsa Termiczna',
+          description: 'ULTIMATE: Piekielna eksplozja spalajaca wszystkich wrogow',
+          cooldownTicks: 840,
+          isPassive: false,
+          isUltimate: true,
+          unlockedAtLevel: 25,
+          effects: [
+            { type: 'damage', amount: 200, target: 'all' },
+            { type: 'percent_current_hp_damage', percent: 50, target: 'all' },
+            { type: 'slow', percent: 50, duration: 150 }
+          ]
+        }
+      ],
+      visualChanges: {
+        sizeMultiplier: 1.4,
+        glowIntensity: 1.0,
+        particleEffects: ['fire_sparks', 'flame_trail', 'inferno_aura'],
+        colorShift: 0xffd700
+      },
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'extremis' }
+    }
+  ]
+};
+
+// ============================================================================
+// UNIT 10: GLACIER (Unit-8 "Glacier" - Ice/Tank) - PREMIUM SHOP EXCLUSIVE
+// ============================================================================
+
+const UNIT_GLACIER: HeroDefinition = {
+  id: 'glacier',
+  name: 'Unit-8 "Glacier"',
+  class: 'ice',
+  role: 'tank',
+  rarity: 'epic',
+  baseStats: {
+    hp: 280,
+    damage: 22,
+    attackSpeed: 0.8,
+    range: FP.fromInt(4),
+    moveSpeed: FP.fromFloat(0.065),
+    deployCooldown: 330
+  },
+  colors: { primary: 0x1e90ff, secondary: 0xb0e0e6, glow: 0x87ceeb },
+  shape: 'hexagon',
+  weaknesses: [
+    {
+      id: 'slow_metabolism',
+      name: 'Wolny Metabolizm',
+      description: 'Fire zadaje +25% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'fire', multiplier: 1.25 }
+    }
+  ],
+  tiers: [
+    {
+      tier: 1,
+      name: 'Unit-8 "Glacier"',
+      statMultiplier: 1.0,
+      skills: [
+        {
+          id: 'ice_barrier',
+          name: 'Lodowa Bariera',
+          description: 'Tarcza lodowa spowalniajaca atakujacych',
+          cooldownTicks: 240,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: [
+            { type: 'shield', amount: 60, duration: 180 },
+            { type: 'slow', percent: 30, duration: 90 }
+          ]
+        },
+        {
+          id: 'cryo_armor',
+          name: 'Kriogeniczna Zbroja',
+          description: '+20% redukcja obrazen, atakujacy sa spowalniani',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.3, glowIntensity: 0.3, particleEffects: ['frost_particles'] },
+      unlockRequirements: { level: 1, gold: 0, dust: 0 }
+    },
+    {
+      tier: 2,
+      name: 'Unit-8 "Glacier" Mk.II',
+      statMultiplier: 1.65,
+      skills: [
+        {
+          id: 'frost_strike',
+          name: 'Mrozne Uderzenie',
+          description: 'Obszarowy atak zamrazajacy wrogow',
+          cooldownTicks: 180,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: [
+            { type: 'damage', amount: 50, target: 'area' },
+            { type: 'freeze', duration: 75 }
+          ]
+        },
+        {
+          id: 'heart_of_winter',
+          name: 'Serce Zimy',
+          description: '+30% max HP, regeneracja gdy niezaatakowany',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.5, glowIntensity: 0.5, particleEffects: ['frost_particles', 'ice_shield'] },
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
+    },
+    {
+      tier: 3,
+      name: 'Unit-8 "Glacier" APEX',
+      statMultiplier: 2.15,
+      skills: [
+        {
+          id: 'eternal_winter',
+          name: 'Wieczna Zima',
+          description: 'Strefa wiecznego mroku zamrazajaca wrogow',
+          cooldownTicks: 300,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 20,
+          effects: [
+            { type: 'damage', amount: 40, target: 'area' },
+            { type: 'slow', percent: 60, duration: 150 }
+          ]
+        },
+        {
+          id: 'absolute_zero',
+          name: 'Absolutne Zero',
+          description: 'ULTIMATE: Zamraza wszystkich wrogow i wzmacnia obrone',
+          cooldownTicks: 900,
+          isPassive: false,
+          isUltimate: true,
+          unlockedAtLevel: 25,
+          effects: [
+            { type: 'freeze', duration: 150 },
+            { type: 'damage', amount: 180, target: 'all' },
+            { type: 'shield', amount: 200, duration: 300 }
+          ]
+        }
+      ],
+      visualChanges: {
+        sizeMultiplier: 1.8,
+        glowIntensity: 0.9,
+        particleEffects: ['frost_particles', 'ice_shield', 'blizzard_aura'],
+        colorShift: 0x87ceeb
+      },
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'vibranium' }
+    }
+  ]
+};
+
+// ============================================================================
+// ALL UNITS EXPORT (10 Units)
 // ============================================================================
 
 export const HEROES: HeroDefinition[] = [
-  THUNDERLORD,
-  IRON_SENTINEL,
-  JADE_TITAN,
-  SHIELD_CAPTAIN,
-  SCARLET_MAGE,
-  FROST_ARCHER
+  UNIT_STORM,
+  UNIT_FORGE,
+  UNIT_TITAN,
+  UNIT_VANGUARD,
+  UNIT_RIFT,
+  UNIT_FROST,
+  UNIT_SPECTRE,
+  UNIT_OMEGA,
+  UNIT_INFERNO,
+  UNIT_GLACIER
 ];
+
+// Legacy aliases for migration
+export const THUNDERLORD = UNIT_STORM;
+export const IRON_SENTINEL = UNIT_FORGE;
+export const JADE_TITAN = UNIT_TITAN;
+export const SHIELD_CAPTAIN = UNIT_VANGUARD;
+export const SCARLET_MAGE = UNIT_RIFT;
+export const FROST_ARCHER = UNIT_FROST;
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -821,15 +1357,36 @@ export function getUnlockableHeroes(): HeroDefinition[] {
   return HEROES.filter(h => h.rarity !== 'starter');
 }
 
+// Premium shop heroes - not available via regular unlock
+export const PREMIUM_SHOP_HERO_IDS = ['inferno', 'glacier'] as const;
+
+export function isPremiumShopHero(heroId: string): boolean {
+  return PREMIUM_SHOP_HERO_IDS.includes(heroId as typeof PREMIUM_SHOP_HERO_IDS[number]);
+}
+
 export function getHeroUnlockCost(heroId: string): { gold: number; dust: number } | undefined {
   const hero = getHeroById(heroId);
   if (!hero) return undefined;
 
+  // Premium shop exclusive heroes - cannot be unlocked with gold/dust
+  if (isPremiumShopHero(heroId)) {
+    return undefined; // Must be purchased from shop with PLN
+  }
+
+  // Special exclusive heroes (available from level 1 with special pricing)
+  if (heroId === 'spectre') {
+    return { gold: 25000, dust: 0 }; // Exclusive rare - gold only
+  }
+  if (heroId === 'omega') {
+    return { gold: 0, dust: 3500 }; // Legendary exclusive - dust only (reduced from 5000)
+  }
+
   switch (hero.rarity) {
     case 'starter': return { gold: 0, dust: 0 };
-    case 'common': return { gold: 3000, dust: 500 };
-    case 'rare': return { gold: 6000, dust: 1000 };
-    case 'epic': return { gold: 12000, dust: 2000 };
+    case 'common': return { gold: 3000, dust: 350 };    // Reduced from 500
+    case 'rare': return { gold: 6000, dust: 700 };      // Reduced from 1000
+    case 'epic': return { gold: 12000, dust: 1400 };    // Reduced from 2000
+    case 'legendary': return { gold: 0, dust: 3500 };   // Reduced from 5000
     default: return { gold: 0, dust: 0 };
   }
 }

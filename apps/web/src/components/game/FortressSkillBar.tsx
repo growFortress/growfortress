@@ -147,10 +147,12 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
 
   return (
     <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
-      <div class={styles.header}>
-        <span class={styles.classIcon}>{classIcon}</span>
-        <span class={styles.title}>Umiejętności Twierdzy</span>
-      </div>
+      {!compact && (
+        <div class={styles.header}>
+          <span class={styles.classIcon}>{classIcon}</span>
+          <span class={styles.title}>Umiejętności Twierdzy</span>
+        </div>
+      )}
       <div class={styles.skillList}>
         {unlockedSkills.map((skill) => {
           const cooldown = skillCooldowns[skill.id] || 0;

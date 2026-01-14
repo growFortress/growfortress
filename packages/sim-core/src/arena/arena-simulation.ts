@@ -2,15 +2,13 @@
  * Arena PvP Simulation
  *
  * Main simulation class for 1v1 arena battles.
- * Two fortresses fight each other with heroes and turrets.
+ * Two fortresses fight each other with heroes.
  */
 
 import { Xorshift32 } from '../rng.js';
 import { FP } from '../fixed.js';
-import type { ActiveHero, ActiveTurret, ActiveProjectile, FortressClass } from '../types.js';
+import type { ActiveHero, ActiveProjectile, FortressClass } from '../types.js';
 import { getHeroById, calculateHeroStats } from '../data/heroes.js';
-import { getTurretById, calculateTurretStats } from '../data/turrets.js';
-import { TURRET_SLOTS } from '../data/turrets.js';
 import { shouldCrit } from '../modifiers.js';
 import {
   integratePosition,
@@ -32,7 +30,6 @@ import {
 } from './arena-state.js';
 import {
   selectHeroTarget,
-  selectTurretTarget,
   selectFortressTarget,
   getHeroMovementDirection,
   type ArenaTarget,
@@ -160,9 +157,6 @@ export class ArenaSimulation {
     // Update heroes
     this.updateHeroes(side, ownSide);
 
-    // Update turrets
-    this.updateTurrets(side, ownSide);
-
     // Update fortress attack
     this.updateFortressAttack(side, ownSide);
   }
@@ -228,15 +222,11 @@ export class ArenaSimulation {
 
     hero.lastAttackTick = this.state.tick;
 
-    // Calculate damage
-    const isCrit = shouldCrit(
-      ownSide.modifiers.critChance,
-      ownSide.modifiers.luckMultiplier,
-      this.rng.nextFloat()
-    );
-    const baseDamage = Math.floor(stats.damage * ownSide.modifiers.damageMultiplier);
+    // Calculate damage (additive bonus system)
+    const isCrit = shouldCrit(ownSide.modifiers.critChance, this.rng.nextFloat());
+    const baseDamage = Math.floor(stats.damage * (1 + ownSide.modifiers.damageBonus));
     const damage = isCrit
-      ? Math.floor(baseDamage * ownSide.modifiers.critDamage)
+      ? Math.floor(baseDamage * (1 + ownSide.modifiers.critDamageBonus))
       : baseDamage;
 
     // Apply damage
@@ -249,80 +239,6 @@ export class ArenaSimulation {
       if (targetHero && targetHero.currentHp > 0) {
         this.damageHero(targetHero, damage, side, ownSide, enemySide);
       }
-    }
-  }
-
-  // ============================================================================
-  // TURRET UPDATES
-  // ============================================================================
-
-  private updateTurrets(side: 'left' | 'right', ownSide: ArenaSide): void {
-    for (const turret of ownSide.turrets) {
-      if (turret.currentHp <= 0) continue;
-
-      // Get turret position
-      const slot = TURRET_SLOTS.find(s => s.id === turret.slotIndex);
-      if (!slot) continue;
-
-      const turretX = FP.add(ownSide.fortress.x, FP.fromFloat(side === 'left' ? slot.offsetX : -slot.offsetX));
-      const turretY = FP.fromFloat(7 + slot.offsetY);
-
-      // Get target
-      const target = selectTurretTarget(turret, turretX, turretY, side, this.state);
-
-      if (target.type !== 'none') {
-        this.turretAttack(turret, turretX, turretY, target, side, ownSide);
-      }
-    }
-  }
-
-  private turretAttack(
-    turret: ActiveTurret,
-    turretX: number,
-    turretY: number,
-    target: ArenaTarget,
-    side: 'left' | 'right',
-    ownSide: ArenaSide
-  ): void {
-    const def = getTurretById(turret.definitionId);
-    if (!def) return;
-
-    const stats = calculateTurretStats(def, turret.currentClass, turret.tier);
-    // stats values are in fixed-point, convert for calculations
-    const attackSpeed = FP.toFloat(stats.attackSpeed);
-    const attackInterval = Math.floor(30 / attackSpeed);
-
-    if (this.state.tick - turret.lastAttackTick < attackInterval) return;
-
-    turret.lastAttackTick = this.state.tick;
-
-    // Calculate damage (stats.damage is fixed-point)
-    const isCrit = shouldCrit(
-      ownSide.modifiers.critChance,
-      ownSide.modifiers.luckMultiplier,
-      this.rng.nextFloat()
-    );
-    const statsDamage = FP.toFloat(stats.damage);
-    const baseDamage = Math.floor(statsDamage * ownSide.modifiers.damageMultiplier);
-    const damage = isCrit
-      ? Math.floor(baseDamage * ownSide.modifiers.critDamage)
-      : baseDamage;
-
-    // Create projectile (target.type is guaranteed to be 'hero' or 'fortress' here)
-    if (target.type === 'hero' || target.type === 'fortress') {
-      this.createProjectile(
-        turretX,
-        turretY,
-        target.x,
-        target.y,
-        damage,
-        'turret',
-        turret.currentClass,
-        side,
-        ownSide,
-        target.type,
-        target.targetIndex
-      );
     }
   }
 
@@ -343,15 +259,11 @@ export class ArenaSimulation {
 
     fortress.lastAttackTick = this.state.tick;
 
-    // Calculate damage
-    const isCrit = shouldCrit(
-      ownSide.modifiers.critChance,
-      ownSide.modifiers.luckMultiplier,
-      this.rng.nextFloat()
-    );
-    const baseDamage = Math.floor(fortress.damage * ownSide.modifiers.damageMultiplier);
+    // Calculate damage (additive bonus system)
+    const isCrit = shouldCrit(ownSide.modifiers.critChance, this.rng.nextFloat());
+    const baseDamage = Math.floor(fortress.damage * (1 + ownSide.modifiers.damageBonus));
     const damage = isCrit
-      ? Math.floor(baseDamage * ownSide.modifiers.critDamage)
+      ? Math.floor(baseDamage * (1 + ownSide.modifiers.critDamageBonus))
       : baseDamage;
 
     // Create projectile

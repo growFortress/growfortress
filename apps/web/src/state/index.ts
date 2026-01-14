@@ -5,13 +5,19 @@ export {
   currentWave,
   baseLevel,
   baseXp,
+  baseTotalXp,
   baseXpToNextLevel,
   displayName,
+  playerDescription,
+  descriptionUpdating,
+  userRole,
+  isAdmin,
   xpProgress,
   getXpProgressWithSegment,
   onboardingCompleted,
   defaultLoadout,
   showOnboardingModal,
+  resetProfileState,
   type DefaultLoadout,
 } from './profile.signals.js';
 
@@ -70,6 +76,7 @@ export {
   queueUnlockNotifications,
   dismissUnlockNotification,
   clearUnlockNotifications,
+  resetUIState,
   type ToastData,
   type SyncStatus,
   type ErrorToastData,
@@ -94,6 +101,7 @@ export {
   resetFortressSelection,
   initializeHubFromLoadout,
   updateProfileFromServer,
+  resetAllState,
 } from './actions.js';
 
 // Fortress signals (class, heroes, turrets, synergies)
@@ -106,6 +114,10 @@ export {
   selectedHeroId,
   heroPanelVisible,
   maxHeroSlots,
+  purchasedHeroSlots,
+  purchasedTurretSlots,
+  nextHeroSlotInfo,
+  nextTurretSlotInfo,
   DEFAULT_TURRET_SLOTS,
   turretSlots,
   activeTurrets,
@@ -121,6 +133,9 @@ export {
   hubHeroes,
   hubTurrets,
   hubInitialized,
+  // Optimized computed signals for panels
+  heroPanelData,
+  turretPanelData,
   type SynergyBonus,
   type UpgradeTarget,
 } from './fortress.signals.js';
@@ -138,6 +153,7 @@ export {
   hasMaterials,
   showMaterialsModal,
   hideMaterialsModal,
+  resetMaterialsState,
   type MaterialDrop,
   type MaterialInfo,
 } from './materials.signals.js';
@@ -170,6 +186,7 @@ export {
   getArtifactForHero,
   hasArtifact,
   getItemAmount,
+  resetArtifactsState,
 } from './artifacts.signals.js';
 
 // Idle rewards signals
@@ -186,14 +203,12 @@ export {
   showIdleRewardsModal,
   hideIdleRewardsModal,
   formatIdleTime,
+  resetIdleState,
 } from './idle.signals.js';
 
 // Power signals
 export {
   powerState,
-  activeUpgradeCategory,
-  selectedEntityId,
-  showPowerUpgradeModal,
   totalPowerDisplay,
   isPowerLoaded,
   setPowerSummary,
@@ -204,14 +219,12 @@ export {
   updateHeroStatLevel,
   updateTurretStatLevel,
   updateItemTier,
-  openPowerUpgradeModal,
-  closePowerUpgradeModal,
   getFortressStatLevel,
   getHeroStatLevel,
   getTurretStatLevel,
   getItemTierLevel,
+  resetPowerState,
   type PowerState,
-  type UpgradeCategory,
 } from './power.signals.js';
 
 // Boss Rush signals
@@ -362,5 +375,362 @@ export {
   type PvpBattleData,
 } from './pvp.signals.js';
 
+// Guild signals
+export {
+  // Panel state
+  showGuildPanel,
+  guildPanelTab,
+  showGuildSearch,
+  showGuildCreate,
+  // Player guild data
+  playerGuild,
+  playerMembership,
+  guildBonuses,
+  guildLevelInfo,
+  isInGuild,
+  isGuildLeader,
+  isGuildOfficer,
+  // Members
+  guildMembers,
+  guildLeader,
+  guildOfficers,
+  memberCount,
+  // Treasury
+  guildTreasury,
+  treasuryLogs,
+  canWithdraw,
+  nextWithdrawAt,
+  // Battles
+  guildBattles,
+  battleHistory,
+  attacksCount,
+  defensesCount,
+  // Invitations
+  receivedInvitations,
+  hasNewInvitations,
+  invitationCount,
+  // Search
+  guildSearchQuery,
+  guildSearchResults,
+  guildSearchTotal,
+  // Leaderboard
+  guildLeaderboard,
+  myGuildRank,
+  // Loading states
+  guildLoading,
+  treasuryLoading,
+  battlesLoading,
+  invitationsLoading,
+  searchLoading,
+  leaderboardLoading as guildLeaderboardLoading,
+  // Error states
+  guildError,
+  treasuryError,
+  battlesError,
+  // Actions
+  openGuildPanel,
+  closeGuildPanel,
+  openGuildSearch,
+  closeGuildSearch,
+  openGuildCreate,
+  closeGuildCreate,
+  resetGuildState,
+  setGuildData,
+  setTreasuryData,
+} from './guild.signals.js';
+
+// Settings signals
+export {
+  audioSettings,
+  graphicsSettings,
+  gameSettings,
+  updateAudioSettings,
+  updateGraphicsSettings,
+  updateGameSettings,
+  type AudioSettings,
+  type GraphicsSettings,
+  type GameSettings,
+} from './settings.signals.js';
+
+// Messages signals
+export {
+  // Modal state
+  showMessagesModal,
+  messagesActiveTab,
+  // Thread list state
+  threads,
+  threadsLoading,
+  threadsTotal,
+  // Selected thread state
+  selectedThreadId,
+  selectedThread,
+  selectedThreadLoading,
+  // Compose modal state
+  showComposeModal,
+  composeLoading,
+  // Reply state
+  replyLoading,
+  // Unread counts
+  unreadCounts,
+  messagesError,
+  // Computed
+  hasUnreadMessages,
+  currentTabUnreadCount,
+  // Actions
+  openMessagesModal,
+  closeMessagesModal,
+  setMessagesTab,
+  loadThreads,
+  loadMoreThreads,
+  selectThread,
+  sendNewMessage,
+  sendReply,
+  removeThread,
+  refreshUnreadCounts,
+  openComposeModal,
+  closeComposeModal,
+  // WebSocket
+  initMessagesWebSocket,
+  cleanupMessagesWebSocket,
+  resetMessagesState,
+} from './messages.signals.js';
+
+// Leaderboard Modal signals (player rankings)
+export {
+  // Modal state
+  showLeaderboardModal,
+  activeMainTab,
+  activeSubTab,
+  selectedWeek,
+  // Leaderboard data (renamed to avoid conflict with ui.signals)
+  leaderboardEntries as playerLeaderboardEntries,
+  leaderboardTotal,
+  leaderboardOffset,
+  leaderboardLimit,
+  leaderboardLoading as playerLeaderboardLoading,
+  leaderboardError as playerLeaderboardError,
+  timeUntilReset,
+  availableWeeks,
+  currentWeekKey,
+  // User ranks
+  userRanks,
+  userRanksLoading,
+  getUserRankForCategory,
+  playerPrimaryRank,
+  // Rewards
+  availableRewards,
+  rewardsLoading,
+  hasUnclaimedRewards,
+  unclaimedRewardsCount,
+  // Exclusive items
+  exclusiveItems,
+  getExclusiveItemById,
+  // Computed
+  hasNextPage,
+  hasPrevPage,
+  currentPage,
+  totalPages,
+  formattedTimeUntilReset,
+  // Actions
+  openLeaderboardModal,
+  closeLeaderboardModal,
+  setMainTab,
+  setSubTab,
+  nextPage,
+  prevPage,
+  resetPagination,
+  setSelectedWeek,
+  setLeaderboardData,
+  setUserRanks,
+  setAvailableRewards,
+  removeClaimedReward,
+  setAvailableWeeks,
+  setExclusiveItems,
+  type MainTab,
+  type SubTab,
+} from './leaderboard.signals.js';
+
+// Pillar Challenge signals
+export {
+  // Modal visibility
+  pillarChallengeModalVisible,
+  // Session state
+  activeSession,
+  // Attempts tracking
+  dailyAttemptsUsed,
+  dailyAttemptsMax,
+  paidAttemptsUsed,
+  paidAttemptsMax,
+  cooldownEndsAt,
+  // Crystal progress
+  crystalProgress,
+  matrixAssembled,
+  // Unlocked tiers
+  unlockedTiers,
+  // Best scores
+  bestScores,
+  // Last result
+  lastResult,
+  // Loading states
+  isLoading as pillarChallengeLoading,
+  challengeError,
+  // Computed values
+  canStartChallenge,
+  cooldownRemaining,
+  hasFreeAttempts,
+  hasPaidAttempts,
+  totalFragments,
+  completeCrystals,
+  isTierUnlocked,
+  // Actions
+  showPillarChallengeModal,
+  hidePillarChallengeModal,
+  updateCrystalProgress,
+  setActiveSession,
+  updateSessionProgress,
+  setChallengeResult,
+  clearLastResult,
+  unlockTier,
+  updateBestScore,
+  setLoading as setPillarChallengeLoading,
+  setError as setPillarChallengeError,
+  resetDailyAttempts,
+  initializePillarChallengeState,
+  // Types
+  type PillarChallengeSession,
+  type PillarChallengeResult,
+  type PillarChallengeState,
+} from './pillar-challenge.signals.js';
+
+// Mastery signals
+export {
+  // State
+  masteryState,
+  masteryModalVisible,
+  selectedMasteryClass,
+  hoveredMasteryNode,
+  // Computed
+  availableMasteryPoints,
+  totalMasteryPointsEarned,
+  currentClassProgress,
+  currentTreeDefinition,
+  isNodeUnlocked,
+  totalPointsSpent,
+  // Actions
+  openMasteryModal,
+  closeMasteryModal,
+  selectMasteryClass,
+  setMasteryLoading,
+  setMasteryError,
+  updateMasteryProgress,
+  updateMasteryTrees,
+  updateMasterySummaries,
+  resetMasteryState,
+  // Types
+  type MasteryState,
+} from './mastery.signals.js';
+
+// Daily Quests signals
+export {
+  // State
+  dailyQuestsState,
+  dailyQuestsLoading,
+  dailyQuestsError,
+  dailyQuestsPanelVisible,
+  claimingQuest,
+  claimingAll,
+  // Computed
+  unclaimedCompletedCount,
+  unclaimedDustTotal,
+  hasUnclaimedRewards as hasUnclaimedQuestRewards,
+  totalPotentialDust,
+  overallProgress,
+  timeUntilReset as questsTimeUntilReset,
+  // Actions
+  fetchDailyQuests,
+  claimQuestReward,
+  claimAllQuestRewards,
+  showDailyQuestsPanel,
+  hideDailyQuestsPanel,
+  getQuestDefinition,
+  resetDailyQuestsState,
+  // Types
+  type DailyQuestsState,
+} from './dailyQuests.signals.js';
+
+// Hub Preview signals
+export {
+  hubPreviewData,
+  hubPreviewLoading,
+  hubPreviewError,
+  hubPreviewModalOpen,
+  hubPreviewUserId,
+  isHubPreviewVisible,
+  isHubPreviewReady,
+  openHubPreview,
+  closeHubPreview,
+} from './hubPreview.signals.js';
+
+// Guild Preview signals
+export {
+  guildPreviewData,
+  guildPreviewLoading,
+  guildPreviewError,
+  guildPreviewModalOpen,
+  guildPreviewGuildId,
+  isGuildPreviewVisible,
+  isGuildPreviewReady,
+  openGuildPreview,
+  closeGuildPreview,
+} from './guildPreview.signals.js';
+
+// Shop signals
+export {
+  // State
+  shopData,
+  activeBoosters,
+  purchaseHistory,
+  isLoadingShop,
+  isProcessingPurchase,
+  shopModalVisible,
+  selectedCategory,
+  checkoutSessionId,
+  checkoutStatus,
+  shopError,
+  // Computed
+  currentCategoryProducts,
+  starterPackAvailable,
+  hasActiveXpBoost,
+  hasActiveGoldBoost,
+  // Functions
+  hasFirstPurchaseBonus,
+  getActiveBooster,
+  // Actions
+  loadShop,
+  loadActiveBoosters,
+  loadPurchaseHistory,
+  startCheckout,
+  handleCheckoutReturn,
+  buyWithDust,
+  showShopModal,
+  hideShopModal,
+  selectCategory,
+  resetCheckoutStatus,
+  updateBoosterTimers,
+  resetShopState,
+} from './shop.signals.js';
+
+// Legal signals
+export {
+  legalModalVisible,
+  activeLegalTab,
+  openLegalModal,
+  closeLegalModal,
+  setLegalTab,
+  resetLegalState,
+  type LegalTab,
+} from './legal.signals.js';
+
 // Re-export types
 export type { LeaderboardEntry, GameEndState } from './ui.signals.js';
+export type { HubPreviewResponse, GuildPreviewResponse } from '@arcade/protocol';

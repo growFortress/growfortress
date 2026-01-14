@@ -515,7 +515,7 @@ describe('Pillar-Specific Enemies', () => {
       expect(types).toContain('ninja');
     });
 
-    it('enemies should have Marvel-inspired descriptions', () => {
+    it('enemies should have thematic descriptions', () => {
       const ninja = streets.enemies.find(e => e.type === 'ninja');
       expect(ninja?.name).toBe('Ninja Hand');
       expect(ninja?.description.toLowerCase()).toContain('zwinny');
@@ -780,36 +780,36 @@ describe('Bosses Configuration', () => {
 
 describe('Natural Heroes System', () => {
   describe('getNaturalHeroesForPillar', () => {
-    it('Streets pillar has shield_captain', () => {
+    it('Streets pillar has vanguard', () => {
       const heroes = getNaturalHeroesForPillar('streets');
-      expect(heroes).toContain('shield_captain');
+      expect(heroes).toContain('vanguard');
     });
 
-    it('Science pillar has iron_sentinel', () => {
+    it('Science pillar has forge', () => {
       const heroes = getNaturalHeroesForPillar('science');
-      expect(heroes).toContain('iron_sentinel');
+      expect(heroes).toContain('forge');
     });
 
-    it('Mutants pillar has jade_titan and scarlet_mage', () => {
+    it('Mutants pillar has titan and rift', () => {
       const heroes = getNaturalHeroesForPillar('mutants');
-      expect(heroes).toContain('jade_titan');
-      expect(heroes).toContain('scarlet_mage');
+      expect(heroes).toContain('titan');
+      expect(heroes).toContain('rift');
     });
 
-    it('Cosmos pillar has thunderlord', () => {
+    it('Cosmos pillar has storm', () => {
       const heroes = getNaturalHeroesForPillar('cosmos');
-      expect(heroes).toContain('thunderlord');
+      expect(heroes).toContain('storm');
     });
 
-    it('Magic pillar has scarlet_mage', () => {
+    it('Magic pillar has rift', () => {
       const heroes = getNaturalHeroesForPillar('magic');
-      expect(heroes).toContain('scarlet_mage');
+      expect(heroes).toContain('rift');
     });
 
-    it('Gods pillar has thunderlord and frost_archer', () => {
+    it('Gods pillar has storm and frost', () => {
       const heroes = getNaturalHeroesForPillar('gods');
-      expect(heroes).toContain('thunderlord');
-      expect(heroes).toContain('frost_archer');
+      expect(heroes).toContain('storm');
+      expect(heroes).toContain('frost');
     });
 
     it('returns empty array for invalid pillar', () => {
@@ -818,22 +818,22 @@ describe('Natural Heroes System', () => {
   });
 
   describe('isHeroNaturalForPillar', () => {
-    it('shield_captain is natural for Streets', () => {
-      expect(isHeroNaturalForPillar('streets', 'shield_captain')).toBe(true);
+    it('vanguard is natural for Streets', () => {
+      expect(isHeroNaturalForPillar('streets', 'vanguard')).toBe(true);
     });
 
-    it('shield_captain is NOT natural for Gods', () => {
-      expect(isHeroNaturalForPillar('gods', 'shield_captain')).toBe(false);
+    it('vanguard is NOT natural for Gods', () => {
+      expect(isHeroNaturalForPillar('gods', 'vanguard')).toBe(false);
     });
 
-    it('thunderlord is natural for multiple pillars (Cosmos, Gods)', () => {
-      expect(isHeroNaturalForPillar('cosmos', 'thunderlord')).toBe(true);
-      expect(isHeroNaturalForPillar('gods', 'thunderlord')).toBe(true);
+    it('storm is natural for multiple pillars (Cosmos, Gods)', () => {
+      expect(isHeroNaturalForPillar('cosmos', 'storm')).toBe(true);
+      expect(isHeroNaturalForPillar('gods', 'storm')).toBe(true);
     });
 
-    it('scarlet_mage is natural for Mutants and Magic', () => {
-      expect(isHeroNaturalForPillar('mutants', 'scarlet_mage')).toBe(true);
-      expect(isHeroNaturalForPillar('magic', 'scarlet_mage')).toBe(true);
+    it('rift is natural for Mutants and Magic', () => {
+      expect(isHeroNaturalForPillar('mutants', 'rift')).toBe(true);
+      expect(isHeroNaturalForPillar('magic', 'rift')).toBe(true);
     });
   });
 
@@ -997,12 +997,12 @@ describe('Rewards System', () => {
       }
     });
 
-    it('Streets gives 100 dust on first completion', () => {
-      expect(getPillarById('streets')?.rewards.firstCompletion.dust).toBe(100);
+    it('Streets gives 50 dust on first completion', () => {
+      expect(getPillarById('streets')?.rewards.firstCompletion.dust).toBe(50);
     });
 
-    it('Gods gives 750 dust on first completion', () => {
-      expect(getPillarById('gods')?.rewards.firstCompletion.dust).toBe(750);
+    it('Gods gives 375 dust on first completion', () => {
+      expect(getPillarById('gods')?.rewards.firstCompletion.dust).toBe(375);
     });
   });
 
@@ -1137,7 +1137,7 @@ describe('Consistency Checks', () => {
     }
   });
 
-  it('all bosses have Marvel inspiration', () => {
+  it('all bosses have lore inspiration', () => {
     for (const pillar of PILLAR_DEFINITIONS) {
       for (const boss of pillar.bosses) {
         expect(boss.inspiration).toBeDefined();

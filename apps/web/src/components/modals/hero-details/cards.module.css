@@ -92,25 +92,46 @@
   opacity: 0.6;
 }
 
-/* Skill card */
+/* Skill card - Enhanced with glassmorphism */
 .skillCard {
-  padding: 12px;
-  background: var(--color-bg);
-  border-radius: var(--radius-sm);
-  border: var(--border-neutral);
-  border-left: var(--border-width) solid var(--skill-color);
-  transition: var(--transition-interactive-normal);
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--skill-color);
+  transition: all 0.3s var(--ease-spring);
   position: relative;
   overflow: hidden;
-  margin-bottom: 8px;
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 0;
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+}
+
+/* Hover glow effect */
+.skillCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 0% 50%,
+    color-mix(in srgb, var(--skill-color) 15%, transparent) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.skillCard:hover::before {
+  opacity: 1;
 }
 
 .skillCard:hover {
-  transform: scale(var(--hover-scale));
+  transform: translateX(6px) scale(1.02);
   border-color: var(--skill-color);
-  box-shadow: var(--shadow-md), 0 0 16px var(--skill-color);
-  box-shadow: var(--shadow-md), 0 0 16px color-mix(in srgb, var(--skill-color) 40%, transparent);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 20px color-mix(in srgb, var(--skill-color) 30%, transparent);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .skillCard.passive {
@@ -427,6 +448,11 @@
 
 .costItem.cantAfford {
   color: var(--color-accent);
+}
+
+.upgradeButtons {
+  display: flex;
+  gap: 8px;
 }
 
 .maxTierReached {

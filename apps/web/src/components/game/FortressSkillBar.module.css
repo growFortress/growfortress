@@ -102,6 +102,13 @@
 }
 
 /* Compact mode */
+.compact {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
 .compact .skillSlot {
   min-width: 24px;
   height: 24px;
@@ -114,14 +121,6 @@
 
 .compact .cooldownText {
   font-size: 7px;
-}
-
-.compact .classIcon {
-  font-size: 11px;
-}
-
-.compact .title {
-  font-size: 9px;
 }
 
 /* Ready pulse animation */

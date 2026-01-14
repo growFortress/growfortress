@@ -23,20 +23,18 @@ export const HERO_UNLOCK_COSTS: Record<HeroRarity, { gold: number; dust: number 
 export const TURRET_UNLOCK_COST = { gold: 3000, dust: 500 } as const;
 
 /**
- * Free starter heroes (automatically available)
+ * Free starter heroes (automatically available at level 1)
  */
 export const FREE_STARTER_HEROES = [
-  'thunderlord',
-  'shield_captain',
-  'scarlet_mage',
+  'vanguard',
+  'storm',
 ] as const;
 
 /**
- * Free starter turrets (automatically available)
+ * Free starter turrets (automatically available at level 1)
  */
 export const FREE_STARTER_TURRETS = [
-  'arrow',
-  'frost',
+  'railgun',
 ] as const;
 
 /**

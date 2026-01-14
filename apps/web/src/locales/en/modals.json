@@ -1,0 +1,97 @@
+{
+  "settings": {
+    "title": "Settings",
+    "ariaLabel": "Settings Menu",
+    "tabs": {
+      "audio": "Audio",
+      "graphics": "Graphics",
+      "account": "Account",
+      "admin": "Admin"
+    },
+    "audio": {
+      "muteAll": "Mute All",
+      "masterVolume": "Master Volume",
+      "musicVolume": "Music Volume",
+      "sfxVolume": "SFX Volume"
+    },
+    "graphics": {
+      "particlesQuality": "Particles Quality",
+      "resolutionScale": "Resolution Scale",
+      "damageNumbers": "Damage Numbers",
+      "qualityLow": "Low",
+      "qualityMedium": "Medium",
+      "qualityHigh": "High"
+    },
+    "account": {
+      "language": "Language",
+      "logout": "Log Out"
+    },
+    "admin": {
+      "broadcast": "System Broadcast",
+      "moderation": "Moderation Panel"
+    },
+    "legal": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "cookies": "Cookies"
+    }
+  },
+  "confirm": {
+    "defaultConfirm": "Confirm",
+    "defaultCancel": "Cancel"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome, Defender!",
+      "subtitle": "Your fortress needs protection from incoming enemy hordes.",
+      "buildDefense": "Build defense",
+      "recruitHeroes": "Recruit heroes",
+      "collectRewards": "Collect rewards"
+    },
+    "starterKit": {
+      "title": "Your Starter Kit",
+      "subtitle": "You get a starter kit to help in your first battles.",
+      "class": "Class",
+      "hero": "Hero",
+      "turret": "Turret",
+      "hint": "Unlock more classes, heroes, and turrets as you progress!",
+      "className": "Natural Fortress",
+      "classDesc": "Balanced defense and regeneration",
+      "heroName": "Unit-0 \"Vanguard\"",
+      "heroDesc": "Durable unit with protective shield",
+      "turretName": "Railgun Tower",
+      "turretDesc": "Fast and precise electromagnetic shots"
+    },
+    "ready": {
+      "title": "Ready to Fight!",
+      "subtitle": "Your fortress is ready. Time to repel enemy attacks!",
+      "tipBomb": "Click <strong>BOMB</strong> to use special ability",
+      "tipAuto": "Your hero and turrets attack automatically",
+      "tipRelic": "After each wave, choose a relic to strengthen your defense"
+    },
+    "preparing": "Preparing...",
+    "startAdventure": "Start Adventure!",
+    "error": "An error occurred. Try again.",
+    "next": "Next →",
+    "back": "← Back"
+  },
+  "classSelection": {
+    "title": "Choose Fortress Class",
+    "subtitle": "Choose an elemental class for your fortress. This determines your skills and bonuses.",
+    "lockedAt": "Unlock at level {{level}}"
+  },
+  "heroRecruitment": {
+    "title": "Hero Recruitment",
+    "recruit": "Recruit",
+    "recruiting": "Recruiting...",
+    "unlock": "Unlock",
+    "levelRequired": "Level {{level}}",
+    "errors": {
+      "failed": "Failed to recruit hero",
+      "connection": "Connection to server failed"
+    }
+  },
+  "choice": {
+    "title": "Choose Relic"
+  }
+}

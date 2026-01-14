@@ -139,3 +139,25 @@ export function dismissUnlockNotification(id: string): void {
 export function clearUnlockNotifications(): void {
   unlockNotifications.value = [];
 }
+
+/**
+ * Reset all UI state (on logout)
+ */
+export function resetUIState(): void {
+  toastMessage.value = null;
+  syncStatus.value = 'online';
+  showChoiceModal.value = false;
+  choiceOptions.value = [];
+  showEndScreen.value = false;
+  endScreenWon.value = false;
+  endGameStats.value = null;
+  leaderboardEntries.value = [];
+  leaderboardLoading.value = false;
+  leaderboardError.value = false;
+  showSessionRecoveryModal.value = false;
+  pendingSessionSnapshot.value = null;
+  showEndSessionConfirm.value = false;
+  settingsMenuVisible.value = false;
+  errorToasts.value = [];
+  unlockNotifications.value = [];
+}

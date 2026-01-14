@@ -1,6 +1,7 @@
 import type { JSX } from 'preact';
 import type { TurretType, FortressClass, ActiveTurret } from '@arcade/sim-core';
 import { TURRET_DEFINITIONS, getTurretById, isTurretUnlockedAtLevel, getTurretUnlockLevel } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import {
   turretPlacementModalVisible,
   turretPlacementSlotIndex,
@@ -11,30 +12,32 @@ import {
 import { Modal } from '../shared/Modal.js';
 import styles from './TurretPlacementModal.module.css';
 
-// Turret role descriptions (Polish)
-const ROLE_DESCRIPTIONS: Record<string, string> = {
-  dps: 'Obrażenia',
-  aoe: 'Obrażenia Obszarowe',
-  crowd_control: 'Kontrola Tłumu',
-  support: 'Wsparcie',
-  debuff: 'Debuffer',
+// Turret role description translation keys
+const ROLE_KEYS: Record<string, string> = {
+  dps: 'turretPlacement.roles.dps',
+  aoe: 'turretPlacement.roles.aoe',
+  crowd_control: 'turretPlacement.roles.crowd_control',
+  support: 'turretPlacement.roles.support',
+  debuff: 'turretPlacement.roles.debuff',
 };
 
-// Class colors (simplified: 5 classes)
+// Class colors (7 classes)
 const CLASS_COLORS: Record<FortressClass, string> = {
   natural: '#228b22',
   ice: '#00bfff',
   fire: '#ff4500',
   lightning: '#9932cc',
   tech: '#00f0ff',
+  void: '#4b0082',
+  plasma: '#00ffff',
 };
 
 // Turret icons (simplified: 4 turrets)
 const TURRET_ICONS: Record<TurretType, string> = {
-  arrow: '\u{1F3F9}', // bow and arrow
-  cannon: '\u{1F4A3}', // bomb
-  tesla: '\u26A1', // lightning
-  frost: '\u2744\uFE0F', // snowflake
+  railgun: '\u26A1', // lightning (railgun energy)
+  artillery: '\u{1F4A3}', // bomb
+  arc: '\u{1F537}', // diamond (arc energy)
+  cryo: '\u2744\uFE0F', // snowflake
 };
 
 interface TurretPlacementModalProps {
@@ -42,6 +45,7 @@ interface TurretPlacementModalProps {
 }
 
 export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
+  const { t } = useTranslation('common');
   const slotIndex = turretPlacementSlotIndex.value;
 
   const handleSelect = (turretType: TurretType) => {
@@ -94,15 +98,16 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
       onClick={handleClose}
     >
       <div class={styles.container}>
-        <h2 class={styles.title}>Postaw Wieżyczkę</h2>
+        <h2 class={styles.title}>{t('turretPlacement.title')}</h2>
         <p class={styles.subtitle}>
-          Wybierz typ wieżyczki dla slotu #{slotIndex !== null ? slotIndex : '?'}
+          {t('turretPlacement.subtitle', { slot: slotIndex !== null ? slotIndex + 1 : '?' })}
         </p>
 
         <div class={styles.turretGrid}>
           {TURRET_DEFINITIONS.map((turret) => {
             const icon = TURRET_ICONS[turret.id];
-            const roleDesc = ROLE_DESCRIPTIONS[turret.role] || turret.role;
+            const roleKey = ROLE_KEYS[turret.role];
+            const roleDesc = roleKey ? t(roleKey) : turret.role;
             const baseCost = turret.baseCost.gold;
 
             // Use fortress level-based unlock system
@@ -137,17 +142,17 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
 
                 <div class={styles.statsList}>
                   <span class={styles.stat}>
-                    OBR: {Math.floor(turret.baseStats.damage / 16384)}
+                    {t('turretPlacement.dmg')}: {Math.floor(turret.baseStats.damage / 16384)}
                   </span>
                   <span class={styles.stat}>
-                    SA: {(turret.baseStats.attackSpeed / 16384).toFixed(1)}/s
+                    {t('turretPlacement.as')}: {(turret.baseStats.attackSpeed / 16384).toFixed(1)}/s
                   </span>
                 </div>
 
                 {isLocked ? (
                   <div class={styles.lockedLabel}>
                     <span class={styles.lockIcon}>🔒</span>
-                    Poziom {requiredLevel}
+                    {t('turretPlacement.level', { level: requiredLevel })}
                   </div>
                 ) : (
                   <>
@@ -155,9 +160,9 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
                       <span class={styles.goldIcon}>&#x1F4B0;</span>
                       {baseCost}
                     </div>
-                    {isUsed && <div class={styles.usedLabel}>W użyciu</div>}
+                    {isUsed && <div class={styles.usedLabel}>{t('turretPlacement.inUse')}</div>}
                     {!isUsed && !canAfford && (
-                      <div class={styles.insufficientLabel}>Brak złota</div>
+                      <div class={styles.insufficientLabel}>{t('turretPlacement.noGold')}</div>
                     )}
                   </>
                 )}
@@ -173,7 +178,7 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
             turretPlacementSlotIndex.value = null;
           }}
         >
-          Anuluj
+          {t('turretPlacement.cancel')}
         </button>
       </div>
     </Modal>

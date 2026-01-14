@@ -9,12 +9,21 @@ import { ErrorToast } from './toasts/ErrorToast.js';
 import { UnlockNotificationQueue } from './game/UnlockNotification.js';
 import { OnboardingModal } from './modals/OnboardingModal.js';
 import { SessionRecoveryModal } from './modals/SessionRecoveryModal.js';
-import { PowerUpgradeModal } from './modals/PowerUpgradeModal.js';
 import { RewardsModal } from './modals/RewardsModal.js';
 import { SettingsMenu } from './modals/SettingsMenu.js';
 import { PvpPanel, PvpBattleResult, PvpReplayViewer } from './pvp/index.js';
+import { GuildPanel, GuildCreateModal, GuildSearchModal } from './guild/index.js';
+import { MessagesModal } from './messages/MessagesModal.js';
+import { LeaderboardModal } from './modals/LeaderboardModal.js';
+import { HubPreviewModal } from './modals/HubPreviewModal.js';
+import { GuildPreviewModal } from './modals/GuildPreviewModal.js';
+import { DailyQuestsModal } from './modals/DailyQuestsModal.js';
+import { ShopModal } from './modals/ShopModal.js';
+import { LegalModal } from './modals/LegalModal.js';
+import { AdminBroadcastPanel, AdminModerationPanel } from './admin/index.js';
 import { ErrorBoundary } from './shared/ErrorBoundary.js';
 import { LoadingScreen } from './shared/LoadingScreen.js';
+import { ScreenReaderAnnouncer } from './shared/ScreenReaderAnnouncer.js';
 import { syncManager } from '../storage/sync.js';
 import { getActiveSession, clearActiveSession, type ActiveSessionSnapshot } from '../storage/idb.js';
 import { login, register, getProfile, getLeaderboard, getPowerSummary, refreshTokensApi } from '../api/client.js';
@@ -33,6 +42,10 @@ import {
   checkIdleRewards,
   unlockNotifications,
   dismissUnlockNotification,
+  initMessagesWebSocket,
+  cleanupMessagesWebSocket,
+  refreshUnreadCounts,
+  fetchDailyQuests,
 } from '../state/index.js';
 import {
   isAuthenticated as checkAuth,
@@ -53,6 +66,17 @@ const queryClient = new QueryClient({
   },
 });
 
+// Loading stages for the app initialization
+type LoadingStage =
+  | 'checking_session'    // Sprawdzanie lokalnej sesji
+  | 'verifying_tokens'    // Weryfikacja/odświeżanie tokenów
+  | 'loading_profile'     // Ładowanie profilu gracza
+  | 'initializing'        // Inicjalizacja systemu gry
+  | 'ready';              // Gotowe
+
+// Single consistent loading message - no stage changes for seamless UX
+const LOADING_MESSAGE = 'Ładowanie...';
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -62,7 +86,7 @@ export function App() {
 }
 
 function AppContent() {
-  const [appReady, setAppReady] = useState(false);
+  const [loadingStage, setLoadingStage] = useState<LoadingStage>('checking_session');
   const [savedSession, setSavedSession] = useState<ActiveSessionSnapshot | null>(null);
 
   // Core Authentication State
@@ -93,6 +117,9 @@ function AppContent() {
   // Sync Profile to Signals
   useEffect(() => {
     if (profile) {
+      // Przejdź do etapu inicjalizacji
+      setLoadingStage('initializing');
+
       updateFromProfile(profile);
       setDisplayName(profile.displayName);
       isAuthSignal.value = true;
@@ -102,7 +129,12 @@ function AppContent() {
       } else {
         initializeHubFromLoadout();
       }
+
+      // Po krótkiej chwili na inicjalizację - gotowe
+      const timer = setTimeout(() => setLoadingStage('ready'), 150);
+      return () => clearTimeout(timer);
     }
+    return undefined;
   }, [profile]);
 
   // Sync Leaderboard to Signals
@@ -118,6 +150,20 @@ function AppContent() {
       setPowerSummary(powerData);
     }
   }, [powerData]);
+
+  // Initialize WebSocket for real-time messaging when authenticated
+  useEffect(() => {
+    if (internalAuth && profile) {
+      initMessagesWebSocket();
+      refreshUnreadCounts();
+    }
+
+    return () => {
+      if (internalAuth && profile) {
+        cleanupMessagesWebSocket();
+      }
+    };
+  }, [internalAuth, profile]);
 
   // Check for session recovery when auth is confirmed
   useEffect(() => {
@@ -165,22 +211,32 @@ function AppContent() {
         if (!checkAuth()) {
           const refreshToken = getRefreshToken();
           if (refreshToken) {
+            // Mamy refresh token - weryfikujemy
+            setLoadingStage('verifying_tokens');
             const refreshed = await refreshTokensApi(refreshToken);
             if (refreshed) {
               setInternalAuth(true);
+              setLoadingStage('loading_profile');
+            } else {
+              // Nie udało się odświeżyć - pokaż auth screen
+              setLoadingStage('ready');
             }
           } else {
+            // Brak tokenów - pokaż auth screen
             await clearActiveSession();
             setSavedSession(null);
             pendingSessionSnapshot.value = null;
+            setLoadingStage('ready');
           }
+        } else {
+          // Mamy ważne tokeny - ładujemy profil
+          setLoadingStage('loading_profile');
         }
       } catch {
         clearTokens();
         isAuthSignal.value = false;
         setInternalAuth(false);
-      } finally {
-        setAppReady(true);
+        setLoadingStage('ready');
       }
     };
     init();
@@ -193,6 +249,7 @@ function AppContent() {
     try {
       await login({ username, password });
       setInternalAuth(true);
+      setLoadingStage('loading_profile');
     } catch (error) {
       if (error instanceof Error && 'status' in error) {
         const status = (error as { status: number }).status;
@@ -218,6 +275,7 @@ function AppContent() {
     try {
       await register({ username, password });
       setInternalAuth(true);
+      setLoadingStage('loading_profile');
     } catch (error) {
       if (error instanceof Error && 'status' in error && (error as { status: number }).status === 409) {
         authError.value = 'Ta nazwa jest już zajęta';
@@ -244,6 +302,9 @@ function AppContent() {
 
       // Check for idle rewards after profile loads
       checkIdleRewards();
+
+      // Fetch daily quests status
+      fetchDailyQuests();
     } catch {
       // Silently fail
     }
@@ -265,9 +326,15 @@ function AppContent() {
     pendingSessionSnapshot.value = null;
   };
 
-  // Don't render until we've checked auth
-  if (!appReady) {
-    return <LoadingScreen message="Connecting to server..." />;
+  // Pokaż ekran ładowania podczas inicjalizacji
+  if (loadingStage !== 'ready') {
+    // Pokaż AuthScreen gdy nie ma uwierzytelnienia i zakończyliśmy sprawdzanie
+    if (loadingStage !== 'checking_session' && !internalAuth) {
+      return <AuthScreen onLogin={handleLogin} onRegister={handleRegister} />;
+    }
+
+    // Jeden spójny ekran ładowania - identyczny jak HTML loader
+    return <LoadingScreen message={LOADING_MESSAGE} />;
   }
 
   if (!isAuthSignal.value) {
@@ -276,25 +343,58 @@ function AppContent() {
 
   return (
     <ErrorBoundary>
+      {/* Screen reader announcer for live updates */}
+      <ScreenReaderAnnouncer />
+
+      {/* Skip links for keyboard navigation */}
+      <a
+        href="#main-content"
+        class="skip-link"
+        style={{
+          position: 'absolute',
+          top: '-40px',
+          left: 0,
+          background: 'var(--color-primary)',
+          color: 'var(--color-bg)',
+          padding: '8px 16px',
+          zIndex: 9999,
+          textDecoration: 'none',
+          fontWeight: 'bold',
+        }}
+        onFocus={(e) => { (e.target as HTMLElement).style.top = '0'; }}
+        onBlur={(e) => { (e.target as HTMLElement).style.top = '-40px'; }}
+      >
+        Przejdź do głównej zawartości
+      </a>
+
       <div id="app">
         <Header />
-        <GameContainer
-          onLoadProfile={loadProfile}
-          savedSession={savedSession}
-          onSessionResumeFailed={handleSessionAbandon}
-          onSessionResumed={handleSessionResumed}
-        />
-        <Leaderboard />
+        <main id="main-content" role="main" aria-label="Gra Grow Fortress">
+          <GameContainer
+            onLoadProfile={loadProfile}
+            savedSession={savedSession}
+            onSessionResumeFailed={handleSessionAbandon}
+            onSessionResumed={handleSessionResumed}
+          />
+        </main>
+        <aside role="complementary" aria-label="Ranking graczy">
+          <Leaderboard />
+        </aside>
       </div>
-      <SyncStatus />
-      <RewardsToast />
-      <ErrorToast />
-      <UnlockNotificationQueue
-        notifications={unlockNotifications.value}
-        onDismiss={dismissUnlockNotification}
-      />
+
+      {/* Toast notifications */}
+      <div role="region" aria-label="Powiadomienia" aria-live="polite">
+        <SyncStatus />
+        <RewardsToast />
+        <ErrorToast />
+        <UnlockNotificationQueue
+          notifications={unlockNotifications.value}
+          onDismiss={dismissUnlockNotification}
+        />
+      </div>
+
+      {/* Modal dialogs */}
       <OnboardingModal />
-      <PowerUpgradeModal />
       <RewardsModal />
       <SessionRecoveryModal
         onContinue={handleSessionContinue}
@@ -304,6 +404,18 @@ function AppContent() {
       <PvpPanel />
       <PvpBattleResult />
       <PvpReplayViewer />
+      <GuildPanel />
+      <GuildCreateModal onSuccess={() => {}} />
+      <GuildSearchModal onSuccess={() => {}} />
+      <MessagesModal />
+      <LeaderboardModal />
+      <HubPreviewModal />
+      <GuildPreviewModal />
+      <DailyQuestsModal />
+      <ShopModal />
+      <LegalModal />
+      <AdminBroadcastPanel />
+      <AdminModerationPanel />
     </ErrorBoundary>
   );
 }

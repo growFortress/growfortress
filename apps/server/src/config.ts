@@ -5,6 +5,9 @@ const ConfigSchema = z.object({
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
+  // CORS - comma-separated list of allowed origins
+  CORS_ORIGINS: z.string().default('http://localhost:5173'),
+
   // Database
   DATABASE_URL: z.string(),
 
@@ -23,6 +26,12 @@ const ConfigSchema = z.object({
   // Rate Limiting
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
+
+  // Stripe (Payment processing)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_SUCCESS_URL: z.string().url().default('http://localhost:5173/shop?success=true'),
+  STRIPE_CANCEL_URL: z.string().url().default('http://localhost:5173/shop?canceled=true'),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

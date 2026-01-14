@@ -1,16 +1,18 @@
 import type { JSX } from 'preact';
-import type { FortressClass, HeroDefinition, HeroRole } from '@arcade/sim-core';
+import type { FortressClass, HeroDefinition, HeroRole, HeroWeakness } from '@arcade/sim-core';
 import { HeroAvatar } from '../../shared/HeroAvatar.js';
 import styles from './HeroIdentityCard.module.css';
 import cardStyles from './cards.module.css';
 
-// Class colors (simplified: 5 classes)
+// Class colors (7 classes)
 const CLASS_COLORS: Record<FortressClass, string> = {
   natural: '#228b22',
   ice: '#00bfff',
   fire: '#ff4500',
   lightning: '#9932cc',
   tech: '#00f0ff',
+  void: '#4b0082',
+  plasma: '#00ffff',
 };
 
 // Class icons
@@ -20,6 +22,8 @@ const CLASS_ICONS: Record<FortressClass, string> = {
   fire: '🔥',
   lightning: '⚡',
   tech: '🔧',
+  void: '🌀',
+  plasma: '⚛️',
 };
 
 // Tier colors
@@ -35,15 +39,18 @@ const ROLE_LABELS: Record<HeroRole, string> = {
   dps: 'DPS',
   support: 'SUPPORT',
   crowd_control: 'KONTROLA',
+  assassin: 'ZABÓJCA',
 };
 
 interface HeroIdentityCardProps {
   heroDefinition: HeroDefinition;
   currentTier: 1 | 2 | 3;
   level: number;
+  weaknesses?: HeroWeakness[];
+  power?: number;
 }
 
-export function HeroIdentityCard({ heroDefinition, currentTier, level }: HeroIdentityCardProps) {
+export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesses = [], power }: HeroIdentityCardProps) {
   const classColor = CLASS_COLORS[heroDefinition.class];
   const classIcon = CLASS_ICONS[heroDefinition.class];
   const tierColor = TIER_COLORS[currentTier];
@@ -81,29 +88,43 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level }: HeroIde
         {heroDefinition.rarity.toUpperCase()}
       </span>
 
-      {/* Current Tier Display */}
-      <div class={styles.tierDisplay}>
-        <div class={styles.tierLabel}>TIER</div>
-        <div
-          class={styles.tierNumber}
-          style={{
-            color: tierColor.bg,
-            textShadow: `0 0 20px ${tierColor.bg}`
-          }}
-        >
-          {currentTier}
+      {/* Tier & Level Display - Compact */}
+      <div class={styles.tierLevelRow}>
+        <div class={styles.tierCompact}>
+          <span class={styles.tierBadge} style={{ background: tierColor.bg }}>
+            T{currentTier}
+          </span>
+          <span class={styles.tierName}>{tierDef.name}</span>
         </div>
-        <div class={styles.tierName}>{tierDef.name}</div>
-        <div class={styles.tierBadge} style={{ background: tierColor.bg }}>
-          {tierColor.label}
+        <div class={styles.levelCompact}>
+          <span class={styles.levelLabel}>Poz.</span>
+          <span class={styles.levelValue}>{level}</span>
         </div>
       </div>
 
-      {/* Level Display */}
-      <div class={styles.levelDisplay}>
-        <span class={styles.levelLabel}>Poziom</span>
-        <span class={styles.levelValue}>{level}</span>
-      </div>
+      {/* Power Display */}
+      {power !== undefined && (
+        <div class={styles.powerRow}>
+          <span class={styles.powerIcon}>⚡</span>
+          <span class={styles.powerLabel}>POWER</span>
+          <span class={styles.powerValue}>{power.toLocaleString()}</span>
+        </div>
+      )}
+
+      {/* Weaknesses Section */}
+      {weaknesses.length > 0 && (
+        <div class={styles.weaknessSection}>
+          <div class={styles.weaknessHeader}>⚠️ SŁABOŚCI</div>
+          <div class={styles.weaknessList}>
+            {weaknesses.map((weakness) => (
+              <div key={weakness.id} class={styles.weaknessItem}>
+                <span class={styles.weaknessName}>{weakness.name}</span>
+                <span class={styles.weaknessDesc}>{weakness.description}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

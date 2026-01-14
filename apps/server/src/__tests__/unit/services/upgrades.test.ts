@@ -25,6 +25,8 @@ describe('Upgrades Service', () => {
         gold: 100,
         dust: 50,
       });
+      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({ heroTiers: { 'hero-1': 1 } });
+      mockPrisma.powerUpgrades.upsert.mockResolvedValue({});
 
       const result = await upgradeHero('user-123', 'hero-1', 1);
 
@@ -47,6 +49,8 @@ describe('Upgrades Service', () => {
         gold: 0,
         dust: 0,
       });
+      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({ heroTiers: { 'hero-1': 2 } });
+      mockPrisma.powerUpgrades.upsert.mockResolvedValue({});
 
       const result = await upgradeHero('user-123', 'hero-1', 2);
 
@@ -133,6 +137,8 @@ describe('Upgrades Service', () => {
         gold: startGold - cost.gold,
         dust: startDust - cost.dust,
       });
+      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({ heroTiers: { 'hero-1': 1 } });
+      mockPrisma.powerUpgrades.upsert.mockResolvedValue({});
 
       await upgradeHero('user-123', 'hero-1', 1);
 
@@ -160,6 +166,8 @@ describe('Upgrades Service', () => {
         gold: 100,
         dust: 50,
       });
+      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({ turretTiers: { basic: 1 } });
+      mockPrisma.powerUpgrades.upsert.mockResolvedValue({});
 
       const result = await upgradeTurret('user-123', 'basic', 0, 1);
 
@@ -182,6 +190,8 @@ describe('Upgrades Service', () => {
         gold: 0,
         dust: 0,
       });
+      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({ turretTiers: { basic: 2 } });
+      mockPrisma.powerUpgrades.upsert.mockResolvedValue({});
 
       const result = await upgradeTurret('user-123', 'basic', 0, 2);
 
@@ -242,6 +252,8 @@ describe('Upgrades Service', () => {
         gold: startGold - cost.gold,
         dust: startDust - cost.dust,
       });
+      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({ turretTiers: { basic: 1 } });
+      mockPrisma.powerUpgrades.upsert.mockResolvedValue({});
 
       await upgradeTurret('user-123', 'basic', 0, 1);
 

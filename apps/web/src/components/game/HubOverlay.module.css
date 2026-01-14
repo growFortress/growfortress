@@ -61,8 +61,8 @@
 
 /* Hero area */
 .heroArea {
-  width: 70px;
-  height: 70px;
+  width: var(--hub-hero-size);
+  height: var(--hub-hero-size);
   transform: translate(-50%, -50%);
   border-radius: var(--radius-full);
   border: var(--border-primary);
@@ -85,12 +85,12 @@
   text-shadow: var(--text-shadow);
 }
 
-/* Turret area - base styles */
+/* Turret area - base styles (square to match hex slot) */
 .turretArea {
-  width: 80px;
-  height: 60px;
+  width: var(--hub-turret-size);
+  height: var(--hub-turret-size);
   transform: translate(-50%, -50%);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full); /* Round to match hex */
 }
 
 /* Occupied turret slot */
@@ -135,6 +135,28 @@
 
 .addIcon {
   display: none; /* Canvas renders the slot visuals */
+}
+
+/* Locked turret slot */
+.turretArea.locked {
+  border: 2px dashed var(--color-text-30);
+  background: rgba(0, 20, 40, 0.6);
+  box-shadow: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lockIcon {
+  font-size: 1.2rem;
+  filter: grayscale(1);
+}
+
+.unlockLabel {
+  font-size: 0.6rem;
+  color: var(--color-text-40);
+  font-weight: 600;
 }
 
 @keyframes pulseEmpty {

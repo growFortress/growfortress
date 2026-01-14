@@ -7,6 +7,7 @@ import { initializeJobs } from './lib/queue.js';
 import { createLeaderboardWorker } from './jobs/leaderboardSnapshot.js';
 import { createCleanupWorker } from './jobs/cleanupExpiredRuns.js';
 import { createMetricsWorker } from './jobs/metricsJob.js';
+import { createWeeklyPlayerResetWorker } from './jobs/weeklyPlayerReset.js';
 
 async function main() {
   console.log('Starting Arcade TD Server...');
@@ -18,6 +19,7 @@ async function main() {
   const leaderboardWorker = createLeaderboardWorker();
   const cleanupWorker = createCleanupWorker();
   const metricsWorker = createMetricsWorker();
+  const weeklyPlayerResetWorker = createWeeklyPlayerResetWorker();
 
   // Initialize recurring jobs
   await initializeJobs();
@@ -29,6 +31,7 @@ async function main() {
     await leaderboardWorker.close();
     await cleanupWorker.close();
     await metricsWorker.close();
+    await weeklyPlayerResetWorker.close();
     await redis.quit();
     await prisma.$disconnect();
     await app.close();

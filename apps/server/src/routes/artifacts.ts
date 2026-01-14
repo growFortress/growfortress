@@ -1,9 +1,13 @@
 import { FastifyPluginAsync } from 'fastify';
 import {
   CraftArtifactRequestSchema,
+  CraftArtifactResponseSchema,
   EquipArtifactRequestSchema,
+  EquipArtifactResponseSchema,
   UnequipArtifactRequestSchema,
+  UnequipArtifactResponseSchema,
   UseItemRequestSchema,
+  UseItemResponseSchema,
 } from '@arcade/protocol';
 import {
   getPlayerArtifacts,
@@ -54,7 +58,13 @@ const artifactsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ error: result.error });
     }
 
-    return result;
+    // Validate response matches protocol schema
+    const responseValidation = CraftArtifactResponseSchema.safeParse(result);
+    if (!responseValidation.success) {
+      fastify.log.error({ error: responseValidation.error }, 'CraftArtifactResponse validation failed');
+    }
+
+    return reply.send(result);
   });
 
   /**
@@ -74,14 +84,21 @@ const artifactsRoutes: FastifyPluginAsync = async (fastify) => {
     const result = await equipArtifact(
       request.userId,
       validation.data.artifactInstanceId,
-      validation.data.heroId
+      validation.data.heroId,
+      validation.data.slotType
     );
 
     if (!result.success) {
       return reply.status(400).send({ error: result.error });
     }
 
-    return result;
+    // Validate response matches protocol schema
+    const responseValidation = EquipArtifactResponseSchema.safeParse(result);
+    if (!responseValidation.success) {
+      fastify.log.error({ error: responseValidation.error }, 'EquipArtifactResponse validation failed');
+    }
+
+    return reply.send(result);
   });
 
   /**
@@ -104,7 +121,13 @@ const artifactsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ error: result.error });
     }
 
-    return result;
+    // Validate response matches protocol schema
+    const responseValidation = UnequipArtifactResponseSchema.safeParse(result);
+    if (!responseValidation.success) {
+      fastify.log.error({ error: responseValidation.error }, 'UnequipArtifactResponse validation failed');
+    }
+
+    return reply.send(result);
   });
 
   /**
@@ -127,7 +150,13 @@ const artifactsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ error: result.error });
     }
 
-    return result;
+    // Validate response matches protocol schema
+    const responseValidation = UseItemResponseSchema.safeParse(result);
+    if (!responseValidation.success) {
+      fastify.log.error({ error: responseValidation.error }, 'UseItemResponse validation failed');
+    }
+
+    return reply.send(result);
   });
 
   /**

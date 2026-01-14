@@ -1,140 +1,224 @@
-# Turrets
+# Defense Towers (Wieżyczki)
 
-The game features 4 turret types that can be placed in 6 slots around the fortress.
+The game features 5 defense tower types: 4 core turrets + 1 late-game unlock. Each tower has 3 tiers.
 
 ## Overview
 
-| Turret | Role | Damage | Attack Speed | Range | Cost |
-|--------|------|--------|--------------|-------|------|
-| Arrow Tower | DPS | 25 | 1.5/s | 8 | 100g |
-| Frost Tower | Crowd Control | 15 | 0.8/s | 7 | 150g |
-| Cannon Tower | AoE | 40 | 0.5/s | 6 | 200g |
-| Tesla Tower | Chain | 20 | 1.0/s | 7 | 175g |
+| Tower | Role | Base Cost | Unlock Level | Description |
+|-------|------|-----------|--------------|-------------|
+| Wieża Railgun | DPS | 3,000g | 1 (Starter) | Fast, single-target damage |
+| Wieża Kriogeniczna | Crowd Control | 3,500g | 5 | Slow enemies and freeze groups |
+| Wieża Artyleryjska | AOE | 8,000g | 15 | Slow but powerful splash damage |
+| Wieża Łukowa | AOE | 7,000g | 30 | Chain lightning between enemies |
+| Wieża Fotonowa | DPS | 10,000g | 45 | Advanced laser technology |
 
 ---
 
-## Arrow Tower (Wieża Strzał)
+## Wieża Railgun
 
-**Role**: Single-target DPS
+**Role**: DPS (Single-Target) | **Unlock**: Level 1 (Starter)
 
 ### Description
-Fast attacks with high precision. Best for taking down priority targets.
+Fast electromagnetic rail turret. Ideal for eliminating single high-priority targets.
 
-### Stats
-| Stat | Base | Tier 2 | Tier 3 |
-|------|------|--------|--------|
-| HP | 150 | 188 | 225 |
-| Damage | 25 | 31 | 38 |
-| Attack Speed | 1.5/s | 1.65/s | 1.8/s |
-| Range | 8 | 8 | 8 |
+### Base Stats
+| Stat | Value |
+|------|-------|
+| Damage | 8.0 |
+| Attack Speed | 2.5/s |
+| Range | 10 units |
+| Crit Chance | 10% |
+| Crit Multiplier | 1.5x |
+| HP | 150 |
 
-### Special Ability
-- **Precision Shot**: Every 5th attack deals 2x damage
+### Costs
+- Base Cost: 3,000g
+- Tier Cost Multiplier: 2.0x per tier
+- Class Change: 150g + 20 dust
 
-### Best With
-- Tech class (+pierce synergy)
-- Chain Lightning relic
-- Single-target focus builds
+### Ability: Rapid Fire
+- **Effect**: Doubles attack speed for 5 seconds
+- **Cooldown**: 30 seconds
+
+### Projectile Type
+Arrow (energy bolt)
+
+### Colors
+- Primary: Slate Gray (#4A5568)
+- Secondary: Gray-blue (#718096)
+- Projectile: Deep Sky Blue (#00BFFF)
 
 ---
 
-## Frost Tower (Wieża Mrozu)
+## Wieża Kriogeniczna
 
-**Role**: Crowd Control
+**Role**: Crowd Control | **Unlock**: Level 5
 
 ### Description
-Slows enemies with ice attacks. Essential for controlling enemy waves.
+Cryogenic tower that slows and freezes enemies in place.
 
-### Stats
-| Stat | Base | Tier 2 | Tier 3 |
-|------|------|--------|--------|
-| HP | 175 | 219 | 263 |
-| Damage | 15 | 19 | 23 |
-| Attack Speed | 0.8/s | 0.88/s | 0.96/s |
-| Range | 7 | 7 | 7 |
+### Base Stats
+| Stat | Value |
+|------|-------|
+| Damage | 12.0 |
+| Attack Speed | 1.0/s |
+| Range | 8 units |
+| Crit Chance | 10% |
+| Crit Multiplier | 1.5x |
+| HP | 200 |
 
-### Special Ability
-- **Chill**: Attacks slow enemies by 40% for 2s
-- **Freeze** (Tier 3): 10% chance to freeze enemies for 1s
+### Special Effects
+- Slow Amount: 50%
+- Slow Duration: 2 seconds
 
-### Best With
-- Ice class (enhanced slow effects)
-- Fire class (combo: slow + burn)
-- Frost Archer hero
+### Costs
+- Base Cost: 3,500g
+- Tier Cost Multiplier: 2.0x per tier
+- Class Change: 150g + 20 dust
+
+### Ability: Flash Freeze
+- **Effect**: Freezes all enemies in range for 3 seconds
+- **Cooldown**: 30 seconds
+
+### Projectile Type
+Ice Shard
+
+### Colors
+- Primary: Dark Turquoise (#00CED1)
+- Secondary: Sky Blue (#87CEEB)
+- Projectile: Light Blue (#ADD8E6)
 
 ---
 
-## Cannon Tower (Wieża Armatnia)
+## Wieża Artyleryjska
 
-**Role**: Area Damage
+**Role**: AOE | **Unlock**: Level 15
 
 ### Description
-Slow but devastating area attacks. Excellent against grouped enemies.
+Slow but powerful artillery with area damage.
 
-### Stats
-| Stat | Base | Tier 2 | Tier 3 |
-|------|------|--------|--------|
-| HP | 200 | 250 | 300 |
-| Damage | 40 | 50 | 60 |
-| Attack Speed | 0.5/s | 0.55/s | 0.6/s |
-| Range | 6 | 6 | 6 |
+### Base Stats
+| Stat | Value |
+|------|-------|
+| Damage | 45.0 |
+| Attack Speed | 0.5/s |
+| Range | 8 units |
+| Crit Chance | 5% |
+| Crit Multiplier | 2.0x |
+| HP | 200 |
 
-### Special Ability
-- **Splash Damage**: 50% damage in 3-unit radius
-- **Demolition** (Tier 3): +25% damage to structures/elites
+### Special Effects
+- Splash: Yes
+- Splash Radius: 1.5 units
 
-### Best With
-- Fire class (splash synergy)
-- Splash Master relic
-- AoE-focused builds
+### Costs
+- Base Cost: 8,000g
+- Tier Cost Multiplier: 2.0x per tier
+- Class Change: 150g + 20 dust
+
+### Ability: Explosive Shell
+- **Effect**: Next shot deals 200% damage with larger splash
+- **Splash Radius**: 3 units
+- **Cooldown**: 20 seconds
+
+### Projectile Type
+Cannonball
+
+### Colors
+- Primary: Dark Slate Gray (#2F4F4F)
+- Secondary: Dim Gray (#696969)
+- Projectile: Dark (#1C1C1C)
 
 ---
 
-## Tesla Tower (Wieża Tesli)
+## Wieża Łukowa
 
-**Role**: Chain Lightning
+**Role**: AOE (Chain) | **Unlock**: Level 30
 
 ### Description
-Lightning attacks that chain between multiple enemies.
+Electric tower with arc energy that chains between enemies.
 
-### Stats
-| Stat | Base | Tier 2 | Tier 3 |
-|------|------|--------|--------|
-| HP | 125 | 156 | 188 |
-| Damage | 20 | 25 | 30 |
-| Attack Speed | 1.0/s | 1.1/s | 1.2/s |
-| Range | 7 | 7 | 7 |
+### Base Stats
+| Stat | Value |
+|------|-------|
+| Damage | 15.0 |
+| Attack Speed | 1.2/s |
+| Range | 7 units |
+| Crit Chance | 10% |
+| Crit Multiplier | 1.5x |
+| HP | 180 |
 
-### Special Ability
-- **Chain Lightning**: Attacks jump to 2 additional enemies (50% damage per jump)
-- **Overcharge** (Tier 3): Chain count +1, chain damage +20%
+### Special Effects
+- Chain Targets: 3
+- Chain Damage Reduction: -30% per jump
 
-### Best With
-- Lightning class (chain synergy)
-- Chain Lightning relic
-- Thunderlord hero
+### Costs
+- Base Cost: 7,000g
+- Tier Cost Multiplier: 2.0x per tier
+- Class Change: 150g + 20 dust
+
+### Ability: Overload
+- **Effect**: Next attack hits ALL enemies in range
+- **Cooldown**: 25 seconds
+
+### Projectile Type
+Lightning
+
+### Colors
+- Primary: Indigo (#4B0082)
+- Secondary: Dark Orchid (#9932CC)
+- Projectile: Cyan (#00FFFF)
 
 ---
 
-## Turret Slots
+## Wieża Fotonowa
 
-### Slot Positions
+**Role**: DPS (Advanced) | **Unlock**: Level 45
 
-```
-     [1]----[2]----[3]
-              |
-          FORTRESS
-              |
-     [4]----[5]----[6]
-```
+### Description
+Advanced photon laser technology with piercing beams.
 
-- Slots 1-3: Top row (above path)
-- Slots 4-6: Bottom row (below path)
+### Base Stats
+| Stat | Value |
+|------|-------|
+| Damage | 20.0 |
+| Attack Speed | 2.0/s |
+| Range | 12 units |
+| Crit Chance | 15% |
+| Crit Multiplier | 1.75x |
+| HP | 160 |
 
-### Slot Unlocks
+### Special Effects
+- Pierce: Hits through multiple enemies
+- Pierce Count: 2
 
-| Fortress Level | Slots Available |
-|----------------|-----------------|
+### Costs
+- Base Cost: 10,000g
+- Tier Cost Multiplier: 2.0x per tier
+- Class Change: 200g + 25 dust
+
+### Ability: Photon Surge
+- **Effect**: Continuous beam dealing damage over time for 4 seconds
+- **DPS**: 30 damage/second
+- **Cooldown**: 25 seconds
+
+### Projectile Type
+Laser
+
+### Colors
+- Primary: Cyan (#00F0FF)
+- Secondary: Magenta (#FF00FF)
+- Projectile: White (#FFFFFF)
+
+---
+
+## Tower Slots
+
+### Standard Slots (6)
+Always available, unlocked by fortress level:
+
+| Level | Slots Available |
+|-------|-----------------|
 | 1 | 1 |
 | 5 | 2 |
 | 15 | 3 |
@@ -142,66 +226,85 @@ Lightning attacks that chain between multiple enemies.
 | 35 | 5 |
 | 40 | 6 |
 
+### Layout
+```
+    [SLOT 1]    [SLOT 2]    [SLOT 3]
+        \_________|_________/
+              ZAMEK
+        /_________|_________\
+    [SLOT 4]    [SLOT 5]    [SLOT 6]
+```
+
+### Extra Slots (7-8)
+Can be unlocked with dust:
+- Slot 7: 1,000 dust
+- Slot 8: 1,000 dust
+
 ---
 
-## Upgrade Costs
+## Class Modifiers
 
-| Upgrade | Gold | Dust |
-|---------|------|------|
-| Tier 1 → 2 | 150 | 15 |
-| Tier 2 → 3 | 400 | 50 |
+When a tower matches the fortress configuration class, it receives bonuses:
 
-### Upgrade Bonuses
-- **Tier 2**: +25% damage, +15% attack speed
-- **Tier 3**: +50% damage, +30% attack speed
+| Class | Damage | Attack Speed | Range | Special |
+|-------|--------|--------------|-------|---------|
+| Natural | 1.0x | 1.0x | 1.0x | - |
+| Ice | 0.9x | 1.0x | 1.0x | +30% slow duration |
+| Fire | 1.2x | 1.0x | 1.0x | +20% DOT damage |
+| Lightning | 1.0x | 1.3x | 1.0x | +1 chain target |
+| Tech | 1.0x | 1.0x | 1.2x | +1 pierce |
+
+---
+
+## Tier Upgrades
+
+Towers can be upgraded to increase their stats:
+
+| Tier | Stat Multiplier | Cost Multiplier |
+|------|-----------------|-----------------|
+| 1 | 1.0x | 1.0x (base) |
+| 2 | 1.25x | 2.0x |
+| 3 | 1.5x | 4.0x |
+
+HP scales the same: Tier 1 = 1.0x, Tier 2 = 1.25x, Tier 3 = 1.5x
+
+### Example Costs (Railgun)
+| Tier | Gold Cost |
+|------|-----------|
+| 1 | 3,000g |
+| 2 | 6,000g |
+| 3 | 12,000g |
 
 ---
 
 ## Targeting Modes
 
-Turrets can be set to different targeting priorities:
-
-| Mode | Description |
-|------|-------------|
-| **Closest to Fortress** | Default - protects fortress |
-| **Strongest** | Targets highest HP enemy |
-| **Weakest** | Finishes off low HP enemies |
-| **First** | Targets enemy closest to reaching fortress |
-
----
-
-## Class Synergies
-
-Turrets inherit some bonuses from fortress class:
-
-| Class | Turret Bonus |
-|-------|--------------|
-| Natural | +10% turret HP |
-| Ice | Turrets apply 20% slow |
-| Fire | Turrets deal +10% splash |
-| Lightning | +15% chain chance |
-| Tech | +10% turret damage |
+All towers can use these targeting priorities:
+1. **Closest** - Target nearest enemy
+2. **First** - Target enemy closest to fortress
+3. **Strongest** - Target highest HP enemy
+4. **Weakest** - Target lowest HP enemy
 
 ---
 
 ## Recommended Loadouts
 
-### Balanced (Starter)
-- Arrow Tower (DPS)
-- Frost Tower (Control)
+### Early Game (Level 1-15)
+- 1-2x Railgun (reliable damage)
 
-### DPS Focus
-- Arrow Tower x2
-- Tesla Tower
+### Mid Game (Level 15-30)
+- 1x Railgun (single-target)
+- 1x Kriogeniczna (crowd control)
+- 1x Artyleryjska (AOE damage)
 
-### Control Focus
-- Frost Tower x2
-- Cannon Tower
+### Late Game (Level 30-45)
+- 1x Railgun
+- 1x Kriogeniczna
+- 1x Artyleryjska
+- 1x Łukowa (chain damage)
 
-### Chain Build (Lightning Class)
-- Tesla Tower x2
-- Arrow Tower
-
-### Splash Build (Fire Class)
-- Cannon Tower x2
-- Frost Tower
+### End Game (Level 45+)
+- 2x Fotonowa (DPS)
+- 1x Kriogeniczna (CC)
+- 1x Łukowa (AOE)
+- 2x Artyleryjska (AOE)

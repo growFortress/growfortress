@@ -73,7 +73,11 @@ export type {
   // Pillars
   PillarId,
   PillarDefinition,
-  // Infinity Stones
+  // Crystals (ancient artifacts system)
+  CrystalType,
+  CrystalFragment,
+  CrystalMatrixState,
+  // Legacy aliases for backwards compatibility
   InfinityStoneType,
   InfinityStoneFragment,
   InfinityGauntletState,
@@ -83,6 +87,13 @@ export type {
   StatusEffectType,
   StatusEffect,
   AnalyticsStats,
+  // Artifact Visuals
+  ArtifactSlotType,
+  ArtifactSynergyBonus,
+  ArtifactVisualDefinition,
+  ArtifactShapeType,
+  ArtifactAnimationType,
+  ArtifactParticleType,
 } from './types.js';
 
 // Data
@@ -117,9 +128,6 @@ export {
   getClassById,
   getUnlockedSkills as getClassUnlockedSkills,
   getSkillById,
-  isClassUnlocked,
-  getUnlockableClasses,
-  getClassUnlockCost,
 } from './data/classes.js';
 
 // Modifiers
@@ -199,6 +207,16 @@ export {
   type FortressLevelReward,
   type FortressLevel,
   type FortressTier,
+  // Slot purchase system
+  type SlotUnlockConfig,
+  HERO_SLOT_UNLOCKS,
+  TURRET_SLOT_UNLOCKS,
+  MAX_HERO_SLOTS,
+  MAX_TURRET_SLOTS,
+  getNextPurchasableHeroSlot,
+  getNextPurchasableTurretSlot,
+  getNextHeroSlotInfo,
+  getNextTurretSlotInfo,
 } from './data/fortress-progression.js';
 
 // Heroes
@@ -219,14 +237,32 @@ export {
 
 // Artifacts
 export {
+  // Getters
   getArtifactById,
   getItemById,
   getArtifactsBySlot,
+  getArtifactsBySlotType,
   getArtifactsByRarity,
+  // Equip system
   canHeroEquipArtifact,
+  canEquipToSlot,
   getAvailableArtifactsForHero,
+  getAvailableArtifactsForSlot,
+  // Synergy system
+  hasSynergyBonus,
+  calculateSynergyMultiplier,
+  calculateTotalSynergyMultiplier,
+  // Items
   getConsumableItems,
+  // Crafting costs
   calculateArtifactCraftCost,
+  // Crafting 2.0 - Upgrade/Fuse/Dismantle
+  calculateUpgradeCost,
+  calculateLevelStatMultiplier,
+  calculateDismantleReturn,
+  getFusionResults,
+  validateFusion,
+  // Constants
   ARTIFACT_DEFINITIONS,
   ITEM_DEFINITIONS,
   MAX_ITEMS_PER_HERO,
@@ -264,6 +300,44 @@ export {
   type MaterialDropSource,
   type CraftingRecipe,
 } from './data/materials.js';
+
+// Crystals (Ancient Artifacts)
+export {
+  CRYSTAL_DEFINITIONS,
+  CRYSTAL_MATRIX,
+  CRYSTAL_COLORS,
+  MATRIX_CRYSTAL_ORDER,
+  BOSS_CRYSTAL_DROPS,
+  FRAGMENTS_PER_CRYSTAL,
+  getCrystalById,
+  canUseCrystalMatrix,
+  calculateFragmentBonus,
+  canCraftFullCrystal,
+  getCrystalDropLocations,
+  getFragmentDropChance,
+  calculateCrystalBonuses,
+  isBossEnemy,
+  rollCrystalDrop,
+  getBossIdForEnemy,
+  BOSS_ENEMY_TYPES,
+  ENEMY_TYPE_TO_BOSS_ID,
+  // Legacy aliases
+  INFINITY_STONE_DEFINITIONS,
+  INFINITY_GAUNTLET,
+  STONE_COLORS,
+  GAUNTLET_STONE_ORDER,
+  BOSS_STONE_DROPS,
+  getStoneById,
+  canUseInfinityGauntlet,
+  canCraftFullStone,
+  getStoneDropLocations,
+  calculateStoneBonuses,
+  rollStoneDrop,
+  type CrystalDefinition,
+  type CrystalEffect,
+  type CrystalMatrixDefinition,
+  type CrystalFragmentState,
+} from './data/crystals.js';
 
 // Power Upgrades System
 export {
@@ -327,11 +401,14 @@ export {
   calculateHeroPower,
   calculateTurretPower,
   calculateItemPower,
+  calculateArtifactPower,
+  calculateArenaPower,
   calculateTotalPower,
   calculateQuickTotalPower,
   formatPower,
   getPowerColor,
   type TierMaps,
+  type ArenaHeroConfig,
 } from './power/index.js';
 
 // Power Upgrades Application (Simulation Integration)
@@ -376,6 +453,22 @@ export {
   type BossRushSummary,
 } from './boss-rush.js';
 
+// Boss Rush Simulation (Server-side verification)
+export {
+  BossRushSimulation,
+  replayBossRush,
+  getDefaultBossRushConfig,
+  createBossRushGameState,
+  computeBossRushCheckpointHash,
+  computeBossRushFinalHash,
+  createBossRushCheckpoint,
+  type BossRushGameState,
+  type BossRushSimConfig,
+  type BossRushReplayResult,
+  type BossRushVerifyOptions,
+  type BossRushTurretConfig,
+} from './boss-rush-simulation.js';
+
 // AI System (Simplified Role-Based)
 export {
   getHeroRole,
@@ -397,7 +490,6 @@ export {
   DEFAULT_ARENA_CONFIG,
   // AI
   selectHeroTarget,
-  selectTurretTarget,
   selectFortressTarget,
   getHeroMovementDirection,
   // Simulation
@@ -415,4 +507,140 @@ export {
   type ArenaTargetType,
   type ArenaResult,
   type ArenaReplayEvent,
+  // Guild Arena 5v5
+  runGuildArena,
+  type GuildBattleHero,
+  type GuildArenaResult,
+  type GuildArenaKeyMoment,
+  type GuildArenaKillLog,
+  type GuildArenaMvp,
 } from './arena/index.js';
+
+// Leaderboard Exclusive Items
+export {
+  WAVES_EXCLUSIVE_ITEMS,
+  HONOR_EXCLUSIVE_ITEMS,
+  ALL_EXCLUSIVE_ITEMS,
+  WAVES_REWARD_TIERS,
+  HONOR_REWARD_TIERS,
+  REWARD_TIERS,
+  getExclusiveItemById,
+  getExclusiveItemsByCategory,
+  getExclusiveItemsByRarity,
+  getRewardTierForRank,
+  type ExclusiveItem,
+  type ExclusiveItemType,
+  type ExclusiveItemRarity,
+  type ExclusiveItemCategory,
+  type RewardTier,
+} from './data/leaderboard-items.js';
+
+// Pillar Challenge (Deterministic Crystal Acquisition)
+export {
+  // Constants & Config
+  PILLAR_CRYSTAL_REWARDS,
+  TIER_CONFIGS,
+  PERFORMANCE_BONUSES,
+  CHALLENGE_ENTRY_CONFIG,
+  TIER_MATERIAL_REWARDS,
+  PILLAR_SPECIFIC_MATERIALS,
+  TIER_FORTRESS_XP,
+  PILLAR_XP_MULTIPLIERS,
+  // Functions
+  checkPerformanceBonus,
+  calculateFragmentRewards,
+  calculateMaterialRewards,
+  createPillarChallengeState,
+  processWaveComplete,
+  processHeroDeath,
+  finishChallengeSession,
+  generateChallengeSummary,
+  isTierUnlocked,
+  calculateRemainingAttempts,
+  isCooldownExpired,
+  getCooldownRemaining,
+  getCrystalInfoForPillar,
+  // Types
+  type PillarChallengeTier,
+  type PillarCrystalReward,
+  type TierConfig,
+  type PerformanceBonus,
+  type PerfBonusCondition,
+  type ChallengeEntryConfig,
+  type PillarChallengeState,
+  type PillarChallengeSummary,
+} from './pillar-challenge.js';
+
+// Pillar Challenge Simulation (Server-side verification)
+export {
+  PillarChallengeSimulation,
+  replayPillarChallenge,
+  getDefaultPillarChallengeConfig,
+  createPillarChallengeGameState,
+  computePillarChallengeCheckpointHash,
+  computePillarChallengeFinalHash,
+  type PillarChallengeSimConfig,
+  type PillarChallengeReplayResult,
+  type PillarChallengeVerifyOptions,
+  type PillarChallengeCheckpoint,
+} from './pillar-challenge-simulation.js';
+
+// Mastery System (Class Skill Trees)
+export {
+  // Types
+  type MasteryNodeType,
+  type MasteryNodeId,
+  type MasterySynergyAmplifier,
+  type MasteryClassPerk,
+  type MasteryNodeEffect,
+  type MasteryNodeDefinition,
+  type MasteryTreeDefinition,
+  type ClassMasteryProgress,
+  type PlayerMasteryProgress,
+  type MasteryPointCondition,
+  type MasteryPointSource,
+  type MasteryModifiers,
+  // Constants
+  MASTERY_POINT_SOURCES,
+  MASTERY_ECONOMY,
+  // Functions
+  createDefaultMasteryProgress,
+  createEmptyMasteryModifiers,
+  getPointsRequiredForTier,
+  isTierUnlocked as isMasteryTierUnlocked,
+  canUnlockNode,
+  calculateRespecReturn,
+} from './data/mastery.js';
+
+export {
+  // Tree Data
+  MASTERY_TREES,
+  getMasteryTree,
+  getMasteryNodeById,
+  getMasteryNodesForClass,
+  getMasteryNodesByTier,
+  getAllMasteryClasses,
+  // Individual trees
+  FIRE_MASTERY_TREE,
+  LIGHTNING_MASTERY_TREE,
+  ICE_MASTERY_TREE,
+  NATURAL_MASTERY_TREE,
+  TECH_MASTERY_TREE,
+  VOID_MASTERY_TREE,
+  PLASMA_MASTERY_TREE,
+} from './data/mastery-trees/index.js';
+
+export {
+  // Mastery calculation
+  calculateMasteryModifiers,
+  calculateAllClassMasteryModifiers,
+  getTotalPointsSpent,
+  getClassProgressSummary,
+  getAllClassProgressSummaries,
+  validateNodeUnlock,
+  validateNodeUnlockSync,
+  hasMasteryPerk,
+  getSynergyMultiplier,
+  type ClassProgressSummary,
+  type UnlockValidation,
+} from './systems/mastery.js';

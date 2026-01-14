@@ -1,0 +1,314 @@
+/* Backdrop overlay */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-backdrop);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+
+  /* Entrance animation */
+  opacity: 0;
+  animation: backdropEnter 0.3s ease-out forwards;
+}
+
+@keyframes backdropEnter {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(var(--glass-blur-sm));
+  }
+}
+
+/* Modal container - centers the modal */
+.container {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+}
+
+/* Modal dialog */
+.modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+
+  /* Glassmorphism */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-3);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+
+  /* Pointer events */
+  pointer-events: auto;
+
+  /* Spring entrance animation */
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+  animation: modalEnter 0.4s var(--ease-spring) forwards;
+}
+
+@keyframes modalEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Size variants */
+.sizeSmall {
+  width: 360px;
+}
+
+.sizeMedium {
+  width: 480px;
+}
+
+.sizeLarge {
+  width: 640px;
+}
+
+.sizeXLarge {
+  width: 800px;
+}
+
+.sizeFullScreen {
+  width: 95vw;
+  height: 95vh;
+  max-width: none;
+  max-height: none;
+  border-radius: var(--radius-md);
+}
+
+/* Modal header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+
+  /* Staggered entrance */
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: headerEnter 0.3s ease-out 0.1s forwards;
+}
+
+@keyframes headerEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.5px;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: -4px -8px -4px 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-60);
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+}
+
+.closeButton:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.closeIcon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Modal body */
+.body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  /* Staggered entrance */
+  opacity: 0;
+  transform: translateY(10px);
+  animation: bodyEnter 0.3s ease-out 0.15s forwards;
+}
+
+@keyframes bodyEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar styling */
+.body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.body::-webkit-scrollbar-thumb {
+  background: var(--color-text-20);
+  border-radius: 4px;
+}
+
+.body::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-30);
+}
+
+/* Modal footer */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--glass-border);
+  flex-shrink: 0;
+
+  /* Staggered entrance */
+  opacity: 0;
+  transform: translateY(10px);
+  animation: footerEnter 0.3s ease-out 0.2s forwards;
+}
+
+@keyframes footerEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Exit animations (applied via class) */
+.exiting .backdrop {
+  animation: backdropExit 0.2s ease-in forwards;
+}
+
+.exiting .modal {
+  animation: modalExit 0.2s ease-in forwards;
+}
+
+@keyframes backdropExit {
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+@keyframes modalExit {
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+}
+
+/* Variant styles */
+.variantDefault {
+  /* Uses standard glassmorphism */
+}
+
+.variantDanger {
+  border-color: var(--color-accent-30);
+}
+
+.variantDanger .header {
+  border-bottom-color: var(--color-accent-30);
+}
+
+.variantDanger .title {
+  color: var(--color-accent);
+}
+
+/* Custom scrollbar for Firefox */
+.body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-20) transparent;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .backdrop {
+    animation: none;
+    opacity: 1;
+  }
+
+  .modal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .header,
+  .body,
+  .footer {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+  }
+
+  .modal {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .sizeSmall,
+  .sizeMedium,
+  .sizeLarge,
+  .sizeXLarge {
+    width: 100%;
+  }
+
+  .header,
+  .body,
+  .footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

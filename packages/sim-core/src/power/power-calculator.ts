@@ -28,6 +28,8 @@ import {
 
 import { getHeroById } from '../data/heroes.js';
 import { getTurretById } from '../data/turrets.js';
+import { getArtifactById, type ArtifactRarity } from '../data/artifacts.js';
+import { calculateTotalHpBonus, calculateTotalDamageBonus } from '../data/fortress-progression.js';
 
 // ============================================================================
 // INTERNAL HELPERS
@@ -70,18 +72,84 @@ function calculateBaseStatPower(stats: {
 }
 
 // ============================================================================
+// ARTIFACT POWER
+// ============================================================================
+
+/**
+ * Stałe bazowej mocy artefaktu wg rzadkości
+ */
+const ARTIFACT_RARITY_POWER: Record<ArtifactRarity, number> = {
+  common: 20,
+  rare: 40,
+  epic: 60,
+  legendary: 100,
+};
+
+/**
+ * Oblicza Power artefaktu na podstawie jego rzadkości i efektów
+ */
+export function calculateArtifactPower(artifactId: string | undefined): number {
+  if (!artifactId) return 0;
+
+  const artifact = getArtifactById(artifactId);
+  if (!artifact) return 0;
+
+  let power = 0;
+
+  // Bazowy power z rzadkości
+  power += ARTIFACT_RARITY_POWER[artifact.rarity];
+
+  // Dodatkowy power z efektów stat_boost
+  const FP_SCALE = 16384;
+  for (const effect of artifact.effects) {
+    if (effect.type === 'stat_boost' && effect.value) {
+      // Konwersja z FP na procent (np. 22938 -> 40% bonus -> +40 power)
+      const bonus = (effect.value / FP_SCALE) - 1;
+      power += Math.floor(bonus * 100);
+    }
+    // Efekty passive dają stały bonus
+    if (effect.type === 'passive') {
+      power += 15; // Każdy efekt pasywny +15 power
+    }
+  }
+
+  return Math.max(0, power);
+}
+
+// ============================================================================
 // FORTRESS POWER
 // ============================================================================
 
 /**
- * Oblicza Power twierdzy
+ * Bazowe statystyki twierdzy (bez bonusów)
+ */
+const BASE_FORTRESS_HP = 1000;
+const BASE_FORTRESS_DMG = 15;
+
+/**
+ * Oblicza Power twierdzy uwzględniając faktyczne statystyki
  */
 export function calculateFortressPower(
   upgrades: StatUpgrades,
   commanderLevel: number
 ): PowerBreakdown {
-  // Bazowa moc rośnie z poziomem dowódcy
-  const basePower = POWER_WEIGHTS.fortressBase + commanderLevel * 10;
+  const FP_SCALE = 16384;
+
+  // Bonusy z poziomu dowódcy (w FP)
+  const hpBonusFP = calculateTotalHpBonus(commanderLevel);
+  const damageBonusFP = calculateTotalDamageBonus(commanderLevel);
+
+  // Efektywne statystyki twierdzy
+  const effectiveHp = (BASE_FORTRESS_HP * hpBonusFP) / FP_SCALE;
+  const effectiveDmg = (BASE_FORTRESS_DMG * damageBonusFP) / FP_SCALE;
+
+  // Bazowy power ze statystyk + skalowanie z poziomem
+  // Poziom dowódcy daje dodatkowy power (10 per level) + power ze statystyk
+  const basePower =
+    POWER_WEIGHTS.fortressBase +
+    commanderLevel * 10 +
+    effectiveHp * POWER_WEIGHTS.hp +
+    effectiveDmg * POWER_WEIGHTS.damage;
 
   // Mnożnik z ulepszeń statystyk
   const upgradeMultiplier = calculateUpgradeMultiplier(upgrades, FORTRESS_STAT_UPGRADES);
@@ -104,12 +172,13 @@ export function calculateFortressPower(
 // ============================================================================
 
 /**
- * Oblicza Power bohatera
+ * Oblicza Power bohatera (opcjonalnie z wyposażonym artefaktem)
  */
 export function calculateHeroPower(
   heroId: string,
   upgrades: StatUpgrades,
-  heroTier: 1 | 2 | 3
+  heroTier: 1 | 2 | 3,
+  equippedArtifactId?: string
 ): PowerBreakdown {
   const heroDef = getHeroById(heroId);
 
@@ -118,6 +187,7 @@ export function calculateHeroPower(
       basePower: 0,
       upgradeMultiplier: 1,
       tierMultiplier: 1,
+      artifactPower: 0,
       totalPower: 0,
     };
   }
@@ -138,12 +208,17 @@ export function calculateHeroPower(
   const tierDef = heroDef.tiers[heroTier - 1];
   const tierMultiplier = tierDef?.statMultiplier ?? 1.0;
 
-  const totalPower = Math.floor(basePower * upgradeMultiplier * tierMultiplier);
+  // Power z wyposażonego artefaktu
+  const artifactPower = calculateArtifactPower(equippedArtifactId);
+
+  // Total = (bazowy × mnożniki) + artefakt
+  const totalPower = Math.floor(basePower * upgradeMultiplier * tierMultiplier) + artifactPower;
 
   return {
     basePower: Math.floor(basePower),
     upgradeMultiplier,
     tierMultiplier,
+    artifactPower,
     totalPower,
   };
 }
@@ -217,6 +292,46 @@ export function calculateItemPower(
   }
 
   return Math.floor(totalPower);
+}
+
+// ============================================================================
+// ARENA POWER (PvP)
+// ============================================================================
+
+/**
+ * Konfiguracja bohatera w arenie
+ */
+export interface ArenaHeroConfig {
+  heroId: string;
+  tier: 1 | 2 | 3;
+  upgrades: StatUpgrades;
+  equippedArtifactId?: string;
+}
+
+/**
+ * Oblicza łączny Power dla PvP Arena
+ * Power = twierdza + wszyscy aktywni bohaterowie (z artefaktami)
+ * NIE obejmuje wieżyczek (usunięte z areny)
+ */
+export function calculateArenaPower(
+  fortressUpgrades: StatUpgrades,
+  commanderLevel: number,
+  activeHeroes: ArenaHeroConfig[]
+): number {
+  // Power twierdzy
+  const fortressPower = calculateFortressPower(fortressUpgrades, commanderLevel).totalPower;
+
+  // Power bohaterów (z artefaktami)
+  const heroPower = activeHeroes.reduce((sum, hero) => {
+    return sum + calculateHeroPower(
+      hero.heroId,
+      hero.upgrades,
+      hero.tier,
+      hero.equippedArtifactId
+    ).totalPower;
+  }, 0);
+
+  return fortressPower + heroPower;
 }
 
 // ============================================================================
@@ -298,12 +413,24 @@ export function calculateQuickTotalPower(
   defaultHeroTier: 1 | 2 | 3 = 1,
   defaultTurretTier: 1 | 2 | 3 = 1
 ): number {
-  // Fortress
+  const FP_SCALE = 16384;
+
+  // Fortress (matching calculateFortressPower formula)
+  const hpBonusFP = calculateTotalHpBonus(commanderLevel);
+  const damageBonusFP = calculateTotalDamageBonus(commanderLevel);
+  const effectiveHp = (BASE_FORTRESS_HP * hpBonusFP) / FP_SCALE;
+  const effectiveDmg = (BASE_FORTRESS_DMG * damageBonusFP) / FP_SCALE;
+
   const fortressMultiplier = calculateUpgradeMultiplier(
     powerData.fortressUpgrades.statUpgrades,
     FORTRESS_STAT_UPGRADES
   );
-  const fortressPower = (POWER_WEIGHTS.fortressBase + commanderLevel * 10) * fortressMultiplier;
+  const fortressPower = (
+    POWER_WEIGHTS.fortressBase +
+    commanderLevel * 10 +
+    effectiveHp * POWER_WEIGHTS.hp +
+    effectiveDmg * POWER_WEIGHTS.damage
+  ) * fortressMultiplier;
 
   // Heroes
   let heroPower = 0;
@@ -322,7 +449,6 @@ export function calculateQuickTotalPower(
 
   // Turrets
   let turretPower = 0;
-  const FP_SCALE = 16384;
   for (const tu of powerData.turretUpgrades) {
     const turretDef = getTurretById(tu.turretType);
     if (turretDef) {

@@ -2,11 +2,33 @@ import { prisma } from '../lib/prisma.js';
 import { HERO_UPGRADE_COSTS, TURRET_UPGRADE_COSTS } from '@arcade/protocol';
 
 /**
+ * Get hero tiers from power upgrades
+ */
+async function getHeroTiers(userId: string): Promise<Record<string, number>> {
+  const powerUpgrades = await prisma.powerUpgrades.findUnique({
+    where: { userId },
+    select: { heroTiers: true },
+  });
+  return (powerUpgrades?.heroTiers as Record<string, number>) || {};
+}
+
+/**
+ * Get turret tiers from power upgrades
+ */
+async function getTurretTiers(userId: string): Promise<Record<string, number>> {
+  const powerUpgrades = await prisma.powerUpgrades.findUnique({
+    where: { userId },
+    select: { turretTiers: true },
+  });
+  return (powerUpgrades?.turretTiers as Record<string, number>) || {};
+}
+
+/**
  * Upgrade a hero to the next tier
  */
 export async function upgradeHero(
   userId: string,
-  _heroId: string,  // Reserved for future: track individual hero upgrades
+  heroId: string,
   currentTier: number
 ): Promise<{ success: boolean; newTier: number; newInventory: { gold: number; dust: number }; error?: string }> {
   // Validate tier
@@ -41,18 +63,46 @@ export async function upgradeHero(
     };
   }
 
-  // Deduct cost from inventory
-  const updatedInventory = await prisma.inventory.update({
-    where: { userId },
-    data: {
-      gold: inventory.gold - cost.gold,
-      dust: inventory.dust - cost.dust,
-    },
-  });
+  // Get current hero tiers
+  const heroTiers = await getHeroTiers(userId);
+
+  // Verify current tier matches what's stored (or default to 1)
+  const storedTier = heroTiers[heroId] || 1;
+  if (storedTier !== currentTier) {
+    return {
+      success: false,
+      newTier: storedTier,
+      newInventory: { gold: inventory.gold, dust: inventory.dust },
+      error: 'Tier mismatch - please refresh',
+    };
+  }
+
+  const newTier = currentTier + 1;
+
+  // Deduct cost and save new tier in a transaction
+  const [updatedInventory] = await prisma.$transaction([
+    prisma.inventory.update({
+      where: { userId },
+      data: {
+        gold: inventory.gold - cost.gold,
+        dust: inventory.dust - cost.dust,
+      },
+    }),
+    prisma.powerUpgrades.upsert({
+      where: { userId },
+      create: {
+        userId,
+        heroTiers: { [heroId]: newTier },
+      },
+      update: {
+        heroTiers: { ...heroTiers, [heroId]: newTier },
+      },
+    }),
+  ]);
 
   return {
     success: true,
-    newTier: currentTier + 1,
+    newTier,
     newInventory: {
       gold: updatedInventory.gold,
       dust: updatedInventory.dust,
@@ -65,7 +115,7 @@ export async function upgradeHero(
  */
 export async function upgradeTurret(
   userId: string,
-  _turretType: string,
+  turretType: string,
   _slotIndex: number,
   currentTier: number
 ): Promise<{ success: boolean; newTier: number; newInventory: { gold: number; dust: number }; error?: string }> {
@@ -101,21 +151,63 @@ export async function upgradeTurret(
     };
   }
 
-  // Deduct cost from inventory
-  const updatedInventory = await prisma.inventory.update({
-    where: { userId },
-    data: {
-      gold: inventory.gold - cost.gold,
-      dust: inventory.dust - cost.dust,
-    },
-  });
+  // Get current turret tiers
+  const turretTiers = await getTurretTiers(userId);
+
+  // Verify current tier matches what's stored (or default to 1)
+  const storedTier = turretTiers[turretType] || 1;
+  if (storedTier !== currentTier) {
+    return {
+      success: false,
+      newTier: storedTier,
+      newInventory: { gold: inventory.gold, dust: inventory.dust },
+      error: 'Tier mismatch - please refresh',
+    };
+  }
+
+  const newTier = currentTier + 1;
+
+  // Deduct cost and save new tier in a transaction
+  const [updatedInventory] = await prisma.$transaction([
+    prisma.inventory.update({
+      where: { userId },
+      data: {
+        gold: inventory.gold - cost.gold,
+        dust: inventory.dust - cost.dust,
+      },
+    }),
+    prisma.powerUpgrades.upsert({
+      where: { userId },
+      create: {
+        userId,
+        turretTiers: { [turretType]: newTier },
+      },
+      update: {
+        turretTiers: { ...turretTiers, [turretType]: newTier },
+      },
+    }),
+  ]);
 
   return {
     success: true,
-    newTier: currentTier + 1,
+    newTier,
     newInventory: {
       gold: updatedInventory.gold,
       dust: updatedInventory.dust,
     },
   };
+}
+
+/**
+ * Get all hero tiers for a user (exported for session start)
+ */
+export async function getUserHeroTiers(userId: string): Promise<Record<string, number>> {
+  return getHeroTiers(userId);
+}
+
+/**
+ * Get all turret tiers for a user (exported for session start)
+ */
+export async function getUserTurretTiers(userId: string): Promise<Record<string, number>> {
+  return getTurretTiers(userId);
 }

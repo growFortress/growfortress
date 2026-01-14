@@ -27,8 +27,7 @@
    ========================= */
 
 .shop-modal,
-.end-screen,
-.choice-modal {
+.end-screen {
   position: fixed;
   top: 0;
   left: 0;
@@ -48,11 +47,15 @@
 }
 
 .shop-modal.visible,
-.end-screen.visible,
-.choice-modal.visible {
+.end-screen.visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+/* Choice modal - handled by Modal component, only content styles needed */
+.choice-modal {
+  /* Inherits from Modal component */
 }
 
 /* =========================
@@ -208,88 +211,6 @@
 .shop-buttons {
   display: flex;
   gap: 1rem;
-}
-
-/* =========================
-   End Screen Styles
-   ========================= */
-
-.end-screen h2 {
-  font-family: var(--font-display);
-  font-size: 5rem; /* Huge impact text */
-  margin-bottom: 2rem;
-  text-transform: uppercase;
-  letter-spacing: 4px;
-  text-shadow: 4px 4px 0px #000;
-  transform: skew(-5deg); /* Dynamic angle */
-}
-
-.end-screen.victory h2 {
-  color: var(--color-success);
-  text-shadow: 0 0 20px rgba(0, 255, 157, 0.5), 4px 4px 0 #000;
-}
-
-.end-screen.defeat h2 {
-  color: var(--color-danger);
-  text-shadow: 0 0 20px rgba(255, 34, 34, 0.5), 4px 4px 0 #000;
-}
-
-.end-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  max-width: 600px;
-}
-
-.end-stat {
-  background: var(--color-bg-panel);
-  border: 1px solid var(--color-bg-panel-border);
-  border-radius: var(--radius-sm);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.end-stat span:first-child {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.end-stat span:last-child {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  color: var(--color-accent-primary);
-  text-shadow: 2px 2px 0 #000;
-}
-
-.rewards {
-  margin-bottom: 2rem;
-}
-
-.reward-item {
-  display: flex;
-  gap: 2rem;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  text-transform: uppercase;
-}
-
-.reward-item span:nth-child(1) {
-  color: var(--color-warning);
-}
-
-.reward-item span:nth-child(2) {
-  color: var(--color-accent-secondary);
-}
-
-.reward-item span:nth-child(3) {
-  color: var(--color-accent-tertiary);
 }
 
 /* =========================

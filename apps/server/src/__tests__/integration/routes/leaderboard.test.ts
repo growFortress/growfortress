@@ -25,9 +25,10 @@ describe('Leaderboard Routes Integration', () => {
 
   describe('GET /v1/leaderboards/weekly', () => {
     it('should return empty leaderboard when no entries exist', async () => {
-      // Mock empty leaderboard with proper user structure
+      // Mock empty leaderboard with proper structure
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
+      mockPrisma.run.findMany.mockResolvedValue([]);
       // Mock for getUserRank - user has no entry
       mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(null);
 
@@ -51,6 +52,7 @@ describe('Leaderboard Routes Integration', () => {
     it('should allow request without authentication', async () => {
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
+      mockPrisma.run.findMany.mockResolvedValue([]);
 
       const response = await app.inject({
         method: 'GET',
@@ -66,6 +68,7 @@ describe('Leaderboard Routes Integration', () => {
     it('should accept week query parameter', async () => {
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
       mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
+      mockPrisma.run.findMany.mockResolvedValue([]);
       mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(null);
 
       const token = await generateTestToken('user-123');

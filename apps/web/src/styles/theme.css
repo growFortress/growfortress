@@ -38,12 +38,31 @@
   --color-text: #ffffff;
   --color-text-80: rgba(255, 255, 255, 0.8);
   --color-text-60: rgba(255, 255, 255, 0.6);
+  --color-text-50: rgba(255, 255, 255, 0.5);
   --color-text-40: rgba(255, 255, 255, 0.4);
 
   /* 5. NEUTRAL: Cyan-tinted gray */
   --color-neutral: #3a4a5a;
   --color-neutral-light: #5a6a7a;
   --color-neutral-dark: #2a3a4a;
+
+  /* 6. SKILL/GAME MODE: Orange/Gold - For game actions */
+  --color-skill: #f59e0b;
+  --color-skill-70: rgba(245, 158, 11, 0.7);
+  --color-skill-50: rgba(245, 158, 11, 0.5);
+  --color-skill-30: rgba(245, 158, 11, 0.3);
+  --color-skill-15: rgba(245, 158, 11, 0.15);
+
+  /* 7. GOLD: For premium/leader elements */
+  --color-gold: #fbbf24;
+  --color-gold-70: rgba(251, 191, 36, 0.7);
+  --color-gold-50: rgba(251, 191, 36, 0.5);
+  --color-gold-30: rgba(251, 191, 36, 0.3);
+  --color-gold-20: rgba(251, 191, 36, 0.2);
+
+  /* 8. GUILD: Cyan-tinted borders for guild UI */
+  --color-border-guild: rgba(0, 229, 255, 0.2);
+  --color-border-guild-hover: rgba(0, 229, 255, 0.35);
 
   /* =========================
      SEMANTIC ALIASES
@@ -52,7 +71,7 @@
   --color-success-50: var(--color-primary-50);
   --color-success-30: var(--color-primary-30);
   --color-success-20: var(--color-primary-20);
-  --color-warning: var(--color-primary-70);
+  --color-warning: var(--color-skill);
   --color-danger: var(--color-accent);
   --color-info: var(--color-primary-50);
 
@@ -101,6 +120,29 @@
   --spacing-between: 12px; /* Między elementami */
 
   /* =========================
+     GAME UI SIZES (Responsive)
+     Uses clamp() for smooth scaling
+     ========================= */
+  /* HubOverlay click areas - synced with Pixi SIZES */
+  --hub-hero-size: clamp(50px, 6vmin, 80px);
+  /* Turret slot: matches Pixi slotSize (60px) - use square for hex alignment */
+  --hub-turret-size: clamp(52px, 6vmin, 68px);
+
+  /* TurretPanel slots */
+  --slot-size: clamp(44px, 5vmin, 64px);
+  --slot-size-compact: clamp(32px, 4vmin, 48px);
+  --slot-gap: clamp(4px, 0.5vmin, 8px);
+
+  /* Icon sizes (scale with slot) */
+  --icon-size-lg: clamp(20px, 2.5vmin, 28px);
+  --icon-size-md: clamp(16px, 2vmin, 24px);
+  --icon-size-sm: clamp(14px, 1.5vmin, 20px);
+
+  /* Font sizes (scale with viewport) */
+  --font-size-badge: clamp(7px, 0.8vmin, 10px);
+  --font-size-label: clamp(8px, 1vmin, 12px);
+
+  /* =========================
      SHADOWS & GLOWS
      Light source: Top-Left
      ========================= */
@@ -116,7 +158,7 @@
   --text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
 
   /* Legacy aliases */
-  --effect-glass-blur: 0px;
+  --effect-glass-blur: var(--glass-blur-md);
   --effect-glow-primary: var(--glow-primary);
   --effect-glow-text: var(--text-shadow);
 
@@ -156,6 +198,80 @@
 
   --hover-scale: 1.03;
   --hover-lift: translateY(-1px);
+
+  /* =========================
+     GLASSMORPHISM
+     Modern frosted glass effects
+     ========================= */
+  --glass-bg: rgba(18, 18, 31, 0.75);
+  --glass-bg-light: rgba(26, 26, 42, 0.6);
+  --glass-bg-dark: rgba(10, 10, 18, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-light: rgba(255, 255, 255, 0.15);
+  --glass-blur-sm: 8px;
+  --glass-blur-md: 16px;
+  --glass-blur-lg: 24px;
+
+  /* =========================
+     ELEVATION SYSTEM
+     Depth & layering shadows
+     ========================= */
+  --elevation-1: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --elevation-2: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --elevation-3: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --elevation-glow-1: 0 2px 8px rgba(0, 0, 0, 0.4), var(--glow-primary);
+  --elevation-glow-2: 0 4px 16px rgba(0, 0, 0, 0.5), var(--glow-primary);
+
+  /* =========================
+     SPRING ANIMATIONS
+     Natural motion curves
+     ========================= */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-bouncy: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --ease-spring-soft: cubic-bezier(0.25, 1.25, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  --duration-micro: 0.1s;
+  --duration-entrance: 0.4s;
+  --duration-exit: 0.25s;
+  --stagger-delay: 40ms;
+
+  /* =========================
+     Z-INDEX LAYERING SYSTEM
+     Organized stacking context
+     ========================= */
+
+  /* Game field elements */
+  --z-game-field: 1;
+
+  /* HUD and in-game UI */
+  --z-hud: 10;
+  --z-controls: 15;
+  --z-panels: 20;
+
+  /* Header and navigation */
+  --z-header: 30;
+
+  /* Tooltips and popovers */
+  --z-tooltip: 40;
+  --z-dropdown: 50;
+
+  /* Modals - main layer (above auth screen z-index 100) */
+  --z-modal-backdrop: 150;
+  --z-modal: 160;
+
+  /* Nested modals (e.g., artifact picker inside hero details) */
+  --z-modal-nested: 170;
+
+  /* Critical modals (confirmations, alerts) */
+  --z-modal-critical: 200;
+
+  /* Toast notifications */
+  --z-toast: 500;
+
+  /* Loading screens (topmost) */
+  --z-loading: 1000;
 }
 
 body {
@@ -182,6 +298,44 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary-50);
+}
+
+/* =========================
+   ASPECT RATIO RESPONSIVE
+   Adjustments for extreme aspect ratios
+   ========================= */
+
+/* Ultra-wide screens (21:9 and wider) */
+@media (min-aspect-ratio: 2/1) {
+  :root {
+    /* Larger UI elements to fill horizontal space */
+    --hub-hero-size: clamp(60px, 7vmin, 90px);
+    --hub-turret-size: clamp(58px, 7vmin, 76px);
+    --slot-size: clamp(48px, 6vmin, 72px);
+  }
+}
+
+/* Tall/portrait screens (mobile) */
+@media (max-aspect-ratio: 3/4) {
+  :root {
+    /* Smaller UI to fit vertical space */
+    --hub-hero-size: clamp(40px, 10vw, 60px);
+    --hub-turret-size: clamp(44px, 10vw, 60px);
+    --slot-size: clamp(36px, 9vw, 52px);
+    --slot-size-compact: clamp(28px, 7vw, 40px);
+  }
+}
+
+/* Small screens (mobile landscape) */
+@media (max-height: 500px) {
+  :root {
+    --hub-hero-size: clamp(40px, 8vh, 60px);
+    --hub-turret-size: clamp(44px, 8vh, 60px);
+    --slot-size: clamp(32px, 6vh, 48px);
+    --slot-size-compact: clamp(28px, 5vh, 36px);
+    --icon-size-lg: clamp(16px, 3vh, 24px);
+    --icon-size-md: clamp(14px, 2.5vh, 20px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

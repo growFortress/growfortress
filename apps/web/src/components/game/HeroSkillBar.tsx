@@ -51,9 +51,11 @@ export function HeroSkillBar({ compact = false }: HeroSkillBarProps) {
 
   return (
     <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
-      <div class={styles.header}>
-        <span class={styles.title}>Skills</span>
-      </div>
+      {!compact && (
+        <div class={styles.header}>
+          <span class={styles.title}>Skills</span>
+        </div>
+      )}
       <div class={styles.heroSkills}>
         {heroes.map((hero) => (
           <HeroSkillGroup key={hero.definitionId} hero={hero} compact={compact} />

@@ -15,6 +15,7 @@ const passwordSchema = z.string()
 export const AuthRegisterRequestSchema = z.object({
   username: usernameSchema,
   password: passwordSchema,
+  email: z.string().email('Nieprawidłowy adres email').optional(),
 });
 
 export type AuthRegisterRequest = z.infer<typeof AuthRegisterRequestSchema>;
@@ -67,7 +68,7 @@ export type AuthRefreshResponse = z.infer<typeof AuthRefreshResponseSchema>;
 export const InventorySchema = z.object({
   gold: z.number().int().min(0),
   dust: z.number().int().min(0),
-  sigils: z.number().int().min(0),
+  materials: z.record(z.string(), z.number()).optional(),
 });
 
 export type Inventory = z.infer<typeof InventorySchema>;
@@ -77,27 +78,35 @@ export const ProgressionSchema = z.object({
   xp: z.number().int().min(0),
   totalXp: z.number().int().min(0),
   xpToNextLevel: z.number().int().min(0),
+  purchasedHeroSlots: z.number().int().min(1).max(6).default(2),
+  purchasedTurretSlots: z.number().int().min(1).max(6).default(1),
 });
 
 export type Progression = z.infer<typeof ProgressionSchema>;
 
 // Fortress class types
 export const FortressClassSchema = z.enum([
-  'natural', 'ice', 'fire', 'lightning', 'tech'
+  'natural', 'ice', 'fire', 'lightning', 'tech', 'void', 'plasma'
 ]);
 export type FortressClassType = z.infer<typeof FortressClassSchema>;
 
-// Hero IDs (starter heroes)
+// Hero IDs (Unit IDs)
 export const HeroIdSchema = z.enum([
-  'thunderlord', 'iron_sentinel', 'jade_titan', 'spider_sentinel',
-  'shield_captain', 'scarlet_mage', 'frost_archer', 'flame_phoenix',
-  'venom_assassin', 'arcane_sorcerer', 'frost_giant', 'cosmic_guardian'
+  'storm', 'forge', 'titan', 'vanguard', 'rift', 'frost',
+  // Exclusive units:
+  'spectre', 'omega',
+  // Future units:
+  'spider_sentinel', 'flame_phoenix', 'venom_assassin',
+  'arcane_sorcerer', 'frost_giant', 'cosmic_guardian'
 ]);
 export type HeroIdType = z.infer<typeof HeroIdSchema>;
 
-// Turret types
+// Turret types (new Sci-Fi IDs with legacy aliases)
 export const TurretTypeSchema = z.enum([
-  'arrow', 'cannon', 'sniper', 'tesla', 'frost', 'flame', 'support', 'poison'
+  'railgun', 'artillery', 'arc', 'cryo',  // Core turrets (new IDs)
+  'arrow', 'cannon', 'tesla', 'frost',     // Legacy aliases (backwards compatibility)
+  // Future turrets:
+  'sniper', 'flame', 'support', 'poison'
 ]);
 export type TurretTypeType = z.infer<typeof TurretTypeSchema>;
 
@@ -109,9 +118,15 @@ export const DefaultLoadoutSchema = z.object({
 });
 export type DefaultLoadout = z.infer<typeof DefaultLoadoutSchema>;
 
+// User role schema
+export const UserRoleSchema = z.enum(['USER', 'ADMIN']);
+export type UserRole = z.infer<typeof UserRoleSchema>;
+
 export const ProfileResponseSchema = z.object({
   userId: z.string(),
   displayName: z.string(),
+  description: z.string(),
+  role: UserRoleSchema,
   inventory: InventorySchema,
   progression: ProgressionSchema,
   currentWave: z.number().int().min(0),
@@ -142,3 +157,18 @@ export const CompleteOnboardingResponseSchema = z.object({
 });
 
 export type CompleteOnboardingResponse = z.infer<typeof CompleteOnboardingResponseSchema>;
+
+// Password reset request
+export const ForgotPasswordRequestSchema = z.object({
+  email: z.string().email('Nieprawidłowy adres email'),
+});
+
+export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;
+
+// Password reset submission
+export const ResetPasswordRequestSchema = z.object({
+  token: z.string().min(1),
+  password: passwordSchema,
+});
+
+export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>;

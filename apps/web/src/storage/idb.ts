@@ -154,11 +154,64 @@ export interface ActiveSessionSnapshot {
     maxHeroSlots: number;
     maxTurretSlots: number;
   };
-  inventory?: { gold: number; dust: number; sigils: number };
+  inventory?: { gold: number; dust: number };
   segmentAuditTicks: number[];
   fortressClass: string;
   startingHeroes: string[];
   startingTurrets: string[];
+  // Remote config values for simulation determinism
+  fortressBaseHp: number;
+  fortressBaseDamage: number;
+  waveIntervalTicks: number;
+  // Power upgrades data for permanent stat bonuses
+  powerData?: {
+    fortressUpgrades: {
+      statUpgrades: {
+        hp: number;
+        damage: number;
+        attackSpeed: number;
+        range: number;
+        critChance: number;
+        critMultiplier: number;
+        armor: number;
+        dodge: number;
+      };
+    };
+    heroUpgrades: Array<{
+      heroId: string;
+      statUpgrades: {
+        hp: number;
+        damage: number;
+        attackSpeed: number;
+        range: number;
+        critChance: number;
+        critMultiplier: number;
+        armor: number;
+        dodge: number;
+      };
+    }>;
+    turretUpgrades: Array<{
+      turretType: string;
+      statUpgrades: {
+        hp: number;
+        damage: number;
+        attackSpeed: number;
+        range: number;
+        critChance: number;
+        critMultiplier: number;
+        armor: number;
+        dodge: number;
+      };
+    }>;
+    itemTiers: Array<{
+      itemId: string;
+      tier: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+    }>;
+    // Hero tier progression (1-3)
+    heroTiers: Record<string, number>;
+    // Turret tier progression (1-3)
+    turretTiers: Record<string, number>;
+  };
   simulationState?: GameState;
   events?: GameEvent[];
   checkpoints?: Checkpoint[];

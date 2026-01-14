@@ -52,6 +52,11 @@
   gap: 8px;
   cursor: pointer;
   transition: var(--transition-interactive-fast);
+  /* Performance: hint browser about transform animations */
+  will-change: transform, box-shadow;
+  /* Performance: skip rendering when off-screen */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 48px;
 }
 
 .heroSlot.filled {
@@ -187,4 +192,16 @@
   50% {
     box-shadow: 0 0 0 5px #00ffff, 0 0 25px rgba(0, 255, 255, 0.7);
   }
+}
+
+/* Hint text for idle mode */
+.hint {
+  font-size: 0.7rem;
+  color: var(--color-text-40);
+  text-align: center;
+  margin: 8px 0 0 0;
+  padding: 6px 10px;
+  background: rgba(0, 20, 40, 0.5);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-text-20);
 }

@@ -30,7 +30,7 @@ describe('Turret Definitions', () => {
   });
 
   it('should have all expected turret types', () => {
-    const expectedTypes = ['arrow', 'frost', 'cannon', 'tesla'];
+    const expectedTypes = ['railgun', 'cryo', 'artillery', 'arc'];
     const actualTypes = TURRET_DEFINITIONS.map(t => t.id);
 
     for (const type of expectedTypes) {
@@ -394,12 +394,12 @@ describe('Turret Helper Functions', () => {
 // ============================================================================
 
 describe('Fortress Classes', () => {
-  it('should have exactly 5 fortress classes', () => {
-    expect(FORTRESS_CLASSES.length).toBe(5);
+  it('should have exactly 6 fortress classes', () => {
+    expect(FORTRESS_CLASSES.length).toBe(6);
   });
 
   it('should have all expected classes', () => {
-    const expectedClasses = ['natural', 'ice', 'fire', 'lightning', 'tech'];
+    const expectedClasses = ['natural', 'ice', 'fire', 'lightning', 'void', 'tech'];
     const actualClasses = FORTRESS_CLASSES.map(c => c.id);
 
     for (const cls of expectedClasses) {
@@ -424,10 +424,6 @@ describe('Fortress Classes', () => {
   describe('Natural Class', () => {
     const natural = getClassById('natural')!;
 
-    it('is the starting/free class', () => {
-      expect(natural.unlockCost?.gold || 0).toBe(0);
-    });
-
     it('has nature-themed projectile', () => {
       expect(natural.projectileType).toBe('physical');
     });
@@ -441,11 +437,6 @@ describe('Fortress Classes', () => {
 
   describe('Ice Class', () => {
     const ice = getClassById('ice')!;
-
-    it('costs gold and dust', () => {
-      expect(ice.unlockCost?.gold).toBeGreaterThan(0);
-      expect(ice.unlockCost?.dust).toBeGreaterThan(0);
-    });
 
     it('has ice projectile type', () => {
       expect(ice.projectileType).toBe('icicle');

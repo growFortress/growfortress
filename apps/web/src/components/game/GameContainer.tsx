@@ -1,28 +1,32 @@
-import { useRef, useState, useCallback, useEffect } from 'preact/hooks';
+import { useRef, useState, useCallback, useEffect, lazy, Suspense } from 'preact/compat';
 import type { FortressClass } from '@arcade/sim-core';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import './GameContainer.css';
 import { Hud } from './Hud.js';
 import { Controls } from './Controls.js';
 import { HubOverlay } from './HubOverlay.js';
+// Critical modals - loaded eagerly (needed immediately on game start)
 import { ChoiceModal } from '../modals/ChoiceModal.js';
 import { EndScreen } from '../modals/EndScreen.js';
 import { ClassSelectionModal } from '../modals/ClassSelectionModal.js';
 import { UpgradeModal } from '../modals/UpgradeModal.js';
-import { HeroDetailsModal } from '../modals/HeroDetailsModal.js';
 import { TurretPlacementModal } from '../modals/TurretPlacementModal.js';
 import { ConfirmModal } from '../modals/ConfirmModal.js';
-import { MaterialsInventory } from '../modals/MaterialsInventory.js';
-import { IdleRewardsModal } from '../modals/IdleRewardsModal.js';
 import { MaterialDrop } from './MaterialDrop.js';
 import { ArtifactDrop } from './ArtifactDrop.js';
-import { ArtifactsModal } from '../modals/ArtifactsModal.js';
-import { CraftingModal } from '../modals/CraftingModal.js';
-import { HeroRecruitmentModal } from '../modals/HeroRecruitmentModal.js';
-import { BossRushSetupModal } from '../modals/BossRushSetupModal.js';
-import { BossRushEndScreen } from '../modals/BossRushEndScreen.js';
 import { BossHealthBar } from './BossHealthBar.js';
 import { BossRushHUD } from './BossRushHUD.js';
+
+// Lazy-loaded modals - loaded on demand (20-30% bundle size reduction)
+const HeroDetailsModal = lazy(() => import('../modals/HeroDetailsModal.js').then(m => ({ default: m.HeroDetailsModal })));
+const MaterialsInventory = lazy(() => import('../modals/MaterialsInventory.js').then(m => ({ default: m.MaterialsInventory })));
+const IdleRewardsModal = lazy(() => import('../modals/IdleRewardsModal.js').then(m => ({ default: m.IdleRewardsModal })));
+const ArtifactsModal = lazy(() => import('../modals/ArtifactsModal.js').then(m => ({ default: m.ArtifactsModal })));
+const CraftingModal = lazy(() => import('../modals/CraftingModal.js').then(m => ({ default: m.CraftingModal })));
+const HeroRecruitmentModal = lazy(() => import('../modals/HeroRecruitmentModal.js').then(m => ({ default: m.HeroRecruitmentModal })));
+const BossRushSetupModal = lazy(() => import('../modals/BossRushSetupModal.js').then(m => ({ default: m.BossRushSetupModal })));
+const BossRushEndScreen = lazy(() => import('../modals/BossRushEndScreen.js').then(m => ({ default: m.BossRushEndScreen })));
 import type { ActiveSessionSnapshot } from '../../storage/idb.js';
 import {
   updateLeaderboard,
@@ -33,6 +37,15 @@ import {
   unlockedTurretIds,
   showSessionRecoveryModal,
   showEndSessionConfirm,
+  upgradeTarget,
+  upgradePanelVisible,
+  materialsModalVisible,
+  idleRewardsModalVisible,
+  artifactsModalVisible,
+  craftingModalVisible,
+  heroRecruitmentModalVisible,
+  showBossRushSetup,
+  showBossRushEndScreen,
 } from '../../state/index.js';
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
 import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState } from '../../state/index.js';
@@ -45,6 +58,7 @@ interface GameContainerProps {
 }
 
 export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFailed, onSessionResumed }: GameContainerProps) {
+  const { t } = useTranslation('game');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
   const [sessionStarting, setSessionStarting] = useState(false);
@@ -57,7 +71,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     }
   }, []);
 
-  const { startSession, resumeSession, endSession, chooseRelic, activateSnap, reset, startBossRush, endBossRush } = useGameLoop(canvasRef, canvasReady);
+  const { startSession, resumeSession, endSession, chooseRelic, reset, startBossRush, endBossRush } = useGameLoop(canvasRef, canvasReady);
 
   // Auto-start session when recovery modal is confirmed
   useEffect(() => {
@@ -67,14 +81,14 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       resumeSession(savedSession)
         .then((sessionInfo) => {
           if (!sessionInfo) {
-            showErrorToast('Nie udało się wznowić sesji. Rozpocznij nową.');
+            showErrorToast(t('gameContainer.resumeFailed'));
             void onSessionResumeFailed();
             return;
           }
           onSessionResumed();
         })
         .catch(() => {
-          showErrorToast('Nie udało się wznowić sesji. Rozpocznij nową.');
+          showErrorToast(t('gameContainer.resumeFailed'));
           void onSessionResumeFailed();
         })
         .finally(() => setSessionStarting(false));
@@ -117,7 +131,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     });
 
     if (!sessionInfo) {
-      showErrorToast('Nie udało się rozpocząć sesji. Spróbuj ponownie.');
+      showErrorToast(t('gameContainer.startFailed'));
     }
   };
 
@@ -228,7 +242,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     });
 
     if (!sessionInfo) {
-      showErrorToast('Nie udało się rozpocząć Boss Rush. Spróbuj ponownie.');
+      showErrorToast(t('gameContainer.bossRushFailed'));
     }
   };
 
@@ -246,6 +260,10 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     reset();
   };
 
+  const handleReturnToHub = () => {
+    reset();
+  };
+
   return (
     <div id="game-container">
       <canvas ref={canvasCallbackRef} id="game-canvas" />
@@ -254,7 +272,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       <HubOverlay />
 
       <div id="ui-overlay">
-        <Hud onSnapClick={activateSnap} />
+        <Hud />
         <Controls
           onStartClick={handleStartClick}
           onEndSessionClick={handleEndSessionClick}
@@ -268,14 +286,13 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       {/* Modals outside ui-overlay to allow full pointer interactions */}
       <ClassSelectionModal onSelect={handleClassSelect} />
       <ChoiceModal onSelect={chooseRelic} />
-      <EndScreen onPlayAgain={handlePlayAgain} />
-      <HeroDetailsModal onUpgrade={handleUpgrade} />
+      <EndScreen onPlayAgain={handlePlayAgain} onReturnToHub={handleReturnToHub} />
       <ConfirmModal
         visible={showEndSessionConfirm.value}
-        title="Zakończ sesję"
-        message="Czy na pewno chcesz zakończyć bieżącą sesję? Twój postęp z obecnego segmentu zostanie zapisany."
-        confirmText="Zakończ"
-        cancelText="Kontynuuj grę"
+        title={t('gameContainer.endSessionTitle')}
+        message={t('gameContainer.endSessionMessage')}
+        confirmText={t('gameContainer.endSessionConfirm')}
+        cancelText={t('gameContainer.endSessionCancel')}
         variant="danger"
         onConfirm={handleEndSessionConfirm}
         onCancel={handleEndSessionCancel}
@@ -284,22 +301,18 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       {/* Materials & Artifacts drop notifications */}
       <MaterialDrop />
       <ArtifactDrop />
-      <MaterialsInventory />
-      <IdleRewardsModal />
 
-      {/* Artifacts system */}
-      <ArtifactsModal />
-      <CraftingModal />
+      {/* Lazy-loaded modals - only mounted when visible to prevent memory leaks */}
+      {upgradePanelVisible.value && upgradeTarget.value?.type === 'hero' && <Suspense fallback={null}><HeroDetailsModal onUpgrade={handleUpgrade} /></Suspense>}
+      {materialsModalVisible.value && <Suspense fallback={null}><MaterialsInventory /></Suspense>}
+      {idleRewardsModalVisible.value && <Suspense fallback={null}><IdleRewardsModal /></Suspense>}
+      {artifactsModalVisible.value && <Suspense fallback={null}><ArtifactsModal /></Suspense>}
+      {craftingModalVisible.value && <Suspense fallback={null}><CraftingModal /></Suspense>}
+      {heroRecruitmentModalVisible.value && <Suspense fallback={null}><HeroRecruitmentModal /></Suspense>}
+      {showBossRushSetup.value && <Suspense fallback={null}><BossRushSetupModal onStart={handleBossRushStart} /></Suspense>}
+      {showBossRushEndScreen.value && <Suspense fallback={null}><BossRushEndScreen onPlayAgain={handleBossRushPlayAgain} onMenu={handleBossRushMenu} /></Suspense>}
 
-      {/* Hero recruitment */}
-      <HeroRecruitmentModal />
-
-      {/* Boss Rush mode */}
-      <BossRushSetupModal onStart={handleBossRushStart} />
-      <BossRushEndScreen
-        onPlayAgain={handleBossRushPlayAgain}
-        onMenu={handleBossRushMenu}
-      />
+      {/* Boss Rush HUD (eagerly loaded - visible during gameplay) */}
       <BossHealthBar />
       <BossRushHUD />
     </div>

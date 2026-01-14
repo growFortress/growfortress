@@ -24,14 +24,11 @@ export const SessionEndRequestSchema = z.object({
 
 export type SessionEndRequest = z.infer<typeof SessionEndRequestSchema>;
 
-// Update default loadout request
+// Update default loadout request (aligned with actual implementation)
 export const UpdateLoadoutRequestSchema = z.object({
-  defaultHeroes: z.array(z.string()).max(4).optional(),
-  defaultTurrets: z.array(z.object({
-    slotIndex: z.number().int().min(0).max(7),
-    turretId: z.string(),
-  })).max(8).optional(),
   fortressClass: FortressClassSchema.optional(),
+  heroId: z.string().optional(),
+  turretType: z.string().optional(),
 });
 
 export type UpdateLoadoutRequest = z.infer<typeof UpdateLoadoutRequestSchema>;
@@ -41,11 +38,48 @@ export const ProgressionBonusesSchema = z.object({
   damageMultiplier: z.number(),
   goldMultiplier: z.number(),
   startingGold: z.number(),
-  maxHeroSlots: z.number().int().min(1).max(4),
+  maxHeroSlots: z.number().int().min(1).max(6),
   maxTurretSlots: z.number().int().min(1).max(6),
 });
 
 export type ProgressionBonuses = z.infer<typeof ProgressionBonusesSchema>;
+
+// Stat upgrades schema for power data
+const StatUpgradesSchema = z.object({
+  hp: z.number().int().min(0),
+  damage: z.number().int().min(0),
+  attackSpeed: z.number().int().min(0),
+  range: z.number().int().min(0),
+  critChance: z.number().int().min(0),
+  critMultiplier: z.number().int().min(0),
+  armor: z.number().int().min(0),
+  dodge: z.number().int().min(0),
+});
+
+// Power data schema for session start
+export const PowerDataSchema = z.object({
+  fortressUpgrades: z.object({
+    statUpgrades: StatUpgradesSchema,
+  }),
+  heroUpgrades: z.array(z.object({
+    heroId: z.string(),
+    statUpgrades: StatUpgradesSchema,
+  })),
+  turretUpgrades: z.array(z.object({
+    turretType: z.string(),
+    statUpgrades: StatUpgradesSchema,
+  })),
+  itemTiers: z.array(z.object({
+    itemId: z.string(),
+    tier: z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  })),
+  // Hero tier progression (1-3)
+  heroTiers: z.record(z.string(), z.number().int().min(1).max(3)),
+  // Turret tier progression (1-3)
+  turretTiers: z.record(z.string(), z.number().int().min(1).max(3)),
+});
+
+export type PowerData = z.infer<typeof PowerDataSchema>;
 
 // Session start response
 export const SessionStartResponseSchema = z.object({
@@ -63,6 +97,8 @@ export const SessionStartResponseSchema = z.object({
   fortressBaseHp: z.number().int().min(1),
   fortressBaseDamage: z.number().int().min(1),
   waveIntervalTicks: z.number().int().min(1),
+  // Power upgrades data for permanent stat bonuses
+  powerData: PowerDataSchema,
 });
 
 export type SessionStartResponse = z.infer<typeof SessionStartResponseSchema>;
@@ -79,6 +115,15 @@ export const SegmentSubmitRequestSchema = z.object({
 
 export type SegmentSubmitRequest = z.infer<typeof SegmentSubmitRequestSchema>;
 
+// Extended inventory schema for session responses (includes materials)
+export const SessionInventorySchema = z.object({
+  gold: z.number().int().min(0),
+  dust: z.number().int().min(0),
+  materials: z.record(z.string(), z.number().int().min(0)).optional(),
+});
+
+export type SessionInventory = z.infer<typeof SessionInventorySchema>;
+
 // Segment submit response
 export const SegmentSubmitResponseSchema = z.object({
   verified: z.boolean(),
@@ -86,8 +131,9 @@ export const SegmentSubmitResponseSchema = z.object({
   goldEarned: z.number(),
   dustEarned: z.number(),
   xpEarned: z.number(),
+  materialsEarned: z.record(z.string(), z.number().int().min(0)).optional(),
   nextSegmentAuditTicks: z.array(z.number()),
-  newInventory: InventorySchema,
+  newInventory: SessionInventorySchema,
   newProgression: z.object({
     level: z.number().int().min(1),
     xp: z.number().int().min(0),
@@ -114,6 +160,25 @@ export const SessionEndResponseSchema = z.object({
   totalGoldEarned: z.number(),
   totalDustEarned: z.number(),
   totalXpEarned: z.number(),
+  newInventory: z.object({
+    gold: z.number(),
+    dust: z.number(),
+  }),
+  newProgression: z.object({
+    level: z.number().int().min(1),
+    xp: z.number().int().min(0),
+    totalXp: z.number().int().min(0),
+    xpToNextLevel: z.number().int().min(0),
+  }),
 });
 
 export type SessionEndResponse = z.infer<typeof SessionEndResponseSchema>;
+
+// Active session response (for resuming sessions)
+export const ActiveSessionResponseSchema = z.object({
+  sessionId: z.string(),
+  currentWave: z.number().int().min(0),
+  startedAt: z.string().datetime(),
+});
+
+export type ActiveSessionResponse = z.infer<typeof ActiveSessionResponseSchema>;

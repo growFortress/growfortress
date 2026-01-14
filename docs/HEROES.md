@@ -1,23 +1,65 @@
-# Heroes
+# Combat Units (Jednostki Bojowe)
 
-The game features 6 heroes, each with 3 tiers and 2 skills per tier.
+The game features 8 combat units, each with 3 tiers and unique skills per tier.
 
 ## Overview
 
-| Hero | Class | Role | Rarity | Marvel Inspiration |
-|------|-------|------|--------|-------------------|
-| Thunderlord | Lightning | DPS | Starter | Thor |
-| Iron Sentinel | Tech | Tank | Rare | Iron Man |
-| Jade Titan | Natural | Tank | Epic | Hulk |
-| Shield Captain | Natural | Tank | Starter | Captain America |
-| Scarlet Mage | Fire | DPS | Epic | Scarlet Witch |
-| Frost Archer | Ice | DPS | Rare | Hawkeye |
+| Unit | Configuration | Role | Rarity | Unlock |
+|------|---------------|------|--------|--------|
+| Unit-0 "Vanguard" | Standardowa | Tank | Starter | Level 1 |
+| Unit-7 "Storm" | Elektryczna | DPS | Starter | Level 1 |
+| Unit-3 "Forge" | Kwantowa | DPS | Common | Level 10 |
+| Unit-5 "Frost" | Kriogeniczna | Crowd Control | Common | Level 20 |
+| Unit-9 "Rift" | Termiczna | Support | Rare | Level 30 |
+| Unit-1 "Titan" | Próżniowa | Tank | Epic | Level 40 |
+| Unit-4 "Spectre" | Plasma | DPS | Rare (Exclusive) | Level 1* |
+| Unit-X "Omega" | Próżniowa | Assassin | Legendary (Exclusive) | Level 1* |
+
+*Exclusive units are available from level 1 but require premium currency purchase.
 
 ---
 
-## Thunderlord
+## Unit-0 "Vanguard"
 
-**Class**: Lightning | **Role**: DPS | **Inspiration**: Thor
+**Configuration**: Standardowa | **Role**: Tank | **Rarity**: Starter
+
+### Base Stats
+| Stat | Value |
+|------|-------|
+| HP | 200 |
+| Damage | 18 |
+| Attack Speed | 1.0/s |
+| Range | 5 |
+| Move Speed | 0.09 |
+
+### Weakness
+- **Tylko Człowiek**: +20% damage from Lightning attacks
+
+### Tiers
+
+**Tier 1: Unit-0 "Vanguard"**
+- Stat Multiplier: 1.0x
+- Skills:
+  - *Impuls Tarczy*: Bounces between enemies (30 DMG area)
+  - *Aura Dowodzenia*: +10% ally damage (passive)
+
+**Tier 2: Unit-0 "Vanguard" Mk.II** (Level 10, 500g + 50 dust)
+- Stat Multiplier: 1.4x
+- Skills:
+  - *Podwójna Bariera*: Two barriers at once (45 DMG area)
+  - *Weteran*: +25% damage reduction (passive)
+
+**Tier 3: Unit-0 "Vanguard" APEX** (Level 20, 2000g + 200 dust + Vibranium)
+- Stat Multiplier: 1.8x
+- Skills:
+  - *Młot Kinetyczny*: High power kinetic weapon (80 DMG area + 2s stun)
+  - *Rozkaz Rajdu* (ULTIMATE): +50% damage to all allies for 10s
+
+---
+
+## Unit-7 "Storm"
+
+**Configuration**: Elektryczna | **Role**: DPS | **Rarity**: Starter
 
 ### Base Stats
 | Stat | Value |
@@ -29,219 +71,304 @@ The game features 6 heroes, each with 3 tiers and 2 skills per tier.
 | Move Speed | 0.08 |
 
 ### Weakness
-- **Fire Vulnerability**: +25% damage from Fire attacks
+- **Wrażliwość na Ogień**: +25% damage from Fire attacks
 
 ### Tiers
 
-**Tier 1: Thunderlord**
+**Tier 1: Unit-7 "Storm"**
 - Stat Multiplier: 1.0x
 - Skills:
-  - *Hammer Throw*: Throws hammer dealing 40 damage
-  - *Storm Passive*: +15% chain damage
+  - *Uderzenie Łukowe*: Arc strike dealing 40 damage
+  - *Protokół Burzowy*: +15% chain damage (passive)
 
-**Tier 2: God of Thunder** (Level 10, 500g + 50 dust)
+**Tier 2: Unit-7 "Storm" Mk.II** (Level 10, 500g + 50 dust)
 - Stat Multiplier: 1.5x
 - Skills:
-  - *Mjolnir*: Powerful throw with chain lightning, 60 damage
-  - *Storm Lord*: +30% chain damage, +10% chain chance
+  - *Łańcuch Błyskawic*: Chain lightning attack (60 DMG)
+  - *Władca Piorunów*: +30% chain damage, +10% chain chance (passive)
 
-**Tier 3: Rune King** (Level 20, 1000g + 100 dust)
+**Tier 3: Unit-7 "Storm" APEX** (Level 20, 2000g + 200 dust + Uru)
 - Stat Multiplier: 2.0x
 - Skills:
-  - *Odinforce*: Ultimate lightning storm, massive AoE
-  - *All-Father's Blessing*: Team-wide lightning buffs
+  - *Działo Jonowe*: Ultimate energy weapon (100 DMG)
+  - *Burza EMP* (ULTIMATE): Massive EMP explosion (200 DMG to all + 3s stun)
 
 ---
 
-## Iron Sentinel
+## Unit-3 "Forge"
 
-**Class**: Tech | **Role**: Tank | **Inspiration**: Iron Man
-
-### Base Stats
-| Stat | Value |
-|------|-------|
-| HP | 200 |
-| Damage | 20 |
-| Attack Speed | 0.8/s |
-| Range | 7 |
-| Move Speed | 0.06 |
-
-### Weakness
-- **Lightning Vulnerability**: +25% damage from Lightning attacks
-
-### Tiers
-
-**Tier 1: Iron Sentinel**
-- Shield and ranged attacks
-- *Repulsor Blast*: Single target damage
-- *Iron Plating*: +20% armor
-
-**Tier 2: War Machine** (Level 10)
-- Heavy weapons and improved armor
-- *Missile Barrage*: AoE damage
-- *Titanium Alloy*: +40% armor, damage reduction
-
-**Tier 3: Hulkbuster** (Level 20)
-- Maximum durability
-- *Orbital Strike*: Massive AoE
-- *Veronica Protocol*: Team shields
-
----
-
-## Jade Titan
-
-**Class**: Natural | **Role**: Tank | **Inspiration**: Hulk
-
-### Base Stats
-| Stat | Value |
-|------|-------|
-| HP | 300 |
-| Damage | 30 |
-| Attack Speed | 0.6/s |
-| Range | 3 |
-| Move Speed | 0.05 |
-
-### Weakness
-- **Ice Vulnerability**: +25% damage from Ice attacks
-
-### Tiers
-
-**Tier 1: Jade Titan**
-- Raw strength and durability
-- *Smash*: High melee damage
-- *Rage*: Damage increases as HP drops
-
-**Tier 2: Worldbreaker** (Level 15)
-- Increased power and rage
-- *Thunderclap*: AoE stun
-- *Gamma Surge*: HP regen when damaged
-
-**Tier 3: Immortal Hulk** (Level 25)
-- Unstoppable force
-- *World Shatter*: Ultimate ground pound
-- *Immortality*: Revive once per run
-
----
-
-## Shield Captain
-
-**Class**: Natural | **Role**: Tank | **Inspiration**: Captain America
-
-### Base Stats
-| Stat | Value |
-|------|-------|
-| HP | 180 |
-| Damage | 18 |
-| Attack Speed | 1.0/s |
-| Range | 5 |
-| Move Speed | 0.07 |
-
-### Weakness
-- **Tech Vulnerability**: +25% damage from Tech attacks
-
-### Tiers
-
-**Tier 1: Shield Captain**
-- Balanced tank with utility
-- *Shield Throw*: Bounces between enemies
-- *Inspiring Presence*: +10% ally damage
-
-**Tier 2: Super Soldier** (Level 10)
-- Enhanced capabilities
-- *Vibranium Bash*: Stun and damage
-- *Tactical Leader*: +20% ally attack speed
-
-**Tier 3: Sentinel of Liberty** (Level 20)
-- Peak human potential
-- *Final Stand*: Team invulnerability (3s)
-- *Avengers Assemble*: Massive team buff
-
----
-
-## Scarlet Mage
-
-**Class**: Fire | **Role**: DPS | **Inspiration**: Scarlet Witch
+**Configuration**: Kwantowa | **Role**: DPS | **Rarity**: Common
 
 ### Base Stats
 | Stat | Value |
 |------|-------|
 | HP | 120 |
-| Damage | 35 |
-| Attack Speed | 0.9/s |
+| Damage | 30 |
+| Attack Speed | 1.5/s |
 | Range | 8 |
-| Move Speed | 0.06 |
+| Move Speed | 0.10 |
 
 ### Weakness
-- **Natural Vulnerability**: +25% damage from Natural attacks
+- **Wrażliwość na EMP**: +30% damage from Lightning attacks
 
 ### Tiers
 
-**Tier 1: Scarlet Mage**
-- Chaos magic attacks
-- *Hex Bolt*: High damage single target
-- *Probability Shift*: +10% crit chance
+**Tier 1: Unit-3 "Forge"**
+- Stat Multiplier: 1.0x
+- Skills:
+  - *Impuls Laserowy*: Precision laser shot (25 DMG)
+  - *Silniki Odrzutowe*: +20% movement speed (passive)
 
-**Tier 2: Chaos Witch** (Level 15)
-- Reality manipulation
-- *Reality Warp*: AoE damage + confusion
-- *Chaos Field*: Enemies take +20% damage
+**Tier 2: Unit-3 "Forge" Mk.II** (Level 10, 500g + 50 dust)
+- Stat Multiplier: 1.5x
+- Skills:
+  - *Salwa Rakietowa*: Multiple guided missiles (40 DMG area)
+  - *System Celowania*: +20% crit chance (passive)
 
-**Tier 3: Nexus Being** (Level 25)
-- Ultimate power
-- *No More Enemies*: Instant kill on weakened
-- *Multiverse Collapse*: Screen-wide damage
+**Tier 3: Unit-3 "Forge" APEX** (Level 20, 2000g + 200 dust + Extremis)
+- Stat Multiplier: 2.0x
+- Skills:
+  - *Rój Nanorobotów*: Adaptive nano-weapons (60 DMG area + 20 heal)
+  - *Uderzenie Orbitalne* (ULTIMATE): Massive orbital beam (300 DMG area)
+
+### Unlock Cost
+3,000g + 500 dust
 
 ---
 
-## Frost Archer
+## Unit-5 "Frost"
 
-**Class**: Ice | **Role**: DPS | **Inspiration**: Hawkeye
+**Configuration**: Kriogeniczna | **Role**: Crowd Control | **Rarity**: Common
 
 ### Base Stats
 | Stat | Value |
 |------|-------|
-| HP | 100 |
+| HP | 80 |
 | Damage | 28 |
-| Attack Speed | 1.4/s |
-| Range | 10 |
-| Move Speed | 0.08 |
+| Attack Speed | 1.8/s |
+| Range | 12 |
+| Move Speed | 0.10 |
 
 ### Weakness
-- **Fire Vulnerability**: +25% damage from Fire attacks
+- **Brak Mocy**: -40% max HP
 
 ### Tiers
 
-**Tier 1: Frost Archer**
-- Precise ice arrows
-- *Frost Arrow*: Slows target
-- *Eagle Eye*: +15% crit chance
+**Tier 1: Unit-5 "Frost"**
+- Stat Multiplier: 1.0x
+- Skills:
+  - *Strzał Kriogeniczny*: Slows target (25 DMG + 40% slow for 3s)
+  - *Precyzja*: +15% crit chance (passive)
 
-**Tier 2: Winter's Edge** (Level 10)
-- Improved ice effects
-- *Blizzard Arrow*: AoE slow and damage
-- *Cold Precision*: Crits freeze enemies
+**Tier 2: Unit-5 "Frost" Mk.II** (Level 10, 500g + 50 dust)
+- Stat Multiplier: 1.5x
+- Skills:
+  - *Wielostrzał*: 3 projectiles at once (20 DMG area)
+  - *Mistrzostwo Lodu*: +25% ice damage, +10% slow duration (passive)
 
-**Tier 3: Absolute Zero** (Level 20)
-- Maximum ice power
-- *Ice Storm*: Massive AoE freeze
-- *Permafrost*: Frozen enemies shatter for bonus damage
+**Tier 3: Unit-5 "Frost" APEX** (Level 20, 2000g + 200 dust)
+- Stat Multiplier: 2.0x
+- Skills:
+  - *Strzał Kruszący*: Double damage to frozen targets (60 DMG)
+  - *Nawałnica Lodowa* (ULTIMATE): Rain of ice arrows (80 DMG to all + 3s freeze)
+
+### Unlock Cost
+3,000g + 500 dust
 
 ---
 
-## Hero Slots
+## Unit-9 "Rift"
 
-Heroes are unlocked by fortress level:
+**Configuration**: Termiczna | **Role**: Support | **Rarity**: Rare
 
-| Fortress Level | Hero Slots |
+### Base Stats
+| Stat | Value |
+|------|-------|
+| HP | 90 |
+| Damage | 35 |
+| Attack Speed | 0.8/s |
+| Range | 10 |
+| Move Speed | 0.07 |
+
+### Weakness
+- **Krucha Psychika**: Stun deals additional damage
+
+### Tiers
+
+**Tier 1: Unit-9 "Rift"**
+- Stat Multiplier: 1.0x
+- Skills:
+  - *Impuls Plazmowy*: High temperature plasma bolt (40 DMG)
+  - *Probability Manipulation*: +15% luck (passive)
+
+**Tier 2: Unit-9 "Rift" Mk.II** (Level 10, 500g + 50 dust)
+- Stat Multiplier: 1.5x
+- Skills:
+  - *Fala Plazmowa*: Area thermal damage (60 DMG area)
+  - *Fluktuacja Termiczna*: Random buffs/debuffs (passive)
+
+**Tier 3: Unit-9 "Rift" APEX** (Level 20, 2000g + 200 dust + Darkforce)
+- Stat Multiplier: 2.0x
+- Skills:
+  - *Tarcza Plazmowa*: Protective plasma sphere (100 shield for 8s)
+  - *Anihilacja Termiczna* (ULTIMATE): Instantly deals 50% current HP to all enemies
+
+### Unlock Cost
+6,000g + 1,000 dust
+
+---
+
+## Unit-1 "Titan"
+
+**Configuration**: Próżniowa | **Role**: Tank | **Rarity**: Epic
+
+### Base Stats
+| Stat | Value |
+|------|-------|
+| HP | 300 |
+| Damage | 35 |
+| Attack Speed | 0.7/s |
+| Range | 3 |
+| Move Speed | 0.06 |
+
+### Weakness
+- **Podatny na Kontrolę**: Stun/Freeze duration +50%
+
+### Tiers
+
+**Tier 1: Unit-1 "Titan"**
+- Stat Multiplier: 1.0x
+- Skills:
+  - *Uderzenie Próżni*: Dimensional energy strike (50 DMG area + 1.5s stun)
+  - *Absorpcja Próżni*: Damage increases as HP drops (passive)
+
+**Tier 2: Unit-1 "Titan" Mk.II** (Level 10, 500g + 50 dust)
+- Stat Multiplier: 1.6x
+- Skills:
+  - *Szczelina Wymiarowa*: Space rift pulling enemies (80 DMG to all + 40% slow for 4s)
+  - *Rezonans Próżni*: +100% damage when HP below 30% (passive)
+
+**Tier 3: Unit-1 "Titan" APEX** (Level 20, 2000g + 200 dust + Dark Matter)
+- Stat Multiplier: 2.2x
+- Skills:
+  - *Eksplozja Próżniowa*: Powerful void energy explosion (120 DMG area)
+  - *Kolaps Wymiarowy* (ULTIMATE): Creates black hole (250 DMG to all + 4s stun)
+
+### Unlock Cost
+12,000g + 2,000 dust
+
+---
+
+## Unit-4 "Spectre" (Exclusive)
+
+**Configuration**: Plasma | **Role**: DPS | **Rarity**: Rare (Exclusive)
+
+### Base Stats
+| Stat | Value |
+|------|-------|
+| HP | 140 |
+| Damage | 33 |
+| Attack Speed | 1.6/s |
+| Range | 9 |
+| Move Speed | 0.09 |
+
+### Weakness
+- **Niestabilność Energii**: +35% damage from Void attacks
+
+### Tiers
+
+**Tier 1: Unit-4 "Spectre"**
+- Stat Multiplier: 1.0x
+- Skills:
+  - *Impuls Plazmowy*: Concentrated plasma burst (45 DMG)
+  - *Protokół Kamuflażu*: +20% crit chance (passive)
+
+**Tier 2: Unit-4 "Spectre" Mk.II** (Level 10, 750g + 75 dust)
+- Stat Multiplier: 1.6x
+- Skills:
+  - *Lanca Plazmowa*: Piercing plasma attack (65 DMG area)
+  - *Przesunięcie Fazowe*: +30% crit chance, +15% attack speed (passive)
+
+**Tier 3: Unit-4 "Spectre" APEX** (Level 20, 2500g + 250 dust + Cosmic Dust)
+- Stat Multiplier: 2.1x
+- Skills:
+  - *Przeciążenie Plazmowe*: Massive plasma explosion (100 DMG area)
+  - *Protokół Widmo* (ULTIMATE): Become invisible, next attack deals 300% damage (150 DMG)
+
+### Unlock Cost
+25,000g (Gold only - exclusive purchase)
+
+---
+
+## Unit-X "Omega" (Exclusive)
+
+**Configuration**: Próżniowa | **Role**: Assassin | **Rarity**: Legendary (Exclusive)
+
+### Base Stats
+| Stat | Value |
+|------|-------|
+| HP | 110 |
+| Damage | 45 |
+| Attack Speed | 1.1/s |
+| Range | 7 |
+| Move Speed | 0.11 |
+
+### Weakness
+- **Niestabilna Moc**: +20% damage taken when HP < 50%
+
+### Tiers
+
+**Tier 1: Unit-X "Omega"**
+- Stat Multiplier: 1.0x
+- Skills:
+  - *Egzekucja*: 80 DMG + 100% bonus vs targets <30% HP
+  - *Śmiertelna Precyzja*: +25% crit damage, crits heal 10 HP (passive)
+
+**Tier 2: Unit-X "Omega" Mk.II** (Level 10, 1000g + 100 dust)
+- Stat Multiplier: 1.7x
+- Skills:
+  - *Cięcie Próżni*: Dash through enemies (100 DMG area + 30% slow for 3s)
+  - *Instynkt Łowcy*: +40% crit damage, execute threshold 40% (passive)
+
+**Tier 3: Unit-X "Omega" APEX** (Level 20, 3000g + 300 dust + Dark Matter)
+- Stat Multiplier: 2.3x
+- Skills:
+  - *Znak Śmierci*: Mark target for +50% damage for 5s (120 DMG)
+  - *Protokół Omega* (ULTIMATE): Instant kill if target <25% HP, otherwise 400 DMG
+
+### Unlock Cost
+5,000 dust (Dust only - legendary exclusive purchase)
+
+---
+
+## Unit Slots
+
+Units are unlocked by fortress level:
+
+| Fortress Level | Unit Slots |
 |----------------|------------|
 | 1 | 1 |
 | 10 | 2 |
-| 25 | 3 |
+| 30 | 3 |
 | 45 | 4 |
 
 ## Tier Upgrade Costs
 
 | Tier | Gold | Dust | Level Required |
 |------|------|------|----------------|
-| 2 | 500 | 50 | 10 |
-| 3 | 1000 | 100 | 20 |
+| 1→2 | 500 | 50 | 10 |
+| 2→3 | 2000 | 200 | 20 |
+
+*Tier 3 upgrades may require special materials depending on the unit.*
+
+## Unit Unlock Progression
+
+| Level | Units Unlocked |
+|-------|----------------|
+| 1 | Vanguard, Storm (starters), Spectre*, Omega* |
+| 10 | Forge |
+| 20 | Frost |
+| 30 | Rift |
+| 40 | Titan |
+
+*Available for purchase from level 1 but require premium currency.

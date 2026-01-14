@@ -3,6 +3,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 12px 24px;
   font-family: var(--font-display);
   font-size: 16px;
@@ -19,12 +20,62 @@
   overflow: hidden;
   user-select: none;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* Content wrapper for proper text alignment */
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+/* Icon containers */
+.iconLeft,
+.iconRight {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.iconLeft {
+  margin-right: 2px;
+}
+
+.iconRight {
+  margin-left: 2px;
+}
+
+/* Icon hover animation */
+.btn:hover:not(:disabled) .iconRight {
+  transform: translateX(2px);
+}
+
+.btn:hover:not(:disabled) .iconLeft {
+  transform: translateX(-2px);
+}
+
+/* Has icon modifier - tighter padding */
+.hasIcon {
+  padding: 12px 20px;
+}
+
+/* Full width modifier */
+.fullWidth {
+  width: 100%;
+}
+
+/* Enhanced focus ring */
 .btn:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-  box-shadow: var(--shadow-sm), var(--glow-primary);
+  outline: none;
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 2px var(--color-bg-deep),
+    0 0 0 4px var(--color-primary),
+    var(--glow-primary);
 }
 
 .btn:hover:not(:disabled) {
@@ -33,13 +84,94 @@
 }
 
 .btn:active:not(:disabled) {
-  transform: scale(1);
+  transform: scale(0.98);
+  transition-duration: 0.1s;
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
-  filter: grayscale(0.5);
+  filter: grayscale(0.3);
+  border-style: dashed;
+}
+
+/* Loading state */
+.loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.loading .content {
+  opacity: 0.7;
+}
+
+/* Spinner */
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: spin 1s linear infinite;
+}
+
+.spinnerCircle {
+  animation: spinnerDash 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinnerDash {
+  0% {
+    stroke-dasharray: 1 62.8;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 31.4 31.4;
+    stroke-dashoffset: -15.7;
+  }
+  100% {
+    stroke-dasharray: 1 62.8;
+    stroke-dashoffset: -62.8;
+  }
+}
+
+/* Ripple effect */
+.rippleContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.2;
+  transform: scale(0);
+  animation: rippleExpand 0.6s ease-out forwards;
+}
+
+@keyframes rippleExpand {
+  0% {
+    transform: scale(0);
+    opacity: 0.25;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
 }
 
 /* Primary Variant */
@@ -53,7 +185,19 @@
   box-shadow: var(--shadow-sm), var(--glow-primary-strong);
 }
 
-/* Secondary Variant - Muted, less prominent */
+.primary:focus-visible {
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 2px var(--color-bg-deep),
+    0 0 0 4px var(--color-primary),
+    var(--glow-primary-strong);
+}
+
+.primary .ripple {
+  background: var(--color-primary);
+}
+
+/* Secondary Variant */
 .secondary {
   border: var(--border-neutral);
   color: var(--color-text-80);
@@ -64,6 +208,18 @@
   border-color: var(--color-secondary);
   color: var(--color-secondary);
   box-shadow: var(--shadow-sm), 0 0 10px var(--color-secondary-30);
+}
+
+.secondary:focus-visible {
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 2px var(--color-bg-deep),
+    0 0 0 4px var(--color-secondary),
+    0 0 10px var(--color-secondary-30);
+}
+
+.secondary .ripple {
+  background: var(--color-secondary);
 }
 
 /* Danger Variant */
@@ -77,19 +233,39 @@
   box-shadow: var(--shadow-sm), var(--glow-accent-strong);
 }
 
-/* Skill Variant (circular buttons) */
+.danger:focus-visible {
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 2px var(--color-bg-deep),
+    0 0 0 4px var(--color-accent),
+    var(--glow-accent-strong);
+}
+
+.danger .ripple {
+  background: var(--color-accent);
+}
+
+/* Skill Variant */
 .skill {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-full);
-  padding: 0;
-  border: var(--border-primary);
-  color: var(--color-primary);
+  border: 2px solid var(--color-skill);
+  color: var(--color-skill);
 }
 
 .skill:hover:not(:disabled) {
-  background: var(--color-primary-20);
-  box-shadow: var(--shadow-sm), var(--glow-primary-strong);
+  background: var(--color-skill-15);
+  box-shadow: var(--shadow-sm), 0 0 15px var(--color-skill-30);
+}
+
+.skill:focus-visible {
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 2px var(--color-bg-deep),
+    0 0 0 4px var(--color-skill),
+    0 0 15px var(--color-skill-30);
+}
+
+.skill .ripple {
+  background: var(--color-skill);
 }
 
 /* Fortress Variant */
@@ -102,4 +278,84 @@
 .fortress:hover:not(:disabled) {
   background: var(--color-primary-30);
   box-shadow: var(--shadow-md), var(--glow-primary-strong);
+}
+
+.fortress .ripple {
+  background: var(--color-primary);
+}
+
+/* Ghost Variant */
+.ghost {
+  background: transparent;
+  border: none;
+  color: var(--color-text-60);
+  box-shadow: none;
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+  box-shadow: none;
+  transform: none;
+}
+
+.ghost:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-bg-deep),
+    0 0 0 4px var(--color-text-60);
+}
+
+.ghost .ripple {
+  background: var(--color-text);
+}
+
+/* Size Variants */
+.sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.sm.hasIcon {
+  padding: 6px 10px;
+}
+
+.lg {
+  padding: 16px 32px;
+  font-size: 18px;
+  gap: 10px;
+}
+
+.lg.hasIcon {
+  padding: 16px 28px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
+
+  .spinner {
+    animation: none;
+  }
+
+  .spinnerCircle {
+    animation: none;
+    stroke-dasharray: 31.4 31.4;
+  }
+
+  .ripple {
+    animation: none;
+    transform: scale(1);
+    opacity: 0.15;
+  }
 }

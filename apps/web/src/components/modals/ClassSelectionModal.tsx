@@ -5,7 +5,7 @@ import { classSelectionVisible, selectedFortressClass, baseLevel } from '../../s
 import { Modal } from '../shared/Modal.js';
 import styles from './ClassSelectionModal.module.css';
 
-// Class definitions with descriptions and colors (simplified: 5 classes)
+// Class definitions with descriptions and colors (6 classes)
 const FORTRESS_CLASSES: Array<{
   id: FortressClass;
   name: string;
@@ -34,7 +34,7 @@ const FORTRESS_CLASSES: Array<{
     id: 'fire',
     name: 'Fire',
     description: 'Burn everything in your path. Pure destruction with splash damage.',
-    bonuses: ['+25% DMG', '+10% Crit', '30% Splash'],
+    bonuses: ['+20% DMG', '+8% Crit', '25% Splash'],
     color: '#ff4500',
     icon: '🔥',
   },
@@ -45,6 +45,14 @@ const FORTRESS_CLASSES: Array<{
     bonuses: ['+40% AS', '+25% Chain Chance', 'Chain Lightning'],
     color: '#9932cc',
     icon: '⚡',
+  },
+  {
+    id: 'void',
+    name: 'Void',
+    description: 'Harness dimensional energy with chaos effects. For experienced commanders.',
+    bonuses: ['+15% DMG', '+10% Crit', '-10% Cooldowns'],
+    color: '#4b0082',
+    icon: '🌀',
   },
   {
     id: 'tech',
@@ -73,10 +81,13 @@ export function ClassSelectionModal({ onSelect }: ClassSelectionModalProps) {
     onSelect(classId);
   };
 
+  const handleClose = () => {
+    classSelectionVisible.value = false;
+  };
+
   return (
-    <Modal visible={classSelectionVisible.value} class={styles.modal}>
+    <Modal visible={classSelectionVisible.value} class={styles.modal} bodyClass={styles.body} onClose={handleClose} title="Wybierz Klasę Twierdzy">
       <div class={styles.container}>
-        <h2 class={styles.title}>Wybierz Klasę Twierdzy</h2>
         <p class={styles.subtitle}>
           Wybierz klasę elementalną dla swojej twierdzy. To określi twoje umiejętności i bonusy.
         </p>

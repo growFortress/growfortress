@@ -186,7 +186,6 @@ describe('Auth Schemas', () => {
       const result = InventorySchema.safeParse({
         gold: 100,
         dust: 50,
-        sigils: 0,
       });
 
       expect(result.success).toBe(true);
@@ -196,7 +195,6 @@ describe('Auth Schemas', () => {
       const result = InventorySchema.safeParse({
         gold: -10,
         dust: 50,
-        sigils: 0,
       });
 
       expect(result.success).toBe(false);
@@ -206,7 +204,6 @@ describe('Auth Schemas', () => {
       const result = InventorySchema.safeParse({
         gold: 100.5,
         dust: 50,
-        sigils: 0,
       });
 
       expect(result.success).toBe(false);
@@ -216,7 +213,6 @@ describe('Auth Schemas', () => {
       const result = InventorySchema.safeParse({
         gold: 0,
         dust: 0,
-        sigils: 0,
       });
 
       expect(result.success).toBe(true);
@@ -263,33 +259,35 @@ describe('Auth Schemas', () => {
       const result = ProfileResponseSchema.safeParse({
         userId: 'user-123',
         displayName: 'TestUser',
-        inventory: { gold: 100, dust: 50, sigils: 0 },
+        description: 'A test user profile',
+        inventory: { gold: 100, dust: 50 },
         progression: { level: 5, xp: 200, totalXp: 1050, xpToNextLevel: 559 },
-        unlockedRelics: ['damage-boost', 'speed-demon'],
         currentWave: 10,
         highestWave: 25,
         onboardingCompleted: true,
-        defaultLoadout: { fortressClass: 'natural', heroId: 'shield_captain', turretType: 'arrow' },
-        unlockedHeroes: ['shield_captain'],
+        defaultLoadout: { fortressClass: 'natural', heroId: 'vanguard', turretType: 'arrow' },
+        unlockedHeroes: ['vanguard'],
         unlockedTurrets: ['arrow'],
+        role: 'USER',
       });
 
       expect(result.success).toBe(true);
     });
 
-    it('accepts empty unlockedRelics array', () => {
+    it('accepts empty unlocked arrays', () => {
       const result = ProfileResponseSchema.safeParse({
         userId: 'user-123',
         displayName: 'TestUser',
-        inventory: { gold: 0, dust: 0, sigils: 0 },
+        description: '',
+        inventory: { gold: 0, dust: 0 },
         progression: { level: 1, xp: 0, totalXp: 0, xpToNextLevel: 150 },
-        unlockedRelics: [],
         currentWave: 0,
         highestWave: 0,
         onboardingCompleted: false,
         defaultLoadout: { fortressClass: null, heroId: null, turretType: null },
         unlockedHeroes: [],
         unlockedTurrets: [],
+        role: 'USER',
       });
 
       expect(result.success).toBe(true);
@@ -299,15 +297,16 @@ describe('Auth Schemas', () => {
       const result = ProfileResponseSchema.safeParse({
         userId: 'user-123',
         displayName: 'TestUser',
-        inventory: { gold: 0, dust: 0, sigils: 0 },
+        description: '',
+        inventory: { gold: 0, dust: 0 },
         progression: { level: 1, xp: 0, totalXp: 0, xpToNextLevel: 150 },
-        unlockedRelics: [],
         currentWave: -1,
         highestWave: 0,
         onboardingCompleted: false,
         defaultLoadout: { fortressClass: null, heroId: null, turretType: null },
         unlockedHeroes: [],
         unlockedTurrets: [],
+        role: 'USER',
       });
 
       expect(result.success).toBe(false);

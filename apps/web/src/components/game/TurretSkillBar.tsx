@@ -48,9 +48,11 @@ export function TurretSkillBar({ compact = false }: TurretSkillBarProps) {
 
   return (
     <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
-      <div class={styles.header}>
-        <span class={styles.title}>Turret Abilities</span>
-      </div>
+      {!compact && (
+        <div class={styles.header}>
+          <span class={styles.title}>Turret Abilities</span>
+        </div>
+      )}
       <div class={styles.turretSkills}>
         {turrets.map((turret) => (
           <TurretSkillSlot key={turret.slotIndex} turret={turret} compact={compact} />

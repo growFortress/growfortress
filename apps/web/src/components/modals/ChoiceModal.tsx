@@ -1,5 +1,6 @@
 import { getRelicById } from '@arcade/sim-core';
 import { showChoiceModal, choiceOptions, hideChoice } from '../../state/index.js';
+import { Modal } from '../shared/Modal.js';
 
 interface ChoiceModalProps {
   onSelect: (index: number) => void;
@@ -12,25 +13,33 @@ export function ChoiceModal({ onSelect }: ChoiceModalProps) {
   };
 
   return (
-    <div class={`choice-modal ${showChoiceModal.value ? 'visible' : ''}`}>
-      <h2>Choose a Relic</h2>
+    <Modal
+      visible={showChoiceModal.value}
+      title="Wybierz Relikt"
+      onClose={hideChoice}
+      size="xlarge"
+      class="choice-modal"
+      ariaLabel="Relic Selection"
+    >
       <div class="choice-options">
         {choiceOptions.value.map((relicId, index) => {
           const relic = getRelicById(relicId);
           if (!relic) return null;
 
           return (
-            <div
+            <button
+              type="button"
               key={relicId}
               class={`choice-option ${relic.isBuildDefining ? 'build-defining' : ''}`}
               onClick={() => handleSelect(index)}
+              aria-label={`Select ${relic.name}: ${relic.description}`}
             >
               <h3>{relic.name}</h3>
               <p>{relic.description}</p>
-            </div>
+            </button>
           );
         })}
       </div>
-    </div>
+    </Modal>
   );
 }

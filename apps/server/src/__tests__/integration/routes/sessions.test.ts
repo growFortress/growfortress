@@ -31,23 +31,29 @@ describe('Sessions Routes Integration', () => {
 
   describe('POST /v1/sessions/start', () => {
     it('should start a new session without relics', async () => {
-      const mockUser = createMockUser();
+      const mockUser = createMockUser({ activeGameSessionId: null });
       const mockInventory = createMockInventory({ gold: 500 });
       const mockProgression = createMockProgression({ level: 1 });
 
-      // Profile lookup
+      // Auth plugin role check
+      mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
+
+      // Profile lookup (getUserProfile)
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         ...mockUser,
         inventory: mockInventory,
         progression: mockProgression,
-        relicUnlocks: [],
       });
 
-      // User lookup for session creation
+      // User lookup for session creation (startGameSession)
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         ...mockUser,
         inventory: mockInventory,
+        activeGameSessionId: null,
       });
+
+      // GameConfig lookup
+      mockPrisma.gameConfig.findMany.mockResolvedValue([]);
 
       // Game session creation
       const mockSession = createMockGameSession();
@@ -143,6 +149,9 @@ describe('Sessions Routes Integration', () => {
       const mockInventory = createMockInventory();
       const mockProgression = createMockProgression();
 
+      // Auth plugin role check
+      mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
+
       mockPrisma.gameSession.findUnique.mockResolvedValue({
         ...mockSession,
         segments: [], // Include required segments array
@@ -153,10 +162,13 @@ describe('Sessions Routes Integration', () => {
         },
       });
 
-      // $transaction mock - execute the callback
+      // endGameSession needs progression.findUnique
+      mockPrisma.progression.findUnique.mockResolvedValue(mockProgression);
+
+      // $transaction mock - execute the callback and return its result
       mockPrisma.$transaction.mockImplementation(async (callback: unknown) => {
         if (typeof callback === 'function') {
-          await callback(mockPrisma);
+          return callback(mockPrisma);
         }
         return [];
       });
@@ -169,6 +181,8 @@ describe('Sessions Routes Integration', () => {
       mockPrisma.user.update.mockResolvedValue(mockUser);
       mockPrisma.inventory.update.mockResolvedValue(mockInventory);
       mockPrisma.progression.update.mockResolvedValue(mockProgression);
+      // inventory.findUnique is called inside the transaction
+      mockPrisma.inventory.findUnique.mockResolvedValue({ gold: 500, dust: 100 });
 
       const token = await generateTestToken('user-123');
 

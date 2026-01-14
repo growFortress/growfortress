@@ -1,18 +1,16 @@
 /**
  * Arena PvP AI - Targeting Logic
  *
- * Handles target selection for heroes and turrets in arena battles.
+ * Handles target selection for heroes in arena battles.
  *
  * Priority rules:
  * - Heroes: Attack enemy fortress (priority) > Attack enemy heroes
- * - Turrets: Attack enemy heroes (priority) > Attack enemy fortress
  */
 
 import { FP } from '../fixed.js';
-import type { ActiveHero, ActiveTurret } from '../types.js';
+import type { ActiveHero } from '../types.js';
 import type { ArenaState, ArenaSide, ArenaFortress } from './arena-state.js';
 import { getHeroById, calculateHeroStats } from '../data/heroes.js';
-import { getTurretById, calculateTurretStats } from '../data/turrets.js';
 
 // ============================================================================
 // TYPES
@@ -53,18 +51,6 @@ function getHeroRange(hero: ActiveHero): number {
 
   const stats = calculateHeroStats(def, hero.tier, hero.level);
   return FP.fromFloat(stats.range);
-}
-
-/**
- * Get turret's attack range from definition
- */
-function getTurretRange(turret: ActiveTurret): number {
-  const def = getTurretById(turret.definitionId);
-  if (!def) return FP.fromInt(8); // Default range
-
-  const stats = calculateTurretStats(def, turret.currentClass, turret.tier);
-  // stats.range is already in fixed-point format
-  return stats.range;
 }
 
 /**
@@ -177,74 +163,6 @@ export function getHeroMovementDirection(
   const vy = FP.div(FP.mul(dy, baseSpeed), dist);
 
   return { vx, vy };
-}
-
-// ============================================================================
-// TURRET AI
-// ============================================================================
-
-/**
- * Select target for a turret in arena battle
- *
- * Priority:
- * 1. Enemy heroes in range - target closest
- * 2. Enemy fortress (if in range)
- * 3. No target
- */
-export function selectTurretTarget(
-  turret: ActiveTurret,
-  turretX: number,
-  turretY: number,
-  ownSide: 'left' | 'right',
-  state: ArenaState
-): ArenaTarget {
-  const enemySide = ownSide === 'left' ? state.right : state.left;
-  const turretRange = getTurretRange(turret);
-  const rangeSq = FP.mul(turretRange, turretRange);
-
-  // Priority 1: Attack enemy heroes in range
-  const aliveEnemyHeroes = getAliveHeroes(enemySide);
-  let closestHero: ActiveHero | null = null;
-  let closestDistSq = Infinity;
-
-  for (let i = 0; i < aliveEnemyHeroes.length; i++) {
-    const enemyHero = aliveEnemyHeroes[i];
-    const distSq = distanceSquared(turretX, turretY, enemyHero.x, enemyHero.y);
-
-    if (distSq <= rangeSq && distSq < closestDistSq) {
-      closestHero = enemyHero;
-      closestDistSq = distSq;
-    }
-  }
-
-  if (closestHero) {
-    return {
-      type: 'hero',
-      x: closestHero.x,
-      y: closestHero.y,
-      targetId: closestHero.definitionId,
-      targetIndex: enemySide.heroes.indexOf(closestHero),
-    };
-  }
-
-  // Priority 2: Attack enemy fortress if in range
-  const fortressDistSq = distanceSquared(
-    turretX,
-    turretY,
-    enemySide.fortress.x,
-    enemySide.fortress.y
-  );
-
-  if (fortressDistSq <= rangeSq) {
-    return {
-      type: 'fortress',
-      x: enemySide.fortress.x,
-      y: enemySide.fortress.y,
-    };
-  }
-
-  // No valid target
-  return { type: 'none', x: 0, y: 0 };
 }
 
 // ============================================================================

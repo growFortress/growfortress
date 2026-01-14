@@ -239,3 +239,17 @@ export function hasArtifact(artifactId: string): boolean {
 export function getItemAmount(itemId: string): number {
   return playerItems.value.find((i) => i.itemId === itemId)?.amount ?? 0;
 }
+
+/**
+ * Reset all artifacts state (on logout)
+ */
+export function resetArtifactsState(): void {
+  playerArtifacts.value = [];
+  playerItems.value = [];
+  artifactsModalVisible.value = false;
+  craftingModalVisible.value = false;
+  selectedArtifactId.value = null;
+  artifactsLoading.value = false;
+  artifactsError.value = null;
+  recentArtifactDrops.value = [];
+}

@@ -1,14 +1,20 @@
-import { authScreen, authLoading, authError } from '../../state/index.js';
+import { authScreen, authLoading, authError, openLegalModal } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { LoginForm } from './LoginForm.js';
 import { RegisterForm } from './RegisterForm.js';
+import { ForgotPasswordForm } from './ForgotPasswordForm.js';
+import { ResetPasswordForm } from './ResetPasswordForm.js';
+import { forgotPassword, resetPassword } from '../../api/client.js';
 import styles from './AuthScreen.module.css';
 
 interface AuthScreenProps {
   onLogin: (username: string, password: string) => Promise<void>;
-  onRegister: (username: string, password: string) => Promise<void>;
+  onRegister: (username: string, password: string, email?: string) => Promise<void>;
 }
 
 export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
+  const { t } = useTranslation('auth');
+
   const showLoginForm = () => {
     authScreen.value = 'login';
     authError.value = null;
@@ -19,30 +25,117 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
     authError.value = null;
   };
 
+  const showForgotPassword = () => {
+    authScreen.value = 'forgot_password';
+    authError.value = null;
+  };
+
+  const handleForgotPassword = async (email: string) => {
+    authLoading.value = true;
+    authError.value = null;
+    try {
+      await forgotPassword({ email });
+    } catch (err: any) {
+      authError.value = err.message || t('errors.generic');
+    } finally {
+      authLoading.value = false;
+    }
+  };
+
+  const handleResetPassword = async (password: string) => {
+    const token = new URLSearchParams(window.location.search).get('token');
+    if (!token) {
+      authError.value = t('resetPassword.invalidToken');
+      return;
+    }
+
+    authLoading.value = true;
+    authError.value = null;
+    try {
+      await resetPassword({ token, password });
+      // After success, wait a bit then show login
+      setTimeout(() => {
+        showLoginForm();
+      }, 3000);
+    } catch (err: any) {
+      authError.value = err.message || t('errors.generic');
+    } finally {
+      authLoading.value = false;
+    }
+  };
+
+  // Check if we have a reset token in the URL on mount
+  const resetToken = new URLSearchParams(window.location.search).get('token');
+  if (resetToken && authScreen.value === 'login') {
+    authScreen.value = 'reset_password';
+  }
+
   return (
     <div class={styles.authScreen}>
       <div class={styles.authBox}>
-        <h1>Grow Fortress: Age of Super Hero</h1>
-        <p>Tower defense roguelite z elementami arcade</p>
+        <h1 class={styles.logo}>
+          <span class={styles.logoGrow}>Grow</span>
+          <span class={styles.logoFortress}>Fortress</span>
+        </h1>
+        <p class={styles.tagline}>Tower Defense Roguelite</p>
 
-        {authScreen.value === 'login' ? (
+        {authScreen.value === 'login' && (
           <>
-            <LoginForm onSubmit={onLogin} />
+            <LoginForm onSubmit={onLogin} onForgotPassword={showForgotPassword} />
             <div class={styles.authToggle} onClick={showRegisterForm}>
-              Nie masz konta? <strong>Zarejestruj się</strong>
-            </div>
-          </>
-        ) : (
-          <>
-            <RegisterForm onSubmit={onRegister} />
-            <div class={styles.authToggle} onClick={showLoginForm}>
-              Masz już konto? <strong>Zaloguj się</strong>
+              {t('login.noAccount')} <strong>{t('login.registerLink')}</strong>
             </div>
           </>
         )}
 
-        {authLoading.value && <div class={`${styles.loading} visible`}>Łączenie...</div>}
-        {authError.value && <div class={styles.error}>{authError.value}</div>}
+        {authScreen.value === 'register' && (
+          <>
+            <RegisterForm onSubmit={onRegister} />
+            <div class={styles.legalNotice}>
+              {t('register.legalPrefix', { defaultValue: 'By registering, you accept the' })}{' '}
+              <button
+                type="button"
+                class={styles.legalLink}
+                onClick={() => openLegalModal('terms')}
+              >
+                {t('register.terms', { defaultValue: 'Terms of Service' })}
+              </button>{' '}
+              {t('register.legalAnd', { defaultValue: 'and' })}{' '}
+              <button
+                type="button"
+                class={styles.legalLink}
+                onClick={() => openLegalModal('privacy')}
+              >
+                {t('register.privacy', { defaultValue: 'Privacy Policy' })}
+              </button>
+            </div>
+            <div class={styles.authToggle} onClick={showLoginForm}>
+              {t('register.hasAccount')} <strong>{t('register.loginLink')}</strong>
+            </div>
+          </>
+        )}
+
+        {authScreen.value === 'forgot_password' && (
+          <ForgotPasswordForm 
+            onSubmit={handleForgotPassword} 
+            onBack={showLoginForm} 
+            error={authError.value}
+          />
+        )}
+
+        {authScreen.value === 'reset_password' && (
+          <ResetPasswordForm 
+            token={resetToken || ''} 
+            onSubmit={handleResetPassword} 
+            onBack={showLoginForm} 
+            error={authError.value}
+          />
+        )}
+
+        {authLoading.value && <div class={`${styles.loading} visible`}>{t('connecting', { defaultValue: 'Connecting...' })}</div>}
+        {authError.value && authScreen.value !== 'forgot_password' && authScreen.value !== 'reset_password' && (
+          <div class={styles.error}>{authError.value}</div>
+        )}
       </div>
     </div>
   );

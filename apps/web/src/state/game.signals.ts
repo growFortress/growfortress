@@ -5,28 +5,42 @@ import { WAVE_SCORE_MULTIPLIER, KILL_SCORE_MULTIPLIER } from '../constants.js';
 import { baseGold, baseDust } from './profile.signals.js';
 
 /**
- * Infinity Stone types
+ * Crystal types (ancient artifacts)
  */
-export type InfinityStoneType = 'power' | 'space' | 'time' | 'reality' | 'soul' | 'mind';
+export type CrystalType = 'power' | 'space' | 'time' | 'reality' | 'soul' | 'mind';
+/** @deprecated Use CrystalType */
+export type InfinityStoneType = CrystalType;
 
 /**
- * Infinity Stone fragment
+ * Crystal fragment
  */
-export interface InfinityStoneFragment {
-  stoneType: InfinityStoneType;
+export interface CrystalFragment {
+  crystalType: CrystalType;
   count: number;
+  /** @deprecated Use crystalType */
+  stoneType?: CrystalType;
 }
+/** @deprecated Use CrystalFragment */
+export type InfinityStoneFragment = CrystalFragment;
 
 /**
- * Infinity Gauntlet state
+ * Crystal Matrix state
  */
-export interface InfinityGauntletState {
+export interface CrystalMatrixState {
   isAssembled: boolean;
   heroId?: string;
-  stonesCollected: InfinityStoneType[];
-  snapCooldown: number;
-  snapUsedCount: number;
+  crystalsCollected: CrystalType[];
+  annihilationCooldown: number;
+  annihilationUsedCount: number;
+  /** @deprecated Use crystalsCollected */
+  stonesCollected?: CrystalType[];
+  /** @deprecated Use annihilationCooldown */
+  snapCooldown?: number;
+  /** @deprecated Use annihilationUsedCount */
+  snapUsedCount?: number;
 }
+/** @deprecated Use CrystalMatrixState */
+export type InfinityGauntletState = CrystalMatrixState;
 
 /**
  * Game state snapshot from simulation.
@@ -50,10 +64,10 @@ export interface GameStateSnapshot {
   commanderLevel: number;
   sessionXpEarned: number;
   xpAtSessionStart: number;
-  // Infinity Stones
-  collectedStones: InfinityStoneType[];
-  infinityStoneFragments: InfinityStoneFragment[];
-  gauntletState: InfinityGauntletState | null;
+  // Crystal system (ancient artifacts)
+  collectedStones: CrystalType[];
+  infinityStoneFragments: CrystalFragment[];
+  gauntletState: CrystalMatrixState | null;
   // Fortress class skills
   fortressActiveSkills: string[];
   fortressSkillCooldowns: Record<string, number>;
@@ -164,13 +178,36 @@ function getXpForLevel(level: number): number {
 }
 
 /**
+ * Pre-computed XP lookup table for O(1) level lookups instead of O(n) loops.
+ * Caches total XP needed to reach each level (1-100+).
+ */
+const XP_LEVEL_CACHE = new Map<number, number>();
+
+// Pre-populate cache for common levels (1-100) at module load
+(function precomputeXpTable() {
+  let cumulative = 0;
+  XP_LEVEL_CACHE.set(1, 0);
+  for (let level = 1; level <= 100; level++) {
+    XP_LEVEL_CACHE.set(level, cumulative);
+    cumulative += getXpForLevel(level);
+  }
+})();
+
+/**
  * Total XP needed to REACH a given level (from level 1)
+ * Uses cached lookup table for O(1) performance instead of O(n) loop.
  */
 function getTotalXpForLevel(level: number): number {
-  let total = 0;
-  for (let i = 1; i < level; i++) {
+  // Return cached value if available
+  const cached = XP_LEVEL_CACHE.get(level);
+  if (cached !== undefined) return cached;
+
+  // For levels beyond cache, compute and store
+  let total = XP_LEVEL_CACHE.get(100) ?? 0;
+  for (let i = 100; i < level; i++) {
     total += getXpForLevel(i);
   }
+  XP_LEVEL_CACHE.set(level, total);
   return total;
 }
 

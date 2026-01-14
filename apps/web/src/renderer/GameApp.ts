@@ -1,6 +1,91 @@
 import { Application, Container } from 'pixi.js';
 import { CRTFilter } from 'pixi-filters';
 import { GameScene, type HubState } from './scenes/GameScene';
+import { filterManager, FilterManager } from './effects/FilterManager';
+
+// =============================================================================
+// WebGPU Detection & Renderer Info
+// =============================================================================
+
+export type RendererType = 'webgpu' | 'webgl2' | 'webgl' | 'unknown';
+
+export interface RendererInfo {
+  type: RendererType;
+  isWebGPU: boolean;
+  isHardwareAccelerated: boolean;
+  maxTextureSize: number;
+  vendor: string;
+  renderer: string;
+}
+
+/**
+ * Detect if WebGPU is available in the browser
+ */
+async function isWebGPUAvailable(): Promise<boolean> {
+  if (!navigator.gpu) {
+    return false;
+  }
+
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    return adapter !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get renderer information from PixiJS Application
+ */
+function getRendererInfo(app: Application): RendererInfo {
+  const renderer = app.renderer;
+  const gl = (renderer as any).gl as WebGL2RenderingContext | WebGLRenderingContext | undefined;
+
+  // Detect renderer type
+  let type: RendererType = 'unknown';
+  let vendor = 'Unknown';
+  let rendererName = 'Unknown';
+  let maxTextureSize = 4096;
+  let isHardwareAccelerated = true;
+
+  // Check if WebGPU
+  if ((renderer as any).gpu || (renderer as any).type === 'webgpu') {
+    type = 'webgpu';
+    vendor = 'WebGPU';
+    rendererName = 'WebGPU Renderer';
+  } else if (gl) {
+    // WebGL detection
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+      vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'Unknown';
+      rendererName = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'Unknown';
+    }
+
+    maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096;
+
+    // Check for WebGL2
+    if (gl instanceof WebGL2RenderingContext) {
+      type = 'webgl2';
+    } else {
+      type = 'webgl';
+    }
+
+    // Detect software rendering (SwiftShader, llvmpipe, etc.)
+    const softwareRenderers = ['swiftshader', 'llvmpipe', 'softpipe', 'software'];
+    isHardwareAccelerated = !softwareRenderers.some(
+      sw => rendererName.toLowerCase().includes(sw)
+    );
+  }
+
+  return {
+    type,
+    isWebGPU: type === 'webgpu',
+    isHardwareAccelerated,
+    maxTextureSize,
+    vendor,
+    renderer: rendererName,
+  };
+}
 
 // Force full page reload instead of HMR for Pixi/WebGL files
 if (import.meta.hot) {
@@ -67,6 +152,8 @@ export class GameApp {
   public app: Application;
   public stage: Container;
   public gameScene: GameScene | null = null;
+  public filterManager: FilterManager = filterManager;
+  public rendererInfo: RendererInfo | null = null;
   private canvas: HTMLCanvasElement;
   private resizeObserver: ResizeObserver | null = null;
   private screenShake: ScreenShakeManager;
@@ -81,6 +168,10 @@ export class GameApp {
   }
 
   async init() {
+    // Check WebGPU availability
+    const webgpuAvailable = await isWebGPUAvailable();
+
+    // Initialize with preference for WebGPU if available
     await this.app.init({
       canvas: this.canvas,
       resizeTo: window,
@@ -88,7 +179,20 @@ export class GameApp {
       antialias: true,
       autoDensity: true,
       resolution: window.devicePixelRatio || 1,
+      // PixiJS 8 prefers WebGPU automatically if available
+      // But we can explicitly set preference here
+      preference: webgpuAvailable ? 'webgpu' : 'webgl',
     });
+
+    // Get and store renderer info
+    this.rendererInfo = getRendererInfo(this.app);
+
+    // Log renderer info for debugging
+    console.log(
+      `[GameApp] Renderer: ${this.rendererInfo.type.toUpperCase()}`,
+      `| GPU: ${this.rendererInfo.renderer}`,
+      `| Hardware Accelerated: ${this.rendererInfo.isHardwareAccelerated}`
+    );
 
     // Create game container for screen shake
     this.gameContainer.interactiveChildren = true;
@@ -103,9 +207,23 @@ export class GameApp {
       this.screenShake.shake(intensity, duration);
     });
 
-    // Setup resizing
-    this.resizeObserver = new ResizeObserver(() => this.resize());
+    // Setup resize notification for GameScene
+    // Note: resizeTo: window handles canvas resize automatically,
+    // ResizeObserver just notifies GameScene about the new dimensions
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.gameScene) {
+        this.gameScene.onResize(this.app.screen.width, this.app.screen.height);
+      }
+    });
     this.resizeObserver.observe(this.canvas);
+
+    // Initialize FilterManager with game container
+    this.filterManager.setGlobalContainer(this.gameContainer);
+
+    // Auto-detect quality based on device performance
+    const isLowEndDevice = navigator.hardwareConcurrency <= 2 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    this.filterManager.setQualityLevel(isLowEndDevice ? 'low' : 'high');
 
     // Apply Global CRT Filter (with fallback if incompatible)
     try {
@@ -119,7 +237,7 @@ export class GameApp {
       crt.time = 0;
       this.stage.filters = [crt];
 
-      // Animate CRT noise/time and update screen shake
+      // Animate CRT noise/time, update screen shake, and update filter effects
       this.app.ticker.add((ticker) => {
         crt.time += ticker.deltaTime * 0.01;
         crt.seed = Math.random();
@@ -127,31 +245,31 @@ export class GameApp {
         // Update screen shake
         const shake = this.screenShake.update(ticker.deltaMS);
         this.gameContainer.position.set(shake.x, shake.y);
+
+        // Update filter effects
+        this.filterManager.update(ticker.deltaMS);
       });
     } catch (e) {
       console.warn('CRT filter not supported, skipping:', e);
 
-      // Still update screen shake even without CRT filter
+      // Still update screen shake and filters even without CRT filter
       this.app.ticker.add((ticker) => {
         const shake = this.screenShake.update(ticker.deltaMS);
         this.gameContainer.position.set(shake.x, shake.y);
+
+        // Update filter effects
+        this.filterManager.update(ticker.deltaMS);
       });
     }
 
-    // Initial resize to set dimensions
-    this.resize();
+    // Initial notification to GameScene (canvas already sized by resizeTo: window)
+    this.gameScene.onResize(this.app.screen.width, this.app.screen.height);
   }
 
   destroy() {
+    this.filterManager.destroy();
     this.resizeObserver?.disconnect();
     this.app.destroy(true, { children: true, texture: true });
-  }
-
-  private resize() {
-    this.app.resize();
-    if (this.gameScene) {
-      this.gameScene.onResize(this.app.screen.width, this.app.screen.height);
-    }
   }
 
   public render(state: any, alpha: number, hubState?: HubState) {
@@ -166,6 +284,15 @@ export class GameApp {
   public setOnHeroClick(callback: (heroId: string) => void) {
     if (this.gameScene) {
       this.gameScene.setOnHeroClick(callback);
+    }
+  }
+
+  /**
+   * Set callback for turret click events
+   */
+  public setOnTurretClick(callback: (turretId: string, slotIndex: number) => void) {
+    if (this.gameScene) {
+      this.gameScene.setOnTurretClick(callback);
     }
   }
 

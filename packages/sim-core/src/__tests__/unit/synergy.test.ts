@@ -9,7 +9,7 @@ describe('calculateSynergyBonuses', () => {
   it('stacks hero and turret synergy bonuses', () => {
     const state = createGameState({
       fortressClass: 'tech',
-      heroes: initializeHeroes(['iron_sentinel'], fortressX),
+      heroes: initializeHeroes(['forge'], fortressX),
       turrets: initializeTurrets([
         { definitionId: 'arrow', slotIndex: 1, class: 'tech' },
       ]),
@@ -19,15 +19,15 @@ describe('calculateSynergyBonuses', () => {
 
     // 1 tech hero: +30% DMG, +15% AS
     // 1 tech turret: +15% DMG, +25% AS
-    // Total: 1.45 DMG, 1.40 AS
-    expect(bonuses.damageMultiplier).toBeCloseTo(1.45, 5);
-    expect(bonuses.attackSpeedMultiplier).toBeCloseTo(1.40, 5);
+    // Total: 0.45 DMG bonus, 0.40 AS bonus
+    expect(bonuses.damageBonus).toBeCloseTo(0.45, 5);
+    expect(bonuses.attackSpeedBonus).toBeCloseTo(0.40, 5);
   });
 
   it('applies full synergy when minimum units are present', () => {
     const state = createGameState({
       fortressClass: 'tech',
-      heroes: initializeHeroes(['iron_sentinel', 'iron_sentinel'], fortressX),
+      heroes: initializeHeroes(['forge', 'forge'], fortressX),
       turrets: initializeTurrets([
         { definitionId: 'arrow', slotIndex: 1, class: 'tech' },
         { definitionId: 'cannon', slotIndex: 2, class: 'tech' },
@@ -38,14 +38,14 @@ describe('calculateSynergyBonuses', () => {
     const bonuses = calculateSynergyBonuses(state);
 
     // Full synergy (2+ heroes, 3+ turrets) adds +50% DMG, +15% crit
-    expect(bonuses.damageMultiplier).toBeGreaterThan(2.0);
+    expect(bonuses.damageBonus).toBeGreaterThan(1.0);
     expect(bonuses.critChance).toBeCloseTo(0.15, 5);
   });
 
   it('applies harmonic resonance bonuses with full synergy', () => {
     const state = createGameState({
       fortressClass: 'tech',
-      heroes: initializeHeroes(['iron_sentinel', 'iron_sentinel'], fortressX),
+      heroes: initializeHeroes(['forge', 'forge'], fortressX),
       turrets: initializeTurrets([
         { definitionId: 'arrow', slotIndex: 1, class: 'tech' },
         { definitionId: 'cannon', slotIndex: 2, class: 'tech' },
@@ -57,14 +57,14 @@ describe('calculateSynergyBonuses', () => {
     const bonuses = calculateSynergyBonuses(state);
 
     // Harmonic resonance adds cooldown reduction and crit when full synergy
-    expect(bonuses.cooldownMultiplier).toBeDefined();
+    expect(bonuses.cooldownReduction).toBeDefined();
     expect(bonuses.critChance).toBeGreaterThanOrEqual(0.15);
   });
 
   it('scales bonuses per matching hero with team spirit', () => {
     const state = createGameState({
       fortressClass: 'tech',
-      heroes: initializeHeroes(['iron_sentinel'], fortressX),
+      heroes: initializeHeroes(['forge'], fortressX),
       turrets: [],
       relics: [createActiveRelic('team-spirit')],
     });
@@ -72,11 +72,12 @@ describe('calculateSynergyBonuses', () => {
     const bonuses = calculateSynergyBonuses(state);
 
     // With 1 tech hero:
-    // Base: damageMultiplier = 1.30, attackSpeedMultiplier = 1.15
-    // Team-spirit: damageMultiplier * 1.15 = 1.495, maxHpMultiplier = 1.05
-    expect(bonuses.damageMultiplier).toBeCloseTo(1.495, 2);
-    expect(bonuses.attackSpeedMultiplier).toBeCloseTo(1.15, 5);
-    expect(bonuses.maxHpMultiplier).toBeCloseTo(1.05, 5);
+    // Base synergy: damageBonus = 0.30, attackSpeedBonus = 0.15
+    // Team-spirit adds: +0.15 damage per hero, +0.05 maxHp per hero
+    // Total: damageBonus = 0.30 + 0.15 = 0.45, attackSpeedBonus = 0.15, maxHpBonus = 0.05
+    expect(bonuses.damageBonus).toBeCloseTo(0.45, 5);
+    expect(bonuses.attackSpeedBonus).toBeCloseTo(0.15, 5);
+    expect(bonuses.maxHpBonus).toBeCloseTo(0.05, 5);
   });
 
   it('returns no bonuses without matching units', () => {
@@ -89,7 +90,7 @@ describe('calculateSynergyBonuses', () => {
     const bonuses = calculateSynergyBonuses(state);
 
     // No heroes or turrets means no synergy bonuses
-    expect(bonuses.damageMultiplier).toBeUndefined();
-    expect(bonuses.attackSpeedMultiplier).toBeUndefined();
+    expect(bonuses.damageBonus).toBeUndefined();
+    expect(bonuses.attackSpeedBonus).toBeUndefined();
   });
 });

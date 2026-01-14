@@ -10,6 +10,8 @@ import {
   UpgradeHeroStatRequestSchema,
   UpgradeTurretStatRequestSchema,
   UpgradeItemTierRequestSchema,
+  PrestigeFortressStatRequestSchema,
+  PrestigeTurretStatRequestSchema,
 } from '@arcade/protocol';
 import {
   upgradeFortressStat,
@@ -17,6 +19,9 @@ import {
   upgradeTurretStat,
   upgradeItemTier,
   getPowerSummary,
+  prestigeFortressStat,
+  prestigeTurretStat,
+  getPrestigeStatus,
 } from '../services/power-upgrades.js';
 
 const powerUpgradesRoutes: FastifyPluginAsync = async (fastify) => {
@@ -110,6 +115,64 @@ const powerUpgradesRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const result = await upgradeItemTier(request.userId, body.itemId);
+
+    if (!result.success) {
+      return reply.status(400).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  // ============================================================================
+  // PRESTIGE ROUTES
+  // ============================================================================
+
+  // Get prestige status
+  fastify.get('/v1/power/prestige', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const status = await getPrestigeStatus(request.userId);
+    return reply.send(status);
+  });
+
+  // Prestige fortress stat
+  fastify.post('/v1/power/prestige/fortress', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    let body;
+    try {
+      body = PrestigeFortressStatRequestSchema.parse(request.body);
+    } catch (error) {
+      return reply.status(400).send({ error: 'Invalid request body' });
+    }
+
+    const result = await prestigeFortressStat(request.userId, body.stat);
+
+    if (!result.success) {
+      return reply.status(400).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  // Prestige turret stat
+  fastify.post('/v1/power/prestige/turret', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    let body;
+    try {
+      body = PrestigeTurretStatRequestSchema.parse(request.body);
+    } catch (error) {
+      return reply.status(400).send({ error: 'Invalid request body' });
+    }
+
+    const result = await prestigeTurretStat(request.userId, body.turretType, body.stat);
 
     if (!result.success) {
       return reply.status(400).send(result);

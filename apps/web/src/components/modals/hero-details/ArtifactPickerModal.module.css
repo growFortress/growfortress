@@ -1,0 +1,299 @@
+/* Artifact Picker Modal - Nested modal for selecting artifacts */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-nested);
+  animation: fadeIn 0.2s var(--ease-standard);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  width: 90%;
+  max-width: 450px;
+  max-height: 85vh;
+  background: var(--color-bg-panel);
+  border: var(--border-neutral);
+  border-top: 4px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 60px var(--color-primary);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s var(--ease-standard);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--color-bg-elevated);
+  border-bottom: var(--border-neutral);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-60);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+}
+
+.backButton:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+.backIcon {
+  font-size: 16px;
+}
+
+.title {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* Content */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.emptyHint {
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+/* Artifact List */
+.artifactList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.artifactOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-left: 3px solid var(--artifact-color, var(--color-neutral));
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  text-align: left;
+  width: 100%;
+}
+
+.artifactOption:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--artifact-color, var(--color-neutral));
+}
+
+.artifactOption.selected {
+  background: var(--color-primary-10);
+  border-color: var(--color-primary);
+  border-left-color: var(--artifact-color, var(--color-primary));
+  box-shadow: 0 0 10px var(--color-primary-30);
+}
+
+.artifactOption.common {
+  --artifact-color: var(--color-success);
+}
+
+.artifactOption.rare {
+  --artifact-color: #3b82f6;
+}
+
+.artifactOption.epic {
+  --artifact-color: #9c27b0;
+}
+
+.artifactOption.legendary {
+  --artifact-color: #ff9800;
+}
+
+.artifactIcon {
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.artifactInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.artifactName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.artifactSlot {
+  font-size: 11px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rarityBadge {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-bg);
+  background: var(--artifact-color, var(--color-neutral));
+  flex-shrink: 0;
+}
+
+.checkmark {
+  font-size: 18px;
+  color: var(--color-primary);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* Preview Section */
+.previewSection {
+  padding: 16px;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-md);
+  animation: fadeIn 0.2s var(--ease-standard);
+}
+
+.previewTitle {
+  margin: 0 0 12px 0;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.effectsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.effectItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.effectIcon {
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.effectDesc {
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--color-bg-elevated);
+  border-top: var(--border-neutral);
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .artifactOption {
+    padding: 10px;
+  }
+
+  .artifactName {
+    font-size: 13px;
+  }
+}

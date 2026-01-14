@@ -170,25 +170,25 @@ describe('applyEvent', () => {
 
     it('recomputes modifiers', () => {
       const state = createStateInChoiceMode(['sharpened-blades', 'swift-strikes', 'gold-rush'], 1, 100);
-      const originalDamage = state.modifiers.damageMultiplier;
+      const originalDamage = state.modifiers.damageBonus;
       const config = createSimConfig();
       const event = createChooseRelicEvent(100, 1, 0); // damage-boost
       const getNewOptions = vi.fn();
 
       applyEvent(event, state, config, getNewOptions);
 
-      expect(state.modifiers.damageMultiplier).toBeGreaterThan(originalDamage);
+      expect(state.modifiers.damageBonus).toBeGreaterThan(originalDamage);
     });
 
     it('updates max HP if changed', () => {
-      // Set up state where an HP relic was already acquired (e.g. with 1.25x multiplier)
+      // Set up state where an HP relic was already acquired (e.g. with +25% bonus)
       // so fortressMaxHp is already scaled, then acquire another relic
       const state = createStateInChoiceMode(['iron-hide', 'swift-strikes'], 2, 200);
       state.fortressHp = 125;
       state.fortressMaxHp = 125;
       // Simulate already having an HP-boosting relic
       state.relics = [{ id: 'iron-hide', acquiredWave: 1, acquiredTick: 100 }];
-      state.modifiers = { ...state.modifiers, maxHpMultiplier: 1.25 };
+      state.modifiers = { ...state.modifiers, maxHpBonus: 0.25 };
       const config = createSimConfig({ fortressBaseHp: 100 });
       // Choose another iron-hide (the implementation logic allows duplicates in options)
       const event = createChooseRelicEvent(200, 2, 0);
@@ -196,11 +196,11 @@ describe('applyEvent', () => {
 
       applyEvent(event, state, config, getNewOptions);
 
-      // With two iron-hides stacking multiplicatively: 1.25 * 1.25 = 1.5625
-      expect(state.modifiers.maxHpMultiplier).toBeCloseTo(1.5625, 4);
+      // With two iron-hides stacking additively: 0.25 + 0.25 = 0.5 (50% bonus)
+      expect(state.modifiers.maxHpBonus).toBeCloseTo(0.5, 4);
       // The max HP calculation:
-      // baseHp = 125 / 1.25 = 100
-      // newMaxHp = floor(100 * 1.5625) = 156
+      // baseHp = 100
+      // newMaxHp = floor(100 * (1 + 0.5)) = 150
       // Since newMaxHp > fortressMaxHp, HP scales proportionally
       expect(state.fortressMaxHp).toBeGreaterThanOrEqual(125);
     });

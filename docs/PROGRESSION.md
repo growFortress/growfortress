@@ -4,11 +4,11 @@
 
 The game features multiple progression systems:
 
-1. **Fortress Level** - Main progression (1-50)
-2. **Hero Tiers** - Individual hero upgrades (1-3)
-3. **Turret Tiers** - Turret upgrades (1-3)
+1. **Fortress Level (Commander Level)** - Main progression (1-50+)
+2. **Unit Tiers** - Individual unit upgrades (1-3)
+3. **Tower Tiers** - Tower upgrades (1-3)
 4. **Power Upgrades** - Stat investments
-5. **Unlocks** - Classes, heroes, relics
+5. **Unlocks** - Configurations, units, towers
 
 ---
 
@@ -16,44 +16,52 @@ The game features multiple progression systems:
 
 ### XP Sources
 
-| Source | XP Amount |
-|--------|-----------|
-| Wave Clear | 100 + (wave × 20) |
-| Enemy Kill | 10 |
-| Elite Kill | 50 |
-| Boss Kill | 200 |
+| Source | Base XP | Scaling |
+|--------|---------|---------|
+| Enemy Kill | 0.75 | +0.075 per wave |
+| Elite Kill | 3 | +0.3 per wave |
+| Boss Kill | 35 | +1.5 per wave |
+| Wave Complete | 7 | +1.5 per wave |
+| Pillar Complete | 350 | - |
+| Pillar First Complete | 700 | - |
 
-### Level Formula
+### XP Formula
 
 ```
-XP required = 100 × 1.5^(level-1)
+Level 1-10:  XP = level × 200
+Level 11-30: XP = level² × 18
+Level 31-50: XP = level² × 40
+Level 51+:   XP = 100,000 + (level - 50) × 8,000
 ```
 
-| Level | XP Required | Total XP |
-|-------|-------------|----------|
-| 1→2 | 100 | 100 |
-| 5→6 | 506 | 1,518 |
-| 10→11 | 2,563 | 10,178 |
-| 20→21 | 32,688 | 162,594 |
-| 50 | - | ~10M |
+### Example XP Requirements
+
+| Level | XP to Next | Total XP |
+|-------|------------|----------|
+| 1→2 | 200 | 200 |
+| 5→6 | 1,000 | 3,000 |
+| 10→11 | 2,000 | 11,000 |
+| 20→21 | 7,200 | ~55,000 |
+| 30→31 | 16,200 | ~220,000 |
+| 50 | 100,000 | ~1.2M |
 
 ---
 
 ## Slot Unlocks
 
-### Hero Slots
+### Unit Slots
 
-| Fortress Level | Hero Slots |
+| Fortress Level | Unit Slots |
 |----------------|------------|
 | 1 | 1 |
 | 10 | 2 |
-| 25 | 3 |
-| 45 | 4 |
+| 30 | 3 |
+| 45 | 4 (max) |
 
-### Turret Slots
+### Tower Slots
 
-| Fortress Level | Turret Slots |
-|----------------|--------------|
+| Fortress Level | Tower Slots |
+|----------------|-------------|
 | 1 | 1 |
 | 5 | 2 |
 | 15 | 3 |
@@ -61,102 +69,114 @@ XP required = 100 × 1.5^(level-1)
 | 35 | 5 |
 | 40 | 6 |
 
----
-
-## Class Unlocks
-
-| Fortress Level | Class |
-|----------------|-------|
-| 1 | Natural (free) |
-| 10 | Ice OR Fire |
-| 20 | Ice/Fire (remaining) |
-| 25 | Lightning |
-| 30 | Tech |
+**Extra Slots** (purchasable):
+- Slot 7: 1,000 dust
+- Slot 8: 1,000 dust
 
 ---
 
-## Hero Unlocks
+## Configuration Unlocks
 
-| Hero | Unlock Level | Rarity |
-|------|--------------|--------|
-| Shield Captain | 1 | Starter |
-| Thunderlord | 1 | Starter |
-| Frost Archer | 5 | Rare |
-| Iron Sentinel | 10 | Rare |
-| Scarlet Mage | 15 | Epic |
-| Jade Titan | 20 | Epic |
+| Fortress Level | Configuration | Cost |
+|----------------|---------------|------|
+| 1 | Standardowa | Free (Starter) |
+| 20 | Kriogeniczna | 500g + 50 dust |
+| 25 | Termiczna | 500g + 50 dust |
+| 30 | Elektryczna | 750g + 75 dust |
+| 40 | Próżniowa | 1,000g + 100 dust |
+| 45 | Kwantowa | 750g + 75 dust |
 
 ---
 
-## Turret Unlocks
+## Unit Unlocks
 
-| Turret | Unlock Level |
-|--------|--------------|
-| Arrow Tower | 1 |
-| Frost Tower | 5 |
-| Cannon Tower | 10 |
-| Tesla Tower | 15 |
+| Unit | Unlock Level | Rarity | Unlock Cost |
+|------|--------------|--------|-------------|
+| Vanguard | 1 | Starter | Free |
+| Storm | 1 | Starter | Free |
+| Spectre | 1* | Rare (Exclusive) | 25,000g |
+| Omega | 1* | Legendary (Exclusive) | 5,000 dust |
+| Forge | 10 | Common | 3,000g + 500 dust |
+| Frost | 20 | Common | 3,000g + 500 dust |
+| Rift | 30 | Rare | 6,000g + 1,000 dust |
+| Titan | 40 | Epic | 12,000g + 2,000 dust |
+
+*Exclusive units are available from level 1 but require premium purchase.
+
+---
+
+## Tower Unlocks
+
+| Tower | Unlock Level |
+|-------|--------------|
+| Wieża Railgun | 1 (Starter) |
+| Wieża Kriogeniczna | 5 |
+| Wieża Artyleryjska | 15 |
+| Wieża Łukowa | 30 |
+| Wieża Fotonowa | 45 |
 
 ---
 
 ## Power Upgrades
 
-Permanent stat bonuses purchased with gold.
+Permanent stat bonuses purchased with gold. Stored per-player.
 
-### Fortress Stats (3)
+### Fortress Stats
 
-| Stat | Bonus/Level | Max Level | Base Cost | Cost/Level |
-|------|-------------|-----------|-----------|------------|
-| HP | +5% | 20 | 100g | +75g |
-| Damage | +4% | 20 | 150g | +100g |
-| Armor | +3% | 20 | 200g | +125g |
+| Stat | Bonus/Level | Max Level |
+|------|-------------|-----------|
+| HP | +5% | 20 |
+| Damage | +4% | 20 |
+| Armor | +3% | 20 |
 
-### Hero Stats (2)
+### Unit Stats (per unit)
 
-| Stat | Bonus/Level | Max Level | Base Cost | Cost/Level |
-|------|-------------|-----------|-----------|------------|
-| HP | +3% | 20 | 75g | +50g |
-| Damage | +3% | 20 | 100g | +75g |
+| Stat | Bonus/Level | Max Level |
+|------|-------------|-----------|
+| HP | +3% | 20 |
+| Damage | +3% | 20 |
 
-### Turret Stats (2)
+### Tower Stats (per tower type)
 
-| Stat | Bonus/Level | Max Level | Base Cost | Cost/Level |
-|------|-------------|-----------|-----------|------------|
-| Damage | +3% | 20 | 80g | +60g |
-| Attack Speed | +2% | 20 | 100g | +80g |
+| Stat | Bonus/Level | Max Level |
+|------|-------------|-----------|
+| Damage | +3% | 20 |
+| Attack Speed | +2% | 20 |
 
 ---
 
 ## Tier Upgrade Costs
 
-### Hero Tiers
+### Unit Tiers
 
 | Upgrade | Gold | Dust | Level Required |
 |---------|------|------|----------------|
 | Tier 1→2 | 500 | 50 | 10 |
-| Tier 2→3 | 1000 | 100 | 20 |
+| Tier 2→3 | 2,000 | 200 | 20 |
 
-### Turret Tiers
+*Tier 3 may require special materials (Vibranium, Uru, Extremis, etc.)*
 
-| Upgrade | Gold | Dust |
-|---------|------|------|
-| Tier 1→2 | 150 | 15 |
-| Tier 2→3 | 400 | 50 |
+### Tower Tiers
+
+Towers use a tier cost multiplier (2.0x per tier):
+
+| Tier | Cost Multiplier |
+|------|-----------------|
+| 1 | 1.0x (base cost) |
+| 2 | 2.0x |
+| 3 | 4.0x |
 
 ---
 
-## Fortress Tiers
+## Fortress Tiers (Visual)
 
-Based on fortress level, you gain tier bonuses:
+Based on fortress level, your fortress has a visual tier:
 
-| Level Range | Tier | Name | Bonus |
-|-------------|------|------|-------|
-| 1-9 | 1 | Drewniany | Base stats |
-| 10-19 | 2 | Kamienny | +10% HP, +5% DMG |
-| 20-29 | 3 | Żelazny | +20% HP, +10% DMG |
-| 30-39 | 4 | Stalowy | +30% HP, +15% DMG |
-| 40-49 | 5 | Diamentowy | +40% HP, +20% DMG |
-| 50 | 6 | Legendarny | +50% HP, +25% DMG |
+| Level Range | Tier | Name | Description |
+|-------------|------|------|-------------|
+| 1-9 | 1 | Podstawowa Twierdza | Simple structure |
+| 10-24 | 2 | Warownia | Fortified with battlements |
+| 25-50 | 3 | Cytadela | Elemental theming and effects |
 
 ---
 
@@ -164,64 +184,72 @@ Based on fortress level, you gain tier bonuses:
 
 Specific rewards at milestone levels:
 
-| Level | Reward |
-|-------|--------|
-| 5 | +2nd Turret Slot, Frost Tower unlock |
-| 10 | +2nd Hero Slot, Ice/Fire class unlock |
-| 15 | Cannon Tower unlock, Skill 2 unlock |
-| 20 | Tesla Tower unlock, 2nd class unlock |
-| 25 | Lightning class unlock, +3rd Hero Slot |
-| 30 | Tech class unlock |
-| 35 | +5th Turret Slot |
-| 40 | +6th Turret Slot, Infinity Gauntlet eligible |
-| 45 | +4th Hero Slot |
-| 50 | Max level bonuses |
+| Level | Rewards |
+|-------|---------|
+| 1 | Starter Kit (Standardowa, Vanguard, Storm, Railgun), Skill 1 |
+| 5 | 2nd Tower Slot, Wieża Kriogeniczna, Skill 2 |
+| 10 | 2nd Unit Slot, Unit "Forge", Skill 3 |
+| 15 | 3rd Tower Slot, Wieża Artyleryjska, +10% DMG bonus |
+| 20 | Konfiguracja Kriogeniczna, Unit "Frost", Ultimate Skill (Skill 4) |
+| 25 | Konfiguracja Termiczna, 4th Tower Slot |
+| 30 | 3rd Unit Slot, Unit "Rift", Konfiguracja Elektryczna, Wieża Łukowa |
+| 35 | 5th Tower Slot |
+| 40 | Unit "Titan", Konfiguracja Próżniowa, 6th Tower Slot, Magic Pillar |
+| 45 | 4th Unit Slot (max), Konfiguracja Kwantowa, Wieża Fotonowa |
+| 50 | Nexus Sector unlock, Crystal Matrix eligibility, Annihilation Protocol |
 
 ---
 
-## Infinity Stones
+## Ancient Crystals (Starożytne Kryształy)
 
 End-game progression for level 40+ players.
 
 ### Fragment Collection
-- 2% drop rate from pillar bosses
-- 10 fragments = 1 stone
-- 6 stones = Infinity Gauntlet
+- 2% fragment drop rate from sector bosses (5x more common than full crystals)
+- 0.2% full crystal drop rate
+- 10 fragments = 1 crystal
+- 6 crystals = Crystal Matrix activation
 
-### Stone Types
-| Stone | Effect |
-|-------|--------|
-| Power | +50% damage |
-| Space | +3 range all attacks |
-| Time | -30% all cooldowns |
-| Soul | +50% HP, lifesteal |
-| Mind | +50% XP gain |
-| Reality | +50% gold/dust |
+### Crystal Types
 
-### SNAP Ability
-- Requires: All 6 stones + Level 40
-- Effect: 30% damage to ALL enemies
-- Cooldown: 25 waves
+| Crystal | Polish Name | Color | Primary Effect |
+|---------|-------------|-------|----------------|
+| Power | Kryształ Mocy | Purple | +50% damage |
+| Void | Kryształ Próżni | Blue | +100% range |
+| Chrono | Kryształ Czasu | Green | -50% cooldowns |
+| Matter | Kryształ Materii | Red | Adaptive damage type, +50% luck |
+| Vitae | Kryształ Życia | Orange | 30% lifesteal, +15% crit |
+| Psi | Kryształ Umysłu | Yellow | +50% XP, CC immunity |
+
+### Crystal Matrix Requirements
+- Commander Level 40+
+- Tier 3 unit (APEX)
+- All 6 Ancient Crystals equipped
+- Crystal Matrix artifact
+
+### Annihilation Wave (Fala Anihilacji)
+- Effect: Deals 30% of max HP to ALL enemies on screen
+- Cooldown: 25 waves (unit unavailable during cooldown)
 
 ---
 
-## Daily/Weekly Bonuses
+## Post-50 Progression
 
-### Daily Login
-- Day 1-6: 100-500 gold
-- Day 7: 1000 gold + 50 dust
+After reaching level 50, players can continue earning XP:
 
-### Weekly Challenges
-- Complete 10 runs: 500 gold
-- Kill 1000 enemies: 100 dust
-- Clear wave 10: 50 Sigils (premium)
+| Bonus | Per Level |
+|-------|-----------|
+| Damage | +1% |
+| Gold | +0.5% |
+| Starting Gold | +3 |
 
 ---
 
 ## Prestige System (Future)
 
-After level 50:
+Planned system for level 50+ players:
 - Reset to level 1 with permanent bonuses
 - +5% base stats per prestige
 - Unlock exclusive cosmetics
-- Max prestige: 10
+- Starting gold bonus
+- Dust multiplier

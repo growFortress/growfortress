@@ -6,6 +6,7 @@ import {
   hideMaterialsModal,
   uniqueMaterialsCount,
 } from '../../state/materials.signals.js';
+import { Modal } from '../shared/Modal.js';
 import styles from './MaterialsInventory.module.css';
 
 // Rarity colors
@@ -48,8 +49,6 @@ export function MaterialsInventory() {
   const materials = playerMaterials.value;
   const filter = activeFilter.value;
 
-  if (!isVisible) return null;
-
   // Get total materials count
   const totalMaterials = Object.values(materials).reduce((sum, amount) => sum + amount, 0);
 
@@ -61,74 +60,65 @@ export function MaterialsInventory() {
     return mat.rarity === filter;
   });
 
-  const handleOverlayClick = (e: MouseEvent) => {
-    if ((e.target as HTMLElement).classList.contains(styles.overlay)) {
-      hideMaterialsModal();
-    }
-  };
-
   return (
-    <div class={styles.overlay} onClick={handleOverlayClick}>
-      <div class={styles.modal}>
-        <div class={styles.header}>
-          <h2 class={styles.title}>Materials</h2>
-          <button class={styles.closeBtn} onClick={hideMaterialsModal}>
-            ×
-          </button>
+    <Modal
+      visible={isVisible}
+      title="Materials"
+      onClose={hideMaterialsModal}
+      class={styles.modalContent}
+      ariaLabel="Materials Inventory"
+    >
+      <div class={styles.stats}>
+        <div class={styles.stat}>
+          <span class={styles.statLabel}>Total Materials</span>
+          <span class={styles.statValue}>{totalMaterials}</span>
         </div>
-
-        <div class={styles.stats}>
-          <div class={styles.stat}>
-            <span class={styles.statLabel}>Total Materials</span>
-            <span class={styles.statValue}>{totalMaterials}</span>
-          </div>
-          <div class={styles.stat}>
-            <span class={styles.statLabel}>Unique Types</span>
-            <span class={styles.statValue}>{uniqueMaterialsCount.value}</span>
-          </div>
+        <div class={styles.stat}>
+          <span class={styles.statLabel}>Unique Types</span>
+          <span class={styles.statValue}>{uniqueMaterialsCount.value}</span>
         </div>
-
-        <div class={styles.filters}>
-          {RARITY_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              class={`${styles.filterBtn} ${filter === f.value ? styles.active : ''}`}
-              onClick={() => (activeFilter.value = f.value)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {filteredMaterials.length === 0 ? (
-          <div class={styles.empty}>
-            {Object.keys(materials).length === 0
-              ? 'No materials collected yet. Defeat enemies and complete waves to find materials!'
-              : `No ${filter} materials found.`}
-          </div>
-        ) : (
-          <div class={styles.grid}>
-            {filteredMaterials.map((material) => {
-              const amount = materials[material.id] ?? 0;
-              const color = RARITY_COLORS[material.rarity] || '#808080';
-              const icon = MATERIAL_ICONS[material.id] || '📦';
-
-              return (
-                <div
-                  key={material.id}
-                  class={styles.materialCard}
-                  style={{ '--rarity-color': color } as Record<string, string>}
-                  title={`${material.polishName}\n${material.description}\n\n${material.lore}`}
-                >
-                  <span class={styles.materialIcon}>{icon}</span>
-                  <span class={styles.materialName}>{material.polishName}</span>
-                  <span class={styles.materialAmount}>×{amount}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
-    </div>
+
+      <div class={styles.filters}>
+        {RARITY_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            class={`${styles.filterBtn} ${filter === f.value ? styles.active : ''}`}
+            onClick={() => (activeFilter.value = f.value)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {filteredMaterials.length === 0 ? (
+        <div class={styles.empty}>
+          {Object.keys(materials).length === 0
+            ? 'No materials collected yet. Defeat enemies and complete waves to find materials!'
+            : `No ${filter} materials found.`}
+        </div>
+      ) : (
+        <div class={styles.grid}>
+          {filteredMaterials.map((material) => {
+            const amount = materials[material.id] ?? 0;
+            const color = RARITY_COLORS[material.rarity] || '#808080';
+            const icon = MATERIAL_ICONS[material.id] || '📦';
+
+            return (
+              <div
+                key={material.id}
+                class={styles.materialCard}
+                style={{ '--rarity-color': color } as Record<string, string>}
+                title={`${material.polishName}\n${material.description}\n\n${material.lore}`}
+              >
+                <span class={styles.materialIcon}>{icon}</span>
+                <span class={styles.materialName}>{material.polishName}</span>
+                <span class={styles.materialAmount}>×{amount}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Modal>
   );
 }

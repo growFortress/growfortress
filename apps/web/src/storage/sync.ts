@@ -1,15 +1,7 @@
-import type { RunFinishRequest } from '@arcade/protocol';
-import { finishRun } from '../api/client.js';
 import {
-  getPendingFinishes,
-  deletePendingFinish,
-  updatePendingFinishRetry,
   getTelemetryQueue,
   deleteTelemetryBatch,
 } from './idb.js';
-
-const MAX_RETRIES = 5;
-const RETRY_DELAY_BASE = 1000; // 1 second
 
 type SyncStatus = 'online' | 'offline' | 'syncing';
 
@@ -77,37 +69,12 @@ class SyncManager {
     this.notifyListeners();
 
     try {
-      await this.syncPendingFinishes();
       await this.syncTelemetry();
     } catch (error) {
       console.error('Sync error:', error);
     } finally {
       this.isSyncing = false;
       this.notifyListeners();
-    }
-  }
-
-  private async syncPendingFinishes(): Promise<void> {
-    const pending = await getPendingFinishes();
-
-    for (const item of pending) {
-      if (item.retryCount >= MAX_RETRIES) {
-        // Too many retries, give up
-        await deletePendingFinish(item.runId);
-        continue;
-      }
-
-      try {
-        await finishRun(item.runId, item.payload as RunFinishRequest);
-        await deletePendingFinish(item.runId);
-      } catch (error) {
-        console.error(`Failed to sync run ${item.runId}:`, error);
-        await updatePendingFinishRetry(item.runId, item.retryCount + 1);
-
-        // Exponential backoff
-        const delay = RETRY_DELAY_BASE * Math.pow(2, item.retryCount);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
     }
   }
 
@@ -127,11 +94,6 @@ class SyncManager {
         // Don't retry telemetry, just skip for now
       }
     }
-  }
-
-  async getPendingCount(): Promise<number> {
-    const pending = await getPendingFinishes();
-    return pending.length;
   }
 }
 

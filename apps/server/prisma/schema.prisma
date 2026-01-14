@@ -7,55 +7,130 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum Role {
   USER
   ADMIN
 }
 
 model User {
-  id                   String             @id @default(cuid())
-  username             String             @unique
-  passwordHash         String
-  displayName          String
-  role                 Role               @default(USER)
-  banned               Boolean            @default(false)
-  createdAt            DateTime           @default(now())
-  currentWave          Int                @default(0)
-  highestWave          Int                @default(0)
-  activeGameSessionId  String?            @unique
+  id                  String   @id @default(cuid())
+  username            String   @unique
+  email               String?  @unique
+  passwordHash        String
+  displayName         String
+  role                Role     @default(USER)
+  banned              Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  currentWave         Int      @default(0)
+  highestWave         Int      @default(0)
+  activeGameSessionId String?  @unique
 
   // Idle rewards tracking
-  lastIdleClaimAt      DateTime           @default(now())
+  lastIdleClaimAt DateTime @default(now())
 
   // Default loadout (selected after registration)
-  defaultFortressClass String?            // 'natural' | 'ice' | 'fire' | 'lightning' | 'poison' | 'magic' | 'tech'
-  defaultHeroId        String?            // e.g. 'shield_captain', 'thunderlord', 'scarlet_mage'
-  defaultTurretType    String?            // 'arrow' | 'cannon' | 'sniper' | 'tesla' | 'frost' | 'flame' | 'support' | 'poison'
-  onboardingCompleted  Boolean            @default(false)
+  defaultFortressClass String? // 'natural' | 'ice' | 'fire' | 'lightning' | 'poison' | 'magic' | 'tech'
+  defaultHeroId        String? // e.g. 'shield_captain', 'thunderlord', 'scarlet_mage'
+  defaultTurretType    String? // 'arrow' | 'cannon' | 'sniper' | 'tesla' | 'frost' | 'flame' | 'support' | 'poison'
+  onboardingCompleted  Boolean @default(false)
+  description          String? @default("") // Player bio, max 500 chars
 
-  inventory            Inventory?
-  progression          Progression?
-  powerUpgrades        PowerUpgrades?
-  runs                 Run[]
-  sessions             Session[]
-  gameSessions         GameSession[]
-  leaderboardEntries   LeaderboardEntry[]
-  artifacts            PlayerArtifact[]
+  inventory          Inventory?
+  progression        Progression?
+  powerUpgrades      PowerUpgrades?
+  runs               Run[]
+  sessions           Session[]
+  gameSessions       GameSession[]
+  leaderboardEntries LeaderboardEntry[]
+  artifacts          PlayerArtifact[]
 
   // Boss Rush mode
-  bossRushSessions     BossRushSession[]
-  bossRushLeaderboard  BossRushLeaderboard[]
+  bossRushSessions    BossRushSession[]
+  bossRushLeaderboard BossRushLeaderboard[]
 
   // Bulk Rewards
-  rewardClaims         PlayerRewardClaim[]
-  bugReports           BugReport[]
+  rewardClaims PlayerRewardClaim[]
+  bugReports   BugReport[]
 
   // PvP Arena
   pvpChallengesSent     PvpChallenge[] @relation("pvpChallenger")
   pvpChallengesReceived PvpChallenge[] @relation("pvpChallenged")
   pvpWins               Int            @default(0)
   pvpLosses             Int            @default(0)
+
+  // Guild system
+  guildMembership      GuildMember?
+  guildInvitesSent     GuildInvitation[]  @relation("guildInviter")
+  guildInvitesReceived GuildInvitation[]  @relation("guildInvitee")
+  guildTreasuryLogs    GuildTreasuryLog[]
+
+  // Messaging system
+  messageParticipations MessageParticipant[]
+  sentMessages          Message[]            @relation("SentMessages")
+
+  // Moderation system
+  reportsMade     MessageReport[] @relation("ReportsMade")
+  reportsReviewed MessageReport[] @relation("ReportsReviewed")
+  blocksMade      UserBlock[]     @relation("BlocksMade")
+  blocksReceived  UserBlock[]     @relation("BlocksReceived")
+  mutesReceived   UserMute[]      @relation("MutesReceived")
+  mutesGiven      UserMute[]      @relation("MutesGiven")
+
+  // Anti-spam tracking
+  lastMessageAt   DateTime?
+  messagesToday   Int       @default(0)
+  messagesResetAt DateTime?
+
+  // System broadcasts
+  broadcastsSent SystemBroadcast[] @relation("BroadcastsSent")
+
+  // Player rankings & progression
+  totalWaves         Int       @default(0) // Sum of all waves cleared ever
+  honor              Int       @default(1000) // PvP honor (hybrid ELO)
+  weeklyHonor        Int       @default(0) // Honor gained this week
+  weeklyHonorResetAt DateTime? // When weekly honor was last reset
+  exclusiveItems     String[]  @default([]) // Exclusive item IDs from leaderboards
+
+  // Player leaderboard relations
+  weeklyPlayerLeaderboards WeeklyPlayerLeaderboard[]
+  weeklyPlayerRewards      WeeklyPlayerReward[]
+
+  // IAP transactions
+  iapTransactions IAPTransaction[]
+
+  // Pillar Challenge & Crystal system
+  crystalProgress         CrystalProgress?
+  pillarChallengeSessions PillarChallengeSession[]
+  pillarChallengeLimits   PillarChallengeLimits?
+
+  // Mastery System (Class Skill Trees)
+  masteryProgress MasteryProgress?
+
+  // Daily Quests
+  dailyQuestProgress DailyQuestProgress[]
+
+  // Password Reset
+  passwordResetTokens PasswordResetToken[]
+
+  // Shop & Microtransactions
+  shopPurchases      ShopPurchase[]
+  purchaseLimits     UserPurchaseLimit[]
+  gachaPulls         GachaPull[]
+  gachaProgress      GachaProgress?
+  battlePassProgress BattlePassProgress[]
+  activeBoosters     ActiveBooster[]
+  cosmetics          UserCosmetic[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Session {
@@ -71,29 +146,45 @@ model Session {
 }
 
 model Inventory {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  gold            Int      @default(0)
-  dust            Int      @default(0)
-  sigils          Int      @default(0)
-  materials       Json     @default("{}")  // { [materialId: string]: amount: number }
-  items           Json     @default("{}")  // { [itemId: string]: amount: number }
-  unlockedHeroIds String[] @default([])    // Hero IDs the player has unlocked
-  unlockedTurretIds String[] @default([])  // Turret types the player has unlocked
-  version         Int      @default(1)
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  gold              Int      @default(0)
+  dust              Int      @default(0)
+  materials         Json     @default("{}") // { [materialId: string]: amount: number }
+  items             Json     @default("{}") // { [itemId: string]: amount: number }
+  unlockedHeroIds   String[] @default([]) // Hero IDs the player has unlocked
+  unlockedTurretIds String[] @default([]) // Turret types the player has unlocked
+  pillarKeys        Json     @default("{}") // { [pillarId: string]: keyCount } for Pillar Challenge
+  version           Int      @default(1)
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Progression {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  level     Int      @default(1)
-  xp        Int      @default(0)
-  totalXp   Int      @default(0)
-  version   Int      @default(1)
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  level                Int      @default(1)
+  xp                   Int      @default(0)
+  totalXp              Int      @default(0)
+  purchasedHeroSlots   Int      @default(2) // Start with 2 free slots
+  purchasedTurretSlots Int      @default(1) // Start with 1 free slot
+  version              Int      @default(1)
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Mastery System - Class Skill Trees
+// Stores player's mastery point progress and unlocked nodes per class
+model MasteryProgress {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  availablePoints Int      @default(0)
+  totalEarned     Int      @default(0)
+  // Per-class progress stored as JSON: { [class]: { pointsSpent: number, unlockedNodes: string[] } }
+  classProgress   Json     @default("{}")
+  version         Int      @default(1)
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Run {
@@ -111,7 +202,7 @@ model Run {
   finalHash    Int?
   score        Int?
   summaryJson  Json?
-  configJson   Json?      // Initial simulation configuration for replays
+  configJson   Json? // Initial simulation configuration for replays
   events       RunEvent[]
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -154,88 +245,106 @@ model TelemetryEvent {
 }
 
 model GameSession {
-  id               String    @id @default(cuid())
+  id               String      @id @default(cuid())
   userId           String
   seed             Int
-  startedAt        DateTime  @default(now())
-  lastActivityAt   DateTime  @default(now())
-  startingWave     Int       @default(0)
-  currentWave      Int       @default(0)
-  lastVerifiedWave Int       @default(0)
-  lastSegmentHash  Int       @default(0)
+  startedAt        DateTime    @default(now())
+  lastActivityAt   DateTime    @default(now())
+  startingWave     Int         @default(0)
+  currentWave      Int         @default(0)
+  lastVerifiedWave Int         @default(0)
+  lastSegmentHash  Int         @default(0)
   endedAt          DateTime?
   endReason        String?
-  configJson       Json?      // Initial simulation configuration for replays
+  configJson       Json? // Initial simulation configuration for replays
   segments         Segment[]
   bugReports       BugReport[]
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model Segment {
-  id              String       @id @default(cuid())
+  id              String      @id @default(cuid())
   gameSessionId   String
   startWave       Int
   endWave         Int
   eventsJson      Json
   checkpointsJson Json
   finalHash       Int
-  verified        Boolean      @default(false)
+  verified        Boolean     @default(false)
   verifiedAt      DateTime?
-  goldEarned      Int          @default(0)
-  dustEarned      Int          @default(0)
-  xpEarned        Int          @default(0)
-  createdAt       DateTime     @default(now())
-  gameSession     GameSession  @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+  goldEarned      Int         @default(0)
+  dustEarned      Int         @default(0)
+  xpEarned        Int         @default(0)
+  materialsJson   Json        @default("{}") // { [materialId: string]: amount: number }
+  createdAt       DateTime    @default(now())
+  gameSession     GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
 
   @@index([gameSessionId])
 }
 
 model PlayerArtifact {
-  id              String    @id @default(cuid())
-  userId          String
-  artifactId      String    // Reference to artifact definition (e.g., 'mjolnir')
-  equippedToHeroId String?  // If equipped, which hero
-  acquiredAt      DateTime  @default(now())
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  userId           String
+  artifactId       String // Reference to artifact definition (e.g., 'plasma_hammer')
+  level            Int       @default(1) // Upgrade level 1-20
+  equippedSlot     String? // 'weapon' | 'armor' | 'accessory' - which slot type
+  equippedToHeroId String? // If equipped, which hero
+  acquiredAt       DateTime  @default(now())
+  upgradedAt       DateTime? // Last upgrade timestamp
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, artifactId]) // Player can only own one of each artifact
   @@index([userId])
+  @@index([equippedToHeroId])
 }
 
 // Power Upgrades - permanent meta-progression for stats
 model PowerUpgrades {
-  id               String   @id @default(cuid())
-  userId           String   @unique
+  id     String @id @default(cuid())
+  userId String @unique
 
   // Fortress stat upgrades (JSON: { statUpgrades: StatUpgrades })
-  fortressUpgrades Json     @default("{\"statUpgrades\":{\"hp\":0,\"damage\":0,\"attackSpeed\":0,\"range\":0,\"critChance\":0,\"critMultiplier\":0,\"armor\":0,\"dodge\":0}}")
+  fortressUpgrades Json @default("{\"statUpgrades\":{\"hp\":0,\"damage\":0,\"attackSpeed\":0,\"range\":0,\"critChance\":0,\"critMultiplier\":0,\"armor\":0,\"dodge\":0}}")
+
+  // Fortress prestige levels (JSON: { hp: 0, damage: 0, armor: 0 })
+  // Each prestige gives +5% permanent bonus, max 5 prestiges = +25%
+  fortressPrestige Json @default("{\"hp\":0,\"damage\":0,\"armor\":0}")
 
   // Hero stat upgrades (JSON: HeroUpgrades[])
-  heroUpgrades     Json     @default("[]")
+  heroUpgrades Json @default("[]")
+
+  // Hero tier levels (JSON: { [heroId]: 1|2|3 })
+  heroTiers Json @default("{}")
 
   // Turret stat upgrades (JSON: TurretUpgrades[])
-  turretUpgrades   Json     @default("[]")
+  turretUpgrades Json @default("[]")
+
+  // Turret tier levels (JSON: { [turretType]: 1|2|3 })
+  turretTiers Json @default("{}")
+
+  // Turret prestige levels (JSON: [{ turretType, damage, attackSpeed }])
+  turretPrestige Json @default("[]")
 
   // Item tier upgrades (JSON: ItemTierUpgrade[])
-  itemTiers        Json     @default("[]")
+  itemTiers Json @default("[]")
 
   // Cached total power (recalculated on each upgrade)
-  cachedTotalPower Int      @default(0)
+  cachedTotalPower Int @default(0)
 
-  version          Int      @default(1)
-  updatedAt        DateTime @updatedAt
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  adminId     String
-  action      String   // e.g., 'BAN_PLAYER', 'GRANT_REWARDS', 'RESET_PROGRESS'
-  targetId    String   // ID of the target user
-  details     Json     // Action details (e.g., { gold: 100, dust: 50 })
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String // e.g., 'BAN_PLAYER', 'GRANT_REWARDS', 'RESET_PROGRESS'
+  targetId  String // ID of the target user
+  details   Json // Action details (e.g., { gold: 100, dust: 50 })
+  createdAt DateTime @default(now())
 
   @@index([adminId])
   @@index([targetId])
@@ -244,7 +353,7 @@ model AuditLog {
 
 model GameConfig {
   key         String   @id
-  value       String   // JSON stringified value
+  value       String // JSON stringified value
   description String?
   updatedAt   DateTime @updatedAt
 }
@@ -254,36 +363,36 @@ model GameConfig {
 // ============================================================================
 
 model BossRushSession {
-  id                String    @id @default(cuid())
-  userId            String
-  seed              Int
-  startedAt         DateTime  @default(now())
-  endedAt           DateTime?
+  id        String    @id @default(cuid())
+  userId    String
+  seed      Int
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
 
   // Boss tracking
-  bossesKilled      Int       @default(0)
-  currentBossIndex  Int       @default(0)
-  currentCycle      Int       @default(0)
+  bossesKilled     Int @default(0)
+  currentBossIndex Int @default(0)
+  currentCycle     Int @default(0)
 
   // Primary score metric - total damage dealt to all bosses
-  totalDamageDealt  BigInt    @default(0)
+  totalDamageDealt BigInt @default(0)
 
   // Rewards earned
-  goldEarned        Int       @default(0)
-  dustEarned        Int       @default(0)
-  xpEarned          Int       @default(0)
-  materialsEarned   Json      @default("{}")  // { [materialId: string]: amount }
+  goldEarned      Int  @default(0)
+  dustEarned      Int  @default(0)
+  xpEarned        Int  @default(0)
+  materialsEarned Json @default("{}") // { [materialId: string]: amount }
 
   // Loadout snapshot
-  loadoutJson       Json      // { fortressClass, heroIds, turretTypes }
+  loadoutJson Json // { fortressClass, heroIds, turretTypes }
 
   // Verification
-  finalHash         Int?
-  verified          Boolean   @default(false)
-  verifiedAt        DateTime?
-  rejectReason      String?
+  finalHash    Int?
+  verified     Boolean   @default(false)
+  verifiedAt   DateTime?
+  rejectReason String?
 
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([startedAt])
@@ -294,7 +403,7 @@ model BossRushLeaderboard {
   id           String   @id @default(cuid())
   weekKey      String
   userId       String
-  totalDamage  BigInt   // Primary ranking metric
+  totalDamage  BigInt // Primary ranking metric
   bossesKilled Int
   sessionId    String
   createdAt    DateTime @default(now())
@@ -305,11 +414,11 @@ model BossRushLeaderboard {
 }
 
 model MetricSnapshot {
-  id              String   @id @default(cuid())
-  timestamp       DateTime @default(now())
-  ccu             Int
-  activeSessions  Int
-  errorCount      Int
+  id             String   @id @default(cuid())
+  timestamp      DateTime @default(now())
+  ccu            Int
+  activeSessions Int
+  errorCount     Int
 
   @@index([timestamp])
 }
@@ -331,8 +440,8 @@ model ScheduledEvent {
   id          String   @id @default(cuid())
   name        String
   description String?
-  type        String   // e.g. "MULTIPLIER_XP", "MULTIPLIER_GOLD", "MULTIPLIER_DUST"
-  value       Float    // e.g. 2.0
+  type        String // e.g. "MULTIPLIER_XP", "MULTIPLIER_GOLD", "MULTIPLIER_DUST"
+  value       Float // e.g. 2.0
   startsAt    DateTime
   endsAt      DateTime
   isActive    Boolean  @default(true)
@@ -343,15 +452,15 @@ model ScheduledEvent {
 }
 
 model BulkReward {
-  id           String              @id @default(cuid())
-  title        String
-  description  String
-  type         String              // 'GOLD', 'DUST', 'SIGILS', 'ITEM', 'ARTIFACT'
-  value        String              // Amount as string or item/artifact ID
-  targetType   String              @default("ALL") // For now only "ALL"
-  expiresAt    DateTime?
-  createdAt    DateTime            @default(now())
-  claims       PlayerRewardClaim[]
+  id          String              @id @default(cuid())
+  title       String
+  description String
+  type        String // 'GOLD', 'DUST', 'SIGILS', 'ITEM', 'ARTIFACT'
+  value       String // Amount as string or item/artifact ID
+  targetType  String              @default("ALL") // For now only "ALL"
+  expiresAt   DateTime?
+  createdAt   DateTime            @default(now())
+  claims      PlayerRewardClaim[]
 }
 
 model PlayerRewardClaim {
@@ -367,14 +476,14 @@ model PlayerRewardClaim {
 }
 
 model BugReport {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   userId      String
   sessionId   String
   tick        Int
   description String
-  status      String   @default("OPEN") // OPEN, CLOSED, INVESTIGATING
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String      @default("OPEN") // OPEN, CLOSED, INVESTIGATING
+  createdAt   DateTime    @default(now())
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   session     GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -386,42 +495,42 @@ model BugReport {
 // ============================================================================
 
 enum PvpChallengeStatus {
-  PENDING     // Waiting for acceptance
-  ACCEPTED    // Accepted, ready to resolve
-  RESOLVED    // Battle completed, result known
-  DECLINED    // Declined by challenged player
-  EXPIRED     // Challenge expired (24h)
-  CANCELLED   // Cancelled by challenger
+  PENDING // Waiting for acceptance
+  ACCEPTED // Accepted, ready to resolve
+  RESOLVED // Battle completed, result known
+  DECLINED // Declined by challenged player
+  EXPIRED // Challenge expired (24h)
+  CANCELLED // Cancelled by challenger
 }
 
 model PvpChallenge {
-  id              String              @id @default(cuid())
+  id String @id @default(cuid())
 
   // Players
-  challengerId    String
-  challenger      User                @relation("pvpChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
-  challengedId    String
-  challenged      User                @relation("pvpChallenged", fields: [challengedId], references: [id], onDelete: Cascade)
+  challengerId String
+  challenger   User   @relation("pvpChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
+  challengedId String
+  challenged   User   @relation("pvpChallenged", fields: [challengedId], references: [id], onDelete: Cascade)
 
   // Power snapshot (at challenge creation time)
   challengerPower Int
   challengedPower Int
 
   // Status
-  status          PvpChallengeStatus  @default(PENDING)
+  status PvpChallengeStatus @default(PENDING)
 
   // Seed for deterministic simulation (generated on accept)
-  seed            Int?
+  seed Int?
 
   // Timestamps
-  createdAt       DateTime            @default(now())
-  expiresAt       DateTime            // 24h from creation
-  acceptedAt      DateTime?
-  resolvedAt      DateTime?
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime // 24h from creation
+  acceptedAt DateTime?
+  resolvedAt DateTime?
 
   // Result (after resolution)
-  result          PvpResult?
-  winnerId        String?
+  result   PvpResult?
+  winnerId String?
 
   @@index([challengerId])
   @@index([challengedId])
@@ -430,36 +539,1028 @@ model PvpChallenge {
 }
 
 model PvpResult {
-  id                   String       @id @default(cuid())
+  id String @id @default(cuid())
 
-  challengeId          String       @unique
-  challenge            PvpChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId String       @unique
+  challenge   PvpChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
 
   // Result
-  winnerId             String?      // null = draw
-  winReason            String       // 'fortress_destroyed' | 'timeout' | 'draw'
+  winnerId  String? // null = draw
+  winReason String // 'fortress_destroyed' | 'timeout' | 'draw'
 
   // Challenger stats
-  challengerFinalHp    Int
+  challengerFinalHp     Int
   challengerDamageDealt Int
   challengerHeroesAlive Int
 
   // Challenged stats
-  challengedFinalHp    Int
+  challengedFinalHp     Int
   challengedDamageDealt Int
   challengedHeroesAlive Int
 
   // Duration (in ticks)
-  duration             Int
+  duration Int
 
   // Build snapshots (for replay)
-  challengerBuild      Json         // { fortressClass, heroes, turrets, powerUpgrades }
-  challengedBuild      Json
+  challengerBuild Json // { fortressClass, heroes, turrets, powerUpgrades }
+  challengedBuild Json
 
   // Replay events (optional, for detailed replay)
-  replayEvents         Json?        // ArenaReplayEvent[]
+  replayEvents Json? // ArenaReplayEvent[]
 
-  resolvedAt           DateTime     @default(now())
+  resolvedAt DateTime @default(now())
 
   @@index([winnerId])
+}
+
+// ============================================================================
+// GUILD SYSTEM
+// ============================================================================
+
+enum GuildRole {
+  LEADER // Full control: all permissions, can transfer leadership, disband
+  OFFICER // Can invite, kick members, start battles, manage treasury deposits
+  MEMBER // Can donate to treasury, participate in battles
+}
+
+enum GuildInvitationStatus {
+  PENDING // Waiting for player response
+  ACCEPTED // Player joined the guild
+  DECLINED // Player declined
+  EXPIRED // 72h expiry
+  CANCELLED // Cancelled by sender
+}
+
+enum GuildBattleStatus {
+  RESOLVED // Battle completed (instant attacks - only status used now)
+}
+
+enum TreasuryTransactionType {
+  DEPOSIT_GOLD
+  DEPOSIT_DUST
+  WITHDRAW_GOLD
+  WITHDRAW_DUST
+  BATTLE_COST
+  UPGRADE_COST
+  REWARD_DISTRIBUTION
+  SHIELD_PURCHASE // Shield activated
+  GUILD_TECH_UPGRADE // Guild Tech upgrade cost
+}
+
+model Guild {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  tag         String  @unique // 3-5 uppercase chars, e.g., "APEX"
+  description String? @default("")
+
+  // Progression
+  level   Int @default(1) // 1-20
+  xp      Int @default(0)
+  totalXp Int @default(0)
+
+  // Honor system (for guild vs guild rankings)
+  honor Int @default(1000) // Start at 1000, ELO-like
+
+  // Guild Coins (currency for Guild Tech)
+  guildCoins Int @default(0)
+
+  // Guild Tech levels (JSON: { fortress: {...}, hero: {...}, turret: {...}, economy: {...} })
+  techLevels Json @default("{\"fortress\":{\"hp\":0,\"damage\":0,\"regen\":0},\"hero\":{\"hp\":0,\"damage\":0,\"cooldown\":0},\"turret\":{\"damage\":0,\"speed\":0,\"range\":0},\"economy\":{\"gold\":0,\"dust\":0,\"xp\":0}}")
+
+  // Trophies earned from special achievements
+  trophies Json @default("[]") // Array of trophy IDs
+
+  // Settings (JSON for flexibility)
+  settings Json @default("{\"minLevel\":1,\"autoAcceptInvites\":false,\"battleCooldownHours\":24}")
+
+  // Status
+  disbanded Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  members            GuildMember[]
+  invitations        GuildInvitation[]
+  treasury           GuildTreasury?
+  treasuryLogs       GuildTreasuryLog[]
+  upgrades           GuildUpgrade[]
+  leaderboardEntries GuildLeaderboardEntry[]
+
+  // Battle relations
+  battlesSent     GuildBattle[] @relation("guildBattleChallenger")
+  battlesReceived GuildBattle[] @relation("guildBattleChallenged")
+
+  @@index([level])
+  @@index([honor(sort: Desc)])
+}
+
+model GuildMember {
+  id      String    @id @default(cuid())
+  guildId String
+  userId  String    @unique // User can only be in one guild
+  role    GuildRole @default(MEMBER)
+
+  // Battle Hero - selected hero for guild battles
+  battleHeroId        String? // Hero definition ID (e.g., 'thunderlord')
+  battleHeroTier      Int? // 1-3, cached from player's hero progression
+  battleHeroPower     Int? // Cached power of this specific hero
+  battleHeroUpdatedAt DateTime? // When Battle Hero was last set/updated
+
+  // Contribution tracking
+  totalGoldDonated    Int @default(0)
+  totalDustDonated    Int @default(0)
+  weeklyXpContributed Int @default(0) // Reset weekly
+
+  // Guild Coins earned
+  earnedGuildCoins Int @default(0)
+
+  // Participation stats
+  battlesParticipated Int @default(0)
+  battlesWon          Int @default(0)
+
+  // Timestamps
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@index([userId])
+}
+
+model GuildInvitation {
+  id        String                @id @default(cuid())
+  guildId   String
+  inviterId String // User who sent invite
+  inviteeId String // User being invited
+  status    GuildInvitationStatus @default(PENDING)
+  message   String? // Optional invite message
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime // 72h from creation
+  respondedAt DateTime?
+
+  // Relations
+  guild              Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  inviter            User           @relation("guildInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee            User           @relation("guildInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  notificationThread MessageThread? // Link to messaging notification
+
+  @@index([guildId])
+  @@index([inviteeId])
+  @@index([status])
+}
+
+model GuildTreasury {
+  id      String @id @default(cuid())
+  guildId String @unique
+
+  // Current balances
+  gold Int @default(0)
+  dust Int @default(0)
+
+  // Lifetime totals (for tracking)
+  totalGoldDeposited BigInt @default(0)
+  totalDustDeposited BigInt @default(0)
+
+  // Version for optimistic locking
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+model GuildTreasuryLog {
+  id              String                  @id @default(cuid())
+  guildId         String
+  userId          String // Who performed the action
+  transactionType TreasuryTransactionType
+
+  // Amounts (positive for deposits, negative for withdrawals/costs)
+  goldAmount Int @default(0)
+  dustAmount Int @default(0)
+
+  // Context
+  description String? // e.g., "Guild upgrade: Gold Boost Lv.3"
+  referenceId String? // e.g., battle ID, upgrade ID
+
+  // Balance snapshot after transaction
+  balanceAfterGold Int
+  balanceAfterDust Int
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@index([userId])
+  @@index([transactionType])
+  @@index([createdAt])
+}
+
+model GuildUpgrade {
+  id        String @id @default(cuid())
+  guildId   String
+  upgradeId String // Reference to upgrade definition (e.g., 'gold_boost', 'member_cap')
+  level     Int    @default(1)
+
+  // Timestamps
+  unlockedAt DateTime @default(now())
+  upgradedAt DateTime @updatedAt
+
+  // Relations
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, upgradeId])
+  @@index([guildId])
+}
+
+model GuildLeaderboardEntry {
+  id      String @id @default(cuid())
+  weekKey String
+  guildId String
+
+  // Ranking metrics
+  honor      Int // Snapshot of honor at end of week
+  totalScore Int @default(0) // Aggregate of member scores
+
+  // Stats snapshot
+  battlesWon  Int @default(0)
+  battlesLost Int @default(0)
+  memberCount Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([weekKey, guildId])
+  @@index([weekKey, honor(sort: Desc)])
+  @@index([weekKey, totalScore(sort: Desc)])
+}
+
+model GuildBattle {
+  id String @id @default(cuid())
+
+  // Guilds
+  attackerGuildId String
+  attackerGuild   Guild  @relation("guildBattleChallenger", fields: [attackerGuildId], references: [id], onDelete: Cascade)
+  defenderGuildId String
+  defenderGuild   Guild  @relation("guildBattleChallenged", fields: [defenderGuildId], references: [id], onDelete: Cascade)
+
+  // Who initiated the attack
+  attackerUserId String
+
+  // Selected members for Arena 5v5 (user IDs)
+  attackerMemberIds String[] // 5 user IDs selected by attacker
+  defenderMemberIds String[] // 5 user IDs (random from defenders with Battle Hero)
+
+  // Battle Hero snapshots at battle time (JSON: [{userId, heroId, tier, power}])
+  attackerHeroes Json // Array of BattleHeroSnapshot
+  defenderHeroes Json // Array of BattleHeroSnapshot
+
+  // Seed for deterministic arena simulation
+  seed Int
+
+  // Status - always RESOLVED for instant attacks
+  status GuildBattleStatus @default(RESOLVED)
+
+  // Timestamps
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime @default(now())
+
+  // Result
+  winnerGuildId String?
+  result        GuildBattleResult?
+
+  // Is this a revenge battle?
+  isRevenge          Boolean @default(false)
+  revengeForBattleId String? // Reference to original battle
+
+  @@index([attackerGuildId])
+  @@index([defenderGuildId])
+  @@index([status])
+  @@index([attackerGuildId, defenderGuildId, createdAt])
+}
+
+model GuildBattleResult {
+  id       String      @id @default(cuid())
+  battleId String      @unique
+  battle   GuildBattle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  // Winner
+  winnerGuildId String? // null = draw
+  winnerSide    String // 'attacker' | 'defender' | 'draw'
+  winReason     String // 'elimination' | 'timeout' | 'draw'
+
+  // Honor changes
+  attackerHonorChange Int
+  defenderHonorChange Int
+
+  // Arena 5v5 result
+  attackerSurvivors   Int // Number of heroes that survived (0-5)
+  defenderSurvivors   Int // Number of heroes that survived (0-5)
+  attackerTotalDamage BigInt // Total damage dealt by attackers
+  defenderTotalDamage BigInt // Total damage dealt by defenders
+
+  // MVP - player who contributed most
+  mvpUserId String?
+  mvpHeroId String?
+  mvpDamage BigInt  @default(0)
+  mvpKills  Int     @default(0)
+
+  // Key moments for animation replay (JSON: ArenaKeyMoment[])
+  keyMoments Json @default("[]")
+
+  // Detailed kill log (JSON: [{tick, killerHeroId, victimHeroId}])
+  killLog Json @default("[]")
+
+  // Duration in simulation ticks
+  duration Int
+
+  resolvedAt DateTime @default(now())
+
+  @@index([winnerGuildId])
+}
+
+// ============================================================================
+// GUILD SHIELD - Protection from attacks
+// ============================================================================
+
+model GuildShield {
+  id      String @id @default(cuid())
+  guildId String @unique
+
+  // Shield timing
+  activatedAt DateTime @default(now())
+  expiresAt   DateTime // 24h from activation
+
+  // Who activated it
+  activatedBy String // userId
+
+  // Weekly limit tracking (resets on Monday)
+  weekKey     String // YYYY-Www format
+  weeklyCount Int    @default(1) // How many shields used this week (max 2)
+
+  // Cost paid
+  goldCost Int @default(5000)
+
+  @@index([guildId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// GUILD TOWER RACE - Weekly competition
+// ============================================================================
+
+model GuildTowerRace {
+  id      String @id @default(cuid())
+  weekKey String @unique // YYYY-Www format
+
+  // Race timing
+  startedAt DateTime @default(now())
+  endsAt    DateTime // Sunday 23:59:59
+
+  // Status
+  status String @default("active") // 'active' | 'completed'
+
+  // Relations
+  entries GuildTowerRaceEntry[]
+
+  @@index([status])
+}
+
+model GuildTowerRaceEntry {
+  id      String @id @default(cuid())
+  raceId  String
+  guildId String
+
+  // Accumulated waves from all members
+  totalWaves Int @default(0)
+
+  // Breakdown per member (JSON: { [userId]: wavesContributed })
+  memberContributions Json @default("{}")
+
+  // Timestamps
+  lastUpdatedAt DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  // Relations
+  race GuildTowerRace @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@unique([raceId, guildId])
+  @@index([raceId])
+  @@index([guildId])
+  @@index([totalWaves(sort: Desc)])
+}
+
+// ============================================================================
+// GUILD BOSS - Weekly shared boss
+// ============================================================================
+
+model GuildBoss {
+  id      String @id @default(cuid())
+  weekKey String @unique // YYYY-Www format
+
+  // Boss configuration
+  bossType String // Boss definition ID (rotates weekly)
+  totalHp  BigInt // Starting HP (50M fixed)
+  weakness String? // FortressClass that deals bonus damage
+
+  // Current state (global across all guilds)
+  currentHp BigInt // Remaining HP
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  endsAt    DateTime // Sunday 23:59:59
+
+  // Relations
+  attempts GuildBossAttempt[]
+
+  @@index([weekKey])
+}
+
+model GuildBossAttempt {
+  id          String @id @default(cuid())
+  guildBossId String
+  guildId     String
+  userId      String
+
+  // Damage dealt in this attempt
+  damage BigInt
+
+  // Loadout snapshot (for leaderboard display)
+  heroId    String // Which hero was used
+  heroTier  Int
+  heroPower Int
+
+  // Timestamp
+  attemptedAt DateTime @default(now())
+
+  // Relations
+  guildBoss GuildBoss @relation(fields: [guildBossId], references: [id], onDelete: Cascade)
+
+  // One attempt per user per day
+  @@unique([guildBossId, userId, attemptedAt])
+  @@index([guildBossId])
+  @@index([guildId])
+  @@index([userId])
+  @@index([damage(sort: Desc)])
+}
+
+// ============================================================================
+// MESSAGING SYSTEM
+// ============================================================================
+
+enum MessageType {
+  PRIVATE // 1:1 between players
+  GROUP // Multiple players (max 10)
+  SYSTEM // From admin/system
+  GUILD_INVITE // Guild invitation notification
+  GUILD_KICK // Guild kick notification
+}
+
+model MessageThread {
+  id      String      @id @default(cuid())
+  subject String
+  type    MessageType @default(PRIVATE)
+
+  // For GROUP - who can add participants
+  creatorId       String?
+  maxParticipants Int     @default(2) // 2 = private, 10 = group
+
+  // For GUILD_INVITE - link to invitation
+  linkedInvitationId String?          @unique
+  linkedInvitation   GuildInvitation? @relation(fields: [linkedInvitationId], references: [id], onDelete: SetNull)
+
+  // For GUILD_KICK - info about the kick
+  kickedFromGuildName String?
+  kickedByDisplayName String?
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastMessageAt DateTime @default(now())
+
+  // Relations
+  participants MessageParticipant[]
+  messages     Message[]
+  reports      MessageReport[]
+
+  @@index([lastMessageAt(sort: Desc)])
+  @@index([type])
+  @@index([creatorId])
+}
+
+model MessageParticipant {
+  id          String    @id @default(cuid())
+  threadId    String
+  userId      String
+  lastReadAt  DateTime?
+  unreadCount Int       @default(0)
+  deletedAt   DateTime? // Soft delete - user left/removed thread
+
+  // Relations
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@index([userId, unreadCount])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  threadId  String
+  senderId  String? // null = system message
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  // Relations
+  thread  MessageThread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender  User?           @relation("SentMessages", fields: [senderId], references: [id], onDelete: SetNull)
+  reports MessageReport[]
+
+  @@index([threadId, createdAt])
+  @@index([senderId])
+}
+
+// ============================================================================
+// MODERATION SYSTEM
+// ============================================================================
+
+enum ReportReason {
+  SPAM
+  SCAM
+  OFFENSIVE
+  HARASSMENT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+model MessageReport {
+  id          String       @id @default(cuid())
+  threadId    String?
+  messageId   String?
+  reporterId  String
+  reason      ReportReason
+  details     String?      @db.Text
+  status      ReportStatus @default(PENDING)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  actionTaken String? // Description of action taken
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  thread   MessageThread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  message  Message?       @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  reporter User           @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewer User?          @relation("ReportsReviewed", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([reporterId])
+}
+
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  blocker User @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+enum MuteReason {
+  SPAM
+  OFFENSIVE
+  SCAM
+  HARASSMENT
+  OTHER
+}
+
+model UserMute {
+  id        String     @id @default(cuid())
+  userId    String
+  mutedBy   String
+  reason    MuteReason
+  details   String?
+  expiresAt DateTime? // null = permanent
+  createdAt DateTime   @default(now())
+
+  // Relations
+  user      User @relation("MutesReceived", fields: [userId], references: [id], onDelete: Cascade)
+  moderator User @relation("MutesGiven", fields: [mutedBy], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model SystemBroadcast {
+  id          String   @id @default(cuid())
+  subject     String
+  content     String   @db.Text
+  sentById    String
+  targetCount Int
+  createdAt   DateTime @default(now())
+
+  // Relations
+  sentBy User @relation("BroadcastsSent", fields: [sentById], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
+}
+
+// ============================================================================
+// PLAYER LEADERBOARD SYSTEM
+// ============================================================================
+
+// Weekly player leaderboard tracking
+model WeeklyPlayerLeaderboard {
+  id      String @id @default(cuid())
+  weekKey String // YYYY-Www format (ISO week)
+  userId  String
+
+  // Metrics
+  wavesThisWeek Int @default(0)
+  honorGained   Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([weekKey, userId])
+  @@index([weekKey, wavesThisWeek(sort: Desc)])
+  @@index([weekKey, honorGained(sort: Desc)])
+}
+
+// Weekly rewards for players (from leaderboard rankings)
+model WeeklyPlayerReward {
+  id       String @id @default(cuid())
+  weekKey  String // YYYY-Www format
+  userId   String
+  category String // 'waves' | 'honor'
+  rank     Int
+
+  // Reward amounts
+  goldAmount Int
+  dustAmount Int
+  itemIds    String[] @default([]) // Exclusive item IDs
+
+  // Claim status
+  claimed   Boolean   @default(false)
+  claimedAt DateTime?
+  expiresAt DateTime // 7 days to claim
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([weekKey, userId, category])
+  @@index([weekKey])
+  @@index([userId, claimed])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// PILLAR CHALLENGE & CRYSTAL SYSTEM
+// ============================================================================
+
+// Crystal fragment tracking for deterministic crystal acquisition
+model CrystalProgress {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Infinity Stone fragments (10 fragments = 1 full crystal)
+  powerFragments   Int @default(0)
+  spaceFragments   Int @default(0)
+  timeFragments    Int @default(0)
+  realityFragments Int @default(0)
+  soulFragments    Int @default(0)
+  mindFragments    Int @default(0)
+
+  // Full crystals owned (array of crystal IDs: 'power', 'space', etc.)
+  fullCrystals String[] @default([])
+
+  // Crystal Matrix assembled (all 6 crystals)
+  matrixAssembled Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Pillar Challenge session for deterministic crystal farming
+model PillarChallengeSession {
+  id       String @id @default(cuid())
+  userId   String
+  pillarId String // 'streets', 'science', 'mutants', 'cosmos', 'magic', 'gods'
+  tier     Int // 1 = Normal, 2 = Hard, 3 = Mythic
+
+  // Deterministic seed
+  seed Int
+
+  // Session state
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  // Progress tracking
+  wavesCleared        Int @default(0)
+  fortressDamageTaken Int @default(0)
+  heroesLost          Int @default(0)
+
+  // Rewards earned
+  fragmentsEarned   Int     @default(0)
+  fullCrystalEarned Boolean @default(false)
+  crystalType       String? // Which crystal type was earned ('power', 'space', etc.)
+
+  goldEarned      Int  @default(0)
+  materialsEarned Json @default("{}") // { [materialId]: amount }
+
+  // Performance bonuses achieved
+  bonusesAchieved String[] @default([]) // ['speed_clear', 'fortress_intact', 'perfect_clear', 'heroes_triumphant']
+
+  // Verification
+  loadoutJson Json // { fortressClass, heroIds, turretTypes, artifacts }
+  finalHash   Int?
+  verified    Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([pillarId])
+  @@index([startedAt])
+}
+
+// Daily/weekly limits for Pillar Challenge
+model PillarChallengeLimits {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Daily attempts (reset at midnight UTC)
+  dailyAttempts     Int      @default(0)
+  dailyPaidAttempts Int      @default(0)
+  dailyResetAt      DateTime @default(now())
+
+  // Cooldown tracking
+  lastAttemptAt DateTime?
+
+  // Weekly perfect clears per pillar (JSON: { [pillarId_tier]: count })
+  weeklyPerfectClears Json     @default("{}")
+  weeklyResetAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// IAP (IN-APP PURCHASES)
+// ============================================================================
+
+enum IAPPlatform {
+  ios
+  android
+  steam
+  web
+}
+
+model IAPTransaction {
+  id            String      @id @default(cuid())
+  userId        String
+  packageId     String // Reference to dust package (e.g., 'dust_100')
+  dustGranted   Int // Base dust from package
+  bonusGranted  Int         @default(0) // First-purchase bonus
+  transactionId String      @unique // External transaction ID from store
+  platform      IAPPlatform
+  receipt       String? // Store receipt for verification (future)
+  createdAt     DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([transactionId])
+  @@index([platform])
+}
+
+// ============================================================================
+// DAILY QUESTS
+// ============================================================================
+
+model DailyQuestProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  questId   String // 'first_blood', 'wave_hunter', 'elite_slayer', 'boss_rush_daily', 'pillar_master'
+  progress  Int      @default(0) // Current progress towards target
+  completed Boolean  @default(false) // Whether target was reached
+  claimed   Boolean  @default(false) // Whether reward was claimed
+  resetAt   DateTime // Next reset time (midnight UTC)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Unique constraint: one progress record per quest per reset period
+  @@unique([userId, questId, resetAt])
+  @@index([userId])
+  @@index([resetAt])
+}
+
+// ============================================================================
+// SHOP & MICROTRANSACTIONS
+// ============================================================================
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  EXPIRED
+}
+
+enum ProductType {
+  DUST
+  STARTER_PACK
+  HERO
+  COSMETIC
+  BATTLE_PASS
+  BOOSTER
+  CONVENIENCE
+  GACHA
+}
+
+model ShopPurchase {
+  id              String         @id @default(cuid())
+  userId          String
+  productId       String // Reference to product (e.g., 'dust_medium', 'starter_pack')
+  productType     ProductType
+  productName     String
+  pricePLN        Int // Price in grosze (1/100 PLN)
+  status          PurchaseStatus @default(PENDING)
+
+  // Stripe integration
+  stripeSessionId String?        @unique
+  stripePaymentId String?
+
+  // Granted rewards
+  dustGranted      Int?
+  goldGranted      Int?
+  heroGranted      String?
+  cosmeticGranted  String?
+  materialsGranted Json?
+
+  // Timestamps
+  createdAt       DateTime       @default(now())
+  completedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([stripeSessionId])
+  @@index([createdAt])
+}
+
+// Track limited purchases per user (e.g., starter pack)
+model UserPurchaseLimit {
+  id           String   @id @default(cuid())
+  userId       String
+  productId    String
+  purchaseCount Int     @default(0)
+  lastPurchase DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ============================================================================
+// GACHA SYSTEM
+// ============================================================================
+
+enum GachaType {
+  HERO
+  ARTIFACT
+}
+
+model GachaPull {
+  id        String    @id @default(cuid())
+  userId    String
+  gachaType GachaType
+  rarity    String // 'common', 'rare', 'epic', 'legendary'
+  itemId    String // Hero ID or Artifact ID
+  itemName  String
+  isNew     Boolean   @default(true) // First time getting this item
+  dustSpent Int
+  pityCount Int // Pity counter at time of pull
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gachaType])
+  @@index([createdAt])
+}
+
+model GachaProgress {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  heroPityCount  Int      @default(0) // Resets when Epic+ pulled
+  heroSparkCount Int      @default(0) // Accumulates, resets at 100
+  heroShards     Int      @default(0) // From duplicate heroes
+  artifactPity   Json     @default("{}") // { [chestType]: pityCount }
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// BATTLE PASS
+// ============================================================================
+
+model BattlePassSeason {
+  id            String   @id @default(cuid())
+  seasonNumber  Int      @unique
+  name          String
+  description   String
+  startsAt      DateTime
+  endsAt        DateTime
+  isActive      Boolean  @default(false)
+  featuredReward String?
+  createdAt     DateTime @default(now())
+
+  progress BattlePassProgress[]
+}
+
+model BattlePassProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  seasonId        String
+  currentTier     Int      @default(0)
+  currentPoints   Int      @default(0)
+  isPremium       Boolean  @default(false)
+  claimedFreeTiers  Int[]  @default([])
+  claimedPremiumTiers Int[] @default([])
+  purchasedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  season BattlePassSeason  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seasonId])
+  @@index([userId])
+  @@index([seasonId])
+}
+
+// ============================================================================
+// ACTIVE BOOSTERS
+// ============================================================================
+
+model ActiveBooster {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // 'xp_2x', 'gold_2x', 'material_2x', 'ultimate_2x'
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// COSMETICS
+// ============================================================================
+
+model UserCosmetic {
+  id         String   @id @default(cuid())
+  userId     String
+  cosmeticId String // e.g., 'skin_hero_vanguard_dark', 'theme_fortress_crystal'
+  equippedOn String?  // e.g., 'hero:vanguard', 'fortress', 'ui'
+  acquiredAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cosmeticId])
+  @@index([userId])
 }

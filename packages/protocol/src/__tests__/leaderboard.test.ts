@@ -14,6 +14,7 @@ describe('Leaderboard Schemas', () => {
       const result = LeaderboardEntrySchema.safeParse({
         rank: 1,
         userId: 'user-123',
+        displayName: 'TestPlayer',
         score: 50000,
         wavesCleared: 25,
         createdAt: '2024-01-15T12:00:00Z',
@@ -26,6 +27,7 @@ describe('Leaderboard Schemas', () => {
       const result = LeaderboardEntrySchema.safeParse({
         rank: 0,
         userId: 'user-123',
+        displayName: 'TestPlayer',
         score: 50000,
         wavesCleared: 25,
         createdAt: '2024-01-15T12:00:00Z',
@@ -38,6 +40,7 @@ describe('Leaderboard Schemas', () => {
       const result = LeaderboardEntrySchema.safeParse({
         rank: 1,
         userId: 'user-123',
+        displayName: 'TestPlayer',
         score: -100,
         wavesCleared: 25,
         createdAt: '2024-01-15T12:00:00Z',
@@ -50,6 +53,7 @@ describe('Leaderboard Schemas', () => {
       const result = LeaderboardEntrySchema.safeParse({
         rank: 1,
         userId: 'user-123',
+        displayName: 'TestPlayer',
         score: 50000,
         wavesCleared: -1,
         createdAt: '2024-01-15T12:00:00Z',
@@ -62,6 +66,7 @@ describe('Leaderboard Schemas', () => {
       const result = LeaderboardEntrySchema.safeParse({
         rank: 1,
         userId: 'user-123',
+        displayName: 'TestPlayer',
         score: 50000,
         wavesCleared: 25,
         createdAt: 'not-a-date',
@@ -74,6 +79,7 @@ describe('Leaderboard Schemas', () => {
       const result = LeaderboardEntrySchema.safeParse({
         rank: 1,
         userId: 'user-123',
+        displayName: 'TestPlayer',
         score: 50000,
         wavesCleared: 25,
         createdAt: '2024-01-15T12:00:00.000Z',
@@ -86,6 +92,7 @@ describe('Leaderboard Schemas', () => {
       const result = LeaderboardEntrySchema.safeParse({
         rank: 1,
         userId: 'user-123',
+        displayName: 'TestPlayer',
         score: 0,
         wavesCleared: 0,
         createdAt: '2024-01-15T12:00:00Z',
@@ -189,6 +196,7 @@ describe('Leaderboard Schemas', () => {
           {
             rank: 1,
             userId: 'user-123',
+            displayName: 'TopPlayer',
             score: 100000,
             wavesCleared: 50,
             createdAt: '2024-01-15T12:00:00Z',
@@ -196,6 +204,7 @@ describe('Leaderboard Schemas', () => {
           {
             rank: 2,
             userId: 'user-456',
+            displayName: 'SecondPlayer',
             score: 90000,
             wavesCleared: 45,
             createdAt: '2024-01-14T10:00:00Z',

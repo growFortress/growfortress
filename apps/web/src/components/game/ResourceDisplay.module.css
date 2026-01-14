@@ -1,0 +1,69 @@
+.container {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.container:hover {
+  background: rgba(0, 0, 0, 0.75);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(1px);
+}
+
+.resource {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family:
+    "Outfit",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  color: #fff;
+}
+
+.icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+}
+
+.value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Compact mode for tighter spaces */
+.compact {
+  padding: 0.5rem 0.75rem;
+  gap: 1rem;
+}
+
+.compact .icon {
+  font-size: 1rem;
+}
+
+.compact .value {
+  font-size: 0.95rem;
+}
+
+/* Specific colors for resource types if needed via classes, 
+   but currently inline styles or global classes might be overkill.
+   Let's add subtle glows. */
+
+.resource:first-child .value {
+  color: #ffd700; /* Gold */
+}
+
+.resource:last-child .value {
+  color: #b580ff; /* Dust (Purple-ish) */
+}

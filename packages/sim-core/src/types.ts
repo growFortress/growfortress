@@ -16,7 +16,7 @@ export type FP = number;
 // FORTRESS CLASS SYSTEM
 // ============================================================================
 
-export type FortressClass = 'natural' | 'ice' | 'fire' | 'lightning' | 'tech';
+export type FortressClass = 'natural' | 'ice' | 'fire' | 'lightning' | 'tech' | 'void' | 'plasma';
 
 export interface ClassColors {
   primary: number;
@@ -26,24 +26,24 @@ export interface ClassColors {
 }
 
 export interface ClassPassiveModifiers {
-  damageMultiplier?: number;
-  attackSpeedMultiplier?: number;
+  damageBonus?: number;
+  attackSpeedBonus?: number;
   critChance?: number;
-  critDamage?: number;
-  maxHpMultiplier?: number;
+  critDamageBonus?: number;
+  maxHpBonus?: number;
   hpRegen?: number;
-  splashRadius?: number;
-  splashDamage?: number;
+  splashRadiusBonus?: number;
+  splashDamagePercent?: number;
   pierceCount?: number;
   chainChance?: number;
   chainCount?: number;
-  chainDamage?: number;
+  chainDamagePercent?: number;
   executeThreshold?: number;
-  executeDamage?: number;
-  cooldownMultiplier?: number;
-  goldMultiplier?: number;
-  dustMultiplier?: number;
-  luckMultiplier?: number;
+  executeBonusDamage?: number;
+  cooldownReduction?: number;
+  goldBonus?: number;
+  dustBonus?: number;
+  dropRateBonus?: number;
 }
 
 export type SkillTargetType = 'single' | 'area' | 'all' | 'self';
@@ -75,7 +75,7 @@ export interface SkillDefinition {
   unlockedAtFortressLevel: number;
 }
 
-export type ProjectileType = 'physical' | 'icicle' | 'fireball' | 'bolt' | 'laser';
+export type ProjectileType = 'physical' | 'icicle' | 'fireball' | 'bolt' | 'laser' | 'plasma_beam' | 'void_slash';
 
 export interface FortressClassDefinition {
   id: FortressClass;
@@ -85,14 +85,13 @@ export interface FortressClassDefinition {
   passiveModifiers: ClassPassiveModifiers;
   skills: SkillDefinition[];
   projectileType: ProjectileType;
-  unlockCost: { gold: number; dust: number };
 }
 
 // ============================================================================
 // HERO SYSTEM
 // ============================================================================
 
-export type HeroRole = 'tank' | 'dps' | 'support' | 'crowd_control';
+export type HeroRole = 'tank' | 'dps' | 'support' | 'crowd_control' | 'assassin';
 export type HeroState = 'idle' | 'deploying' | 'combat' | 'returning' | 'cooldown' | 'dead' | 'commanded';
 
 export interface HeroWeakness {
@@ -141,10 +140,9 @@ export interface HeroTier {
 export interface HeroDefinition {
   id: string;
   name: string;
-  marvelInspiration: string;
   class: FortressClass;
   role: HeroRole;
-  rarity: 'starter' | 'common' | 'rare' | 'epic';
+  rarity: 'starter' | 'common' | 'rare' | 'epic' | 'legendary';
   baseStats: {
     hp: number;
     damage: number;
@@ -198,7 +196,9 @@ export interface ActiveHero {
   buffs: ActiveBuff[];
   equippedArtifact?: string;
   equippedItems: string[];
-  infinityStone?: InfinityStoneType;
+  crystal?: CrystalType;
+  /** @deprecated Use crystal */
+  infinityStone?: CrystalType;
 
   // AI targeting (cached for current tick)
   currentTargetId?: number;      // Enemy ID being targeted
@@ -300,13 +300,15 @@ export interface PillarDefinition {
 }
 
 // ============================================================================
-// INFINITY STONES
+// CRYSTALS (Ancient artifacts system)
 // ============================================================================
 
-export type InfinityStoneType = 'power' | 'space' | 'time' | 'reality' | 'soul' | 'mind';
+// Crystal IDs match the old Infinity Stone IDs for backwards compatibility
+// Display names are different (e.g., 'space' displays as "Kryształ Próżni")
+export type CrystalType = 'power' | 'space' | 'time' | 'reality' | 'soul' | 'mind';
 
-export interface InfinityStoneDefinition {
-  type: InfinityStoneType;
+export interface CrystalDefinition {
+  type: CrystalType;
   name: string;
   color: number;
   description: string;
@@ -316,21 +318,111 @@ export interface InfinityStoneDefinition {
   purchaseCost: { dust: number };
 }
 
-export interface InfinityStoneFragment {
-  stoneType: InfinityStoneType;
+export interface CrystalFragment {
+  crystalType: CrystalType;
   count: number;
+  /** @deprecated Use crystalType */
+  stoneType?: CrystalType;
 }
 
-export interface InfinityGauntletState {
+export interface CrystalMatrixState {
   isAssembled: boolean;
   heroId?: string;
-  stonesCollected: InfinityStoneType[];
-  snapCooldown: number;
-  snapUsedCount: number;
+  crystalsCollected: CrystalType[];
+  annihilationCooldown: number;
+  annihilationUsedCount: number;
+
+  // Legacy aliases for backwards compatibility
+  /** @deprecated Use crystalsCollected */
+  stonesCollected?: CrystalType[];
+  /** @deprecated Use annihilationCooldown */
+  snapCooldown?: number;
+  /** @deprecated Use annihilationUsedCount */
+  snapUsedCount?: number;
 }
+
+// Legacy aliases for backwards compatibility during migration
+/** @deprecated Use CrystalType instead */
+export type InfinityStoneType = CrystalType;
+/** @deprecated Use CrystalDefinition instead */
+export type InfinityStoneDefinition = CrystalDefinition;
+/** @deprecated Use CrystalFragment instead */
+export type InfinityStoneFragment = CrystalFragment;
+/** @deprecated Use CrystalMatrixState instead */
+export type InfinityGauntletState = CrystalMatrixState;
 
 // NOTE: ArtifactDefinition and ItemDefinition are defined in data/artifacts.ts
 // to avoid circular dependencies
+
+// ============================================================================
+// ARTIFACT SLOT SYSTEM (3 slots per hero)
+// ============================================================================
+
+/** Simplified slot types - 3 per hero */
+export type ArtifactSlotType = 'weapon' | 'armor' | 'accessory';
+
+/** Hero's equipped artifacts by slot */
+export interface HeroArtifactSlots {
+  weapon: string | null;
+  armor: string | null;
+  accessory: string | null;
+}
+
+// ============================================================================
+// ARTIFACT SYNERGY SYSTEM
+// ============================================================================
+
+/** Synergy bonus when artifact matches hero class */
+export interface ArtifactSynergyBonus {
+  synergyClasses: FortressClass[];
+  bonusMultiplier: number; // 1.15 = +15% effectiveness
+  bonusDescription: string;
+}
+
+// ============================================================================
+// ARTIFACT VISUAL SYSTEM (Procedural)
+// ============================================================================
+
+/** Shape types for procedural artifact rendering */
+export type ArtifactShapeType =
+  | 'hexagon'
+  | 'diamond'
+  | 'circle'
+  | 'star'
+  | 'gear'
+  | 'crystal'
+  | 'blade'
+  | 'shield'
+  | 'ring';
+
+/** Animation types for artifacts */
+export type ArtifactAnimationType = 'pulse' | 'rotate' | 'shimmer' | 'float' | 'static';
+
+/** Particle effect types */
+export type ArtifactParticleType =
+  | 'sparkles'
+  | 'flames'
+  | 'frost'
+  | 'void'
+  | 'lightning'
+  | 'plasma'
+  | 'none';
+
+/** Complete visual definition for procedural artifact rendering */
+export interface ArtifactVisualDefinition {
+  shape: ArtifactShapeType;
+  primaryColor: number;
+  secondaryColor: number;
+  glowColor: number;
+  accentColor?: number;
+  animation: ArtifactAnimationType;
+  animationSpeed?: number; // 0.5-2.0, default 1.0
+  particles: ArtifactParticleType;
+  particleIntensity?: number; // 0.0-1.0, default 0.5
+  iconScale?: number; // 0.5-2.0, default 1.0
+  hasOuterRing?: boolean; // Legendary effect
+  hasInnerGlow?: boolean; // Epic+ effect
+}
 
 // ============================================================================
 // MATERIALS & CRAFTING
@@ -469,41 +561,50 @@ export interface RelicChoice {
   offeredTick: number;
 }
 
-// Modifier system - all values are multipliers or flat bonuses
+// Modifier system - additive bonus system for balanced scaling
+// Formula: base × (1 + sum of bonuses)
 export interface ModifierSet {
-  // Damage modifiers
-  damageMultiplier: number;      // Base damage multiplier (1.0 = 100%)
-  splashRadius: number;          // Fixed-point radius for splash damage
-  splashDamage: number;          // Splash damage multiplier (0.5 = 50%)
-  pierceCount: number;           // Number of enemies to pierce
-  chainChance: number;           // Chance to chain (0-1)
-  chainCount: number;            // Number of chain targets
-  chainDamage: number;           // Chain damage multiplier
-  executeThreshold: number;      // HP% threshold for execute
-  executeDamage: number;         // Execute damage multiplier
-  critChance: number;            // Crit chance (0-1)
-  critDamage: number;            // Crit damage multiplier
+  // === ADDITIVE BONUSES ===
+  // These stack additively: 3x +50% = +150%, not 3.375x
+  damageBonus: number;           // Sum of +X% damage (0.5 = +50%)
+  attackSpeedBonus: number;      // Sum of +X% attack speed
+  cooldownReduction: number;     // Sum of CDR (capped at 0.75)
+  goldBonus: number;             // Sum of +X% gold
+  dustBonus: number;             // Sum of +X% dust
+  maxHpBonus: number;            // Sum of +X% max HP
+  eliteDamageBonus: number;      // Sum of +X% vs elites
 
-  // Economy modifiers
-  goldMultiplier: number;        // Gold earned multiplier
-  dustMultiplier: number;        // Dust earned multiplier
+  // === STACKABLE SECONDARY STATS ===
+  // All stack additively for consistent value
+  splashRadiusBonus: number;     // Additive bonus to splash radius
+  splashDamagePercent: number;   // Sum of splash damage % (capped at 1.0)
+  pierceCount: number;           // Total pierce count (additive)
+  chainChance: number;           // Chain chance (capped at 1.0)
+  chainCount: number;            // Chain targets (additive)
+  chainDamagePercent: number;    // Sum of chain damage % (capped at 1.0)
+  executeThreshold: number;      // HP% threshold for execute (max wins)
+  executeBonusDamage: number;    // Additive bonus damage on execute
+  critChance: number;            // Crit chance with diminishing returns (capped at 0.75)
+  critDamageBonus: number;       // Additive crit damage bonus (0.5 = 150% total)
 
-  // Defense modifiers
-  maxHpMultiplier: number;       // Fortress max HP multiplier
-  hpRegen: number;               // HP regenerated per 5 seconds
+  // === DEFENSE ===
+  hpRegen: number;               // Flat HP regen per interval
+  incomingDamageReduction: number; // Damage reduction (negative = more damage)
 
-  // Skill modifiers
-  cooldownMultiplier: number;    // Skill cooldown multiplier (lower = faster)
-  attackSpeedMultiplier: number; // Attack speed multiplier
+  // === PHYSICS-BASED DEFENSE ===
+  massBonus: number;             // +X% mass (harder to push)
+  knockbackResistance: number;   // Knockback reduction (capped at 0.9)
+  ccResistance: number;          // Crowd control resistance (capped at 0.9)
 
-  // Conditional modifiers
-  eliteDamageMultiplier: number; // Extra damage vs elites
-  waveDamageBonus: number;       // Extra damage per wave cleared
-  lowHpDamageMultiplier: number; // Damage multiplier when fortress low HP
+  // === LUCK (META-REWARDS, NOT COMBAT) ===
+  dropRateBonus: number;         // +X% drop rates
+  relicQualityBonus: number;     // +X% chance for higher rarity
+  goldFindBonus: number;         // Additional gold bonus from luck
+
+  // === CONDITIONAL ===
+  waveDamageBonus: number;       // Bonus damage per wave cleared
+  lowHpDamageBonus: number;      // Bonus when fortress HP low
   lowHpThreshold: number;        // HP% threshold for low HP bonus
-
-  // Luck
-  luckMultiplier: number;        // Multiplier for all luck-based effects
 }
 
 
@@ -553,6 +654,56 @@ export interface SimConfig {
 
   // NEW: Player's already-owned artifacts (for duplicate detection)
   playerOwnedArtifacts?: string[];
+
+  // NEW: Power upgrades data (permanent stat bonuses)
+  powerData?: {
+    fortressUpgrades: {
+      statUpgrades: {
+        hp: number;
+        damage: number;
+        attackSpeed: number;
+        range: number;
+        critChance: number;
+        critMultiplier: number;
+        armor: number;
+        dodge: number;
+      };
+    };
+    heroUpgrades: Array<{
+      heroId: string;
+      statUpgrades: {
+        hp: number;
+        damage: number;
+        attackSpeed: number;
+        range: number;
+        critChance: number;
+        critMultiplier: number;
+        armor: number;
+        dodge: number;
+      };
+    }>;
+    turretUpgrades: Array<{
+      turretType: string;
+      statUpgrades: {
+        hp: number;
+        damage: number;
+        attackSpeed: number;
+        range: number;
+        critChance: number;
+        critMultiplier: number;
+        armor: number;
+        dodge: number;
+      };
+    }>;
+    itemTiers: Array<{
+      itemId: string;
+      tier: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+    }>;
+    // Hero tier progression (1-3)
+    heroTiers: Record<string, number>;
+    // Turret tier progression (1-3)
+    turretTiers: Record<string, number>;
+  };
 }
 
 // Main game state
@@ -638,10 +789,18 @@ export interface GameState {
   projectiles: ActiveProjectile[];
   nextProjectileId: number;
 
-  // NEW: Infinity Stones
-  infinityStoneFragments: InfinityStoneFragment[];
-  collectedStones: InfinityStoneType[];
-  gauntletState: InfinityGauntletState | null;
+  // Crystal system (ancient artifacts)
+  crystalFragments: CrystalFragment[];
+  collectedCrystals: CrystalType[];
+  matrixState: CrystalMatrixState | null;
+
+  // Legacy aliases for backwards compatibility during migration
+  /** @deprecated Use crystalFragments */
+  infinityStoneFragments: CrystalFragment[];
+  /** @deprecated Use collectedCrystals */
+  collectedStones: CrystalType[];
+  /** @deprecated Use matrixState */
+  gauntletState: CrystalMatrixState | null;
 
   // NEW: Materials inventory (during run)
   materials: PlayerMaterials;

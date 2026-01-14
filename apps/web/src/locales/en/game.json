@@ -1,0 +1,199 @@
+{
+  "controls": {
+    "gameControls": "Game controls",
+    "management": "Management",
+    "recruitHeroes": "Recruit new heroes",
+    "heroesLabel": "Heroes",
+    "heroesAria": "Heroes - Recruit new heroes",
+    "collectedMaterials": "Collected materials",
+    "materialsLabel": "Materials",
+    "materialsAria": "Materials - Collected materials",
+    "artifactsItems": "Artifacts and items",
+    "artifactsLabel": "Artifacts",
+    "artifactsAria": "Artifacts - Artifacts and items",
+    "claimOfflineRewards": "Claim offline rewards",
+    "gatheringLabel": "Gathering",
+    "gatheringAria": "Gathering - Claim offline rewards",
+    "pendingRewards": " (you have pending rewards)",
+    "startGame": "Start game",
+    "startLabel": "Start",
+    "gameModes": "Game modes",
+    "comingSoon": "Coming soon! Mode in preparation.",
+    "bossRushComingSoon": "Boss Rush - Coming soon",
+    "fightPlayers": "Fight other players!",
+    "pvpArena": "PvP Arena - Fight other players",
+    "pendingChallenges": ", {{count}} pending challenges",
+    "endSession": "End game session",
+    "endLabel": "End",
+    "endBossRush": "End Boss Rush mode",
+    "play": "Play",
+    "pause": "Pause",
+    "speed1x": "1x Speed",
+    "speed2x": "2x Speed",
+    "autoSkill": "Auto Skill"
+  },
+  "gameContainer": {
+    "resumeFailed": "Could not resume session. Start new.",
+    "startFailed": "Could not start session. Try again.",
+    "bossRushFailed": "Could not start Boss Rush. Try again.",
+    "endSessionTitle": "End Session",
+    "endSessionMessage": "Are you sure you want to end the current session? Your progress from the current segment will be saved.",
+    "endSessionConfirm": "End",
+    "endSessionCancel": "Continue game"
+  },
+  "heroPanel": {
+    "slotEmpty": "Slot {{index}}: empty",
+    "healthy": "healthy",
+    "wounded": "wounded",
+    "critical": "critical",
+    "selected": ", selected",
+    "lifeOf": "Life {{name}}",
+    "lifePercent": "{{percent}}% life",
+    "unitsPanel": "Units panel",
+    "units": "Units",
+    "clickToManage": "Click to manage",
+    "clickForDetails": "Click unit to see details and upgrades",
+    "slotsOccupied": "{{count}} of {{total}} slots occupied",
+    "state": {
+      "idle": "idle",
+      "deploying": "deploying",
+      "combat": "in combat",
+      "returning": "returning",
+      "cooldown": "on cooldown",
+      "dead": "defeated",
+      "commanded": "under command"
+    }
+  },
+  "turretPanel": {
+    "turrets": "Turrets",
+    "arrowTower": "Arrow Tower",
+    "cannonTower": "Cannon Tower",
+    "teslaTower": "Tesla Tower",
+    "frostTower": "Frost Tower",
+    "unlockAtLevel": "Unlock at level {{level}}",
+    "levelShort": "Lvl {{level}}",
+    "classSynergyActive": "Class Synergy Active"
+  },
+  "hubOverlay": {
+    "unlockAtLevel": "Unlock at level {{level}}",
+    "levelShort": "Lvl {{level}}",
+    "clickToAddTurret": "Click to add turret"
+  },
+  "fortressSkills": {
+    "title": "Fortress Skills",
+    "baseDamage": "Base damage: {{damage}}",
+    "cooldown": "Cooldown: {{seconds}}s",
+    "effects": "Effects:",
+    "damageAll": "{{amount}} damage (all)",
+    "damageArea": "{{amount}} damage (area)",
+    "damage": "{{amount}} damage",
+    "slow": "Slow {{percent}}% for {{duration}}s",
+    "stun": "Stun for {{duration}}s",
+    "freeze": "Freeze for {{duration}}s",
+    "burn": "Burn: {{damage}}/tick for {{duration}}s",
+    "poison": "Poison: {{damage}}/tick for {{duration}}s",
+    "poisonStacks": " ({{stacks}} stacks)",
+    "heal": "Heal: +{{amount}} HP",
+    "shield": "Shield: {{amount}} HP for {{duration}}s",
+    "buff": "Buff: +{{percent}}% {{stat}} for {{duration}}s",
+    "summon": "Summons {{count}}x {{unitType}}",
+    "percentHpAll": "{{percent}}% current HP (all)"
+  },
+  "crystalDisplay": {
+    "ancientCrystals": "Ancient Crystals",
+    "matrixActive": "MATRIX ACTIVE",
+    "collected": " (Collected)",
+    "fragments": " ({{count}}/10 fragments)",
+    "annihilationWave": "Annihilation Wave",
+    "annihilationCooldown": "Annihilation Wave: {{count}} waves"
+  },
+  "bossRush": {
+    "bosses": "Bosses",
+    "bossCount": "Boss {{current}}/7",
+    "nextBossIn": "NEXT BOSS IN {{count}}...",
+    "details": "Details",
+    "hide": "Hide"
+  },
+  "tutorial": {
+    "yourFortress": "Your Fortress",
+    "fortressDescription": "Fortress and turrets attack automatically. Watch projectiles hit enemies!",
+    "bombAbility": "BOMB Ability",
+    "bombDescription": "Click BOMB button to damage all enemies in range!",
+    "relics": "Relics",
+    "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
+    "waveN": "Wave {{n}}",
+    "clickToClose": "Click to close"
+  },
+  "unlock": {
+    "level": "Level {{level}}",
+    "newUnlock": "New Unlock!",
+    "clickToClose": "Click to close",
+    "more": "+{{count}} more"
+  },
+  "loadout": {
+    "defaultLoadout": "Default Loadout",
+    "configuration": "Configuration",
+    "unit": "Unit",
+    "tower": "Tower",
+    "classes": {
+      "standard": "Standard",
+      "cryogenic": "Cryogenic",
+      "thermal": "Thermal",
+      "electrical": "Electrical",
+      "quantum": "Quantum",
+      "void": "Void",
+      "plasma": "Plasma"
+    },
+    "turrets": {
+      "railgun": "Railgun Tower",
+      "artillery": "Artillery Tower",
+      "bow": "Bow Tower",
+      "cryogenic": "Cryogenic Tower"
+    }
+  },
+  "header": {
+    "fortressStatus": "Fortress status",
+    "playerStatus": "Player status and navigation",
+    "hpLevel": {
+      "healthy": "healthy",
+      "damaged": "damaged",
+      "critical": "critical"
+    },
+    "hpValueText": "{{current}} of {{max}} health points, fortress {{level}}",
+    "resourceGold": "Gold: {{amount}}",
+    "resourceDust": "Dust: {{amount}}",
+    "levelLabel": "Level {{level}}",
+    "xpProgress": "Experience progress",
+    "dailyQuestsWithRewards": "Daily Quests ({{count}} rewards)",
+    "leaderboardsWithRewards": "Leaderboards (rewards to claim)",
+    "messagesWithUnread": "Messages ({{count}} unread)",
+    "openGuildPanel": "Open guild panel",
+    "newInvitations": "New invitations",
+    "rewardsToClaim": "Rewards to claim"
+  },
+  "hud": {
+    "wave": "Wave",
+    "rewards": "Rewards",
+    "skills": "Skills"
+  },
+  "tutorial": {
+    "yourFortress": "Your Fortress",
+    "fortressDescription": "Fortress and turrets attack automatically. Watch projectiles hit enemies!",
+    "bombAbility": "BOMB Ability",
+    "bombDescription": "Click BOMB button to damage all enemies in range!",
+    "relics": "Relics",
+    "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
+    "waveN": "Wave {{n}}",
+    "clickToClose": "Click to close"
+  },
+  "endScreen": {
+    "victory": "Victory!",
+    "defeat": "Defeat",
+    "waveReached": "You reached wave {{wave}}",
+    "enemies": "Enemies",
+    "elites": "Elites",
+    "relics": "Relics",
+    "returnToHub": "Return to Hub",
+    "playAgain": "Play Again"
+  }
+}

@@ -1,0 +1,103 @@
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Blur variants */
+.blur-sm {
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+}
+
+.blur-md {
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+}
+
+.blur-lg {
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+}
+
+/* Background variants */
+.bg-light {
+  background: var(--glass-bg-light);
+}
+
+.bg-dark {
+  background: var(--glass-bg-dark);
+}
+
+/* Glow border variants */
+.glow-primary {
+  border-color: var(--color-primary-30);
+  box-shadow: var(--elevation-glow-1);
+}
+
+.glow-accent {
+  border-color: var(--color-accent-30);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), var(--glow-accent);
+}
+
+.glow-skill {
+  border-color: var(--color-skill-30);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px var(--color-skill-50);
+}
+
+/* Elevation variants */
+.elevation-1 {
+  box-shadow: var(--elevation-1);
+}
+
+.elevation-2 {
+  box-shadow: var(--elevation-2);
+}
+
+.elevation-3 {
+  box-shadow: var(--elevation-3);
+}
+
+/* Padding variants */
+.padding-sm {
+  padding: var(--spacing-sm);
+}
+
+.padding-md {
+  padding: var(--spacing-md);
+}
+
+.padding-lg {
+  padding: var(--spacing-lg);
+}
+
+.padding-xl {
+  padding: var(--spacing-xl);
+}
+
+/* Interactive state */
+.interactive {
+  transition: var(--transition-interactive-normal);
+  cursor: pointer;
+}
+
+.interactive:hover {
+  background: var(--glass-bg-light);
+  border-color: var(--glass-border-light);
+  transform: translateY(-2px);
+  box-shadow: var(--elevation-2);
+}
+
+.interactive:active {
+  transform: translateY(0);
+  box-shadow: var(--elevation-1);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: var(--color-bg-panel);
+  }
+}

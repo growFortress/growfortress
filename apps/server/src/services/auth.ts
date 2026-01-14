@@ -11,10 +11,30 @@ import {
   getXpForLevel,
   getProgressionBonuses,
   type ProgressionBonuses,
+  createDefaultPlayerPowerData,
 } from '@arcade/sim-core';
 import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from '@arcade/protocol';
+import { sendPasswordResetEmail } from './email.js';
+import { createSystemMessage } from './messages.js';
 
 const SALT_ROUNDS = 12;
+
+// Map legacy hero IDs to new canonical IDs
+const LEGACY_HERO_ID_MAP: Record<string, string> = {
+  shield_captain: 'vanguard',
+  thunderlord: 'storm',
+  scarlet_mage: 'rift',
+  iron_sentinel: 'forge',
+  jade_titan: 'titan',
+  frost_archer: 'frost_unit',
+};
+
+/**
+ * Normalize a hero ID, mapping legacy IDs to their canonical versions
+ */
+function normalizeHeroId(heroId: string): string {
+  return LEGACY_HERO_ID_MAP[heroId] ?? heroId;
+}
 
 interface AuthResult {
   userId: string;
@@ -29,31 +49,49 @@ interface AuthResult {
  */
 export async function registerUser(
   username: string,
-  password: string
+  password: string,
+  email?: string
 ): Promise<AuthResult> {
   // Check if username already exists
-  const existing = await prisma.user.findUnique({
+  const existingUsername = await prisma.user.findUnique({
     where: { username: username.toLowerCase() },
   });
 
-  if (existing) {
+  if (existingUsername) {
     throw new Error('USERNAME_TAKEN');
+  }
+
+  // Check if email already exists (if provided)
+  if (email) {
+    const existingEmail = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (existingEmail) {
+      throw new Error('EMAIL_TAKEN');
+    }
   }
 
   // Hash password
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
+  // Starter pack for new players
+  const STARTER_PACK = {
+    gold: 1000,   // Enough for early power upgrades
+    dust: 100,    // Premium currency - reduced starting amount
+  };
+
   // Create user with initial inventory and progression (username = displayName)
   const user = await prisma.user.create({
     data: {
       username: username.toLowerCase(),
+      email: email?.toLowerCase(),
       passwordHash,
       displayName: username,
       inventory: {
         create: {
-          gold: 0,
-          dust: 0,
-          sigils: 0,
+          gold: STARTER_PACK.gold,
+          dust: STARTER_PACK.dust,
         },
       },
       progression: {
@@ -61,6 +99,17 @@ export async function registerUser(
           level: 1,
           xp: 0,
           totalXp: 0,
+        },
+      },
+      powerUpgrades: {
+        create: {
+          fortressUpgrades: JSON.stringify(createDefaultPlayerPowerData().fortressUpgrades),
+          heroUpgrades: '[]',
+          turretUpgrades: '[]',
+          itemTiers: '[]',
+          cachedTotalPower: 0,
+          fortressPrestige: { level: 0, xp: 0 },
+          turretPrestige: [],
         },
       },
     },
@@ -74,6 +123,49 @@ export async function registerUser(
       expiresAt: new Date(Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY)),
     },
   });
+
+  // =========================================================================
+  // WELCOME PACKAGE - Launch promotion
+  // =========================================================================
+
+  // Grant Founders Medal artifact (special launch artifact)
+  try {
+    await prisma.playerArtifact.create({
+      data: {
+        userId: user.id,
+        artifactId: 'founders_medal',
+        level: 1,
+      },
+    });
+  } catch {
+    // Ignore if artifact creation fails (shouldn't happen for new users)
+  }
+
+  // Send welcome message with gift info
+  const welcomeMessage = `🎉 Witaj w Grow Fortress, ${username}!
+
+Dziękujemy za dołączenie do naszej społeczności obrońców!
+
+🎁 **Twój Pakiet Powitalny:**
+• 💰 ${STARTER_PACK.gold} złota na start
+• 💎 ${STARTER_PACK.dust} dust (waluta premium)
+• 🏅 **Medal Założyciela** - ekskluzywny legendarny artefakt!
+
+Medal Założyciela to specjalny artefakt dostępny tylko dla graczy, którzy dołączyli w okresie premiery. Daje +10% do obrażeń i zdrowia oraz bonus XP z każdej fali!
+
+Powodzenia w obronie Fortecy! 🏰⚔️
+
+— Zespół Grow Fortress`;
+
+  try {
+    await createSystemMessage(
+      user.id,
+      '🎉 Witaj w Grow Fortress!',
+      welcomeMessage
+    );
+  } catch {
+    // Ignore if message creation fails (non-critical)
+  }
 
   // Generate tokens
   const accessToken = await createAccessToken(user.id);
@@ -202,8 +294,10 @@ export async function refreshTokens(refreshTokenStr: string): Promise<{
 export async function getUserProfile(userId: string): Promise<{
   userId: string;
   displayName: string;
-  inventory: { gold: number; dust: number; sigils: number };
-  progression: { level: number; xp: number; totalXp: number; xpToNextLevel: number };
+  description: string;
+  role: 'USER' | 'ADMIN';
+  inventory: { gold: number; dust: number; materials?: Record<string, number> };
+  progression: { level: number; xp: number; totalXp: number; xpToNextLevel: number; purchasedHeroSlots: number; purchasedTurretSlots: number };
   currentWave: number;
   highestWave: number;
   onboardingCompleted: boolean;
@@ -227,13 +321,36 @@ export async function getUserProfile(userId: string): Promise<{
     return null;
   }
 
+  // Fix any level inconsistency (XP exceeds level threshold)
+  let { level, xp } = user.progression;
+  const xpThreshold = getXpForLevel(level);
+
+  if (xp >= xpThreshold) {
+    // Calculate correct level from accumulated XP
+    while (xp >= getXpForLevel(level)) {
+      xp -= getXpForLevel(level);
+      level++;
+    }
+
+    // Update database with corrected values
+    await prisma.progression.update({
+      where: { userId },
+      data: { level, xp },
+    });
+
+    // Update local reference
+    user.progression.level = level;
+    user.progression.xp = xp;
+  }
+
   // Build unlocked heroes list from inventory + free starters + default
+  // Normalize all hero IDs to canonical versions (legacy -> new)
   const heroSet = new Set<string>([
     ...FREE_STARTER_HEROES,
-    ...(user.inventory.unlockedHeroIds || []),
+    ...(user.inventory.unlockedHeroIds || []).map(normalizeHeroId),
   ]);
   if (user.defaultHeroId) {
-    heroSet.add(user.defaultHeroId);
+    heroSet.add(normalizeHeroId(user.defaultHeroId));
   }
   const unlockedHeroes = Array.from(heroSet);
 
@@ -250,16 +367,20 @@ export async function getUserProfile(userId: string): Promise<{
   return {
     userId: user.id,
     displayName: user.displayName,
+    description: user.description || '',
+    role: user.role,
     inventory: {
       gold: user.inventory.gold,
       dust: user.inventory.dust,
-      sigils: user.inventory.sigils,
+      materials: (user.inventory.materials as Record<string, number>) || {},
     },
     progression: {
       level: user.progression.level,
       xp: user.progression.xp,
       totalXp: user.progression.totalXp,
       xpToNextLevel: getXpForLevel(user.progression.level) - user.progression.xp,
+      purchasedHeroSlots: user.progression.purchasedHeroSlots,
+      purchasedTurretSlots: user.progression.purchasedTurretSlots,
     },
     currentWave: user.currentWave,
     highestWave: user.highestWave,
@@ -320,12 +441,14 @@ export async function updateDefaultLoadout(
     heroId?: string;
     turretType?: string;
     displayName?: string;
+    description?: string;
   }
 ): Promise<{
   fortressClass: string | null;
   heroId: string | null;
   turretType: string | null;
   displayName: string | null;
+  description: string | null;
 }> {
   const user = await prisma.user.update({
     where: { id: userId },
@@ -334,6 +457,7 @@ export async function updateDefaultLoadout(
       ...(updates.heroId && { defaultHeroId: updates.heroId }),
       ...(updates.turretType && { defaultTurretType: updates.turretType }),
       ...(updates.displayName && { displayName: updates.displayName }),
+      ...(updates.description !== undefined && { description: updates.description }),
     },
   });
 
@@ -342,7 +466,111 @@ export async function updateDefaultLoadout(
     heroId: user.defaultHeroId,
     turretType: user.defaultTurretType,
     displayName: user.displayName,
+    description: user.description,
   };
+}
+
+/**
+ * Logout user - revoke refresh token
+ */
+export async function logoutUser(refreshTokenStr: string): Promise<boolean> {
+  // Verify refresh token to get session ID
+  const payload = await verifyRefreshToken(refreshTokenStr);
+  if (!payload) {
+    return false;
+  }
+
+  // Revoke the session
+  try {
+    await prisma.session.update({
+      where: { id: payload.sessionId },
+      data: { revoked: true },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Revoke all sessions for a user (force logout everywhere)
+ */
+export async function revokeAllUserSessions(userId: string): Promise<number> {
+  const result = await prisma.session.updateMany({
+    where: {
+      userId,
+      revoked: false,
+    },
+    data: { revoked: true },
+  });
+  return result.count;
+}
+
+/**
+ * Request a password reset
+ */
+export async function requestPasswordReset(email: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+  });
+
+  // Always return true to prevent email enumeration
+  if (!user) {
+    return true;
+  }
+
+  // Generate a random token
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+  // Store the token
+  await prisma.passwordResetToken.create({
+    data: {
+      token,
+      userId: user.id,
+      expiresAt,
+    },
+  });
+
+  // Send the email
+  await sendPasswordResetEmail(user.email!, token);
+
+  return true;
+}
+
+/**
+ * Reset password using a token
+ */
+export async function resetPassword(token: string, password: string): Promise<boolean> {
+  const resetToken = await prisma.passwordResetToken.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+
+  if (!resetToken || resetToken.expiresAt < new Date()) {
+    return false;
+  }
+
+  // Hash new password
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+  // Update user password and delete the token
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: resetToken.userId },
+      data: { passwordHash },
+    }),
+    prisma.passwordResetToken.delete({
+      where: { id: resetToken.id },
+    }),
+    // Revoke all existing sessions for security
+    prisma.session.updateMany({
+      where: { userId: resetToken.userId, revoked: false },
+      data: { revoked: true },
+    }),
+  ]);
+
+  return true;
 }
 
 // Re-export progression functions from sim-core for convenience

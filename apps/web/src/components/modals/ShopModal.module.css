@@ -1,0 +1,621 @@
+/**
+ * Shop Modal Styles - Redesigned
+ */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  font-size: 1.1rem;
+  color: var(--color-text-60);
+}
+
+/* ============================================
+   BALANCE HEADER
+   ============================================ */
+.balanceHeader {
+  display: flex;
+  gap: var(--spacing-xl);
+  justify-content: center;
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  background: var(--glass-bg);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-neutral);
+}
+
+.balance {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.balanceIcon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 6px var(--color-primary-50));
+}
+
+.balanceValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.balanceLabel {
+  font-size: 14px;
+  color: var(--color-text-60);
+}
+
+/* ============================================
+   CATEGORY TABS
+   ============================================ */
+.categoryTabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-neutral-dark);
+  overflow-x: auto;
+}
+
+.categoryTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-width: 100px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-text-60);
+}
+
+.categoryTab:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-neutral);
+}
+
+.categoryTab.active {
+  background: var(--color-primary-20);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.categoryIcon {
+  font-size: 1.5rem;
+}
+
+.categoryLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   ERROR DISPLAY
+   ============================================ */
+.error {
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  background: var(--color-accent-10);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-30);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+}
+
+/* ============================================
+   PRODUCTS GRID
+   ============================================ */
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  max-height: 420px;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+/* ============================================
+   PRODUCT CARD (Base)
+   ============================================ */
+.product {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-neutral);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.product:hover {
+  border-color: var(--color-primary-50);
+  box-shadow: 0 0 16px var(--color-primary-20);
+}
+
+/* ============================================
+   FEATURED PRODUCT (Starter Pack)
+   ============================================ */
+.featuredProduct {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-primary-10) 100%);
+  border: 3px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 24px var(--color-primary-20), inset 0 0 40px var(--color-primary-10);
+  grid-column: 1 / -1;
+}
+
+.featuredProduct .productTitle {
+  font-size: 1.75rem;
+  color: var(--color-text);
+  text-shadow: 0 0 12px var(--color-primary-30);
+}
+
+.featuredProduct .productPrice {
+  font-size: 1.75rem;
+  color: var(--color-primary);
+}
+
+.featuredProduct .buyButton {
+  max-width: 300px;
+}
+
+/* ============================================
+   PRODUCT BADGE
+   ============================================ */
+.productBadge {
+  position: absolute;
+  top: -10px;
+  right: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: linear-gradient(135deg, var(--color-skill), #d97706);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px var(--color-skill-30);
+}
+
+/* ============================================
+   PRODUCT TITLE
+   ============================================ */
+.productTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ============================================
+   PRODUCT CONTENTS (for featured)
+   ============================================ */
+.productContents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-dark);
+}
+
+.productContents > div {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 14px;
+  color: var(--color-text-80);
+}
+
+/* ============================================
+   PRODUCT PRICE
+   ============================================ */
+.productPrice {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ============================================
+   BONUS TAG
+   ============================================ */
+.bonusTag {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary-30);
+}
+
+/* ============================================
+   FIRST PURCHASE BONUS
+   ============================================ */
+.hasFirstBonus {
+  border: 2px solid var(--color-skill);
+  background: linear-gradient(135deg, var(--color-skill-15), var(--color-bg-elevated));
+  box-shadow: 0 0 16px var(--color-skill-30);
+}
+
+.firstPurchaseBanner {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: linear-gradient(90deg, var(--color-skill), #d97706);
+  color: var(--color-bg);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.bonusPlus {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.doubleBonusTag {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-70));
+  color: var(--color-bg);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--color-primary-50);
+  }
+  50% {
+    box-shadow: 0 0 15px var(--color-primary-70);
+  }
+}
+
+/* ============================================
+   PRICE PER UNIT
+   ============================================ */
+.pricePerUnit {
+  font-size: 11px;
+  color: var(--color-text-40);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+/* ============================================
+   PRODUCT DURATION
+   ============================================ */
+.productDuration {
+  font-size: 14px;
+  color: var(--color-text-60);
+}
+
+/* ============================================
+   WEEKLY LIMIT
+   ============================================ */
+.weeklyLimit {
+  font-size: 10px;
+  color: var(--color-skill);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   DUST COST
+   ============================================ */
+.productDustCost {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.dustIcon {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 4px var(--color-primary-50));
+}
+
+/* ============================================
+   PRODUCT DESCRIPTION
+   ============================================ */
+.productDescription {
+  font-size: 12px;
+  color: var(--color-text-60);
+  line-height: 1.4;
+}
+
+/* ============================================
+   BUY BUTTON
+   ============================================ */
+.buyButton {
+  margin-top: auto;
+  width: 100%;
+}
+
+/* ============================================
+   EMPTY MESSAGE
+   ============================================ */
+.emptyMessage {
+  grid-column: 1 / -1;
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-60);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-neutral);
+}
+
+/* ============================================
+   STATUS OVERLAY
+   ============================================ */
+.statusOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 18, 0.9);
+  border-radius: var(--radius-lg);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.statusContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.statusContent p {
+  font-size: 1.125rem;
+  color: var(--color-text);
+}
+
+/* ============================================
+   SPINNER
+   ============================================ */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--color-neutral);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   SUCCESS/ERROR ICONS
+   ============================================ */
+.successIcon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-20);
+  border: 3px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+.errorIcon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-20);
+  border: 3px solid var(--color-accent);
+  color: var(--color-accent);
+  font-size: 1.75rem;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+/* ============================================
+   PURCHASE REWARDS (Success Modal)
+   ============================================ */
+.purchaseRewards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-primary-30);
+  border-radius: var(--radius-lg);
+  min-width: 250px;
+}
+
+.purchaseRewards h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: center;
+}
+
+.rewardItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-primary-10);
+  border-radius: var(--radius-md);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.rewardIcon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 6px var(--color-primary-50));
+}
+
+/* ============================================
+   HERO PRODUCT CARD
+   ============================================ */
+.heroProduct {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-primary-10) 100%);
+  border: 2px solid var(--color-primary-50);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.heroProduct:hover:not(.owned) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-30);
+  transform: translateY(-2px);
+}
+
+.heroProduct.owned {
+  opacity: 0.6;
+  border-color: var(--color-neutral);
+  background: var(--color-bg-elevated);
+}
+
+.heroAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--color-bg-panel);
+  border: 3px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px var(--color-primary-30);
+}
+
+.heroIcon {
+  font-size: 2.5rem;
+}
+
+.heroClass {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.classBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.roleBadge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-60);
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--color-neutral);
+}
+
+.heroDescription {
+  font-size: 12px;
+  color: var(--color-text-60);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.heroProduct .productTitle {
+  text-align: center;
+}
+
+.heroProduct .productPrice {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+
+.heroProduct .buyButton {
+  width: 100%;
+  max-width: 200px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 600px) {
+  .balanceHeader {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+  }
+
+  .categoryTabs {
+    justify-content: flex-start;
+  }
+
+  .categoryTab {
+    min-width: 80px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .productsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .featuredProduct {
+    padding: var(--spacing-lg);
+  }
+
+  .featuredProduct .productTitle {
+    font-size: 1.5rem;
+  }
+
+  .featuredProduct .buyButton {
+    max-width: 100%;
+  }
+}

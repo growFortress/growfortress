@@ -17,11 +17,13 @@ import {
   type BossRushState,
   type BossRushBossStats,
 } from '@arcade/sim-core';
+import { audioManager } from './AudioManager.js';
 import { CONFIG } from '../config.js';
 import { startSession, submitSegment, endSession, SessionStartResponse, SegmentSubmitResponse } from '../api/client.js';
 import { startBossRush as apiStartBossRush, finishBossRush as apiFinishBossRush } from '../api/boss-rush.js';
 import type { PartialRewards } from '../api/client.js';
 import { saveActiveSession, clearActiveSession, type ActiveSessionSnapshot } from '../storage/idb.js';
+import { deferTask } from '../utils/scheduler.js';
 import {
   bossRushActive,
   initBossRushSession,
@@ -53,7 +55,12 @@ export type GamePhase = 'idle' | 'shop' | 'playing' | 'choice' | 'segment_submit
 export interface GameCallbacks {
   onStateChange: () => void;
   onChoiceRequired: (options: string[]) => void;
-  onGameEnd: (won: boolean) => void;
+  onGameEnd: (
+    won: boolean,
+    newInventory?: { gold: number; dust: number },
+    newProgression?: { level: number; xp: number; totalXp: number; xpToNextLevel: number },
+    finalWave?: number
+  ) => void;
   onSegmentComplete?: (result: SegmentSubmitResponse) => void;
   onRewardsReceived?: (gold: number, dust: number, xp: number) => void;
   onBossRushEnd?: (result: BossRushFinishResponse) => void;
@@ -87,6 +94,8 @@ export class Game {
   private currentBossStats: BossRushBossStats | null = null;
   private bossEntityId: number | null = null;
   private lastBossDamageCheck = 0;
+  private lastFortressHp = 0;
+  private lastLevel = 0;
 
   constructor(callbacks: GameCallbacks) {
     this.callbacks = callbacks;
@@ -161,6 +170,9 @@ export class Game {
         class: fortressClass,
       }));
 
+      // Apply power upgrades for permanent stat bonuses
+      config.powerData = sessionInfo.powerData;
+
       this.simulation = new Simulation(sessionInfo.seed, config);
       this.simulation.setAuditTicks(sessionInfo.segmentAuditTicks);
 
@@ -172,9 +184,15 @@ export class Game {
       this.auditTickSet = new Set(sessionInfo.segmentAuditTicks);
       this.pendingSegmentSubmit = false;
       this.lastSnapshotTick = 0;
+      this.lastFortressHp = sessionInfo.fortressBaseHp;
+      this.lastLevel = sessionInfo.commanderLevel;
 
       this.phase = 'playing';
       this.callbacks.onStateChange();
+      
+      // Start background ambience
+      audioManager.playSfx('ui_click');
+      audioManager.playMusic('main');
 
       // Save initial session snapshot for recovery
       this.saveSessionSnapshot();
@@ -212,6 +230,13 @@ export class Game {
       class: fortressClass,
     }));
 
+    // Apply power upgrades from snapshot
+    config.powerData = snapshot.powerData ? {
+      ...snapshot.powerData,
+      heroTiers: snapshot.powerData.heroTiers || {},
+      turretTiers: snapshot.powerData.turretTiers || {},
+    } : undefined;
+
     this.simulation = new Simulation(snapshot.seed, config);
     this.simulation.setAuditTicks(snapshot.segmentAuditTicks);
     this.simulation.state = snapshot.simulationState;
@@ -225,9 +250,24 @@ export class Game {
       tickHz: snapshot.tickHz,
       startingWave: snapshot.startingWave,
       segmentAuditTicks: snapshot.segmentAuditTicks,
-      inventory: snapshot.inventory || { gold: 0, dust: 0, sigils: 0 },
+      inventory: snapshot.inventory || { gold: 0, dust: 0 },
       commanderLevel: snapshot.commanderLevel,
       progressionBonuses: snapshot.progressionBonuses,
+      fortressBaseHp: snapshot.fortressBaseHp,
+      fortressBaseDamage: snapshot.fortressBaseDamage,
+      waveIntervalTicks: snapshot.waveIntervalTicks,
+      powerData: snapshot.powerData ? {
+        ...snapshot.powerData,
+        heroTiers: snapshot.powerData.heroTiers || {},
+        turretTiers: snapshot.powerData.turretTiers || {},
+      } : {
+        fortressUpgrades: { statUpgrades: { hp: 0, damage: 0, attackSpeed: 0, range: 0, critChance: 0, critMultiplier: 0, armor: 0, dodge: 0 } },
+        heroUpgrades: [],
+        turretUpgrades: [],
+        itemTiers: [],
+        heroTiers: {},
+        turretTiers: {},
+      },
     };
 
     this.events = snapshot.events || [];
@@ -265,6 +305,18 @@ export class Game {
     if (!this.simulation || !['playing', 'segment_submit'].includes(this.phase)) return;
 
     const state = this.simulation.state;
+
+    // Monitor fortress damage
+    if (this.lastFortressHp > state.fortressHp) {
+      audioManager.playSfx('fortress_damage');
+    }
+    this.lastFortressHp = state.fortressHp;
+
+    // Monitor level up
+    if (state.commanderLevel > this.lastLevel && this.lastLevel > 0) {
+      audioManager.playSfx('level_up');
+    }
+    this.lastLevel = state.commanderLevel;
 
     // Check if we need to create a checkpoint
     const shouldCheckpoint =
@@ -359,7 +411,14 @@ export class Game {
             result.dustEarned,
             result.xpEarned
           );
+          
+          // Play sounds for rewards/progress
+          if (result.goldEarned > 0 || result.dustEarned > 0) {
+            audioManager.playSfx('coin');
+          }
         }
+        
+        audioManager.playSfx('wave_complete');
 
         // Analytics report available via analytics.generateReport() if needed for debugging
 
@@ -373,9 +432,9 @@ export class Game {
         console.error('Segment verification failed:', result.rejectReason);
         // End the session on verification failure to prevent further desync
         // Note: sessionInfo is guaranteed non-null by the guard at the start of this method
-        await endSession(this.sessionInfo.sessionId, 'verification_failed', undefined);
+        const endResult = await endSession(this.sessionInfo.sessionId, 'verification_failed', undefined);
         this.phase = 'ended';
-        this.callbacks.onGameEnd(false);
+        this.callbacks.onGameEnd(false, endResult.newInventory, endResult.newProgression, endResult.finalWave);
         return;
       }
     } catch (error) {
@@ -401,10 +460,16 @@ export class Game {
     // Clear saved session - user is ending manually
     clearActiveSession().catch(err => console.error('Failed to clear session:', err));
 
+    let newInventory: { gold: number; dust: number } | undefined;
+    let newProgression: { level: number; xp: number; totalXp: number; xpToNextLevel: number } | undefined;
+    let finalWave: number | undefined;
     try {
       // Get partial rewards from current gameplay
       const partialRewards = this.getPartialRewards();
-      await endSession(this.sessionInfo.sessionId, 'manual', partialRewards);
+      const result = await endSession(this.sessionInfo.sessionId, 'manual', partialRewards);
+      newInventory = result.newInventory;
+      newProgression = result.newProgression;
+      finalWave = result.finalWave;
     } catch (error) {
       console.error('Failed to end session:', error);
     }
@@ -412,7 +477,7 @@ export class Game {
     this.phase = 'ended';
     this.pendingSegmentSubmit = false;
     this.callbacks.onStateChange();
-    this.callbacks.onGameEnd(false); // Ended by player choice
+    this.callbacks.onGameEnd(false, newInventory, newProgression, finalWave); // Ended by player choice
 
   }
 
@@ -483,15 +548,15 @@ export class Game {
     this.callbacks.onStateChange();
   }
 
-  /** Activate the Infinity Gauntlet SNAP ability */
-  activateSnap(): void {
+  /** Activate the Crystal Matrix Annihilation Wave ability */
+  activateAnnihilation(): void {
     if (!this.simulation || this.phase !== 'playing') return;
 
     const state = this.simulation.state;
 
-    // Check if gauntlet is assembled and ready
-    if (!state.gauntletState?.isAssembled) return;
-    if (state.gauntletState.snapCooldown > 0) return;
+    // Check if matrix is assembled and ready
+    if (!state.matrixState?.isAssembled) return;
+    if (state.matrixState.annihilationCooldown > 0) return;
     if (state.enemies.length === 0) return;
 
     const event: GameEvent = {
@@ -499,6 +564,7 @@ export class Game {
       tick: state.tick,
     };
 
+    audioManager.playSfx('skill_activate');
     this.events.push(event);
     this.simulation.setEvents([...this.events]);
   }
@@ -526,13 +592,13 @@ export class Game {
     this.simulation.setEvents([...this.events]);
   }
 
-  /** Check if SNAP is ready to use */
-  isSnapReady(): boolean {
+  /** Check if Annihilation Wave is ready to use */
+  isAnnihilationReady(): boolean {
     if (!this.simulation) return false;
     const state = this.simulation.state;
     return (
       state.gauntletState?.isAssembled === true &&
-      state.gauntletState.snapCooldown === 0 &&
+      state.gauntletState.annihilationCooldown === 0 &&
       state.enemies.length > 0
     );
   }
@@ -542,15 +608,21 @@ export class Game {
     clearActiveSession().catch(err => console.error('Failed to clear session:', err));
 
     // Session auto-ends when player dies
+    let newInventory: { gold: number; dust: number } | undefined;
+    let newProgression: { level: number; xp: number; totalXp: number; xpToNextLevel: number } | undefined;
+    let finalWave: number | undefined;
     if (this.sessionInfo) {
       try {
         const partialRewards = this.getPartialRewards();
-        await endSession(this.sessionInfo.sessionId, 'death', partialRewards);
+        const result = await endSession(this.sessionInfo.sessionId, 'death', partialRewards);
+        newInventory = result.newInventory;
+        newProgression = result.newProgression;
+        finalWave = result.finalWave;
       } catch (error) {
         console.error('Failed to end session on death:', error);
       }
     }
-    this.callbacks.onGameEnd(false);
+    this.callbacks.onGameEnd(false, newInventory, newProgression, finalWave);
   }
 
   /** Reset the game to initial state */
@@ -592,6 +664,10 @@ export class Game {
       fortressClass: this.sessionOptions.fortressClass || 'natural',
       startingHeroes: this.sessionOptions.startingHeroes || [],
       startingTurrets: this.sessionOptions.startingTurrets || [],
+      fortressBaseHp: this.sessionInfo.fortressBaseHp,
+      fortressBaseDamage: this.sessionInfo.fortressBaseDamage,
+      waveIntervalTicks: this.sessionInfo.waveIntervalTicks,
+      powerData: this.sessionInfo.powerData,
       simulationState: this.simulation.state,
       events: this.events,
       checkpoints: this.checkpoints,
@@ -603,9 +679,12 @@ export class Game {
       savedAt: Date.now(),
     };
 
-    saveActiveSession(snapshot).catch(err =>
-      console.error('Failed to save session snapshot:', err)
-    );
+    // Defer session save to idle time to avoid blocking gameplay
+    deferTask(() => {
+      saveActiveSession(snapshot).catch(err =>
+        console.error('Failed to save session snapshot:', err)
+      );
+    });
   }
 
   // ============================================================================
@@ -738,6 +817,9 @@ export class Game {
     state.enemies.push(bossEnemy);
     this.bossEntityId = bossEnemy.id;
     this.lastBossDamageCheck = bossStats.hp;
+    
+    // Play boss spawn sound
+    audioManager.playSfx('boss_spawn');
 
     // Update signals for UI
     updateBossState(

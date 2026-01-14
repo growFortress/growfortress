@@ -69,18 +69,18 @@ export function InfinityStones({ onSnapClick }: InfinityStonesProps) {
 
       {gauntletState?.isAssembled && (
         <div class={styles.snapSection}>
-          {gauntletState.snapCooldown > 0 ? (
+          {gauntletState.annihilationCooldown > 0 ? (
             <span class={styles.cooldown}>
-              SNAP cooldown: {gauntletState.snapCooldown} waves
+              Fala Anihilacji: {gauntletState.annihilationCooldown} fal
             </span>
           ) : (
             <button
               class={styles.snapButton}
               onClick={onSnapClick}
               disabled={state.enemyCount === 0}
-              title="Activate SNAP - eliminates 50% of all enemies"
+              title="Aktywuj Falę Anihilacji - zadaje 30% obrażeń wszystkim wrogom"
             >
-              SNAP
+              Fala Anihilacji
             </button>
           )}
         </div>

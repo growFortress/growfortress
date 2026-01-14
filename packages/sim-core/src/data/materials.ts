@@ -1,16 +1,16 @@
 /**
  * Materials and Crafting System
  *
- * System materiałów rzadkich do craftingu artefaktów i ulepszeń:
- * - Adamantium: Niezniszczalne bronie
- * - Vibranium: Absorbująca zbroja
- * - Uru: Boskie bronie
- * - Darkforce: Mroczne artefakty
- * - Cosmic Dust: Kosmiczne ulepszenia
- * - Mutant DNA: Serum mutacji
- * - Pym Particles: Manipulacja rozmiarem
- * - Extremis: Tech ulepszenia
- * - Super Soldier Serum: Buff dla Natural heroes
+ * Rok 2347 - System materiałów rzadkich do craftingu artefaktów i ulepszeń:
+ * - Adamantium: Niezniszczalne bronie (syntetyczny stop wojskowy)
+ * - Fazowy Stop: Absorbująca zbroja (obcy metal z wraków)
+ * - Krystaliczny Rdzeń: Bronie energetyczne (z Starożytnych Kryształów)
+ * - Katalizator Próżni: Artefakty wymiarowe (z Wyrwy)
+ * - Pył Kosmiczny: Kosmiczne ulepszenia
+ * - Genom Adaptacyjny: Biomodyfikacje
+ * - Destabilizator Molekularny: Manipulacja rozmiarem
+ * - Nanowirusy Extremis: Tech ulepszenia z regeneracją
+ * - Serum Elitarne: Buff dla jednostek Natural
  */
 
 import { MaterialType, FP, PillarId } from '../types';
@@ -108,16 +108,16 @@ const ADAMANTIUM: MaterialDefinition = {
 
 const VIBRANIUM: MaterialDefinition = {
   id: 'vibranium',
-  name: 'Vibranium',
-  polishName: 'Vibranium',
-  description: 'Metal absorbujący energię, pochodzący z Wakandy.',
-  lore: 'Meteoryt, który spadł na Wakandę tysiące lat temu, zawierał ten unikalny metal zdolny absorbować i przekierowywać energię kinetyczną.',
+  name: 'Phase-Locked Alloy',
+  polishName: 'Fazowy Stop',
+  description: 'Obcy metal absorbujący energię, odzyskany z wraków statków Roju.',
+  lore: 'Stop metalu odkryty we wrakach pierwszych statków inwazyjnych Roju. Zdolny absorbować i przekierowywać energię kinetyczną. Kluczowy element w technologii obronnej ludzkości.',
 
   rarity: 'legendary',
   maxStack: 10,
 
   sources: [
-    { type: 'event', pillarId: 'streets', dropChance: 3277 as FP }, // Wakanda event - 20%
+    { type: 'event', pillarId: 'streets', dropChance: 3277 as FP }, // Salvage event - 20%
     { type: 'pillar', pillarId: 'streets', dropChance: 41 as FP }, // 0.25% per wave
   ],
 
@@ -126,23 +126,23 @@ const VIBRANIUM: MaterialDefinition = {
   visuals: {
     color: 0x4169e1,
     glowColor: 0x87ceeb,
-    icon: 'metal_vibranium',
+    icon: 'metal_phase',
   },
 };
 
 const URU: MaterialDefinition = {
   id: 'uru',
-  name: 'Uru',
-  polishName: 'Uru',
-  description: 'Asgardyjski metal używany do tworzenia boskich broni.',
-  lore: 'Metal wydobywany z serca umierającej gwiazdy w Nidavellir. Tylko krasnoludy znają tajemnicę jego obróbki.',
+  name: 'Crystalline Core',
+  polishName: 'Krystaliczny Rdzeń',
+  description: 'Rdzeń energetyczny z rozbitych Starożytnych Kryształów.',
+  lore: 'Fragmenty rdzeni Starożytnych Kryształów, pozostawione przez wymarłą cywilizację. Zawierają ogromne ilości skondensowanej energii, idealnej do tworzenia broni energetycznych.',
 
   rarity: 'legendary',
   maxStack: 5,
 
   sources: [
-    { type: 'boss', pillarId: 'gods', bossId: 'hela', dropChance: 1638 as FP },
-    { type: 'boss', pillarId: 'gods', bossId: 'surtur', dropChance: 2458 as FP },
+    { type: 'boss', pillarId: 'gods', bossId: 'nexus_guardian', dropChance: 1638 as FP },
+    { type: 'boss', pillarId: 'magic', bossId: 'void_entity', dropChance: 2458 as FP },
   ],
 
   dustCost: 3000,
@@ -150,24 +150,24 @@ const URU: MaterialDefinition = {
   visuals: {
     color: 0x8b4513,
     glowColor: 0xffd700,
-    icon: 'metal_uru',
+    icon: 'crystal_core',
   },
 };
 
 const DARKFORCE: MaterialDefinition = {
   id: 'darkforce',
-  name: 'Darkforce',
-  polishName: 'Ciemna Siła',
-  description: 'Esencja z Dark Dimension, do tworzenia mrocznych artefaktów.',
-  lore: 'Czysta energia z wymiaru ciemności. Niestabilna i niebezpieczna, ale niezwykle potężna w rękach doświadczonego maga.',
+  name: 'Void Catalyst',
+  polishName: 'Katalizator Próżni',
+  description: 'Esencja z Wyrwy - portalu, przez który wdziera się Rój.',
+  lore: 'Czysta energia wymiarowa pobierana z krawędzi Wyrwy. Niestabilna i niebezpieczna, ale niezbędna do tworzenia broni zdolnych przebić pancerze Roju.',
 
   rarity: 'epic',
   maxStack: 15,
 
   sources: [
     { type: 'pillar', pillarId: 'magic', dropChance: 328 as FP }, // 2% per wave
-    { type: 'boss', pillarId: 'magic', bossId: 'dormammu', dropChance: 4915 as FP },
-    { type: 'boss', pillarId: 'magic', bossId: 'baron_mordo', dropChance: 2458 as FP },
+    { type: 'boss', pillarId: 'magic', bossId: 'rift_lord', dropChance: 4915 as FP },
+    { type: 'boss', pillarId: 'magic', bossId: 'void_walker', dropChance: 2458 as FP },
   ],
 
   dustCost: 1000,
@@ -175,7 +175,7 @@ const DARKFORCE: MaterialDefinition = {
   visuals: {
     color: 0x4b0082,
     glowColor: 0x9400d3,
-    icon: 'essence_dark',
+    icon: 'essence_void',
   },
 };
 
@@ -206,18 +206,18 @@ const COSMIC_DUST: MaterialDefinition = {
 
 const MUTANT_DNA: MaterialDefinition = {
   id: 'mutant_dna',
-  name: 'Mutant DNA',
-  polishName: 'DNA Mutanta',
-  description: 'Gen X do tworzenia serum mutacji.',
-  lore: 'Wyizolowany gen X odpowiedzialny za mutacje. Niezwykle niestabilny, ale może przyznać nadludzkie zdolności.',
+  name: 'Adaptive Genome',
+  polishName: 'Genom Adaptacyjny',
+  description: 'Zmodyfikowane DNA do biomodyfikacji jednostek bojowych.',
+  lore: 'Syntetyczny genom opracowany w wojskowych laboratoriach. Pozwala na adaptacyjne modyfikacje organizmu, zwiększające zdolności bojowe.',
 
   rarity: 'rare',
   maxStack: 25,
 
   sources: [
     { type: 'pillar', pillarId: 'mutants', dropChance: 656 as FP }, // 4% per wave
-    { type: 'boss', pillarId: 'mutants', bossId: 'master_mold', dropChance: 4915 as FP },
-    { type: 'boss', pillarId: 'mutants', bossId: 'nimrod', dropChance: 3277 as FP },
+    { type: 'boss', pillarId: 'mutants', bossId: 'bio_titan', dropChance: 4915 as FP },
+    { type: 'boss', pillarId: 'mutants', bossId: 'hive_queen', dropChance: 3277 as FP },
   ],
 
   dustCost: 500,
@@ -225,23 +225,23 @@ const MUTANT_DNA: MaterialDefinition = {
   visuals: {
     color: 0x9acd32,
     glowColor: 0xadff2f,
-    icon: 'dna_helix',
+    icon: 'genome_helix',
   },
 };
 
 const PYM_PARTICLES: MaterialDefinition = {
   id: 'pym_particles',
-  name: 'Pym Particles',
-  polishName: 'Cząsteczki Pyma',
-  description: 'Cząsteczki do manipulacji rozmiarem.',
-  lore: 'Odkryte przez Hanka Pyma, te subatomowe cząsteczki pozwalają zmieniać rozmiar obiektów i istot.',
+  name: 'Molecular Destabilizer',
+  polishName: 'Destabilizator Molekularny',
+  description: 'Cząsteczki do manipulacji rozmiarem i strukturą molekularną.',
+  lore: 'Odkryte w laboratoriach Sektora Nauki, te subatomowe cząsteczki destabilizują więzi molekularne, pozwalając na zmianę rozmiaru i gęstości obiektów.',
 
   rarity: 'rare',
   maxStack: 20,
 
   sources: [
     { type: 'pillar', pillarId: 'science', dropChance: 492 as FP }, // 3% per wave
-    { type: 'boss', pillarId: 'science', bossId: 'modok', dropChance: 3277 as FP },
+    { type: 'boss', pillarId: 'science', bossId: 'ai_overlord', dropChance: 3277 as FP },
   ],
 
   dustCost: 600,
@@ -249,22 +249,22 @@ const PYM_PARTICLES: MaterialDefinition = {
   visuals: {
     color: 0xff0000,
     glowColor: 0xff6347,
-    icon: 'particles_pym',
+    icon: 'particles_molecular',
   },
 };
 
 const EXTREMIS: MaterialDefinition = {
   id: 'extremis',
-  name: 'Extremis',
-  polishName: 'Extremis',
-  description: 'Wirus do ulepszeń technologicznych z regeneracją.',
-  lore: 'Eksperymentalny wirus nanotechnologiczny. Przeprogramowuje DNA, dając nadludzkie zdolności regeneracyjne.',
+  name: 'Extremis Nanovirus',
+  polishName: 'Nanowirus Extremis',
+  description: 'Nanowirus do ulepszeń technologicznych z regeneracją.',
+  lore: 'Wojskowy nanowirus opracowany w Fortecy Nauki. Integruje się z systemami jednostki, zapewniając zaawansowaną regenerację i ulepszenia cybernetyczne.',
 
   rarity: 'rare',
   maxStack: 15,
 
   sources: [
-    { type: 'boss', pillarId: 'science', bossId: 'ultron', dropChance: 2458 as FP },
+    { type: 'boss', pillarId: 'science', bossId: 'rogue_ai', dropChance: 2458 as FP },
     { type: 'pillar', pillarId: 'science', dropChance: 246 as FP }, // 1.5% per wave
   ],
 
@@ -273,23 +273,23 @@ const EXTREMIS: MaterialDefinition = {
   visuals: {
     color: 0xff4500,
     glowColor: 0xffa500,
-    icon: 'virus_extremis',
+    icon: 'nanovirus',
   },
 };
 
 const SUPER_SOLDIER_SERUM: MaterialDefinition = {
   id: 'super_soldier_serum',
-  name: 'Super Soldier Serum',
-  polishName: 'Serum Super-żołnierza',
-  description: 'Serum zwiększające wszystkie fizyczne zdolności.',
-  lore: 'Oryginalna formuła Dr. Erskine\'a. Zwiększa siłę, szybkość i wytrzymałość do szczytu ludzkich możliwości.',
+  name: 'Elite Combat Serum',
+  polishName: 'Serum Elitarne',
+  description: 'Wojskowe serum zwiększające wszystkie fizyczne zdolności.',
+  lore: 'Zaawansowana formuła opracowana przez wojskowych naukowców. Zwiększa siłę, szybkość i wytrzymałość do maksimum ludzkiego potencjału. Stosowane tylko u jednostek elitarnych.',
 
   rarity: 'epic',
   maxStack: 5,
 
   sources: [
     { type: 'quest', pillarId: 'streets', dropChance: 16384 as FP }, // Quest reward - 100%
-    { type: 'boss', pillarId: 'streets', bossId: 'kingpin', dropChance: 820 as FP },
+    { type: 'boss', pillarId: 'streets', bossId: 'crime_lord', dropChance: 820 as FP },
   ],
 
   dustCost: 1500,
@@ -297,7 +297,7 @@ const SUPER_SOLDIER_SERUM: MaterialDefinition = {
   visuals: {
     color: 0x0000cd,
     glowColor: 0x4169e1,
-    icon: 'serum_blue',
+    icon: 'serum_elite',
   },
 };
 
@@ -422,17 +422,17 @@ const BOSS_ESSENCE_MAGIC: MaterialDefinition = {
 
 const BOSS_ESSENCE_GODS: MaterialDefinition = {
   id: 'boss_essence_gods',
-  name: 'Divine Boss Essence',
-  polishName: 'Esencja Bossa Bogów',
-  description: 'Skoncentrowana moc bossów boskich.',
-  lore: 'Esencja tytanów i bogów. Emanuje boską mocą.',
+  name: 'Apex Boss Essence',
+  polishName: 'Esencja Bossa Apeksu',
+  description: 'Skoncentrowana moc bossów z Sektora Bogów.',
+  lore: 'Esencja najpotężniejszych strażników - ostatniej linii obrony przed Rojem. Pulsuje energią wymiarową.',
 
   rarity: 'rare',
   maxStack: 30,
 
   sources: [
-    { type: 'boss', pillarId: 'gods', bossId: 'titan', dropChance: 4915 as FP },
-    { type: 'boss', pillarId: 'gods', bossId: 'god', dropChance: 4915 as FP },
+    { type: 'boss', pillarId: 'gods', bossId: 'apex_guardian', dropChance: 4915 as FP },
+    { type: 'boss', pillarId: 'gods', bossId: 'void_titan', dropChance: 4915 as FP },
   ],
 
   dustCost: 350,
@@ -557,10 +557,10 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
     requirements: { heroClass: 'natural' },
   },
 
-  // Zbroje z Vibranium
+  // Zbroje z Fazowego Stopu
   {
     id: 'vibranium_armor',
-    name: 'Vibranium Armor',
+    name: 'Phase Armor',
     description: 'Zbroja absorbująca 50% obrażeń.',
     materials: [{ type: 'vibranium', amount: 3 }],
     goldCost: 800,
@@ -568,19 +568,19 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
   },
   {
     id: 'captain_shield',
-    name: "Captain's Shield",
-    description: 'Legendarna tarcza Kapitana.',
+    name: 'Kinetic Deflector',
+    description: 'Tarcza kinetyczna jednostki dowodzenia.',
     materials: [{ type: 'vibranium', amount: 3 }],
     goldCost: 2000,
     result: { type: 'artifact', itemId: 'captain_shield' },
     requirements: { heroClass: 'natural' },
   },
 
-  // Bronie z Uru
+  // Bronie z Krystalicznego Rdzenia
   {
     id: 'uru_weapon',
-    name: 'Uru Weapon',
-    description: 'Boska broń z +45% DMG.',
+    name: 'Crystal Core Weapon',
+    description: 'Broń energetyczna z +45% DMG.',
     materials: [
       { type: 'uru', amount: 3 },
       { type: 'cosmic_dust', amount: 2 },
@@ -590,8 +590,8 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
   },
   {
     id: 'stormbreaker',
-    name: 'Stormbreaker',
-    description: 'Topór-młot Thora z mocą Bifrostu.',
+    name: 'Void Edge',
+    description: 'Topór energetyczny z generatorem teleportacyjnym.',
     materials: [
       { type: 'uru', amount: 5 },
       { type: 'cosmic_dust', amount: 3 },
@@ -601,11 +601,11 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
     requirements: { heroClass: 'lightning', fortressLevel: 45 },
   },
 
-  // Mroczne artefakty
+  // Artefakty Próżni
   {
     id: 'darkforce_amulet',
-    name: 'Darkforce Amulet',
-    description: 'Amulet z mocą ciemności.',
+    name: 'Void Amulet',
+    description: 'Amulet z mocą Wyrwy.',
     materials: [{ type: 'darkforce', amount: 3 }],
     goldCost: 600,
     result: { type: 'artifact', itemId: 'darkforce_amulet' },
@@ -640,11 +640,11 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
     requirements: { heroClass: 'natural' },
   },
 
-  // Gadżety z Pym Particles
+  // Gadżety z Destabilizatora Molekularnego
   {
     id: 'size_shifter',
-    name: 'Size Shifter',
-    description: 'Gadżet pozwalający zmieniać rozmiar.',
+    name: 'Molecular Shifter',
+    description: 'Gadżet pozwalający manipulować rozmiarem.',
     materials: [{ type: 'pym_particles', amount: 2 }],
     goldCost: 400,
     result: { type: 'artifact', itemId: 'size_shifter' },
@@ -652,19 +652,19 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
   },
   {
     id: 'web_shooters_mk2',
-    name: 'Web Shooters MK2',
-    description: 'Ulepszone miotacze sieci.',
+    name: 'Grapple Launcher MK2',
+    description: 'Ulepszone miotacze linek hakowych.',
     materials: [{ type: 'pym_particles', amount: 2 }],
     goldCost: 1500,
     result: { type: 'artifact', itemId: 'web_shooters_mk2' },
     requirements: { heroClass: 'tech' },
   },
 
-  // Iron Man Armor
+  // Pancerz Bojowy
   {
     id: 'iron_man_armor_mk50',
-    name: 'Iron Man Armor MK50',
-    description: 'Najnowsza zbroja z nanotechnologią.',
+    name: 'Siege Exosuit MK50',
+    description: 'Najnowszy egzoszkielet z nanotechnologią.',
     materials: [
       { type: 'extremis', amount: 3 },
       { type: 'vibranium', amount: 2 },

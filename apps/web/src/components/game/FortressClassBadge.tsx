@@ -3,7 +3,7 @@ import type { FortressClass } from '@arcade/sim-core';
 import { selectedFortressClass } from '../../state/index.js';
 import styles from './FortressClassBadge.module.css';
 
-// Class configuration (simplified: 5 classes)
+// Class configuration (6 classes)
 const CLASS_CONFIG: Record<FortressClass, { color: string; icon: string; bonuses: string[] }> = {
   natural: {
     color: '#228b22',
@@ -30,6 +30,12 @@ const CLASS_CONFIG: Record<FortressClass, { color: string; icon: string; bonuses
     icon: '🔧',
     bonuses: ['+2 Pierce', '+15% Gold'],
   },
+  void: {
+    color: '#4b0082',
+    icon: '🌀',
+    bonuses: ['+15% DMG', '+10% HP', '+10% CDR'],
+  },
+  plasma: { color: '#00ffff', icon: '⚛️', bonuses: ['+15% Crit', '+10% AS'] },
 };
 
 interface FortressClassBadgeProps {

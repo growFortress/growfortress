@@ -83,6 +83,8 @@
   right: 0;
   background: var(--color-primary-30);
   transition: height 0.1s linear;
+  /* Performance: frequent height updates during gameplay */
+  will-change: height;
 }
 
 .skillIcon {
@@ -105,13 +107,20 @@
 }
 
 /* Compact mode */
+.compact {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
 .compact .skillSlot {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .compact .skillIcon {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .compact .cooldownText {

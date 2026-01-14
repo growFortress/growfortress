@@ -32,7 +32,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.0,
     baseDamage: 17,
     goldReward: 7,
-    dustReward: 3,
+    dustReward: 2,
     description: 'Slow and tanky',
   },
   leech: {
@@ -41,7 +41,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 2.0,
     baseDamage: 4,
     goldReward: 5,
-    dustReward: 2,
+    dustReward: 1,
     description: 'Heals on hit',
   },
 
@@ -61,7 +61,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.5,
     baseDamage: 14,
     goldReward: 6,
-    dustReward: 2,
+    dustReward: 1,
     description: 'Tough street enforcer',
   },
   mafia_boss: {
@@ -70,7 +70,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 0.8,
     baseDamage: 29,
     goldReward: 25,
-    dustReward: 10,
+    dustReward: 5,
     description: 'Crime lord with bodyguards',
   },
 
@@ -81,7 +81,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.8,
     baseDamage: 12,
     goldReward: 5,
-    dustReward: 2,
+    dustReward: 1,
     description: 'Mechanical soldier',
   },
   drone: {
@@ -99,7 +99,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 0.5,
     baseDamage: 35,
     goldReward: 40,
-    dustReward: 15,
+    dustReward: 8,
     description: 'Central AI consciousness',
   },
 
@@ -110,7 +110,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.2,
     baseDamage: 23,
     goldReward: 12,
-    dustReward: 5,
+    dustReward: 3,
     description: 'Mutant-hunting robot',
   },
   mutant_hunter: {
@@ -119,7 +119,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 2.0,
     baseDamage: 17,
     goldReward: 7,
-    dustReward: 3,
+    dustReward: 2,
     description: 'Human mutant hunter',
   },
 
@@ -130,7 +130,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.8,
     baseDamage: 14,
     goldReward: 7,
-    dustReward: 3,
+    dustReward: 2,
     description: 'Kree Empire warrior',
   },
   skrull: {
@@ -139,7 +139,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 2.0,
     baseDamage: 12,
     goldReward: 6,
-    dustReward: 2,
+    dustReward: 1,
     description: 'Shape-shifting alien',
   },
   cosmic_beast: {
@@ -148,7 +148,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.0,
     baseDamage: 40,
     goldReward: 30,
-    dustReward: 12,
+    dustReward: 6,
     description: 'Massive space creature',
   },
 
@@ -159,7 +159,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.5,
     baseDamage: 21,
     goldReward: 9,
-    dustReward: 4,
+    dustReward: 2,
     description: 'Hellish entity',
   },
   sorcerer: {
@@ -168,7 +168,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.2,
     baseDamage: 29,
     goldReward: 10,
-    dustReward: 5,
+    dustReward: 3,
     description: 'Dark magic user',
   },
   dimensional_being: {
@@ -177,7 +177,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 0.6,
     baseDamage: 46,
     goldReward: 50,
-    dustReward: 20,
+    dustReward: 10,
     description: 'Entity from another dimension',
   },
 
@@ -188,7 +188,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.5,
     baseDamage: 25,
     goldReward: 12,
-    dustReward: 5,
+    dustReward: 3,
     description: 'Fallen warrior of Valhalla',
   },
   titan: {
@@ -197,7 +197,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 0.4,
     baseDamage: 58,
     goldReward: 60,
-    dustReward: 25,
+    dustReward: 13,
     description: 'Primordial giant',
   },
   god: {
@@ -206,7 +206,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     baseSpeed: 1.0,
     baseDamage: 69,
     goldReward: 100,
-    dustReward: 50,
+    dustReward: 25,
     description: 'Divine being of immense power',
   },
 };
@@ -228,9 +228,9 @@ export function getEnemyStats(
   // Scale HP and damage by effective wave within cycle (12% per wave)
   const waveScale = 1 + (effectiveWave - 1) * 0.12;
 
-  // Cycle scaling: exponential 2^cycle
-  // Cycle 0: 1x, Cycle 1: 2x, Cycle 2: 4x, Cycle 3: 8x
-  const cycleScale = Math.pow(2, cycle);
+  // Cycle scaling: exponential 1.6^cycle (reduced from 2x for better balance)
+  // Cycle 0: 1x, Cycle 1: 1.6x, Cycle 2: 2.56x, Cycle 3: 4.1x
+  const cycleScale = Math.pow(1.6, cycle);
 
   // Combined scaling
   const totalScale = waveScale * cycleScale;
@@ -248,6 +248,7 @@ export function getEnemyStats(
 
 /**
  * Get rewards for killing enemy
+ * Base rewards are halved to compensate for doubled enemy count in waves
  */
 export function getEnemyRewards(
   type: EnemyType,
@@ -258,10 +259,12 @@ export function getEnemyRewards(
   const archetype = ENEMY_ARCHETYPES[type];
   // Elite enemies give 3x rewards (balanced from 5x to prevent late-game economy breaking)
   const eliteMult = isElite ? 3 : 1;
+  // Economy balance: halved rewards per enemy since enemy count is doubled
+  const economyBalanceMult = 0.5;
 
   return {
-    gold: Math.floor(archetype.goldReward * eliteMult * goldMult),
-    dust: Math.floor(archetype.dustReward * eliteMult * dustMult),
+    gold: Math.floor(archetype.goldReward * eliteMult * goldMult * economyBalanceMult),
+    dust: Math.floor(archetype.dustReward * eliteMult * dustMult * economyBalanceMult),
   };
 }
 
@@ -326,14 +329,16 @@ export function getWaveComposition(wave: number, tickHz: number): WaveCompositio
   const effectiveWave = ((wave - 1) % 100) + 1;
 
   // Enemy count scales with actual wave (more enemies in higher cycles)
-  const baseEnemies = 5 + wave * 3;
+  // Doubled enemy count for more intense waves
+  const baseEnemies = 10 + wave * 6;
 
   // Elite chance continues scaling, caps at 50% (increased from 30% for endless)
   const eliteChance = Math.min(0.05 + wave * 0.005, 0.5);
 
   // Spawn interval gets faster with cycles (minimum 5 ticks)
-  const baseInterval = Math.max(tickHz - effectiveWave * 2, tickHz / 2);
-  const spawnInterval = Math.max(baseInterval - cycle * 5, 5);
+  // Reduced by 40% to compensate for doubled enemy count
+  const baseInterval = Math.max((tickHz - effectiveWave * 2) * 0.6, tickHz / 3);
+  const spawnInterval = Math.max(baseInterval - cycle * 3, 4);
 
   const enemies: Array<{ type: EnemyType; count: number }> = [];
 

@@ -1,0 +1,199 @@
+{
+  "controls": {
+    "gameControls": "Kontrolki gry",
+    "management": "Zarządzanie",
+    "recruitHeroes": "Rekrutuj nowych bohaterów",
+    "heroesLabel": "Bohaterowie",
+    "heroesAria": "Bohaterowie - Rekrutuj nowych bohaterów",
+    "collectedMaterials": "Zebrane materiały",
+    "materialsLabel": "Materiały",
+    "materialsAria": "Materiały - Zebrane materiały",
+    "artifactsItems": "Artefakty i przedmioty",
+    "artifactsLabel": "Artefakty",
+    "artifactsAria": "Artefakty - Artefakty i przedmioty",
+    "claimOfflineRewards": "Odbierz nagrody za czas offline",
+    "gatheringLabel": "Zbieranie",
+    "gatheringAria": "Zbieranie - Odbierz nagrody za czas offline",
+    "pendingRewards": " (masz oczekujące nagrody)",
+    "startGame": "Rozpocznij grę",
+    "startLabel": "Rozpocznij",
+    "gameModes": "Tryby gry",
+    "comingSoon": "Wkrótce dostępne! Tryb w przygotowaniu.",
+    "bossRushComingSoon": "Boss Rush - Wkrótce dostępne",
+    "fightPlayers": "Walcz z innymi graczami!",
+    "pvpArena": "PvP Arena - Walcz z innymi graczami",
+    "pendingChallenges": ", {{count}} oczekujących wyzwań",
+    "endSession": "Zakończ sesję gry",
+    "endLabel": "Zakończ",
+    "endBossRush": "Zakończ tryb Boss Rush",
+    "play": "Graj",
+    "pause": "Pauza",
+    "speed1x": "1x Prędkość",
+    "speed2x": "2x Prędkość",
+    "autoSkill": "Auto Umiejętność"
+  },
+  "gameContainer": {
+    "resumeFailed": "Nie udało się wznowić sesji. Rozpocznij nową.",
+    "startFailed": "Nie udało się rozpocząć sesji. Spróbuj ponownie.",
+    "bossRushFailed": "Nie udało się rozpocząć Boss Rush. Spróbuj ponownie.",
+    "endSessionTitle": "Zakończ sesję",
+    "endSessionMessage": "Czy na pewno chcesz zakończyć bieżącą sesję? Twój postęp z obecnego segmentu zostanie zapisany.",
+    "endSessionConfirm": "Zakończ",
+    "endSessionCancel": "Kontynuuj grę"
+  },
+  "heroPanel": {
+    "slotEmpty": "Slot {{index}}: pusty",
+    "healthy": "zdrowy",
+    "wounded": "ranny",
+    "critical": "krytyczny",
+    "selected": ", wybrany",
+    "lifeOf": "Życie {{name}}",
+    "lifePercent": "{{percent}}% życia",
+    "unitsPanel": "Panel jednostek",
+    "units": "Jednostki",
+    "clickToManage": "Kliknij, aby zarządzać",
+    "clickForDetails": "Kliknij jednostkę, aby zobaczyć szczegóły i ulepszenia",
+    "slotsOccupied": "{{count}} z {{total}} slotów zajętych",
+    "state": {
+      "idle": "bezczynny",
+      "deploying": "w drodze",
+      "combat": "walczy",
+      "returning": "powraca",
+      "cooldown": "odnawia się",
+      "dead": "pokonany",
+      "commanded": "pod rozkazem"
+    }
+  },
+  "turretPanel": {
+    "turrets": "Wieżyczki",
+    "arrowTower": "Wieża Łucznicza",
+    "cannonTower": "Wieża Armatnia",
+    "teslaTower": "Wieża Tesli",
+    "frostTower": "Wieża Mrozu",
+    "unlockAtLevel": "Odblokuj na poziomie {{level}}",
+    "levelShort": "Poz. {{level}}",
+    "classSynergyActive": "Synergia Klasy Aktywna"
+  },
+  "hubOverlay": {
+    "unlockAtLevel": "Odblokuj na poziomie {{level}}",
+    "levelShort": "Poz. {{level}}",
+    "clickToAddTurret": "Kliknij, aby dodać wieżyczkę"
+  },
+  "fortressSkills": {
+    "title": "Umiejętności Twierdzy",
+    "baseDamage": "Obrażenia bazowe: {{damage}}",
+    "cooldown": "Cooldown: {{seconds}}s",
+    "effects": "Efekty:",
+    "damageAll": "{{amount}} obrażeń (wszyscy)",
+    "damageArea": "{{amount}} obrażeń (obszar)",
+    "damage": "{{amount}} obrażeń",
+    "slow": "Spowolnienie {{percent}}% na {{duration}}s",
+    "stun": "Ogłuszenie na {{duration}}s",
+    "freeze": "Zamrożenie na {{duration}}s",
+    "burn": "Podpalenie: {{damage}}/tick przez {{duration}}s",
+    "poison": "Trucizna: {{damage}}/tick przez {{duration}}s",
+    "poisonStacks": " ({{stacks}} stacków)",
+    "heal": "Leczenie: +{{amount}} HP",
+    "shield": "Tarcza: {{amount}} HP na {{duration}}s",
+    "buff": "Buff: +{{percent}}% {{stat}} na {{duration}}s",
+    "summon": "Przywołuje {{count}}x {{unitType}}",
+    "percentHpAll": "{{percent}}% aktualnego HP (wszyscy)"
+  },
+  "crystalDisplay": {
+    "ancientCrystals": "Starożytne Kryształy",
+    "matrixActive": "MATRYCA AKTYWNA",
+    "collected": " (Zebrano)",
+    "fragments": " ({{count}}/10 fragmentów)",
+    "annihilationWave": "Fala Anihilacji",
+    "annihilationCooldown": "Fala Anihilacji: {{count}} fal"
+  },
+  "bossRush": {
+    "bosses": "Bossów",
+    "bossCount": "Boss {{current}}/7",
+    "nextBossIn": "NASTĘPNY BOSS ZA {{count}}...",
+    "details": "Szczegóły",
+    "hide": "Ukryj"
+  },
+  "tutorial": {
+    "yourFortress": "Twoja Twierdza",
+    "fortressDescription": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak pociski trafiają wrogów!",
+    "bombAbility": "Umiejętność BOMB",
+    "bombDescription": "Kliknij przycisk BOMB aby zadać obrażenia wszystkim wrogom w zasięgu!",
+    "relics": "Relikty",
+    "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
+    "waveN": "Fala {{n}}",
+    "clickToClose": "Kliknij aby zamknąć"
+  },
+  "unlock": {
+    "level": "Poziom {{level}}",
+    "newUnlock": "Nowe Odblokowanie!",
+    "clickToClose": "Kliknij aby zamknąć",
+    "more": "+{{count}} więcej"
+  },
+  "loadout": {
+    "defaultLoadout": "Domyślny Loadout",
+    "configuration": "Konfiguracja",
+    "unit": "Jednostka",
+    "tower": "Wieża",
+    "classes": {
+      "standard": "Standardowa",
+      "cryogenic": "Kriogeniczna",
+      "thermal": "Termiczna",
+      "electrical": "Elektryczna",
+      "quantum": "Kwantowa",
+      "void": "Próżniowa",
+      "plasma": "Plazmowa"
+    },
+    "turrets": {
+      "railgun": "Wieża Railgun",
+      "artillery": "Wieża Artyleryjska",
+      "bow": "Wieża Łukowa",
+      "cryogenic": "Wieża Kriogeniczna"
+    }
+  },
+  "header": {
+    "fortressStatus": "Status fortecy",
+    "playerStatus": "Status gracza i nawigacja",
+    "hpLevel": {
+      "healthy": "zdrowa",
+      "damaged": "uszkodzona",
+      "critical": "krytyczna"
+    },
+    "hpValueText": "{{current}} z {{max}} punktów życia, forteca {{level}}",
+    "resourceGold": "Złoto: {{amount}}",
+    "resourceDust": "Pył: {{amount}}",
+    "levelLabel": "Poziom {{level}}",
+    "xpProgress": "Postęp doświadczenia",
+    "dailyQuestsWithRewards": "Dzienne Zadania ({{count}} nagród)",
+    "leaderboardsWithRewards": "Rankingi (nagrody do odebrania)",
+    "messagesWithUnread": "Wiadomości ({{count}} nieprzeczytanych)",
+    "openGuildPanel": "Otwórz panel gildii",
+    "newInvitations": "Nowe zaproszenia",
+    "rewardsToClaim": "Nagrody do odebrania"
+  },
+  "hud": {
+    "wave": "Fala",
+    "rewards": "Nagrody",
+    "skills": "Umiejętności"
+  },
+  "tutorial": {
+    "yourFortress": "Twoja Twierdza",
+    "fortressDescription": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak pociski trafiają wrogów!",
+    "bombAbility": "Umiejętność BOMB",
+    "bombDescription": "Kliknij przycisk BOMB aby zadać obrażenia wszystkim wrogom w zasięgu!",
+    "relics": "Relikty",
+    "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
+    "waveN": "Fala {{n}}",
+    "clickToClose": "Kliknij aby zamknąć"
+  },
+  "endScreen": {
+    "victory": "Zwycięstwo!",
+    "defeat": "Porażka",
+    "waveReached": "Dotarłeś do fali {{wave}}",
+    "enemies": "Wrogowie",
+    "elites": "Elity",
+    "relics": "Relikty",
+    "returnToHub": "Wróć do bazy",
+    "playAgain": "Zagraj ponownie"
+  }
+}

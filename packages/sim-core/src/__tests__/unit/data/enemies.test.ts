@@ -31,7 +31,7 @@ describe('ENEMY_ARCHETYPES', () => {
     expect(bruiser.baseSpeed).toBe(1.0);
     expect(bruiser.baseDamage).toBe(17);
     expect(bruiser.goldReward).toBe(7);
-    expect(bruiser.dustReward).toBe(3);
+    expect(bruiser.dustReward).toBe(2);  // Reduced from 3
   });
 
   it('leech has correct base stats', () => {
@@ -41,7 +41,7 @@ describe('ENEMY_ARCHETYPES', () => {
     expect(leech.baseSpeed).toBe(2.0);
     expect(leech.baseDamage).toBe(4);
     expect(leech.goldReward).toBe(5);
-    expect(leech.dustReward).toBe(2);
+    expect(leech.dustReward).toBe(1);  // Reduced from 2
   });
 
   it('all archetypes have descriptions', () => {
@@ -141,69 +141,79 @@ describe('getEnemyStats', () => {
 });
 
 describe('getEnemyRewards', () => {
-  describe('base rewards', () => {
+  // Note: Base rewards are halved (economyBalanceMult = 0.5) since enemy count is doubled
+  describe('base rewards (halved for economy balance)', () => {
     it('returns correct base rewards for runner', () => {
       const rewards = getEnemyRewards('runner', false, 1.0, 1.0);
-      expect(rewards.gold).toBe(2);
-      expect(rewards.dust).toBe(1);
+      // Base: gold=2, dust=1 * 0.5 = gold=1, dust=0
+      expect(rewards.gold).toBe(1);
+      expect(rewards.dust).toBe(0);
     });
 
     it('returns correct base rewards for bruiser', () => {
       const rewards = getEnemyRewards('bruiser', false, 1.0, 1.0);
-      expect(rewards.gold).toBe(7);
-      expect(rewards.dust).toBe(3);
+      // Base: gold=7, dust=3 * 0.5 = gold=3, dust=1
+      expect(rewards.gold).toBe(3);
+      expect(rewards.dust).toBe(1);
     });
 
     it('returns correct base rewards for leech', () => {
       const rewards = getEnemyRewards('leech', false, 1.0, 1.0);
-      expect(rewards.gold).toBe(5);
-      expect(rewards.dust).toBe(2);
+      // Base: gold=5, dust=1 * 0.5 = gold=2, dust=0
+      expect(rewards.gold).toBe(2);
+      expect(rewards.dust).toBe(0);
     });
   });
 
   describe('elite multiplier', () => {
-    it('applies elite multiplier (3x)', () => {
-      const normal = getEnemyRewards('runner', false, 1.0, 1.0);
-      const elite = getEnemyRewards('runner', true, 1.0, 1.0);
+    it('applies elite multiplier (approximately 3x)', () => {
+      // Use mafia_boss for higher base values to avoid floor() issues
+      const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
+      const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0);
 
-      expect(elite.gold).toBe(normal.gold * 3);
-      expect(elite.dust).toBe(normal.dust * 3);
+      // Elite gives significantly more (close to 3x, accounting for floor())
+      expect(elite.gold).toBeGreaterThan(normal.gold * 2);
+      expect(elite.gold).toBeLessThanOrEqual(normal.gold * 3 + 1);
+      expect(elite.dust).toBeGreaterThan(normal.dust * 2);
+      expect(elite.dust).toBeLessThanOrEqual(normal.dust * 3 + 1);
     });
   });
 
   describe('gold/dust multipliers', () => {
     it('applies gold multiplier', () => {
       const rewards = getEnemyRewards('runner', false, 2.0, 1.0);
-      expect(rewards.gold).toBe(4); // 2 * 2
-      expect(rewards.dust).toBe(1); // Unaffected
+      // Base: 2 * 0.5 * 2.0 = 2
+      expect(rewards.gold).toBe(2);
+      expect(rewards.dust).toBe(0); // Unaffected
     });
 
     it('applies dust multiplier', () => {
       const rewards = getEnemyRewards('runner', false, 1.0, 2.0);
-      expect(rewards.gold).toBe(2); // Unaffected
-      expect(rewards.dust).toBe(2); // 1 * 2
+      expect(rewards.gold).toBe(1); // Unaffected
+      // Base: 1 * 0.5 * 2.0 = 1
+      expect(rewards.dust).toBe(1);
     });
 
     it('combines all multipliers', () => {
       const rewards = getEnemyRewards('runner', true, 1.5, 2.0);
-      // Gold: 2 * 3 (elite) * 1.5 = 9
-      expect(rewards.gold).toBe(9);
-      // Dust: 1 * 3 (elite) * 2.0 = 6
-      expect(rewards.dust).toBe(6);
+      // Gold: 2 * 3 (elite) * 1.5 * 0.5 = 4.5 = 4
+      expect(rewards.gold).toBe(4);
+      // Dust: 1 * 3 (elite) * 2.0 * 0.5 = 3
+      expect(rewards.dust).toBe(3);
     });
   });
 
   describe('floor behavior', () => {
     it('floors gold reward', () => {
       const rewards = getEnemyRewards('runner', false, 1.1, 1.0);
-      // 2 * 1.1 = 2.2, floored to 2
-      expect(rewards.gold).toBe(2);
+      // 2 * 0.5 * 1.1 = 1.1, floored to 1
+      expect(rewards.gold).toBe(1);
     });
 
     it('floors dust reward', () => {
       const rewards = getEnemyRewards('runner', false, 1.0, 1.3);
-      // 1 * 1.3 = 1.3, floored to 1
-      expect(rewards.dust).toBe(1);
+      // 1 * 0.5 * 1.3 = 0.65, floored to 0
+      expect(rewards.dust).toBe(0);
     });
   });
 });
@@ -289,9 +299,10 @@ describe('getWaveComposition', () => {
       expect(wave1.spawnIntervalTicks).toBeGreaterThan(wave10.spawnIntervalTicks);
     });
 
-    it('spawn interval has minimum (tickHz / 2)', () => {
+    it('spawn interval has minimum (tickHz / 3)', () => {
       const composition = getWaveComposition(100, 30);
-      expect(composition.spawnIntervalTicks).toBeGreaterThanOrEqual(15); // 30 / 2
+      // Min is tickHz/3 = 10, but cycle scaling can reduce further (min 4)
+      expect(composition.spawnIntervalTicks).toBeGreaterThanOrEqual(4);
     });
 
     it('uses tickHz for calculation', () => {
@@ -313,17 +324,17 @@ describe('getWaveComposition', () => {
       expect(count5).toBeGreaterThan(count1);
     });
 
-    it('baseEnemies follows formula: 5 + wave * 3, distributed by composition', () => {
+    it('baseEnemies follows formula: 10 + wave * 6, distributed by composition', () => {
       const wave1 = getWaveComposition(1, 30);
       const wave10 = getWaveComposition(10, 30);
 
       const count1 = wave1.enemies.reduce((sum, e) => sum + e.count, 0);
       const count10 = wave10.enemies.reduce((sum, e) => sum + e.count, 0);
 
-      // Base: 5 + wave * 3, but distributed with floor() can lose some
-      // Wave 1: base 8, distributed: floor(8*0.6) + floor(8*0.4) = 4+3 = 7
+      // Base: 10 + wave * 6, but distributed with floor() can lose some
+      // Wave 1: base 16, distributed: floor(16*0.6) + floor(16*0.4) = 9+6 = 15
       // Wave 10 is a boss wave with different composition
-      expect(count1).toBe(7);
+      expect(count1).toBe(15);
       expect(count10).toBeGreaterThan(count1);
     });
   });

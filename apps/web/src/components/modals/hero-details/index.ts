@@ -6,3 +6,5 @@ export { TierContent } from './TierContent.js';
 export { TierComparison } from './TierComparison.js';
 export { SkillCard } from './SkillCard.js';
 export { UpgradeSection } from './UpgradeSection.js';
+export { TierPreviewModal } from './TierPreviewModal.js';
+export { ArtifactPickerModal } from './ArtifactPickerModal.js';

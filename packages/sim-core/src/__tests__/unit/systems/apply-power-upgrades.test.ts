@@ -18,28 +18,45 @@ import type { PlayerPowerData, StatUpgrades } from '../../../data/power-upgrades
 // Helper to create base modifiers
 function createBaseModifiers(): ModifierSet {
   return {
-    damageMultiplier: 1.0,
-    splashRadius: 0,
-    splashDamage: 0,
+    // Additive bonuses
+    damageBonus: 0,
+    attackSpeedBonus: 0,
+    cooldownReduction: 0,
+    goldBonus: 0,
+    dustBonus: 0,
+    maxHpBonus: 0,
+    eliteDamageBonus: 0,
+
+    // Stackable secondary stats
+    splashRadiusBonus: 0,
+    splashDamagePercent: 0,
     pierceCount: 0,
     chainChance: 0,
     chainCount: 0,
-    chainDamage: 0,
+    chainDamagePercent: 0,
     executeThreshold: 0,
-    executeDamage: 1.0,
+    executeBonusDamage: 0,
     critChance: 0.05,
-    critDamage: 2.0,
-    goldMultiplier: 1.0,
-    dustMultiplier: 1.0,
-    maxHpMultiplier: 1.0,
+    critDamageBonus: 1.0,  // +100% = 200% crit
+
+    // Defense
     hpRegen: 0,
-    cooldownMultiplier: 1.0,
-    attackSpeedMultiplier: 1.0,
-    eliteDamageMultiplier: 1.0,
+    incomingDamageReduction: 0,
+
+    // Physics-based defense
+    massBonus: 0,
+    knockbackResistance: 0,
+    ccResistance: 0,
+
+    // Luck (meta-rewards)
+    dropRateBonus: 0,
+    relicQualityBonus: 0,
+    goldFindBonus: 0,
+
+    // Conditional
     waveDamageBonus: 0,
-    lowHpDamageMultiplier: 1.0,
+    lowHpDamageBonus: 0,
     lowHpThreshold: 0.3,
-    luckMultiplier: 1.0,
   };
 }
 
@@ -75,9 +92,9 @@ describe('applyFortressPowerUpgrades', () => {
 
     const result = applyFortressPowerUpgrades(base, upgrades);
 
-    expect(result.damageMultiplier).toBe(1.0);
-    expect(result.attackSpeedMultiplier).toBe(1.0);
-    expect(result.maxHpMultiplier).toBe(1.0);
+    expect(result.damageBonus).toBe(0);
+    expect(result.attackSpeedBonus).toBe(0);
+    expect(result.maxHpBonus).toBe(0);
   });
 
   it('applies HP upgrade', () => {
@@ -87,7 +104,7 @@ describe('applyFortressPowerUpgrades', () => {
 
     const result = applyFortressPowerUpgrades(base, upgrades);
 
-    expect(result.maxHpMultiplier).toBeGreaterThan(1.0);
+    expect(result.maxHpBonus).toBeGreaterThan(0);
   });
 
   it('applies damage upgrade', () => {
@@ -97,7 +114,7 @@ describe('applyFortressPowerUpgrades', () => {
 
     const result = applyFortressPowerUpgrades(base, upgrades);
 
-    expect(result.damageMultiplier).toBeGreaterThan(1.0);
+    expect(result.damageBonus).toBeGreaterThan(0);
   });
 
   it('applies armor upgrade', () => {
@@ -114,13 +131,13 @@ describe('applyFortressPowerUpgrades', () => {
 
   it('does not modify original modifiers', () => {
     const base = createBaseModifiers();
-    const originalDamage = base.damageMultiplier;
+    const originalDamage = base.damageBonus;
     const upgrades = createEmptyStats();
     upgrades.damage = 10;
 
     applyFortressPowerUpgrades(base, upgrades);
 
-    expect(base.damageMultiplier).toBe(originalDamage);
+    expect(base.damageBonus).toBe(originalDamage);
   });
 
   it('stacks multiple upgrades', () => {
@@ -132,8 +149,8 @@ describe('applyFortressPowerUpgrades', () => {
 
     const result = applyFortressPowerUpgrades(base, upgrades);
 
-    expect(result.maxHpMultiplier).toBeGreaterThan(1.0);
-    expect(result.damageMultiplier).toBeGreaterThan(1.0);
+    expect(result.maxHpBonus).toBeGreaterThan(0);
+    expect(result.damageBonus).toBeGreaterThan(0);
   });
 });
 
@@ -141,7 +158,7 @@ describe('getHeroPowerMultipliers', () => {
   it('returns base multipliers with no upgrades', () => {
     const powerData = createTestPowerData();
 
-    const result = getHeroPowerMultipliers(powerData, 'thunderlord');
+    const result = getHeroPowerMultipliers(powerData, 'storm');
 
     expect(result.hpMultiplier).toBe(1.0);
     expect(result.damageMultiplier).toBe(1.0);
@@ -153,10 +170,10 @@ describe('getHeroPowerMultipliers', () => {
     heroUpgrades.damage = 10;
 
     const powerData = createTestPowerData({
-      heroUpgrades: [{ heroId: 'thunderlord', statUpgrades: heroUpgrades }],
+      heroUpgrades: [{ heroId: 'storm', statUpgrades: heroUpgrades }],
     });
 
-    const result = getHeroPowerMultipliers(powerData, 'thunderlord');
+    const result = getHeroPowerMultipliers(powerData, 'storm');
 
     expect(result.hpMultiplier).toBeGreaterThan(1.0);
     expect(result.damageMultiplier).toBeGreaterThan(1.0);
@@ -167,7 +184,7 @@ describe('getHeroPowerMultipliers', () => {
       heroUpgrades: [{ heroId: 'other-hero', statUpgrades: createEmptyStats() }],
     });
 
-    const result = getHeroPowerMultipliers(powerData, 'thunderlord');
+    const result = getHeroPowerMultipliers(powerData, 'storm');
 
     expect(result.hpMultiplier).toBe(1.0);
     expect(result.damageMultiplier).toBe(1.0);
@@ -252,7 +269,7 @@ describe('applyAllPowerUpgrades', () => {
 
     const result = applyAllPowerUpgrades(base, powerData);
 
-    expect(result.damageMultiplier).toBeGreaterThan(1.0);
+    expect(result.damageBonus).toBeGreaterThan(0);
   });
 });
 
@@ -278,7 +295,7 @@ describe('hasAnyPowerUpgrades', () => {
     heroUpgrades.damage = 1;
 
     const powerData = createTestPowerData({
-      heroUpgrades: [{ heroId: 'thunderlord', statUpgrades: heroUpgrades }],
+      heroUpgrades: [{ heroId: 'storm', statUpgrades: heroUpgrades }],
     });
 
     expect(hasAnyPowerUpgrades(powerData)).toBe(true);

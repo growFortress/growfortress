@@ -1,0 +1,97 @@
+{
+  "settings": {
+    "title": "Ustawienia",
+    "ariaLabel": "Menu Ustawień",
+    "tabs": {
+      "audio": "Audio",
+      "graphics": "Grafika",
+      "account": "Konto",
+      "admin": "Admin"
+    },
+    "audio": {
+      "muteAll": "Wycisz wszystko",
+      "masterVolume": "Głośność główna",
+      "musicVolume": "Głośność muzyki",
+      "sfxVolume": "Głośność efektów"
+    },
+    "graphics": {
+      "particlesQuality": "Jakość cząsteczek",
+      "resolutionScale": "Skala rozdzielczości",
+      "damageNumbers": "Liczby obrażeń",
+      "qualityLow": "Niska",
+      "qualityMedium": "Średnia",
+      "qualityHigh": "Wysoka"
+    },
+    "account": {
+      "language": "Język",
+      "logout": "Wyloguj"
+    },
+    "admin": {
+      "broadcast": "System Broadcast",
+      "moderation": "Panel moderacji"
+    },
+    "legal": {
+      "terms": "Regulamin",
+      "privacy": "Prywatność",
+      "cookies": "Cookies"
+    }
+  },
+  "confirm": {
+    "defaultConfirm": "Potwierdź",
+    "defaultCancel": "Anuluj"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Witaj, Obrońco!",
+      "subtitle": "Twoja twierdza potrzebuje ochrony przed nadciągającymi hordami wrogów.",
+      "buildDefense": "Buduj obronę",
+      "recruitHeroes": "Rekrutuj bohaterów",
+      "collectRewards": "Zbieraj nagrody"
+    },
+    "starterKit": {
+      "title": "Twój Starter Kit",
+      "subtitle": "Otrzymujesz zestaw startowy, który pomoże Ci w pierwszych bitwach.",
+      "class": "Klasa",
+      "hero": "Bohater",
+      "turret": "Wieżyczka",
+      "hint": "Więcej klas, bohaterów i wieżyczek odblokujesz w miarę postępów!",
+      "className": "Twierdza Natury",
+      "classDesc": "Zbalansowana obrona i regeneracja",
+      "heroName": "Unit-0 \"Vanguard\"",
+      "heroDesc": "Wytrzymała jednostka z polem ochronnym",
+      "turretName": "Wieża Railgun",
+      "turretDesc": "Szybkie i precyzyjne strzały elektromagnetyczne"
+    },
+    "ready": {
+      "title": "Gotowy do walki!",
+      "subtitle": "Twoja twierdza jest gotowa. Czas odpierać ataki wrogów!",
+      "tipBomb": "Kliknij <strong>BOMB</strong> aby użyć umiejętności specjalnej",
+      "tipAuto": "Twój bohater i wieżyczki atakują automatycznie",
+      "tipRelic": "Po każdej fali wybierz relikt, który wzmocni obronę"
+    },
+    "preparing": "Przygotowywanie...",
+    "startAdventure": "Rozpocznij przygodę!",
+    "error": "Wystąpił błąd. Spróbuj ponownie.",
+    "next": "Dalej →",
+    "back": "← Wstecz"
+  },
+  "classSelection": {
+    "title": "Wybierz Klasę Twierdzy",
+    "subtitle": "Wybierz klasę elementalną dla swojej twierdzy. To określi twoje umiejętności i bonusy.",
+    "lockedAt": "Odblokujesz na poziomie {{level}}"
+  },
+  "heroRecruitment": {
+    "title": "Rekrutacja Bohaterów",
+    "recruit": "Rekrutuj",
+    "recruiting": "Rekrutacja...",
+    "unlock": "Odblokuj",
+    "levelRequired": "Poziom {{level}}",
+    "errors": {
+      "failed": "Nie udało się zrekrutować bohatera",
+      "connection": "Błąd połączenia z serwerem"
+    }
+  },
+  "choice": {
+    "title": "Wybierz Relikt"
+  }
+}

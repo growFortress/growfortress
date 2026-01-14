@@ -22,7 +22,6 @@ export {
 // AI targeting
 export {
   selectHeroTarget,
-  selectTurretTarget,
   selectFortressTarget,
   getHeroMovementDirection,
   type ArenaTarget,
@@ -36,3 +35,13 @@ export {
   type ArenaResult,
   type ArenaReplayEvent,
 } from './arena-simulation.js';
+
+// Guild Arena 5v5
+export {
+  runGuildArena,
+  type GuildBattleHero,
+  type GuildArenaResult,
+  type GuildArenaKeyMoment,
+  type GuildArenaKillLog,
+  type GuildArenaMvp,
+} from './guild-arena.js';

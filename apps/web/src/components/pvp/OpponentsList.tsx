@@ -8,6 +8,7 @@ import {
   addSentChallenge,
   formatPower,
   showErrorToast,
+  openHubPreview,
 } from '../../state/index.js';
 import { createChallenge, PvpApiError } from '../../api/pvp.js';
 import type { PvpOpponent } from '@arcade/protocol';
@@ -79,7 +80,14 @@ export function OpponentsList({ onRefresh }: OpponentsListProps) {
     <div class={styles.list}>
       {pvpOpponents.value.map((opponent) => (
         <div key={opponent.userId} class={styles.listItem}>
-          <div class={styles.listItemInfo}>
+          <div
+            class={styles.listItemInfo}
+            onClick={() => openHubPreview(opponent.userId)}
+            style={{ cursor: 'pointer' }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openHubPreview(opponent.userId); }}
+          >
             <div class={styles.listItemName}>{opponent.displayName}</div>
             <div class={styles.listItemMeta}>
               <span class={styles.listItemPower}>

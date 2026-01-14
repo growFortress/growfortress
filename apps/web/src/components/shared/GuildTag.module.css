@@ -1,0 +1,31 @@
+/* ==========================================
+   GUILD TAG COMPONENT STYLES
+   Clickable guild tag [TAG]
+   ========================================== */
+
+.guildTag {
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--color-primary);
+  user-select: none;
+}
+
+.guildTag.clickable {
+  cursor: pointer;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+}
+
+.guildTag.clickable:hover {
+  color: var(--color-primary-light);
+  text-shadow: 0 0 8px var(--color-primary-30);
+}
+
+.guildTag.clickable:focus {
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.guildTag.clickable:active {
+  transform: scale(0.98);
+}

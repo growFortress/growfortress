@@ -1,20 +1,16 @@
 import { Button } from '../../shared/Button.js';
 import cardStyles from './cards.module.css';
-
-// Upgrade costs
-const HERO_UPGRADE_COSTS = {
-  '1_to_2': { gold: 300, dust: 30 },
-  '2_to_3': { gold: 800, dust: 100 },
-} as const;
+import { HERO_UPGRADE_COSTS } from '@arcade/protocol';
 
 interface UpgradeSectionProps {
   currentTier: 1 | 2 | 3;
   playerGold: number;
   playerDust: number;
   onUpgrade: () => void;
+  onPreview?: () => void;
 }
 
-export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade }: UpgradeSectionProps) {
+export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade, onPreview }: UpgradeSectionProps) {
   const canUpgrade = currentTier < 3;
 
   if (!canUpgrade) {
@@ -44,13 +40,20 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade 
           </span>
         </div>
       </div>
-      <Button
-        variant="primary"
-        disabled={!canAfford}
-        onClick={onUpgrade}
-      >
-        ULEPSZ
-      </Button>
+      <div class={cardStyles.upgradeButtons}>
+        {onPreview && (
+          <Button variant="secondary" onClick={onPreview}>
+            PODGLĄD
+          </Button>
+        )}
+        <Button
+          variant="primary"
+          disabled={!canAfford}
+          onClick={onUpgrade}
+        >
+          ULEPSZ
+        </Button>
+      </div>
     </div>
   );
 }

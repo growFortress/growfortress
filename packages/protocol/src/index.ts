@@ -16,8 +16,11 @@ export {
   HeroIdSchema,
   TurretTypeSchema,
   DefaultLoadoutSchema,
+  UserRoleSchema,
   CompleteOnboardingRequestSchema,
   CompleteOnboardingResponseSchema,
+  ForgotPasswordRequestSchema,
+  ResetPasswordRequestSchema,
   type AuthRegisterRequest,
   type AuthRegisterResponse,
   type AuthLoginRequest,
@@ -31,8 +34,11 @@ export {
   type HeroIdType,
   type TurretTypeType,
   type DefaultLoadout,
+  type UserRole,
   type CompleteOnboardingRequest,
   type CompleteOnboardingResponse,
+  type ForgotPasswordRequest,
+  type ResetPasswordRequest,
 } from './auth.js';
 
 // Events
@@ -49,20 +55,6 @@ export {
   type Checkpoint,
 } from './events.js';
 
-// Runs
-export {
-  RunStartResponseSchema,
-  RunFinishRequestSchema,
-  RunRewardsSchema,
-  RunFinishResponseSchema,
-  RUN_REJECTION_REASONS,
-  type RunStartResponse,
-  type RunFinishRequest,
-  type RunRewards,
-  type RunFinishResponse,
-  type RunRejectionReason,
-} from './runs.js';
-
 // Leaderboard
 export {
   LeaderboardEntrySchema,
@@ -71,6 +63,39 @@ export {
   type LeaderboardEntry,
   type LeaderboardQuery,
   type LeaderboardResponse,
+  // Player leaderboards (extended system)
+  PlayerLeaderboardCategorySchema,
+  PlayerLeaderboardEntrySchema,
+  TimeUntilResetSchema,
+  PlayerLeaderboardResponseSchema,
+  UserRankInfoSchema,
+  UserRanksResponseSchema,
+  AvailableRewardSchema,
+  AvailableRewardsResponseSchema,
+  ClaimRewardRequestSchema,
+  ClaimRewardResponseSchema,
+  PlayerWeeksResponseSchema,
+  ExclusiveItemTypeSchema,
+  ExclusiveItemRaritySchema,
+  ExclusiveItemCategorySchema,
+  ExclusiveItemSchema,
+  ExclusiveItemsResponseSchema,
+  type PlayerLeaderboardCategory,
+  type PlayerLeaderboardEntry,
+  type TimeUntilReset,
+  type PlayerLeaderboardResponse,
+  type UserRankInfo,
+  type UserRanksResponse,
+  type AvailableReward,
+  type AvailableRewardsResponse,
+  type ClaimRewardRequest,
+  type ClaimRewardResponse,
+  type PlayerWeeksResponse,
+  type ExclusiveItemType,
+  type ExclusiveItemRarity,
+  type ExclusiveItemCategory,
+  type ExclusiveItem,
+  type ExclusiveItemsResponse,
 } from './leaderboard.js';
 
 // Telemetry
@@ -94,8 +119,10 @@ export {
   SessionStartResponseSchema,
   SegmentSubmitRequestSchema,
   SegmentSubmitResponseSchema,
+  SessionInventorySchema,
   PartialRewardsSchema,
   SessionEndResponseSchema,
+  ActiveSessionResponseSchema,
   type SessionStartRequest,
   type SessionEndRequest,
   type UpdateLoadoutRequest,
@@ -103,8 +130,10 @@ export {
   type SessionStartResponse,
   type SegmentSubmitRequest,
   type SegmentSubmitResponse,
+  type SessionInventory,
   type PartialRewards,
   type SessionEndResponse,
+  type ActiveSessionResponse,
 } from './sessions.js';
 
 // Upgrades
@@ -121,19 +150,58 @@ export {
   type UpgradeTurretResponse,
 } from './upgrades.js';
 
+// Slots (hero/turret slot purchase)
+export {
+  MAX_HERO_SLOTS,
+  MAX_TURRET_SLOTS,
+  SlotUnlockInfoSchema,
+  NextSlotInfoSchema,
+  PurchaseHeroSlotRequestSchema,
+  PurchaseHeroSlotResponseSchema,
+  PurchaseTurretSlotRequestSchema,
+  PurchaseTurretSlotResponseSchema,
+  SlotStatusSchema,
+  type SlotUnlockInfo,
+  type NextSlotInfo,
+  type PurchaseHeroSlotRequest,
+  type PurchaseHeroSlotResponse,
+  type PurchaseTurretSlotRequest,
+  type PurchaseTurretSlotResponse,
+  type SlotStatus,
+} from './slots.js';
+
 // Artifacts
 export {
+  // Core schemas
+  ArtifactSlotTypeSchema,
+  ArtifactRaritySchema,
   PlayerArtifactSchema,
   PlayerItemSchema,
   ArtifactsResponseSchema,
+  // Craft
   CraftArtifactRequestSchema,
   CraftArtifactResponseSchema,
+  // Equip/Unequip
   EquipArtifactRequestSchema,
   EquipArtifactResponseSchema,
   UnequipArtifactRequestSchema,
   UnequipArtifactResponseSchema,
+  // Items
   UseItemRequestSchema,
   UseItemResponseSchema,
+  // Crafting 2.0 - Upgrade/Fuse/Dismantle
+  UpgradeArtifactRequestSchema,
+  UpgradeCostSchema,
+  UpgradeArtifactResponseSchema,
+  FuseArtifactsRequestSchema,
+  FuseArtifactsResponseSchema,
+  DismantleArtifactRequestSchema,
+  DismantleArtifactResponseSchema,
+  GetUpgradeCostRequestSchema,
+  GetUpgradeCostResponseSchema,
+  // Types
+  type ArtifactSlotType,
+  type ArtifactRarity,
   type PlayerArtifact,
   type PlayerItem,
   type ArtifactsResponse,
@@ -145,6 +213,15 @@ export {
   type UnequipArtifactResponse,
   type UseItemRequest,
   type UseItemResponse,
+  type UpgradeArtifactRequest,
+  type UpgradeCost,
+  type UpgradeArtifactResponse,
+  type FuseArtifactsRequest,
+  type FuseArtifactsResponse,
+  type DismantleArtifactRequest,
+  type DismantleArtifactResponse,
+  type GetUpgradeCostRequest,
+  type GetUpgradeCostResponse,
 } from './artifacts.js';
 
 // Heroes (unlock/recruit)
@@ -203,13 +280,22 @@ export {
   FortressUpgradableStatSchema,
   HeroUpgradableStatSchema,
   TurretUpgradableStatSchema,
+  // Prestige schemas
+  FortressPrestigeSchema,
+  TurretPrestigeSchema,
+  MAX_PRESTIGE_LEVEL,
+  PRESTIGE_BONUS_PER_LEVEL,
+  PRESTIGE_COSTS,
   // Request schemas
   UpgradeFortressStatRequestSchema,
   UpgradeHeroStatRequestSchema,
   UpgradeTurretStatRequestSchema,
   UpgradeItemTierRequestSchema,
+  PrestigeFortressStatRequestSchema,
+  PrestigeTurretStatRequestSchema,
   // Response schemas
   PowerUpgradeResponseSchema,
+  PrestigeUpgradeResponseSchema,
   PowerBreakdownSchema,
   EntityPowerSchema,
   PowerSummaryResponseSchema,
@@ -221,11 +307,16 @@ export {
   type FortressUpgradableStat,
   type HeroUpgradableStat as PowerHeroUpgradableStat,
   type TurretUpgradableStat as PowerTurretUpgradableStat,
+  type FortressPrestige,
+  type TurretPrestige,
   type UpgradeFortressStatRequest,
   type UpgradeHeroStatRequest,
   type UpgradeTurretStatRequest,
   type UpgradeItemTierRequest,
+  type PrestigeFortressStatRequest,
+  type PrestigeTurretStatRequest,
   type PowerUpgradeResponse,
+  type PrestigeUpgradeResponse,
   type PowerBreakdown,
   type EntityPower,
   type PowerSummaryResponse,
@@ -273,3 +364,686 @@ export {
   type PvpUserStats,
   type PvpErrorCode,
 } from './pvp.js';
+
+// Guild System
+export {
+  // Enums
+  GuildRoleSchema,
+  GuildInvitationStatusSchema,
+  GuildBattleStatusSchema,
+  TreasuryTransactionTypeSchema,
+  ArenaWinnerSideSchema,
+  ArenaWinReasonSchema,
+  // Guild schemas
+  GuildSettingsSchema,
+  GuildMemberSchema,
+  GuildTechLevelsSchema,
+  GuildSchema,
+  GuildWithMembersSchema,
+  // Management
+  CreateGuildRequestSchema,
+  CreateGuildResponseSchema,
+  UpdateGuildRequestSchema,
+  GuildSearchQuerySchema,
+  GuildSearchResponseSchema,
+  // Membership
+  MyGuildResponseSchema,
+  UpdateMemberRoleRequestSchema,
+  TransferLeadershipRequestSchema,
+  // Battle Hero
+  BattleHeroSchema,
+  BattleHeroSnapshotSchema,
+  SetBattleHeroRequestSchema,
+  BattleRosterMemberSchema,
+  BattleRosterResponseSchema,
+  // Invitations
+  GuildInvitationSchema,
+  CreateInvitationRequestSchema,
+  InvitationsQuerySchema,
+  InvitationsResponseSchema,
+  // Treasury
+  GuildTreasurySchema,
+  TreasuryLogEntrySchema,
+  TreasuryResponseSchema,
+  TreasuryDepositRequestSchema,
+  TreasuryWithdrawRequestSchema,
+  TreasuryLogsQuerySchema,
+  TreasuryLogsResponseSchema,
+  // Arena Battles
+  ArenaKeyMomentSchema,
+  ArenaKillLogEntrySchema,
+  ArenaMvpSchema,
+  GuildBattleSchema,
+  GuildBattleResultSchema,
+  GuildBattleWithResultSchema,
+  InstantAttackRequestSchema,
+  InstantAttackResponseSchema,
+  BattlesQuerySchema,
+  BattlesResponseSchema,
+  // Shield
+  GuildShieldSchema,
+  ActivateShieldRequestSchema,
+  ShieldStatusResponseSchema,
+  // Leaderboard
+  GuildLeaderboardEntrySchema,
+  GuildLeaderboardQuerySchema,
+  GuildLeaderboardResponseSchema,
+  GuildRankResponseSchema,
+  MemberContributionSchema,
+  ContributionsResponseSchema,
+  // Progression
+  GuildLevelInfoSchema,
+  GuildTrophySchema,
+  // Tower Race
+  TowerRaceContributionSchema,
+  TowerRaceEntrySchema,
+  TowerRaceSchema,
+  TowerRaceLeaderboardResponseSchema,
+  TowerRaceGuildDetailsResponseSchema,
+  // Guild Boss
+  GuildBossSchema,
+  GuildBossAttemptSchema,
+  GuildBossStatusResponseSchema,
+  GuildBossLeaderboardEntrySchema,
+  GuildBossLeaderboardResponseSchema,
+  GuildBossAttackResponseSchema,
+  // Guild Tech
+  GuildTechTreeTypeSchema,
+  GuildTechStatTypeSchema,
+  UpgradeTechRequestSchema,
+  GuildTechBonusesSchema,
+  GuildTechResponseSchema,
+  TechUpgradeCostSchema,
+  // Constants
+  GUILD_CONSTANTS,
+  GUILD_LEVEL_TABLE,
+  GUILD_TROPHIES,
+  GUILD_ERROR_CODES,
+  // Types
+  type GuildRole,
+  type GuildInvitationStatus,
+  type GuildBattleStatus,
+  type TreasuryTransactionType,
+  type ArenaWinnerSide,
+  type ArenaWinReason,
+  type GuildSettings,
+  type GuildMember,
+  type GuildTechLevels,
+  type Guild,
+  type GuildWithMembers,
+  type CreateGuildRequest,
+  type CreateGuildResponse,
+  type UpdateGuildRequest,
+  type GuildSearchQuery,
+  type GuildSearchResponse,
+  type MyGuildResponse,
+  type UpdateMemberRoleRequest,
+  type TransferLeadershipRequest,
+  type BattleHero,
+  type BattleHeroSnapshot,
+  type SetBattleHeroRequest,
+  type BattleRosterMember,
+  type BattleRosterResponse,
+  type GuildInvitation,
+  type CreateInvitationRequest,
+  type InvitationsQuery,
+  type InvitationsResponse,
+  type GuildTreasury,
+  type TreasuryLogEntry,
+  type TreasuryResponse,
+  type TreasuryDepositRequest,
+  type TreasuryWithdrawRequest,
+  type TreasuryLogsQuery,
+  type TreasuryLogsResponse,
+  type ArenaKeyMoment,
+  type ArenaKillLogEntry,
+  type ArenaMvp,
+  type GuildBattle,
+  type GuildBattleResult,
+  type GuildBattleWithResult,
+  type InstantAttackRequest,
+  type InstantAttackResponse,
+  type BattlesQuery,
+  type BattlesResponse,
+  type GuildShield,
+  type ActivateShieldRequest,
+  type ShieldStatusResponse,
+  type GuildLeaderboardEntry,
+  type GuildLeaderboardQuery,
+  type GuildLeaderboardResponse,
+  type GuildRankResponse,
+  type MemberContribution,
+  type ContributionsResponse,
+  type GuildLevelInfo,
+  type GuildTrophy,
+  type TowerRaceContribution,
+  type TowerRaceEntry,
+  type TowerRace,
+  type TowerRaceLeaderboardResponse,
+  type TowerRaceGuildDetailsResponse,
+  type GuildBoss,
+  type GuildBossAttempt,
+  type GuildBossStatusResponse,
+  type GuildBossLeaderboardEntry,
+  type GuildBossLeaderboardResponse,
+  type GuildBossAttackResponse,
+  type GuildTechTreeType,
+  type GuildTechStatType,
+  type UpgradeTechRequest,
+  type GuildTechBonuses,
+  type GuildTechResponse,
+  type TechUpgradeCost,
+  type GuildErrorCode,
+} from './guild.js';
+
+// Messaging System
+export {
+  // Enums
+  MessageTypeSchema,
+  ReportReasonSchema,
+  ReportStatusSchema,
+  MuteReasonSchema,
+  // Core schemas
+  ParticipantSchema,
+  MessageSchema,
+  ThreadSummarySchema,
+  ThreadDetailSchema,
+  UnreadCountsSchema,
+  // Request schemas
+  ThreadsQuerySchema,
+  ComposeThreadRequestSchema,
+  ReplyThreadRequestSchema,
+  AddParticipantRequestSchema,
+  SearchUsersQuerySchema,
+  // Response schemas
+  UserSearchResultSchema,
+  ThreadsResponseSchema,
+  SearchUsersResponseSchema,
+  // Moderation - Reports
+  ReportRequestSchema,
+  MessageReportSchema,
+  ReportsQuerySchema,
+  ReportsResponseSchema,
+  ReviewReportRequestSchema,
+  // Moderation - Blocking
+  BlockedUserSchema,
+  BlockedUsersResponseSchema,
+  // Moderation - Mutes
+  MuteUserRequestSchema,
+  UserMuteSchema,
+  UserSanctionsResponseSchema,
+  // Admin - Broadcast
+  BroadcastRequestSchema,
+  BroadcastHistoryItemSchema,
+  BroadcastHistoryResponseSchema,
+  // Types
+  type MessageType,
+  type ReportReason,
+  type ReportStatus,
+  type MuteReason,
+  type Participant,
+  type Message,
+  type ThreadSummary,
+  type ThreadDetail,
+  type UnreadCounts,
+  type ThreadsQuery,
+  type ComposeThreadRequest,
+  type ReplyThreadRequest,
+  type AddParticipantRequest,
+  type SearchUsersQuery,
+  type UserSearchResult,
+  type ThreadsResponse,
+  type SearchUsersResponse,
+  type ReportRequest,
+  type MessageReport,
+  type ReportsQuery,
+  type ReportsResponse,
+  type ReviewReportRequest,
+  type BlockedUser,
+  type BlockedUsersResponse,
+  type MuteUserRequest,
+  type UserMute,
+  type UserSanctionsResponse,
+  type BroadcastRequest,
+  type BroadcastHistoryItem,
+  type BroadcastHistoryResponse,
+} from './messages.js';
+
+// Idle Rewards
+export {
+  PendingIdleRewardsResponseSchema,
+  ClaimedRewardsSchema,
+  NewInventorySchema,
+  ClaimIdleRewardsResponseSchema,
+  IdleRewardsConfigResponseSchema,
+  type PendingIdleRewardsResponse,
+  type ClaimIdleRewardsResponse,
+  type IdleRewardsConfigResponse,
+} from './idle.js';
+
+// Materials
+export {
+  MaterialsResponseSchema,
+  AddMaterialsRequestSchema,
+  AddMaterialsResponseSchema,
+  RemoveMaterialsRequestSchema,
+  RemoveMaterialsResponseSchema,
+  type MaterialsResponse,
+  type AddMaterialsRequest,
+  type AddMaterialsResponse,
+  type RemoveMaterialsRequest,
+  type RemoveMaterialsResponse,
+} from './materials.js';
+
+// Bulk Rewards
+export {
+  BulkRewardSchema,
+  BulkRewardsResponseSchema,
+  ClaimBulkRewardResponseSchema,
+  type BulkReward,
+  type BulkRewardsResponse,
+  type ClaimBulkRewardResponse,
+} from './rewards.js';
+
+// IAP (In-App Purchases)
+export {
+  DUST_PACKAGES,
+  DustPackageSchema,
+  PlatformSchema,
+  GetPackagesResponseSchema,
+  GrantDustRequestSchema,
+  GrantDustResponseSchema,
+  IAPTransactionSchema,
+  GetTransactionsResponseSchema,
+  type DustPackage,
+  type Platform,
+  type GetPackagesResponse,
+  type GrantDustRequest,
+  type GrantDustResponse,
+  type IAPTransaction,
+  type GetTransactionsResponse,
+} from './iap.js';
+
+// WebSocket
+export {
+  // Server -> Client events
+  MessageNewEventSchema,
+  MessageReadEventSchema,
+  ThreadNewEventSchema,
+  ThreadParticipantAddedEventSchema,
+  ThreadParticipantLeftEventSchema,
+  GuildInvitationEventSchema,
+  GuildInvitationStatusEventSchema,
+  GuildKickedEventSchema,
+  UnreadUpdateEventSchema,
+  MutedEventSchema,
+  UnmutedEventSchema,
+  WarningEventSchema,
+  PongEventSchema,
+  ErrorEventSchema,
+  ConnectedEventSchema,
+  ServerEventSchema,
+  // Client -> Server events
+  PingEventSchema,
+  SubscribeEventSchema,
+  UnsubscribeEventSchema,
+  ClientEventSchema,
+  // Connection
+  WebSocketConnectQuerySchema,
+  // Types
+  type MessageNewEvent,
+  type MessageReadEvent,
+  type ThreadNewEvent,
+  type ThreadParticipantAddedEvent,
+  type ThreadParticipantLeftEvent,
+  type GuildInvitationEvent,
+  type GuildInvitationStatusEvent,
+  type GuildKickedEvent,
+  type UnreadUpdateEvent,
+  type MutedEvent,
+  type UnmutedEvent,
+  type WarningEvent,
+  type PongEvent,
+  type ErrorEvent,
+  type ConnectedEvent,
+  type ServerEvent,
+  type PingEvent,
+  type SubscribeEvent,
+  type UnsubscribeEvent,
+  type ClientEvent,
+  type WebSocketConnectQuery,
+} from './websocket.js';
+
+// Pillar Challenge (Deterministic Crystal Acquisition)
+export {
+  // Enums
+  PillarIdSchema,
+  PillarChallengeTierSchema,
+  CrystalTypeSchema,
+  // Loadout
+  ChallengeHeroConfigSchema,
+  ChallengeTurretConfigSchema,
+  ChallengeLoadoutSchema,
+  // Progress
+  PillarChallengeProgressSchema,
+  CrystalProgressSchema,
+  ChallengeLimitsSchema,
+  // Start Challenge
+  StartPillarChallengeRequestSchema,
+  StartPillarChallengeResponseSchema,
+  // Submit Challenge
+  ClientCheckpointSchema,
+  SubmitPillarChallengeRequestSchema,
+  AchievedBonusSchema,
+  SubmitPillarChallengeResponseSchema,
+  // Status
+  PillarChallengeStatusResponseSchema,
+  // Abandon
+  AbandonPillarChallengeRequestSchema,
+  AbandonPillarChallengeResponseSchema,
+  // Preview
+  PreviewChallengeRewardsRequestSchema,
+  PreviewChallengeRewardsResponseSchema,
+  // Leaderboard
+  ChallengeLeaderboardEntrySchema,
+  GetChallengeLeaderboardRequestSchema,
+  GetChallengeLeaderboardResponseSchema,
+  // Crystal Craft
+  CraftCrystalRequestSchema,
+  CraftCrystalResponseSchema,
+  // Matrix
+  AssembleMatrixResponseSchema,
+  // Types
+  type PillarId,
+  type PillarChallengeTier,
+  type CrystalType,
+  type ChallengeHeroConfig,
+  type ChallengeTurretConfig,
+  type ChallengeLoadout,
+  type PillarChallengeProgress,
+  type CrystalProgress,
+  type ChallengeLimits,
+  type StartPillarChallengeRequest,
+  type StartPillarChallengeResponse,
+  type ClientCheckpoint,
+  type SubmitPillarChallengeRequest,
+  type AchievedBonus,
+  type SubmitPillarChallengeResponse,
+  type PillarChallengeStatusResponse,
+  type AbandonPillarChallengeRequest,
+  type AbandonPillarChallengeResponse,
+  type PreviewChallengeRewardsRequest,
+  type PreviewChallengeRewardsResponse,
+  type ChallengeLeaderboardEntry,
+  type GetChallengeLeaderboardRequest,
+  type GetChallengeLeaderboardResponse,
+  type CraftCrystalRequest,
+  type CraftCrystalResponse,
+  type AssembleMatrixResponse,
+} from './pillar-challenge.js';
+
+// Daily Quests
+export {
+  // Enums
+  DailyQuestIdSchema,
+  QuestBonusTypeSchema,
+  // Definitions
+  DailyQuestDefinitionSchema,
+  DailyQuestProgressSchema,
+  // API schemas
+  DailyQuestsResponseSchema,
+  ClaimQuestRewardRequestSchema,
+  ClaimQuestRewardResponseSchema,
+  ClaimAllQuestsResponseSchema,
+  // Static data
+  DAILY_QUEST_DEFINITIONS,
+  TOTAL_DAILY_DUST,
+  DAILY_QUEST_ERROR_CODES,
+  // Types
+  type DailyQuestId,
+  type QuestBonusType,
+  type DailyQuestDefinition,
+  type DailyQuestProgress,
+  type DailyQuestsResponse,
+  type ClaimQuestRewardRequest,
+  type ClaimQuestRewardResponse,
+  type ClaimAllQuestsResponse,
+  type DailyQuestErrorCode,
+} from './daily-quests.js';
+
+// Mastery System (Class Skill Trees)
+export {
+  // Node schemas
+  MasteryNodeIdSchema,
+  MasteryNodeTypeSchema,
+  MasteryTierSchema,
+  // Progress schemas
+  ClassMasteryProgressSchema,
+  PlayerMasteryProgressSchema,
+  // API schemas
+  GetMasteryProgressResponseSchema,
+  UnlockMasteryNodeRequestSchema,
+  UnlockMasteryNodeResponseSchema,
+  RespecMasteryTreeRequestSchema,
+  RespecMasteryTreeResponseSchema,
+  // Tree definition schemas
+  MasterySynergyAmplifierSchema,
+  MasteryClassPerkSchema,
+  MasteryNodeEffectSchema,
+  MasteryNodeDefinitionSchema,
+  MasteryTreeDefinitionSchema,
+  GetMasteryTreesResponseSchema,
+  // Point award schemas
+  MasteryPointConditionSchema,
+  AwardMasteryPointsRequestSchema,
+  AwardMasteryPointsResponseSchema,
+  // Progress summary schemas
+  ClassProgressSummarySchema,
+  GetClassProgressSummariesResponseSchema,
+  // Types
+  type MasteryNodeIdType,
+  type MasteryNodeTypeType,
+  type MasteryTierType,
+  type ClassMasteryProgress,
+  type PlayerMasteryProgress,
+  type GetMasteryProgressResponse,
+  type UnlockMasteryNodeRequest,
+  type UnlockMasteryNodeResponse,
+  type RespecMasteryTreeRequest,
+  type RespecMasteryTreeResponse,
+  type MasterySynergyAmplifier,
+  type MasteryClassPerk,
+  type MasteryNodeEffect,
+  type MasteryNodeDefinition,
+  type MasteryTreeDefinition,
+  type GetMasteryTreesResponse,
+  type MasteryPointConditionType,
+  type AwardMasteryPointsRequest,
+  type AwardMasteryPointsResponse,
+  type ClassProgressSummary,
+  type GetClassProgressSummariesResponse,
+} from './mastery.js';
+
+// Hub Preview (View other players' hubs)
+export {
+  HubPreviewArtifactSchema,
+  HubPreviewHeroSchema,
+  HubPreviewTurretSchema,
+  HubPreviewResponseSchema,
+  HubPreviewRequestSchema,
+  type HubPreviewArtifact,
+  type HubPreviewHero,
+  type HubPreviewTurret,
+  type HubPreviewResponse,
+  type HubPreviewRequest,
+} from './hub-preview.js';
+
+// Guild Preview (View other guilds' public info)
+export {
+  GuildPreviewMemberSchema,
+  GuildPreviewBonusesSchema,
+  GuildPreviewResponseSchema,
+  type GuildPreviewMember,
+  type GuildPreviewBonuses,
+  type GuildPreviewResponse,
+} from './guild-preview.js';
+
+// Shop (Microtransactions)
+export {
+  // Enums & Types
+  ProductTypeSchema,
+  PurchaseStatusSchema,
+  BoosterTypeSchema,
+  ConvenienceItemTypeSchema,
+  ShopCategorySchema,
+  // Product definitions
+  ShopProductSchema,
+  DustPackagePLNSchema,
+  DUST_PACKAGES_PLN,
+  STARTER_PACK,
+  STARTER_PACK_PRICE_PLN,
+  STARTER_PACK_PRICE_GROSZE,
+  BOOSTER_DEFINITIONS,
+  CONVENIENCE_ITEMS,
+  // Checkout flow
+  CreateCheckoutRequestSchema,
+  CreateCheckoutResponseSchema,
+  // Purchases
+  PurchaseSchema,
+  GetPurchasesQuerySchema,
+  GetPurchasesResponseSchema,
+  // Shop overview
+  GetShopResponseSchema,
+  // Buy with dust
+  BuyWithDustRequestSchema,
+  BuyWithDustResponseSchema,
+  // Active boosters
+  ActiveBoosterSchema,
+  GetActiveBoostersResponseSchema,
+  // Error codes
+  SHOP_ERROR_CODES,
+  // Premium heroes
+  PREMIUM_HEROES,
+  // Types
+  type ProductType,
+  type PurchaseStatus,
+  type ShopProduct,
+  type DustPackagePLN,
+  type BoosterType,
+  type BoosterDefinition,
+  type ConvenienceItemType,
+  type ConvenienceItem,
+  type CreateCheckoutRequest,
+  type CreateCheckoutResponse,
+  type Purchase,
+  type GetPurchasesQuery,
+  type GetPurchasesResponse,
+  type ShopCategory,
+  type GetShopResponse,
+  type BuyWithDustRequest,
+  type BuyWithDustResponse,
+  type ActiveBooster,
+  type GetActiveBoostersResponse,
+  type ShopErrorCode,
+  type PremiumHeroProduct,
+} from './shop.js';
+
+// Gacha System
+export {
+  // Enums
+  GachaTypeSchema,
+  GachaRaritySchema,
+  ArtifactChestTypeSchema,
+  // Configuration
+  HERO_GACHA_CONFIG,
+  ARTIFACT_CHEST_CONFIGS,
+  // Hero Gacha
+  HeroGachaPullRequestSchema,
+  HeroGachaPullResultSchema,
+  HeroGachaPullResponseSchema,
+  // Artifact Gacha
+  ArtifactGachaPullRequestSchema,
+  ArtifactGachaPullResultSchema,
+  ArtifactGachaPullResponseSchema,
+  // Spark system
+  SparkRedeemRequestSchema,
+  SparkRedeemResponseSchema,
+  // Shard system
+  UseHeroShardsRequestSchema,
+  UseHeroShardsResponseSchema,
+  // Status & History
+  GachaStatusResponseSchema,
+  GachaPullRecordSchema,
+  GetGachaHistoryQuerySchema,
+  GetGachaHistoryResponseSchema,
+  // Banners
+  GachaBannerSchema,
+  GetActiveBannersResponseSchema,
+  // Error codes
+  GACHA_ERROR_CODES,
+  // Types
+  type GachaType,
+  type GachaRarity,
+  type ArtifactChestType,
+  type ArtifactChestConfig,
+  type HeroGachaPullRequest,
+  type HeroGachaPullResult,
+  type HeroGachaPullResponse,
+  type ArtifactGachaPullRequest,
+  type ArtifactGachaPullResult,
+  type ArtifactGachaPullResponse,
+  type SparkRedeemRequest,
+  type SparkRedeemResponse,
+  type UseHeroShardsRequest,
+  type UseHeroShardsResponse,
+  type GachaStatusResponse,
+  type GachaPullRecord,
+  type GetGachaHistoryQuery,
+  type GetGachaHistoryResponse,
+  type GachaBanner,
+  type GetActiveBannersResponse,
+  type GachaErrorCode,
+} from './gacha.js';
+
+// Battle Pass
+export {
+  // Configuration
+  BATTLE_PASS_CONFIG,
+  BATTLE_PASS_FREE_TRACK,
+  BATTLE_PASS_PREMIUM_TRACK,
+  BATTLE_PASS_PREMIUM_DUST_VALUE,
+  BP_POINT_VALUES,
+  // Enums
+  BattlePassRewardTypeSchema,
+  BattlePassPointSourceSchema,
+  // Schemas
+  BattlePassRewardSchema,
+  BattlePassSeasonSchema,
+  BattlePassProgressSchema,
+  // API schemas
+  GetBattlePassResponseSchema,
+  PurchaseBattlePassRequestSchema,
+  PurchaseBattlePassResponseSchema,
+  ClaimBattlePassRewardRequestSchema,
+  ClaimBattlePassRewardResponseSchema,
+  ClaimAllBattlePassRewardsResponseSchema,
+  BuyBattlePassTiersRequestSchema,
+  BuyBattlePassTiersResponseSchema,
+  // Error codes
+  BATTLE_PASS_ERROR_CODES,
+  // Types
+  type BattlePassRewardType,
+  type BattlePassReward,
+  type BattlePassSeason,
+  type BattlePassProgress,
+  type GetBattlePassResponse,
+  type PurchaseBattlePassRequest,
+  type PurchaseBattlePassResponse,
+  type ClaimBattlePassRewardRequest,
+  type ClaimBattlePassRewardResponse,
+  type ClaimAllBattlePassRewardsResponse,
+  type BuyBattlePassTiersRequest,
+  type BuyBattlePassTiersResponse,
+  type BattlePassPointSource,
+  type BattlePassErrorCode,
+} from './battlepass.js';

@@ -7,7 +7,7 @@ export type DamageSourceType = 'hero' | 'turret' | 'projectile' | 'fortress' | '
 
 export interface DamageReport {
   sourceType: DamageSourceType;
-  sourceId: string; // e.g., 'thunderlord', 'arrow_tower', 'fire_dot'
+  sourceId: string; // e.g., 'storm', 'arrow_tower', 'fire_dot'
   targetId: string; // enemy id
   amount: number;
   tick: number;
@@ -117,6 +117,7 @@ export class AnalyticsSystem {
   public updateTick(): void {
     if (this.currentWaveStats) {
       this.currentWaveStats.durationTicks++;
+      this.notifyListeners();
     }
   }
 
@@ -149,7 +150,7 @@ export class AnalyticsSystem {
   /**
    * Track damage dealt to enemies
    * @param sourceType - General source category
-   * @param sourceId - Specific ID (e.g. 'thunderlord')
+   * @param sourceId - Specific ID (e.g. 'storm')
    * @param amount - Damage amount
    */
   public trackDamage(sourceType: DamageSourceType, sourceId: string, amount: number): void {
@@ -191,6 +192,23 @@ export class AnalyticsSystem {
     } else {
       if (resource === 'gold') this.currentWaveStats.economy.goldSpent += amount;
       if (resource === 'dust') this.currentWaveStats.economy.dustSpent += amount;
+    }
+  }
+
+  // --- Event Handling ---
+  
+  private listeners: (() => void)[] = [];
+
+  public onUpdate(listener: () => void): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    for (const listener of this.listeners) {
+      listener();
     }
   }
 

@@ -15,6 +15,13 @@ import type {
   FortressUpgradableStat,
   PowerHeroUpgradableStat,
   PowerTurretUpgradableStat,
+  PrestigeUpgradeResponse,
+  FortressPrestige,
+  TurretPrestige,
+} from '@arcade/protocol';
+import {
+  MAX_PRESTIGE_LEVEL,
+  PRESTIGE_COSTS,
 } from '@arcade/protocol';
 import {
   type PlayerPowerData,
@@ -41,12 +48,23 @@ import {
 // ============================================================================
 
 /**
+ * Default fortress prestige data
+ */
+const DEFAULT_FORTRESS_PRESTIGE: FortressPrestige = {
+  hp: 0,
+  damage: 0,
+  armor: 0,
+};
+
+/**
  * Get or create power upgrades for user
  */
 async function getOrCreatePowerUpgrades(userId: string): Promise<{
   id: string;
   powerData: PlayerPowerData;
   cachedTotalPower: number;
+  fortressPrestige: FortressPrestige;
+  turretPrestige: TurretPrestige[];
 }> {
   let powerUpgrades = await prisma.powerUpgrades.findUnique({
     where: { userId },
@@ -62,9 +80,15 @@ async function getOrCreatePowerUpgrades(userId: string): Promise<{
         turretUpgrades: JSON.stringify(defaultData.turretUpgrades),
         itemTiers: JSON.stringify(defaultData.itemTiers),
         cachedTotalPower: 0,
+        fortressPrestige: DEFAULT_FORTRESS_PRESTIGE,
+        turretPrestige: [],
       },
     });
   }
+
+  // Parse prestige data from JSON
+  const fortressPrestige = (powerUpgrades.fortressPrestige as FortressPrestige | null) || DEFAULT_FORTRESS_PRESTIGE;
+  const turretPrestige = (powerUpgrades.turretPrestige as TurretPrestige[] | null) || [];
 
   return {
     id: powerUpgrades.id,
@@ -75,6 +99,8 @@ async function getOrCreatePowerUpgrades(userId: string): Promise<{
       itemTiers: JSON.parse(powerUpgrades.itemTiers as string),
     },
     cachedTotalPower: powerUpgrades.cachedTotalPower,
+    fortressPrestige,
+    turretPrestige,
   };
 }
 
@@ -592,4 +618,327 @@ export async function getPowerSummary(userId: string): Promise<PowerSummaryRespo
 export async function getCachedTotalPower(userId: string): Promise<number> {
   const { cachedTotalPower } = await getOrCreatePowerUpgrades(userId);
   return cachedTotalPower;
+}
+
+// ============================================================================
+// PRESTIGE FORTRESS STAT
+// ============================================================================
+
+/**
+ * Calculate prestige cost (gold + dust)
+ */
+function calculatePrestigeCost(currentPrestigeLevel: number): { gold: number; dust: number } {
+  const scalingFactor = Math.pow(PRESTIGE_COSTS.scalingMultiplier, currentPrestigeLevel);
+  return {
+    gold: Math.floor(PRESTIGE_COSTS.baseGold * scalingFactor),
+    dust: Math.floor(PRESTIGE_COSTS.baseDust * scalingFactor),
+  };
+}
+
+/**
+ * Prestige a fortress stat
+ * - Requires stat to be at max level (20)
+ * - Costs gold + dust
+ * - Resets stat level to 0
+ * - Grants permanent +5% bonus to that stat
+ */
+export async function prestigeFortressStat(
+  userId: string,
+  stat: FortressUpgradableStat
+): Promise<PrestigeUpgradeResponse> {
+  // Get power upgrades and inventory
+  const [{ powerData, fortressPrestige }, inventory] = await Promise.all([
+    getOrCreatePowerUpgrades(userId),
+    prisma.inventory.findUnique({ where: { userId } }),
+  ]);
+
+  if (!inventory) {
+    return {
+      success: false,
+      newPrestigeLevel: 0,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: 0,
+      newDust: 0,
+      statReset: false,
+      error: 'Inventory not found',
+    };
+  }
+
+  // Get current stat level
+  const currentStatLevel = powerData.fortressUpgrades.statUpgrades[stat] || 0;
+  const maxLevel = 20; // Max stat level
+
+  // Check if at max level
+  if (currentStatLevel < maxLevel) {
+    return {
+      success: false,
+      newPrestigeLevel: fortressPrestige[stat] || 0,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Stat must be at max level (${maxLevel}) to prestige`,
+    };
+  }
+
+  // Get current prestige level
+  const currentPrestigeLevel = fortressPrestige[stat] || 0;
+
+  // Check max prestige
+  if (currentPrestigeLevel >= MAX_PRESTIGE_LEVEL) {
+    return {
+      success: false,
+      newPrestigeLevel: currentPrestigeLevel,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Max prestige level (${MAX_PRESTIGE_LEVEL}) reached`,
+    };
+  }
+
+  // Calculate cost
+  const { gold: goldCost, dust: dustCost } = calculatePrestigeCost(currentPrestigeLevel);
+
+  // Check resources
+  if (inventory.gold < goldCost) {
+    return {
+      success: false,
+      newPrestigeLevel: currentPrestigeLevel,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Not enough gold (need ${goldCost})`,
+    };
+  }
+
+  if (inventory.dust < dustCost) {
+    return {
+      success: false,
+      newPrestigeLevel: currentPrestigeLevel,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Not enough dust (need ${dustCost})`,
+    };
+  }
+
+  // Apply prestige
+  const newPrestigeLevel = currentPrestigeLevel + 1;
+  const updatedPrestige: FortressPrestige = {
+    ...fortressPrestige,
+    [stat]: newPrestigeLevel,
+  };
+
+  // Reset stat level to 0
+  powerData.fortressUpgrades.statUpgrades[stat] = 0;
+
+  // Calculate new resource amounts
+  const newGold = inventory.gold - goldCost;
+  const newDust = inventory.dust - dustCost;
+
+  // Persist changes
+  await Promise.all([
+    prisma.inventory.update({
+      where: { userId },
+      data: {
+        gold: newGold,
+        dust: newDust,
+      },
+    }),
+    prisma.powerUpgrades.update({
+      where: { userId },
+      data: {
+        fortressUpgrades: JSON.stringify(powerData.fortressUpgrades),
+        fortressPrestige: updatedPrestige,
+      },
+    }),
+  ]);
+
+  return {
+    success: true,
+    newPrestigeLevel,
+    goldSpent: goldCost,
+    dustSpent: dustCost,
+    newGold,
+    newDust,
+    statReset: true,
+  };
+}
+
+// ============================================================================
+// PRESTIGE TURRET STAT
+// ============================================================================
+
+/**
+ * Prestige a turret stat
+ * - Requires stat to be at max level (20)
+ * - Costs gold + dust
+ * - Resets stat level to 0
+ * - Grants permanent +5% bonus to that stat for that turret type
+ */
+export async function prestigeTurretStat(
+  userId: string,
+  turretType: string,
+  stat: PowerTurretUpgradableStat
+): Promise<PrestigeUpgradeResponse> {
+  // Get power upgrades and inventory
+  const [{ powerData, turretPrestige }, inventory] = await Promise.all([
+    getOrCreatePowerUpgrades(userId),
+    prisma.inventory.findUnique({ where: { userId } }),
+  ]);
+
+  if (!inventory) {
+    return {
+      success: false,
+      newPrestigeLevel: 0,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: 0,
+      newDust: 0,
+      statReset: false,
+      error: 'Inventory not found',
+    };
+  }
+
+  // Find turret upgrades
+  const turretUpgrade = powerData.turretUpgrades.find((t: TurretUpgrades) => t.turretType === turretType);
+  const currentStatLevel = turretUpgrade?.statUpgrades[stat] || 0;
+  const maxLevel = 20;
+
+  // Check if at max level
+  if (currentStatLevel < maxLevel) {
+    return {
+      success: false,
+      newPrestigeLevel: 0,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Stat must be at max level (${maxLevel}) to prestige`,
+    };
+  }
+
+  // Find or get current prestige level
+  let turretPrestigeData = turretPrestige.find(tp => tp.turretType === turretType);
+  const currentPrestigeLevel = turretPrestigeData?.[stat] || 0;
+
+  // Check max prestige
+  if (currentPrestigeLevel >= MAX_PRESTIGE_LEVEL) {
+    return {
+      success: false,
+      newPrestigeLevel: currentPrestigeLevel,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Max prestige level (${MAX_PRESTIGE_LEVEL}) reached`,
+    };
+  }
+
+  // Calculate cost
+  const { gold: goldCost, dust: dustCost } = calculatePrestigeCost(currentPrestigeLevel);
+
+  // Check resources
+  if (inventory.gold < goldCost) {
+    return {
+      success: false,
+      newPrestigeLevel: currentPrestigeLevel,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Not enough gold (need ${goldCost})`,
+    };
+  }
+
+  if (inventory.dust < dustCost) {
+    return {
+      success: false,
+      newPrestigeLevel: currentPrestigeLevel,
+      goldSpent: 0,
+      dustSpent: 0,
+      newGold: inventory.gold,
+      newDust: inventory.dust,
+      statReset: false,
+      error: `Not enough dust (need ${dustCost})`,
+    };
+  }
+
+  // Apply prestige
+  const newPrestigeLevel = currentPrestigeLevel + 1;
+
+  // Update turret prestige array
+  const updatedTurretPrestige = [...turretPrestige];
+  if (!turretPrestigeData) {
+    turretPrestigeData = { turretType, damage: 0, attackSpeed: 0 };
+    updatedTurretPrestige.push(turretPrestigeData);
+  }
+  const prestigeIndex = updatedTurretPrestige.findIndex(tp => tp.turretType === turretType);
+  updatedTurretPrestige[prestigeIndex] = {
+    ...updatedTurretPrestige[prestigeIndex],
+    [stat]: newPrestigeLevel,
+  };
+
+  // Reset stat level to 0
+  if (turretUpgrade) {
+    turretUpgrade.statUpgrades[stat] = 0;
+  }
+
+  // Calculate new resource amounts
+  const newGold = inventory.gold - goldCost;
+  const newDust = inventory.dust - dustCost;
+
+  // Persist changes
+  await Promise.all([
+    prisma.inventory.update({
+      where: { userId },
+      data: {
+        gold: newGold,
+        dust: newDust,
+      },
+    }),
+    prisma.powerUpgrades.update({
+      where: { userId },
+      data: {
+        turretUpgrades: JSON.stringify(powerData.turretUpgrades),
+        turretPrestige: updatedTurretPrestige,
+      },
+    }),
+  ]);
+
+  return {
+    success: true,
+    newPrestigeLevel,
+    goldSpent: goldCost,
+    dustSpent: dustCost,
+    newGold,
+    newDust,
+    statReset: true,
+  };
+}
+
+// ============================================================================
+// GET PRESTIGE STATUS
+// ============================================================================
+
+/**
+ * Get user's prestige status for all stats
+ */
+export async function getPrestigeStatus(userId: string): Promise<{
+  fortressPrestige: FortressPrestige;
+  turretPrestige: TurretPrestige[];
+}> {
+  const { fortressPrestige, turretPrestige } = await getOrCreatePowerUpgrades(userId);
+  return { fortressPrestige, turretPrestige };
 }

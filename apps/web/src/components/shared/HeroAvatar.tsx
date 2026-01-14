@@ -1,15 +1,30 @@
 import type { JSX } from 'preact';
+import { memo } from 'preact/compat';
 import type { FortressClass } from '@arcade/sim-core';
 
-// Hero colors (based on Marvel inspirations) - same as in HeroSystem
+// Tank heroes that should be rendered as hexagons
+const TANK_HEROES = new Set(['titan', 'jade_titan', 'vanguard', 'shield_captain', 'glacier']);
+
+// Unit colors (configuration-based) - same as in HeroSystem
 const HERO_COLORS: Record<string, { primary: string; secondary: string; accent: string }> = {
-  thunderlord: { primary: '#1e90ff', secondary: '#87ceeb', accent: '#ffd700' },
-  iron_sentinel: { primary: '#b22222', secondary: '#ffd700', accent: '#00ffff' },
-  jade_titan: { primary: '#228b22', secondary: '#32cd32', accent: '#9932cc' },
+  // Premium heroes
+  inferno: { primary: '#ff4500', secondary: '#ff8c00', accent: '#ffd700' },
+  glacier: { primary: '#1e90ff', secondary: '#b0e0e6', accent: '#87ceeb' },
+  // New unit IDs
+  storm: { primary: '#9932cc', secondary: '#dda0dd', accent: '#ffff00' },
+  forge: { primary: '#00f0ff', secondary: '#ff00aa', accent: '#ccff00' },
+  titan: { primary: '#4b0082', secondary: '#8b008b', accent: '#9400d3' },  // Void colors
+  vanguard: { primary: '#228b22', secondary: '#8fbc8f', accent: '#98fb98' },
+  rift: { primary: '#ff4500', secondary: '#ff8c00', accent: '#ffd700' },
+  frost: { primary: '#00bfff', secondary: '#e0ffff', accent: '#87ceeb' },
+  // Legacy IDs
+  thunderlord: { primary: '#9932cc', secondary: '#dda0dd', accent: '#ffff00' },
+  iron_sentinel: { primary: '#00f0ff', secondary: '#ff00aa', accent: '#ccff00' },
+  jade_titan: { primary: '#4b0082', secondary: '#8b008b', accent: '#9400d3' },  // Void colors
   spider_sentinel: { primary: '#ff0000', secondary: '#0000ff', accent: '#ffffff' },
-  shield_captain: { primary: '#0000cd', secondary: '#ff0000', accent: '#ffffff' },
-  scarlet_mage: { primary: '#dc143c', secondary: '#8b0000', accent: '#ff69b4' },
-  frost_archer: { primary: '#4b0082', secondary: '#00bfff', accent: '#ffffff' },
+  shield_captain: { primary: '#228b22', secondary: '#8fbc8f', accent: '#98fb98' },
+  scarlet_mage: { primary: '#ff4500', secondary: '#ff8c00', accent: '#ffd700' },
+  frost_archer: { primary: '#00bfff', secondary: '#e0ffff', accent: '#87ceeb' },
   flame_phoenix: { primary: '#ff4500', secondary: '#ffd700', accent: '#ff0000' },
   venom_assassin: { primary: '#1a1a1a', secondary: '#8b0000', accent: '#00ff00' },
   arcane_sorcerer: { primary: '#4b0082', secondary: '#ff4500', accent: '#00ff00' },
@@ -24,11 +39,26 @@ interface HeroAvatarProps {
   class?: FortressClass;
 }
 
-export function HeroAvatar({ heroId, tier, size = 80 }: HeroAvatarProps) {
+// Generate hexagon clip-path points
+function getHexagonClipPath(): string {
+  const points: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3 - Math.PI / 2;
+    const x = 50 + Math.cos(angle) * 50;
+    const y = 50 + Math.sin(angle) * 50;
+    points.push(`${x}% ${y}%`);
+  }
+  return `polygon(${points.join(', ')})`;
+}
+
+const HEXAGON_CLIP_PATH = getHexagonClipPath();
+
+function HeroAvatarComponent({ heroId, tier, size = 80 }: HeroAvatarProps) {
   const colors = HERO_COLORS[heroId] || { primary: '#888888', secondary: '#aaaaaa', accent: '#ffffff' };
   const tierMultiplier = { 1: 1.0, 2: 1.15, 3: 1.3 }[tier];
   const actualSize = size * tierMultiplier;
   const glowIntensity = 0.2 + tier * 0.15;
+  const isTank = TANK_HEROES.has(heroId);
 
   const containerStyle: JSX.CSSProperties = {
     position: 'relative',
@@ -43,7 +73,8 @@ export function HeroAvatar({ heroId, tier, size = 80 }: HeroAvatarProps) {
     position: 'absolute',
     width: `${actualSize * 1.3}px`,
     height: `${actualSize * 1.3}px`,
-    borderRadius: '50%',
+    borderRadius: isTank ? '0' : '50%',
+    clipPath: isTank ? HEXAGON_CLIP_PATH : undefined,
     background: `radial-gradient(circle, ${colors.accent}${Math.round(glowIntensity * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
     animation: 'heroGlow 2s ease-in-out infinite',
   };
@@ -52,17 +83,30 @@ export function HeroAvatar({ heroId, tier, size = 80 }: HeroAvatarProps) {
     position: 'absolute',
     width: `${actualSize * 0.9}px`,
     height: `${actualSize * 0.9}px`,
-    borderRadius: '50%',
+    borderRadius: isTank ? '0' : '50%',
+    clipPath: isTank ? HEXAGON_CLIP_PATH : undefined,
     background: `radial-gradient(circle at 30% 30%, ${colors.secondary}, ${colors.primary})`,
-    border: `3px solid ${colors.secondary}`,
+    border: isTank ? undefined : `3px solid ${colors.secondary}`,
     boxShadow: `0 0 ${10 + tier * 5}px ${colors.primary}, inset 0 0 20px rgba(0,0,0,0.3)`,
   };
+
+  // For hexagons, we need a separate border element since clip-path clips borders
+  const borderStyle: JSX.CSSProperties | null = isTank ? {
+    position: 'absolute',
+    width: `${actualSize * 0.9}px`,
+    height: `${actualSize * 0.9}px`,
+    clipPath: HEXAGON_CLIP_PATH,
+    background: colors.secondary,
+    transform: 'scale(1.08)',
+    zIndex: -1,
+  } : null;
 
   const emblemStyle: JSX.CSSProperties = {
     position: 'absolute',
     width: `${actualSize * 0.4}px`,
     height: `${actualSize * 0.4}px`,
-    borderRadius: '50%',
+    borderRadius: isTank ? '0' : '50%',
+    clipPath: isTank ? HEXAGON_CLIP_PATH : undefined,
     background: `radial-gradient(circle, ${colors.accent}, ${colors.accent}aa)`,
     boxShadow: `0 0 10px ${colors.accent}`,
   };
@@ -94,6 +138,9 @@ export function HeroAvatar({ heroId, tier, size = 80 }: HeroAvatarProps) {
       {/* Outer glow */}
       <div style={glowStyle} />
 
+      {/* Hexagon border (for tank heroes) */}
+      {borderStyle && <div style={borderStyle} />}
+
       {/* Tier 3 rotating particles */}
       {tier === 3 && (
         <div style={particleContainerStyle}>
@@ -124,3 +171,6 @@ export function HeroAvatar({ heroId, tier, size = 80 }: HeroAvatarProps) {
     </div>
   );
 }
+
+// Memoize to prevent unnecessary re-renders when parent updates
+export const HeroAvatar = memo(HeroAvatarComponent);

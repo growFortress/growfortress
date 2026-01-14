@@ -1,5 +1,15 @@
 import { prisma } from '../lib/prisma.js';
 
+/**
+ * Safely parse an integer from a string, returning the default value on failure
+ */
+function safeParseInt(value: string | undefined, defaultValue: number = 0): number {
+  if (value === undefined || value === '') return defaultValue;
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || !isFinite(parsed)) return defaultValue;
+  return parsed;
+}
+
 export async function createBulkReward(data: {
   title: string;
   description: string;
@@ -79,41 +89,56 @@ export async function claimReward(userId: string, rewardId: string) {
     const val = reward.value;
     
     switch (reward.type) {
-      case 'GOLD':
-        await tx.inventory.update({
-          where: { userId },
-          data: { gold: { increment: parseInt(val) } },
-        });
+      case 'GOLD': {
+        const goldAmount = safeParseInt(val, 0);
+        if (goldAmount > 0) {
+          await tx.inventory.update({
+            where: { userId },
+            data: { gold: { increment: goldAmount } },
+          });
+        }
         break;
-      case 'DUST':
-        await tx.inventory.update({
-          where: { userId },
-          data: { dust: { increment: parseInt(val) } },
-        });
+      }
+      case 'DUST': {
+        const dustAmount = safeParseInt(val, 0);
+        if (dustAmount > 0) {
+          await tx.inventory.update({
+            where: { userId },
+            data: { dust: { increment: dustAmount } },
+          });
+        }
         break;
-      case 'SIGILS':
-        await tx.inventory.update({
-          where: { userId },
-          data: { sigils: { increment: parseInt(val) } },
-        });
+      }
+      case 'SIGILS': {
+        // DEPRECATED: Convert sigils to dust (10:1 ratio)
+        const sigilAmount = safeParseInt(val, 0);
+        if (sigilAmount > 0) {
+          await tx.inventory.update({
+            where: { userId },
+            data: { dust: { increment: sigilAmount * 10 } },
+          });
+        }
         break;
-      case 'ITEM':
+      }
+      case 'ITEM': {
         // Note: ITEM reward value should be "itemId:amount"
-        const [itemId, amount] = val.split(':');
-        // Since addItems handles its own prisma call, we'll call it outside or inside if we can
-        // But for safety within transaction, we'll manually update inventory here if needed
-        // or just accept the risk of non-atomic if we use service.
-        // Let's manually do it for consistency with currencies.
+        const parts = val.split(':');
+        const itemId = parts[0];
+        const amount = safeParseInt(parts[1], 1);
+        if (!itemId || amount <= 0) {
+          throw new Error('Invalid ITEM reward format');
+        }
         const inv = await tx.inventory.findUnique({ where: { userId } });
         if (inv) {
           const items = (inv.items as Record<string, number>) || {};
-          items[itemId] = (items[itemId] || 0) + parseInt(amount || '1');
+          items[itemId] = (items[itemId] || 0) + amount;
           await tx.inventory.update({
             where: { userId },
             data: { items },
           });
         }
         break;
+      }
       case 'ARTIFACT':
         // ARTIFACT needs to create actual PlayerArtifact
         // We do this by calling the service, but since we are in transaction, we might want to do it manually

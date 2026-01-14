@@ -42,13 +42,13 @@ describe('RELICS data', () => {
     }
   });
 
-  it('has 25 total relics', () => {
-    expect(RELICS.length).toBe(25);
+  it('has 27 total relics', () => {
+    expect(RELICS.length).toBe(27);
   });
 
   it('has correct number of relics per category', () => {
     expect(getRelicsByCategory('build_defining').length).toBe(4);
-    expect(getRelicsByCategory('standard').length).toBe(5);
+    expect(getRelicsByCategory('standard').length).toBe(7); // +2 physics defense relics
     expect(getRelicsByCategory('class').length).toBe(5);
     expect(getRelicsByCategory('pillar').length).toBe(3);
     expect(getRelicsByCategory('synergy').length).toBe(2);
@@ -79,49 +79,49 @@ describe('RELICS data', () => {
 
 describe('DEFAULT_MODIFIERS', () => {
   it('has all modifier keys', () => {
-    expect(DEFAULT_MODIFIERS.damageMultiplier).toBeDefined();
-    expect(DEFAULT_MODIFIERS.splashRadius).toBeDefined();
-    expect(DEFAULT_MODIFIERS.splashDamage).toBeDefined();
+    expect(DEFAULT_MODIFIERS.damageBonus).toBeDefined();
+    expect(DEFAULT_MODIFIERS.splashRadiusBonus).toBeDefined();
+    expect(DEFAULT_MODIFIERS.splashDamagePercent).toBeDefined();
     expect(DEFAULT_MODIFIERS.pierceCount).toBeDefined();
     expect(DEFAULT_MODIFIERS.chainChance).toBeDefined();
     expect(DEFAULT_MODIFIERS.chainCount).toBeDefined();
-    expect(DEFAULT_MODIFIERS.chainDamage).toBeDefined();
+    expect(DEFAULT_MODIFIERS.chainDamagePercent).toBeDefined();
     expect(DEFAULT_MODIFIERS.executeThreshold).toBeDefined();
-    expect(DEFAULT_MODIFIERS.executeDamage).toBeDefined();
+    expect(DEFAULT_MODIFIERS.executeBonusDamage).toBeDefined();
     expect(DEFAULT_MODIFIERS.critChance).toBeDefined();
-    expect(DEFAULT_MODIFIERS.critDamage).toBeDefined();
-    expect(DEFAULT_MODIFIERS.goldMultiplier).toBeDefined();
-    expect(DEFAULT_MODIFIERS.dustMultiplier).toBeDefined();
-    expect(DEFAULT_MODIFIERS.maxHpMultiplier).toBeDefined();
+    expect(DEFAULT_MODIFIERS.critDamageBonus).toBeDefined();
+    expect(DEFAULT_MODIFIERS.goldBonus).toBeDefined();
+    expect(DEFAULT_MODIFIERS.dustBonus).toBeDefined();
+    expect(DEFAULT_MODIFIERS.maxHpBonus).toBeDefined();
     expect(DEFAULT_MODIFIERS.hpRegen).toBeDefined();
-    expect(DEFAULT_MODIFIERS.cooldownMultiplier).toBeDefined();
-    expect(DEFAULT_MODIFIERS.attackSpeedMultiplier).toBeDefined();
-    expect(DEFAULT_MODIFIERS.eliteDamageMultiplier).toBeDefined();
+    expect(DEFAULT_MODIFIERS.cooldownReduction).toBeDefined();
+    expect(DEFAULT_MODIFIERS.attackSpeedBonus).toBeDefined();
+    expect(DEFAULT_MODIFIERS.eliteDamageBonus).toBeDefined();
     expect(DEFAULT_MODIFIERS.waveDamageBonus).toBeDefined();
-    expect(DEFAULT_MODIFIERS.lowHpDamageMultiplier).toBeDefined();
+    expect(DEFAULT_MODIFIERS.lowHpDamageBonus).toBeDefined();
     expect(DEFAULT_MODIFIERS.lowHpThreshold).toBeDefined();
-    expect(DEFAULT_MODIFIERS.luckMultiplier).toBeDefined();
+    expect(DEFAULT_MODIFIERS.dropRateBonus).toBeDefined();
   });
 
-  it('has neutral values for multipliers', () => {
-    expect(DEFAULT_MODIFIERS.damageMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.goldMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.dustMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.maxHpMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.cooldownMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.attackSpeedMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.eliteDamageMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.lowHpDamageMultiplier).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.luckMultiplier).toBe(1.0);
+  it('has zero values for additive bonuses', () => {
+    expect(DEFAULT_MODIFIERS.damageBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.goldBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.dustBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.maxHpBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.cooldownReduction).toBe(0);
+    expect(DEFAULT_MODIFIERS.attackSpeedBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.eliteDamageBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.lowHpDamageBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.dropRateBonus).toBe(0);
   });
 
-  it('has zero for additive bonuses', () => {
-    expect(DEFAULT_MODIFIERS.splashRadius).toBe(0);
-    expect(DEFAULT_MODIFIERS.splashDamage).toBe(0);
+  it('has zero for stackable secondary stats', () => {
+    expect(DEFAULT_MODIFIERS.splashRadiusBonus).toBe(0);
+    expect(DEFAULT_MODIFIERS.splashDamagePercent).toBe(0);
     expect(DEFAULT_MODIFIERS.pierceCount).toBe(0);
     expect(DEFAULT_MODIFIERS.chainChance).toBe(0);
     expect(DEFAULT_MODIFIERS.chainCount).toBe(0);
-    expect(DEFAULT_MODIFIERS.chainDamage).toBe(0);
+    expect(DEFAULT_MODIFIERS.chainDamagePercent).toBe(0);
     expect(DEFAULT_MODIFIERS.executeThreshold).toBe(0);
     expect(DEFAULT_MODIFIERS.critChance).toBe(0);
     expect(DEFAULT_MODIFIERS.hpRegen).toBe(0);
@@ -129,8 +129,8 @@ describe('DEFAULT_MODIFIERS', () => {
   });
 
   it('has sensible default values for special modifiers', () => {
-    expect(DEFAULT_MODIFIERS.executeDamage).toBe(1.0);
-    expect(DEFAULT_MODIFIERS.critDamage).toBe(1.5);
+    expect(DEFAULT_MODIFIERS.executeBonusDamage).toBe(0);
+    expect(DEFAULT_MODIFIERS.critDamageBonus).toBe(0.5);  // Base 150% crit damage
     expect(DEFAULT_MODIFIERS.lowHpThreshold).toBe(0.3);
   });
 });
@@ -152,12 +152,12 @@ describe('getRelicById', () => {
     const splashMaster = getRelicById('splash-master');
     expect(splashMaster).toBeDefined();
     expect(splashMaster?.isBuildDefining).toBe(true);
-    expect(splashMaster?.modifiers.splashDamage).toBe(0.35);
+    expect(splashMaster?.modifiers.splashDamagePercent).toBe(0.35);
 
     const ironHide = getRelicById('iron-hide');
     expect(ironHide).toBeDefined();
     expect(ironHide?.isBuildDefining).toBe(false);
-    expect(ironHide?.modifiers.maxHpMultiplier).toBe(1.25);
+    expect(ironHide?.modifiers.maxHpBonus).toBe(0.25);
   });
 
   it('handles empty string', () => {

@@ -10,17 +10,15 @@ import { FP } from '../fixed.js';
 import type {
   FortressClass,
   ActiveHero,
-  ActiveTurret,
   ActiveProjectile,
   ModifierSet,
 } from '../types.js';
 import { DEFAULT_MODIFIERS } from '../data/relics.js';
-import { initializeHeroes, initializeTurrets } from '../systems.js';
+import { initializeHeroes } from '../systems.js';
 import {
   calculateTotalHpBonus,
   calculateTotalDamageBonus,
   getMaxHeroSlots,
-  getMaxTurretSlots,
 } from '../data/fortress-progression.js';
 
 // ============================================================================
@@ -45,11 +43,10 @@ export interface ArenaFortress {
  * One side of the arena (left or right)
  */
 export interface ArenaSide {
-  oderId: string;
-  odername: string;
+  ownerId: string;
+  ownerName: string;
   fortress: ArenaFortress;
   heroes: ActiveHero[];
-  turrets: ActiveTurret[];
   projectiles: ActiveProjectile[];
   /** Computed modifiers for this side */
   modifiers: ModifierSet;
@@ -99,17 +96,15 @@ export interface ArenaState {
  * Configuration for one player's build
  */
 export interface ArenaBuildConfig {
-  oderId: string;
-  odername: string;
+  ownerId: string;
+  ownerName: string;
   fortressClass: FortressClass;
   commanderLevel: number;
   /** Hero definition IDs */
   heroIds: string[];
-  /** Turret configuration */
-  turrets: Array<{ definitionId: string; slotIndex: number; class: FortressClass }>;
-  /** Power upgrade bonuses (pre-calculated multipliers) */
-  damageMultiplier?: number;
-  hpMultiplier?: number;
+  /** Power upgrade bonuses (additive bonuses, e.g., 0.2 = +20%) */
+  damageBonus?: number;
+  hpBonus?: number;
 }
 
 /**
@@ -157,10 +152,10 @@ function createArenaSide(
   config: ArenaConfig
 ): ArenaSide {
   // Calculate HP with commander level bonus
-  const hpBonus = calculateTotalHpBonus(build.commanderLevel);
-  const baseMaxHp = Math.floor((config.fortressBaseHp * hpBonus) / 16384);
-  const maxHp = build.hpMultiplier
-    ? Math.floor(baseMaxHp * build.hpMultiplier)
+  const hpBonusFP = calculateTotalHpBonus(build.commanderLevel);
+  const baseMaxHp = Math.floor((config.fortressBaseHp * hpBonusFP) / 16384);
+  const maxHp = build.hpBonus
+    ? Math.floor(baseMaxHp * (1 + build.hpBonus))
     : baseMaxHp;
 
   // Calculate damage with commander level bonus
@@ -183,19 +178,15 @@ function createArenaSide(
     }
   }
 
-  // Initialize turrets
-  const maxTurretSlots = getMaxTurretSlots(build.commanderLevel);
-  const turrets = initializeTurrets(build.turrets.slice(0, maxTurretSlots));
-
   // Build modifiers
   const modifiers: ModifierSet = { ...DEFAULT_MODIFIERS };
-  if (build.damageMultiplier) {
-    modifiers.damageMultiplier *= build.damageMultiplier;
+  if (build.damageBonus) {
+    modifiers.damageBonus += build.damageBonus;
   }
 
   return {
-    oderId: build.oderId,
-    odername: build.odername,
+    ownerId: build.ownerId,
+    ownerName: build.ownerName,
     fortress: {
       hp: maxHp,
       maxHp,
@@ -206,7 +197,6 @@ function createArenaSide(
       y: FP.fromInt(7), // Center Y
     },
     heroes,
-    turrets,
     projectiles: [],
     modifiers,
     stats: {

@@ -4,7 +4,6 @@
  */
 
 import { RelicDef, ModifierSet, FortressClass, PillarId } from '../types.js';
-import { FP } from '../fixed.js';
 
 // ============================================================================
 // TYPES
@@ -45,31 +44,49 @@ export interface ExtendedRelicDef extends RelicDef {
 }
 
 /**
- * Default modifier values (neutral)
+ * Default modifier values (neutral - all bonuses start at 0)
+ * Formula: base × (1 + bonus)
  */
 export const DEFAULT_MODIFIERS: ModifierSet = {
-  damageMultiplier: 1.0,
-  splashRadius: 0,
-  splashDamage: 0,
+  // Additive bonuses (0 = no change)
+  damageBonus: 0,
+  attackSpeedBonus: 0,
+  cooldownReduction: 0,
+  goldBonus: 0,
+  dustBonus: 0,
+  maxHpBonus: 0,
+  eliteDamageBonus: 0,
+
+  // Stackable secondary stats
+  splashRadiusBonus: 0,
+  splashDamagePercent: 0,
   pierceCount: 0,
   chainChance: 0,
   chainCount: 0,
-  chainDamage: 0,
+  chainDamagePercent: 0,
   executeThreshold: 0,
-  executeDamage: 1.0,
+  executeBonusDamage: 0,
   critChance: 0,
-  critDamage: 1.5,
-  goldMultiplier: 1.0,
-  dustMultiplier: 1.0,
-  maxHpMultiplier: 1.0,
+  critDamageBonus: 0.5,        // Base 150% crit damage
+
+  // Defense
   hpRegen: 0,
-  cooldownMultiplier: 1.0,
-  attackSpeedMultiplier: 1.0,
-  eliteDamageMultiplier: 1.0,
+  incomingDamageReduction: 0,
+
+  // Physics-based defense
+  massBonus: 0,
+  knockbackResistance: 0,
+  ccResistance: 0,
+
+  // Luck (meta-rewards)
+  dropRateBonus: 0,
+  relicQualityBonus: 0,
+  goldFindBonus: 0,
+
+  // Conditional
   waveDamageBonus: 0,
-  lowHpDamageMultiplier: 1.0,
+  lowHpDamageBonus: 0,
   lowHpThreshold: 0.3,
-  luckMultiplier: 1.0,
 };
 
 // ============================================================================
@@ -86,8 +103,8 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      splashRadius: FP.fromInt(3),
-      splashDamage: 0.35,
+      splashRadiusBonus: 3,
+      splashDamagePercent: 0.35,
     },
     synergies: [],
   },
@@ -102,21 +119,21 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
       ...DEFAULT_MODIFIERS,
       chainChance: 0.4,
       chainCount: 2,
-      chainDamage: 0.6,
+      chainDamagePercent: 0.6,
     },
     synergies: [],
   },
   {
     id: 'executioner',
     name: 'Executioner',
-    description: 'Execute enemies below 15% HP for 3x damage',
+    description: 'Execute enemies below 15% HP for +200% damage',
     category: 'build_defining',
     rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
       executeThreshold: 0.15,
-      executeDamage: 3.0,
+      executeBonusDamage: 2.0,  // +200% = 3x total
     },
     synergies: [],
   },
@@ -129,8 +146,8 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageMultiplier: 2.0,
-      maxHpMultiplier: 0.6,
+      damageBonus: 1.0,      // +100%
+      maxHpBonus: -0.4,      // -40%
     },
     synergies: [],
   },
@@ -150,7 +167,7 @@ const STANDARD_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      maxHpMultiplier: 1.25,
+      maxHpBonus: 0.25,
     },
     synergies: [],
   },
@@ -163,7 +180,7 @@ const STANDARD_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageMultiplier: 1.2,
+      damageBonus: 0.2,
     },
     synergies: [],
   },
@@ -176,7 +193,7 @@ const STANDARD_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      attackSpeedMultiplier: 1.15,
+      attackSpeedBonus: 0.15,
     },
     synergies: [],
   },
@@ -190,7 +207,7 @@ const STANDARD_RELICS: ExtendedRelicDef[] = [
     modifiers: {
       ...DEFAULT_MODIFIERS,
       critChance: 0.1,
-      critDamage: 2.0,
+      critDamageBonus: 0.5,  // +50% on top of base
     },
     synergies: [],
   },
@@ -203,7 +220,7 @@ const STANDARD_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      eliteDamageMultiplier: 1.5,
+      eliteDamageBonus: 0.5,
     },
     synergies: [],
   },
@@ -224,7 +241,7 @@ const CLASS_RELICS: ExtendedRelicDef[] = [
     requirements: { fortressClass: 'natural' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      maxHpMultiplier: 1.3,
+      maxHpBonus: 0.3,
       hpRegen: 2,
     },
     synergies: ['natural'],
@@ -239,7 +256,7 @@ const CLASS_RELICS: ExtendedRelicDef[] = [
     requirements: { fortressClass: 'ice' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageMultiplier: 1.25,
+      damageBonus: 0.25,
     },
     synergies: ['ice'],
   },
@@ -253,7 +270,7 @@ const CLASS_RELICS: ExtendedRelicDef[] = [
     requirements: { fortressClass: 'lightning' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      chainDamage: 0.3,
+      chainDamagePercent: 0.3,
       chainCount: 1,
     },
     synergies: ['lightning'],
@@ -269,7 +286,7 @@ const CLASS_RELICS: ExtendedRelicDef[] = [
     modifiers: {
       ...DEFAULT_MODIFIERS,
       critChance: 0.15,
-      attackSpeedMultiplier: 1.25,
+      attackSpeedBonus: 0.25,
     },
     synergies: ['tech'],
   },
@@ -283,7 +300,7 @@ const CLASS_RELICS: ExtendedRelicDef[] = [
     requirements: { fortressClass: 'fire' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageMultiplier: 1.3,
+      damageBonus: 0.3,
       critChance: 0.05,
     },
     synergies: ['fire'],
@@ -298,15 +315,15 @@ const PILLAR_RELICS: ExtendedRelicDef[] = [
   {
     id: 'cosmos-blessing',
     name: 'Cosmos Blessing',
-    description: 'Cosmos Pillar: +40% damage, +20% luck',
+    description: 'Cosmos Pillar: +40% damage, +20% drop rates',
     category: 'pillar',
     rarity: 'epic',
     isBuildDefining: false,
     requirements: { pillarId: 'cosmos' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageMultiplier: 1.4,
-      luckMultiplier: 1.2,
+      damageBonus: 0.4,
+      dropRateBonus: 0.2,  // Luck now affects drops, not combat
     },
     synergies: [],
   },
@@ -320,7 +337,7 @@ const PILLAR_RELICS: ExtendedRelicDef[] = [
     requirements: { pillarId: 'science' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      attackSpeedMultiplier: 1.3,
+      attackSpeedBonus: 0.3,
       critChance: 0.2,
     },
     synergies: [],
@@ -328,15 +345,15 @@ const PILLAR_RELICS: ExtendedRelicDef[] = [
   {
     id: 'magic-arts',
     name: 'Magic Arts',
-    description: 'Magic Pillar: +50% damage, -20% cooldowns',
+    description: 'Magic Pillar: +50% damage, 20% cooldown reduction',
     category: 'pillar',
     rarity: 'epic',
     isBuildDefining: false,
     requirements: { pillarId: 'magic' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageMultiplier: 1.5,
-      cooldownMultiplier: 0.8,
+      damageBonus: 0.5,
+      cooldownReduction: 0.2,
     },
     synergies: [],
   },
@@ -356,7 +373,7 @@ const SYNERGY_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      cooldownMultiplier: 0.6,
+      cooldownReduction: 0.4,  // 40% CDR
       critChance: 0.15,
     },
     synergies: [],
@@ -364,14 +381,14 @@ const SYNERGY_RELICS: ExtendedRelicDef[] = [
   {
     id: 'team-spirit',
     name: 'Team Spirit',
-    description: '+5% damage and HP per hero matching fortress class',
+    description: '+15% damage and +5% HP per hero matching fortress class',
     category: 'synergy',
     rarity: 'epic',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageMultiplier: 1.15,
-      maxHpMultiplier: 1.05,
+      damageBonus: 0.15,
+      maxHpBonus: 0.05,
     },
     synergies: [],
   },
@@ -385,39 +402,40 @@ const ECONOMY_RELICS: ExtendedRelicDef[] = [
   {
     id: 'gold-rush',
     name: 'Gold Rush',
-    description: '+50% gold from all sources',
+    description: '+30% gold from all sources',
     category: 'economy',
     rarity: 'rare',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      goldMultiplier: 1.5,
+      goldBonus: 0.3,  // Reduced from 0.5 for economy balance
     },
     synergies: [],
   },
   {
     id: 'dust-collector',
     name: 'Dust Collector',
-    description: '+50% dust from all sources',
+    description: '+10% dust from all sources',
     category: 'economy',
     rarity: 'rare',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      dustMultiplier: 1.5,
+      dustBonus: 0.10,  // Premium currency - reduced from 0.3
     },
     synergies: [],
   },
   {
     id: 'lucky-charm',
     name: 'Lucky Charm',
-    description: '+30% luck for all drops',
+    description: '+30% drop rates, +20% relic quality',
     category: 'economy',
     rarity: 'epic',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      luckMultiplier: 1.3,
+      dropRateBonus: 0.3,
+      relicQualityBonus: 0.2,
     },
     synergies: [],
   },
@@ -437,13 +455,12 @@ const CURSED_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      lowHpDamageMultiplier: 1.8,
+      lowHpDamageBonus: 0.8,
       lowHpThreshold: 0.3,
-      maxHpMultiplier: 0.8,
     },
     curse: {
-      stat: 'maxHpMultiplier',
-      value: 0.8,
+      stat: 'maxHpBonus',
+      value: 0.8,  // Will be converted to -0.2 in applyCurse
       description: '-20% max HP',
     },
     synergies: [],
@@ -457,12 +474,11 @@ const CURSED_RELICS: ExtendedRelicDef[] = [
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      goldMultiplier: 2.0,
-      damageMultiplier: 0.85,
+      goldBonus: 1.0,
     },
     curse: {
-      stat: 'damageMultiplier',
-      value: 0.85,
+      stat: 'damageBonus',
+      value: 0.85,  // Will be converted to -0.15 in applyCurse
       description: '-15% damage',
     },
     synergies: [],
@@ -470,19 +486,54 @@ const CURSED_RELICS: ExtendedRelicDef[] = [
   {
     id: 'desperate-measures',
     name: 'Desperate Measures',
-    description: '+100% damage when HP below 20%, enemies deal +25% damage',
+    description: '+100% damage when HP below 20%, +25% incoming damage',
     category: 'cursed',
     rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      lowHpDamageMultiplier: 2.0,
+      lowHpDamageBonus: 1.0,
       lowHpThreshold: 0.2,
     },
     curse: {
       stat: 'incomingDamage',
-      value: 1.25,
+      value: 1.25,  // Will set incomingDamageReduction to -0.25
       description: '+25% incoming damage',
+    },
+    synergies: [],
+  },
+];
+
+// ============================================================================
+// PHYSICS DEFENSE RELICS (2) - NEW
+// ============================================================================
+
+const PHYSICS_DEFENSE_RELICS: ExtendedRelicDef[] = [
+  {
+    id: 'immovable-object',
+    name: 'Immovable Object',
+    description: '+50% mass, +30% knockback resistance',
+    category: 'standard',
+    rarity: 'rare',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      massBonus: 0.5,
+      knockbackResistance: 0.3,
+    },
+    synergies: [],
+  },
+  {
+    id: 'crowd-breaker',
+    name: 'Crowd Breaker',
+    description: '+40% CC resistance, +20% mass',
+    category: 'standard',
+    rarity: 'rare',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      ccResistance: 0.4,
+      massBonus: 0.2,
     },
     synergies: [],
   },
@@ -500,6 +551,7 @@ export const RELICS: ExtendedRelicDef[] = [
   ...SYNERGY_RELICS,
   ...ECONOMY_RELICS,
   ...CURSED_RELICS,
+  ...PHYSICS_DEFENSE_RELICS,
 ];
 
 // ============================================================================

@@ -1,0 +1,352 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 400px;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-60);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.tab:hover {
+  color: var(--color-text);
+  background: var(--color-bg-hover);
+}
+
+.tabActive {
+  background: var(--color-primary);
+  color: var(--color-text);
+}
+
+.tabBadge {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.5rem;
+  background: var(--color-danger);
+  color: white;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 999px;
+  min-width: 0.9rem;
+}
+
+.searchForm {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.625rem 0.875rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-60);
+}
+
+.results {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resultCount {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+}
+
+.guildList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.guildCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-guild);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.guildCard:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-hover);
+  transform: translateX(2px);
+  box-shadow: var(--elevation-1);
+}
+
+.guildInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.guildName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.guildTag {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.guildMeta {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+}
+
+.guildArrow {
+  color: var(--color-text-60);
+  font-size: 1.25rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  flex: 1;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--color-text-80);
+  text-align: center;
+  flex: 1;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+  background: var(--color-primary-10);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-primary-30);
+}
+
+/* Guild Details */
+.guildDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.backBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.backBtn:hover {
+  text-decoration: underline;
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detailsName {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.detailsLevel {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.detailsDescription {
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  color: var(--color-text-80);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.detailsStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.detailsStat {
+  padding: 0.75rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.statValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.memberPreview {
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+}
+
+.memberPreviewTitle {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.memberPreviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.memberPreviewItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+}
+
+.memberRole {
+  font-size: 0.9rem;
+}
+
+.memberPreviewMore {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+  margin-top: 0.25rem;
+}
+
+.detailsInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  color: var(--color-info);
+}
+
+.infoIcon {
+  font-size: 1rem;
+}
+
+/* Invitations */
+.invitationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.invitationCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-guild);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s;
+}
+
+.invitationCard:hover {
+  border-color: var(--color-border-guild-hover);
+}
+
+.invitationInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.invitationGuild {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.invitationFrom {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+}
+
+.invitationMessage {
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+.invitationActions {
+  display: flex;
+  gap: 0.5rem;
+}

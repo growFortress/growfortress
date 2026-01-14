@@ -119,10 +119,12 @@ describe('Simulation class', () => {
     });
 
     it('applies progression bonuses', () => {
+      // progressionDamageBonus and progressionGoldBonus are multipliers (1.5 = +50%)
+      // They get converted to additive bonuses: damageBonus += (multiplier - 1)
       const config = { ...getDefaultConfig(), progressionDamageBonus: 1.5, progressionGoldBonus: 1.2 };
       const sim = new Simulation(12345, config);
-      expect(sim.state.modifiers.damageMultiplier).toBe(1.5);
-      expect(sim.state.modifiers.goldMultiplier).toBe(1.2);
+      expect(sim.state.modifiers.damageBonus).toBe(0.5);
+      expect(sim.state.modifiers.goldBonus).toBeCloseTo(0.2, 5);
     });
   });
 
@@ -816,7 +818,7 @@ describe('Simulation class', () => {
       ];
       sim.state.modifiers = {
         ...DEFAULT_MODIFIERS,
-        damageMultiplier: 19661, // 1.2 in FP
+        damageBonus: 0.2, // +20%
       };
       sim.state.ended = true;
       sim.state.won = false;
@@ -827,7 +829,7 @@ describe('Simulation class', () => {
       expect(sim.state.relics).toHaveLength(2);
       expect(sim.state.relics[0].id).toBe('damage-boost');
       expect(sim.state.relics[1].id).toBe('speed-demon');
-      expect(sim.state.modifiers.damageMultiplier).toBe(19661);
+      expect(sim.state.modifiers.damageBonus).toBe(0.2);
     });
   });
 });

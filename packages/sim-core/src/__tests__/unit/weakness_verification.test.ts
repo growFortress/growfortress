@@ -6,11 +6,8 @@ import {
   checkBehavioralWeaknesses
 } from '../../systems.js';
 import { HeroWeakness } from '../../types.js';
-import { Xorshift32 } from '../../rng.js';
 
 describe('Weakness System Verification', () => {
-
-  const rng = new Xorshift32(12345);
 
   describe('Damage Vulnerability', () => {
     it('should multiply damage correctly when vulnerability matches', () => {
@@ -54,12 +51,12 @@ describe('Weakness System Verification', () => {
         description: '30% less damage',
         effect: {
            type: 'stat_penalty',
-           stat: 'damageMultiplier',
+           stat: 'damageBonus',
            amount: 0.7
         }
       }];
 
-      const multiplier = calculateWeaknessStatPenalty(weaknesses, 'damageMultiplier');
+      const multiplier = calculateWeaknessStatPenalty(weaknesses, 'damageBonus');
       expect(multiplier).toBe(0.7);
     });
 
@@ -70,31 +67,45 @@ describe('Weakness System Verification', () => {
         description: '30% less damage',
         effect: {
            type: 'stat_penalty',
-           stat: 'damageMultiplier',
+           stat: 'damageBonus',
            amount: 0.7
         }
       }];
 
-      const multiplier = calculateWeaknessStatPenalty(weaknesses, 'attackSpeedMultiplier');
+      const multiplier = calculateWeaknessStatPenalty(weaknesses, 'attackSpeedBonus');
       expect(multiplier).toBe(1.0);
     });
   });
 
   describe('Behavioral Weakness', () => {
-    it('should detect behavioral weaknesses', () => {
+    it('should detect no_killing_blow behavioral weakness', () => {
       const weaknesses: HeroWeakness[] = [{
         id: 'w3',
-        name: 'Traitor',
-        description: 'Chance to betray',
+        name: 'Merciful',
+        description: 'Cannot deliver killing blows',
         effect: {
           type: 'behavioral',
-          behavior: 'betray',
-          chance: 1.0 // 100% chance for test
+          behavior: 'no_killing_blow'
         }
       }];
 
-      const result = checkBehavioralWeaknesses(weaknesses, rng);
-      expect(result.isBetray).toBe(true);
+      const result = checkBehavioralWeaknesses(weaknesses);
+      expect(result.noKillingBlow).toBe(true);
+    });
+
+    it('should detect random_target behavioral weakness', () => {
+      const weaknesses: HeroWeakness[] = [{
+        id: 'w4',
+        name: 'Confused',
+        description: 'Attacks random targets',
+        effect: {
+          type: 'behavioral',
+          behavior: 'random_target'
+        }
+      }];
+
+      const result = checkBehavioralWeaknesses(weaknesses);
+      expect(result.randomTarget).toBe(true);
     });
   });
 });

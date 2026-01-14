@@ -1,15 +1,15 @@
 /**
- * Pillars (Filary) - Rozdziały gry
+ * Sectors (Sektory) - Rozdziały gry
  *
- * 6 Filarów reprezentujących różne "światy" Marvela:
- * 1. Ulice (Streets) - Gangsterzy, złodzieje, street-level villains
- * 2. Nauka i Technologia (Science) - Roboty, AI, naukowcy
- * 3. Mutanci (Mutants) - Sentinele, łowcy mutantów
- * 4. Kosmos (Cosmos) - Kosmici, imperia galaktyczne
- * 5. Magia (Magic) - Demony, byty wymiarowe
- * 6. Bogowie (Gods) - Bogowie, tytani, kosmiczne byty
+ * 6 Sektorów reprezentujących różne strefy walki:
+ * 1. Ulice (Streets) - Gangi, najemnicy, lokalni przeciwnicy
+ * 2. Nauka i Technologia (Science) - Roboty, AI, drony bojowe
+ * 3. Mutanci (Mutants) - Biomodyfikowane jednostki, łowcy
+ * 4. Kosmos (Cosmos) - Kosmici, stacje orbitalne, imperia
+ * 5. Magia (Magic) - Anomalie, byty wymiarowe
+ * 6. Nexus (Gods) - Elite, tytani, kosmiczne zagrożenia
  *
- * Każdy filar ma modyfikatory dla klas, wpływające na efektywność.
+ * Każdy sektor ma modyfikatory dla konfiguracji, wpływające na efektywność.
  */
 
 import { FortressClass, PillarId, FP } from '../types';
@@ -33,9 +33,9 @@ export interface PillarEnemy {
 export interface PillarBoss {
   id: string;
   name: string;
-  inspiration: string; // Marvel inspiration
+  inspiration: string; // Boss archetype/theme
   abilities: string[];
-  drops: string[]; // Możliwe dropy (materiały, kamienie, etc.)
+  drops: string[]; // Możliwe dropy (materiały, kryształy, etc.)
 }
 
 export interface PillarDefinition {
@@ -155,16 +155,16 @@ const PILLAR_STREETS: PillarDefinition = {
     },
   ],
 
-  naturalHeroes: ['shield_captain'],
+  naturalHeroes: ['vanguard'],
 
   rewards: {
     firstCompletion: {
-      dust: 100,
+      dust: 50,
       fortressXp: 1000,
       unlocks: ['pillar_science'],
     },
     regularCompletion: {
-      dust: 25,
+      dust: 12,
       fortressXp: 200,
     },
   },
@@ -226,7 +226,7 @@ const PILLAR_SCIENCE: PillarDefinition = {
     },
   ],
 
-  naturalHeroes: ['iron_sentinel'],
+  naturalHeroes: ['forge'],
 
   specialMechanics: [
     {
@@ -243,12 +243,12 @@ const PILLAR_SCIENCE: PillarDefinition = {
 
   rewards: {
     firstCompletion: {
-      dust: 200,
+      dust: 100,
       fortressXp: 2000,
       unlocks: ['pillar_mutants'],
     },
     regularCompletion: {
-      dust: 50,
+      dust: 25,
       fortressXp: 400,
     },
   },
@@ -310,7 +310,7 @@ const PILLAR_MUTANTS: PillarDefinition = {
     },
   ],
 
-  naturalHeroes: ['jade_titan', 'scarlet_mage'],
+  naturalHeroes: ['titan', 'rift'],
 
   specialMechanics: [
     {
@@ -327,12 +327,12 @@ const PILLAR_MUTANTS: PillarDefinition = {
 
   rewards: {
     firstCompletion: {
-      dust: 300,
+      dust: 150,
       fortressXp: 3000,
       unlocks: ['pillar_cosmos'],
     },
     regularCompletion: {
-      dust: 75,
+      dust: 38,
       fortressXp: 600,
     },
   },
@@ -394,7 +394,7 @@ const PILLAR_COSMOS: PillarDefinition = {
     },
   ],
 
-  naturalHeroes: ['thunderlord'],
+  naturalHeroes: ['storm'],
 
   specialMechanics: [
     {
@@ -411,12 +411,12 @@ const PILLAR_COSMOS: PillarDefinition = {
 
   rewards: {
     firstCompletion: {
-      dust: 400,
+      dust: 200,
       fortressXp: 4000,
       unlocks: ['pillar_magic', 'pillar_gods'],
     },
     regularCompletion: {
-      dust: 100,
+      dust: 50,
       fortressXp: 800,
     },
   },
@@ -478,7 +478,7 @@ const PILLAR_MAGIC: PillarDefinition = {
     },
   ],
 
-  naturalHeroes: ['scarlet_mage'],
+  naturalHeroes: ['rift'],
 
   specialMechanics: [
     {
@@ -495,11 +495,11 @@ const PILLAR_MAGIC: PillarDefinition = {
 
   rewards: {
     firstCompletion: {
-      dust: 500,
+      dust: 250,
       fortressXp: 5000,
     },
     regularCompletion: {
-      dust: 125,
+      dust: 62,
       fortressXp: 1000,
     },
   },
@@ -561,7 +561,7 @@ const PILLAR_GODS: PillarDefinition = {
     },
   ],
 
-  naturalHeroes: ['thunderlord', 'frost_archer'],
+  naturalHeroes: ['storm', 'frost'],
 
   specialMechanics: [
     {
@@ -578,12 +578,12 @@ const PILLAR_GODS: PillarDefinition = {
 
   rewards: {
     firstCompletion: {
-      dust: 750,
+      dust: 375,
       fortressXp: 7500,
       unlocks: ['true_ending'],
     },
     regularCompletion: {
-      dust: 175,
+      dust: 88,
       fortressXp: 1500,
     },
   },

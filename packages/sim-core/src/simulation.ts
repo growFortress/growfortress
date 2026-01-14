@@ -48,6 +48,7 @@ import {
 import { TURRET_SLOTS } from './data/turrets.js';
 import { getPillarForWave } from './data/pillars.js';
 import { analytics } from './analytics.js';
+import { applyFortressPowerUpgrades } from './systems/apply-power-upgrades.js';
 import {
   calculateTotalHpBonus,
   calculateTotalDamageBonus,
@@ -63,8 +64,8 @@ import {
   getBossIdForEnemy,
   rollStoneDrop,
   FRAGMENTS_PER_STONE,
-  INFINITY_GAUNTLET,
-} from './data/infinity-stones.js';
+  CRYSTAL_MATRIX,
+} from './data/crystals.js';
 import {
   rollMaterialDropFromBoss,
   rollMaterialDropFromWave,
@@ -73,7 +74,7 @@ import {
   rollArtifactDropFromBoss,
   rollArtifactDropFromWave,
 } from './data/artifacts.js';
-import type { InfinityStoneType, MaterialType } from './types.js';
+import type { CrystalType, CrystalMatrixState, MaterialType } from './types.js';
 
 // ============================================================================
 // Constants
@@ -169,17 +170,43 @@ export function getDefaultConfig(availableRelics: string[] = RELICS.map(r => r.i
 export function createInitialState(seed: number, config: SimConfig): GameState {
   const rng = new Xorshift32(seed);
 
+  // Initialize base modifiers and apply power upgrades
+  let baseModifiers = { ...DEFAULT_MODIFIERS };
+  if (config.powerData?.fortressUpgrades?.statUpgrades) {
+    baseModifiers = applyFortressPowerUpgrades(
+      baseModifiers,
+      config.powerData.fortressUpgrades.statUpgrades
+    );
+  }
+
   // Apply commander level HP bonus (fixed-point: 16384 = 1.0)
   const hpBonus = calculateTotalHpBonus(config.commanderLevel);
-  const maxHp = Math.floor((config.fortressBaseHp * hpBonus) / 16384);
+  // Apply power upgrade HP bonus (additive: 0.15 = 15%)
+  const powerHpMultiplier = 1 + baseModifiers.maxHpBonus;
+  const maxHp = Math.floor((config.fortressBaseHp * hpBonus * powerHpMultiplier) / 16384);
 
   // Initialize heroes with max slots based on commander level
   const maxHeroSlots = getMaxHeroSlots(config.commanderLevel);
-  const heroes = initializeHeroes(config.startingHeroes || [], config.fortressX);
+  // Convert powerData to PlayerPowerData format for hero initialization
+  const powerDataForHeroes = config.powerData ? {
+    fortressUpgrades: config.powerData.fortressUpgrades,
+    heroUpgrades: config.powerData.heroUpgrades,
+    turretUpgrades: config.powerData.turretUpgrades,
+    itemTiers: config.powerData.itemTiers,
+  } : undefined;
+  // Get hero and turret tiers from power data
+  const heroTiers = config.powerData?.heroTiers || {};
+  const turretTiers = config.powerData?.turretTiers || {};
+  const heroes = initializeHeroes(config.startingHeroes || [], config.fortressX, powerDataForHeroes, heroTiers);
 
   // Initialize turrets with max slots based on commander level
   const maxTurretSlots = getMaxTurretSlots(config.commanderLevel);
-  const turrets = initializeTurrets(config.startingTurrets || []);
+  // Apply turret tiers to starting turrets config
+  const turretConfigsWithTiers = (config.startingTurrets || []).map(t => ({
+    ...t,
+    tier: (turretTiers[t.definitionId] || 1) as 1 | 2 | 3,
+  }));
+  const turrets = initializeTurrets(turretConfigsWithTiers);
 
   // Initialize active skills based on commander level
   const activeSkills = initializeActiveSkills(config.fortressClass, config.commanderLevel);
@@ -230,7 +257,7 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     eliteKills: 0,
     goldEarned: 0,
     dustEarned: 0,
-    modifiers: { ...DEFAULT_MODIFIERS },
+    modifiers: baseModifiers,
 
     // NEW: Pillar system
     currentPillar: config.currentPillar,
@@ -249,7 +276,11 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     projectiles: [],
     nextProjectileId: 1,
 
-    // NEW: Infinity Stones
+    // Crystal system (ancient artifacts)
+    crystalFragments: [],
+    collectedCrystals: [],
+    matrixState: null,
+    // Legacy aliases
     infinityStoneFragments: [],
     collectedStones: [],
     gauntletState: null,
@@ -302,13 +333,13 @@ export class Simulation {
     this.initialCommanderLevel = config.commanderLevel;
     this.xpNeededForInitialLevel = getTotalXpForLevel(config.commanderLevel);
 
-    // Apply progression bonuses to modifiers
-    this.state.modifiers.damageMultiplier *= config.progressionDamageBonus;
-    this.state.modifiers.goldMultiplier *= config.progressionGoldBonus;
+    // Apply progression bonuses to modifiers (convert from multiplier to additive bonus)
+    this.state.modifiers.damageBonus += (config.progressionDamageBonus - 1);
+    this.state.modifiers.goldBonus += (config.progressionGoldBonus - 1);
 
-    // Apply commander level damage bonus (fixed-point: 16384 = 1.0)
-    const damageBonus = calculateTotalDamageBonus(config.commanderLevel);
-    this.state.modifiers.damageMultiplier *= damageBonus / 16384;
+    // Apply commander level damage bonus (fixed-point: 16384 = 1.0, convert to additive)
+    const commanderDamageBonus = calculateTotalDamageBonus(config.commanderLevel);
+    this.state.modifiers.damageBonus += (commanderDamageBonus / 16384) - 1;
   }
 
   /**
@@ -394,15 +425,18 @@ export class Simulation {
    * Update synergy modifiers
    */
   private updateSynergyModifiers(): void {
-    const previousMaxHpMultiplier = this.state.synergyModifiers.maxHpMultiplier ?? 1;
-    const safePreviousMultiplier = previousMaxHpMultiplier > 0 ? previousMaxHpMultiplier : 1;
+    // Calculate previous HP bonus multiplier (additive system)
+    const previousMaxHpBonus = this.state.synergyModifiers.maxHpBonus ?? 0;
+    const safePreviousMultiplier = 1 + previousMaxHpBonus;
     const baseMaxHp = Math.floor(this.state.fortressMaxHp / safePreviousMultiplier);
 
     this.state.synergyModifiers = calculateSynergyBonuses(this.state);
 
-    const nextMaxHpMultiplier = this.state.synergyModifiers.maxHpMultiplier ?? 1;
-    if (nextMaxHpMultiplier !== safePreviousMultiplier) {
-      const newMaxHp = Math.floor(baseMaxHp * nextMaxHpMultiplier);
+    // Apply new HP bonus (additive system)
+    const nextMaxHpBonus = this.state.synergyModifiers.maxHpBonus ?? 0;
+    const nextMultiplier = 1 + nextMaxHpBonus;
+    if (nextMultiplier !== safePreviousMultiplier) {
+      const newMaxHp = Math.floor(baseMaxHp * nextMultiplier);
       if (newMaxHp !== this.state.fortressMaxHp) {
         const hpDelta = newMaxHp - this.state.fortressMaxHp;
         this.state.fortressMaxHp = newMaxHp;
@@ -588,9 +622,14 @@ export class Simulation {
       };
     }
 
-    // Reduce SNAP cooldown if gauntlet is assembled
-    if (this.state.gauntletState && this.state.gauntletState.snapCooldown > 0) {
-      this.state.gauntletState.snapCooldown--;
+    // Reduce annihilation cooldown if matrix is assembled
+    if (this.state.matrixState && this.state.matrixState.annihilationCooldown > 0) {
+      this.state.matrixState.annihilationCooldown--;
+      // Keep legacy aliases in sync
+      if (this.state.gauntletState) {
+        this.state.gauntletState.annihilationCooldown = this.state.matrixState.annihilationCooldown;
+        this.state.gauntletState.snapCooldown = this.state.matrixState.annihilationCooldown;
+      }
     }
 
     // Roll for material drop from wave
@@ -895,12 +934,12 @@ export class Simulation {
       if (idx >= 0) {
         const enemy = this.state.enemies[idx];
 
-        // Grant rewards
+        // Grant rewards (convert additive bonuses to multipliers for reward calculation)
         const rewards = getEnemyRewards(
           enemy.type,
           enemy.isElite,
-          this.state.modifiers.goldMultiplier,
-          this.state.modifiers.dustMultiplier
+          1 + this.state.modifiers.goldBonus + this.state.modifiers.goldFindBonus,
+          1 + this.state.modifiers.dustBonus
         );
         this.state.gold += rewards.gold;
         this.state.dust += rewards.dust;
@@ -921,7 +960,7 @@ export class Simulation {
         this.state.sessionXpEarned += xpEarned;
         this.checkAndUpdateLevel();
 
-        // Check for Infinity Stone, Material, and Artifact drops from bosses
+        // Check for Crystal, Material, and Artifact drops from bosses
         if (isBossEnemy(enemy.type)) {
           this.processBossStoneDrop(enemy.type);
           this.processBossMaterialDrop(enemy.type);
@@ -940,7 +979,7 @@ export class Simulation {
   }
 
   /**
-   * Process potential Infinity Stone drop from a killed boss
+   * Process potential Crystal drop from a killed boss
    */
   private processBossStoneDrop(enemyType: string): void {
     const bossId = getBossIdForEnemy(enemyType, this.state.wave);
@@ -949,64 +988,77 @@ export class Simulation {
     const drop = rollStoneDrop(bossId, this.state.currentPillar, this.rng.nextFloat());
     if (!drop) return;
 
-    if (drop.isFullStone) {
-      // Full stone dropped!
-      if (!this.state.collectedStones.includes(drop.stoneType)) {
-        this.state.collectedStones.push(drop.stoneType);
+    const crystalType = drop.crystalType;
+
+    if (drop.isFullCrystal) {
+      // Full crystal dropped!
+      if (!this.state.collectedCrystals.includes(crystalType)) {
+        this.state.collectedCrystals.push(crystalType);
+        this.state.collectedStones.push(crystalType); // Legacy sync
       }
-      // Also remove any fragments for this stone
-      const fragmentIdx = this.state.infinityStoneFragments.findIndex(
-        f => f.stoneType === drop.stoneType
+      // Also remove any fragments for this crystal
+      const fragmentIdx = this.state.crystalFragments.findIndex(
+        f => f.crystalType === crystalType
       );
       if (fragmentIdx >= 0) {
-        this.state.infinityStoneFragments.splice(fragmentIdx, 1);
+        this.state.crystalFragments.splice(fragmentIdx, 1);
+        this.state.infinityStoneFragments.splice(fragmentIdx, 1); // Legacy sync
       }
     } else {
-      // Fragment dropped - only if we don't have the full stone
-      if (this.state.collectedStones.includes(drop.stoneType)) return;
+      // Fragment dropped - only if we don't have the full crystal
+      if (this.state.collectedCrystals.includes(crystalType)) return;
 
       // Find or create fragment entry
-      let fragment = this.state.infinityStoneFragments.find(
-        f => f.stoneType === drop.stoneType
+      let fragment = this.state.crystalFragments.find(
+        f => f.crystalType === crystalType
       );
       if (!fragment) {
-        fragment = { stoneType: drop.stoneType, count: 0 };
-        this.state.infinityStoneFragments.push(fragment);
+        fragment = { crystalType, stoneType: crystalType, count: 0 };
+        this.state.crystalFragments.push(fragment);
+        this.state.infinityStoneFragments.push(fragment); // Legacy sync
       }
 
       fragment.count++;
 
-      // Check if we have enough fragments for a full stone
+      // Check if we have enough fragments for a full crystal
       if (fragment.count >= FRAGMENTS_PER_STONE) {
-        this.state.collectedStones.push(drop.stoneType);
+        this.state.collectedCrystals.push(crystalType);
+        this.state.collectedStones.push(crystalType); // Legacy sync
         // Remove the fragment entry
-        const idx = this.state.infinityStoneFragments.findIndex(
-          f => f.stoneType === drop.stoneType
+        const idx = this.state.crystalFragments.findIndex(
+          f => f.crystalType === crystalType
         );
         if (idx >= 0) {
-          this.state.infinityStoneFragments.splice(idx, 1);
+          this.state.crystalFragments.splice(idx, 1);
+          this.state.infinityStoneFragments.splice(idx, 1); // Legacy sync
         }
       }
     }
 
-    // Check if all 6 stones are collected - enable gauntlet
-    this.checkGauntletAssembly();
+    // Check if all 6 crystals are collected - enable matrix
+    this.checkMatrixAssembly();
   }
 
   /**
-   * Check if all 6 Infinity Stones are collected
+   * Check if all 6 Crystals are collected to assemble the Matrix
    */
-  private checkGauntletAssembly(): void {
-    const allStones: InfinityStoneType[] = ['power', 'space', 'time', 'reality', 'soul', 'mind'];
-    const hasAllStones = allStones.every(s => this.state.collectedStones.includes(s));
+  private checkMatrixAssembly(): void {
+    const allCrystals: CrystalType[] = ['power', 'space', 'time', 'reality', 'soul', 'mind'];
+    const hasAllCrystals = allCrystals.every(c => this.state.collectedCrystals.includes(c));
 
-    if (hasAllStones && !this.state.gauntletState) {
-      this.state.gauntletState = {
+    if (hasAllCrystals && !this.state.matrixState) {
+      const newMatrixState: CrystalMatrixState = {
         isAssembled: true,
-        stonesCollected: [...this.state.collectedStones],
+        crystalsCollected: [...this.state.collectedCrystals],
+        annihilationCooldown: 0,
+        annihilationUsedCount: 0,
+        // Legacy aliases
+        stonesCollected: [...this.state.collectedCrystals],
         snapCooldown: 0,
         snapUsedCount: 0,
       };
+      this.state.matrixState = newMatrixState;
+      this.state.gauntletState = newMatrixState; // Legacy sync
     }
   }
 
@@ -1125,23 +1177,39 @@ export class Simulation {
   }
 
   /**
-   * Execute the SNAP ability (deals 30% of max HP to all enemies)
+   * Execute the Annihilation Wave ability (deals 30% of max HP to all enemies)
+   * @deprecated Use executeAnnihilation() instead
    */
   executeSnap(): boolean {
-    if (!this.state.gauntletState?.isAssembled) return false;
-    if (this.state.gauntletState.snapCooldown > 0) return false;
+    return this.executeAnnihilation();
+  }
+
+  /**
+   * Execute the Annihilation Wave ability (deals 30% of max HP to all enemies)
+   */
+  executeAnnihilation(): boolean {
+    if (!this.state.matrixState?.isAssembled) return false;
+    if (this.state.matrixState.annihilationCooldown > 0) return false;
     if (this.state.enemies.length === 0) return false;
 
     // Deal 30% of max HP damage to ALL enemies
-    const SNAP_DAMAGE_PERCENT = 0.3;
+    const ANNIHILATION_DAMAGE_PERCENT = 0.3;
     for (const enemy of this.state.enemies) {
-      const damage = Math.floor(enemy.maxHp * SNAP_DAMAGE_PERCENT);
+      const damage = Math.floor(enemy.maxHp * ANNIHILATION_DAMAGE_PERCENT);
       enemy.hp = Math.max(0, enemy.hp - damage);
     }
 
     // Set cooldown (in waves, not ticks)
-    this.state.gauntletState.snapCooldown = INFINITY_GAUNTLET.snapAbility.cooldownWaves;
-    this.state.gauntletState.snapUsedCount++;
+    const cooldownWaves = CRYSTAL_MATRIX.annihilationWave?.cooldownWaves ?? 3;
+    this.state.matrixState.annihilationCooldown = cooldownWaves;
+    this.state.matrixState.annihilationUsedCount++;
+    // Keep legacy aliases in sync
+    if (this.state.gauntletState) {
+      this.state.gauntletState.annihilationCooldown = cooldownWaves;
+      this.state.gauntletState.snapCooldown = cooldownWaves;
+      this.state.gauntletState.annihilationUsedCount = this.state.matrixState.annihilationUsedCount;
+      this.state.gauntletState.snapUsedCount = this.state.matrixState.annihilationUsedCount;
+    }
 
     return true;
   }
@@ -1150,10 +1218,11 @@ export class Simulation {
    * Fortress auto-attack
    */
   private updateFortressAttack(): void {
-    const synergyAttackSpeed = this.state.synergyModifiers.attackSpeedMultiplier ?? 1;
+    // Calculate attack speed bonus (additive system)
+    const synergyAttackSpeedBonus = this.state.synergyModifiers.attackSpeedBonus ?? 0;
+    const totalAttackSpeedBonus = this.state.modifiers.attackSpeedBonus + synergyAttackSpeedBonus;
     const attackInterval = Math.floor(
-      this.config.fortressAttackInterval /
-      (this.state.modifiers.attackSpeedMultiplier * synergyAttackSpeed)
+      this.config.fortressAttackInterval / (1 + totalAttackSpeedBonus)
     );
 
     if (this.state.tick - this.state.fortressLastAttackTick >= attackInterval) {
@@ -1168,22 +1237,18 @@ export class Simulation {
         this.state.modifiers.critChance + (this.state.synergyModifiers.critChance ?? 0),
         1.0
       );
-      const isCrit = shouldCrit(
-        critChance,
-        this.state.modifiers.luckMultiplier,
-        this.rng.nextFloat()
-      );
+      const isCrit = shouldCrit(critChance, this.rng.nextFloat());
 
-      // Apply synergy and pillar modifiers
-      let damageMultiplier = this.state.modifiers.damageMultiplier;
-      if (this.state.synergyModifiers.damageMultiplier) {
-        damageMultiplier *= this.state.synergyModifiers.damageMultiplier;
+      // Apply synergy and pillar damage bonuses (additive system)
+      let damageBonus = this.state.modifiers.damageBonus;
+      if (this.state.synergyModifiers.damageBonus) {
+        damageBonus += this.state.synergyModifiers.damageBonus;
       }
-      if (this.state.pillarModifiers.damageMultiplier) {
-        damageMultiplier *= this.state.pillarModifiers.damageMultiplier;
+      if (this.state.pillarModifiers.damageBonus) {
+        damageBonus += this.state.pillarModifiers.damageBonus;
       }
 
-      const baseDamage = Math.floor(this.config.fortressBaseDamage * damageMultiplier);
+      const baseDamage = Math.floor(this.config.fortressBaseDamage * (1 + damageBonus));
       const damage = calculateDamage(
         baseDamage,
         this.state,
@@ -1238,13 +1303,12 @@ export class Simulation {
   private applyChainDamage(primary: Enemy, damage: number): void {
     const shouldDoChain = shouldChain(
       this.state.modifiers.chainChance,
-      this.state.modifiers.luckMultiplier,
       this.rng.nextFloat()
     );
 
     if (!shouldDoChain) return;
 
-    const chainDamage = Math.floor(damage * this.state.modifiers.chainDamage);
+    const chainDamage = Math.floor(damage * this.state.modifiers.chainDamagePercent);
     const candidates = this.state.enemies.filter(e => e.id !== primary.id);
 
     // Use deterministic Fisher-Yates shuffle instead of non-deterministic sort
@@ -1260,15 +1324,23 @@ export class Simulation {
    * Apply splash damage to enemies near the primary target
    */
   private applySplashDamage(primary: Enemy, damage: number): void {
-    if (this.state.modifiers.splashRadius <= 0) return;
+    if (this.state.modifiers.splashRadiusBonus <= 0) return;
 
-    const splashDamage = Math.floor(damage * this.state.modifiers.splashDamage);
-    const splashRadiusFP = FP.fromInt(this.state.modifiers.splashRadius);
+    const splashDamage = Math.floor(damage * this.state.modifiers.splashDamagePercent);
+    const splashRadiusFP = FP.fromInt(this.state.modifiers.splashRadiusBonus);
+
+    // Use squared distance for efficiency (avoids sqrt)
+    const splashRadiusSq = FP.mul(splashRadiusFP, splashRadiusFP);
 
     for (const enemy of this.state.enemies) {
       if (enemy.id === primary.id) continue;
-      const dist = FP.abs(FP.sub(enemy.x, primary.x));
-      if (dist <= splashRadiusFP) {
+
+      // Calculate 2D distance (not just X-axis!)
+      const dx = FP.sub(enemy.x, primary.x);
+      const dy = FP.sub(enemy.y, primary.y);
+      const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+
+      if (distSq <= splashRadiusSq) {
         this.damageEnemy(enemy, splashDamage);
       }
     }

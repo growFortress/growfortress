@@ -9,7 +9,15 @@ import * as profile from './profile.signals.js';
 import * as game from './game.signals.js';
 import * as ui from './ui.signals.js';
 import * as fortress from './fortress.signals.js';
-import { addArtifactDrop } from './artifacts.signals.js';
+import { addArtifactDrop, resetArtifactsState } from './artifacts.signals.js';
+import { resetMaterialsState, updatePlayerMaterials } from './materials.signals.js';
+import { resetIdleState } from './idle.signals.js';
+import { resetPowerState } from './power.signals.js';
+import { resetGuildState } from './guild.signals.js';
+import { resetMessagesState } from './messages.signals.js';
+import { resetPvpState } from './pvp.signals.js';
+import { resetBossRushState } from './boss-rush.signals.js';
+import { resetDailyQuestsState } from './dailyQuests.signals.js';
 import { getProfile } from '../api/client.js';
 
 // Track processed artifact drops to avoid duplicates
@@ -27,7 +35,18 @@ export function updateFromProfile(data: ProfileResponse): void {
     profile.baseXp.value = data.progression.xp;
     profile.baseTotalXp.value = data.progression.totalXp;
     profile.baseXpToNextLevel.value = data.progression.xpToNextLevel;
+
+    // Update purchased slots (new slot purchase system)
+    if (data.progression.purchasedHeroSlots !== undefined) {
+      fortress.purchasedHeroSlots.value = data.progression.purchasedHeroSlots;
+      fortress.maxHeroSlots.value = data.progression.purchasedHeroSlots;
+    }
+    if (data.progression.purchasedTurretSlots !== undefined) {
+      fortress.purchasedTurretSlots.value = data.progression.purchasedTurretSlots;
+    }
     profile.displayName.value = data.displayName;
+    profile.playerDescription.value = data.description || '';
+    profile.userRole.value = data.role;
 
     // Onboarding status
     profile.onboardingCompleted.value = data.onboardingCompleted;
@@ -45,6 +64,11 @@ export function updateFromProfile(data: ProfileResponse): void {
     // Update unlocked heroes and turrets from profile
     fortress.unlockedHeroIds.value = data.unlockedHeroes || [];
     fortress.unlockedTurretIds.value = data.unlockedTurrets || [];
+
+    // Update materials from inventory
+    if (data.inventory.materials) {
+      updatePlayerMaterials(data.inventory.materials);
+    }
   });
 }
 
@@ -117,10 +141,10 @@ export function syncGameState(gameInstance: Game): void {
         commanderLevel: state.commanderLevel,
         sessionXpEarned: state.sessionXpEarned,
         xpAtSessionStart: state.xpAtSessionStart,
-        // Infinity Stones
-        collectedStones: state.collectedStones || [],
-        infinityStoneFragments: state.infinityStoneFragments || [],
-        gauntletState: state.gauntletState || null,
+        // Crystal system (ancient artifacts)
+        collectedStones: state.collectedCrystals || [],
+        infinityStoneFragments: state.crystalFragments || [],
+        gauntletState: state.matrixState || null,
         // Fortress class skills
         fortressActiveSkills: state.activeSkills || [],
         fortressSkillCooldowns: state.skillCooldowns || {},
@@ -295,10 +319,63 @@ export function initializeHubFromLoadout(): void {
 
   batch(() => {
     // Create hub heroes from all unlocked heroes
-    // Position heroes spread vertically like in the game
+    // Position heroes in formation like in the game
     const FP_SCALE = 1 << 16; // 65536 - Q16.16 fixed point format
-    const centerY = 7.5;
-    const spreadRange = 5; // Total spread range (units from top to bottom)
+
+    // Formation position helper - aligned with turret slot positions
+    // Turret slots are at offsetX: 4, 7, 10 from fortress
+    const getFormationPosition = (index: number, totalCount: number): { xOffset: number; yOffset: number } => {
+      const centerY = 7.5;
+      // Use turret slot X positions for alignment
+      const SLOT_X = [4, 7, 10]; // Same as turret offsetX values
+
+      switch (totalCount) {
+        case 1:
+          // Single hero: centered at slot 1 position
+          return { xOffset: SLOT_X[0], yOffset: centerY };
+        case 2:
+          // Two heroes: at slot 1, spread vertically
+          return [
+            { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+            { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+          ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        case 3:
+          // Three heroes: leader at slot 2, two at slot 1
+          return [
+            { xOffset: SLOT_X[1], yOffset: centerY },      // Leader front (slot 2)
+            { xOffset: SLOT_X[0], yOffset: centerY - 2 },  // Back-top (slot 1)
+            { xOffset: SLOT_X[0], yOffset: centerY + 2 },  // Back-bottom (slot 1)
+          ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        case 4:
+          // Four heroes: diamond at slots 1 and 2
+          return [
+            { xOffset: SLOT_X[1], yOffset: centerY },      // Front (slot 2)
+            { xOffset: SLOT_X[0], yOffset: centerY - 2 },  // Top (slot 1)
+            { xOffset: SLOT_X[0], yOffset: centerY + 2 },  // Bottom (slot 1)
+            { xOffset: SLOT_X[0], yOffset: centerY },      // Back center (slot 1)
+          ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        case 5:
+          // Five heroes: arrow formation using slots 1, 2
+          return [
+            { xOffset: SLOT_X[2], yOffset: centerY },      // Point (slot 3)
+            { xOffset: SLOT_X[1], yOffset: centerY - 2 },  // Front wings (slot 2)
+            { xOffset: SLOT_X[1], yOffset: centerY + 2 },
+            { xOffset: SLOT_X[0], yOffset: centerY - 2 },  // Back wings (slot 1)
+            { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+          ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        default: {
+          // 6+ heroes: rows aligned with slots
+          const row = Math.floor(index / 3);
+          const col = index % 3;
+          const ySpread = 2.5;
+          const yPositions = [centerY - ySpread, centerY, centerY + ySpread];
+          return {
+            xOffset: SLOT_X[Math.min(row, 2)],
+            yOffset: yPositions[col] || centerY
+          };
+        }
+      }
+    };
 
     const heroIds = unlockedHeroes.length > 0 ? unlockedHeroes : [loadout.heroId!];
     const heroCount = heroIds.length;
@@ -307,21 +384,18 @@ export function initializeHubFromLoadout(): void {
     for (let i = 0; i < heroCount; i++) {
       const heroId = heroIds[i];
 
-      // Calculate Y position based on hero count (same logic as sim-core)
-      let heroY: number;
-      if (heroCount === 1) {
-        heroY = centerY;
-      } else {
-        const spreadStep = spreadRange / (heroCount - 1);
-        heroY = (centerY - spreadRange / 2) + (i * spreadStep);
-      }
+      // Get formation position for this hero
+      const formation = getFormationPosition(i, heroCount);
+      // fortressX is 2, add formation offset
+      const heroX = 2 + formation.xOffset;
+      const heroY = formation.yOffset;
 
       const hubHero: ActiveHero = {
         definitionId: heroId,
         tier: 1,
         state: 'idle',
-        x: 6 * FP_SCALE, // Fixed point: to the right of fortress (fortress is at X=2)
-        y: Math.round(heroY * FP_SCALE), // Fixed point: spread vertically
+        x: Math.round(heroX * FP_SCALE), // Fixed point: formation X position
+        y: Math.round(heroY * FP_SCALE), // Fixed point: formation Y position
         vx: 0,
         vy: 0,
         radius: Math.round(1.0 * FP_SCALE),
@@ -381,4 +455,54 @@ export async function updateProfileFromServer(): Promise<void> {
   } catch (error) {
     console.error('Failed to refresh profile:', error);
   }
+}
+
+/**
+ * Reset all application state on logout.
+ * This cleans up all signals, disconnects WebSocket, and prepares for a fresh session.
+ */
+export function resetAllState(): void {
+  batch(() => {
+    // Reset profile state
+    profile.resetProfileState();
+
+    // Reset game state
+    resetGameState();
+
+    // Reset fortress selection
+    resetFortressSelection();
+
+    // Reset artifacts and items
+    resetArtifactsState();
+
+    // Reset materials
+    resetMaterialsState();
+
+    // Reset idle rewards
+    resetIdleState();
+
+    // Reset power upgrades
+    resetPowerState();
+
+    // Reset guild state
+    resetGuildState();
+
+    // Reset messages and disconnect WebSocket
+    resetMessagesState();
+
+    // Reset PvP state
+    resetPvpState();
+
+    // Reset Boss Rush state
+    resetBossRushState();
+
+    // Reset Daily Quests state
+    resetDailyQuestsState();
+
+    // Reset UI state
+    ui.resetUIState();
+  });
+
+  // Reset artifact drop tracking
+  lastProcessedArtifactDropTick = -1;
 }

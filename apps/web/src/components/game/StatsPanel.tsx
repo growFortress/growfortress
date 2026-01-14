@@ -17,9 +17,9 @@ export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
     // Initial load
     updateStats();
 
-    // Poll for updates while open
-    const interval = setInterval(updateStats, 1000);
-    return () => clearInterval(interval);
+    // Subscribe to updates
+    const unsubscribe = analytics.onUpdate(updateStats);
+    return unsubscribe;
   }, [isOpen]);
 
   const updateStats = () => {

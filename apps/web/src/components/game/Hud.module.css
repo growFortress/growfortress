@@ -1,108 +1,376 @@
+/* HUD - Enhanced with Glassmorphism */
+
 .hud {
   position: absolute;
   top: 90px;
   left: 0;
   width: 100%;
+  padding-right: var(--panel-width, 0);
   pointer-events: none;
-  padding: 0 24px;
+  padding-left: 24px;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  z-index: 10;
+  z-index: var(--z-hud, 10);
 }
 
 .leftSection {
   display: flex;
-  align-items: stretch;
-  gap: 10px;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Wave Display - Glassmorphic with integrated progress */
+.waveDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+  padding: 10px 18px;
+  min-width: 100px;
+
+  /* Glassmorphism */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+
+  /* Subtle glow */
+  position: relative;
+  overflow: hidden;
+}
+
+.waveProgressIntegrated {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.waveDisplay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-primary-40),
+    transparent
+  );
+}
+
+.waveLabel {
+  font-family: var(--font-display);
+  font-size: clamp(10px, 1.5vw, 12px);
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.waveNumber {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 700;
+  color: var(--color-primary);
+  text-shadow: 0 0 20px var(--color-primary-50);
+  letter-spacing: 2px;
+
+  /* Number change animation */
+  transition: transform 0.3s var(--ease-spring);
+  /* Performance: frequently updated during gameplay */
+  will-change: transform, contents;
+}
+
+.waveNumber:active {
+  transform: scale(1.1);
 }
 
 .rightSection {
-  display: flex;
-  align-items: flex-start;
   pointer-events: auto;
-  margin-top: -3px;
 }
 
+/* Right Game Panel - Resources and buttons (game mode only) */
+.rightGamePanel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  box-shadow: var(--elevation-2);
+  z-index: var(--z-hud, 10);
+  pointer-events: auto;
+  animation: panelFadeIn 0.4s var(--ease-spring) forwards;
+}
+
+.gameResources {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.resourceItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.resourceIcon {
+  font-size: 16px;
+}
+
+.resourceValue {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.gameButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.gameButtons button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s ease;
+}
+
+.gameButtons button:hover {
+  background: var(--color-primary-15);
+  border-color: var(--color-primary-40);
+  transform: scale(1.1);
+}
+
+/* Pillar Section - separate panel below resources */
+.pillarSection {
+  position: fixed;
+  top: 150px;
+  right: 16px;
+  z-index: var(--z-hud, 10);
+  pointer-events: auto;
+}
+
+/* Skills Section - Bottom Left (game mode only) */
+.skillsSectionBottomLeft {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  pointer-events: auto;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  z-index: var(--z-hud, 10);
+  animation: panelFadeIn 0.4s var(--ease-spring) forwards;
+}
+
+/* Panel - Glassmorphic */
 .panel {
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: 16px 24px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: var(--shadow-lg);
   pointer-events: auto;
+
+  /* Glassmorphism */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+
+  /* Entrance animation */
+  animation: panelFadeIn 0.4s var(--ease-spring) forwards;
+}
+
+@keyframes panelFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .left {
   align-items: flex-start;
+  max-width: 220px;
 }
 
 .right {
-  align-items: flex-end;
+  align-items: center;
   text-align: right;
-  border-color: var(--color-neutral);
-  box-shadow: var(--shadow-md);
+  padding: 12px 18px;
+  flex-direction: row;
+  gap: 20px;
 }
 
+/* Stat Item - Enhanced */
 .statItem {
-  font-family: var(--font-display);
-  font-size: 20px;
-  color: var(--color-text);
-  text-shadow: var(--text-shadow);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: clamp(6px, 1vw, 8px);
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-interactive-fast);
 }
 
-.label {
-  color: var(--color-text-60);
-  font-size: 13px; /* Zwiększony minimalny rozmiar */
-  text-transform: none; /* Normal case dla lepszej czytelności */
-  letter-spacing: 0.5px;
-  font-family: var(--font-body);
-  font-weight: 600;
+.statItem:hover {
+  background: rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
 }
 
 .value {
+  font-family: var(--font-display);
+  font-size: clamp(14px, 2vw, 18px);
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: 1px;
+  text-shadow: 0 0 10px var(--color-primary-40);
+
+  /* Tabular numbers for consistent width */
+  font-variant-numeric: tabular-nums;
 }
 
+.icon {
+  font-size: 18px;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.statItem:hover .icon {
+  transform: scale(1.2);
+}
+
+/* Center Panels */
 .centerPanels {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   pointer-events: none;
+  align-items: flex-start;
 }
 
+.unitsSection {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+/* Skills Section - Glassmorphic */
+.skillsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  pointer-events: auto;
+
+  /* Glassmorphism */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+}
+
+.skillsHeader {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.skillsRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+/* Stats Button - Glassmorphic */
 .statsButton {
   position: absolute;
   top: 1rem;
   right: clamp(12px, 3vw, 24px);
-  width: 48px;
-  height: 48px;
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-full);
-  color: var(--color-primary);
+  width: 50px;
+  height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: var(--transition-interactive-normal);
   z-index: 100;
   font-size: 1.5rem;
   pointer-events: auto;
-  box-shadow: var(--shadow-sm);
+
+  /* Glassmorphism */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+
+  color: var(--color-primary);
+  transition: all 0.3s var(--ease-spring);
 }
 
 .statsButton:hover {
-  transform: scale(var(--hover-scale));
-  box-shadow: var(--shadow-sm), var(--glow-primary);
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: var(--elevation-2), 0 0 20px var(--color-primary-40);
+  border-color: var(--color-primary-40);
+}
+
+.statsButton:active {
+  transform: scale(0.95);
+}
+
+.statsButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .sidePanel {
@@ -111,146 +379,187 @@
 
 .statsGroup {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-neutral-dark); /* Minimalna ramka */
-  margin-bottom: 8px;
+  flex-direction: row;
+  gap: 16px;
 }
 
+/* Fortress Button - Enhanced */
 .fortressButton {
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 20px;
-  background: var(--color-primary-20);
-  border: var(--border-primary);
-  border-radius: var(--radius-sm);
+  gap: 6px;
+  padding: 14px 24px;
   cursor: pointer;
-  transition: var(--transition-interactive-normal);
-  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+
+  /* Glassmorphism with accent */
+  background: linear-gradient(135deg, var(--color-primary-15), var(--color-primary-10));
+  border: 1px solid var(--color-primary-40);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+
+  transition: all 0.3s var(--ease-spring);
+}
+
+.fortressButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.fortressButton:hover::before {
+  transform: translateX(100%);
 }
 
 .fortressButton:hover {
-  background: var(--color-primary-30);
-  transform: scale(var(--hover-scale));
-  box-shadow: var(--shadow-sm), var(--glow-primary-strong);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--elevation-3), 0 0 25px var(--color-primary-40);
+  border-color: var(--color-primary);
 }
 
 .fortressIcon {
-  font-size: 24px;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px var(--color-primary-40));
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.fortressButton:hover .fortressIcon {
+  transform: scale(1.15);
 }
 
 .fortressLabel {
   color: var(--color-primary);
-  font-size: 11px; /* Zwiększony rozmiar */
-  font-weight: bold;
-  text-transform: uppercase; /* CTA pozostaje uppercase */
-  letter-spacing: 1px;
-  text-shadow: var(--text-shadow);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 10px var(--color-primary-30);
 }
 
-.hubButtons {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  align-items: stretch;
-}
-
+/* Power Button - Enhanced */
 .powerButton {
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 20px;
-  background: var(--color-bg-elevated);
-  border: 2px solid var(--color-neutral);
-  border-radius: var(--radius-sm);
+  gap: 6px;
+  padding: 14px 24px;
   cursor: pointer;
-  transition: var(--transition-interactive-normal);
-  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+
+  /* Glassmorphism */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+
+  transition: all 0.3s var(--ease-spring);
 }
 
 .powerButton:hover {
-  background: var(--color-secondary-20);
-  border-color: var(--color-secondary);
-  transform: scale(var(--hover-scale));
-  box-shadow: var(--shadow-sm), 0 0 10px var(--color-secondary-30);
+  background: linear-gradient(135deg, var(--color-secondary-15), var(--color-secondary-10));
+  border-color: var(--color-secondary-50);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--elevation-2), 0 0 20px var(--color-secondary-30);
 }
 
 .powerIcon {
-  font-size: 24px;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+  font-size: 28px;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.powerButton:hover .powerIcon {
+  transform: scale(1.15);
 }
 
 .powerLabel {
   color: var(--color-text-80);
-  font-size: 11px; /* Zwiększony rozmiar */
-  font-weight: bold;
-  text-transform: uppercase; /* CTA pozostaje uppercase */
-  letter-spacing: 1px;
-  text-shadow: var(--text-shadow);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  transition: color 0.2s ease;
 }
 
 .powerButton:hover .powerLabel {
   color: var(--color-secondary);
+  text-shadow: 0 0 10px var(--color-secondary-30);
 }
 
+/* Reward Button - Enhanced */
 .rewardButton {
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
   padding: 8px 12px;
-  color: var(--color-text);
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
   cursor: pointer;
   position: relative;
-  transition: var(--transition-interactive-normal);
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: var(--shadow-sm);
+  pointer-events: auto;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s var(--ease-spring);
 }
 
 .rewardButton:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-md), var(--glow-primary-20);
+  background: rgba(0, 0, 0, 0.2);
 }
 
-.rewardIcon {
-  font-size: 18px;
+.rewardButton:hover .rewardLabel {
+  color: var(--color-primary);
+  text-shadow: 0 0 15px var(--color-primary-50);
+}
+
+.rewardLabel {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
 }
 
 .rewardBadge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: var(--color-error);
-  color: white;
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-accent);
   border-radius: 50%;
-  border: 2px solid var(--color-bg-panel);
-  animation: pulse-badge 2s infinite;
+  animation: rewardPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 10px var(--color-accent-50);
 }
 
-@keyframes pulse-badge {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(255, 68, 68, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+@keyframes rewardPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
 }
 
+/* Tablet breakpoint */
 @media (max-width: 1200px) {
   .hud {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
+    padding-right: 24px;
   }
 
   .centerPanels {
@@ -263,7 +572,202 @@
     order: 10;
   }
 
-  .hubButtons {
-    flex-direction: row;
+  .rightGamePanel {
+    top: 12px;
+    right: 12px;
+  }
+
+  .pillarSection {
+    top: 140px;
+    right: 12px;
+  }
+
+  .skillsSectionBottomLeft {
+    bottom: 16px;
+    left: 16px;
+  }
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  .hud {
+    top: 70px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .leftSection {
+    gap: 10px;
+  }
+
+  .waveDisplay {
+    padding: 8px 12px;
+    min-width: 80px;
+  }
+
+  .waveLabel {
+    font-size: 10px;
+  }
+
+  .waveNumber {
+    font-size: 22px;
+  }
+
+  .centerPanels {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .skillsSection {
+    padding: 8px 10px;
+  }
+
+  .skillsRow {
+    gap: 8px;
+  }
+
+  .statsButton {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+    top: 0.5rem;
+    right: 10px;
+  }
+
+  .panel.right {
+    padding: 10px 14px;
+    gap: 14px;
+  }
+
+  .statItem {
+    font-size: 14px;
+    padding: 4px 8px;
+  }
+
+  .rightGamePanel {
+    top: 8px;
+    right: 8px;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .pillarSection {
+    top: 120px;
+    right: 8px;
+  }
+
+  .gameButtons {
+    gap: 4px;
+  }
+
+  .gameButtons button {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .skillsSectionBottomLeft {
+    bottom: 12px;
+    left: 12px;
+    padding: 8px 10px;
+  }
+}
+
+/* Small mobile breakpoint */
+@media (max-width: 480px) {
+  .hud {
+    top: 60px;
+    padding: 0 8px;
+  }
+
+  .waveDisplay {
+    padding: 6px 10px;
+    min-width: 70px;
+  }
+
+  .waveNumber {
+    font-size: 18px;
+  }
+
+  .skillsSection {
+    padding: 6px 8px;
+  }
+
+  .skillsRow {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .statsButton {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+
+  .rightGamePanel {
+    top: 6px;
+    right: 6px;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .pillarSection {
+    top: 110px;
+    right: 6px;
+  }
+
+  .gameResources {
+    gap: 4px;
+  }
+
+  .resourceItem {
+    padding: 2px 4px;
+    gap: 4px;
+  }
+
+  .resourceIcon {
+    font-size: 12px;
+  }
+
+  .resourceValue {
+    font-size: 12px;
+  }
+
+  .gameButtons {
+    gap: 3px;
+  }
+
+  .gameButtons button {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .skillsSectionBottomLeft {
+    bottom: 8px;
+    left: 8px;
+    padding: 6px 8px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .statsButton,
+  .fortressButton,
+  .powerButton {
+    animation: none;
+  }
+
+  .statsButton:hover,
+  .fortressButton:hover,
+  .powerButton:hover,
+  .statItem:hover {
+    transform: none;
+  }
+
+  .rewardBadge {
+    animation: none;
   }
 }

@@ -33,7 +33,7 @@ describe('Rewards Service', () => {
       expect(rewards.dust).toBe(25);
     });
 
-    it('adds 35 dust bonus on win', () => {
+    it('adds 5 dust bonus on win', () => {
       const rewards = calculateRewards({
         wavesCleared: 10,
         kills: 100,
@@ -43,7 +43,7 @@ describe('Rewards Service', () => {
         won: true,
       });
 
-      expect(rewards.dust).toBe(65); // 30 + 35 win bonus
+      expect(rewards.dust).toBe(35); // 30 + 5 win bonus
     });
 
     it('calculates XP from waves cleared (10 per wave)', () => {
@@ -277,32 +277,6 @@ describe('Rewards Service', () => {
 
       expect(result.levelUp).toBe(true);
       expect(result.newLevel).toBe(3);
-    });
-
-    it('preserves sigils in inventory', async () => {
-      const mockUser = createMockUser();
-      const mockInventory = createMockInventory({ gold: 0, dust: 0, sigils: 5 });
-      const mockProgression = createMockProgression();
-
-      mockPrisma.user.findUnique.mockResolvedValue({
-        ...mockUser,
-        inventory: mockInventory,
-        progression: mockProgression,
-      });
-
-      mockPrisma.$transaction.mockResolvedValue([
-        mockInventory,
-        mockProgression,
-      ]);
-
-      const result = await applyRewards('user-123', {
-        gold: 100,
-        dust: 10,
-        xp: 50,
-        levelUp: false,
-      });
-
-      expect(result.newInventory.sigils).toBe(5);
     });
 
     it('calculates xpToNextLevel correctly', async () => {

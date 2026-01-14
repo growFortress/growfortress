@@ -43,6 +43,16 @@ export interface XPSource {
   };
 }
 
+/**
+ * Konfiguracja odblokowywania slotów (bohater/wieżyczka)
+ */
+export interface SlotUnlockConfig {
+  slot: number;
+  levelRequired: number;
+  goldCost: number;
+  isFree: boolean;
+}
+
 // ============================================================================
 // KONFIGURACJA XP
 // ============================================================================
@@ -85,6 +95,118 @@ export const XP_SOURCES: Record<string, XPSource> = {
     baseXp: 700,  // Rebalanced from 1000
   },
 };
+
+// ============================================================================
+// KONFIGURACJA SLOTÓW (ZAKUP ZA ZŁOTO + POZIOM)
+// ============================================================================
+
+/**
+ * Konfiguracja odblokowywania slotów bohaterów
+ * Gracz zaczyna z 2 darmowymi slotami, kolejne kupuje za złoto
+ */
+export const HERO_SLOT_UNLOCKS: SlotUnlockConfig[] = [
+  { slot: 1, levelRequired: 1, goldCost: 0, isFree: true },
+  { slot: 2, levelRequired: 1, goldCost: 0, isFree: true },
+  { slot: 3, levelRequired: 15, goldCost: 3000, isFree: false },
+  { slot: 4, levelRequired: 25, goldCost: 8000, isFree: false },
+  { slot: 5, levelRequired: 35, goldCost: 20000, isFree: false },
+  { slot: 6, levelRequired: 50, goldCost: 50000, isFree: false },
+];
+
+export const MAX_HERO_SLOTS = 6;
+
+/**
+ * Konfiguracja odblokowywania slotów wieżyczek
+ * Gracz zaczyna z 1 darmowym slotem, kolejne kupuje za złoto
+ */
+export const TURRET_SLOT_UNLOCKS: SlotUnlockConfig[] = [
+  { slot: 1, levelRequired: 1, goldCost: 0, isFree: true },
+  { slot: 2, levelRequired: 5, goldCost: 1000, isFree: false },
+  { slot: 3, levelRequired: 15, goldCost: 3000, isFree: false },
+  { slot: 4, levelRequired: 25, goldCost: 8000, isFree: false },
+  { slot: 5, levelRequired: 35, goldCost: 15000, isFree: false },
+  { slot: 6, levelRequired: 40, goldCost: 25000, isFree: false },
+];
+
+export const MAX_TURRET_SLOTS = 6;
+
+/**
+ * Pobiera następny slot do kupienia dla bohaterów
+ * Zwraca null jeśli gracz ma max slotów lub nie spełnia wymagań poziomu
+ */
+export function getNextPurchasableHeroSlot(
+  currentPurchased: number,
+  commanderLevel: number
+): SlotUnlockConfig | null {
+  if (currentPurchased >= MAX_HERO_SLOTS) return null;
+  const nextSlot = HERO_SLOT_UNLOCKS[currentPurchased];
+  if (!nextSlot) return null;
+  if (commanderLevel < nextSlot.levelRequired) return null;
+  return nextSlot;
+}
+
+/**
+ * Pobiera następny slot do kupienia dla wieżyczek
+ */
+export function getNextPurchasableTurretSlot(
+  currentPurchased: number,
+  commanderLevel: number
+): SlotUnlockConfig | null {
+  if (currentPurchased >= MAX_TURRET_SLOTS) return null;
+  const nextSlot = TURRET_SLOT_UNLOCKS[currentPurchased];
+  if (!nextSlot) return null;
+  if (commanderLevel < nextSlot.levelRequired) return null;
+  return nextSlot;
+}
+
+/**
+ * Pobiera info o następnym slocie (do wyświetlenia w UI)
+ * Zwraca slot nawet jeśli gracz nie spełnia wymagań (dla podglądu)
+ */
+export function getNextHeroSlotInfo(
+  currentPurchased: number,
+  commanderLevel: number,
+  currentGold: number
+): { slot: SlotUnlockConfig; canPurchase: boolean; reason?: string } | null {
+  if (currentPurchased >= MAX_HERO_SLOTS) return null;
+  const nextSlot = HERO_SLOT_UNLOCKS[currentPurchased];
+  if (!nextSlot) return null;
+
+  const levelOk = commanderLevel >= nextSlot.levelRequired;
+  const goldOk = currentGold >= nextSlot.goldCost;
+  const canPurchase = levelOk && goldOk && !nextSlot.isFree;
+
+  let reason: string | undefined;
+  if (!levelOk) reason = 'level_too_low';
+  else if (!goldOk) reason = 'insufficient_gold';
+  else if (nextSlot.isFree) reason = 'already_free';
+
+  return { slot: nextSlot, canPurchase, reason };
+}
+
+/**
+ * Pobiera info o następnym slocie wieżyczki
+ */
+export function getNextTurretSlotInfo(
+  currentPurchased: number,
+  commanderLevel: number,
+  currentGold: number
+): { slot: SlotUnlockConfig; canPurchase: boolean; reason?: string } | null {
+  if (currentPurchased >= MAX_TURRET_SLOTS) return null;
+  const nextSlot = TURRET_SLOT_UNLOCKS[currentPurchased];
+  if (!nextSlot) return null;
+
+  const levelOk = commanderLevel >= nextSlot.levelRequired;
+  const goldOk = currentGold >= nextSlot.goldCost;
+  const canPurchase = levelOk && goldOk && !nextSlot.isFree;
+
+  let reason: string | undefined;
+  if (!levelOk) reason = 'level_too_low';
+  else if (!goldOk) reason = 'insufficient_gold';
+  else if (nextSlot.isFree) reason = 'already_free';
+
+  return { slot: nextSlot, canPurchase, reason };
+}
 
 // ============================================================================
 // POZIOMY TWIERDZY
@@ -150,7 +272,7 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
   const rewards: FortressLevelReward[] = [];
 
   // === NOWY UPROSZCZONY SYSTEM PROGRESJI ===
-  // Nowi gracze zaczynają z Starter Kit (natural, shield_captain, arrow)
+  // Nowi gracze zaczynają z Starter Kit (natural, vanguard, arrow)
   // Stopniowe odblokowania sprawiają, że gra jest przystępna
 
   switch (level) {
@@ -159,59 +281,59 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       rewards.push({
         type: 'skill_unlock',
         skillId: 'skill_1',
-        description: 'Odblokowano podstawową umiejętność klasy',
+        description: 'Odblokowano podstawową umiejętność konfiguracji',
       });
       break;
 
-    // Level 5: Drugi slot wieżyczki + FROST turret
+    // Level 5: Drugi slot wieży + CRYO turret
     case 5:
       rewards.push({
         type: 'turret_slot',
         value: 2,
-        description: 'Odblokowano 2. slot wieżyczki',
+        description: 'Odblokowano 2. slot wieży',
       });
       rewards.push({
         type: 'turret_unlock',
-        turretType: 'frost',
-        description: 'Odblokowano Wieżę Mrozu',
+        turretType: 'cryo',
+        description: 'Odblokowano Wieżę Kriogeniczną',
       });
       rewards.push({
         type: 'skill_unlock',
         skillId: 'skill_2',
-        description: 'Odblokowano drugą umiejętność klasy',
+        description: 'Odblokowano drugą umiejętność konfiguracji',
       });
       break;
 
-    // Level 10: Drugi slot bohatera + THUNDERLORD hero
+    // Level 10: Drugi slot jednostki + Forge
     case 10:
       rewards.push({
         type: 'hero_slot',
         value: 2,
-        description: 'Odblokowano 2. slot bohatera',
+        description: 'Odblokowano 2. slot jednostki',
       });
       rewards.push({
         type: 'hero_unlock',
-        heroId: 'thunder_lord',
-        description: 'Odblokowano Thunder Lord',
+        heroId: 'forge',
+        description: 'Odblokowano Unit-3 "Forge"',
       });
       rewards.push({
         type: 'skill_unlock',
         skillId: 'skill_3',
-        description: 'Odblokowano trzecią umiejętność klasy',
+        description: 'Odblokowano trzecią umiejętność konfiguracji',
       });
       break;
 
-    // Level 15: Trzeci slot wieżyczki + CANNON turret
+    // Level 15: Trzeci slot wieży + ARTILLERY turret
     case 15:
       rewards.push({
         type: 'turret_slot',
         value: 3,
-        description: 'Odblokowano 3. slot wieżyczki',
+        description: 'Odblokowano 3. slot wieży',
       });
       rewards.push({
         type: 'turret_unlock',
         turretType: 'cannon',
-        description: 'Odblokowano Armatę',
+        description: 'Odblokowano Wieżę Artyleryjską',
       });
       rewards.push({
         type: 'damage_bonus',
@@ -220,55 +342,50 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 20: Druga klasa (ICE) + Ultimate skill
+    // Level 20: Druga konfiguracja (CRYO) + Ultimate skill + Frost
     case 20:
       rewards.push({
         type: 'class_unlock',
         classId: 'ice',
-        description: 'Odblokowano klasę Lodowa Cytadela',
+        description: 'Odblokowano Konfigurację Kriogeniczną',
+      });
+      rewards.push({
+        type: 'hero_unlock',
+        heroId: 'frost',
+        description: 'Odblokowano Unit-5 "Frost"',
       });
       rewards.push({
         type: 'skill_unlock',
         skillId: 'skill_4',
-        description: 'Odblokowano Ultimate klasy',
+        description: 'Odblokowano Ultimate konfiguracji',
       });
       break;
 
-    // Level 25: Trzecia klasa (FIRE) + nowy bohater
+    // Level 25: slot wieży
     case 25:
-      rewards.push({
-        type: 'class_unlock',
-        classId: 'fire',
-        description: 'Odblokowano klasę Ognista Forteca',
-      });
-      rewards.push({
-        type: 'hero_unlock',
-        heroId: 'fire_mage',
-        description: 'Odblokowano Fire Mage',
-      });
       rewards.push({
         type: 'turret_slot',
         value: 4,
-        description: 'Odblokowano 4. slot wieżyczki',
+        description: 'Odblokowano 4. slot wieży',
       });
       break;
 
-    // Level 30: Trzeci slot bohatera + klasa LIGHTNING
+    // Level 30: Trzeci slot jednostki + Rift
     case 30:
       rewards.push({
         type: 'hero_slot',
         value: 3,
-        description: 'Odblokowano 3. slot bohatera',
+        description: 'Odblokowano 3. slot jednostki',
       });
       rewards.push({
-        type: 'class_unlock',
-        classId: 'lightning',
-        description: 'Odblokowano klasę Bastion Burzy',
+        type: 'hero_unlock',
+        heroId: 'rift',
+        description: 'Odblokowano Unit-9 "Rift"',
       });
       rewards.push({
         type: 'turret_unlock',
-        turretType: 'tesla',
-        description: 'Odblokowano Wieżę Tesla',
+        turretType: 'arc',
+        description: 'Odblokowano Wieżę Łukową',
       });
       break;
 
@@ -281,8 +398,18 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 40: Nowy slot wieżyczki + Filar
+    // Level 40: Titan + Fire class + slot wieżyczki + Filar
     case 40:
+      rewards.push({
+        type: 'hero_unlock',
+        heroId: 'titan',
+        description: 'Odblokowano Unit-1 "Titan"',
+      });
+      rewards.push({
+        type: 'class_unlock',
+        classId: 'fire',
+        description: 'Odblokowano Konfigurację Termiczną',
+      });
       rewards.push({
         type: 'turret_slot',
         value: 6,
@@ -295,22 +422,17 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 45: Czwarty slot bohatera + klasa TECH
+    // Level 45: Czwarty slot jednostki
     case 45:
       rewards.push({
         type: 'hero_slot',
         value: 4,
-        description: 'Odblokowano 4. slot bohatera (max)',
-      });
-      rewards.push({
-        type: 'class_unlock',
-        classId: 'tech',
-        description: 'Odblokowano klasę Cyber Forteca',
+        description: 'Odblokowano 4. slot jednostki (max)',
       });
       rewards.push({
         type: 'turret_unlock',
         turretType: 'laser',
-        description: 'Odblokowano Laser',
+        description: 'Odblokowano Wieżę Fotonową',
       });
       break;
 
@@ -319,17 +441,44 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       rewards.push({
         type: 'pillar_unlock',
         pillarId: 'gods',
-        description: 'Odblokowano Filar: Bogowie',
+        description: 'Odblokowano Sektor: Nexus',
       });
       rewards.push({
         type: 'feature_unlock',
-        featureId: 'infinity_gauntlet',
-        description: 'Odblokowano Kamienie Nieskończoności',
+        featureId: 'crystal_matrix',
+        description: 'Odblokowano Matrycę Kryształów',
       });
       rewards.push({
         type: 'feature_unlock',
         featureId: 'true_ending',
-        description: 'Odblokowano Prawdziwe Zakończenie',
+        description: 'Odblokowano Protokół Anihilacji',
+      });
+      break;
+
+    // Level 60: Konfiguracja Elektryczna
+    case 60:
+      rewards.push({
+        type: 'class_unlock',
+        classId: 'lightning',
+        description: 'Odblokowano Konfigurację Elektryczną',
+      });
+      break;
+
+    // Level 80: Konfiguracja Próżniowa
+    case 80:
+      rewards.push({
+        type: 'class_unlock',
+        classId: 'void',
+        description: 'Odblokowano Konfigurację Próżniową',
+      });
+      break;
+
+    // Level 100: Konfiguracja Kwantowa
+    case 100:
+      rewards.push({
+        type: 'class_unlock',
+        classId: 'tech',
+        description: 'Odblokowano Konfigurację Kwantową',
       });
       break;
   }
@@ -427,26 +576,39 @@ export function calculatePillarCompleteXp(isFirst: boolean): number {
 }
 
 /**
- * Pobiera maksymalną liczbę bohaterów dla poziomu
- * Zaczyna od 3 (FREE_STARTER_HEROES), dodatkowe sloty na wyższych poziomach
+ * Pobiera maksymalną liczbę bohaterów
+ * Nowy system: używa purchasedSlots jeśli podane (zakup za złoto)
+ * Legacy: oblicza na podstawie poziomu (dla kompatybilności wstecznej)
  */
-export function getMaxHeroSlots(fortressLevel: number): number {
-  if (fortressLevel >= 45) return 6;
-  if (fortressLevel >= 30) return 5;
-  if (fortressLevel >= 15) return 4;
-  return 3; // Base: 3 starter heroes
+export function getMaxHeroSlots(fortressLevel: number, purchasedSlots?: number): number {
+  // Nowy system: użyj zakupionych slotów
+  if (purchasedSlots !== undefined) {
+    return Math.min(purchasedSlots, MAX_HERO_SLOTS);
+  }
+  // Legacy fallback (dla starych zapisów bez purchasedSlots)
+  if (fortressLevel >= 45) return 4;
+  if (fortressLevel >= 30) return 3;
+  if (fortressLevel >= 10) return 2;
+  return 2; // Zmienione z 1 na 2 - nowi gracze zaczynają z 2 slotami
 }
 
 /**
- * Pobiera maksymalną liczbę wieżyczek dla poziomu
- * Zaczyna od 2 (FREE_STARTER_TURRETS), dodatkowe sloty na wyższych poziomach
+ * Pobiera maksymalną liczbę wieżyczek
+ * Nowy system: używa purchasedSlots jeśli podane (zakup za złoto)
+ * Legacy: oblicza na podstawie poziomu (dla kompatybilności wstecznej)
  */
-export function getMaxTurretSlots(fortressLevel: number): number {
+export function getMaxTurretSlots(fortressLevel: number, purchasedSlots?: number): number {
+  // Nowy system: użyj zakupionych slotów
+  if (purchasedSlots !== undefined) {
+    return Math.min(purchasedSlots, MAX_TURRET_SLOTS);
+  }
+  // Legacy fallback
   if (fortressLevel >= 40) return 6;
-  if (fortressLevel >= 30) return 5;
-  if (fortressLevel >= 20) return 4;
-  if (fortressLevel >= 10) return 3;
-  return 2; // Base: 2 starter turrets
+  if (fortressLevel >= 35) return 5;
+  if (fortressLevel >= 25) return 4;
+  if (fortressLevel >= 15) return 3;
+  if (fortressLevel >= 5) return 2;
+  return 1; // Base: 1 slot
 }
 
 /**
@@ -471,9 +633,10 @@ export function getUnlockedClasses(fortressLevel: number): string[] {
   const classes: string[] = ['natural']; // Starter Kit
 
   if (fortressLevel >= 20) classes.push('ice');
-  if (fortressLevel >= 25) classes.push('fire');
-  if (fortressLevel >= 30) classes.push('lightning');
-  if (fortressLevel >= 35) classes.push('tech');
+  if (fortressLevel >= 40) classes.push('fire');
+  if (fortressLevel >= 60) classes.push('lightning');
+  if (fortressLevel >= 80) classes.push('void');
+  if (fortressLevel >= 100) classes.push('tech');
 
   return classes;
 }
@@ -492,23 +655,24 @@ export function getClassUnlockLevel(classId: string): number {
   switch (classId) {
     case 'natural': return 1;
     case 'ice': return 20;
-    case 'fire': return 25;
-    case 'lightning': return 30;
-    case 'tech': return 35;
-    default: return 99;
+    case 'fire': return 40;
+    case 'lightning': return 60;
+    case 'void': return 80;
+    case 'tech': return 100;
+    default: return 999;
   }
 }
 
 /**
  * Pobiera odblokowane typy wieżyczek dla poziomu
- * arrow jest zawsze odblokowana (starter kit)
+ * railgun jest zawsze odblokowana (starter kit)
  */
 export function getUnlockedTurretTypes(fortressLevel: number): string[] {
-  const turrets: string[] = ['arrow']; // Starter Kit
+  const turrets: string[] = ['railgun']; // Starter Kit
 
-  if (fortressLevel >= 5) turrets.push('frost');
+  if (fortressLevel >= 5) turrets.push('cryo');
   if (fortressLevel >= 15) turrets.push('cannon');
-  if (fortressLevel >= 30) turrets.push('tesla');
+  if (fortressLevel >= 30) turrets.push('arc');
   if (fortressLevel >= 45) turrets.push('laser');
 
   return turrets;
@@ -526,25 +690,31 @@ export function isTurretUnlockedAtLevel(turretType: string, fortressLevel: numbe
  */
 export function getTurretUnlockLevel(turretType: string): number {
   switch (turretType) {
-    case 'arrow': return 1;
-    case 'frost': return 5;
+    case 'railgun': return 1;  // Starter turret
+    case 'cryo': return 5;
     case 'cannon': return 15;
-    case 'tesla': return 30;
+    case 'arc': return 30;
     case 'laser': return 45;
     default: return 99;
   }
 }
 
 /**
- * Pobiera odblokowanych bohaterów dla poziomu
- * shield_captain jest zawsze odblokowany (starter kit)
+ * Pobiera odblokowane jednostki dla poziomu
+ * vanguard i storm są zawsze odblokowane (starter kit)
+ * spectre i omega są ekskluzywne - dostępne od poziomu 1 ale za premium koszt
  */
 export function getUnlockedHeroes(fortressLevel: number): string[] {
-  const heroes: string[] = ['shield_captain']; // Starter Kit
+  const heroes: string[] = ['vanguard', 'storm']; // Starter Kit
 
-  if (fortressLevel >= 10) heroes.push('thunder_lord');
-  if (fortressLevel >= 25) heroes.push('fire_mage');
-  if (fortressLevel >= 35) heroes.push('shadow_assassin');
+  // Exclusive heroes - available from level 1 (premium cost)
+  heroes.push('spectre'); // Rare exclusive - 25,000 gold
+  heroes.push('omega');   // Legendary exclusive - 5,000 dust
+
+  if (fortressLevel >= 10) heroes.push('forge');
+  if (fortressLevel >= 20) heroes.push('frost');
+  if (fortressLevel >= 30) heroes.push('rift');
+  if (fortressLevel >= 40) heroes.push('titan');
 
   return heroes;
 }
@@ -557,14 +727,18 @@ export function isHeroUnlockedAtLevel(heroId: string, fortressLevel: number): bo
 }
 
 /**
- * Pobiera poziom wymagany do odblokowania bohatera
+ * Pobiera poziom wymagany do odblokowania jednostki
  */
 export function getHeroUnlockLevel(heroId: string): number {
   switch (heroId) {
-    case 'shield_captain': return 1;
-    case 'thunder_lord': return 10;
-    case 'fire_mage': return 25;
-    case 'shadow_assassin': return 35;
+    case 'vanguard': return 1;  // Starter
+    case 'storm': return 1;     // Starter
+    case 'spectre': return 1;   // Exclusive rare - available from level 1
+    case 'omega': return 1;     // Exclusive legendary - available from level 1
+    case 'forge': return 10;
+    case 'frost': return 20;
+    case 'rift': return 30;
+    case 'titan': return 40;
     default: return 99;
   }
 }
@@ -678,8 +852,13 @@ export function calculateTotalDamageBonus(fortressLevel: number): FP {
  * Pobiera nagrody za osiągnięcie poziomu
  */
 export function getRewardsForLevel(level: number): FortressLevelReward[] {
+  // For levels in FORTRESS_LEVELS array (1-50), use cached data
   const levelInfo = getFortressLevelInfo(level);
-  return levelInfo?.rewards ?? [];
+  if (levelInfo) {
+    return levelInfo.rewards;
+  }
+  // For levels beyond 50, compute rewards directly
+  return getFortressLevelRewards(level);
 }
 
 /**

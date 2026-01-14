@@ -4,7 +4,7 @@
  * Client-side state management for the power upgrade system.
  */
 
-import { signal, computed } from '@preact/signals';
+import { signal, computed, Signal, ReadonlySignal } from '@preact/signals';
 import type {
   PowerStatUpgrades,
   PowerItemTier,
@@ -54,7 +54,7 @@ const DEFAULT_STAT_UPGRADES: PowerStatUpgrades = {
 /**
  * Main power state
  */
-export const powerState = signal<PowerState>({
+export const powerState: Signal<PowerState> = signal<PowerState>({
   fortressPower: null,
   heroPower: [],
   turretPower: [],
@@ -68,22 +68,6 @@ export const powerState = signal<PowerState>({
   error: null,
 });
 
-/**
- * Currently selected upgrade category for the modal
- */
-export type UpgradeCategory = 'fortress' | 'hero' | 'turret' | 'items' | null;
-export const activeUpgradeCategory = signal<UpgradeCategory>(null);
-
-/**
- * Currently selected entity ID (heroId or turretType)
- */
-export const selectedEntityId = signal<string | null>(null);
-
-/**
- * Show power upgrade modal
- */
-export const showPowerUpgradeModal = signal(false);
-
 // ============================================================================
 // COMPUTED VALUES
 // ============================================================================
@@ -91,7 +75,7 @@ export const showPowerUpgradeModal = signal(false);
 /**
  * Total power as a display string
  */
-export const totalPowerDisplay = computed(() => {
+export const totalPowerDisplay: ReadonlySignal<string> = computed(() => {
   const power = powerState.value.totalPower;
   if (power >= 1_000_000) return `${(power / 1_000_000).toFixed(1)}M`;
   if (power >= 1_000) return `${(power / 1_000).toFixed(1)}K`;
@@ -101,9 +85,36 @@ export const totalPowerDisplay = computed(() => {
 /**
  * Is power data loaded?
  */
-export const isPowerLoaded = computed(() => {
+export const isPowerLoaded: ReadonlySignal<boolean> = computed(() => {
   return powerState.value.fortressPower !== null;
 });
+
+// ============================================================================
+// POWER UPGRADE MODAL STATE
+// ============================================================================
+
+export type PowerUpgradeTab = 'fortress' | 'heroes' | 'turrets' | 'items';
+
+/** Whether the power upgrade modal is visible */
+export const powerUpgradeModalVisible: Signal<boolean> = signal(false);
+
+/** Currently selected tab in the power upgrade modal */
+export const powerUpgradeModalTab: Signal<PowerUpgradeTab> = signal<PowerUpgradeTab>('fortress');
+
+/**
+ * Open the power upgrade modal with a specific tab
+ */
+export function openPowerUpgradeModal(tab: PowerUpgradeTab = 'fortress'): void {
+  powerUpgradeModalTab.value = tab;
+  powerUpgradeModalVisible.value = true;
+}
+
+/**
+ * Close the power upgrade modal
+ */
+export function closePowerUpgradeModal(): void {
+  powerUpgradeModalVisible.value = false;
+}
 
 // ============================================================================
 // ACTIONS
@@ -259,27 +270,6 @@ export function updateItemTier(itemId: string, newTier: PowerItemTier): void {
   };
 }
 
-/**
- * Open power upgrade modal for a specific category
- */
-export function openPowerUpgradeModal(
-  category: UpgradeCategory,
-  entityId?: string
-): void {
-  activeUpgradeCategory.value = category;
-  selectedEntityId.value = entityId ?? null;
-  showPowerUpgradeModal.value = true;
-}
-
-/**
- * Close power upgrade modal
- */
-export function closePowerUpgradeModal(): void {
-  showPowerUpgradeModal.value = false;
-  activeUpgradeCategory.value = null;
-  selectedEntityId.value = null;
-}
-
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -321,4 +311,34 @@ export function getTurretStatLevel(
 export function getItemTierLevel(itemId: string): PowerItemTier {
   const itemTier = powerState.value.itemTiers.find(i => i.itemId === itemId);
   return itemTier?.tier || 'common';
+}
+
+/**
+ * Reset all power state (on logout)
+ */
+export function resetPowerState(): void {
+  powerState.value = {
+    fortressPower: null,
+    heroPower: [],
+    turretPower: [],
+    itemPower: 0,
+    totalPower: 0,
+    fortressUpgrades: {
+      hp: 0,
+      damage: 0,
+      attackSpeed: 0,
+      range: 0,
+      critChance: 0,
+      critMultiplier: 0,
+      armor: 0,
+      dodge: 0,
+    },
+    heroUpgrades: [],
+    turretUpgrades: [],
+    itemTiers: [],
+    isLoading: false,
+    error: null,
+  };
+  powerUpgradeModalVisible.value = false;
+  powerUpgradeModalTab.value = 'fortress';
 }
