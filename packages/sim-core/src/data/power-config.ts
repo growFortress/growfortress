@@ -70,8 +70,8 @@ export const HERO_STAT_UPGRADES: StatUpgradeConfig[] = [
   {
     stat: 'hp',
     name: 'Wytrzymałość',
-    description: '+1% HP bohatera za level',
-    bonusPerLevel: 0.01,
+    description: '+10% HP bohatera za level',
+    bonusPerLevel: 0.10,
     maxLevel: Infinity,
     baseCost: 15,
     costPerLevel: 10,
@@ -79,8 +79,8 @@ export const HERO_STAT_UPGRADES: StatUpgradeConfig[] = [
   {
     stat: 'damage',
     name: 'Siła Ataku',
-    description: '+1% obrażeń bohatera za level',
-    bonusPerLevel: 0.01,
+    description: '+10% obrażeń bohatera za level',
+    bonusPerLevel: 0.10,
     maxLevel: Infinity,
     baseCost: 25,
     costPerLevel: 15,
