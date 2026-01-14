@@ -2552,13 +2552,13 @@ const FOUNDERS_MEDAL: ArtifactDefinition = {
     {
       type: 'stat_boost',
       stat: 'damageMultiplier',
-      value: 8192 as FP, // +10%
+      value: 18022 as FP, // 1.1x multiplier (16384 * 1.1 = 18022)
       description: '+10% obrażeń',
     },
     {
       type: 'stat_boost',
       stat: 'healthMultiplier',
-      value: 8192 as FP, // +10%
+      value: 18022 as FP, // 1.1x multiplier (16384 * 1.1 = 18022)
       description: '+10% zdrowia',
     },
     {
