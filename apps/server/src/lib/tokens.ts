@@ -93,6 +93,7 @@ export type SimConfigSnapshot = Pick<
   | 'fortressBaseHp'
   | 'fortressBaseDamage'
   | 'waveIntervalTicks'
+  | 'equippedArtifacts'
 >;
 
 export interface RunTokenPayload {

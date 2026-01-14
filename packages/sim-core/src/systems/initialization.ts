@@ -13,6 +13,7 @@ import { getHeroById, calculateHeroStats } from '../data/heroes.js';
 import { getTurretById, calculateTurretHp } from '../data/turrets.js';
 import { getClassById } from '../data/classes.js';
 import { HERO_PHYSICS } from '../physics.js';
+import { calculateHeroArtifactHealthBonus } from './artifacts.js';
 import { getFormationPosition } from './helpers.js';
 import { getHeroPowerMultipliers } from './apply-power-upgrades.js';
 import { createDefaultPlayerPowerData, type PlayerPowerData } from '../data/power-upgrades.js';
@@ -28,7 +29,8 @@ export function initializeHeroes(
   heroIds: string[],
   fortressX: number,
   powerData?: PlayerPowerData,
-  heroTiers?: Record<string, number>
+  heroTiers?: Record<string, number>,
+  equippedArtifacts?: Record<string, string> // heroId -> artifactId mapping
 ): ActiveHero[] {
   const heroes: ActiveHero[] = [];
   const heroCount = heroIds.filter(id => getHeroById(id)).length;
@@ -54,7 +56,14 @@ export function initializeHeroes(
 
     // Apply power upgrades to hero stats (multiplicative with tier bonus)
     const powerMultipliers = getHeroPowerMultipliers(effectivePowerData, heroId);
-    const modifiedHp = Math.floor(tierStats.hp * powerMultipliers.hpMultiplier);
+    let modifiedHp = Math.floor(tierStats.hp * powerMultipliers.hpMultiplier);
+
+    // Apply artifact bonuses
+    const artifactId = equippedArtifacts?.[heroId];
+    if (artifactId) {
+      const artifactHealthBonus = calculateHeroArtifactHealthBonus(artifactId);
+      modifiedHp = Math.floor(modifiedHp * artifactHealthBonus);
+    }
 
     const hero: ActiveHero = {
       definitionId: heroId,
@@ -80,6 +89,7 @@ export function initializeHeroes(
       lastDeployTick: -1000, // Ready to deploy immediately
       skillCooldowns: {},
       buffs: [],
+      equippedArtifact: artifactId,
       equippedItems: [],
     };
 

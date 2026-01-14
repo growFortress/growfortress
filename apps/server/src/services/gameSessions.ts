@@ -242,11 +242,30 @@ export async function startGameSession(
     turretTiers: (powerUpgradesRecord.turretTiers as Record<string, number>) || {},
   } : { ...defaultPowerData, heroTiers: {}, turretTiers: {} };
 
+  // Get equipped artifacts (heroId -> artifactId mapping)
+  const equippedArtifactsArray = await prisma.playerArtifact.findMany({
+    where: {
+      userId,
+      equippedToHeroId: { not: null },
+    },
+    select: {
+      artifactId: true,
+      equippedToHeroId: true,
+    },
+  });
+  const equippedArtifacts: Record<string, string> = {};
+  for (const artifact of equippedArtifactsArray) {
+    if (artifact.equippedToHeroId) {
+      equippedArtifacts[artifact.equippedToHeroId] = artifact.artifactId;
+    }
+  }
+
   const { simConfig } = buildSimConfigSnapshot({
     commanderLevel,
     progressionBonuses: bonuses,
     unlockedHeroes: profile.unlockedHeroes,
     unlockedTurrets: profile.unlockedTurrets,
+    equippedArtifacts,
     requested: {
       fortressClass: options.fortressClass,
       startingHeroes: options.startingHeroes,

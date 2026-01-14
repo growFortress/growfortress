@@ -12,6 +12,7 @@ import {
   getStatBonusPercent,
   getStatMultiplier,
   ARTIFACT_DEFINITIONS,
+  applyArtifactBonusesToStats,
 } from '@arcade/sim-core';
 import {
   upgradeTarget,
@@ -245,7 +246,15 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
   if (!heroDef) return null;
 
   const classColor = CLASS_COLORS[heroDef.class];
-  const currentStats = calculateHeroStats(heroDef, hero.tier, hero.level);
+
+  // Equipment handlers
+  const equippedArtifact = getArtifactForHero(hero.definitionId);
+  const availableArtifacts = unequippedArtifacts.value;
+
+  // Calculate stats with artifact bonuses
+  const baseStats = calculateHeroStats(heroDef, hero.tier, hero.level);
+  const currentStats = applyArtifactBonusesToStats(baseStats, equippedArtifact?.artifactId);
+
   const heroUpgrades = powerState.value.heroUpgrades.find(h => h.heroId === hero.definitionId);
   const currentTierDef = heroDef.tiers[hero.tier - 1];
 
@@ -279,10 +288,6 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
       setLoadingStat(null);
     }
   };
-
-  // Equipment handlers
-  const equippedArtifact = getArtifactForHero(hero.definitionId);
-  const availableArtifacts = unequippedArtifacts.value;
 
   const handleEquipArtifact = async (artifactInstanceId: string) => {
     setEquipmentLoading(true);

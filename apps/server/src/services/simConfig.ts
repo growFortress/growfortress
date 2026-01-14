@@ -46,6 +46,7 @@ export interface BuildSimConfigParams {
   };
   unlockedHeroes: string[];
   unlockedTurrets: string[];
+  equippedArtifacts?: Record<string, string>; // heroId -> artifactId
   requested?: RequestedLoadout;
   defaults?: LoadoutDefaults;
   remoteConfig?: {
@@ -116,6 +117,7 @@ export function buildSimConfigSnapshot(
     fortressClass,
     startingHeroes,
     startingTurrets,
+    equippedArtifacts: params.equippedArtifacts,
     fortressBaseHp: params.remoteConfig?.fortressBaseHp ?? 100,
     fortressBaseDamage: params.remoteConfig?.fortressBaseDamage ?? 10,
     waveIntervalTicks: params.remoteConfig?.waveIntervalTicks ?? 90,
@@ -145,6 +147,7 @@ export function applySimConfigSnapshot(
   config.startingTurrets = snapshot.startingTurrets.map((turret) => ({
     ...turret,
   }));
+  config.equippedArtifacts = snapshot.equippedArtifacts ? { ...snapshot.equippedArtifacts } : undefined;
   config.fortressBaseHp = snapshot.fortressBaseHp;
   config.fortressBaseDamage = snapshot.fortressBaseDamage;
   config.waveIntervalTicks = snapshot.waveIntervalTicks;

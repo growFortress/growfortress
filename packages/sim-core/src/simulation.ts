@@ -197,7 +197,13 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
   // Get hero and turret tiers from power data
   const heroTiers = config.powerData?.heroTiers || {};
   const turretTiers = config.powerData?.turretTiers || {};
-  const heroes = initializeHeroes(config.startingHeroes || [], config.fortressX, powerDataForHeroes, heroTiers);
+  const heroes = initializeHeroes(
+    config.startingHeroes || [],
+    config.fortressX,
+    powerDataForHeroes,
+    heroTiers,
+    config.equippedArtifacts
+  );
 
   // Initialize turrets with max slots based on commander level
   const maxTurretSlots = getMaxTurretSlots(config.commanderLevel);

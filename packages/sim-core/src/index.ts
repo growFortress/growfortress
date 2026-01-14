@@ -644,3 +644,10 @@ export {
   type ClassProgressSummary,
   type UnlockValidation,
 } from './systems/mastery.js';
+
+// Artifact system
+export {
+  calculateHeroArtifactDamageBonus,
+  calculateHeroArtifactHealthBonus,
+  applyArtifactBonusesToStats,
+} from './systems/artifacts.js';

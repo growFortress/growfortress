@@ -655,6 +655,9 @@ export interface SimConfig {
   // NEW: Player's already-owned artifacts (for duplicate detection)
   playerOwnedArtifacts?: string[];
 
+  // NEW: Equipped artifacts (heroId -> artifactId mapping)
+  equippedArtifacts?: Record<string, string>;
+
   // NEW: Power upgrades data (permanent stat bonuses)
   powerData?: {
     fortressUpgrades: {
