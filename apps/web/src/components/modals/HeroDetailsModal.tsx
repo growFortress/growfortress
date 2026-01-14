@@ -99,7 +99,7 @@ function HeroStatRow({
   value,
   upgradeLevel,
   maxLevel,
-  bonusPercent,
+  bonusPercent: _bonusPercent,
   upgradeCost,
   canAfford,
   onUpgrade,
@@ -116,7 +116,6 @@ function HeroStatRow({
       {hasUpgrade && (
         <>
           <span class={styles.statLevel}>Lv {upgradeLevel}{maxLevel !== Infinity && `/${maxLevel}`}</span>
-          <span class={styles.statBonus}>+{bonusPercent}%</span>
           {isMaxed ? (
             <span class={styles.maxBadge}>MAX</span>
           ) : (
