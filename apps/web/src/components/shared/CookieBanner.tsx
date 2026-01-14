@@ -1,0 +1,52 @@
+import { useEffect, useState } from "preact/hooks";
+import { useTranslation } from "../../i18n/useTranslation.js";
+import { openLegalModal } from "../../state/index.js";
+import styles from "./CookieBanner.module.css";
+
+const CONSENT_KEY = "cookie-consent";
+
+export function CookieBanner() {
+  const { t } = useTranslation("modals");
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(CONSENT_KEY)) {
+      return;
+    }
+    setVisible(true);
+  }, []);
+
+  const handleAccept = () => {
+    localStorage.setItem(CONSENT_KEY, "accepted");
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div
+      class={styles.banner}
+      role="dialog"
+      aria-live="polite"
+      aria-label={t("cookieBanner.label")}
+    >
+      <div class={styles.text}>
+        <strong>{t("cookieBanner.title")}</strong> {t("cookieBanner.body")}
+      </div>
+      <div class={styles.actions}>
+        <button type="button" class={styles.primary} onClick={handleAccept}>
+          {t("cookieBanner.accept")}
+        </button>
+        <button
+          type="button"
+          class={styles.secondary}
+          onClick={() => openLegalModal("cookies")}
+        >
+          {t("cookieBanner.policy")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default CookieBanner;

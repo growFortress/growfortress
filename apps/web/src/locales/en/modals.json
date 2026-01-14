@@ -36,6 +36,25 @@
       "cookies": "Cookies"
     }
   },
+  "legalModal": {
+    "title": "Legal information",
+    "ariaLabel": "Legal information",
+    "tabListLabel": "Legal documents",
+    "tabs": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "cookies": "Cookies",
+      "payment": "Payments"
+    },
+    "footer": "© {{year}} PlazaWorks • help@growfortress.com"
+  },
+  "cookieBanner": {
+    "label": "Cookie notice",
+    "title": "Cookies.",
+    "body": "We use essential cookies to handle login and keep your session active. Details are available in the cookie policy.",
+    "accept": "Accept",
+    "policy": "Cookie policy"
+  },
   "confirm": {
     "defaultConfirm": "Confirm",
     "defaultCancel": "Cancel"

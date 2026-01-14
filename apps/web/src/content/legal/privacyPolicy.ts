@@ -1,6 +1,7 @@
 export const PRIVACY_POLICY = {
-  title: 'Polityka prywatności',
-  content: `
+  pl: {
+    title: "Polityka prywatności",
+    content: `
     <section>
       <h4>1. Administrator danych</h4>
       <p>1.1. Administratorem danych osobowych jest PlazaWorks Marcin Płaza, NIP: 6020152779, REGON: 543561198.</p>
@@ -101,4 +102,109 @@ export const PRIVACY_POLICY = {
 
     <p class="lastUpdated"><em>Ostatnia aktualizacja: styczeń 2025</em></p>
   `,
+  },
+  en: {
+    title: "Privacy Policy",
+    content: `
+    <section>
+      <h4>1. Data controller</h4>
+      <p>1.1. The data controller is PlazaWorks Marcin Płaza, NIP: 6020152779, REGON: 543561198.</p>
+      <p>1.2. Data protection contact: <strong>help@growfortress.com</strong></p>
+    </section>
+
+    <section>
+      <h4>2. Scope of collected data</h4>
+      <p>2.1. When using the Game, we collect the following data:</p>
+      <ul>
+        <li><strong>Registration data:</strong> username, email address, password (hashed)</li>
+        <li><strong>Gameplay data:</strong> progress, statistics, achievements</li>
+        <li><strong>Technical data:</strong> IP address, browser type, operating system</li>
+        <li><strong>Transaction data:</strong> in-game purchase history (without payment details)</li>
+      </ul>
+      <p>2.2. We do not collect sensitive personal data.</p>
+    </section>
+
+    <section>
+      <h4>3. Purpose of data processing</h4>
+      <p>3.1. We process data in order to:</p>
+      <ul>
+        <li>Provide the Game services and manage Accounts</li>
+        <li>Process in-game purchases</li>
+        <li>Communicate with Users</li>
+        <li>Ensure security and prevent abuse</li>
+        <li>Run statistics and analytics</li>
+        <li>Fulfill legal obligations</li>
+      </ul>
+    </section>
+
+    <section>
+      <h4>4. Legal basis (GDPR)</h4>
+      <p>4.1. We process data based on:</p>
+      <ul>
+        <li><strong>Art. 6(1)(b) GDPR</strong> - performance of a contract (providing Game services)</li>
+        <li><strong>Art. 6(1)(a) GDPR</strong> - consent (marketing communication)</li>
+        <li><strong>Art. 6(1)(c) GDPR</strong> - legal obligation (e.g. accounting)</li>
+        <li><strong>Art. 6(1)(f) GDPR</strong> - legitimate interest (security, analytics)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h4>5. Data recipients</h4>
+      <p>5.1. Data may be shared with:</p>
+      <ul>
+        <li>Hosting and IT infrastructure providers</li>
+        <li>Payment processors (for transaction processing)</li>
+        <li>Public authorities (when required by law)</li>
+      </ul>
+      <p>5.2. We do not sell personal data to third parties.</p>
+      <p>5.3. Data may be processed within the EEA in countries providing an adequate level of protection.</p>
+    </section>
+
+    <section>
+      <h4>6. Data retention period</h4>
+      <p>6.1. We retain data:</p>
+      <ul>
+        <li><strong>Account data:</strong> for as long as the Account remains active</li>
+        <li><strong>Transaction data:</strong> for 5 years after the end of the tax year</li>
+        <li><strong>Technical data:</strong> for 12 months</li>
+        <li><strong>Data after Account deletion:</strong> for 30 days (backup)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h4>7. User rights</h4>
+      <p>7.1. The User has the right to:</p>
+      <ul>
+        <li><strong>Access</strong> - obtain information about processed data</li>
+        <li><strong>Rectification</strong> - correct inaccurate data</li>
+        <li><strong>Erasure</strong> - request deletion of data ("right to be forgotten")</li>
+        <li><strong>Restriction</strong> - temporarily limit processing</li>
+        <li><strong>Data portability</strong> - receive data in a machine-readable format</li>
+        <li><strong>Objection</strong> - object to processing based on legitimate interest</li>
+        <li><strong>Withdrawal of consent</strong> - at any time, without affecting prior processing</li>
+      </ul>
+      <p>7.2. To exercise these rights, contact: <strong>help@growfortress.com</strong></p>
+      <p>7.3. The User has the right to lodge a complaint with the Polish Data Protection Authority.</p>
+    </section>
+
+    <section>
+      <h4>8. Data security</h4>
+      <p>8.1. We use appropriate technical and organizational measures, including:</p>
+      <ul>
+        <li>Encrypted connections (SSL/TLS)</li>
+        <li>Password hashing (bcrypt)</li>
+        <li>Regular backups</li>
+        <li>Restricted data access</li>
+      </ul>
+    </section>
+
+    <section>
+      <h4>9. Changes to this Privacy Policy</h4>
+      <p>9.1. We reserve the right to update this Policy.</p>
+      <p>9.2. We will inform Users of material changes via an in-game notification.</p>
+    </section>
+
+    <p class="lastUpdated"><em>Last updated: January 2025</em></p>
+  `,
+  },
 };

@@ -1,6 +1,7 @@
 export const COOKIE_POLICY = {
-  title: 'Polityka cookies',
-  content: `
+  pl: {
+    title: "Polityka cookies",
+    content: `
     <section>
       <h4>1. Czym są pliki cookies?</h4>
       <p>1.1. Pliki cookies (ciasteczka) to małe pliki tekstowe zapisywane na urządzeniu Użytkownika podczas korzystania ze stron internetowych.</p>
@@ -102,4 +103,110 @@ export const COOKIE_POLICY = {
 
     <p class="lastUpdated"><em>Ostatnia aktualizacja: styczeń 2025</em></p>
   `,
+  },
+  en: {
+    title: "Cookie Policy",
+    content: `
+    <section>
+      <h4>1. What are cookies?</h4>
+      <p>1.1. Cookies are small text files stored on the User's device when using websites.</p>
+      <p>1.2. Cookies allow the Game to function properly and remember User preferences.</p>
+    </section>
+
+    <section>
+      <h4>2. Types of cookies we use</h4>
+      <p>2.1. We use the following cookies:</p>
+      <ul>
+        <li><strong>Essential cookies</strong> - required for the Game to work (authentication, session)</li>
+        <li><strong>Functional cookies</strong> - remember settings (language, graphics preferences)</li>
+        <li><strong>Analytics cookies</strong> - anonymous usage statistics</li>
+      </ul>
+      <p>2.2. We do not use advertising or tracking cookies.</p>
+    </section>
+
+    <section>
+      <h4>3. Detailed list of cookies</h4>
+      <table>
+        <tr>
+          <th>Name</th>
+          <th>Purpose</th>
+          <th>Retention</th>
+        </tr>
+        <tr>
+          <td>auth_token</td>
+          <td>User authentication</td>
+          <td>30 days</td>
+        </tr>
+        <tr>
+          <td>refresh_token</td>
+          <td>Session refresh</td>
+          <td>90 days</td>
+        </tr>
+        <tr>
+          <td>settings</td>
+          <td>User preferences</td>
+          <td>1 year</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h4>4. Purpose of cookies</h4>
+      <p>4.1. We use cookies to:</p>
+      <ul>
+        <li>Maintain sessions and authenticate Users</li>
+        <li>Remember Game settings (sound, graphics)</li>
+        <li>Ensure security</li>
+        <li>Analyze Game usage (anonymously)</li>
+        <li>Improve performance and functionality</li>
+      </ul>
+    </section>
+
+    <section>
+      <h4>5. Local Storage and IndexedDB</h4>
+      <p>5.1. In addition to cookies, we also use:</p>
+      <ul>
+        <li><strong>Local Storage</strong> - storing offline settings</li>
+        <li><strong>IndexedDB</strong> - caching game data for faster loading</li>
+      </ul>
+      <p>5.2. This data remains only on the User's device.</p>
+    </section>
+
+    <section>
+      <h4>6. Managing cookies</h4>
+      <p>6.1. Users can manage cookies via browser settings:</p>
+      <ul>
+        <li><strong>Chrome:</strong> Settings → Privacy and security → Cookies</li>
+        <li><strong>Firefox:</strong> Options → Privacy & Security → Cookies</li>
+        <li><strong>Safari:</strong> Preferences → Privacy → Manage data</li>
+        <li><strong>Edge:</strong> Settings → Privacy → Cookies</li>
+      </ul>
+      <p>6.2. Disabling essential cookies may prevent use of the Game.</p>
+      <p>6.3. Deleting cookies will log the User out of their Account.</p>
+    </section>
+
+    <section>
+      <h4>7. Third-party cookies</h4>
+      <p>7.1. We may use third-party services that set their own cookies:</p>
+      <ul>
+        <li><strong>Payment providers</strong> - during transaction processing</li>
+      </ul>
+      <p>7.2. Rules for third-party cookies are defined in their own policies.</p>
+    </section>
+
+    <section>
+      <h4>8. Cookie consent</h4>
+      <p>8.1. By using the Game, the User consents to essential cookies.</p>
+      <p>8.2. We ask for separate consent for analytics cookies.</p>
+      <p>8.3. Consent may be withdrawn at any time in Game settings or browser settings.</p>
+    </section>
+
+    <section>
+      <h4>9. Contact</h4>
+      <p>9.1. Questions about cookies: <strong>help@growfortress.com</strong></p>
+    </section>
+
+    <p class="lastUpdated"><em>Last updated: January 2025</em></p>
+  `,
+  },
 };

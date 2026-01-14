@@ -57,6 +57,7 @@
   padding: 20px 0 0;
   max-height: 55vh;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 
@@ -73,6 +74,8 @@
   color: var(--color-text-80);
   font-size: 13px;
   line-height: 1.7;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .contentBody section {
@@ -109,6 +112,9 @@
   border-collapse: collapse;
   margin: 12px 0;
   font-size: 12px;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .contentBody th,

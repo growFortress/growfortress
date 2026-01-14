@@ -1,27 +1,25 @@
-import { Modal } from '../shared/Modal.js';
+import { Modal } from "../shared/Modal.js";
+import { useTranslation } from "../../i18n/useTranslation.js";
 import {
   legalModalVisible,
   activeLegalTab,
   closeLegalModal,
   setLegalTab,
   type LegalTab,
-} from '../../state/legal.signals.js';
+} from "../../state/legal.signals.js";
 import {
   TERMS_OF_SERVICE,
   PRIVACY_POLICY,
   COOKIE_POLICY,
   PAYMENT_TERMS,
-} from '../../content/legal/index.js';
-import styles from './LegalModal.module.css';
+} from "../../content/legal/index.js";
+import styles from "./LegalModal.module.css";
 
-const LEGAL_TABS: { id: LegalTab; label: string; icon: string }[] = [
-  { id: 'terms', label: 'Regulamin', icon: '📜' },
-  { id: 'privacy', label: 'Prywatność', icon: '🔒' },
-  { id: 'cookies', label: 'Cookies', icon: '🍪' },
-  { id: 'payment', label: 'Płatności', icon: '💳' },
-];
+type LegalContent = { title: string; content: string };
 
-const LEGAL_CONTENT: Record<LegalTab, { title: string; content: string }> = {
+type LegalContentByLanguage = Record<"pl" | "en", LegalContent>;
+
+const LEGAL_CONTENT: Record<LegalTab, LegalContentByLanguage> = {
   terms: TERMS_OF_SERVICE,
   privacy: PRIVACY_POLICY,
   cookies: COOKIE_POLICY,
@@ -29,26 +27,38 @@ const LEGAL_CONTENT: Record<LegalTab, { title: string; content: string }> = {
 };
 
 export function LegalModal() {
+  const { t, language } = useTranslation("modals");
   const isVisible = legalModalVisible.value;
   const activeTab = activeLegalTab.value;
-  const currentContent = LEGAL_CONTENT[activeTab];
+  const languageKey = language === "pl" ? "pl" : "en";
+  const currentContent = LEGAL_CONTENT[activeTab][languageKey];
+  const legalTabs: { id: LegalTab; label: string; icon: string }[] = [
+    { id: "terms", label: t("legalModal.tabs.terms"), icon: "📜" },
+    { id: "privacy", label: t("legalModal.tabs.privacy"), icon: "🔒" },
+    { id: "cookies", label: t("legalModal.tabs.cookies"), icon: "🍪" },
+    { id: "payment", label: t("legalModal.tabs.payment"), icon: "💳" },
+  ];
 
   if (!isVisible) return null;
 
   return (
     <Modal
       visible={isVisible}
-      title="Informacje prawne"
+      title={t("legalModal.title")}
       onClose={closeLegalModal}
       size="large"
-      ariaLabel="Informacje prawne"
+      ariaLabel={t("legalModal.ariaLabel")}
     >
-      <div class={styles.tabs} role="tablist" aria-label="Dokumenty prawne">
-        {LEGAL_TABS.map((tab) => (
+      <div
+        class={styles.tabs}
+        role="tablist"
+        aria-label={t("legalModal.tabListLabel")}
+      >
+        {legalTabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            class={`${styles.tabBtn} ${activeTab === tab.id ? styles.activeTab : ''}`}
+            class={`${styles.tabBtn} ${activeTab === tab.id ? styles.activeTab : ""}`}
             onClick={() => setLegalTab(tab.id)}
             aria-selected={activeTab === tab.id}
             role="tab"
@@ -79,7 +89,7 @@ export function LegalModal() {
 
       <div class={styles.footer}>
         <span class={styles.companyInfo}>
-          © {new Date().getFullYear()} PlazaWorks • help@growfortress.com
+          {t("legalModal.footer", { year: new Date().getFullYear() })}
         </span>
       </div>
     </Modal>

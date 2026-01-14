@@ -1,6 +1,7 @@
 export const PAYMENT_TERMS = {
-  title: 'Warunki płatności',
-  content: `
+  pl: {
+    title: "Warunki płatności",
+    content: `
     <section>
       <h4>1. Informacje ogólne</h4>
       <p>1.1. Niniejsze warunki określają zasady dokonywania zakupów w grze Grow Fortress.</p>
@@ -105,4 +106,113 @@ export const PAYMENT_TERMS = {
 
     <p class="lastUpdated"><em>Ostatnia aktualizacja: styczeń 2025</em></p>
   `,
+  },
+  en: {
+    title: "Payment Terms",
+    content: `
+    <section>
+      <h4>1. General information</h4>
+      <p>1.1. These terms set out the rules for making purchases in Grow Fortress.</p>
+      <p>1.2. The seller is PlazaWorks Marcin Płaza, NIP: 6020152779, REGON: 543561198.</p>
+      <p>1.3. Contact: <strong>help@growfortress.com</strong></p>
+    </section>
+
+    <section>
+      <h4>2. Subject of sale</h4>
+      <p>2.1. The Game offers the following digital products:</p>
+      <ul>
+        <li><strong>Premium currency</strong> - crystals used in the Game</li>
+        <li><strong>Starter packs</strong> - bundles of resources and bonuses</li>
+        <li><strong>Season passes</strong> - access to additional rewards</li>
+        <li><strong>Cosmetic items</strong> - visual items that do not affect gameplay</li>
+      </ul>
+      <p>2.2. All products are digital content and have no physical form.</p>
+    </section>
+
+    <section>
+      <h4>3. Prices and currency</h4>
+      <p>3.1. Prices are provided in Polish zloty (PLN) and include VAT.</p>
+      <p>3.2. Prices may change, but changes do not affect orders already paid for.</p>
+      <p>3.3. Current prices are always visible in the in-game Shop.</p>
+    </section>
+
+    <section>
+      <h4>4. Payment methods</h4>
+      <p>4.1. We accept the following payment methods:</p>
+      <ul>
+        <li>Payment cards (Visa, Mastercard)</li>
+        <li>Online transfers (via payment provider)</li>
+        <li>BLIK</li>
+        <li>Other methods offered by the payment provider</li>
+      </ul>
+      <p>4.2. Payments are processed by an external payment provider.</p>
+      <p>4.3. We do not store payment card details.</p>
+    </section>
+
+    <section>
+      <h4>5. Order fulfillment</h4>
+      <p>5.1. After payment confirmation, purchased products are added to the Account immediately.</p>
+      <p>5.2. In case of technical issues, products will be added within 24 hours.</p>
+      <p>5.3. A purchase confirmation is sent to the email address associated with the Account.</p>
+    </section>
+
+    <section>
+      <h4>6. Right of withdrawal</h4>
+      <p>6.1. Under Article 38(13) of the Polish Consumer Rights Act, the right of withdrawal does not apply to digital content delivered with the consumer's explicit consent before the withdrawal period ends.</p>
+      <p>6.2. By making a purchase, the User consents to immediate delivery of digital content and acknowledges the loss of the right of withdrawal.</p>
+      <p>6.3. Before each purchase, the User must confirm acceptance of these terms.</p>
+    </section>
+
+    <section>
+      <h4>7. Complaints</h4>
+      <p>7.1. Complaints regarding purchases can be submitted:</p>
+      <ul>
+        <li>By email to: <strong>help@growfortress.com</strong></li>
+      </ul>
+      <p>7.2. A complaint should include:</p>
+      <ul>
+        <li>The Account username or email address</li>
+        <li>Date and type of transaction</li>
+        <li>Description of the issue</li>
+      </ul>
+      <p>7.3. Complaints are reviewed within 14 business days.</p>
+      <p>7.4. We inform Users of the complaint outcome by email.</p>
+    </section>
+
+    <section>
+      <h4>8. Refunds</h4>
+      <p>8.1. Due to the nature of digital products, refunds are possible only in cases of:</p>
+      <ul>
+        <li>A technical error preventing delivery of the product</li>
+        <li>Double charge for the same product</li>
+        <li>A justified complaint</li>
+      </ul>
+      <p>8.2. Refunds are issued using the same payment method used for the purchase.</p>
+      <p>8.3. Refund processing time: up to 14 business days.</p>
+    </section>
+
+    <section>
+      <h4>9. Restrictions</h4>
+      <p>9.1. Purchases may be made only by adults or minors with a legal guardian's consent.</p>
+      <p>9.2. The Operator reserves the right to refuse a purchase in case of suspected abuse.</p>
+      <p>9.3. Virtual currency and items purchased in the Game cannot be exchanged for real money.</p>
+    </section>
+
+    <section>
+      <h4>10. Invoices</h4>
+      <p>10.1. We issue VAT invoices upon request.</p>
+      <p>10.2. Requests for an invoice with billing details should be sent to: <strong>help@growfortress.com</strong></p>
+      <p>10.3. We issue the invoice within 7 days of receiving the request.</p>
+    </section>
+
+    <section>
+      <h4>11. Final provisions</h4>
+      <p>11.1. Matters not regulated herein are governed by Polish law, in particular the Civil Code and the Consumer Rights Act.</p>
+      <p>11.2. Disputes are resolved by the court competent for the Seller's seat.</p>
+      <p>11.3. Consumers may use out-of-court complaint resolution, including the ODR platform: <strong>ec.europa.eu/consumers/odr</strong></p>
+    </section>
+
+    <p class="lastUpdated"><em>Last updated: January 2025</em></p>
+  `,
+  },
 };
