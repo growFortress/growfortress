@@ -4,12 +4,16 @@
 # =============================================================================
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
+# System deps for Prisma + health checks
+RUN apt-get update && apt-get install -y openssl wget && rm -rf /var/lib/apt/lists/*
+
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
+
 
 # Copy workspace configuration
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -75,12 +79,16 @@ RUN pnpm --filter @arcade/server build
 # =============================================================================
 # Production stage
 # =============================================================================
-FROM node:20-alpine AS production
+FROM node:20-bookworm-slim AS production
 
 WORKDIR /app
 
+# System deps for Prisma + health checks
+RUN apt-get update && apt-get install -y openssl wget && rm -rf /var/lib/apt/lists/*
+
 # Install pnpm for running the app
 RUN corepack enable && corepack prepare pnpm@latest --activate
+
 
 # Copy workspace configuration
 COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/package.json ./
