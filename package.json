@@ -2,7 +2,7 @@
   "name": "arcade-td",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.28.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
     "dev:db": "docker compose up -d",
@@ -26,6 +26,6 @@
   },
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=9.0.0"
+    "pnpm": ">=10.0.0"
   }
 }
