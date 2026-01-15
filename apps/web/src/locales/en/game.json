@@ -186,6 +186,118 @@
     "waveN": "Wave {{n}}",
     "clickToClose": "Click to close"
   },
+  "relicsCatalog": {
+    "items": {
+      "splash-master": {
+        "name": "Splash Master",
+        "description": "Attacks deal 35% damage to nearby enemies"
+      },
+      "chain-lightning": {
+        "name": "Chain Lightning",
+        "description": "+40% chain chance, +2 chains"
+      },
+      "executioner": {
+        "name": "Executioner",
+        "description": "Execute enemies below 15% HP for +200% damage"
+      },
+      "glass-cannon": {
+        "name": "Glass Cannon",
+        "description": "+100% damage, -40% max HP"
+      },
+      "iron-hide": {
+        "name": "Iron Hide",
+        "description": "+25% max HP"
+      },
+      "sharpened-blades": {
+        "name": "Sharpened Blades",
+        "description": "+20% damage"
+      },
+      "swift-strikes": {
+        "name": "Swift Strikes",
+        "description": "+15% attack speed"
+      },
+      "critical-eye": {
+        "name": "Critical Eye",
+        "description": "+10% crit chance, +50% crit damage"
+      },
+      "elite-hunter": {
+        "name": "Elite Hunter",
+        "description": "+50% damage to elite enemies"
+      },
+      "natural-growth": {
+        "name": "Natural Growth",
+        "description": "Natural class: +30% HP, +HP regen"
+      },
+      "ice-mastery": {
+        "name": "Ice Mastery",
+        "description": "Ice class: +25% damage, enemies slow on hit"
+      },
+      "lightning-surge": {
+        "name": "Lightning Surge",
+        "description": "Lightning class: +30% chain damage, +1 chain"
+      },
+      "tech-precision": {
+        "name": "Tech Precision",
+        "description": "Tech class: +15% crit chance, +25% attack speed"
+      },
+      "fire-fury": {
+        "name": "Fire Fury",
+        "description": "Fire class: +30% damage, +5% crit chance"
+      },
+      "cosmos-blessing": {
+        "name": "Cosmos Blessing",
+        "description": "Cosmos Pillar: +40% damage, +20% drop rates"
+      },
+      "science-enhancement": {
+        "name": "Science Enhancement",
+        "description": "Science Pillar: +30% attack speed, +20% crit"
+      },
+      "magic-arts": {
+        "name": "Magic Arts",
+        "description": "Magic Pillar: +50% damage, 20% cooldown reduction"
+      },
+      "harmonic-resonance": {
+        "name": "Harmonic Resonance",
+        "description": "Double synergy bonuses when all units match class"
+      },
+      "team-spirit": {
+        "name": "Team Spirit",
+        "description": "+15% damage and +5% HP per hero matching fortress class"
+      },
+      "gold-rush": {
+        "name": "Gold Rush",
+        "description": "+30% gold from all sources"
+      },
+      "dust-collector": {
+        "name": "Dust Collector",
+        "description": "+10% dust from all sources"
+      },
+      "lucky-charm": {
+        "name": "Lucky Charm",
+        "description": "+30% drop rates, +20% relic quality"
+      },
+      "berserkers-rage": {
+        "name": "Berserker's Rage",
+        "description": "+80% damage when below 30% HP, -20% max HP"
+      },
+      "greedy-goblin": {
+        "name": "Greedy Goblin",
+        "description": "+100% gold, -15% damage"
+      },
+      "desperate-measures": {
+        "name": "Desperate Measures",
+        "description": "+100% damage when HP below 20%, +25% incoming damage"
+      },
+      "immovable-object": {
+        "name": "Immovable Object",
+        "description": "+50% mass, +30% knockback resistance"
+      },
+      "crowd-breaker": {
+        "name": "Crowd Breaker",
+        "description": "+40% CC resistance, +20% mass"
+      }
+    }
+  },
   "endScreen": {
     "victory": "Victory!",
     "defeat": "Defeat",

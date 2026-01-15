@@ -186,6 +186,118 @@
     "waveN": "Fala {{n}}",
     "clickToClose": "Kliknij aby zamknąć"
   },
+  "relicsCatalog": {
+    "items": {
+      "splash-master": {
+        "name": "Mistrz Rozprysku",
+        "description": "Ataki zadają 35% obrażeń pobliskim wrogom"
+      },
+      "chain-lightning": {
+        "name": "Łańcuchowa Błyskawica",
+        "description": "+40% szansy na łańcuch, +2 łańcuchy"
+      },
+      "executioner": {
+        "name": "Egzekutor",
+        "description": "Dobija wrogów poniżej 15% HP za +200% obrażeń"
+      },
+      "glass-cannon": {
+        "name": "Szklana Armata",
+        "description": "+100% obrażeń, -40% maks. HP"
+      },
+      "iron-hide": {
+        "name": "Żelazna Skóra",
+        "description": "+25% maks. HP"
+      },
+      "sharpened-blades": {
+        "name": "Naostrzone Ostrza",
+        "description": "+20% obrażeń"
+      },
+      "swift-strikes": {
+        "name": "Szybkie Ciosy",
+        "description": "+15% prędkości ataku"
+      },
+      "critical-eye": {
+        "name": "Krytyczne Oko",
+        "description": "+10% szansy na kryt, +50% obrażeń krytycznych"
+      },
+      "elite-hunter": {
+        "name": "Łowca Elit",
+        "description": "+50% obrażeń przeciw elitom"
+      },
+      "natural-growth": {
+        "name": "Naturalny Wzrost",
+        "description": "Klasa Naturalna: +30% HP, regeneracja HP"
+      },
+      "ice-mastery": {
+        "name": "Mistrzostwo Lodu",
+        "description": "Klasa Lodu: +25% obrażeń, spowolnienie przy trafieniu"
+      },
+      "lightning-surge": {
+        "name": "Piorunowy Zryw",
+        "description": "Klasa Błyskawic: +30% obrażeń łańcuchowych, +1 łańcuch"
+      },
+      "tech-precision": {
+        "name": "Precyzja Technologiczna",
+        "description": "Klasa Tech: +15% szansy na kryt, +25% prędkości ataku"
+      },
+      "fire-fury": {
+        "name": "Furia Ognia",
+        "description": "Klasa Ognia: +30% obrażeń, +5% szansy na kryt"
+      },
+      "cosmos-blessing": {
+        "name": "Błogosławieństwo Kosmosu",
+        "description": "Filar Kosmosu: +40% obrażeń, +20% dropu"
+      },
+      "science-enhancement": {
+        "name": "Wzmocnienie Nauki",
+        "description": "Filar Nauki: +30% prędkości ataku, +20% kryta"
+      },
+      "magic-arts": {
+        "name": "Sztuki Magii",
+        "description": "Filar Magii: +50% obrażeń, 20% redukcji cooldownu"
+      },
+      "harmonic-resonance": {
+        "name": "Harmoniczny Rezonans",
+        "description": "Podwaja bonusy synergii, gdy wszystkie jednostki pasują do klasy"
+      },
+      "team-spirit": {
+        "name": "Duch Drużyny",
+        "description": "+15% obrażeń i +5% HP za każdego bohatera pasującego do klasy fortecy"
+      },
+      "gold-rush": {
+        "name": "Gorączka Złota",
+        "description": "+30% złota ze wszystkich źródeł"
+      },
+      "dust-collector": {
+        "name": "Zbieracz Pyłu",
+        "description": "+10% pyłu ze wszystkich źródeł"
+      },
+      "lucky-charm": {
+        "name": "Szczęśliwy Amulet",
+        "description": "+30% dropu, +20% jakości reliktów"
+      },
+      "berserkers-rage": {
+        "name": "Furia Berserkera",
+        "description": "+80% obrażeń poniżej 30% HP, -20% maks. HP"
+      },
+      "greedy-goblin": {
+        "name": "Chciwy Goblin",
+        "description": "+100% złota, -15% obrażeń"
+      },
+      "desperate-measures": {
+        "name": "Ostateczne Środki",
+        "description": "+100% obrażeń poniżej 20% HP, +25% otrzymywanych obrażeń"
+      },
+      "immovable-object": {
+        "name": "Nieruchomy Obiekt",
+        "description": "+50% masy, +30% odporności na odrzut"
+      },
+      "crowd-breaker": {
+        "name": "Łamacz Tłumu",
+        "description": "+40% odporności na CC, +20% masy"
+      }
+    }
+  },
   "endScreen": {
     "victory": "Zwycięstwo!",
     "defeat": "Porażka",
