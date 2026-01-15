@@ -54,6 +54,28 @@ import {
   setDisplayName,
   onAuthInvalidated,
 } from "../api/auth.js";
+import {
+  authError,
+  authLoading,
+  checkIdleRewards,
+  cleanupMessagesWebSocket,
+  dismissUnlockNotification,
+  fetchDailyQuests,
+  initMessagesWebSocket,
+  initializeHubFromLoadout,
+  isAuthenticated as isAuthSignal,
+  pendingSessionSnapshot,
+  refreshUnreadCounts,
+  setPowerSummary,
+  showOnboardingModal,
+  showSessionRecoveryModal,
+  syncStatus,
+  unlockNotifications,
+  updateArtifacts,
+  updateFromProfile,
+  updateItems,
+  updateLeaderboard,
+} from "../state/index.js";
 
 import {
   useQuery,

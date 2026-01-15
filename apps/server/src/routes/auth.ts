@@ -28,10 +28,29 @@ import { redis } from "../lib/redis.js";
 
 const USER_REFRESH_COOKIE = "arcade_refresh";
 const ADMIN_REFRESH_COOKIE = "arcade_admin_refresh";
-const USER_REFRESH_COOKIE_PATH = "/v1/auth";
-const ADMIN_REFRESH_COOKIE_PATH = "/v1/admin/auth";
 const REFRESH_MAX_AGE_SECONDS = Math.floor(
   parseDuration(config.JWT_REFRESH_EXPIRY) / 1000,
+);
+
+function buildCookiePath(prefix: string, path: string) {
+  const trimmedPrefix = prefix.trim();
+  if (!trimmedPrefix || trimmedPrefix === "/") {
+    return path;
+  }
+  const withLeadingSlash = trimmedPrefix.startsWith("/")
+    ? trimmedPrefix
+    : `/${trimmedPrefix}`;
+  const withoutTrailingSlash = withLeadingSlash.endsWith("/")
+    ? withLeadingSlash.slice(0, -1)
+    : withLeadingSlash;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${withoutTrailingSlash}${normalizedPath}`;
+}
+
+const USER_REFRESH_COOKIE_PATH = buildCookiePath(config.API_PREFIX, "/v1/auth");
+const ADMIN_REFRESH_COOKIE_PATH = buildCookiePath(
+  config.API_PREFIX,
+  "/v1/admin/auth",
 );
 
 const LOGIN_ATTEMPT_LIMIT = 5;

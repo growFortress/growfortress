@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 
-const MINIMUM_WIDTH = 1650;
+const MINIMUM_WIDTH = 1280;
 
 interface MinimumScreenSizeProps {
   children: any;

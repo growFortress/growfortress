@@ -13,23 +13,26 @@ import {
   openLeaderboardModal,
   showDailyQuestsPanel,
   showShopModal,
-} from '../../state/index.js';
-import { useTranslation } from '../../i18n/useTranslation.js';
-import { WaveProgress } from './WaveProgress.js';
-import { PillarDisplay } from './PillarDisplay.js';
-import { HeroSkillBar } from './HeroSkillBar.js';
-import { TurretSkillBar } from './TurretSkillBar.js';
-import { FortressSkillBar } from './FortressSkillBar.js';
-import { FortressInfoPanel } from './FortressInfoPanel.js';
-import { hasUnclaimedRewards, showRewardsModal } from '../modals/RewardsModal.js';
-import styles from './Hud.module.css';
+} from "../../state/index.js";
+import { useTranslation } from "../../i18n/useTranslation.js";
+import { WaveProgress } from "./WaveProgress.js";
+import { PillarDisplay } from "./PillarDisplay.js";
+import { HeroSkillBar } from "./HeroSkillBar.js";
+import { TurretSkillBar } from "./TurretSkillBar.js";
+import { FortressSkillBar } from "./FortressSkillBar.js";
+import { FortressInfoPanel } from "./FortressInfoPanel.js";
+import {
+  hasUnclaimedRewards,
+  showRewardsModal,
+} from "../modals/RewardsModal.js";
+import styles from "./Hud.module.css";
 
 export function Hud() {
-  const { t } = useTranslation('game');
+  const { t } = useTranslation("game");
   // Wave display: show game wave during session, profile wave when idle
   const waveDisplay = gameState.value?.wave ?? profileWave.value;
-  const isPlaying = gamePhase.value !== 'idle';
-  const isIdle = gamePhase.value === 'idle';
+  const isPlaying = gamePhase.value !== "idle";
+  const isIdle = gamePhase.value === "idle";
   const hasClass = selectedFortressClass.value !== null;
   const showHubUI = isIdle && hubInitialized.value;
 
@@ -43,7 +46,7 @@ export function Hud() {
       {/* Left section - Wave display with integrated progress */}
       <div class={styles.leftSection}>
         <div class={styles.waveDisplay}>
-          <span class={styles.waveLabel}>{t('hud.wave')}</span>
+          <span class={styles.waveLabel}>{t("hud.wave")}</span>
           <span class={styles.waveNumber}>{waveDisplay}</span>
           {isPlaying && (
             <div class={styles.waveProgressIntegrated}>
@@ -52,15 +55,16 @@ export function Hud() {
           )}
         </div>
 
-
         {showHubUI && hasUnclaimedRewards.value && (
-          <button class={styles.rewardButton} onClick={() => showRewardsModal()}>
-            <span class={styles.rewardLabel}>{t('hud.rewards')}</span>
+          <button
+            class={styles.rewardButton}
+            onClick={() => showRewardsModal()}
+          >
+            <span class={styles.rewardLabel}>{t("hud.rewards")}</span>
             <div class={styles.rewardBadge} />
           </button>
         )}
       </div>
-
 
       {/* Right panel - Resources and buttons (only during gameplay) */}
       {isPlaying && (
@@ -77,12 +81,48 @@ export function Hud() {
           </div>
 
           <div class={styles.gameButtons}>
-            <button onClick={() => showDailyQuestsPanel()} title={t('navigation.dailyQuests', { ns: 'common' })}></button>
-            <button onClick={() => openLeaderboardModal()} title={t('navigation.leaderboards', { ns: 'common' })}></button>
-            <button onClick={() => openMessagesModal()} title={t('navigation.messages', { ns: 'common' })}></button>
-            <button onClick={() => openGuildPanel()} title={t('navigation.guild', { ns: 'common' })}></button>
-            <button onClick={() => showShopModal()} title={t('navigation.shop', { ns: 'common' })}></button>
-            <button onClick={openSettingsMenu} title={t('navigation.settings', { ns: 'common' })}></button>
+            <button
+              onClick={() => showDailyQuestsPanel()}
+              title={t("navigation.dailyQuests", { ns: "common" })}
+              aria-label={t("navigation.dailyQuests", { ns: "common" })}
+            >
+              <span aria-hidden="true">📋</span>
+            </button>
+            <button
+              onClick={() => openLeaderboardModal()}
+              title={t("navigation.leaderboards", { ns: "common" })}
+              aria-label={t("navigation.leaderboards", { ns: "common" })}
+            >
+              <span aria-hidden="true">🏆</span>
+            </button>
+            <button
+              onClick={() => openMessagesModal()}
+              title={t("navigation.messages", { ns: "common" })}
+              aria-label={t("navigation.messages", { ns: "common" })}
+            >
+              <span aria-hidden="true">✉️</span>
+            </button>
+            <button
+              onClick={() => openGuildPanel()}
+              title={t("navigation.guild", { ns: "common" })}
+              aria-label={t("navigation.guild", { ns: "common" })}
+            >
+              <span aria-hidden="true">🏰</span>
+            </button>
+            <button
+              onClick={() => showShopModal()}
+              title={t("navigation.shop", { ns: "common" })}
+              aria-label={t("navigation.shop", { ns: "common" })}
+            >
+              <span aria-hidden="true">🛒</span>
+            </button>
+            <button
+              onClick={openSettingsMenu}
+              title={t("navigation.settings", { ns: "common" })}
+              aria-label={t("navigation.settings", { ns: "common" })}
+            >
+              <span aria-hidden="true">⚙️</span>
+            </button>
           </div>
         </div>
       )}
@@ -104,7 +144,7 @@ export function Hud() {
       {/* Skills section - Bottom left (only during gameplay) */}
       {isPlaying && hasClass && (
         <div class={styles.skillsSectionBottomLeft}>
-          <div class={styles.skillsHeader}>{t('hud.skills')}</div>
+          <div class={styles.skillsHeader}>{t("hud.skills")}</div>
           <div class={styles.skillsRow}>
             <HeroSkillBar compact />
             <TurretSkillBar compact />
@@ -112,7 +152,6 @@ export function Hud() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

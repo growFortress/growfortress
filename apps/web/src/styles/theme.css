@@ -87,8 +87,8 @@
   /* =========================
      TYPOGRAPHY
      ========================= */
-  --font-display: 'Orbitron', system-ui, sans-serif;
-  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-display: "Orbitron", system-ui, sans-serif;
+  --font-body: "Outfit", system-ui, sans-serif;
 
   /* =========================
      SINGLE LINE STYLE (3px Bold Cartoon)
@@ -281,7 +281,7 @@ body {
   margin: 0;
   overflow: hidden;
   cursor: default;
-  min-width: 1650px;
+  min-width: 1280px;
 }
 
 ::-webkit-scrollbar {
@@ -340,7 +340,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
