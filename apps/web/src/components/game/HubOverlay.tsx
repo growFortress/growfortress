@@ -1,5 +1,5 @@
-import type { JSX } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import type { JSX } from "preact";
+import { useState, useEffect } from "preact/hooks";
 import {
   gamePhase,
   hubTurrets,
@@ -10,11 +10,11 @@ import {
   turretPlacementModalVisible,
   turretPlacementSlotIndex,
   baseLevel,
-} from '../../state/index.js';
-import { getMaxTurretSlots } from '@arcade/sim-core';
-import { audioManager } from '../../game/AudioManager.js';
-import { useCoordinates } from '../../hooks/useCoordinates.js';
-import styles from './HubOverlay.module.css';
+} from "../../state/index.js";
+import { getMaxTurretSlots } from "@arcade/sim-core";
+import { audioManager } from "../../game/AudioManager.js";
+import { useCoordinates } from "../../hooks/useCoordinates.js";
+import styles from "./HubOverlay.module.css";
 
 // Turret slot unlock levels (slot index 1-6 -> required fortress level)
 const SLOT_UNLOCK_LEVELS: Record<number, number> = {
@@ -35,24 +35,55 @@ export function HubOverlay() {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   // Use centralized coordinate conversion
-  const { toScreenX, toScreenY } = useCoordinates(canvasSize.width, canvasSize.height);
+  const { toScreenX, toScreenY } = useCoordinates(
+    canvasSize.width,
+    canvasSize.height,
+  );
 
   useEffect(() => {
-    const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
+    const canvas = document.getElementById(
+      "game-canvas",
+    ) as HTMLCanvasElement | null;
     if (!canvas) return;
+
+    let rafId: number | null = null;
 
     const updateSize = () => {
       const rect = canvas.getBoundingClientRect();
-      setCanvasSize({ width: rect.width, height: rect.height });
+      if (rect.width <= 0 || rect.height <= 0) {
+        if (rafId === null) {
+          rafId = requestAnimationFrame(updateSize);
+        }
+        return;
+      }
+
+      rafId = null;
+      setCanvasSize({
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      });
     };
 
+    const resizeObserver = new ResizeObserver(() => updateSize());
+    resizeObserver.observe(canvas);
+
     updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    window.addEventListener("resize", updateSize);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateSize);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, []);
 
   // Only show in idle phase with hub initialized and canvas ready
-  if (gamePhase.value !== 'idle' || !hubInitialized.value || canvasSize.width === 0) {
+  if (
+    gamePhase.value !== "idle" ||
+    !hubInitialized.value ||
+    canvasSize.width === 0
+  ) {
     return null;
   }
 
@@ -62,14 +93,14 @@ export function HubOverlay() {
   const maxUnlockedSlots = getMaxTurretSlots(fortressLevel);
 
   const handleTurretClick = (slotIndex: number) => {
-    audioManager.playSfx('ui_click');
-    const turret = turrets.find(t => t.slotIndex === slotIndex);
+    audioManager.playSfx("ui_click");
+    const turret = turrets.find((t) => t.slotIndex === slotIndex);
     if (turret) {
       // Open upgrade panel for existing turret
       upgradeTarget.value = {
-        type: 'turret',
+        type: "turret",
         slotIndex,
-        turretId: turret.definitionId
+        turretId: turret.definitionId,
       };
       upgradePanelVisible.value = true;
     } else {
@@ -83,7 +114,7 @@ export function HubOverlay() {
     <div class={styles.overlay}>
       {/* Turret slot click areas */}
       {slots.map((slot) => {
-        const hasTurret = turrets.some(t => t.slotIndex === slot.index);
+        const hasTurret = turrets.some((t) => t.slotIndex === slot.index);
         // Skip occupied slots - turrets are rendered on canvas
         if (hasTurret) return null;
 
@@ -97,10 +128,12 @@ export function HubOverlay() {
             <div
               key={slot.index}
               class={`${styles.turretArea} ${styles.locked}`}
-              style={{
-                left: `${toScreenX(slot.x)}px`,
-                top: `${toScreenY(slot.y)}px`,
-              } as JSX.CSSProperties}
+              style={
+                {
+                  left: `${toScreenX(slot.x)}px`,
+                  top: `${toScreenY(slot.y)}px`,
+                } as JSX.CSSProperties
+              }
               title={`Odblokuj na poziomie ${unlockLevel}`}
             >
               <span class={styles.lockIcon}>🔒</span>
@@ -115,10 +148,12 @@ export function HubOverlay() {
             key={slot.index}
             class={`${styles.turretArea} ${styles.empty}`}
             onClick={() => handleTurretClick(slot.index)}
-            style={{
-              left: `${toScreenX(slot.x)}px`,
-              top: `${toScreenY(slot.y)}px`,
-            } as JSX.CSSProperties}
+            style={
+              {
+                left: `${toScreenX(slot.x)}px`,
+                top: `${toScreenY(slot.y)}px`,
+              } as JSX.CSSProperties
+            }
             title="Kliknij, aby dodać wieżyczkę"
           >
             <span class={styles.addIcon}>+</span>

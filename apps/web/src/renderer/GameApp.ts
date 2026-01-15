@@ -1,13 +1,13 @@
-import { Application, Container } from 'pixi.js';
-import { CRTFilter } from 'pixi-filters';
-import { GameScene, type HubState } from './scenes/GameScene';
-import { filterManager, FilterManager } from './effects/FilterManager';
+import { Application, Container } from "pixi.js";
+import { CRTFilter } from "pixi-filters";
+import { GameScene, type HubState } from "./scenes/GameScene";
+import { filterManager, FilterManager } from "./effects/FilterManager";
 
 // =============================================================================
 // WebGPU Detection & Renderer Info
 // =============================================================================
 
-export type RendererType = 'webgpu' | 'webgl2' | 'webgl' | 'unknown';
+export type RendererType = "webgpu" | "webgl2" | "webgl" | "unknown";
 
 export interface RendererInfo {
   type: RendererType;
@@ -28,7 +28,9 @@ async function isWebGPUAvailable(): Promise<boolean> {
 
   try {
     // Add timeout to prevent hanging on WebGPU detection
-    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
+    const timeout = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), 2000),
+    );
     const adapter = await Promise.race([
       navigator.gpu.requestAdapter(),
       timeout,
@@ -44,47 +46,56 @@ async function isWebGPUAvailable(): Promise<boolean> {
  */
 function getRendererInfo(app: Application): RendererInfo {
   const renderer = app.renderer;
-  const gl = (renderer as any).gl as WebGL2RenderingContext | WebGLRenderingContext | undefined;
+  const gl = (renderer as any).gl as
+    | WebGL2RenderingContext
+    | WebGLRenderingContext
+    | undefined;
 
   // Detect renderer type
-  let type: RendererType = 'unknown';
-  let vendor = 'Unknown';
-  let rendererName = 'Unknown';
+  let type: RendererType = "unknown";
+  let vendor = "Unknown";
+  let rendererName = "Unknown";
   let maxTextureSize = 4096;
   let isHardwareAccelerated = true;
 
   // Check if WebGPU
-  if ((renderer as any).gpu || (renderer as any).type === 'webgpu') {
-    type = 'webgpu';
-    vendor = 'WebGPU';
-    rendererName = 'WebGPU Renderer';
+  if ((renderer as any).gpu || (renderer as any).type === "webgpu") {
+    type = "webgpu";
+    vendor = "WebGPU";
+    rendererName = "WebGPU Renderer";
   } else if (gl) {
     // WebGL detection
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
     if (debugInfo) {
-      vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'Unknown';
-      rendererName = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'Unknown';
+      vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "Unknown";
+      rendererName =
+        gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "Unknown";
     }
 
     maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096;
 
     // Check for WebGL2
     if (gl instanceof WebGL2RenderingContext) {
-      type = 'webgl2';
+      type = "webgl2";
     } else {
-      type = 'webgl';
+      type = "webgl";
     }
 
     // Detect software rendering (SwiftShader, llvmpipe, etc.)
-    const softwareRenderers = ['swiftshader', 'llvmpipe', 'softpipe', 'software'];
-    isHardwareAccelerated = !softwareRenderers.some(
-      sw => rendererName.toLowerCase().includes(sw)
+    const softwareRenderers = [
+      "swiftshader",
+      "llvmpipe",
+      "softpipe",
+      "software",
+    ];
+    isHardwareAccelerated = !softwareRenderers.some((sw) =>
+      rendererName.toLowerCase().includes(sw),
     );
   }
 
   return {
     type,
-    isWebGPU: type === 'webgpu',
+    isWebGPU: type === "webgpu",
     isHardwareAccelerated,
     maxTextureSize,
     vendor,
@@ -138,12 +149,18 @@ class ScreenShakeManager {
 
     // Calculate shake offset using sine waves with slight phase difference
     const time = this.elapsed / 1000;
-    const shakeX = Math.sin(time * this.frequency * Math.PI * 2) * this.intensity * decay;
-    const shakeY = Math.sin(time * this.frequency * Math.PI * 2 + 0.5) * this.intensity * decay;
+    const shakeX =
+      Math.sin(time * this.frequency * Math.PI * 2) * this.intensity * decay;
+    const shakeY =
+      Math.sin(time * this.frequency * Math.PI * 2 + 0.5) *
+      this.intensity *
+      decay;
 
     // Add some randomness for more organic feel
-    this.offsetX = shakeX + (Math.random() - 0.5) * this.intensity * decay * 0.3;
-    this.offsetY = shakeY + (Math.random() - 0.5) * this.intensity * decay * 0.3;
+    this.offsetX =
+      shakeX + (Math.random() - 0.5) * this.intensity * decay * 0.3;
+    this.offsetY =
+      shakeY + (Math.random() - 0.5) * this.intensity * decay * 0.3;
 
     return { x: this.offsetX, y: this.offsetY };
   }
@@ -173,26 +190,50 @@ export class GameApp {
   }
 
   async init() {
-    console.log('[GameApp] Starting initialization...');
+    console.log("[GameApp] Starting initialization...");
 
     // Check WebGPU availability
     const webgpuAvailable = await isWebGPUAvailable();
     console.log(`[GameApp] WebGPU available: ${webgpuAvailable}`);
 
     // Initialize with preference for WebGPU if available
-    console.log('[GameApp] Initializing PixiJS Application...');
-    await this.app.init({
+    console.log("[GameApp] Initializing PixiJS Application...");
+    const resizeTarget = this.canvas.parentElement ?? window;
+    const initOptions = {
       canvas: this.canvas,
-      resizeTo: window,
-      backgroundColor: '#161622', // Match theme --color-bg-deep
+      resizeTo: resizeTarget,
+      backgroundColor: "#161622", // Match theme --color-bg-deep
       antialias: true,
       autoDensity: true,
       resolution: window.devicePixelRatio || 1,
-      // PixiJS 8 prefers WebGPU automatically if available
-      // But we can explicitly set preference here
-      preference: webgpuAvailable ? 'webgpu' : 'webgl',
-    });
-    console.log('[GameApp] PixiJS Application initialized');
+    };
+
+    try {
+      await this.app.init({
+        ...initOptions,
+        // PixiJS 8 prefers WebGPU automatically if available
+        // But we can explicitly set preference here
+        preference: webgpuAvailable ? "webgpu" : "webgl",
+      });
+    } catch (error) {
+      if (webgpuAvailable) {
+        console.warn(
+          "[GameApp] WebGPU init failed, falling back to WebGL:",
+          error,
+        );
+        this.app.destroy(true, { children: true, texture: true });
+        this.app = new Application();
+        this.stage = this.app.stage;
+        await this.app.init({
+          ...initOptions,
+          preference: "webgl",
+        });
+      } else {
+        throw error;
+      }
+    }
+
+    console.log("[GameApp] PixiJS Application initialized");
 
     // Get and store renderer info
     this.rendererInfo = getRendererInfo(this.app);
@@ -201,7 +242,7 @@ export class GameApp {
     console.log(
       `[GameApp] Renderer: ${this.rendererInfo.type.toUpperCase()}`,
       `| GPU: ${this.rendererInfo.renderer}`,
-      `| Hardware Accelerated: ${this.rendererInfo.isHardwareAccelerated}`
+      `| Hardware Accelerated: ${this.rendererInfo.isHardwareAccelerated}`,
     );
 
     // Create game container for screen shake
@@ -213,27 +254,40 @@ export class GameApp {
     this.gameContainer.addChild(this.gameScene.container);
 
     // Connect screen shake to VFX system
-    this.gameScene.setScreenShakeCallback((intensity: number, duration: number) => {
-      this.screenShake.shake(intensity, duration);
-    });
+    this.gameScene.setScreenShakeCallback(
+      (intensity: number, duration: number) => {
+        this.screenShake.shake(intensity, duration);
+      },
+    );
 
     // Setup resize notification for GameScene
-    // Note: resizeTo: window handles canvas resize automatically,
+    // Note: resizeTo handles renderer resize automatically,
     // ResizeObserver just notifies GameScene about the new dimensions
-    this.resizeObserver = new ResizeObserver(() => {
-      if (this.gameScene) {
-        this.gameScene.onResize(this.app.screen.width, this.app.screen.height);
-      }
+    const resizeElement =
+      resizeTarget instanceof HTMLElement ? resizeTarget : this.canvas;
+    const notifyResize = (width: number, height: number) => {
+      if (!this.gameScene) return;
+      if (width <= 0 || height <= 0) return;
+      this.gameScene.onResize(Math.round(width), Math.round(height));
+    };
+
+    this.resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      notifyResize(entry.contentRect.width, entry.contentRect.height);
     });
-    this.resizeObserver.observe(this.canvas);
+    this.resizeObserver.observe(resizeElement);
 
     // Initialize FilterManager with game container
     this.filterManager.setGlobalContainer(this.gameContainer);
 
     // Auto-detect quality based on device performance
-    const isLowEndDevice = navigator.hardwareConcurrency <= 2 ||
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    this.filterManager.setQualityLevel(isLowEndDevice ? 'low' : 'high');
+    const isLowEndDevice =
+      navigator.hardwareConcurrency <= 2 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
+    this.filterManager.setQualityLevel(isLowEndDevice ? "low" : "high");
 
     // Apply Global CRT Filter (with fallback if incompatible)
     try {
@@ -260,7 +314,7 @@ export class GameApp {
         this.filterManager.update(ticker.deltaMS);
       });
     } catch (e) {
-      console.warn('CRT filter not supported, skipping:', e);
+      console.warn("CRT filter not supported, skipping:", e);
 
       // Still update screen shake and filters even without CRT filter
       this.app.ticker.add((ticker) => {
@@ -272,8 +326,18 @@ export class GameApp {
       });
     }
 
-    // Initial notification to GameScene (canvas already sized by resizeTo: window)
-    this.gameScene.onResize(this.app.screen.width, this.app.screen.height);
+    // Initial notification to GameScene (wait for layout if needed)
+    const initialResizeElement =
+      resizeTarget instanceof HTMLElement ? resizeTarget : this.canvas;
+    const applyInitialResize = () => {
+      const rect = initialResizeElement.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        requestAnimationFrame(applyInitialResize);
+        return;
+      }
+      notifyResize(rect.width, rect.height);
+    };
+    applyInitialResize();
   }
 
   destroy() {
@@ -300,7 +364,9 @@ export class GameApp {
   /**
    * Set callback for turret click events
    */
-  public setOnTurretClick(callback: (turretId: string, slotIndex: number) => void) {
+  public setOnTurretClick(
+    callback: (turretId: string, slotIndex: number) => void,
+  ) {
     if (this.gameScene) {
       this.gameScene.setOnTurretClick(callback);
     }
@@ -309,7 +375,9 @@ export class GameApp {
   /**
    * Set callback for field click events (tactical commands)
    */
-  public setOnFieldClick(callback: ((worldX: number, worldY: number) => void) | null) {
+  public setOnFieldClick(
+    callback: ((worldX: number, worldY: number) => void) | null,
+  ) {
     if (this.gameScene) {
       this.gameScene.setOnFieldClick(callback);
     }
