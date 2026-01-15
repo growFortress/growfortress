@@ -9,7 +9,32 @@
  */
 
 import type { ServerEvent } from "@arcade/protocol";
+import { CONFIG } from "../config.js";
 import { getAccessToken } from "./auth.js";
+
+function resolveWebSocketUrl(
+  protocol: string,
+  host: string,
+  rawUrl: string,
+): string {
+  if (!rawUrl) {
+    return `${protocol}//${host}/api/ws`;
+  }
+
+  if (rawUrl.startsWith("ws://") || rawUrl.startsWith("wss://")) {
+    return rawUrl;
+  }
+
+  if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+    return rawUrl.replace(/^http/, "ws");
+  }
+
+  if (rawUrl.startsWith("/")) {
+    return `${protocol}//${host}${rawUrl}`;
+  }
+
+  return `${protocol}//${rawUrl}`;
+}
 
 // ============================================================================
 // TYPES
@@ -59,7 +84,7 @@ class WebSocketClient {
     // Construct WebSocket URL
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/api/ws`;
+    const wsUrl = resolveWebSocketUrl(protocol, host, CONFIG.WS_URL);
     const authProtocol = `access.${token}`;
 
     try {
