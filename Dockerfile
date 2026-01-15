@@ -13,6 +13,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy workspace configuration
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.base.json ./
 
 # Copy package.json files for all packages
 COPY packages/protocol/package.json ./packages/protocol/
