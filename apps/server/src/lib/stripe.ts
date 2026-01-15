@@ -1,5 +1,5 @@
-import Stripe from 'stripe';
-import { config } from '../config.js';
+import Stripe from "stripe";
+import { config } from "../config.js";
 
 // ============================================================================
 // STRIPE CLIENT
@@ -55,17 +55,16 @@ export async function createCheckoutSession(
 ): Promise<Stripe.Checkout.Session> {
   const stripe = getStripe();
   if (!stripe) {
-    throw new Error('Stripe is not configured');
+    throw new Error("Stripe is not configured");
   }
 
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card', 'blik', 'p24'], // PLN payment methods
-    mode: 'payment',
-    currency: 'pln',
+    mode: "payment",
+    currency: "pln",
     line_items: [
       {
         price_data: {
-          currency: 'pln',
+          currency: "pln",
           product_data: {
             name: params.productName,
             description: params.productDescription,
@@ -102,11 +101,11 @@ export function verifyWebhookSignature(
 ): Stripe.Event {
   const stripe = getStripe();
   if (!stripe) {
-    throw new Error('Stripe is not configured');
+    throw new Error("Stripe is not configured");
   }
 
   if (!config.STRIPE_WEBHOOK_SECRET) {
-    throw new Error('Stripe webhook secret is not configured');
+    throw new Error("Stripe webhook secret is not configured");
   }
 
   return stripe.webhooks.constructEvent(
@@ -142,7 +141,7 @@ export async function getCheckoutSession(
  * Check if a checkout session was successfully paid
  */
 export function isSessionPaid(session: Stripe.Checkout.Session): boolean {
-  return session.payment_status === 'paid';
+  return session.payment_status === "paid";
 }
 
 /**
@@ -156,9 +155,10 @@ export async function getPaymentIntent(
     return null;
   }
 
-  const paymentIntentId = typeof session.payment_intent === 'string'
-    ? session.payment_intent
-    : session.payment_intent.id;
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent.id;
 
   try {
     return await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -176,7 +176,7 @@ export async function getPaymentIntent(
  */
 export async function createRefund(
   paymentIntentId: string,
-  reason?: 'duplicate' | 'fraudulent' | 'requested_by_customer',
+  reason?: "duplicate" | "fraudulent" | "requested_by_customer",
 ): Promise<Stripe.Refund | null> {
   const stripe = getStripe();
   if (!stripe) {
