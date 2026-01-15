@@ -31,8 +31,42 @@ COPY apps/server ./apps/server
 # Build packages in dependency order
 RUN pnpm --filter @arcade/protocol build
 RUN pnpm --filter @arcade/sim-core build
+RUN node - <<'NODE'
+const fs = require('fs');
+const path = require('path');
+
+const distDir = path.join(process.cwd(), 'packages', 'sim-core', 'dist');
+
+const patchFile = (filePath) => {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const updated = content.replace(/from\s+['"](\.{1,2}\/[^'"]+)['"]/g, (match, specifier) => {
+    if (specifier.endsWith('.js') || specifier.endsWith('.json') || specifier.endsWith('.node')) {
+      return match;
+    }
+    return match.replace(specifier, `${specifier}.js`);
+  });
+
+  if (updated !== content) {
+    fs.writeFileSync(filePath, updated);
+  }
+};
+
+const walk = (dir) => {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walk(fullPath);
+    } else if (entry.isFile() && fullPath.endsWith('.js')) {
+      patchFile(fullPath);
+    }
+  }
+};
+
+walk(distDir);
+NODE
 
 # Generate Prisma client
+
 RUN pnpm --filter @arcade/server exec prisma generate
 
 # Build server
