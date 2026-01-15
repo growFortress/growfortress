@@ -60,39 +60,114 @@
     "defaultCancel": "Anuluj"
   },
   "onboarding": {
-    "welcome": {
-      "title": "Witaj, Obrońco!",
-      "subtitle": "Twoja twierdza potrzebuje ochrony przed nadciągającymi hordami wrogów.",
-      "buildDefense": "Buduj obronę",
-      "recruitHeroes": "Rekrutuj bohaterów",
-      "collectRewards": "Zbieraj nagrody"
-    },
-    "starterKit": {
-      "title": "Twój Starter Kit",
-      "subtitle": "Otrzymujesz zestaw startowy, który pomoże Ci w pierwszych bitwach.",
-      "class": "Klasa",
-      "hero": "Bohater",
-      "turret": "Wieżyczka",
-      "hint": "Więcej klas, bohaterów i wieżyczek odblokujesz w miarę postępów!",
-      "className": "Twierdza Natury",
-      "classDesc": "Zbalansowana obrona i regeneracja",
-      "heroName": "Unit-0 \"Vanguard\"",
-      "heroDesc": "Wytrzymała jednostka z polem ochronnym",
-      "turretName": "Wieża Railgun",
-      "turretDesc": "Szybkie i precyzyjne strzały elektromagnetyczne"
-    },
-    "ready": {
-      "title": "Gotowy do walki!",
-      "subtitle": "Twoja twierdza jest gotowa. Czas odpierać ataki wrogów!",
-      "tipBomb": "Kliknij <strong>BOMB</strong> aby użyć umiejętności specjalnej",
-      "tipAuto": "Twój bohater i wieżyczki atakują automatycznie",
-      "tipRelic": "Po każdej fali wybierz relikt, który wzmocni obronę"
-    },
-    "preparing": "Przygotowywanie...",
-    "startAdventure": "Rozpocznij przygodę!",
-    "error": "Wystąpił błąd. Spróbuj ponownie.",
+    "stepLabel": "Krok {{current}} / {{total}}",
+    "skip": "Pomiń",
     "next": "Dalej →",
-    "back": "← Wstecz"
+    "back": "← Wstecz",
+    "preparing": "Przygotowywanie...",
+    "startAdventure": "Rozpocznij przygodę",
+    "error": "Wystąpił błąd. Spróbuj ponownie.",
+    "steps": {
+      "welcome": {
+        "title": "Witaj, Dowódco",
+        "subtitle": "Grow Fortress to nieskończona obrona, a każda sesja buduje Twoją legendę.",
+        "cards": {
+          "endless": {
+            "title": "Nieskończona obrona",
+            "description": "Wytrzymaj coraz trudniejsze fale i zmieniające się sektory."
+          },
+          "squad": {
+            "title": "Zbuduj drużynę",
+            "description": "Połącz klasę twierdzy, bohaterów i wieżyczki w jeden build."
+          },
+          "progression": {
+            "title": "Stały progres",
+            "description": "Złoto, dust i odblokowania zostają na stałe."
+          }
+        }
+      },
+      "coreLoop": {
+        "title": "Core Loop",
+        "subtitle": "Broń, zgarniaj łupy, wybieraj relikty, idź dalej.",
+        "cards": {
+          "waves": {
+            "title": "Fale i bossowie",
+            "description": "Każda fala skaluje trudność, bossowie dają kryształy i rzadkie dropy."
+          },
+          "relics": {
+            "title": "Wybór reliktu",
+            "description": "Po każdej fali wybierasz 1 z 3 reliktów."
+          },
+          "sessions": {
+            "title": "Zapisy sesji",
+            "description": "Sesje są segmentowane — możesz wrócić po przerwie."
+          }
+        }
+      },
+      "starterKit": {
+        "title": "Starterowy zestaw",
+        "subtitle": "Automatycznie ustawiamy pierwszą konfigurację.",
+        "cards": {
+          "class": {
+            "title": "Twierdza Natury",
+            "description": "Zbalansowana obrona z regeneracją."
+          },
+          "hero": {
+            "title": "Unit-0 \"Vanguard\"",
+            "description": "Wytrzymały tank z polem ochronnym."
+          },
+          "turret": {
+            "title": "Wieża Railgun",
+            "description": "Szybki DPS single-target na groźne cele."
+          }
+        },
+        "hint": "Nowe klasy, bohaterów i wieżyczki odblokujesz wraz z poziomem."
+      },
+      "progression": {
+        "title": "Progres i buildy",
+        "subtitle": "Leveluj, by odblokować klasy, tiery i stałe ulepszenia.",
+        "cards": {
+          "classes": {
+            "title": "Klasy twierdzy",
+            "description": "Sześć żywiołów z unikalnymi umiejętnościami."
+          },
+          "tiers": {
+            "title": "Tiery bohaterów i wieżyczek",
+            "description": "Wyższe tiery to nowe skille i większa moc."
+          },
+          "upgrades": {
+            "title": "Ulepszenia mocy",
+            "description": "Inwestuj złoto w stałe bonusy do statystyk."
+          }
+        }
+      },
+      "pvpGuilds": {
+        "title": "PvP i gildie",
+        "subtitle": "Sprawdź swój build przeciw innym dowódcom.",
+        "cards": {
+          "pvp": {
+            "title": "Asynchroniczna arena PvP",
+            "description": "Wyzwania z graczami o podobnej mocy."
+          },
+          "guilds": {
+            "title": "Bitwy gildii",
+            "description": "Wspólne rajdy, skarbiec i tygodniowe wyścigi."
+          },
+          "leaderboards": {
+            "title": "Rankingi",
+            "description": "Walcz o nagrody w tygodniowych leaderboardach."
+          }
+        }
+      }
+    },
+    "finalTips": {
+      "title": "Szybkie wskazówki na start:",
+      "items": {
+        "auto": "Bohaterowie i wieżyczki atakują automatycznie.",
+        "relics": "Relikty po każdej fali kształtują Twój run.",
+        "skills": "Umiejętności klas odblokujesz wraz z poziomem."
+      }
+    }
   },
   "classSelection": {
     "title": "Wybierz Klasę Twierdzy",

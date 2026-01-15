@@ -60,39 +60,114 @@
     "defaultCancel": "Cancel"
   },
   "onboarding": {
-    "welcome": {
-      "title": "Welcome, Defender!",
-      "subtitle": "Your fortress needs protection from incoming enemy hordes.",
-      "buildDefense": "Build defense",
-      "recruitHeroes": "Recruit heroes",
-      "collectRewards": "Collect rewards"
-    },
-    "starterKit": {
-      "title": "Your Starter Kit",
-      "subtitle": "You get a starter kit to help in your first battles.",
-      "class": "Class",
-      "hero": "Hero",
-      "turret": "Turret",
-      "hint": "Unlock more classes, heroes, and turrets as you progress!",
-      "className": "Natural Fortress",
-      "classDesc": "Balanced defense and regeneration",
-      "heroName": "Unit-0 \"Vanguard\"",
-      "heroDesc": "Durable unit with protective shield",
-      "turretName": "Railgun Tower",
-      "turretDesc": "Fast and precise electromagnetic shots"
-    },
-    "ready": {
-      "title": "Ready to Fight!",
-      "subtitle": "Your fortress is ready. Time to repel enemy attacks!",
-      "tipBomb": "Click <strong>BOMB</strong> to use special ability",
-      "tipAuto": "Your hero and turrets attack automatically",
-      "tipRelic": "After each wave, choose a relic to strengthen your defense"
-    },
-    "preparing": "Preparing...",
-    "startAdventure": "Start Adventure!",
-    "error": "An error occurred. Try again.",
+    "stepLabel": "Step {{current}} / {{total}}",
+    "skip": "Skip",
     "next": "Next →",
-    "back": "← Back"
+    "back": "← Back",
+    "preparing": "Preparing...",
+    "startAdventure": "Start Adventure",
+    "error": "An error occurred. Try again.",
+    "steps": {
+      "welcome": {
+        "title": "Welcome, Commander",
+        "subtitle": "Grow Fortress is an endless defense where every run builds your legacy.",
+        "cards": {
+          "endless": {
+            "title": "Endless Defense",
+            "description": "Hold the line through escalating waves and shifting sectors."
+          },
+          "squad": {
+            "title": "Build Your Squad",
+            "description": "Combine fortress class, heroes, and turrets into one build."
+          },
+          "progression": {
+            "title": "Persistent Progression",
+            "description": "Gold, dust, and unlocks carry across runs."
+          }
+        }
+      },
+      "coreLoop": {
+        "title": "Core Loop",
+        "subtitle": "Defend, loot, choose relics, repeat.",
+        "cards": {
+          "waves": {
+            "title": "Waves & Bosses",
+            "description": "Each wave scales; bosses bring crystals and rare drops."
+          },
+          "relics": {
+            "title": "Relic Choices",
+            "description": "Pick 1 of 3 relics after every wave."
+          },
+          "sessions": {
+            "title": "Session Saves",
+            "description": "Runs are segmented so you can return after a break."
+          }
+        }
+      },
+      "starterKit": {
+        "title": "Starter Loadout",
+        "subtitle": "We auto-equip your first build so you can jump in.",
+        "cards": {
+          "class": {
+            "title": "Natural Fortress",
+            "description": "Balanced defense with regeneration."
+          },
+          "hero": {
+            "title": "Unit-0 \"Vanguard\"",
+            "description": "Front-line tank with a protective shield."
+          },
+          "turret": {
+            "title": "Railgun Tower",
+            "description": "Fast single-target DPS to pick off threats."
+          }
+        },
+        "hint": "Unlock new classes, heroes, and turrets as you level."
+      },
+      "progression": {
+        "title": "Progression & Builds",
+        "subtitle": "Level up to unlock classes, tiers, and permanent upgrades.",
+        "cards": {
+          "classes": {
+            "title": "Fortress Classes",
+            "description": "Six elemental classes with unique skills."
+          },
+          "tiers": {
+            "title": "Hero & Turret Tiers",
+            "description": "Upgrade tiers to unlock new abilities."
+          },
+          "upgrades": {
+            "title": "Power Upgrades",
+            "description": "Invest gold for permanent stat bonuses."
+          }
+        }
+      },
+      "pvpGuilds": {
+        "title": "PvP & Guilds",
+        "subtitle": "Test your build against other commanders.",
+        "cards": {
+          "pvp": {
+            "title": "Async PvP Arena",
+            "description": "Challenge players within your power range."
+          },
+          "guilds": {
+            "title": "Guild Battles",
+            "description": "Team up for raids, treasury, and weekly races."
+          },
+          "leaderboards": {
+            "title": "Leaderboards",
+            "description": "Climb weekly rankings for rewards."
+          }
+        }
+      }
+    },
+    "finalTips": {
+      "title": "Quick tips before you drop in:",
+      "items": {
+        "auto": "Heroes and turrets attack automatically.",
+        "relics": "Relics after each wave shape your run.",
+        "skills": "Class skills unlock as you level up."
+      }
+    }
   },
   "classSelection": {
     "title": "Choose Fortress Class",
