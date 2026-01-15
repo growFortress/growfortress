@@ -71,12 +71,12 @@ export async function buildApp() {
   const allowedOrigins = config.CORS_ORIGINS.split(",").map((o) => o.trim());
   await fastify.register(cors, {
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.) in development
-      if (!origin && config.NODE_ENV === "development") {
+      // Allow requests with no origin (health checks, mobile apps, curl, etc.)
+      if (!origin) {
         return callback(null, true);
       }
       // Check if origin is in the allowed list
-      if (origin && allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       // Reject other origins
