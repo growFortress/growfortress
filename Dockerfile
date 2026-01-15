@@ -81,4 +81,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
 
 # Start server
 WORKDIR /app/apps/server
-CMD ["node", "dist/index.js"]
+CMD ["node", "--experimental-specifier-resolution=node", "dist/index.js"]
+
