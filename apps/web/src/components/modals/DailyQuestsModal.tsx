@@ -19,7 +19,6 @@ import {
   timeUntilReset,
   overallProgress,
   fetchDailyQuests,
-  totalPotentialDust,
 } from '../../state/dailyQuests.signals.js';
 import { Modal } from '../shared/Modal.js';
 import { ProgressBar } from '../shared/ProgressBar.js';
@@ -32,8 +31,8 @@ const QUEST_ICONS: Record<string, string> = {
   first_blood: '🎮',
   wave_hunter: '👾',
   elite_slayer: '💀',
-  boss_rush_daily: '🐉',
-  pillar_master: '🏛️',
+  boss_slayer: '🐉',
+  dedicated: '🏆',
 };
 
 // Bonus type icons
@@ -52,7 +51,6 @@ export function DailyQuestsModal() {
   const unclaimedDust = unclaimedDustTotal.value;
   const resetTime = timeUntilReset.value;
   const progress = overallProgress.value;
-  const maxDust = totalPotentialDust.value;
 
   // Staggered entrance animation for quest cards
   const { getItemStyle } = useStaggeredEntrance(state?.quests.length ?? 0, {
@@ -91,7 +89,6 @@ export function DailyQuestsModal() {
   };
 
   const completedCount = state.quests.filter((q) => q.completed).length;
-  const dustProgress = maxDust > 0 ? (state.totalDustEarned / maxDust) * 100 : 0;
 
   return (
     <Modal
@@ -122,10 +119,6 @@ export function DailyQuestsModal() {
             <span>
               <span class={styles.statsHighlight}>{completedCount}</span> of{' '}
               {state.quests.length} Quests
-            </span>
-            <span>
-              <span class={styles.statsHighlight}>{state.totalDustEarned}</span> /{' '}
-              {maxDust} Dust
             </span>
           </div>
         </div>
@@ -239,37 +232,25 @@ export function DailyQuestsModal() {
       </div>
 
       {/* Footer */}
-      <div class={styles.footer}>
-        <div class={styles.totalDustSection}>
-          <span class={styles.totalDustLabel}>Total Earned Today</span>
-          <span class={styles.totalDustValue}>
-            {state.totalDustEarned}
-            <span class={styles.totalDustMax}> / {maxDust} Dust</span>
-          </span>
-          <ProgressBar
-            percent={dustProgress}
-            class={styles.totalDustMiniBar}
-            variant="primary"
-          />
+      {(unclaimedCount > 0 || state.allClaimed) && (
+        <div class={styles.footer}>
+          {unclaimedCount > 0 ? (
+            <div class={styles.claimAllSection}>
+              <button
+                class={styles.claimAllButton}
+                onClick={handleClaimAll}
+                disabled={claimingAllRewards || claiming !== null}
+              >
+                {claimingAllRewards ? 'Claiming...' : `Claim All (${unclaimedCount})`}
+              </button>
+            </div>
+          ) : (
+            <div class={styles.allClaimedMessage}>
+              ✓ All rewards claimed! See you tomorrow.
+            </div>
+          )}
         </div>
-
-        {unclaimedCount > 0 ? (
-          <div class={styles.claimAllSection}>
-            <button
-              class={styles.claimAllButton}
-              onClick={handleClaimAll}
-              disabled={claimingAllRewards || claiming !== null}
-            >
-              {claimingAllRewards ? 'Claiming...' : `Claim All (${unclaimedCount})`}
-            </button>
-            <span class={styles.claimAllPreview}>Collect: {unclaimedDust} Dust</span>
-          </div>
-        ) : state.allClaimed ? (
-          <div class={styles.allClaimedMessage}>
-            ✓ All rewards claimed! See you tomorrow.
-          </div>
-        ) : null}
-      </div>
+      )}
     </Modal>
   );
 }

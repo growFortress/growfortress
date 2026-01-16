@@ -175,14 +175,14 @@ export async function updateQuestsFromRun(
     enemiesKilled?: number;
     elitesKilled?: number;
     bossesKilled?: number;
-    pillarsCompleted?: number;
   }
 ): Promise<void> {
-  const { runsCompleted = 0, enemiesKilled = 0, elitesKilled = 0, bossesKilled = 0, pillarsCompleted = 0 } = runStats;
+  const { runsCompleted = 0, enemiesKilled = 0, elitesKilled = 0, bossesKilled = 0 } = runStats;
 
   // Update each relevant quest
   if (runsCompleted > 0) {
     await updateQuestProgress(userId, 'first_blood', runsCompleted);
+    await updateQuestProgress(userId, 'dedicated', runsCompleted);
   }
   if (enemiesKilled > 0) {
     await updateQuestProgress(userId, 'wave_hunter', enemiesKilled);
@@ -191,10 +191,7 @@ export async function updateQuestsFromRun(
     await updateQuestProgress(userId, 'elite_slayer', elitesKilled);
   }
   if (bossesKilled > 0) {
-    await updateQuestProgress(userId, 'boss_rush_daily', bossesKilled);
-  }
-  if (pillarsCompleted > 0) {
-    await updateQuestProgress(userId, 'pillar_master', pillarsCompleted);
+    await updateQuestProgress(userId, 'boss_slayer', bossesKilled);
   }
 }
 

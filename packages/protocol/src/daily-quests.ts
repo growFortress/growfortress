@@ -11,8 +11,8 @@ export const DailyQuestIdSchema = z.enum([
   'first_blood',     // Complete 1 run
   'wave_hunter',     // Kill 500 enemies
   'elite_slayer',    // Kill 10 elites
-  'boss_rush_daily', // Complete 3 bosses in Boss Rush
-  'pillar_master',   // Complete any Pillar
+  'boss_slayer',     // Kill 3 bosses (any mode)
+  'dedicated',       // Complete 3 runs
 ]);
 
 export type DailyQuestId = z.infer<typeof DailyQuestIdSchema>;
@@ -134,49 +134,50 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
     name: 'First Blood',
     description: 'Complete 1 run (win or lose)',
     target: 1,
-    dustReward: 12,  // Reduced from 25
-    bonusType: null,
-    bonusValue: null,
+    dustReward: 5,
+    bonusType: 'gold',
+    bonusValue: 50,
+  },
+  {
+    id: 'dedicated',
+    name: 'Dedicated',
+    description: 'Complete 3 runs',
+    target: 3,
+    dustReward: 5,
+    bonusType: 'gold',
+    bonusValue: 100,
   },
   {
     id: 'wave_hunter',
     name: 'Wave Hunter',
     description: 'Defeat 500 enemies',
     target: 500,
-    dustReward: 18,  // Reduced from 35
+    dustReward: 10,
     bonusType: 'gold',
-    bonusValue: 100,
+    bonusValue: 150,
   },
   {
     id: 'elite_slayer',
     name: 'Elite Slayer',
     description: 'Defeat 10 elite enemies',
     target: 10,
-    dustReward: 25,  // Reduced from 50
-    bonusType: 'random_material',
-    bonusValue: 1, // 1 random material
+    dustReward: 10,
+    bonusType: 'gold',
+    bonusValue: 200,
   },
   {
-    id: 'boss_rush_daily',
-    name: 'Boss Rush Daily',
-    description: 'Defeat 3 bosses in Boss Rush mode',
+    id: 'boss_slayer',
+    name: 'Boss Slayer',
+    description: 'Defeat 3 bosses',
     target: 3,
-    dustReward: 38,  // Reduced from 75
-    bonusType: 'material',
-    bonusValue: 'rare_essence', // Specific rare material
-  },
-  {
-    id: 'pillar_master',
-    name: 'Pillar Master',
-    description: 'Complete any Pillar challenge',
-    target: 1,
-    dustReward: 50,  // Reduced from 100
-    bonusType: 'random_material',
-    bonusValue: 2, // 2 random materials
+    dustReward: 15,
+    bonusType: 'gold',
+    bonusValue: 300,
   },
 ];
 
-// Total dust from all daily quests: 12 + 18 + 25 + 38 + 50 = 143
+// Total dust from all daily quests: 5 + 5 + 10 + 10 + 15 = 45
+// Total gold from all daily quests: 50 + 100 + 150 + 200 + 300 = 800
 export const TOTAL_DAILY_DUST = DAILY_QUEST_DEFINITIONS.reduce(
   (sum, q) => sum + q.dustReward,
   0

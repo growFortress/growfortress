@@ -16,7 +16,7 @@ import {
 describe('Daily Quests Protocol', () => {
   describe('DailyQuestIdSchema', () => {
     it('validates valid quest IDs', () => {
-      const validIds = ['first_blood', 'wave_hunter', 'elite_slayer', 'boss_rush_daily', 'pillar_master'];
+      const validIds = ['first_blood', 'wave_hunter', 'elite_slayer', 'boss_slayer', 'dedicated'];
 
       for (const id of validIds) {
         expect(() => DailyQuestIdSchema.parse(id)).not.toThrow();
@@ -61,16 +61,31 @@ describe('Daily Quests Protocol', () => {
       expect(() => DailyQuestProgressSchema.parse(progress)).not.toThrow();
     });
 
-    it('validates progress with material bonus', () => {
+    it('validates progress with gold bonus (elite_slayer)', () => {
       const progress = {
-        questId: 'boss_rush_daily',
+        questId: 'elite_slayer',
+        progress: 10,
+        target: 10,
+        completed: true,
+        claimed: false,
+        dustReward: 10,
+        bonusType: 'gold',
+        bonusValue: 150,
+      };
+
+      expect(() => DailyQuestProgressSchema.parse(progress)).not.toThrow();
+    });
+
+    it('validates progress with gold bonus', () => {
+      const progress = {
+        questId: 'boss_slayer',
         progress: 3,
         target: 3,
         completed: true,
         claimed: false,
-        dustReward: 75,
-        bonusType: 'material',
-        bonusValue: 'rare_essence',
+        dustReward: 10,
+        bonusType: 'gold',
+        bonusValue: 200,
       };
 
       expect(() => DailyQuestProgressSchema.parse(progress)).not.toThrow();
@@ -224,8 +239,12 @@ describe('Daily Quests Protocol', () => {
       expect(questIds).toContain('first_blood');
       expect(questIds).toContain('wave_hunter');
       expect(questIds).toContain('elite_slayer');
-      expect(questIds).toContain('boss_rush_daily');
-      expect(questIds).toContain('pillar_master');
+      expect(questIds).toContain('boss_slayer');
+      expect(questIds).toContain('dedicated');
+    });
+
+    it('has exactly 5 quests', () => {
+      expect(DAILY_QUEST_DEFINITIONS.length).toBe(5);
     });
 
     it('has positive targets for all quests', () => {
