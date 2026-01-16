@@ -10,7 +10,6 @@ import {
   guildPanelTab,
   playerGuild,
   guildBonuses,
-  guildLevelInfo,
   guildBattles,
   receivedInvitations,
   guildLoading,
@@ -90,15 +89,6 @@ export function GuildPanel() {
       });
 
       if (myGuildData.guild) {
-        guildLevelInfo.value = {
-          level: myGuildData.guild.level,
-          xp: myGuildData.guild.xp,
-          totalXp: myGuildData.guild.totalXp,
-          xpToNextLevel: 10000 * myGuildData.guild.level,
-          bonuses: myGuildData.bonuses || { goldBoost: 0, statBoost: 0, xpBoost: 0 },
-          memberCapacity: 10 + myGuildData.guild.level,
-        };
-
         await Promise.all([
           loadTreasuryData(myGuildData.guild.id),
           loadBattlesData(myGuildData.guild.id),
@@ -245,15 +235,9 @@ export function GuildPanel() {
                 </span>
               </div>
               <div class={styles.statRow}>
-                <span class={styles.statLabel}>Poziom</span>
-                <span class={`${styles.statValue} ${styles.statLevel}`}>
-                  {guild.level}
-                </span>
-              </div>
-              <div class={styles.statRow}>
                 <span class={styles.statLabel}>Członkowie</span>
                 <span class={styles.statValue}>
-                  {memberCount.value}/{guildLevelInfo.value?.memberCapacity || 10}
+                  {memberCount.value}/{guild.maxMembers || 10}
                 </span>
               </div>
               {bonuses && (

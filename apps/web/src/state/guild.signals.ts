@@ -10,7 +10,7 @@ import type {
   GuildBattle,
   GuildInvitation,
   GuildApplication,
-  GuildLevelInfo,
+  GuildStructureInfo,
 } from '@arcade/protocol';
 
 // ============================================================================
@@ -42,8 +42,11 @@ export const playerMembership = signal<GuildMember | null>(null);
 /** Guild bonuses for the player */
 export const guildBonuses = signal<{ goldBoost: number; statBoost: number; xpBoost: number } | null>(null);
 
-/** Guild level info */
-export const guildLevelInfo = signal<GuildLevelInfo | null>(null);
+/** Guild structures info for upgrade UI */
+export const guildStructures = signal<GuildStructureInfo[] | null>(null);
+
+/** Loading state for structures */
+export const structuresLoading = signal(false);
 
 /** Whether player is in a guild */
 export const isInGuild = computed(() => playerGuild.value !== null);
@@ -298,7 +301,7 @@ export function resetGuildState() {
   playerGuild.value = null;
   playerMembership.value = null;
   guildBonuses.value = null;
-  guildLevelInfo.value = null;
+  guildStructures.value = null;
   guildTreasury.value = null;
   treasuryLogs.value = [];
   guildBattles.value = [];

@@ -96,7 +96,7 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
     setLoadingDetails(true);
     try {
       const data = await getGuild(guild.id);
-      setSelectedGuild({ ...data.guild, levelInfo: data.levelInfo });
+      setSelectedGuild(data.guild);
     } catch (error) {
       console.error('Failed to load guild details:', error);
     } finally {
@@ -340,7 +340,6 @@ function GuildCard({ guild, onClick, t }: GuildCardProps) {
           {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
         </span>
         <div class={styles.guildMeta}>
-          <span>Lv.{guild.level}</span>
           <span>{t('guild.honor')}: {guild.honor.toLocaleString()}</span>
           {guild._count && <span>{guild._count.members} {t('leaderboard.members')}</span>}
         </div>
@@ -413,7 +412,6 @@ function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProp
           <AccessModeIcon mode={accessMode} />
           {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
         </h3>
-        <div class={styles.detailsLevel}>{t('guild.level')} {guild.level}</div>
       </div>
 
       {guild.description && (
@@ -428,7 +426,7 @@ function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProp
         <div class={styles.detailsStat}>
           <span class={styles.statLabel}>{t('guild.members')}</span>
           <span class={styles.statValue}>
-            {guild.members?.length || 0}/{guild.levelInfo?.maxMembers || 10}
+            {guild.members?.length || 0}/{guild.maxMembers || 10}
           </span>
         </div>
         <div class={styles.detailsStat}>

@@ -1,10 +1,9 @@
 /**
  * GuildPreviewModal - View other guilds' public information
- * Shows guild stats, tech levels with bonuses, trophies, and top 5 members
+ * Shows guild stats, structures with bonuses, trophies, and top 5 members
  */
 import { Modal } from '../shared/Modal.js';
-import { ProgressBar } from '../shared/ProgressBar.js';
-import type { GuildPreviewMember } from '@arcade/protocol';
+import type { GuildPreviewMember, GuildStructureLevels } from '@arcade/protocol';
 import { GUILD_TROPHIES } from '@arcade/protocol';
 import {
   guildPreviewData,
@@ -73,20 +72,6 @@ export function GuildPreviewModal() {
             {/* Stats Grid */}
             <div class={styles.statsGrid}>
               <div class={styles.stat}>
-                <span class={styles.statValue}>{data.level}</span>
-                <span class={styles.statLabel}>Poziom</span>
-                {data.level < 20 && data.xpToNextLevel > 0 && (
-                  <div class={styles.xpProgress}>
-                    <ProgressBar
-                      percent={(data.xp / (data.xp + data.xpToNextLevel)) * 100}
-                      variant="xp"
-                      size="sm"
-                    />
-                    <span class={styles.xpText}>{formatNumber(data.xpToNextLevel)} XP do Lv.{data.level + 1}</span>
-                  </div>
-                )}
-              </div>
-              <div class={styles.stat}>
                 <span class={styles.statValue}>{formatNumber(data.honor)}</span>
                 <span class={styles.statLabel}>Honor</span>
               </div>
@@ -94,6 +79,16 @@ export function GuildPreviewModal() {
                 <span class={styles.statValue}>{data.memberCount}/{data.maxMembers}</span>
                 <span class={styles.statLabel}>Czlonkowie</span>
               </div>
+              <div class={styles.stat}>
+                <span class={styles.statValue}>{data.trophies.length}</span>
+                <span class={styles.statLabel}>Trofea</span>
+              </div>
+            </div>
+
+            {/* Structures */}
+            <div class={styles.section}>
+              <h3 class={styles.sectionTitle}>Struktury</h3>
+              <StructuresDisplay structures={data.structures} bonuses={data.bonuses} />
             </div>
 
             {/* Trophies Section */}
@@ -107,53 +102,6 @@ export function GuildPreviewModal() {
                 </div>
               </div>
             )}
-
-            {/* Tech Tree Bonuses */}
-            <div class={styles.section}>
-              <h3 class={styles.sectionTitle}>Bonusy gildyjne</h3>
-              <div class={styles.techGrid}>
-                <TechCategory
-                  title="Twierdza"
-                  icon="\u{1F3F0}"
-                  levels={data.techLevels.fortress}
-                  bonuses={{
-                    hp: data.bonuses.fortressHpPercent,
-                    damage: data.bonuses.fortressDamagePercent,
-                    regen: data.bonuses.fortressRegenPercent,
-                  }}
-                />
-                <TechCategory
-                  title="Bohaterowie"
-                  icon="\u{1F9B8}"
-                  levels={data.techLevels.hero}
-                  bonuses={{
-                    hp: data.bonuses.heroHpPercent,
-                    damage: data.bonuses.heroDamagePercent,
-                    cooldown: data.bonuses.heroCooldownPercent,
-                  }}
-                />
-                <TechCategory
-                  title="Wiezyczki"
-                  icon="\u{1F5FC}"
-                  levels={data.techLevels.turret}
-                  bonuses={{
-                    damage: data.bonuses.turretDamagePercent,
-                    speed: data.bonuses.turretSpeedPercent,
-                    range: data.bonuses.turretRangePercent,
-                  }}
-                />
-                <TechCategory
-                  title="Ekonomia"
-                  icon="\u{1F4B0}"
-                  levels={data.techLevels.economy}
-                  bonuses={{
-                    gold: data.bonuses.goldPercent,
-                    statBoost: data.bonuses.statBoostPercent,
-                    xp: data.bonuses.xpPercent,
-                  }}
-                />
-              </div>
-            </div>
 
             {/* Top Members */}
             {data.topMembers.length > 0 && (
@@ -203,50 +151,47 @@ function TrophyBadge({ trophyId }: TrophyBadgeProps) {
   );
 }
 
-interface TechCategoryProps {
-  title: string;
-  icon: string;
-  levels: { [key: string]: number };
-  bonuses: { [key: string]: number };
+// Structure display info
+const STRUCTURE_INFO: Record<string, { name: string; icon: string; bonusLabel: string }> = {
+  kwatera: { name: 'Kwatera', icon: '🏠', bonusLabel: 'Pojemnosc' },
+  skarbiec: { name: 'Skarbiec', icon: '💰', bonusLabel: 'Gold Boost' },
+  akademia: { name: 'Akademia', icon: '📚', bonusLabel: 'XP Boost' },
+  zbrojownia: { name: 'Zbrojownia', icon: '⚔️', bonusLabel: 'Stat Boost' },
+};
+
+interface StructuresDisplayProps {
+  structures: GuildStructureLevels;
+  bonuses: { goldBoost: number; xpBoost: number; statBoost: number };
 }
 
-function TechCategory({ title, icon, levels, bonuses }: TechCategoryProps) {
-  const statLabels: Record<string, string> = {
-    hp: 'HP',
-    damage: 'Obrazenia',
-    regen: 'Regeneracja',
-    cooldown: 'Cooldown',
-    speed: 'Szybkosc',
-    range: 'Zasieg',
-    gold: 'Zloto',
-    statBoost: 'Statystyki',
-    xp: 'XP',
-  };
-
-  const entries = Object.entries(levels);
+function StructuresDisplay({ structures, bonuses }: StructuresDisplayProps) {
+  const structureData = [
+    { type: 'kwatera', level: structures.kwatera, bonus: 10 + structures.kwatera, isCapacity: true },
+    { type: 'skarbiec', level: structures.skarbiec, bonus: bonuses.goldBoost },
+    { type: 'akademia', level: structures.akademia, bonus: bonuses.xpBoost },
+    { type: 'zbrojownia', level: structures.zbrojownia, bonus: bonuses.statBoost },
+  ];
 
   return (
-    <div class={styles.techCategory}>
-      <div class={styles.techHeader}>
-        <span class={styles.techIcon}>{icon}</span>
-        <span class={styles.techTitle}>{title}</span>
-      </div>
-      <div class={styles.techStats}>
-        {entries.map(([stat, level]) => {
-          const bonus = bonuses[stat] ?? 0;
-          return (
-            <div key={stat} class={styles.techStat}>
-              <span class={styles.techStatLabel}>{statLabels[stat] ?? stat}</span>
-              <span class={styles.techStatValue}>
-                Lv.{level}
-                {bonus > 0 && (
-                  <span class={styles.techBonus}>+{(bonus * 100).toFixed(0)}%</span>
-                )}
-              </span>
+    <div class={styles.structuresGrid}>
+      {structureData.map(({ type, level, bonus, isCapacity }) => {
+        const info = STRUCTURE_INFO[type];
+        return (
+          <div key={type} class={styles.structureCard}>
+            <div class={styles.structureHeader}>
+              <span class={styles.structureIcon}>{info.icon}</span>
+              <span class={styles.structureName}>{info.name}</span>
             </div>
-          );
-        })}
-      </div>
+            <div class={styles.structureLevel}>Lv.{level}/20</div>
+            <div class={styles.structureBonus}>
+              {isCapacity
+                ? `${bonus} miejsc`
+                : `+${Math.round(bonus * 100)}%`
+              }
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -578,7 +578,6 @@ function GuildLeaderboardEntryRow({ entry, isMyGuild, t }: GuildLeaderboardEntry
       <div class={styles.entryScore}>
         {entry.honor.toLocaleString()} {t('leaderboard.scoreLabels.honor')}
       </div>
-      <div class={styles.entryLevel}>Lv.{entry.level}</div>
     </div>
   );
 }

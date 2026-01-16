@@ -879,6 +879,93 @@ textarea.guildDescription {
   text-shadow: 0 0 15px currentColor;
 }
 
+/* Structures grid */
+.structuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.structureCard {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.structureCard:hover {
+  border-color: var(--color-primary-30);
+  box-shadow: 0 4px 20px var(--color-primary-10);
+}
+
+.structureHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.structureIcon {
+  font-size: 1.5rem;
+}
+
+.structureName {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.structureLevel {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.structureBonus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--glass-border);
+  margin-bottom: var(--spacing-sm);
+}
+
+.structureBonusLabel {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+}
+
+.structureBonusValue {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.structureCost {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+}
+
+.goldCost {
+  color: var(--color-gold);
+  font-weight: 600;
+}
+
+.dustCost {
+  color: var(--color-dust, #a78bfa);
+  font-weight: 600;
+}
+
 /* Settings form */
 .settingsForm {
   display: flex;

@@ -1,15 +1,16 @@
 /**
- * Guild Info Tab - Shows guild details, bonuses, and progression
+ * Guild Info Tab - Shows guild details, structures, and bonuses
  */
-import { useState } from 'preact/hooks';
-import type { GuildAccessMode } from '@arcade/protocol';
+import { useState, useEffect } from 'preact/hooks';
+import type { GuildAccessMode, GuildStructureType } from '@arcade/protocol';
 import {
   playerGuild,
   guildBonuses,
-  guildLevelInfo,
+  guildStructures,
+  structuresLoading,
   isGuildLeader,
 } from '../../state/guild.signals.js';
-import { updateGuild, leaveGuild, disbandGuild } from '../../api/guild.js';
+import { updateGuild, leaveGuild, disbandGuild, getStructures, upgradeStructure } from '../../api/guild.js';
 import { Button } from '../shared/Button.js';
 import styles from './GuildPanel.module.css';
 
@@ -24,12 +25,21 @@ interface GuildInfoTabProps {
   onRefresh: () => void;
 }
 
+// Structure display info
+const STRUCTURE_INFO: Record<GuildStructureType, { name: string; icon: string; bonusLabel: string }> = {
+  kwatera: { name: 'Kwatera', icon: '🏠', bonusLabel: 'Pojemność' },
+  skarbiec: { name: 'Skarbiec', icon: '💰', bonusLabel: 'Gold Boost' },
+  akademia: { name: 'Akademia', icon: '📚', bonusLabel: 'XP Boost' },
+  zbrojownia: { name: 'Zbrojownia', icon: '⚔️', bonusLabel: 'Stat Boost' },
+};
+
 export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState('');
   const [leaving, setLeaving] = useState(false);
   const [disbanding, setDisbanding] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [upgradingStructure, setUpgradingStructure] = useState<GuildStructureType | null>(null);
 
   // Settings state
   const [editingSettings, setEditingSettings] = useState(false);
@@ -40,7 +50,41 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
 
   const guild = playerGuild.value;
   const bonuses = guildBonuses.value;
-  const levelInfo = guildLevelInfo.value;
+  const structures = guildStructures.value;
+
+  // Load structures when component mounts
+  useEffect(() => {
+    if (guild) {
+      loadStructures();
+    }
+  }, [guild?.id]);
+
+  const loadStructures = async () => {
+    if (!guild) return;
+    structuresLoading.value = true;
+    try {
+      const data = await getStructures(guild.id);
+      guildStructures.value = data.structures;
+    } catch (error) {
+      console.error('Failed to load structures:', error);
+    } finally {
+      structuresLoading.value = false;
+    }
+  };
+
+  const handleUpgradeStructure = async (structureType: GuildStructureType) => {
+    if (!guild) return;
+    setUpgradingStructure(structureType);
+    try {
+      await upgradeStructure(guild.id, structureType);
+      await loadStructures();
+      onRefresh(); // Refresh treasury
+    } catch (error) {
+      console.error('Failed to upgrade structure:', error);
+    } finally {
+      setUpgradingStructure(null);
+    }
+  };
 
   if (!guild) return null;
 
@@ -98,10 +142,6 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
       setDisbanding(false);
     }
   };
-
-  const xpProgress = levelInfo
-    ? (guild.xp / levelInfo.xpToNextLevel) * 100
-    : 0;
 
   const handleEditSettings = () => {
     setSettingsAccessMode((guild as any).accessMode || 'INVITE_ONLY');
@@ -169,21 +209,63 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
         </div>
       )}
 
-      {/* Level Progress */}
-      {levelInfo && guild.level < 20 && (
-        <div class={styles.progressSection}>
-          <div class={styles.progressLabel}>
-            <span>Postep do poziomu {guild.level + 1}</span>
-            <span>
-              {guild.xp.toLocaleString()} / {levelInfo.xpToNextLevel.toLocaleString()} XP
-            </span>
-          </div>
-          <div class={styles.progressBar}>
-            <div
-              class={styles.progressFill}
-              style={{ width: `${Math.min(100, xpProgress)}%` }}
-            />
-          </div>
+      {/* Structures */}
+      <div class={styles.sectionHeader}>
+        <span class={styles.sectionTitle}>Struktury</span>
+      </div>
+      {structuresLoading.value ? (
+        <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--color-text-muted)' }}>
+          Ładowanie struktur...
+        </div>
+      ) : structures && structures.length > 0 ? (
+        <div class={styles.structuresGrid}>
+          {structures.map((structure) => {
+            const info = STRUCTURE_INFO[structure.type as GuildStructureType];
+            const isMaxLevel = structure.level >= structure.maxLevel;
+            const isUpgrading = upgradingStructure === structure.type;
+            const canUpgrade = isGuildLeader.value && structure.canAfford && !isMaxLevel;
+
+            return (
+              <div key={structure.type} class={styles.structureCard}>
+                <div class={styles.structureHeader}>
+                  <span class={styles.structureIcon}>{info.icon}</span>
+                  <span class={styles.structureName}>{info.name}</span>
+                  <span class={styles.structureLevel}>Lv.{structure.level}/{structure.maxLevel}</span>
+                </div>
+                <div class={styles.structureBonus}>
+                  <span class={styles.structureBonusLabel}>{info.bonusLabel}:</span>
+                  <span class={styles.structureBonusValue}>
+                    {structure.type === 'kwatera'
+                      ? `${structure.currentBonus} miejsc`
+                      : `+${Math.round(structure.currentBonus * 100)}%`
+                    }
+                  </span>
+                </div>
+                {!isMaxLevel && structure.upgradeCost && (
+                  <div class={styles.structureCost}>
+                    <span>Koszt: </span>
+                    <span class={styles.goldCost}>{structure.upgradeCost.gold.toLocaleString()} 💰</span>
+                    <span class={styles.dustCost}>{structure.upgradeCost.dust.toLocaleString()} ✨</span>
+                  </div>
+                )}
+                {isGuildLeader.value && (
+                  <Button
+                    variant={canUpgrade ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleUpgradeStructure(structure.type as GuildStructureType)}
+                    disabled={!canUpgrade || isUpgrading}
+                    style={{ marginTop: '0.5rem', width: '100%' }}
+                  >
+                    {isUpgrading ? 'Ulepszanie...' : isMaxLevel ? 'MAX' : canUpgrade ? 'Ulepsz' : 'Brak środków'}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--color-text-muted)' }}>
+          Nie można załadować struktur
         </div>
       )}
 
@@ -212,15 +294,15 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
       </div>
       <div class={styles.bonusesGrid}>
         <div class={styles.bonusCard}>
-          <span class={styles.bonusLabel}>Total XP</span>
-          <span class={styles.bonusValue} style={{ color: 'var(--color-text)' }}>
-            {guild.totalXp.toLocaleString()}
-          </span>
-        </div>
-        <div class={styles.bonusCard}>
           <span class={styles.bonusLabel}>Honor</span>
           <span class={styles.bonusValue} style={{ color: 'var(--color-gold)' }}>
             {guild.honor.toLocaleString()}
+          </span>
+        </div>
+        <div class={styles.bonusCard}>
+          <span class={styles.bonusLabel}>Członkowie</span>
+          <span class={styles.bonusValue} style={{ color: 'var(--color-text)' }}>
+            {guild.members?.length || 0}/{guild.maxMembers || 10}
           </span>
         </div>
         <div class={styles.bonusCard}>

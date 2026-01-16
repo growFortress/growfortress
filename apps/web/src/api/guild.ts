@@ -32,6 +32,9 @@ import type {
   SetBattleHeroRequest,
   BattleHero,
   BattleRosterMember,
+  StructuresResponse,
+  UpgradeStructureResponse,
+  GuildStructureType,
 } from '@arcade/protocol';
 import { CONFIG } from '../config.js';
 import { getAccessToken } from './auth.js';
@@ -85,7 +88,7 @@ export async function createGuild(data: CreateGuildRequest): Promise<CreateGuild
   });
 }
 
-export async function getGuild(guildId: string): Promise<{ guild: GuildWithMembers; levelInfo: any }> {
+export async function getGuild(guildId: string): Promise<{ guild: GuildWithMembers }> {
   return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}`);
 }
 
@@ -403,6 +406,24 @@ export async function clearBattleHero(guildId: string): Promise<{ success: boole
 
 export async function getBattleRoster(guildId: string): Promise<{ roster: BattleRosterMember[] }> {
   return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/battle-roster`);
+}
+
+// ============================================================================
+// STRUCTURES
+// ============================================================================
+
+export async function getStructures(guildId: string): Promise<StructuresResponse> {
+  return guildRequest<StructuresResponse>(`/v1/guilds/${encodeURIComponent(guildId)}/structures`);
+}
+
+export async function upgradeStructure(
+  guildId: string,
+  structure: GuildStructureType
+): Promise<UpgradeStructureResponse> {
+  return guildRequest<UpgradeStructureResponse>(
+    `/v1/guilds/${encodeURIComponent(guildId)}/structures/${structure}/upgrade`,
+    { method: 'POST' }
+  );
 }
 
 // ============================================================================
