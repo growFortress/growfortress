@@ -92,6 +92,75 @@
   font-size: 14px;
 }
 
+/* Search Container */
+.searchContainer {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 36px 10px 12px;
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 14px;
+  transition: var(--transition-interactive-fast);
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-40);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+.searchIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.clearButton {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--color-bg-panel);
+  border: none;
+  border-radius: 50%;
+  color: var(--color-text-60);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearButton:hover {
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+}
+
+.clearButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
 /* User Rank Card */
 .userRankCard {
   margin: 16px;
@@ -161,6 +230,12 @@
   margin-left: 8px;
 }
 
+.userGuildTag {
+  font-size: 12px;
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
 .userLevel {
   font-size: 12px;
   color: var(--color-text-60);
@@ -200,7 +275,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 16px 16px;
+  padding: 12px 16px 16px;
 }
 
 /* List Header */
@@ -259,6 +334,19 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Loading More (infinite scroll) */
+.loadingMore {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.loadingMore .loadingSpinner {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 0;
 }
 
 /* Empty State */

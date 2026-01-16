@@ -1,11 +1,11 @@
 /**
  * LeaderboardModal - Main modal component for leaderboard system
  */
-import { useEffect, useCallback } from 'preact/hooks';
+import { useEffect, useCallback, useRef } from 'preact/hooks';
 import { openHubPreview } from '../../state/hubPreview.signals.js';
 import { Modal } from '../shared/Modal.js';
 import { GuildTag } from '../shared/GuildTag.js';
-import { useTranslation } from '../../i18n/useTranslation.js';
+import { useTranslation, currentLanguage } from '../../i18n/useTranslation.js';
 import type { PlayerLeaderboardEntry, PlayerLeaderboardCategory, AvailableReward, ExclusiveItem, GuildLeaderboardEntry } from '@arcade/protocol';
 import { getGuildLeaderboard } from '../../api/guild.js';
 import {
@@ -16,32 +16,33 @@ import {
   leaderboardOffset,
   leaderboardLimit,
   leaderboardLoading,
+  leaderboardLoadingMore,
   leaderboardError,
   availableRewards,
   hasUnclaimedRewards,
   currentWeekKey,
   selectedWeek,
-  hasNextPage,
-  hasPrevPage,
-  currentPage,
-  totalPages,
+  leaderboardSearchQuery,
+  hasMoreEntries,
+  hasMoreGuildEntries,
   closeLeaderboardModal,
   setMainTab,
   setSubTab,
-  nextPage,
-  prevPage,
+  setLeaderboardSearch,
   getUserRankForCategory,
   getExclusiveItemById,
   guildLeaderboardEntries,
   myGuildRank,
   setGuildLeaderboardData,
+  setLeaderboardData,
   type MainTab,
   type SubTab,
 } from '../../state/leaderboard.signals.js';
 import { displayName } from '../../state/profile.signals.js';
+import { getUserId } from '../../api/auth.js';
+import { playerGuild } from '../../state/guild.signals.js';
 import {
   fetchPlayerLeaderboard,
-  fetchUserRanks,
   fetchAvailableRewards,
   loadLeaderboardData,
   claimReward,
@@ -67,9 +68,14 @@ const SUB_TABS: Record<MainTab, { id: SubTab; labelKey: string; icon: string }[]
   ],
   guild: [
     { id: 'guildHonor', labelKey: 'leaderboard.subTabs.honor', icon: '⚔️' },
-    { id: 'guildTrophies', labelKey: 'leaderboard.subTabs.trophies', icon: '🏆' },
+    // NOTE: guildTrophies disabled - endpoint not implemented
   ],
 };
+
+// Helper to get localized item name
+function getLocalizedItemName(item: ExclusiveItem): string {
+  return currentLanguage.value === 'pl' ? item.polishName : item.name;
+}
 
 // Score label keys mapping to translation keys
 const SCORE_LABEL_KEYS: Record<string, string> = {
@@ -79,7 +85,6 @@ const SCORE_LABEL_KEYS: Record<string, string> = {
   weeklyWaves: 'leaderboard.scoreLabels.weeklyWaves',
   weeklyHonor: 'leaderboard.scoreLabels.weeklyHonor',
   guildHonor: 'leaderboard.scoreLabels.guildHonor',
-  guildTrophies: 'leaderboard.scoreLabels.guildTrophies',
 };
 
 export function LeaderboardModal() {
@@ -88,51 +93,105 @@ export function LeaderboardModal() {
   const mainTab = activeMainTab.value;
   const subTab = activeSubTab.value;
   const entries = leaderboardEntries.value;
+  const guildEntries = guildLeaderboardEntries.value;
   const loading = leaderboardLoading.value;
+  const loadingMore = leaderboardLoadingMore.value;
   const error = leaderboardError.value;
   const rewards = availableRewards.value;
   const hasRewards = hasUnclaimedRewards.value;
   const currentWeek = currentWeekKey.value;
   const week = selectedWeek.value || currentWeek;
   const userName = displayName.value;
+  const searchQuery = leaderboardSearchQuery.value;
 
-  // Load data when modal opens
-  useEffect(() => {
-    if (isVisible) {
-      loadLeaderboardData();
-    }
-  }, [isVisible]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch leaderboard when tab or page changes
-  useEffect(() => {
-    if (!isVisible) return;
+  // Load initial data when modal opens or tab/search changes
+  const loadData = useCallback((append = false) => {
+    const offset = append ? leaderboardOffset.value : 0;
+    const isLoadingMore = append;
 
-    // Handle guild leaderboard separately
-    if (subTab === 'guildHonor' || subTab === 'guildTrophies') {
-      leaderboardLoading.value = true;
+    if (subTab === 'guildHonor') {
+      if (isLoadingMore) {
+        leaderboardLoadingMore.value = true;
+      } else {
+        leaderboardLoading.value = true;
+      }
       getGuildLeaderboard({
         limit: leaderboardLimit.value,
-        offset: leaderboardOffset.value,
+        offset,
       })
         .then((response) => {
-          setGuildLeaderboardData(response.entries, response.total, response.myGuildRank);
+          setGuildLeaderboardData(response.entries, response.total, response.myGuildRank, append);
         })
         .catch((err) => {
           leaderboardError.value = err.message || t('leaderboard.guildLoadError');
         })
         .finally(() => {
           leaderboardLoading.value = false;
+          leaderboardLoadingMore.value = false;
         });
       return;
     }
 
     const category = subTab as PlayerLeaderboardCategory;
+    if (isLoadingMore) {
+      leaderboardLoadingMore.value = true;
+    } else {
+      leaderboardLoading.value = true;
+    }
+
     fetchPlayerLeaderboard(category, {
       limit: leaderboardLimit.value,
-      offset: leaderboardOffset.value,
+      offset,
       week: mainTab === 'weekly' ? week : undefined,
-    });
-  }, [isVisible, subTab, leaderboardOffset.value, week, mainTab]);
+      search: searchQuery || undefined,
+    })
+      .then((response) => {
+        if (response) {
+          setLeaderboardData(response.entries, response.total, response.timeUntilReset, append);
+        }
+      })
+      .catch((err) => {
+        leaderboardError.value = err?.message || t('leaderboard.error');
+      })
+      .finally(() => {
+        leaderboardLoading.value = false;
+        leaderboardLoadingMore.value = false;
+      });
+  }, [subTab, mainTab, week, searchQuery, t]);
+
+  // Load data when modal opens
+  useEffect(() => {
+    if (isVisible) {
+      loadLeaderboardData();
+      loadData(false);
+    }
+  }, [isVisible]);
+
+  // Reload when tab or search changes
+  useEffect(() => {
+    if (!isVisible) return;
+    loadData(false);
+  }, [subTab, mainTab, searchQuery]);
+
+  // Handle scroll for infinite loading
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || loading || loadingMore) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+
+    if (isNearBottom) {
+      const hasMore = mainTab === 'guild' ? hasMoreGuildEntries.value : hasMoreEntries.value;
+      if (hasMore) {
+        loadData(true);
+      }
+    }
+  }, [loading, loadingMore, mainTab, loadData]);
 
   // Handle main tab change
   const handleMainTabChange = useCallback((tab: MainTab) => {
@@ -144,33 +203,27 @@ export function LeaderboardModal() {
     setSubTab(tab);
   }, []);
 
-  // Handle refresh
-  const handleRefresh = useCallback(() => {
-    if (subTab === 'guildHonor' || subTab === 'guildTrophies') {
-      leaderboardLoading.value = true;
-      getGuildLeaderboard({
-        limit: leaderboardLimit.value,
-        offset: leaderboardOffset.value,
-      })
-        .then((response) => {
-          setGuildLeaderboardData(response.entries, response.total, response.myGuildRank);
-        })
-        .catch((err) => {
-          leaderboardError.value = err.message || t('leaderboard.guildLoadError');
-        })
-        .finally(() => {
-          leaderboardLoading.value = false;
-        });
-      return;
+  // Handle search input with debounce
+  const handleSearchChange = useCallback((e: Event) => {
+    const value = (e.target as HTMLInputElement).value;
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    searchTimeoutRef.current = window.setTimeout(() => {
+      setLeaderboardSearch(value);
+    }, 300);
+  }, []);
 
-    fetchPlayerLeaderboard(subTab as PlayerLeaderboardCategory, {
-      limit: leaderboardLimit.value,
-      offset: leaderboardOffset.value,
-      week: mainTab === 'weekly' ? week : undefined,
-    });
-    fetchUserRanks(mainTab === 'weekly' ? week : undefined);
-  }, [subTab, mainTab, week]);
+  // Handle clear search
+  const handleClearSearch = useCallback(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    setLeaderboardSearch('');
+  }, []);
 
   // Handle claim reward
   const handleClaimReward = useCallback(async (rewardId: string) => {
@@ -225,8 +278,8 @@ export function LeaderboardModal() {
           <RewardsPanel rewards={rewards} onClaim={handleClaimReward} t={t} />
         )}
 
-        {/* User Rank Card */}
-        {userRank && userName && (
+        {/* User Rank Card (for player leaderboards) */}
+        {mainTab !== 'guild' && userRank && userName && (
           <UserRankCard
             rank={userRank.rank}
             score={userRank.score}
@@ -236,13 +289,45 @@ export function LeaderboardModal() {
           />
         )}
 
+        {/* Guild Rank Card (for guild leaderboards) */}
+        {mainTab === 'guild' && playerGuild.value && (
+          <GuildRankCard
+            rank={myGuildRank.value}
+            guildName={playerGuild.value.name}
+            guildTag={playerGuild.value.tag}
+            honor={playerGuild.value.honor}
+            t={t}
+          />
+        )}
+
         {/* Leaderboard Content */}
-        <div class={styles.leaderboardContent}>
-          <div class={styles.listHeader}>
-            <span class={styles.listTitle}>TOP 100</span>
-            <button class={styles.refreshButton} onClick={handleRefresh}>
-              {t('leaderboard.refresh')}
-            </button>
+        <div
+          class={styles.leaderboardContent}
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+        >
+          {/* Search Input */}
+          <div class={styles.searchContainer}>
+            <input
+              ref={searchInputRef}
+              type="text"
+              class={styles.searchInput}
+              placeholder={t('leaderboard.searchPlaceholder')}
+              onInput={handleSearchChange}
+              defaultValue={searchQuery}
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                class={styles.clearButton}
+                onClick={handleClearSearch}
+                aria-label={t('shared.close')}
+              >
+                ×
+              </button>
+            ) : (
+              <span class={styles.searchIcon}>🔍</span>
+            )}
           </div>
 
           {loading ? (
@@ -258,7 +343,7 @@ export function LeaderboardModal() {
             </div>
           ) : mainTab === 'guild' ? (
             // Guild leaderboard
-            guildLeaderboardEntries.value.length === 0 ? (
+            guildEntries.length === 0 ? (
               <div class={styles.emptyState}>
                 <span class={styles.emptyIcon}>🏰</span>
                 <span class={styles.emptyTitle}>{t('leaderboard.noGuilds')}</span>
@@ -268,7 +353,7 @@ export function LeaderboardModal() {
               </div>
             ) : (
               <>
-                {guildLeaderboardEntries.value.map((entry) => (
+                {guildEntries.map((entry) => (
                   <GuildLeaderboardEntryRow
                     key={entry.guildId}
                     entry={entry}
@@ -276,6 +361,11 @@ export function LeaderboardModal() {
                     t={t}
                   />
                 ))}
+                {loadingMore && (
+                  <div class={styles.loadingMore}>
+                    <div class={styles.loadingSpinner} />
+                  </div>
+                )}
               </>
             )
           ) : entries.length === 0 ? (
@@ -283,7 +373,7 @@ export function LeaderboardModal() {
               <span class={styles.emptyIcon}>📊</span>
               <span class={styles.emptyTitle}>{t('leaderboard.noData')}</span>
               <span class={styles.emptyMessage}>
-                {t('leaderboard.noDataMessage')}
+                {searchQuery ? t('leaderboard.noSearchResults') : t('leaderboard.noDataMessage')}
               </span>
             </div>
           ) : (
@@ -293,36 +383,18 @@ export function LeaderboardModal() {
                   key={entry.userId}
                   entry={entry}
                   category={subTab}
-                  isCurrentUser={userName === entry.displayName}
+                  isCurrentUser={getUserId() === entry.userId}
                   t={t}
                 />
               ))}
+              {loadingMore && (
+                <div class={styles.loadingMore}>
+                  <div class={styles.loadingSpinner} />
+                </div>
+              )}
             </>
           )}
         </div>
-
-        {/* Pagination */}
-        {!loading && entries.length > 0 && (
-          <div class={styles.pagination}>
-            <button
-              class={styles.pageButton}
-              onClick={prevPage}
-              disabled={!hasPrevPage.value}
-            >
-              {t('leaderboard.previous')}
-            </button>
-            <span class={styles.pageInfo}>
-              {t('leaderboard.pageOf', { current: currentPage.value, total: totalPages.value })}
-            </span>
-            <button
-              class={styles.pageButton}
-              onClick={nextPage}
-              disabled={!hasNextPage.value}
-            >
-              {t('leaderboard.next')}
-            </button>
-          </div>
-        )}
       </div>
     </Modal>
   );
@@ -358,6 +430,37 @@ function UserRankCard({ rank, score, userName, category, t }: UserRankCardProps)
         <div class={styles.userScoreSection}>
           <div class={styles.userScore}>
             {score.toLocaleString()} {scoreLabel}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface GuildRankCardProps {
+  rank: number | null;
+  guildName: string;
+  guildTag: string;
+  honor: number;
+  t: (key: string, params?: Record<string, unknown>) => string;
+}
+
+function GuildRankCard({ rank, guildName, guildTag, honor, t }: GuildRankCardProps) {
+  return (
+    <div class={styles.userRankCard}>
+      <div class={styles.userRankHeader}>{t('leaderboard.yourGuildPosition')}</div>
+      <div class={styles.userRankContent}>
+        <div class={styles.userRank}>
+          {rank ? `#${rank}` : <span class={styles.userRankUnranked}>—</span>}
+        </div>
+        <div class={styles.userAvatar}>🏰</div>
+        <div class={styles.userInfo}>
+          <div class={styles.userName}>{guildName}</div>
+          <div class={styles.userGuildTag}>[{guildTag}]</div>
+        </div>
+        <div class={styles.userScoreSection}>
+          <div class={styles.userScore}>
+            {honor.toLocaleString()} {t('leaderboard.scoreLabels.honor')}
           </div>
         </div>
       </div>
@@ -428,9 +531,9 @@ function LeaderboardEntry({ entry, category, isCurrentUser, t }: LeaderboardEntr
               <span
                 key={item.id}
                 class={`${styles.exclusiveTag} ${styles[item.rarity]}`}
-                title={item.polishName}
+                title={getLocalizedItemName(item)}
               >
-                {item.icon} {item.polishName}
+                {item.icon} {getLocalizedItemName(item)}
               </span>
             ))}
           </div>
@@ -552,7 +655,7 @@ function RewardCard({ reward, onClaim, t }: RewardCardProps) {
               key={item.id}
               class={`${styles.exclusiveTag} ${styles[item.rarity]}`}
             >
-              {item.icon} {item.polishName}
+              {item.icon} {getLocalizedItemName(item)}
             </span>
           ))}
         </div>

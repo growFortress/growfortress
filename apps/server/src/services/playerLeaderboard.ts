@@ -76,6 +76,7 @@ export interface ClaimRewardResult {
 export async function getTotalWavesLeaderboard(
   limit: number = 25,
   offset: number = 0,
+  search?: string,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
   return getCachedPermanentLeaderboard(
     "totalWaves",
@@ -117,6 +118,7 @@ export async function getTotalWavesLeaderboard(
         total,
       };
     },
+    search,
   );
 }
 
@@ -126,6 +128,7 @@ export async function getTotalWavesLeaderboard(
 export async function getHonorLeaderboard(
   limit: number = 25,
   offset: number = 0,
+  search?: string,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
   return getCachedPermanentLeaderboard("honor", limit, offset, async () => {
     const [users, total] = await Promise.all([
@@ -162,7 +165,7 @@ export async function getHonorLeaderboard(
       })),
       total,
     };
-  });
+  }, search);
 }
 
 /**
@@ -171,6 +174,7 @@ export async function getHonorLeaderboard(
 export async function getLevelLeaderboard(
   limit: number = 25,
   offset: number = 0,
+  search?: string,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
   return getCachedPermanentLeaderboard("level", limit, offset, async () => {
     const [progressions, total] = await Promise.all([
@@ -208,7 +212,7 @@ export async function getLevelLeaderboard(
       })),
       total,
     };
-  });
+  }, search);
 }
 
 // ==========================================
@@ -222,6 +226,7 @@ export async function getWeeklyWavesLeaderboard(
   weekKey: string = getCurrentWeekKey(),
   limit: number = 25,
   offset: number = 0,
+  search?: string,
 ): Promise<{
   entries: PlayerLeaderboardEntry[];
   total: number;
@@ -279,17 +284,29 @@ export async function getWeeklyWavesLeaderboard(
     await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(data));
   }
 
+  // Apply search filter if provided
+  let filteredEntries = data.entries;
+  let filteredTotal = data.total;
+
+  if (search && search.trim()) {
+    const searchLower = search.toLowerCase().trim();
+    filteredEntries = data.entries.filter((entry) =>
+      entry.displayName.toLowerCase().includes(searchLower)
+    );
+    filteredTotal = filteredEntries.length;
+  }
+
   // Paginate in memory
-  const paginatedEntries = data.entries
+  const paginatedEntries = filteredEntries
     .slice(offset, offset + limit)
     .map((entry, index) => ({
       ...entry,
-      rank: offset + index + 1,
+      rank: search ? index + offset + 1 : offset + index + 1,
     }));
 
   return {
     entries: paginatedEntries,
-    total: data.total,
+    total: filteredTotal,
     weekKey,
   };
 }
@@ -301,6 +318,7 @@ export async function getWeeklyHonorLeaderboard(
   weekKey: string = getCurrentWeekKey(),
   limit: number = 25,
   offset: number = 0,
+  search?: string,
 ): Promise<{
   entries: PlayerLeaderboardEntry[];
   total: number;
@@ -358,17 +376,29 @@ export async function getWeeklyHonorLeaderboard(
     await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(data));
   }
 
+  // Apply search filter if provided
+  let filteredEntries = data.entries;
+  let filteredTotal = data.total;
+
+  if (search && search.trim()) {
+    const searchLower = search.toLowerCase().trim();
+    filteredEntries = data.entries.filter((entry) =>
+      entry.displayName.toLowerCase().includes(searchLower)
+    );
+    filteredTotal = filteredEntries.length;
+  }
+
   // Paginate in memory
-  const paginatedEntries = data.entries
+  const paginatedEntries = filteredEntries
     .slice(offset, offset + limit)
     .map((entry, index) => ({
       ...entry,
-      rank: offset + index + 1,
+      rank: search ? index + offset + 1 : offset + index + 1,
     }));
 
   return {
     entries: paginatedEntries,
-    total: data.total,
+    total: filteredTotal,
     weekKey,
   };
 }
@@ -800,6 +830,7 @@ async function getCachedPermanentLeaderboard(
   limit: number,
   offset: number,
   fetchFn: () => Promise<{ entries: PlayerLeaderboardEntry[]; total: number }>,
+  search?: string,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
   const cacheKey = CACHE_KEYS[category];
   const cached = await redis.get(cacheKey);
@@ -813,17 +844,29 @@ async function getCachedPermanentLeaderboard(
     await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(data));
   }
 
+  // Apply search filter if provided
+  let filteredEntries = data.entries;
+  let filteredTotal = data.total;
+
+  if (search && search.trim()) {
+    const searchLower = search.toLowerCase().trim();
+    filteredEntries = data.entries.filter((entry) =>
+      entry.displayName.toLowerCase().includes(searchLower)
+    );
+    filteredTotal = filteredEntries.length;
+  }
+
   // Paginate in memory
-  const paginatedEntries = data.entries
+  const paginatedEntries = filteredEntries
     .slice(offset, offset + limit)
     .map((entry, index) => ({
       ...entry,
-      rank: offset + index + 1,
+      rank: search ? index + offset + 1 : offset + index + 1,
     }));
 
   return {
     entries: paginatedEntries,
-    total: data.total,
+    total: filteredTotal,
   };
 }
 

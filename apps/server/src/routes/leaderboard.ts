@@ -64,6 +64,7 @@ const leaderboardRoutes: FastifyPluginAsync = async (fastify) => {
     limit: z.coerce.number().min(1).max(100).default(25),
     offset: z.coerce.number().min(0).default(0),
     week: z.string().optional(),
+    search: z.string().optional(),
   });
 
   // Get player leaderboard by category
@@ -78,19 +79,19 @@ const leaderboardRoutes: FastifyPluginAsync = async (fastify) => {
 
     switch (category as LeaderboardCategory) {
       case 'totalWaves':
-        result = await getTotalWavesLeaderboard(query.limit, query.offset);
+        result = await getTotalWavesLeaderboard(query.limit, query.offset, query.search);
         break;
       case 'honor':
-        result = await getHonorLeaderboard(query.limit, query.offset);
+        result = await getHonorLeaderboard(query.limit, query.offset, query.search);
         break;
       case 'level':
-        result = await getLevelLeaderboard(query.limit, query.offset);
+        result = await getLevelLeaderboard(query.limit, query.offset, query.search);
         break;
       case 'weeklyWaves':
-        result = await getWeeklyWavesLeaderboard(weekKey, query.limit, query.offset);
+        result = await getWeeklyWavesLeaderboard(weekKey, query.limit, query.offset, query.search);
         break;
       case 'weeklyHonor':
-        result = await getWeeklyHonorLeaderboard(weekKey, query.limit, query.offset);
+        result = await getWeeklyHonorLeaderboard(weekKey, query.limit, query.offset, query.search);
         break;
       default:
         return reply.status(400).send({ error: 'Invalid category' });

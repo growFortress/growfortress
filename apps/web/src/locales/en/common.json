@@ -218,6 +218,8 @@
       "points": "points"
     },
     "yourPosition": "Your position",
+    "yourGuildPosition": "Your guild's position",
+    "topRanking": "TOP 100",
     "refresh": "Refresh",
     "loading": "Loading...",
     "error": "Error",
@@ -225,6 +227,8 @@
     "noGuildsMessage": "No guilds have appeared in this ranking yet.",
     "noData": "No data",
     "noDataMessage": "No one has appeared in this ranking yet.",
+    "searchPlaceholder": "Search by name...",
+    "noSearchResults": "No players found matching your search.",
     "previous": "← Previous",
     "next": "Next →",
     "pageOf": "Page {{current}} of {{total}}",

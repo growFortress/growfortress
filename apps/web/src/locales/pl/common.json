@@ -218,6 +218,8 @@
       "points": "punktów"
     },
     "yourPosition": "Twoja pozycja",
+    "yourGuildPosition": "Pozycja Twojej gildii",
+    "topRanking": "TOP 100",
     "refresh": "Odśwież",
     "loading": "Ładowanie...",
     "error": "Błąd",
@@ -225,6 +227,8 @@
     "noGuildsMessage": "Żadna gildia nie pojawiła się jeszcze w tym rankingu.",
     "noData": "Brak danych",
     "noDataMessage": "Nikt jeszcze nie pojawił się w tym rankingu.",
+    "searchPlaceholder": "Szukaj po nazwie...",
+    "noSearchResults": "Nie znaleziono graczy pasujących do wyszukiwania.",
     "previous": "← Poprzednia",
     "next": "Następna →",
     "pageOf": "Strona {{current}} z {{total}}",

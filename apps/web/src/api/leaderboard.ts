@@ -15,14 +15,11 @@ import { CONFIG } from '../config.js';
 import { getAccessToken } from './auth.js';
 import { ApiError } from './client.js';
 import {
-  setLeaderboardData,
   setUserRanks,
   setAvailableRewards,
   removeClaimedReward,
   setAvailableWeeks,
   setExclusiveItems,
-  leaderboardLoading,
-  leaderboardError,
   userRanksLoading,
   rewardsLoading,
 } from '../state/leaderboard.signals.js';
@@ -70,35 +67,22 @@ async function leaderboardRequest<T>(
 
 /**
  * Fetch player leaderboard by category
+ * Note: Does not auto-update state - caller handles state updates for infinite scroll support
  */
 export async function fetchPlayerLeaderboard(
   category: PlayerLeaderboardCategory,
-  options: { limit?: number; offset?: number; week?: string } = {}
+  options: { limit?: number; offset?: number; week?: string; search?: string } = {}
 ): Promise<PlayerLeaderboardResponse> {
-  leaderboardLoading.value = true;
-  leaderboardError.value = null;
+  const params = new URLSearchParams();
+  if (options.limit) params.set('limit', options.limit.toString());
+  if (options.offset) params.set('offset', options.offset.toString());
+  if (options.week) params.set('week', options.week);
+  if (options.search) params.set('search', options.search);
 
-  try {
-    const params = new URLSearchParams();
-    if (options.limit) params.set('limit', options.limit.toString());
-    if (options.offset) params.set('offset', options.offset.toString());
-    if (options.week) params.set('week', options.week);
+  const queryString = params.toString();
+  const path = `/v1/leaderboards/players/${category}${queryString ? `?${queryString}` : ''}`;
 
-    const queryString = params.toString();
-    const path = `/v1/leaderboards/players/${category}${queryString ? `?${queryString}` : ''}`;
-
-    const response = await leaderboardRequest<PlayerLeaderboardResponse>(path);
-
-    setLeaderboardData(response.entries, response.total, response.timeUntilReset);
-
-    return response;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch leaderboard';
-    leaderboardError.value = message;
-    throw error;
-  } finally {
-    leaderboardLoading.value = false;
-  }
+  return leaderboardRequest<PlayerLeaderboardResponse>(path);
 }
 
 /**

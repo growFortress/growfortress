@@ -24,11 +24,14 @@ export type MainTab = 'permanent' | 'weekly' | 'guild';
 export const activeMainTab = signal<MainTab>('permanent');
 
 /** Current sub tab based on main tab */
-export type SubTab = PlayerLeaderboardCategory | 'guildHonor' | 'guildTrophies';
+export type SubTab = PlayerLeaderboardCategory | 'guildHonor';
 export const activeSubTab = signal<SubTab>('totalWaves');
 
 /** Selected week for weekly leaderboards */
 export const selectedWeek = signal<string | null>(null);
+
+/** Search query for filtering leaderboard */
+export const leaderboardSearchQuery = signal('');
 
 // ============================================================================
 // LEADERBOARD DATA
@@ -40,14 +43,17 @@ export const leaderboardEntries = signal<PlayerLeaderboardEntry[]>([]);
 /** Total count of entries */
 export const leaderboardTotal = signal(0);
 
-/** Current page offset */
+/** Current offset for infinite scroll */
 export const leaderboardOffset = signal(0);
 
-/** Page size */
-export const leaderboardLimit = signal(25);
+/** Batch size for loading */
+export const leaderboardLimit = signal(50);
 
-/** Loading state */
+/** Loading state (initial load) */
 export const leaderboardLoading = signal(false);
+
+/** Loading more state (infinite scroll) */
+export const leaderboardLoadingMore = signal(false);
 
 /** Error message */
 export const leaderboardError = signal<string | null>(null);
@@ -127,24 +133,14 @@ export const getExclusiveItemById = (id: string): ExclusiveItem | undefined => {
 // COMPUTED VALUES
 // ============================================================================
 
-/** Has more pages to load */
-export const hasNextPage = computed(() => {
-  return leaderboardOffset.value + leaderboardLimit.value < leaderboardTotal.value;
+/** Has more entries to load (player leaderboard) */
+export const hasMoreEntries = computed(() => {
+  return leaderboardEntries.value.length < leaderboardTotal.value;
 });
 
-/** Has previous pages */
-export const hasPrevPage = computed(() => {
-  return leaderboardOffset.value > 0;
-});
-
-/** Current page number (1-indexed) */
-export const currentPage = computed(() => {
-  return Math.floor(leaderboardOffset.value / leaderboardLimit.value) + 1;
-});
-
-/** Total pages */
-export const totalPages = computed(() => {
-  return Math.ceil(leaderboardTotal.value / leaderboardLimit.value);
+/** Has more entries to load (guild leaderboard) */
+export const hasMoreGuildEntries = computed(() => {
+  return guildLeaderboardEntries.value.length < guildLeaderboardTotal.value;
 });
 
 /** Formatted time until reset */
@@ -193,7 +189,8 @@ export function closeLeaderboardModal() {
 /** Change main tab */
 export function setMainTab(tab: MainTab) {
   activeMainTab.value = tab;
-  leaderboardOffset.value = 0;
+  leaderboardSearchQuery.value = '';
+  resetLeaderboardData();
 
   // Set default sub-tab
   switch (tab) {
@@ -212,32 +209,29 @@ export function setMainTab(tab: MainTab) {
 /** Change sub tab */
 export function setSubTab(tab: SubTab) {
   activeSubTab.value = tab;
+  leaderboardSearchQuery.value = '';
+  resetLeaderboardData();
+}
+
+/** Set search query */
+export function setLeaderboardSearch(query: string) {
+  leaderboardSearchQuery.value = query;
+  resetLeaderboardData();
+}
+
+/** Reset leaderboard data for fresh load */
+export function resetLeaderboardData() {
   leaderboardOffset.value = 0;
-}
-
-/** Go to next page */
-export function nextPage() {
-  if (hasNextPage.value) {
-    leaderboardOffset.value += leaderboardLimit.value;
-  }
-}
-
-/** Go to previous page */
-export function prevPage() {
-  if (hasPrevPage.value) {
-    leaderboardOffset.value = Math.max(0, leaderboardOffset.value - leaderboardLimit.value);
-  }
-}
-
-/** Reset to first page */
-export function resetPagination() {
-  leaderboardOffset.value = 0;
+  leaderboardEntries.value = [];
+  guildLeaderboardEntries.value = [];
+  leaderboardTotal.value = 0;
+  guildLeaderboardTotal.value = 0;
 }
 
 /** Set selected week */
 export function setSelectedWeek(week: string | null) {
   selectedWeek.value = week;
-  leaderboardOffset.value = 0;
+  resetLeaderboardData();
 }
 
 // ============================================================================
@@ -248,10 +242,16 @@ export function setSelectedWeek(week: string | null) {
 export function setLeaderboardData(
   entries: PlayerLeaderboardEntry[],
   total: number,
-  reset?: TimeUntilReset
+  reset?: TimeUntilReset,
+  append = false
 ) {
-  leaderboardEntries.value = entries;
+  if (append) {
+    leaderboardEntries.value = [...leaderboardEntries.value, ...entries];
+  } else {
+    leaderboardEntries.value = entries;
+  }
   leaderboardTotal.value = total;
+  leaderboardOffset.value = leaderboardEntries.value.length;
   if (reset) {
     timeUntilReset.value = reset;
   }
@@ -294,10 +294,16 @@ export function setExclusiveItems(items: ExclusiveItem[]) {
 export function setGuildLeaderboardData(
   entries: GuildLeaderboardEntry[],
   total: number,
-  myRank: number | null
+  myRank: number | null,
+  append = false
 ) {
-  guildLeaderboardEntries.value = entries;
+  if (append) {
+    guildLeaderboardEntries.value = [...guildLeaderboardEntries.value, ...entries];
+  } else {
+    guildLeaderboardEntries.value = entries;
+  }
   guildLeaderboardTotal.value = total;
+  leaderboardOffset.value = guildLeaderboardEntries.value.length;
   myGuildRank.value = myRank;
   leaderboardError.value = null;
 }
