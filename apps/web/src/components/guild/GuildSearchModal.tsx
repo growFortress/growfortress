@@ -3,7 +3,7 @@
  */
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
-import type { Guild } from '@arcade/protocol';
+import type { Guild, GuildAccessMode, GuildApplication } from '@arcade/protocol';
 import {
   showGuildSearch,
   closeGuildSearch,
@@ -11,8 +11,20 @@ import {
   guildSearchTotal,
   searchLoading,
   receivedInvitations,
+  myApplications,
+  myApplicationsTotal,
+  myActiveApplicationsCount,
 } from '../../state/guild.signals.js';
-import { searchGuilds, getGuild, acceptInvitation, declineInvitation } from '../../api/guild.js';
+import {
+  searchGuilds,
+  getGuild,
+  acceptInvitation,
+  declineInvitation,
+  joinGuildDirect,
+  submitApplication,
+  getMyApplications,
+  cancelApplication,
+} from '../../api/guild.js';
 import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
 import { Spinner } from '../shared/Spinner.js';
@@ -29,16 +41,34 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
   const [selectedGuild, setSelectedGuild] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'search' | 'invitations'>('search');
+  const [viewMode, setViewMode] = useState<'search' | 'invitations' | 'applications'>('search');
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
 
   const invitations = receivedInvitations.value;
+  const applications = myApplications.value;
+  const activeApplicationsCount = myActiveApplicationsCount.value;
 
   useEffect(() => {
     if (showGuildSearch.value) {
       // Load initial guilds
       handleSearch('');
+      // Load my applications
+      loadMyApplications();
     }
   }, [showGuildSearch.value]);
+
+  const loadMyApplications = useCallback(async () => {
+    setApplicationsLoading(true);
+    try {
+      const data = await getMyApplications({ limit: 20, offset: 0 });
+      myApplications.value = data.applications;
+      myApplicationsTotal.value = data.total;
+    } catch (error) {
+      console.error('Failed to load my applications:', error);
+    } finally {
+      setApplicationsLoading(false);
+    }
+  }, []);
 
   const handleSearch = useCallback(async (searchQuery: string) => {
     searchLoading.value = true;
@@ -100,6 +130,19 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
     }
   };
 
+  const handleCancelApplication = async (applicationId: string) => {
+    setActionLoading(true);
+    try {
+      await cancelApplication(applicationId);
+      // Remove from local state
+      myApplications.value = applications.filter((a) => a.id !== applicationId);
+    } catch (error) {
+      console.error('Failed to cancel application:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleClose = () => {
     setSelectedGuild(null);
     setQuery('');
@@ -134,6 +177,15 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
               <span class={styles.tabBadge}>{invitations.length}</span>
             )}
           </button>
+          <button
+            class={`${styles.tab} ${viewMode === 'applications' ? styles.tabActive : ''}`}
+            onClick={() => setViewMode('applications')}
+          >
+            {t('guild.myApplications')}
+            {activeApplicationsCount > 0 && (
+              <span class={styles.tabBadge}>{activeApplicationsCount}</span>
+            )}
+          </button>
         </div>
 
         {viewMode === 'search' && (
@@ -162,6 +214,7 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
                 guild={selectedGuild}
                 onBack={() => setSelectedGuild(null)}
                 loading={loadingDetails}
+                onSuccess={onSuccess}
                 t={t}
               />
             ) : (
@@ -238,22 +291,52 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
             )}
           </div>
         )}
+
+        {viewMode === 'applications' && (
+          <div class={styles.applicationsList}>
+            {applicationsLoading ? (
+              <div class={styles.loading}>
+                <Spinner />
+              </div>
+            ) : applications.length === 0 ? (
+              <div class={styles.empty}>
+                <span class={styles.emptyIcon}>📝</span>
+                <span>{t('guild.noActiveApplications')}</span>
+                <span class={styles.emptyHint}>
+                  {t('guild.browseAndApply')}
+                </span>
+              </div>
+            ) : (
+              applications.map((application) => (
+                <MyApplicationCard
+                  key={application.id}
+                  application={application}
+                  onCancel={() => handleCancelApplication(application.id)}
+                  actionLoading={actionLoading}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   );
 }
 
 interface GuildCardProps {
-  guild: Guild & { _count?: { members: number } };
+  guild: Guild & { _count?: { members: number }; settings?: { accessMode?: GuildAccessMode } };
   onClick: () => void;
   t: (key: string, params?: Record<string, unknown>) => string;
 }
 
 function GuildCard({ guild, onClick, t }: GuildCardProps) {
+  const accessMode = (guild.settings as any)?.accessMode || 'INVITE_ONLY';
+
   return (
     <div class={styles.guildCard} onClick={onClick}>
       <div class={styles.guildInfo}>
         <span class={styles.guildName}>
+          <AccessModeIcon mode={accessMode} />
           {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
         </span>
         <div class={styles.guildMeta}>
@@ -271,10 +354,16 @@ interface GuildDetailsProps {
   guild: any;
   onBack: () => void;
   loading: boolean;
+  onSuccess?: () => void;
   t: (key: string, params?: Record<string, unknown>) => string;
 }
 
-function GuildDetails({ guild, onBack, loading, t }: GuildDetailsProps) {
+function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProps) {
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [applicationMessage, setApplicationMessage] = useState('');
+
   if (loading) {
     return (
       <div class={styles.loading}>
@@ -282,6 +371,36 @@ function GuildDetails({ guild, onBack, loading, t }: GuildDetailsProps) {
       </div>
     );
   }
+
+  const accessMode: GuildAccessMode = (guild.settings as any)?.accessMode || 'INVITE_ONLY';
+
+  const handleJoinDirect = async () => {
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await joinGuildDirect(guild.id);
+      setActionSuccess('Dolaczyles do gildii!');
+      closeGuildSearch();
+      onSuccess?.();
+    } catch (err: any) {
+      setActionError(err.message || 'Nie udalo sie dolaczyc do gildii');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApply = async () => {
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await submitApplication(guild.id, applicationMessage || undefined);
+      setActionSuccess('Podanie zostalo wyslane!');
+    } catch (err: any) {
+      setActionError(err.message || 'Nie udalo sie wyslac podania');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <div class={styles.guildDetails}>
@@ -291,6 +410,7 @@ function GuildDetails({ guild, onBack, loading, t }: GuildDetailsProps) {
 
       <div class={styles.detailsHeader}>
         <h3 class={styles.detailsName}>
+          <AccessModeIcon mode={accessMode} />
           {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
         </h3>
         <div class={styles.detailsLevel}>{t('guild.level')} {guild.level}</div>
@@ -338,12 +458,147 @@ function GuildDetails({ guild, onBack, loading, t }: GuildDetailsProps) {
         </div>
       )}
 
-      <div class={styles.detailsInfo}>
-        <span class={styles.infoIcon}>ℹ️</span>
-        <span>
-          {t('guild.joinInfo')}
-        </span>
+      {/* Action section based on access mode */}
+      <div class={styles.joinSection}>
+        {actionError && <div class={styles.joinError}>{actionError}</div>}
+        {actionSuccess && <div class={styles.joinSuccess}>{actionSuccess}</div>}
+
+        {!actionSuccess && accessMode === 'OPEN' && (
+          <Button
+            variant="primary"
+            onClick={handleJoinDirect}
+            disabled={actionLoading}
+          >
+            {actionLoading ? t('guild.joining') : t('guild.joinGuildBtn')}
+          </Button>
+        )}
+
+        {!actionSuccess && accessMode === 'APPLY' && (
+          <div class={styles.applySection}>
+            <textarea
+              class={styles.applyMessage}
+              placeholder={t('guild.applicationMessagePlaceholder')}
+              maxLength={200}
+              value={applicationMessage}
+              onInput={(e) => setApplicationMessage((e.target as HTMLTextAreaElement).value)}
+            />
+            <Button
+              variant="primary"
+              onClick={handleApply}
+              disabled={actionLoading}
+            >
+              {actionLoading ? t('guild.sending') : t('guild.sendApplication')}
+            </Button>
+          </div>
+        )}
+
+        {!actionSuccess && accessMode === 'INVITE_ONLY' && (
+          <div class={styles.detailsInfo}>
+            <span class={styles.infoIcon}>🔒</span>
+            <span>{t('guild.inviteOnlyInfo')}</span>
+          </div>
+        )}
+
+        {!actionSuccess && accessMode === 'CLOSED' && (
+          <div class={styles.detailsInfo}>
+            <span class={styles.infoIcon}>🚫</span>
+            <span>{t('guild.closedInfo')}</span>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+// Access Mode Icon Component
+interface AccessModeIconProps {
+  mode: GuildAccessMode;
+}
+
+function AccessModeIcon({ mode }: AccessModeIconProps) {
+  const { t } = useTranslation('common');
+  const icons: Record<GuildAccessMode, { icon: string; class: string; titleKey: string }> = {
+    OPEN: { icon: '🚪', class: styles.accessModeOpen, titleKey: 'guild.accessModes.open' },
+    APPLY: { icon: '📨', class: styles.accessModeApply, titleKey: 'guild.accessModes.apply' },
+    INVITE_ONLY: { icon: '🔒', class: styles.accessModeInviteOnly, titleKey: 'guild.accessModes.inviteOnly' },
+    CLOSED: { icon: '🚫', class: styles.accessModeClosed, titleKey: 'guild.accessModes.closed' },
+  };
+
+  const { icon, class: className, titleKey } = icons[mode];
+
+  return (
+    <span class={`${styles.accessModeIcon} ${className}`} title={t(titleKey)}>
+      {icon}
+    </span>
+  );
+}
+
+// My Application Card Component
+interface MyApplicationCardProps {
+  application: GuildApplication;
+  onCancel: () => void;
+  actionLoading: boolean;
+}
+
+function MyApplicationCard({ application, onCancel, actionLoading }: MyApplicationCardProps) {
+  const { t } = useTranslation('common');
+
+  // Get guild info from the extended application data
+  const guild = (application as any).guild;
+  const guildName = guild?.name || t('guild.unknownGuild');
+  const guildTag = guild?.tag || '';
+
+  // Calculate time remaining
+  const expiresAt = new Date(application.expiresAt);
+  const now = new Date();
+  const hoursRemaining = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60)));
+
+  const statusLabels: Record<string, string> = {
+    PENDING: t('guild.applicationStatus.pending'),
+    ACCEPTED: t('guild.applicationStatus.accepted'),
+    DECLINED: t('guild.applicationStatus.declined'),
+    EXPIRED: t('guild.applicationStatus.expired'),
+    CANCELLED: t('guild.applicationStatus.cancelled'),
+  };
+
+  const statusStyles: Record<string, string> = {
+    PENDING: styles.statusPending,
+    ACCEPTED: styles.statusAccepted,
+    DECLINED: styles.statusDeclined,
+    EXPIRED: styles.statusExpired,
+    CANCELLED: styles.statusCancelled,
+  };
+
+  return (
+    <div class={styles.applicationCard}>
+      <div class={styles.applicationInfo}>
+        <span class={styles.applicationGuild}>
+          {guildName} {guildTag && <GuildTag guildId={application.guildId} tag={guildTag} />}
+        </span>
+        <span class={`${styles.applicationStatus} ${statusStyles[application.status] || ''}`}>
+          {statusLabels[application.status] || application.status}
+        </span>
+        {application.status === 'PENDING' && (
+          <span class={styles.applicationExpiry}>
+            {t('guild.expiresIn', { hours: hoursRemaining })}
+          </span>
+        )}
+        {application.message && (
+          <span class={styles.applicationMessage}>"{application.message}"</span>
+        )}
+      </div>
+      {application.status === 'PENDING' && (
+        <div class={styles.applicationActions}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            disabled={actionLoading}
+          >
+            {t('guild.cancelApplication')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import type {
   GuildTreasury,
   GuildBattle,
   GuildInvitation,
+  GuildApplication,
   GuildLevelInfo,
 } from '@arcade/protocol';
 
@@ -20,7 +21,7 @@ import type {
 export const showGuildPanel = signal(false);
 
 /** Current active tab in guild panel */
-export const guildPanelTab = signal<'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss'>('info');
+export const guildPanelTab = signal<'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications'>('info');
 
 /** Whether guild search modal is visible */
 export const showGuildSearch = signal(false);
@@ -127,6 +128,35 @@ export const hasNewInvitations = computed(() => receivedInvitations.value.length
 export const invitationCount = computed(() => receivedInvitations.value.length);
 
 // ============================================================================
+// APPLICATIONS
+// ============================================================================
+
+/** Guild's received applications (for officers/leaders) */
+export const guildApplications = signal<GuildApplication[]>([]);
+
+/** Total count of guild applications */
+export const guildApplicationsTotal = signal(0);
+
+/** User's sent applications */
+export const myApplications = signal<GuildApplication[]>([]);
+
+/** Total count of user's applications */
+export const myApplicationsTotal = signal(0);
+
+/** Pending applications count (for badge display) */
+export const pendingApplicationsCount = computed(() =>
+  guildApplications.value.filter(a => a.status === 'PENDING').length
+);
+
+/** User's active applications count */
+export const myActiveApplicationsCount = computed(() =>
+  myApplications.value.filter(a => a.status === 'PENDING').length
+);
+
+/** Whether there are pending applications to review */
+export const hasPendingApplications = computed(() => pendingApplicationsCount.value > 0);
+
+// ============================================================================
 // GUILD SEARCH
 // ============================================================================
 
@@ -200,6 +230,7 @@ export const guildLoading = signal(false);
 export const treasuryLoading = signal(false);
 export const battlesLoading = signal(false);
 export const invitationsLoading = signal(false);
+export const applicationsLoading = signal(false);
 export const searchLoading = signal(false);
 export const leaderboardLoading = signal(false);
 
@@ -272,6 +303,10 @@ export function resetGuildState() {
   treasuryLogs.value = [];
   guildBattles.value = [];
   receivedInvitations.value = [];
+  guildApplications.value = [];
+  guildApplicationsTotal.value = 0;
+  myApplications.value = [];
+  myApplicationsTotal.value = 0;
   guildError.value = null;
 }
 

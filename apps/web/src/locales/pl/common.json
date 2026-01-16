@@ -328,7 +328,33 @@
     "back": "← Wstecz",
     "trophies": "Trofea",
     "more": "+{{count}} więcej",
-    "joinInfo": "Aby dołączyć do tej gildii, musisz otrzymać zaproszenie od członka z uprawnieniami."
+    "joinInfo": "Aby dołączyć do tej gildii, musisz otrzymać zaproszenie od członka z uprawnieniami.",
+    "myApplications": "Moje podania",
+    "noActiveApplications": "Nie masz żadnych aktywnych podań.",
+    "browseAndApply": "Przeglądaj gildie i aplikuj do tych, które Cię interesują.",
+    "joining": "Dołączanie...",
+    "joinGuildBtn": "Dołącz do gildii",
+    "applicationMessagePlaceholder": "Wiadomość do gildii (opcjonalnie, max 200 znaków)",
+    "sending": "Wysyłanie...",
+    "sendApplication": "Wyślij podanie",
+    "inviteOnlyInfo": "Ta gildia przyjmuje tylko przez zaproszenia.",
+    "closedInfo": "Ta gildia jest zamknięta i nie przyjmuje nowych graczy.",
+    "unknownGuild": "Nieznana gildia",
+    "expiresIn": "Wygasa za {{hours}}h",
+    "cancelApplication": "Anuluj",
+    "accessModes": {
+      "open": "Gildia otwarta",
+      "apply": "Podania",
+      "inviteOnly": "Tylko zaproszenia",
+      "closed": "Zamknięta"
+    },
+    "applicationStatus": {
+      "pending": "Oczekuje",
+      "accepted": "Zaakceptowano",
+      "declined": "Odrzucono",
+      "expired": "Wygasło",
+      "cancelled": "Anulowano"
+    }
   },
   "messages": {
     "title": "Wiadomości",

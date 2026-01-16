@@ -16,6 +16,23 @@ export const GuildInvitationStatusSchema = z.enum([
 ]);
 export type GuildInvitationStatus = z.infer<typeof GuildInvitationStatusSchema>;
 
+export const GuildAccessModeSchema = z.enum([
+  'OPEN', // Anyone can join directly if meets minLevel
+  'APPLY', // Players must send application
+  'INVITE_ONLY', // Only through invitations (default)
+  'CLOSED', // Not accepting new members
+]);
+export type GuildAccessMode = z.infer<typeof GuildAccessModeSchema>;
+
+export const GuildApplicationStatusSchema = z.enum([
+  'PENDING',
+  'ACCEPTED',
+  'DECLINED',
+  'EXPIRED',
+  'CANCELLED',
+]);
+export type GuildApplicationStatus = z.infer<typeof GuildApplicationStatusSchema>;
+
 export const GuildBattleStatusSchema = z.enum(['RESOLVED']);
 export type GuildBattleStatus = z.infer<typeof GuildBattleStatusSchema>;
 
@@ -72,6 +89,7 @@ export const GuildSettingsSchema = z.object({
   minLevel: z.number().int().min(1).max(100).default(1),
   autoAcceptInvites: z.boolean().default(false),
   battleCooldownHours: z.number().int().min(1).max(168).default(24),
+  accessMode: GuildAccessModeSchema.default('INVITE_ONLY'),
 });
 export type GuildSettings = z.infer<typeof GuildSettingsSchema>;
 
@@ -156,6 +174,7 @@ export const CreateGuildRequestSchema = z.object({
   name: z.string().min(3).max(24),
   tag: z.string().min(3).max(5).regex(/^[A-Z0-9]+$/, 'Tag must be uppercase letters and numbers only'),
   description: z.string().max(200).optional(),
+  settings: GuildSettingsSchema.partial().optional(),
 });
 export type CreateGuildRequest = z.infer<typeof CreateGuildRequestSchema>;
 
@@ -247,6 +266,52 @@ export const InvitationsResponseSchema = z.object({
   total: z.number().int().min(0),
 });
 export type InvitationsResponse = z.infer<typeof InvitationsResponseSchema>;
+
+// ============================================================================
+// APPLICATIONS
+// ============================================================================
+
+export const GuildApplicationSchema = z.object({
+  id: z.string(),
+  guildId: z.string(),
+  guildName: z.string(),
+  guildTag: z.string(),
+  guildLevel: z.number().int().min(1).max(20),
+  applicantId: z.string(),
+  applicantName: z.string(),
+  applicantLevel: z.number().int().min(0), // highestWave
+  applicantPower: z.number().int().min(0),
+  status: GuildApplicationStatusSchema,
+  message: z.string().max(200).nullable(),
+  createdAt: z.string().datetime(),
+  expiresAt: z.string().datetime(),
+  respondedAt: z.string().datetime().nullable(),
+  respondedBy: z.string().nullable(),
+  responderName: z.string().nullable(),
+});
+export type GuildApplication = z.infer<typeof GuildApplicationSchema>;
+
+export const CreateApplicationRequestSchema = z.object({
+  message: z.string().max(200).optional(),
+});
+export type CreateApplicationRequest = z.infer<typeof CreateApplicationRequestSchema>;
+
+export const ApplicationsQuerySchema = z.object({
+  status: GuildApplicationStatusSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+export type ApplicationsQuery = z.infer<typeof ApplicationsQuerySchema>;
+
+export const ApplicationsResponseSchema = z.object({
+  applications: z.array(GuildApplicationSchema),
+  total: z.number().int().min(0),
+});
+export type ApplicationsResponse = z.infer<typeof ApplicationsResponseSchema>;
+
+// Direct join request (for OPEN guilds)
+export const JoinGuildDirectRequestSchema = z.object({});
+export type JoinGuildDirectRequest = z.infer<typeof JoinGuildDirectRequestSchema>;
 
 // ============================================================================
 // TREASURY
@@ -755,8 +820,13 @@ export const GUILD_CONSTANTS = {
 
   // Time limits
   INVITATION_EXPIRY_HOURS: 72,
+  APPLICATION_EXPIRY_HOURS: 72,
   BATTLE_COOLDOWN_HOURS: 24,
   WITHDRAWAL_COOLDOWN_HOURS: 24,
+
+  // Applications
+  MAX_ACTIVE_APPLICATIONS_PER_PLAYER: 5,
+  MAX_APPLICATION_MESSAGE_LENGTH: 200,
 
   // Treasury
   MAX_WITHDRAWAL_PERCENT: 0.20,
@@ -909,6 +979,17 @@ export const GUILD_ERROR_CODES = {
   ALREADY_INVITED: 'ALREADY_INVITED',
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   USER_ALREADY_IN_GUILD: 'USER_ALREADY_IN_GUILD',
+
+  // Application errors
+  APPLICATION_NOT_FOUND: 'APPLICATION_NOT_FOUND',
+  APPLICATION_EXPIRED: 'APPLICATION_EXPIRED',
+  APPLICATION_NOT_PENDING: 'APPLICATION_NOT_PENDING',
+  ALREADY_APPLIED: 'ALREADY_APPLIED',
+  MAX_APPLICATIONS_REACHED: 'MAX_APPLICATIONS_REACHED',
+  GUILD_NOT_ACCEPTING_APPLICATIONS: 'GUILD_NOT_ACCEPTING_APPLICATIONS',
+  GUILD_NOT_ACCEPTING_DIRECT_JOIN: 'GUILD_NOT_ACCEPTING_DIRECT_JOIN',
+  GUILD_CLOSED: 'GUILD_CLOSED',
+  LEVEL_TOO_LOW: 'LEVEL_TOO_LOW',
 
   // Treasury errors
   TREASURY_INSUFFICIENT: 'TREASURY_INSUFFICIENT',

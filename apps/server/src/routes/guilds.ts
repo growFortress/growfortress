@@ -8,6 +8,8 @@ import {
   TransferLeadershipRequestSchema,
   CreateInvitationRequestSchema,
   InvitationsQuerySchema,
+  CreateApplicationRequestSchema,
+  ApplicationsQuerySchema,
   TreasuryDepositRequestSchema,
   TreasuryWithdrawRequestSchema,
   TreasuryLogsQuerySchema,
@@ -30,6 +32,7 @@ import {
   transferLeadership,
   getGuildBonuses,
   getMemberCapacity,
+  joinGuildDirect,
 } from '../services/guild.js';
 import {
   createInvitation,
@@ -39,6 +42,14 @@ import {
   declineInvitation,
   cancelInvitation,
 } from '../services/guildInvitation.js';
+import {
+  createApplication,
+  getGuildApplications,
+  getUserApplications,
+  acceptApplication,
+  declineApplication,
+  cancelApplication,
+} from '../services/guildApplication.js';
 import {
   getTreasury,
   canWithdraw,
@@ -473,6 +484,131 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const { invitationId } = request.params as { invitationId: string };
       await cancelInvitation(invitationId, request.userId);
+      return reply.send({ success: true });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // ============================================================================
+  // APPLICATIONS
+  // ============================================================================
+
+  // Direct join for OPEN guilds
+  fastify.post('/v1/guilds/:guildId/join', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId } = request.params as { guildId: string };
+      await joinGuildDirect(guildId, request.userId);
+      return reply.send({ success: true });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Submit application
+  fastify.post('/v1/guilds/:guildId/applications', withRateLimit('guildApply'), async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId } = request.params as { guildId: string };
+      const body = CreateApplicationRequestSchema.parse(request.body);
+      const application = await createApplication(guildId, request.userId, body.message);
+      return reply.send({ application });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Get guild applications (for officers/leader)
+  fastify.get('/v1/guilds/:guildId/applications', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const { guildId } = request.params as { guildId: string };
+
+    // Security: Verify user has invite permission (LEADER/OFFICER)
+    const membershipCheck = await requireGuildPermission(request.userId, guildId, 'invite');
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
+    const query = ApplicationsQuerySchema.parse(request.query);
+    const result = await getGuildApplications(guildId, query.status, query.limit, query.offset);
+    return reply.send(result);
+  });
+
+  // Get my sent applications
+  fastify.get('/v1/guilds/applications/mine', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const query = ApplicationsQuerySchema.parse(request.query);
+    const result = await getUserApplications(request.userId, query.limit, query.offset);
+    return reply.send(result);
+  });
+
+  // Accept application
+  fastify.post('/v1/guilds/applications/:applicationId/accept', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { applicationId } = request.params as { applicationId: string };
+      await acceptApplication(applicationId, request.userId);
+      return reply.send({ success: true });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Decline application
+  fastify.post('/v1/guilds/applications/:applicationId/decline', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { applicationId } = request.params as { applicationId: string };
+      await declineApplication(applicationId, request.userId);
+      return reply.send({ success: true });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Cancel own application
+  fastify.post('/v1/guilds/applications/:applicationId/cancel', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { applicationId } = request.params as { applicationId: string };
+      await cancelApplication(applicationId, request.userId);
       return reply.send({ success: true });
     } catch (error: any) {
       if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {

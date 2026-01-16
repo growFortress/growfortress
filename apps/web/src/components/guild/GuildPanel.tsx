@@ -20,6 +20,7 @@ import {
   isGuildOfficer,
   memberCount,
   invitationCount,
+  pendingApplicationsCount,
   setGuildData,
   setTreasuryData,
   openGuildSearch,
@@ -40,9 +41,10 @@ import { GuildBattlesTab } from './GuildBattlesTab.js';
 import { GuildRosterTab } from './GuildRosterTab.js';
 import { GuildTowerRaceTab } from './GuildTowerRaceTab.js';
 import { GuildBossTab } from './GuildBossTab.js';
+import { GuildApplicationsTab } from './GuildApplicationsTab.js';
 import styles from './GuildPanel.module.css';
 
-type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss';
+type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications';
 
 export function GuildPanel() {
   const { t } = useTranslation('common');
@@ -281,6 +283,18 @@ export function GuildPanel() {
                   {t('guild.tabs.roster')}
                 </button>
               )}
+              {/* Applications tab - only for officers */}
+              {isGuildOfficer.value && (
+                <button
+                  class={`${styles.tab} ${activeTab === 'applications' ? styles.tabActive : ''}`}
+                  onClick={() => handleTabClick('applications')}
+                >
+                  Podania
+                  {pendingApplicationsCount.value > 0 && (
+                    <span class={styles.tabBadge}>{pendingApplicationsCount.value}</span>
+                  )}
+                </button>
+              )}
               <button
                 class={`${styles.refreshBtn} ${refreshing ? styles.refreshBtnSpinning : ''}`}
                 onClick={refreshData}
@@ -299,6 +313,7 @@ export function GuildPanel() {
               {activeTab === 'tower-race' && <GuildTowerRaceTab onRefresh={refreshData} />}
               {activeTab === 'boss' && <GuildBossTab onRefresh={refreshData} />}
               {activeTab === 'roster' && <GuildRosterTab />}
+              {activeTab === 'applications' && <GuildApplicationsTab onRefresh={refreshData} />}
             </div>
           </>
         )}

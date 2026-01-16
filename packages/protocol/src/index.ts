@@ -370,6 +370,8 @@ export {
   // Enums
   GuildRoleSchema,
   GuildInvitationStatusSchema,
+  GuildAccessModeSchema,
+  GuildApplicationStatusSchema,
   GuildBattleStatusSchema,
   TreasuryTransactionTypeSchema,
   ArenaWinnerSideSchema,
@@ -390,6 +392,7 @@ export {
   MyGuildResponseSchema,
   UpdateMemberRoleRequestSchema,
   TransferLeadershipRequestSchema,
+  JoinGuildDirectRequestSchema,
   // Battle Hero
   BattleHeroSchema,
   BattleHeroSnapshotSchema,
@@ -401,6 +404,11 @@ export {
   CreateInvitationRequestSchema,
   InvitationsQuerySchema,
   InvitationsResponseSchema,
+  // Applications
+  GuildApplicationSchema,
+  CreateApplicationRequestSchema,
+  ApplicationsQuerySchema,
+  ApplicationsResponseSchema,
   // Treasury
   GuildTreasurySchema,
   TreasuryLogEntrySchema,
@@ -462,6 +470,8 @@ export {
   // Types
   type GuildRole,
   type GuildInvitationStatus,
+  type GuildAccessMode,
+  type GuildApplicationStatus,
   type GuildBattleStatus,
   type TreasuryTransactionType,
   type ArenaWinnerSide,
@@ -479,6 +489,7 @@ export {
   type MyGuildResponse,
   type UpdateMemberRoleRequest,
   type TransferLeadershipRequest,
+  type JoinGuildDirectRequest,
   type BattleHero,
   type BattleHeroSnapshot,
   type SetBattleHeroRequest,
@@ -488,6 +499,10 @@ export {
   type CreateInvitationRequest,
   type InvitationsQuery,
   type InvitationsResponse,
+  type GuildApplication,
+  type CreateApplicationRequest,
+  type ApplicationsQuery,
+  type ApplicationsResponse,
   type GuildTreasury,
   type TreasuryLogEntry,
   type TreasuryResponse,

@@ -4,7 +4,6 @@ import {
   GUILD_ERROR_CODES,
   type GuildRole,
   type GuildInvitationStatus,
-  type GuildSettings,
 } from '@arcade/protocol';
 import { hasPermission, getMemberCapacity } from './guild.js';
 import { createGuildInviteNotification } from './messages.js';
@@ -80,7 +79,6 @@ export async function createInvitation(
     where: { id: inviteeId },
     select: {
       id: true,
-      highestWave: true,
     },
   });
 
@@ -88,14 +86,8 @@ export async function createInvitation(
     throw new Error(GUILD_ERROR_CODES.USER_NOT_FOUND);
   }
 
-  // Check invitee meets guild's minLevel requirement (based on highest wave reached)
-  const guildSettings = guild.settings as GuildSettings | null;
-  const minLevel = guildSettings?.minLevel ?? 1;
-  const inviteeLevel = invitee.highestWave ?? 1;
-
-  if (inviteeLevel < minLevel) {
-    throw new Error(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
-  }
+  // Note: Invitations intentionally bypass minLevel requirement
+  // This allows officers/leaders to invite players below the guild's minimum level
 
   // Check invitee is not already in a guild
   const inviteeMembership = await prisma.guildMember.findUnique({

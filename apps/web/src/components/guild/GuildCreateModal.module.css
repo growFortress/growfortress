@@ -48,6 +48,38 @@
   max-width: 120px;
 }
 
+.inputSmall {
+  max-width: 120px;
+}
+
+.select {
+  padding: 0.625rem 0.875rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.select option {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  padding: 0.5rem;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .inputError {
   border-color: var(--color-danger);
 }

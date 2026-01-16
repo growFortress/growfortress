@@ -2,12 +2,20 @@
  * Guild Create Modal - Form for creating a new guild
  */
 import { useState } from 'preact/hooks';
+import type { GuildAccessMode } from '@arcade/protocol';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { showGuildCreate, closeGuildCreate } from '../../state/guild.signals.js';
 import { createGuild } from '../../api/guild.js';
 import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
 import styles from './GuildCreateModal.module.css';
+
+const ACCESS_MODES: { value: GuildAccessMode; label: string; description: string }[] = [
+  { value: 'INVITE_ONLY', label: 'Tylko zaproszenia', description: 'Domyslne - nowi gracze musza zostac zaproszeni' },
+  { value: 'OPEN', label: 'Otwarta', description: 'Kazdy moze dolaczyc bez zaproszenia' },
+  { value: 'APPLY', label: 'Podania', description: 'Gracze wysylaja podania do rozpatrzenia' },
+  { value: 'CLOSED', label: 'Zamknieta', description: 'Nie przyjmuje nowych czlonkow' },
+];
 
 interface GuildCreateModalProps {
   onSuccess?: () => void;
@@ -18,6 +26,8 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [description, setDescription] = useState('');
+  const [accessMode, setAccessMode] = useState<GuildAccessMode>('INVITE_ONLY');
+  const [minLevel, setMinLevel] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -66,12 +76,18 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
         name: name.trim(),
         tag: tag.trim().toUpperCase(),
         description: description.trim() || undefined,
+        settings: {
+          accessMode,
+          minLevel,
+        },
       });
 
       // Reset form
       setName('');
       setTag('');
       setDescription('');
+      setAccessMode('INVITE_ONLY');
+      setMinLevel(1);
       closeGuildCreate();
 
       // Callback to refresh guild data
@@ -163,6 +179,51 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
           )}
           <span class={styles.fieldHint}>{description.length}/500 {t('guild.characters')}</span>
         </div>
+
+        {/* Access Mode field */}
+        <div class={styles.field}>
+          <label class={styles.label} htmlFor="guild-access-mode">
+            Tryb dostepu
+          </label>
+          <select
+            id="guild-access-mode"
+            class={styles.select}
+            value={accessMode}
+            onChange={(e) => setAccessMode((e.target as HTMLSelectElement).value as GuildAccessMode)}
+            disabled={loading}
+          >
+            {ACCESS_MODES.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label}
+              </option>
+            ))}
+          </select>
+          <span class={styles.fieldHint}>
+            {ACCESS_MODES.find(m => m.value === accessMode)?.description}
+          </span>
+        </div>
+
+        {/* Min Level field - only show for OPEN and APPLY modes */}
+        {(accessMode === 'OPEN' || accessMode === 'APPLY') && (
+          <div class={styles.field}>
+            <label class={styles.label} htmlFor="guild-min-level">
+              Minimalny poziom (fala)
+            </label>
+            <input
+              id="guild-min-level"
+              type="number"
+              class={`${styles.input} ${styles.inputSmall}`}
+              value={minLevel}
+              onInput={(e) => setMinLevel(Math.max(1, parseInt((e.target as HTMLInputElement).value) || 1))}
+              min={1}
+              max={1000}
+              disabled={loading}
+            />
+            <span class={styles.fieldHint}>
+              Gracz musi miec conajmniej tyle fal aby dolaczyc (zaproszenia omijaja to wymaganie)
+            </span>
+          </div>
+        )}
 
         {/* Cost info */}
         <div class={styles.costInfo}>

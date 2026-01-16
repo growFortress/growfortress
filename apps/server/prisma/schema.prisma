@@ -59,10 +59,12 @@ model User {
   pvpLosses             Int            @default(0)
 
   // Guild system
-  guildMembership      GuildMember?
-  guildInvitesSent     GuildInvitation[]  @relation("guildInviter")
-  guildInvitesReceived GuildInvitation[]  @relation("guildInvitee")
-  guildTreasuryLogs    GuildTreasuryLog[]
+  guildMembership           GuildMember?
+  guildInvitesSent          GuildInvitation[]    @relation("guildInviter")
+  guildInvitesReceived      GuildInvitation[]    @relation("guildInvitee")
+  guildApplicationsSent     GuildApplication[]   @relation("guildApplicationsSent")
+  guildApplicationsReviewed GuildApplication[]   @relation("guildApplicationsReviewed")
+  guildTreasuryLogs         GuildTreasuryLog[]
 
   // Messaging system
   messageParticipations MessageParticipant[]
@@ -591,6 +593,21 @@ enum GuildInvitationStatus {
   CANCELLED // Cancelled by sender
 }
 
+enum GuildAccessMode {
+  OPEN // Anyone can join directly if meets minLevel
+  APPLY // Players must send application
+  INVITE_ONLY // Only through invitations (default)
+  CLOSED // Not accepting new members
+}
+
+enum GuildApplicationStatus {
+  PENDING // Waiting for review
+  ACCEPTED // Application accepted
+  DECLINED // Application declined
+  EXPIRED // 72h expiry
+  CANCELLED // Cancelled by applicant
+}
+
 enum GuildBattleStatus {
   RESOLVED // Battle completed (instant attacks - only status used now)
 }
@@ -643,6 +660,7 @@ model Guild {
   // Relations
   members            GuildMember[]
   invitations        GuildInvitation[]
+  applications       GuildApplication[]
   treasury           GuildTreasury?
   treasuryLogs       GuildTreasuryLog[]
   upgrades           GuildUpgrade[]
@@ -713,6 +731,29 @@ model GuildInvitation {
 
   @@index([guildId])
   @@index([inviteeId])
+  @@index([status])
+}
+
+model GuildApplication {
+  id          String                 @id @default(cuid())
+  guildId     String
+  applicantId String // User applying to join
+  status      GuildApplicationStatus @default(PENDING)
+  message     String? // Optional message from applicant (max 200 chars)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime // 72h from creation
+  respondedAt DateTime?
+  respondedBy String? // User who accepted/declined
+
+  // Relations
+  guild     Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  applicant User  @relation("guildApplicationsSent", fields: [applicantId], references: [id], onDelete: Cascade)
+  responder User? @relation("guildApplicationsReviewed", fields: [respondedBy], references: [id], onDelete: SetNull)
+
+  @@index([guildId])
+  @@index([applicantId])
   @@index([status])
 }
 

@@ -31,6 +31,7 @@ export const RATE_LIMITS = {
   guildBattle: { max: 20, timeWindow: 60000 },      // 20 req/min (battles)
   guildShield: { max: 10, timeWindow: 60000 },      // 10 req/min (shield activation)
   guildInvite: { max: 40, timeWindow: 60000 },      // 40 req/min (invitations)
+  guildApply: { max: 10, timeWindow: 60000 },       // 10 req/min (applications)
   guildManage: { max: 30, timeWindow: 60000 },      // 30 req/min (management actions)
   guildRead: { max: 120, timeWindow: 60000 },       // 120 req/min (read operations)
 

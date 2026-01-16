@@ -328,7 +328,33 @@
     "back": "← Back",
     "trophies": "Trophies",
     "more": "+{{count}} more",
-    "joinInfo": "To join this guild, you must receive an invitation from a member with permissions."
+    "joinInfo": "To join this guild, you must receive an invitation from a member with permissions.",
+    "myApplications": "My Applications",
+    "noActiveApplications": "You have no active applications.",
+    "browseAndApply": "Browse guilds and apply to those that interest you.",
+    "joining": "Joining...",
+    "joinGuildBtn": "Join Guild",
+    "applicationMessagePlaceholder": "Message to guild (optional, max 200 characters)",
+    "sending": "Sending...",
+    "sendApplication": "Send Application",
+    "inviteOnlyInfo": "This guild accepts members by invitation only.",
+    "closedInfo": "This guild is closed and not accepting new members.",
+    "unknownGuild": "Unknown guild",
+    "expiresIn": "Expires in {{hours}}h",
+    "cancelApplication": "Cancel",
+    "accessModes": {
+      "open": "Open guild",
+      "apply": "Applications",
+      "inviteOnly": "Invite only",
+      "closed": "Closed"
+    },
+    "applicationStatus": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    }
   },
   "messages": {
     "title": "Messages",

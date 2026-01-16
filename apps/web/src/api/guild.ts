@@ -13,6 +13,10 @@ import type {
   CreateInvitationRequest,
   InvitationsQuery,
   InvitationsResponse,
+  CreateApplicationRequest,
+  ApplicationsQuery,
+  ApplicationsResponse,
+  GuildApplication,
   TreasuryResponse,
   TreasuryDepositRequest,
   TreasuryWithdrawRequest,
@@ -179,6 +183,87 @@ export async function declineInvitation(invitationId: string): Promise<{ success
 
 export async function cancelInvitation(invitationId: string): Promise<{ success: boolean }> {
   return guildRequest(`/v1/guilds/invitations/${encodeURIComponent(invitationId)}/cancel`, { method: 'POST' });
+}
+
+// ============================================================================
+// GUILD APPLICATIONS
+// ============================================================================
+
+/**
+ * Join an OPEN guild directly (no application needed)
+ */
+export async function joinGuildDirect(guildId: string): Promise<{ success: boolean }> {
+  return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/join`, { method: 'POST' });
+}
+
+/**
+ * Submit an application to join a guild (for APPLY mode guilds)
+ */
+export async function submitApplication(
+  guildId: string,
+  message?: string
+): Promise<{ application: GuildApplication }> {
+  const data: CreateApplicationRequest = message ? { message } : {};
+  return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/applications`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Get guild's applications (for officers/leaders)
+ */
+export async function getGuildApplications(
+  guildId: string,
+  query?: ApplicationsQuery
+): Promise<ApplicationsResponse> {
+  const params = new URLSearchParams();
+  if (query?.status) params.set('status', query.status);
+  if (query?.limit) params.set('limit', query.limit.toString());
+  if (query?.offset) params.set('offset', query.offset.toString());
+  const qs = params.toString();
+  return guildRequest<ApplicationsResponse>(
+    `/v1/guilds/${encodeURIComponent(guildId)}/applications${qs ? '?' + qs : ''}`
+  );
+}
+
+/**
+ * Get user's own applications
+ */
+export async function getMyApplications(query?: ApplicationsQuery): Promise<ApplicationsResponse> {
+  const params = new URLSearchParams();
+  if (query?.status) params.set('status', query.status);
+  if (query?.limit) params.set('limit', query.limit.toString());
+  if (query?.offset) params.set('offset', query.offset.toString());
+  const qs = params.toString();
+  return guildRequest<ApplicationsResponse>(`/v1/guilds/applications/mine${qs ? '?' + qs : ''}`);
+}
+
+/**
+ * Accept an application (for officers/leaders)
+ */
+export async function acceptApplication(applicationId: string): Promise<{ success: boolean }> {
+  return guildRequest(`/v1/guilds/applications/${encodeURIComponent(applicationId)}/accept`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Decline an application (for officers/leaders)
+ */
+export async function declineApplication(applicationId: string): Promise<{ success: boolean }> {
+  return guildRequest(`/v1/guilds/applications/${encodeURIComponent(applicationId)}/decline`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Cancel own application
+ */
+export async function cancelApplication(applicationId: string): Promise<{ success: boolean }> {
+  return guildRequest(`/v1/guilds/applications/${encodeURIComponent(applicationId)}/cancel`, {
+    method: 'POST',
+  });
 }
 
 export async function getTreasury(guildId: string): Promise<TreasuryResponse> {

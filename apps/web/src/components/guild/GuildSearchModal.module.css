@@ -101,14 +101,6 @@
   border: 1px solid var(--color-border-guild);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.guildCard:hover {
-  border-color: var(--color-primary);
-  background: var(--color-bg-hover);
-  transform: translateX(2px);
-  box-shadow: var(--elevation-1);
 }
 
 .guildInfo {
@@ -349,4 +341,295 @@
 .invitationActions {
   display: flex;
   gap: 0.5rem;
+}
+
+/* Applications */
+.applicationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.applicationCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-guild);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s;
+}
+
+.applicationCard:hover {
+  border-color: var(--color-border-guild-hover);
+}
+
+.applicationInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.applicationHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.applicationGuild {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.applicationStatus {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.statusPending {
+  background: var(--color-warning-20);
+  color: var(--color-warning);
+}
+
+.statusAccepted {
+  background: var(--color-success-20);
+  color: var(--color-success);
+}
+
+.statusDeclined {
+  background: var(--color-danger-20);
+  color: var(--color-danger);
+}
+
+.statusExpired {
+  background: var(--color-text-20);
+  color: var(--color-text-60);
+}
+
+.statusCancelled {
+  background: var(--color-text-20);
+  color: var(--color-text-60);
+}
+
+.applicationMeta {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+}
+
+.applicationMessage {
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+.applicationActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Access Mode Section */
+.accessModeSection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+}
+
+.accessModeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.accessModeLabel {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.accessModeDescription {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+}
+
+.minLevelInfo {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+  padding: 0.25rem 0.5rem;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-sm);
+}
+
+/* Access Mode Icons */
+.accessModeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.accessModeIconSmall {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0.7rem;
+}
+
+.accessModeOpen {
+  background: var(--color-success-20);
+}
+
+.accessModeApply {
+  background: var(--color-primary-20);
+}
+
+.accessModeInviteOnly {
+  background: var(--color-warning-20);
+}
+
+.accessModeClosed {
+  background: var(--color-danger-20);
+}
+
+/* Join Section */
+.joinSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-success-10);
+  border: 1px solid var(--color-success-30);
+  border-radius: var(--radius-md);
+}
+
+.joinSectionContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.joinText {
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+}
+
+.joinError {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+  padding: 0.5rem;
+  background: var(--color-danger-10);
+  border-radius: var(--radius-sm);
+}
+
+.joinSuccess {
+  font-size: 0.85rem;
+  color: var(--color-success);
+  text-align: center;
+  padding: 0.5rem;
+}
+
+/* Apply Section */
+.applySection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-primary-10);
+  border: 1px solid var(--color-primary-30);
+  border-radius: var(--radius-md);
+}
+
+.applyHeader {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.applyMessage {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 60px;
+  max-height: 120px;
+}
+
+.applyMessage:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.applyMessage::placeholder {
+  color: var(--color-text-60);
+}
+
+.applyFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.applyCharCount {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+}
+
+.applyError {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+  padding: 0.5rem;
+  background: var(--color-danger-10);
+  border-radius: var(--radius-sm);
+}
+
+.applySuccess {
+  font-size: 0.85rem;
+  color: var(--color-success);
+  text-align: center;
+  padding: 0.5rem;
+}
+
+/* Closed Guild */
+.closedSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-danger-10);
+  border: 1px solid var(--color-danger-30);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+}
+
+/* Already Applied */
+.alreadyAppliedSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-warning-10);
+  border: 1px solid var(--color-warning-30);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--color-text-80);
 }

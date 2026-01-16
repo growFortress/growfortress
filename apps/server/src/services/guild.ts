@@ -4,6 +4,7 @@ import {
   GUILD_ERROR_CODES,
   type GuildRole,
   type GuildSettings,
+  type GuildAccessMode,
 } from '@arcade/protocol';
 import { createGuildKickNotification } from './messages.js';
 import type { Guild, GuildMember, Prisma } from '@prisma/client';
@@ -32,6 +33,7 @@ export interface CreateGuildInput {
   name: string;
   tag: string;
   description?: string;
+  settings?: Partial<GuildSettings>;
 }
 
 export interface UpdateGuildInput {
@@ -141,6 +143,8 @@ export async function createGuild(
         name: input.name,
         tag: input.tag.toUpperCase(),
         description: input.description || '',
+        ...(input.settings?.accessMode && { accessMode: input.settings.accessMode }),
+        ...(input.settings?.minLevel && { minLevel: input.settings.minLevel }),
       },
     });
 
@@ -392,6 +396,97 @@ export async function joinGuild(
         },
       });
     }
+
+    return tx.guildMember.create({
+      data: {
+        guildId,
+        userId,
+        role: 'MEMBER',
+      },
+    });
+  });
+}
+
+/**
+ * Direct join for OPEN guilds (no invitation needed)
+ */
+export async function joinGuildDirect(
+  guildId: string,
+  userId: string
+): Promise<GuildMember> {
+  // Check if user is already in a guild
+  const existingMembership = await prisma.guildMember.findUnique({
+    where: { userId },
+  });
+
+  if (existingMembership) {
+    throw new Error(GUILD_ERROR_CODES.ALREADY_IN_GUILD);
+  }
+
+  // Get guild and check access mode
+  const guild = await prisma.guild.findUnique({
+    where: { id: guildId },
+    include: { _count: { select: { members: true } } },
+  });
+
+  if (!guild || guild.disbanded) {
+    throw new Error(GUILD_ERROR_CODES.GUILD_NOT_FOUND);
+  }
+
+  // Check access mode is OPEN
+  const guildSettings = guild.settings as GuildSettings | null;
+  const accessMode = (guildSettings?.accessMode ?? 'INVITE_ONLY') as GuildAccessMode;
+
+  if (accessMode === 'CLOSED') {
+    throw new Error(GUILD_ERROR_CODES.GUILD_CLOSED);
+  }
+
+  if (accessMode !== 'OPEN') {
+    throw new Error(GUILD_ERROR_CODES.GUILD_NOT_ACCEPTING_DIRECT_JOIN);
+  }
+
+  // Check guild capacity
+  const maxMembers = getMemberCapacity(guild.level);
+  if (guild._count.members >= maxMembers) {
+    throw new Error(GUILD_ERROR_CODES.GUILD_FULL);
+  }
+
+  // Check user meets minLevel requirement
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { highestWave: true },
+  });
+
+  if (!user) {
+    throw new Error(GUILD_ERROR_CODES.USER_NOT_FOUND);
+  }
+
+  const minLevel = guildSettings?.minLevel ?? 1;
+  const userLevel = user.highestWave ?? 0;
+
+  if (userLevel < minLevel) {
+    throw new Error(GUILD_ERROR_CODES.LEVEL_TOO_LOW);
+  }
+
+  // Create membership and cancel pending applications/invitations
+  return prisma.$transaction(async (tx) => {
+    // Cancel pending applications for this user
+    await tx.guildApplication.updateMany({
+      where: {
+        applicantId: userId,
+        status: 'PENDING',
+      },
+      data: { status: 'CANCELLED' },
+    });
+
+    // Cancel pending invitations for this user
+    await tx.guildInvitation.updateMany({
+      where: {
+        inviteeId: userId,
+        status: 'PENDING',
+      },
+      data: { status: 'CANCELLED' },
+    });
 
     return tx.guildMember.create({
       data: {

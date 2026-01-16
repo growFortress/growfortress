@@ -2,6 +2,7 @@
  * Guild Info Tab - Shows guild details, bonuses, and progression
  */
 import { useState } from 'preact/hooks';
+import type { GuildAccessMode } from '@arcade/protocol';
 import {
   playerGuild,
   guildBonuses,
@@ -11,6 +12,13 @@ import {
 import { updateGuild, leaveGuild, disbandGuild } from '../../api/guild.js';
 import { Button } from '../shared/Button.js';
 import styles from './GuildPanel.module.css';
+
+const ACCESS_MODES: { value: GuildAccessMode; label: string; description: string }[] = [
+  { value: 'OPEN', label: 'Otwarta', description: 'Kazdy moze dolaczyc' },
+  { value: 'APPLY', label: 'Podania', description: 'Gracze wysylaja podania' },
+  { value: 'INVITE_ONLY', label: 'Tylko zaproszenia', description: 'Tylko przez zaproszenia' },
+  { value: 'CLOSED', label: 'Zamknieta', description: 'Nie przyjmuje nowych czlonkow' },
+];
 
 interface GuildInfoTabProps {
   onRefresh: () => void;
@@ -22,6 +30,13 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
   const [leaving, setLeaving] = useState(false);
   const [disbanding, setDisbanding] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Settings state
+  const [editingSettings, setEditingSettings] = useState(false);
+  const [settingsAccessMode, setSettingsAccessMode] = useState<GuildAccessMode>('INVITE_ONLY');
+  const [settingsMinLevel, setSettingsMinLevel] = useState(1);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
 
   const guild = playerGuild.value;
   const bonuses = guildBonuses.value;
@@ -87,6 +102,41 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
   const xpProgress = levelInfo
     ? (guild.xp / levelInfo.xpToNextLevel) * 100
     : 0;
+
+  const handleEditSettings = () => {
+    setSettingsAccessMode((guild as any).accessMode || 'INVITE_ONLY');
+    setSettingsMinLevel((guild as any).minLevel || 1);
+    setSettingsError(null);
+    setEditingSettings(true);
+  };
+
+  const handleSaveSettings = async () => {
+    setSettingsLoading(true);
+    setSettingsError(null);
+
+    try {
+      await updateGuild(guild.id, {
+        settings: {
+          accessMode: settingsAccessMode,
+          minLevel: settingsMinLevel,
+        },
+      });
+      setEditingSettings(false);
+      onRefresh();
+    } catch (err: any) {
+      setSettingsError(err.message || 'Nie udalo sie zapisac ustawien');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleCancelSettings = () => {
+    setEditingSettings(false);
+    setSettingsError(null);
+  };
+
+  // Get current access mode info
+  const currentAccessMode = ACCESS_MODES.find(m => m.value === ((guild as any).accessMode || 'INVITE_ONLY'));
 
   return (
     <div class={styles.infoSection}>
@@ -180,6 +230,96 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
           </span>
         </div>
       </div>
+
+      {/* Settings - Leader only */}
+      {isGuildLeader.value && (
+        <>
+          <div class={styles.sectionHeader}>
+            <span class={styles.sectionTitle}>Ustawienia</span>
+            {!editingSettings && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleEditSettings}
+              >
+                Edytuj
+              </Button>
+            )}
+          </div>
+
+          {editingSettings ? (
+            <div class={styles.settingsForm}>
+              <div class={styles.settingsRow}>
+                <label class={styles.settingsLabel}>Tryb dostepu</label>
+                <select
+                  class={styles.settingsSelect}
+                  value={settingsAccessMode}
+                  onChange={(e) => setSettingsAccessMode((e.target as HTMLSelectElement).value as GuildAccessMode)}
+                >
+                  {ACCESS_MODES.map((mode) => (
+                    <option key={mode.value} value={mode.value}>
+                      {mode.label} - {mode.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div class={styles.settingsRow}>
+                <label class={styles.settingsLabel}>Min. poziom (fala)</label>
+                <input
+                  type="number"
+                  class={styles.settingsInput}
+                  value={settingsMinLevel}
+                  onChange={(e) => setSettingsMinLevel(Math.max(1, parseInt((e.target as HTMLInputElement).value) || 1))}
+                  min={1}
+                  max={1000}
+                />
+                <span class={styles.settingsHint}>
+                  Gracz musi miec conajmniej tyle fal aby dolaczyc (nie dotyczy zaproszen)
+                </span>
+              </div>
+
+              {settingsError && (
+                <div class={styles.settingsError}>{settingsError}</div>
+              )}
+
+              <div class={styles.settingsActions}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSaveSettings}
+                  disabled={settingsLoading}
+                >
+                  {settingsLoading ? 'Zapisywanie...' : 'Zapisz'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelSettings}
+                  disabled={settingsLoading}
+                >
+                  Anuluj
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div class={styles.settingsDisplay}>
+              <div class={styles.settingsDisplayItem}>
+                <span class={styles.settingsDisplayLabel}>Tryb dostepu:</span>
+                <span class={styles.settingsDisplayValue}>
+                  {currentAccessMode?.label || 'Tylko zaproszenia'}
+                </span>
+              </div>
+              <div class={styles.settingsDisplayItem}>
+                <span class={styles.settingsDisplayLabel}>Min. poziom:</span>
+                <span class={styles.settingsDisplayValue}>
+                  Fala {(guild as any).minLevel || 1}
+                </span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Actions */}
       <div class={styles.sectionHeader}>
