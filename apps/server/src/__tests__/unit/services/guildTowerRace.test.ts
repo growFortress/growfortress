@@ -325,9 +325,9 @@ describe('Guild Tower Race Service', () => {
       ]);
       mockPrisma.guildTowerRaceEntry.count.mockResolvedValue(3);
       mockPrisma.guild.findMany.mockResolvedValue([
-        { id: 'guild-1', name: 'First', tag: '1ST', level: 10, _count: { members: 15 } },
-        { id: 'guild-2', name: 'Second', tag: '2ND', level: 5, _count: { members: 10 } },
-        { id: 'guild-3', name: 'Third', tag: '3RD', level: 3, _count: { members: 8 } },
+        { id: 'guild-1', name: 'First', tag: '1ST', _count: { members: 15 } },
+        { id: 'guild-2', name: 'Second', tag: '2ND', _count: { members: 10 } },
+        { id: 'guild-3', name: 'Third', tag: '3RD', _count: { members: 8 } },
       ]);
 
       const result = await getRaceLeaderboard();
@@ -348,14 +348,13 @@ describe('Guild Tower Race Service', () => {
       ]);
       mockPrisma.guildTowerRaceEntry.count.mockResolvedValue(1);
       mockPrisma.guild.findMany.mockResolvedValue([
-        { id: 'guild-1', name: 'Test Guild', tag: 'TG', level: 15, _count: { members: 20 } },
+        { id: 'guild-1', name: 'Test Guild', tag: 'TG', _count: { members: 20 } },
       ]);
 
       const result = await getRaceLeaderboard();
 
       expect(result.entries[0].guildName).toBe('Test Guild');
       expect(result.entries[0].guildTag).toBe('TG');
-      expect(result.entries[0].guildLevel).toBe(15);
       expect(result.entries[0].memberCount).toBe(20);
     });
 
@@ -366,7 +365,7 @@ describe('Guild Tower Race Service', () => {
       ]);
       mockPrisma.guildTowerRaceEntry.count.mockResolvedValue(10);
       mockPrisma.guild.findMany.mockResolvedValue([
-        { id: 'guild-3', name: 'Third', tag: '3RD', level: 1, _count: { members: 5 } },
+        { id: 'guild-3', name: 'Third', tag: '3RD', _count: { members: 5 } },
       ]);
 
       const result = await getRaceLeaderboard(undefined, 1, 2);
@@ -507,7 +506,7 @@ describe('Guild Tower Race Service', () => {
       expect(result.error).toBe('Race already finalized');
     });
 
-    it('distributes correct rewards by rank', async () => {
+    it('returns rankings ordered by total waves', async () => {
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(createMockGuildTowerRace());
       mockPrisma.guildTowerRaceEntry.findMany.mockResolvedValue([
         createMockGuildTowerRaceEntry({ guildId: 'guild-1', totalWaves: 5000 }),
@@ -517,57 +516,37 @@ describe('Guild Tower Race Service', () => {
         createMockGuildTowerRaceEntry({ guildId: 'guild-5', totalWaves: 1000 }),
       ]);
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
-        const tx = {
-          guildTowerRace: { update: vi.fn().mockResolvedValue({}) },
-          guild: { update: vi.fn().mockResolvedValue({}) },
-        };
-        return await callback(tx);
-      });
-
       const result = await finalizeRace('2026-W02');
 
       expect(result.success).toBe(true);
       expect(result.rankings).toHaveLength(5);
 
-      // Check reward amounts
-      const rewardsByRank: Record<number, number> = {};
-      result.rankings!.forEach(r => { rewardsByRank[r.rank] = r.reward; });
-
-      expect(rewardsByRank[1]).toBe(500); // 1st place
-      expect(rewardsByRank[2]).toBe(300); // 2nd place
-      expect(rewardsByRank[3]).toBe(200); // 3rd place
-      expect(rewardsByRank[4]).toBe(100); // 4-10 place
-      expect(rewardsByRank[5]).toBe(100); // 4-10 place
+      // Check rankings
+      expect(result.rankings![0].rank).toBe(1);
+      expect(result.rankings![0].totalWaves).toBe(5000);
+      expect(result.rankings![1].rank).toBe(2);
+      expect(result.rankings![1].totalWaves).toBe(4000);
+      expect(result.rankings![4].rank).toBe(5);
+      expect(result.rankings![4].totalWaves).toBe(1000);
     });
 
     it('marks race as completed', async () => {
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(createMockGuildTowerRace());
       mockPrisma.guildTowerRaceEntry.findMany.mockResolvedValue([]);
-
-      let raceUpdated = false;
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
-        const tx = {
-          guildTowerRace: {
-            update: vi.fn().mockImplementation((args) => {
-              if (args.data.status === 'completed') {
-                raceUpdated = true;
-              }
-              return Promise.resolve({});
-            }),
-          },
-          guild: { update: vi.fn().mockResolvedValue({}) },
-        };
-        return await callback(tx);
-      });
+      mockPrisma.guildTowerRace.update.mockResolvedValue({});
 
       await finalizeRace('2026-W02');
 
-      expect(raceUpdated).toBe(true);
+      expect(mockPrisma.guildTowerRace.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { status: 'completed' },
+        })
+      );
     });
 
-    it('gives 50 coins for ranks 11-20', async () => {
+    it('returns all rankings regardless of count', async () => {
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(createMockGuildTowerRace());
+      mockPrisma.guildTowerRace.update.mockResolvedValue({});
 
       // Create 15 entries
       const entries = Array.from({ length: 15 }, (_, i) =>
@@ -578,23 +557,20 @@ describe('Guild Tower Race Service', () => {
       );
       mockPrisma.guildTowerRaceEntry.findMany.mockResolvedValue(entries);
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
-        const tx = {
-          guildTowerRace: { update: vi.fn().mockResolvedValue({}) },
-          guild: { update: vi.fn().mockResolvedValue({}) },
-        };
-        return await callback(tx);
-      });
-
       const result = await finalizeRace('2026-W02');
 
       expect(result.success).toBe(true);
+      expect(result.rankings).toHaveLength(15);
+
+      // Check rank 15
       const rank15Entry = result.rankings!.find(r => r.rank === 15);
-      expect(rank15Entry?.reward).toBe(50);
+      expect(rank15Entry).toBeDefined();
+      expect(rank15Entry?.totalWaves).toBe(100);
     });
 
-    it('gives no rewards for ranks beyond 20', async () => {
+    it('handles large number of participants', async () => {
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(createMockGuildTowerRace());
+      mockPrisma.guildTowerRace.update.mockResolvedValue({});
 
       // Create 25 entries
       const entries = Array.from({ length: 25 }, (_, i) =>
@@ -605,19 +581,12 @@ describe('Guild Tower Race Service', () => {
       );
       mockPrisma.guildTowerRaceEntry.findMany.mockResolvedValue(entries);
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
-        const tx = {
-          guildTowerRace: { update: vi.fn().mockResolvedValue({}) },
-          guild: { update: vi.fn().mockResolvedValue({}) },
-        };
-        return await callback(tx);
-      });
-
       const result = await finalizeRace('2026-W02');
 
-      // Only top 20 should have rewards
-      expect(result.rankings!.length).toBe(20);
-      expect(result.rankings!.every(r => r.rank <= 20)).toBe(true);
+      expect(result.success).toBe(true);
+      expect(result.rankings).toHaveLength(25);
+      expect(result.rankings![0].rank).toBe(1);
+      expect(result.rankings![24].rank).toBe(25);
     });
   });
 

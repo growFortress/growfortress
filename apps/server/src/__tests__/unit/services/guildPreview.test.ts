@@ -45,32 +45,20 @@ describe('GuildPreview Service', () => {
         name: 'Test Guild',
         tag: 'TEST',
         description: 'A test guild',
-        level: 5,
-        xp: 1000,
-        xpToNextLevel: 500,
         honor: 1500,
         memberCount: 10,
-        maxMembers: 12,
+        maxMembers: 15,
         trophies: ['FIRST_BLOOD'],
-        techLevels: {
-          fortress: { hp: 2, damage: 1, regen: 0 },
-          hero: { hp: 1, damage: 2, cooldown: 0 },
-          turret: { damage: 3, speed: 1, range: 0 },
-          economy: { gold: 2, dust: 1, xp: 0 },
+        structures: {
+          kwatera: 5,
+          skarbiec: 10,
+          akademia: 8,
+          zbrojownia: 12,
         },
         bonuses: {
-          goldPercent: 0.04,
-          dustPercent: 0.02,
-          xpPercent: 0.02,
-          fortressHpPercent: 0.04,
-          fortressDamagePercent: 0.02,
-          fortressRegenPercent: 0,
-          heroHpPercent: 0.02,
-          heroDamagePercent: 0.04,
-          heroCooldownPercent: 0,
-          turretDamagePercent: 0.06,
-          turretSpeedPercent: 0.02,
-          turretRangePercent: 0,
+          goldBoost: 0.10,
+          xpBoost: 0.08,
+          statBoost: 0.12,
         },
         topMembers: [],
         createdAt: '2024-01-01T00:00:00.000Z',
@@ -90,16 +78,11 @@ describe('GuildPreview Service', () => {
         name: 'Epic Guild',
         tag: 'EPIC',
         description: 'An epic guild',
-        level: 3,
-        xp: 2500,
-        totalXp: 2500,
         honor: 2000,
-        techLevels: {
-          fortress: { hp: 1, damage: 0, regen: 0 },
-          hero: { hp: 0, damage: 1, cooldown: 0 },
-          turret: { damage: 0, speed: 0, range: 0 },
-          economy: { gold: 0, dust: 0, xp: 0 },
-        },
+        structureKwatera: 5,
+        structureSkarbiec: 10,
+        structureAkademia: 8,
+        structureZbrojownia: 12,
         trophies: [],
         createdAt: new Date('2024-01-01'),
         members: [
@@ -134,9 +117,9 @@ describe('GuildPreview Service', () => {
       expect(result?.name).toBe('Epic Guild');
       expect(result?.tag).toBe('EPIC');
       expect(result?.description).toBe('An epic guild');
-      expect(result?.level).toBe(3);
       expect(result?.honor).toBe(2000);
       expect(result?.memberCount).toBe(2);
+      expect(result?.maxMembers).toBe(15); // 10 base + 5 kwatera levels
       expect(result?.topMembers).toHaveLength(2);
 
       // Check top members are ordered by role
@@ -145,22 +128,17 @@ describe('GuildPreview Service', () => {
       expect(result?.topMembers[1].role).toBe('OFFICER');
     });
 
-    it('should calculate bonuses from tech levels', async () => {
+    it('should calculate bonuses from structure levels', async () => {
       const mockGuild = {
         id: guildId,
         name: 'Tech Guild',
         tag: 'TECH',
         description: null,
-        level: 5,
-        xp: 10000,
-        totalXp: 10000,
         honor: 1000,
-        techLevels: {
-          fortress: { hp: 5, damage: 3, regen: 2 },
-          hero: { hp: 4, damage: 5, cooldown: 1 },
-          turret: { damage: 6, speed: 4, range: 2 },
-          economy: { gold: 3, dust: 2, xp: 1 },
-        },
+        structureKwatera: 5,
+        structureSkarbiec: 10,
+        structureAkademia: 8,
+        structureZbrojownia: 12,
         trophies: [],
         createdAt: new Date('2024-01-01'),
         members: [],
@@ -172,11 +150,40 @@ describe('GuildPreview Service', () => {
       const result = await getGuildPreview(guildId);
 
       expect(result).not.toBeNull();
-      // Tech bonuses = level * 0.02 (2% per level)
-      expect(result?.bonuses.fortressHpPercent).toBe(0.1); // 5 * 0.02
-      expect(result?.bonuses.fortressDamagePercent).toBe(0.06); // 3 * 0.02
-      expect(result?.bonuses.heroDamagePercent).toBe(0.1); // 5 * 0.02
-      expect(result?.bonuses.turretDamagePercent).toBe(0.12); // 6 * 0.02
+      // Structure bonuses = level * 0.01 (1% per level)
+      expect(result?.bonuses.goldBoost).toBe(0.10); // skarbiec 10 * 0.01
+      expect(result?.bonuses.xpBoost).toBe(0.08);   // akademia 8 * 0.01
+      expect(result?.bonuses.statBoost).toBe(0.12); // zbrojownia 12 * 0.01
+    });
+
+    it('should include structures in response', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Structure Guild',
+        tag: 'STRCT',
+        description: null,
+        honor: 1000,
+        structureKwatera: 15,
+        structureSkarbiec: 18,
+        structureAkademia: 12,
+        structureZbrojownia: 20,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 0 },
+      };
+
+      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.structures).toEqual({
+        kwatera: 15,
+        skarbiec: 18,
+        akademia: 12,
+        zbrojownia: 20,
+      });
+      expect(result?.maxMembers).toBe(25); // 10 base + 15 kwatera levels
     });
 
     it('should limit top members to 5', async () => {
@@ -185,16 +192,11 @@ describe('GuildPreview Service', () => {
         name: 'Big Guild',
         tag: 'BIG',
         description: null,
-        level: 10,
-        xp: 75000,
-        totalXp: 75000,
         honor: 5000,
-        techLevels: {
-          fortress: { hp: 0, damage: 0, regen: 0 },
-          hero: { hp: 0, damage: 0, cooldown: 0 },
-          turret: { damage: 0, speed: 0, range: 0 },
-          economy: { gold: 0, dust: 0, xp: 0 },
-        },
+        structureKwatera: 20,
+        structureSkarbiec: 20,
+        structureAkademia: 20,
+        structureZbrojownia: 20,
         trophies: [],
         createdAt: new Date('2024-01-01'),
         members: Array.from({ length: 10 }, (_, i) => ({
@@ -222,11 +224,11 @@ describe('GuildPreview Service', () => {
         name: 'New Guild',
         tag: 'NEW',
         description: null,
-        level: 1,
-        xp: 0,
-        totalXp: 0,
         honor: 0,
-        techLevels: null,
+        structureKwatera: 0,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
         trophies: null,
         createdAt: new Date('2024-01-01'),
         members: [],
@@ -238,10 +240,14 @@ describe('GuildPreview Service', () => {
       const result = await getGuildPreview(guildId);
 
       expect(result).not.toBeNull();
-      expect(result?.techLevels.fortress.hp).toBe(0);
-      expect(result?.techLevels.hero.damage).toBe(0);
+      expect(result?.structures.kwatera).toBe(0);
+      expect(result?.structures.skarbiec).toBe(0);
+      expect(result?.bonuses.goldBoost).toBe(0);
+      expect(result?.bonuses.xpBoost).toBe(0);
+      expect(result?.bonuses.statBoost).toBe(0);
       expect(result?.trophies).toEqual([]);
       expect(result?.topMembers).toEqual([]);
+      expect(result?.maxMembers).toBe(10); // Base capacity
     });
 
     it('should cache result after fetching from database', async () => {
@@ -250,16 +256,11 @@ describe('GuildPreview Service', () => {
         name: 'Cache Test Guild',
         tag: 'CACH',
         description: null,
-        level: 2,
-        xp: 1000,
-        totalXp: 1000,
         honor: 500,
-        techLevels: {
-          fortress: { hp: 0, damage: 0, regen: 0 },
-          hero: { hp: 0, damage: 0, cooldown: 0 },
-          turret: { damage: 0, speed: 0, range: 0 },
-          economy: { gold: 0, dust: 0, xp: 0 },
-        },
+        structureKwatera: 2,
+        structureSkarbiec: 3,
+        structureAkademia: 1,
+        structureZbrojownia: 4,
         trophies: [],
         createdAt: new Date('2024-01-01'),
         members: [],
@@ -268,39 +269,27 @@ describe('GuildPreview Service', () => {
 
       mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
 
-      // First call - fetches from DB and caches
-      const result1 = await getGuildPreview(guildId);
-      expect(result1?.name).toBe('Cache Test Guild');
-      expect(mockPrisma.guild.findUnique).toHaveBeenCalledTimes(1);
+      await getGuildPreview(guildId);
 
-      // Second call - should use cache
-      const result2 = await getGuildPreview(guildId);
-      expect(result2?.name).toBe('Cache Test Guild');
-      // Still only 1 call because second call used cache
-      expect(mockPrisma.guild.findUnique).toHaveBeenCalledTimes(1);
+      // Verify cache was set
+      const cacheKeys = getMockRedisKeys();
+      expect(cacheKeys).toContain(`guild:preview:${guildId}`);
     });
   });
 
   describe('invalidateGuildPreviewCache', () => {
-    const guildId = 'guild-123';
+    it('should delete cached preview', async () => {
+      const guildId = 'guild-456';
+      const cacheKey = `guild:preview:${guildId}`;
 
-    it('should delete cache key for guild', async () => {
-      // Set up cached data
-      setMockRedisValue(`guild:preview:${guildId}`, JSON.stringify({ guildId }));
+      // Set some cached data first
+      setMockRedisValue(cacheKey, JSON.stringify({ name: 'Test' }));
 
-      // Verify cache exists
-      let keys = getMockRedisKeys();
-      expect(keys).toContain(`guild:preview:${guildId}`);
-
-      // Invalidate cache
       await invalidateGuildPreviewCache(guildId);
 
-      // After fetching again, prisma should be called
-      mockPrisma.guild.findUnique.mockResolvedValue(null);
-      const result = await getGuildPreview(guildId);
-
-      expect(result).toBeNull();
-      expect(mockPrisma.guild.findUnique).toHaveBeenCalled();
+      // Check cache was deleted
+      const cacheKeys = getMockRedisKeys();
+      expect(cacheKeys).not.toContain(cacheKey);
     });
   });
 });

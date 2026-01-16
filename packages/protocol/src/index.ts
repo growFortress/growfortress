@@ -379,7 +379,9 @@ export {
   // Guild schemas
   GuildSettingsSchema,
   GuildMemberSchema,
-  GuildTechLevelsSchema,
+  GuildStructureTypeSchema,
+  GuildStructureLevelsSchema,
+  GuildStructureInfoSchema,
   GuildSchema,
   GuildWithMembersSchema,
   // Management
@@ -439,8 +441,11 @@ export {
   GuildRankResponseSchema,
   MemberContributionSchema,
   ContributionsResponseSchema,
-  // Progression
-  GuildLevelInfoSchema,
+  // Structures
+  UpgradeStructureRequestSchema,
+  UpgradeStructureResponseSchema,
+  StructuresResponseSchema,
+  // Progression (trophies)
   GuildTrophySchema,
   // Tower Race
   TowerRaceContributionSchema,
@@ -455,16 +460,8 @@ export {
   GuildBossLeaderboardEntrySchema,
   GuildBossLeaderboardResponseSchema,
   GuildBossAttackResponseSchema,
-  // Guild Tech
-  GuildTechTreeTypeSchema,
-  GuildTechStatTypeSchema,
-  UpgradeTechRequestSchema,
-  GuildTechBonusesSchema,
-  GuildTechResponseSchema,
-  TechUpgradeCostSchema,
   // Constants
   GUILD_CONSTANTS,
-  GUILD_LEVEL_TABLE,
   GUILD_TROPHIES,
   GUILD_ERROR_CODES,
   // Types
@@ -478,7 +475,9 @@ export {
   type ArenaWinReason,
   type GuildSettings,
   type GuildMember,
-  type GuildTechLevels,
+  type GuildStructureType,
+  type GuildStructureLevels,
+  type GuildStructureInfo,
   type Guild,
   type GuildWithMembers,
   type CreateGuildRequest,
@@ -529,7 +528,9 @@ export {
   type GuildRankResponse,
   type MemberContribution,
   type ContributionsResponse,
-  type GuildLevelInfo,
+  type UpgradeStructureRequest,
+  type UpgradeStructureResponse,
+  type StructuresResponse,
   type GuildTrophy,
   type TowerRaceContribution,
   type TowerRaceEntry,
@@ -542,12 +543,6 @@ export {
   type GuildBossLeaderboardEntry,
   type GuildBossLeaderboardResponse,
   type GuildBossAttackResponse,
-  type GuildTechTreeType,
-  type GuildTechStatType,
-  type UpgradeTechRequest,
-  type GuildTechBonuses,
-  type GuildTechResponse,
-  type TechUpgradeCost,
   type GuildErrorCode,
 } from './guild.js';
 

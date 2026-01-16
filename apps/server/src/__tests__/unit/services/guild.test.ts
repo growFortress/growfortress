@@ -13,9 +13,11 @@ import {
   updateMemberRole,
   transferLeadership,
   hasPermission,
-  getMemberCapacity,
-  getGuildBonuses,
 } from '../../../services/guild.js';
+import {
+  getMemberCapacity,
+  getGuildBonusesFromStructures,
+} from '../../../services/guildStructures.js';
 import {
   mockPrisma,
   resetPrismaMock,
@@ -60,36 +62,51 @@ describe('Guild Service', () => {
   });
 
   describe('getMemberCapacity', () => {
-    it('returns 10 for level 1', () => {
-      expect(getMemberCapacity(1)).toBe(10);
+    it('returns 10 for kwatera level 0', () => {
+      expect(getMemberCapacity(0)).toBe(10);
     });
 
-    it('returns 12 for level 5', () => {
-      expect(getMemberCapacity(5)).toBe(12);
+    it('returns 15 for kwatera level 5', () => {
+      expect(getMemberCapacity(5)).toBe(15);
     });
 
-    it('returns 20 for level 20', () => {
-      expect(getMemberCapacity(20)).toBe(20);
+    it('returns 30 for kwatera level 20', () => {
+      expect(getMemberCapacity(20)).toBe(30);
     });
   });
 
-  describe('getGuildBonuses', () => {
-    it('returns 0 bonuses for level 1', () => {
-      const bonuses = getGuildBonuses(1);
+  describe('getGuildBonusesFromStructures', () => {
+    it('returns 0 bonuses for all structures at level 0', () => {
+      const bonuses = getGuildBonusesFromStructures({
+        kwatera: 0,
+        skarbiec: 0,
+        akademia: 0,
+        zbrojownia: 0,
+      });
       expect(bonuses.goldBoost).toBe(0);
       expect(bonuses.statBoost).toBe(0);
       expect(bonuses.xpBoost).toBe(0);
     });
 
-    it('returns correct bonuses for level 10', () => {
-      const bonuses = getGuildBonuses(10);
+    it('returns correct bonuses for structures at level 10', () => {
+      const bonuses = getGuildBonusesFromStructures({
+        kwatera: 10,
+        skarbiec: 10,
+        akademia: 10,
+        zbrojownia: 10,
+      });
       expect(bonuses.goldBoost).toBe(0.10);
       expect(bonuses.statBoost).toBe(0.10);
       expect(bonuses.xpBoost).toBe(0.10);
     });
 
-    it('returns max bonuses for level 20', () => {
-      const bonuses = getGuildBonuses(20);
+    it('returns max bonuses for structures at level 20', () => {
+      const bonuses = getGuildBonusesFromStructures({
+        kwatera: 20,
+        skarbiec: 20,
+        akademia: 20,
+        zbrojownia: 20,
+      });
       expect(bonuses.goldBoost).toBe(0.20);
       expect(bonuses.statBoost).toBe(0.20);
       expect(bonuses.xpBoost).toBe(0.20);

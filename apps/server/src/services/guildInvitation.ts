@@ -5,7 +5,8 @@ import {
   type GuildRole,
   type GuildInvitationStatus,
 } from '@arcade/protocol';
-import { hasPermission, getMemberCapacity } from './guild.js';
+import { hasPermission } from './guild.js';
+import { getMemberCapacity } from './guildStructures.js';
 import { createGuildInviteNotification } from './messages.js';
 import type { GuildInvitation } from '@prisma/client';
 
@@ -57,7 +58,7 @@ export async function createInvitation(
     where: { id: guildId },
     select: {
       id: true,
-      level: true,
+      structureKwatera: true,
       disbanded: true,
       settings: true,
       _count: { select: { members: true } },
@@ -69,7 +70,7 @@ export async function createInvitation(
   }
 
   // Check guild capacity
-  const maxMembers = getMemberCapacity(guild.level);
+  const maxMembers = getMemberCapacity(guild.structureKwatera);
   if (guild._count.members >= maxMembers) {
     throw new Error(GUILD_ERROR_CODES.GUILD_FULL);
   }
@@ -252,7 +253,11 @@ export async function acceptInvitation(
     where: { id: invitationId },
     include: {
       guild: {
-        include: { _count: { select: { members: true } } },
+        select: {
+          structureKwatera: true,
+          disbanded: true,
+          _count: { select: { members: true } },
+        },
       },
     },
   });
@@ -292,7 +297,7 @@ export async function acceptInvitation(
   }
 
   // Check guild capacity
-  const maxMembers = getMemberCapacity(invitation.guild.level);
+  const maxMembers = getMemberCapacity(invitation.guild.structureKwatera);
   if (invitation.guild._count.members >= maxMembers) {
     throw new Error(GUILD_ERROR_CODES.GUILD_FULL);
   }

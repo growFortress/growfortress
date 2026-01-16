@@ -21,7 +21,6 @@ export interface TowerRaceLeaderboardEntry {
   guildId: string;
   guildName: string;
   guildTag: string;
-  guildLevel: number;
   totalWaves: number;
   memberCount: number;
   rank: number;
@@ -254,7 +253,6 @@ export async function getRaceLeaderboard(
       id: true,
       name: true,
       tag: true,
-      level: true,
       _count: { select: { members: true } },
     },
   });
@@ -268,7 +266,6 @@ export async function getRaceLeaderboard(
         guildId: entry.guildId,
         guildName: guild?.name || 'Unknown',
         guildTag: guild?.tag || '???',
-        guildLevel: guild?.level || 1,
         totalWaves: entry.totalWaves,
         memberCount: guild?._count.members || 0,
         rank: offset + index + 1,
@@ -356,12 +353,13 @@ export async function getRaceGuildDetails(
 // ============================================================================
 
 /**
- * Finalize a race and distribute rewards
+ * Finalize a race
  * Should be called by a scheduled job after race ends
+ * Returns rankings for historical tracking
  */
 export async function finalizeRace(weekKey: string): Promise<{
   success: boolean;
-  rankings?: { guildId: string; rank: number; reward: number }[];
+  rankings?: { guildId: string; rank: number; totalWaves: number }[];
   error?: string;
 }> {
   const race = await prisma.guildTowerRace.findUnique({
@@ -382,51 +380,17 @@ export async function finalizeRace(weekKey: string): Promise<{
     orderBy: { totalWaves: 'desc' },
   });
 
-  // Define rewards (Guild Coins)
-  const rewards: Record<number, number> = {
-    1: 500,  // 1st place
-    2: 300,  // 2nd place
-    3: 200,  // 3rd place
-    // 4-10: 100 each
-    // 11-20: 50 each
-  };
-
-  const rankings: { guildId: string; rank: number; reward: number }[] = [];
-
-  await prisma.$transaction(async (tx) => {
-    // Mark race as completed
-    await tx.guildTowerRace.update({
-      where: { id: race.id },
-      data: { status: 'completed' },
-    });
-
-    // Distribute rewards
-    for (let i = 0; i < entries.length; i++) {
-      const rank = i + 1;
-      const entry = entries[i];
-
-      let reward = rewards[rank];
-      if (!reward) {
-        if (rank <= 10) reward = 100;
-        else if (rank <= 20) reward = 50;
-        else reward = 0;
-      }
-
-      if (reward > 0) {
-        // Add Guild Coins to guild
-        await tx.guild.update({
-          where: { id: entry.guildId },
-          data: { guildCoins: { increment: reward } },
-        });
-
-        rankings.push({
-          guildId: entry.guildId,
-          rank,
-          reward,
-        });
-      }
-    }
+  // Mark race as completed
+  await prisma.guildTowerRace.update({
+    where: { id: race.id },
+    data: { status: 'completed' },
   });
+
+  const rankings = entries.map((entry, index) => ({
+    guildId: entry.guildId,
+    rank: index + 1,
+    totalWaves: entry.totalWaves,
+  }));
 
   return { success: true, rankings };
 }

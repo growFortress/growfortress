@@ -478,21 +478,6 @@ export async function instantAttack(
       });
     }
 
-    // Distribute guild coins based on battle outcome
-    const attackerWon = winnerGuildId === attackerGuildId;
-    const attackerCoins = attackerWon ? GUILD_CONSTANTS.COINS_ARENA_WIN : GUILD_CONSTANTS.COINS_ARENA_LOSS;
-    const defenderCoins = attackerWon ? GUILD_CONSTANTS.COINS_ARENA_LOSS : GUILD_CONSTANTS.COINS_ARENA_WIN;
-
-    await tx.guild.update({
-      where: { id: attackerGuildId },
-      data: { guildCoins: { increment: attackerCoins } },
-    });
-
-    await tx.guild.update({
-      where: { id: defenderGuildId },
-      data: { guildCoins: { increment: defenderCoins } },
-    });
-
     // Create battle record
     const battleRecord = await tx.guildBattle.create({
       data: {

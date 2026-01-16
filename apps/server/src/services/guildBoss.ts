@@ -48,7 +48,6 @@ export interface AttackBossResult {
   error?: string;
   attempt?: GuildBossAttempt;
   bossCurrentHp?: number;
-  guildCoinsEarned?: number;
 }
 
 // ============================================================================
@@ -296,15 +295,6 @@ export async function attackBoss(
     }),
   ]);
 
-  // Award Guild Coins for participation
-  const guildCoinsEarned = GUILD_CONSTANTS.COINS_BOSS_PARTICIPATION;
-  await prisma.guildMember.update({
-    where: { userId },
-    data: {
-      earnedGuildCoins: { increment: guildCoinsEarned },
-    },
-  });
-
   // Get updated boss HP
   const updatedBoss = await prisma.guildBoss.findUnique({
     where: { id: boss.id },
@@ -314,7 +304,6 @@ export async function attackBoss(
     success: true,
     attempt,
     bossCurrentHp: Math.max(0, Number(updatedBoss?.currentHp || 0)),
-    guildCoinsEarned,
   };
 }
 
@@ -516,12 +505,13 @@ export async function getTopDamageDealers(
 // ============================================================================
 
 /**
- * Finalize boss and distribute rewards
+ * Finalize boss week
  * Called by scheduled job after boss week ends
+ * Returns top guilds for historical tracking
  */
 export async function finalizeBoss(weekKey: string): Promise<{
   success: boolean;
-  topGuilds?: { guildId: string; rank: number; reward: number }[];
+  topGuilds?: { guildId: string; rank: number; totalDamage: number }[];
   error?: string;
 }> {
   const boss = await prisma.guildBoss.findUnique({
@@ -532,61 +522,14 @@ export async function finalizeBoss(weekKey: string): Promise<{
     return { success: false, error: 'Boss not found' };
   }
 
-  // Get top guilds
+  // Get top guilds for historical record
   const { entries } = await getBossLeaderboard(weekKey, 20, 0);
 
-  // Define rewards (Guild Coins)
-  const rewards: Record<number, number> = {
-    1: 500, // 1st place
-    2: 300, // 2nd place
-    3: 200, // 3rd place
-    // 4-10: 100 each
-    // 11-20: 50 each
-  };
-
-  const topGuilds: { guildId: string; rank: number; reward: number }[] = [];
-
-  await prisma.$transaction(async (tx) => {
-    for (const entry of entries) {
-      let reward = rewards[entry.rank];
-      if (!reward) {
-        if (entry.rank <= 10) reward = 100;
-        else if (entry.rank <= 20) reward = 50;
-        else reward = 0;
-      }
-
-      if (reward > 0) {
-        await tx.guild.update({
-          where: { id: entry.guildId },
-          data: { guildCoins: { increment: reward } },
-        });
-
-        topGuilds.push({
-          guildId: entry.guildId,
-          rank: entry.rank,
-          reward,
-        });
-      }
-    }
-
-    // Award bonus to top damage dealers in each guild
-    const guildIds = entries.map((e) => e.guildId);
-    for (const guildId of guildIds) {
-      const { members } = await getGuildBossDamageBreakdown(guildId, weekKey);
-      if (members.length > 0) {
-        // Top damage dealer gets bonus coins
-        await tx.guildMember.updateMany({
-          where: {
-            userId: members[0].userId,
-            guildId,
-          },
-          data: {
-            earnedGuildCoins: { increment: GUILD_CONSTANTS.COINS_BOSS_TOP_DAMAGE },
-          },
-        });
-      }
-    }
-  });
+  const topGuilds = entries.map((entry) => ({
+    guildId: entry.guildId,
+    rank: entry.rank,
+    totalDamage: entry.totalDamage,
+  }));
 
   return { success: true, topGuilds };
 }

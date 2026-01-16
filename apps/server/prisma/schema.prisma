@@ -621,7 +621,7 @@ enum TreasuryTransactionType {
   UPGRADE_COST
   REWARD_DISTRIBUTION
   SHIELD_PURCHASE // Shield activated
-  GUILD_TECH_UPGRADE // Guild Tech upgrade cost
+  STRUCTURE_UPGRADE // Structure upgrade cost
 }
 
 model Guild {
@@ -630,19 +630,14 @@ model Guild {
   tag         String  @unique // 3-5 uppercase chars, e.g., "APEX"
   description String? @default("")
 
-  // Progression
-  level   Int @default(1) // 1-20
-  xp      Int @default(0)
-  totalXp Int @default(0)
+  // Structure levels (0-20 each)
+  structureKwatera    Int @default(0) // Barracks: +1 member capacity per level (base 10, max 30)
+  structureSkarbiec   Int @default(0) // Treasury: +1% gold bonus per level (max 20%)
+  structureAkademia   Int @default(0) // Academy: +1% XP bonus per level (max 20%)
+  structureZbrojownia Int @default(0) // Armory: +1% stat bonus per level (max 20%)
 
   // Honor system (for guild vs guild rankings)
   honor Int @default(1000) // Start at 1000, ELO-like
-
-  // Guild Coins (currency for Guild Tech)
-  guildCoins Int @default(0)
-
-  // Guild Tech levels (JSON: { fortress: {...}, hero: {...}, turret: {...}, economy: {...} })
-  techLevels Json @default("{\"fortress\":{\"hp\":0,\"damage\":0,\"regen\":0},\"hero\":{\"hp\":0,\"damage\":0,\"cooldown\":0},\"turret\":{\"damage\":0,\"speed\":0,\"range\":0},\"economy\":{\"gold\":0,\"dust\":0,\"xp\":0}}")
 
   // Trophies earned from special achievements
   trophies Json @default("[]") // Array of trophy IDs
@@ -670,7 +665,6 @@ model Guild {
   battlesSent     GuildBattle[] @relation("guildBattleChallenger")
   battlesReceived GuildBattle[] @relation("guildBattleChallenged")
 
-  @@index([level])
   @@index([honor(sort: Desc)])
 }
 
@@ -687,12 +681,8 @@ model GuildMember {
   battleHeroUpdatedAt DateTime? // When Battle Hero was last set/updated
 
   // Contribution tracking
-  totalGoldDonated    Int @default(0)
-  totalDustDonated    Int @default(0)
-  weeklyXpContributed Int @default(0) // Reset weekly
-
-  // Guild Coins earned
-  earnedGuildCoins Int @default(0)
+  totalGoldDonated Int @default(0)
+  totalDustDonated Int @default(0)
 
   // Participation stats
   battlesParticipated Int @default(0)

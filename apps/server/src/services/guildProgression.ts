@@ -1,206 +1,12 @@
 import { prisma } from '../lib/prisma.js';
-import {
-  GUILD_CONSTANTS,
-  GUILD_LEVEL_TABLE,
-  GUILD_TROPHIES,
-  type GuildLevelInfo,
-} from '@arcade/protocol';
-// Prisma types used internally
+import { GUILD_TROPHIES, GUILD_CONSTANTS } from '@arcade/protocol';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export interface LevelUpResult {
-  leveled: boolean;
-  newLevel?: number;
-  previousLevel?: number;
-}
-
 export interface TrophyCheckResult {
   newTrophies: string[];
-}
-
-// ============================================================================
-// LEVEL CALCULATIONS
-// ============================================================================
-
-/**
- * Get XP required for a specific level
- */
-export function getXpForLevel(level: number): number {
-  const levelData = GUILD_LEVEL_TABLE.find(l => l.level === level);
-  return levelData?.xpRequired ?? GUILD_LEVEL_TABLE[GUILD_LEVEL_TABLE.length - 1].xpRequired;
-}
-
-/**
- * Get XP required for next level
- */
-export function getXpToNextLevel(currentLevel: number, currentXp: number): number {
-  if (currentLevel >= 20) {
-    return 0; // Max level
-  }
-  const nextLevelXp = getXpForLevel(currentLevel + 1);
-  return Math.max(0, nextLevelXp - currentXp);
-}
-
-/**
- * Calculate level from total XP
- */
-export function calculateLevelFromXp(totalXp: number): number {
-  let level = 1;
-  for (const levelData of GUILD_LEVEL_TABLE) {
-    if (totalXp >= levelData.xpRequired) {
-      level = levelData.level;
-    } else {
-      break;
-    }
-  }
-  return level;
-}
-
-/**
- * Get full level info for a guild
- */
-export function getGuildLevelInfo(level: number, xp: number, totalXp: number): GuildLevelInfo {
-  const levelData = GUILD_LEVEL_TABLE.find(l => l.level === level) || GUILD_LEVEL_TABLE[0];
-
-  return {
-    level,
-    xp,
-    xpToNextLevel: getXpToNextLevel(level, totalXp),
-    totalXp,
-    memberCapacity: levelData.memberCap,
-    bonuses: {
-      goldBoost: levelData.goldBoost,
-      statBoost: levelData.statBoost,
-      xpBoost: levelData.xpBoost,
-    },
-  };
-}
-
-// ============================================================================
-// XP MANAGEMENT
-// ============================================================================
-
-/**
- * Add XP to a guild
- */
-export async function addGuildXp(
-  guildId: string,
-  amount: number,
-  _source: string
-): Promise<LevelUpResult> {
-  const guild = await prisma.guild.findUnique({
-    where: { id: guildId },
-  });
-
-  if (!guild || guild.disbanded) {
-    return { leveled: false };
-  }
-
-  const newTotalXp = guild.totalXp + amount;
-  const newLevel = calculateLevelFromXp(newTotalXp);
-  const leveled = newLevel > guild.level;
-
-  await prisma.guild.update({
-    where: { id: guildId },
-    data: {
-      xp: guild.xp + amount,
-      totalXp: newTotalXp,
-      level: newLevel,
-    },
-  });
-
-  return {
-    leveled,
-    newLevel: leveled ? newLevel : undefined,
-    previousLevel: leveled ? guild.level : undefined,
-  };
-}
-
-/**
- * Add XP from member activity (wave cleared)
- */
-export async function addXpFromWave(userId: string): Promise<void> {
-  const membership = await prisma.guildMember.findUnique({
-    where: { userId },
-  });
-
-  if (!membership) {
-    return;
-  }
-
-  await addGuildXp(
-    membership.guildId,
-    GUILD_CONSTANTS.XP_PER_WAVE,
-    'wave_cleared'
-  );
-
-  // Update member's weekly contribution
-  await prisma.guildMember.update({
-    where: { userId },
-    data: {
-      weeklyXpContributed: { increment: GUILD_CONSTANTS.XP_PER_WAVE },
-    },
-  });
-}
-
-/**
- * Add XP from run completion
- */
-export async function addXpFromRun(userId: string): Promise<void> {
-  const membership = await prisma.guildMember.findUnique({
-    where: { userId },
-  });
-
-  if (!membership) {
-    return;
-  }
-
-  await addGuildXp(
-    membership.guildId,
-    GUILD_CONSTANTS.XP_PER_RUN,
-    'run_completed'
-  );
-
-  await prisma.guildMember.update({
-    where: { userId },
-    data: {
-      weeklyXpContributed: { increment: GUILD_CONSTANTS.XP_PER_RUN },
-    },
-  });
-}
-
-/**
- * Add XP from donation
- */
-export async function addXpFromDonation(
-  guildId: string,
-  goldAmount: number,
-  dustAmount: number
-): Promise<void> {
-  const goldXp = Math.floor(goldAmount / 100) * GUILD_CONSTANTS.XP_PER_100_GOLD_DONATED;
-  const dustXp = Math.floor(dustAmount / 10) * GUILD_CONSTANTS.XP_PER_10_DUST_DONATED;
-  const totalXp = goldXp + dustXp;
-
-  if (totalXp > 0) {
-    await addGuildXp(guildId, totalXp, 'donation');
-  }
-}
-
-/**
- * Add XP from battle
- */
-export async function addXpFromBattle(
-  guildId: string,
-  won: boolean
-): Promise<void> {
-  const xp = won
-    ? GUILD_CONSTANTS.XP_PER_BATTLE_WIN
-    : GUILD_CONSTANTS.XP_PER_BATTLE_PARTICIPATION;
-
-  await addGuildXp(guildId, xp, won ? 'battle_win' : 'battle_participation');
 }
 
 // ============================================================================
@@ -258,8 +64,11 @@ export async function checkAndAwardTrophies(guildId: string): Promise<TrophyChec
     newTrophies.push(GUILD_TROPHIES.WEALTHY.id);
   }
 
-  // Check UNITED
-  if (!currentTrophies.includes(GUILD_TROPHIES.UNITED.id) && guild._count.members >= 20) {
+  // Check UNITED (max members = 30 with fully upgraded Kwatera)
+  if (
+    !currentTrophies.includes(GUILD_TROPHIES.UNITED.id) &&
+    guild._count.members >= GUILD_CONSTANTS.MEMBER_MAX_CAPACITY
+  ) {
     newTrophies.push(GUILD_TROPHIES.UNITED.id);
   }
 
@@ -342,14 +151,4 @@ export function getTrophyBonuses(trophies: string[]): {
   }
 
   return { statBonus, goldBonus, xpBonus, dustBonus };
-}
-
-/**
- * Reset weekly member contributions
- */
-export async function resetWeeklyContributions(): Promise<number> {
-  const result = await prisma.guildMember.updateMany({
-    data: { weeklyXpContributed: 0 },
-  });
-  return result.count;
 }

@@ -1,12 +1,15 @@
 import { prisma } from '../lib/prisma.js';
 import {
-  GUILD_LEVEL_TABLE,
   GUILD_ERROR_CODES,
   type GuildRole,
   type GuildSettings,
   type GuildAccessMode,
 } from '@arcade/protocol';
 import { createGuildKickNotification } from './messages.js';
+import {
+  getMemberCapacity,
+  getGuildBonusesFromStructures,
+} from './guildStructures.js';
 import type { Guild, GuildMember, Prisma } from '@prisma/client';
 
 // ============================================================================
@@ -46,36 +49,6 @@ export interface UpdateGuildInput {
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Get level info for a guild level
- */
-export function getLevelInfo(level: number) {
-  const levelData = GUILD_LEVEL_TABLE.find(l => l.level === level);
-  if (!levelData) {
-    return GUILD_LEVEL_TABLE[GUILD_LEVEL_TABLE.length - 1];
-  }
-  return levelData;
-}
-
-/**
- * Get member capacity for a guild level
- */
-export function getMemberCapacity(level: number): number {
-  return getLevelInfo(level).memberCap;
-}
-
-/**
- * Get bonuses for a guild level
- */
-export function getGuildBonuses(level: number): GuildBonuses {
-  const levelData = getLevelInfo(level);
-  return {
-    goldBoost: levelData.goldBoost,
-    statBoost: levelData.statBoost,
-    xpBoost: levelData.xpBoost,
-  };
-}
-
 // Cache for user guild bonuses (TTL: 60 seconds)
 const userGuildBonusesCache = new Map<string, { bonuses: GuildBonuses | null; expiry: number }>();
 
@@ -93,7 +66,16 @@ export async function getUserGuildBonuses(userId: string): Promise<GuildBonuses 
 
   const membership = await prisma.guildMember.findUnique({
     where: { userId },
-    include: { guild: { select: { level: true, disbanded: true } } },
+    include: {
+      guild: {
+        select: {
+          structureSkarbiec: true,
+          structureAkademia: true,
+          structureZbrojownia: true,
+          disbanded: true,
+        },
+      },
+    },
   });
 
   if (!membership || membership.guild.disbanded) {
@@ -101,7 +83,12 @@ export async function getUserGuildBonuses(userId: string): Promise<GuildBonuses 
     return null;
   }
 
-  const bonuses = getGuildBonuses(membership.guild.level);
+  const bonuses = getGuildBonusesFromStructures({
+    kwatera: 0, // Not needed for bonuses calculation
+    skarbiec: membership.guild.structureSkarbiec,
+    akademia: membership.guild.structureAkademia,
+    zbrojownia: membership.guild.structureZbrojownia,
+  });
   userGuildBonusesCache.set(userId, { bonuses, expiry: now + 60_000 });
   return bonuses;
 }
@@ -424,7 +411,7 @@ export async function joinGuild(
     throw new Error(GUILD_ERROR_CODES.GUILD_NOT_FOUND);
   }
 
-  const maxMembers = getMemberCapacity(guild.level);
+  const maxMembers = getMemberCapacity(guild.structureKwatera);
   if (guild._count.members >= maxMembers) {
     throw new Error(GUILD_ERROR_CODES.GUILD_FULL);
   }
@@ -491,7 +478,7 @@ export async function joinGuildDirect(
   }
 
   // Check guild capacity
-  const maxMembers = getMemberCapacity(guild.level);
+  const maxMembers = getMemberCapacity(guild.structureKwatera);
   if (guild._count.members >= maxMembers) {
     throw new Error(GUILD_ERROR_CODES.GUILD_FULL);
   }

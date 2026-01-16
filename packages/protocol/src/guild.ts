@@ -51,7 +51,7 @@ export const TreasuryTransactionTypeSchema = z.enum([
   'UPGRADE_COST',
   'REWARD_DISTRIBUTION',
   'SHIELD_PURCHASE',
-  'GUILD_TECH_UPGRADE',
+  'STRUCTURE_UPGRADE',
 ]);
 export type TreasuryTransactionType = z.infer<typeof TreasuryTransactionTypeSchema>;
 
@@ -105,8 +105,6 @@ export const GuildMemberSchema = z.object({
   // Contributions
   totalGoldDonated: z.number().int().min(0),
   totalDustDonated: z.number().int().min(0),
-  weeklyXpContributed: z.number().int().min(0),
-  earnedGuildCoins: z.number().int().min(0),
   // Participation
   battlesParticipated: z.number().int().min(0),
   battlesWon: z.number().int().min(0),
@@ -116,48 +114,78 @@ export const GuildMemberSchema = z.object({
 });
 export type GuildMember = z.infer<typeof GuildMemberSchema>;
 
-// Guild Tech tree structure
-export const GuildTechLevelsSchema = z.object({
-  fortress: z.object({
-    hp: z.number().int().min(0).max(10).default(0),
-    damage: z.number().int().min(0).max(10).default(0),
-    regen: z.number().int().min(0).max(5).default(0),
-  }),
-  hero: z.object({
-    hp: z.number().int().min(0).max(10).default(0),
-    damage: z.number().int().min(0).max(10).default(0),
-    cooldown: z.number().int().min(0).max(5).default(0),
-  }),
-  turret: z.object({
-    damage: z.number().int().min(0).max(10).default(0),
-    speed: z.number().int().min(0).max(10).default(0),
-    range: z.number().int().min(0).max(5).default(0),
-  }),
-  economy: z.object({
-    gold: z.number().int().min(0).max(10).default(0),
-    dust: z.number().int().min(0).max(10).default(0),
-    xp: z.number().int().min(0).max(5).default(0),
+// Guild Structure types
+export const GuildStructureTypeSchema = z.enum([
+  'kwatera',    // Barracks - member capacity (+1 per level, base 10, max 30)
+  'skarbiec',   // Treasury - gold bonus (+1% per level, max 20%)
+  'akademia',   // Academy - XP bonus (+1% per level, max 20%)
+  'zbrojownia', // Armory - stat bonus (+1% per level, max 20%)
+]);
+export type GuildStructureType = z.infer<typeof GuildStructureTypeSchema>;
+
+// Structure levels stored in Guild
+export const GuildStructureLevelsSchema = z.object({
+  kwatera: z.number().int().min(0).max(20).default(0),
+  skarbiec: z.number().int().min(0).max(20).default(0),
+  akademia: z.number().int().min(0).max(20).default(0),
+  zbrojownia: z.number().int().min(0).max(20).default(0),
+});
+export type GuildStructureLevels = z.infer<typeof GuildStructureLevelsSchema>;
+
+// Structure info for display
+export const GuildStructureInfoSchema = z.object({
+  type: GuildStructureTypeSchema,
+  level: z.number().int().min(0).max(20),
+  maxLevel: z.number().int().default(20),
+  currentBonus: z.number(), // Current bonus value (members for kwatera, % for others)
+  nextBonus: z.number().nullable(), // Bonus at next level (null if max)
+  upgradeCost: z.object({
+    gold: z.number().int(),
+    dust: z.number().int(),
+  }).nullable(), // null if max level
+  canAfford: z.boolean(),
+});
+export type GuildStructureInfo = z.infer<typeof GuildStructureInfoSchema>;
+
+// Upgrade structure request
+export const UpgradeStructureRequestSchema = z.object({
+  structure: GuildStructureTypeSchema,
+});
+export type UpgradeStructureRequest = z.infer<typeof UpgradeStructureRequestSchema>;
+
+// Upgrade structure response
+export const UpgradeStructureResponseSchema = z.object({
+  success: z.boolean(),
+  newLevel: z.number().int(),
+  goldSpent: z.number().int(),
+  dustSpent: z.number().int(),
+  treasuryBalance: z.object({
+    gold: z.number().int(),
+    dust: z.number().int(),
   }),
 });
-export type GuildTechLevels = z.infer<typeof GuildTechLevelsSchema>;
+export type UpgradeStructureResponse = z.infer<typeof UpgradeStructureResponseSchema>;
+
+// Structures response (list all structures with upgrade info)
+export const StructuresResponseSchema = z.object({
+  structures: z.array(GuildStructureInfoSchema),
+});
+export type StructuresResponse = z.infer<typeof StructuresResponseSchema>;
 
 export const GuildSchema = z.object({
   id: z.string(),
   name: z.string(),
   tag: z.string(),
   description: z.string().nullable(),
-  level: z.number().int().min(1).max(20),
-  xp: z.number().int().min(0),
-  totalXp: z.number().int().min(0),
+  // Structure levels (0-20 each)
+  structures: GuildStructureLevelsSchema,
   honor: z.number().int().min(0),
-  guildCoins: z.number().int().min(0),
-  techLevels: GuildTechLevelsSchema,
   trophies: z.array(z.string()),
   settings: GuildSettingsSchema,
   disbanded: z.boolean(),
   createdAt: z.string().datetime(),
   memberCount: z.number().int().min(0).optional(),
-  maxMembers: z.number().int().min(10).max(20).optional(),
+  maxMembers: z.number().int().min(10).max(30).optional(),
 });
 export type Guild = z.infer<typeof GuildSchema>;
 
@@ -276,7 +304,7 @@ export const GuildApplicationSchema = z.object({
   guildId: z.string(),
   guildName: z.string(),
   guildTag: z.string(),
-  guildLevel: z.number().int().min(1).max(20),
+  guildMemberCount: z.number().int().min(0),
   applicantId: z.string(),
   applicantName: z.string(),
   applicantLevel: z.number().int().min(0), // highestWave
@@ -551,7 +579,6 @@ export const GuildLeaderboardEntrySchema = z.object({
   guildId: z.string(),
   guildName: z.string(),
   guildTag: z.string(),
-  level: z.number().int().min(1).max(20),
   honor: z.number().int().min(0),
   totalScore: z.number().int().min(0),
   battlesWon: z.number().int().min(0),
@@ -585,7 +612,6 @@ export type GuildRankResponse = z.infer<typeof GuildRankResponseSchema>;
 export const MemberContributionSchema = z.object({
   userId: z.string(),
   displayName: z.string(),
-  xpContributed: z.number().int().min(0),
   goldDonated: z.number().int().min(0),
   dustDonated: z.number().int().min(0),
   battlesParticipated: z.number().int().min(0),
@@ -600,22 +626,8 @@ export const ContributionsResponseSchema = z.object({
 export type ContributionsResponse = z.infer<typeof ContributionsResponseSchema>;
 
 // ============================================================================
-// PROGRESSION
+// TROPHIES
 // ============================================================================
-
-export const GuildLevelInfoSchema = z.object({
-  level: z.number().int().min(1).max(20),
-  xp: z.number().int().min(0),
-  xpToNextLevel: z.number().int().min(0),
-  totalXp: z.number().int().min(0),
-  memberCapacity: z.number().int().min(10).max(20),
-  bonuses: z.object({
-    goldBoost: z.number().min(0).max(1),
-    statBoost: z.number().min(0).max(1),
-    xpBoost: z.number().min(0).max(1),
-  }),
-});
-export type GuildLevelInfo = z.infer<typeof GuildLevelInfoSchema>;
 
 export const GuildTrophySchema = z.object({
   id: z.string(),
@@ -732,69 +744,8 @@ export type GuildBossLeaderboardResponse = z.infer<typeof GuildBossLeaderboardRe
 export const GuildBossAttackResponseSchema = z.object({
   attempt: GuildBossAttemptSchema,
   bossCurrentHp: BigIntStringSchema, // BigInt serialized as string
-  guildCoinsEarned: z.number().int().min(0),
 });
 export type GuildBossAttackResponse = z.infer<typeof GuildBossAttackResponseSchema>;
-
-// ============================================================================
-// GUILD TECH
-// ============================================================================
-
-export const GuildTechTreeTypeSchema = z.enum(['fortress', 'hero', 'turret', 'economy']);
-export type GuildTechTreeType = z.infer<typeof GuildTechTreeTypeSchema>;
-
-export const GuildTechStatTypeSchema = z.enum([
-  'hp', 'damage', 'regen', 'cooldown', 'speed', 'range', 'gold', 'dust', 'xp'
-]);
-export type GuildTechStatType = z.infer<typeof GuildTechStatTypeSchema>;
-
-export const UpgradeTechRequestSchema = z.object({
-  tree: GuildTechTreeTypeSchema,
-  stat: GuildTechStatTypeSchema,
-});
-export type UpgradeTechRequest = z.infer<typeof UpgradeTechRequestSchema>;
-
-export const GuildTechBonusesSchema = z.object({
-  fortress: z.object({
-    hpPercent: z.number().min(0).max(0.2),
-    damagePercent: z.number().min(0).max(0.2),
-    regenPercent: z.number().min(0).max(0.1),
-  }),
-  hero: z.object({
-    hpPercent: z.number().min(0).max(0.2),
-    damagePercent: z.number().min(0).max(0.2),
-    cooldownReductionPercent: z.number().min(0).max(0.1),
-  }),
-  turret: z.object({
-    damagePercent: z.number().min(0).max(0.2),
-    speedPercent: z.number().min(0).max(0.2),
-    rangePercent: z.number().min(0).max(0.1),
-  }),
-  economy: z.object({
-    goldPercent: z.number().min(0).max(0.2),
-    dustPercent: z.number().min(0).max(0.2),
-    xpPercent: z.number().min(0).max(0.1),
-  }),
-});
-export type GuildTechBonuses = z.infer<typeof GuildTechBonusesSchema>;
-
-export const GuildTechResponseSchema = z.object({
-  techLevels: GuildTechLevelsSchema,
-  bonuses: GuildTechBonusesSchema,
-  guildCoins: z.number().int().min(0),
-  canUpgrade: z.boolean(),
-});
-export type GuildTechResponse = z.infer<typeof GuildTechResponseSchema>;
-
-export const TechUpgradeCostSchema = z.object({
-  tree: GuildTechTreeTypeSchema,
-  stat: GuildTechStatTypeSchema,
-  currentLevel: z.number().int().min(0),
-  maxLevel: z.number().int().min(1),
-  cost: z.number().int().min(0),
-  canAfford: z.boolean(),
-});
-export type TechUpgradeCost = z.infer<typeof TechUpgradeCostSchema>;
 
 // ============================================================================
 // CONSTANTS
@@ -808,9 +759,9 @@ export const GUILD_CONSTANTS = {
   TAG_MAX_LENGTH: 5,
   MAX_DESCRIPTION_LENGTH: 200,
 
-  // Member limits
-  MAX_MEMBERS_BASE: 10,
-  MAX_MEMBERS_CAP: 20,
+  // Member limits (based on Kwatera structure level)
+  MEMBER_BASE_CAPACITY: 10,
+  MEMBER_MAX_CAPACITY: 30,
 
   // Donation limits
   MIN_DONATION_GOLD: 100,
@@ -848,56 +799,22 @@ export const GUILD_CONSTANTS = {
   MIN_HONOR: 100,
   HONOR_K_FACTOR: 32,
 
-  // XP sources
-  XP_PER_WAVE: 5,
-  XP_PER_RUN: 25,
-  XP_PER_100_GOLD_DONATED: 1,
-  XP_PER_10_DUST_DONATED: 2,
-  XP_PER_BATTLE_WIN: 500,
-  XP_PER_BATTLE_PARTICIPATION: 100,
-  XP_WEEKLY_ACTIVITY_BONUS: 1000,
-  XP_PER_1000_BOSS_DAMAGE: 1,
-
-  // Guild Coins rewards
-  COINS_ARENA_WIN: 100,
-  COINS_ARENA_LOSS: 30,
-  COINS_BOSS_PARTICIPATION: 50,
-  COINS_BOSS_TOP_DAMAGE: 200,
-  COINS_TOWER_RACE_TOP_3: [500, 300, 100] as readonly number[],
-
-  // Guild Tech
-  TECH_COST_BASE: 100, // Cost = 100 × (currentLevel + 1)
-  TECH_BONUS_PER_LEVEL: 0.02, // +2% per level
+  // Structure upgrades
+  STRUCTURE_MAX_LEVEL: 20,
+  STRUCTURE_UPGRADE_BASE_GOLD: 500, // Cost = 500 × (level + 1)²
+  STRUCTURE_UPGRADE_BASE_DUST: 25,  // Cost = 25 × (level + 1)
+  STRUCTURE_BONUS_PER_LEVEL: 0.01,  // +1% per level for skarbiec/akademia/zbrojownia
 
   // Guild Boss
   BOSS_TOTAL_HP: 50_000_000,
   BOSS_ATTACKS_PER_DAY: 1,
-} as const;
 
-// Guild level progression table
-// Bonuses: goldBoost, statBoost (HP/damage for fortress/heroes), xpBoost - all 0-20% at level 20
-export const GUILD_LEVEL_TABLE = [
-  { level: 1, xpRequired: 0, memberCap: 10, goldBoost: 0, statBoost: 0, xpBoost: 0 },
-  { level: 2, xpRequired: 1000, memberCap: 10, goldBoost: 0.01, statBoost: 0.01, xpBoost: 0.01 },
-  { level: 3, xpRequired: 2500, memberCap: 11, goldBoost: 0.02, statBoost: 0.02, xpBoost: 0.02 },
-  { level: 4, xpRequired: 5000, memberCap: 11, goldBoost: 0.03, statBoost: 0.03, xpBoost: 0.03 },
-  { level: 5, xpRequired: 10000, memberCap: 12, goldBoost: 0.04, statBoost: 0.04, xpBoost: 0.04 },
-  { level: 6, xpRequired: 17500, memberCap: 12, goldBoost: 0.05, statBoost: 0.05, xpBoost: 0.05 },
-  { level: 7, xpRequired: 27500, memberCap: 13, goldBoost: 0.06, statBoost: 0.06, xpBoost: 0.06 },
-  { level: 8, xpRequired: 40000, memberCap: 13, goldBoost: 0.07, statBoost: 0.07, xpBoost: 0.07 },
-  { level: 9, xpRequired: 55000, memberCap: 14, goldBoost: 0.08, statBoost: 0.08, xpBoost: 0.08 },
-  { level: 10, xpRequired: 75000, memberCap: 14, goldBoost: 0.10, statBoost: 0.10, xpBoost: 0.10 },
-  { level: 11, xpRequired: 100000, memberCap: 15, goldBoost: 0.11, statBoost: 0.11, xpBoost: 0.11 },
-  { level: 12, xpRequired: 130000, memberCap: 15, goldBoost: 0.12, statBoost: 0.12, xpBoost: 0.12 },
-  { level: 13, xpRequired: 165000, memberCap: 16, goldBoost: 0.13, statBoost: 0.13, xpBoost: 0.13 },
-  { level: 14, xpRequired: 205000, memberCap: 16, goldBoost: 0.14, statBoost: 0.14, xpBoost: 0.14 },
-  { level: 15, xpRequired: 250000, memberCap: 17, goldBoost: 0.15, statBoost: 0.15, xpBoost: 0.15 },
-  { level: 16, xpRequired: 300000, memberCap: 17, goldBoost: 0.16, statBoost: 0.16, xpBoost: 0.16 },
-  { level: 17, xpRequired: 360000, memberCap: 18, goldBoost: 0.17, statBoost: 0.17, xpBoost: 0.17 },
-  { level: 18, xpRequired: 430000, memberCap: 18, goldBoost: 0.18, statBoost: 0.18, xpBoost: 0.18 },
-  { level: 19, xpRequired: 510000, memberCap: 19, goldBoost: 0.19, statBoost: 0.19, xpBoost: 0.19 },
-  { level: 20, xpRequired: 600000, memberCap: 20, goldBoost: 0.20, statBoost: 0.20, xpBoost: 0.20 },
-] as const;
+  // Guild Coins (earned from battles/boss)
+  COINS_ARENA_WIN: 50,
+  COINS_ARENA_LOSS: 10,
+  COINS_BOSS_PARTICIPATION: 5,
+  COINS_BOSS_TOP_DAMAGE: 25,
+} as const;
 
 // Trophy definitions
 export const GUILD_TROPHIES = {
@@ -933,7 +850,7 @@ export const GUILD_TROPHIES = {
     id: 'UNITED',
     name: 'United',
     description: 'Reach maximum member capacity',
-    requirement: '20 members',
+    requirement: '30 members',
     bonus: '+5% XP from all sources',
   },
   ANCIENT: {
@@ -1026,10 +943,9 @@ export const GUILD_ERROR_CODES = {
   ALREADY_ATTACKED_BOSS_TODAY: 'ALREADY_ATTACKED_BOSS_TODAY',
   BOSS_EXPIRED: 'BOSS_EXPIRED',
 
-  // Guild Tech errors
-  TECH_MAX_LEVEL: 'TECH_MAX_LEVEL',
-  TECH_INSUFFICIENT_COINS: 'TECH_INSUFFICIENT_COINS',
-  TECH_INVALID_STAT: 'TECH_INVALID_STAT',
+  // Structure upgrade errors
+  STRUCTURE_MAX_LEVEL: 'STRUCTURE_MAX_LEVEL',
+  STRUCTURE_INVALID: 'STRUCTURE_INVALID',
 } as const;
 
 export type GuildErrorCode = keyof typeof GUILD_ERROR_CODES;

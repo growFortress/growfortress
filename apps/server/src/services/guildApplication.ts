@@ -7,7 +7,8 @@ import {
   type GuildApplicationStatus,
   type GuildAccessMode,
 } from '@arcade/protocol';
-import { hasPermission, getMemberCapacity } from './guild.js';
+import { hasPermission } from './guild.js';
+import { getMemberCapacity } from './guildStructures.js';
 import type { GuildApplication } from '@prisma/client';
 
 // ============================================================================
@@ -18,7 +19,6 @@ export interface GuildApplicationWithDetails extends GuildApplication {
   guild: {
     name: string;
     tag: string;
-    level: number;
   };
   applicant: {
     displayName: string;
@@ -56,7 +56,7 @@ export async function createApplication(
     where: { id: guildId },
     select: {
       id: true,
-      level: true,
+      structureKwatera: true,
       disbanded: true,
       settings: true,
       _count: { select: { members: true } },
@@ -80,7 +80,7 @@ export async function createApplication(
   }
 
   // Check guild capacity
-  const maxMembers = getMemberCapacity(guild.level);
+  const maxMembers = getMemberCapacity(guild.structureKwatera);
   if (guild._count.members >= maxMembers) {
     throw new Error(GUILD_ERROR_CODES.GUILD_FULL);
   }
@@ -145,7 +145,7 @@ export async function createApplication(
     },
     include: {
       guild: {
-        select: { name: true, tag: true, level: true },
+        select: { name: true, tag: true },
       },
       applicant: {
         select: {
@@ -182,7 +182,7 @@ export async function getGuildApplications(
       where,
       include: {
         guild: {
-          select: { name: true, tag: true, level: true },
+          select: { name: true, tag: true },
         },
         applicant: {
           select: {
@@ -224,7 +224,7 @@ export async function getUserApplications(
       where,
       include: {
         guild: {
-          select: { name: true, tag: true, level: true },
+          select: { name: true, tag: true },
         },
         applicant: {
           select: {
@@ -257,7 +257,7 @@ export async function getApplication(
     where: { id: applicationId },
     include: {
       guild: {
-        select: { name: true, tag: true, level: true },
+        select: { name: true, tag: true },
       },
       applicant: {
         select: {
@@ -284,7 +284,11 @@ export async function acceptApplication(
     where: { id: applicationId },
     include: {
       guild: {
-        include: { _count: { select: { members: true } } },
+        select: {
+          structureKwatera: true,
+          disbanded: true,
+          _count: { select: { members: true } },
+        },
       },
     },
   });
@@ -333,7 +337,7 @@ export async function acceptApplication(
   }
 
   // Check guild capacity
-  const maxMembers = getMemberCapacity(application.guild.level);
+  const maxMembers = getMemberCapacity(application.guild.structureKwatera);
   if (application.guild._count.members >= maxMembers) {
     throw new Error(GUILD_ERROR_CODES.GUILD_FULL);
   }

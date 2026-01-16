@@ -299,19 +299,19 @@ describe("Guild Leaderboard Service", () => {
   // ============================================================================
 
   describe("getMemberContributions", () => {
-    it("returns member contributions sorted by XP", async () => {
+    it("returns member contributions sorted by gold donated", async () => {
       const members = [
         {
           ...createMockGuildMember({
             userId: "user-1",
-            weeklyXpContributed: 500,
+            totalGoldDonated: 5000,
           }),
           user: { displayName: "Top Contributor" },
         },
         {
           ...createMockGuildMember({
             userId: "user-2",
-            weeklyXpContributed: 200,
+            totalGoldDonated: 2000,
           }),
           user: { displayName: "Second Best" },
         },
@@ -322,7 +322,7 @@ describe("Guild Leaderboard Service", () => {
 
       expect(result).toHaveLength(2);
       expect(result[0].displayName).toBe("Top Contributor");
-      expect(result[0].xpContributed).toBe(500);
+      expect(result[0].goldDonated).toBe(5000);
     });
 
     it("returns empty array for guild with no members", async () => {
@@ -337,7 +337,6 @@ describe("Guild Leaderboard Service", () => {
       const member = {
         ...createMockGuildMember({
           userId: "user-1",
-          weeklyXpContributed: 500,
           totalGoldDonated: 10000,
           totalDustDonated: 100,
           battlesParticipated: 5,
@@ -352,7 +351,6 @@ describe("Guild Leaderboard Service", () => {
       expect(result[0]).toMatchObject({
         userId: "user-1",
         displayName: "Test User",
-        xpContributed: 500,
         goldDonated: 10000,
         dustDonated: 100,
         battlesParticipated: 5,

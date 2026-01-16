@@ -254,7 +254,6 @@ describe('Guild Boss Service', () => {
       const result = await attackBoss('user-123');
 
       expect(result.success).toBe(true);
-      expect(result.guildCoinsEarned).toBeGreaterThan(0);
       expect(mockPrisma.$transaction).toHaveBeenCalled();
     });
 
@@ -278,32 +277,6 @@ describe('Guild Boss Service', () => {
       // Tier 3 should have 2x multiplier (1 + (3-1)*0.5 = 2)
     });
 
-    it('awards guild coins for participation', async () => {
-      mockPrisma.guildMember.findUnique.mockResolvedValue({
-        ...createMockGuildMember(),
-        battleHeroId: 'THUNDERLORD',
-        battleHeroPower: 1000,
-        battleHeroTier: 1,
-        guild: createMockGuild(),
-      });
-      mockPrisma.guildBoss.findUnique.mockResolvedValue(createMockGuildBoss());
-      mockPrisma.guildBossAttempt.findFirst.mockResolvedValue(null);
-      mockPrisma.$transaction.mockResolvedValue([createMockGuildBossAttempt(), {}]);
-      mockPrisma.guildMember.update.mockResolvedValue({});
-
-      const result = await attackBoss('user-123');
-
-      expect(result.success).toBe(true);
-      expect(result.guildCoinsEarned).toBe(50); // COINS_BOSS_PARTICIPATION
-      expect(mockPrisma.guildMember.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { userId: 'user-123' },
-          data: expect.objectContaining({
-            earnedGuildCoins: { increment: expect.any(Number) },
-          }),
-        })
-      );
-    });
   });
 
   // ============================================================================
@@ -501,83 +474,45 @@ describe('Guild Boss Service', () => {
         { id: 'guild-3', name: 'Third', tag: '3RD' },
       ]);
 
-      // Mock breakdown for each guild
-      mockPrisma.guildBossAttempt.findMany.mockResolvedValue([
-        createMockGuildBossAttempt({ userId: 'top-user', damage: BigInt(100000) }),
-      ]);
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: 'top-user', displayName: 'TopUser' },
-      ]);
-
-      // Make $transaction pass through to callback
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
-        const tx = {
-          guild: { update: vi.fn() },
-          guildMember: { updateMany: vi.fn() },
-        };
-        return await callback(tx);
-      });
-
       const result = await finalizeBoss('2026-W02');
 
       expect(result.success).toBe(true);
       expect(result.topGuilds).toBeDefined();
       expect(result.topGuilds!.length).toBeGreaterThan(0);
-      // First place should get 500 coins
-      expect(result.topGuilds![0].reward).toBe(500);
       expect(result.topGuilds![0].rank).toBe(1);
+      expect(result.topGuilds![0].totalDamage).toBe(500000);
     });
 
-    it('gives correct rewards by rank', async () => {
+    it('returns rankings by damage', async () => {
       mockPrisma.guildBoss.findUnique.mockResolvedValue(createMockGuildBoss());
 
-      // Create 5 guilds to test different reward tiers
+      // Create 3 guilds to test rankings
       const guildDamages = [
         { guildId: 'guild-1', totalDamage: BigInt(500), participantCount: BigInt(1) },
         { guildId: 'guild-2', totalDamage: BigInt(400), participantCount: BigInt(1) },
         { guildId: 'guild-3', totalDamage: BigInt(300), participantCount: BigInt(1) },
-        { guildId: 'guild-4', totalDamage: BigInt(200), participantCount: BigInt(1) },
-        { guildId: 'guild-5', totalDamage: BigInt(100), participantCount: BigInt(1) },
       ];
 
       mockPrisma.$queryRaw
         .mockResolvedValueOnce(guildDamages)
-        .mockResolvedValueOnce([{ count: BigInt(5) }]);
+        .mockResolvedValueOnce([{ count: BigInt(3) }]);
 
       mockPrisma.guild.findMany.mockResolvedValue([
         { id: 'guild-1', name: 'G1', tag: 'G1' },
         { id: 'guild-2', name: 'G2', tag: 'G2' },
         { id: 'guild-3', name: 'G3', tag: 'G3' },
-        { id: 'guild-4', name: 'G4', tag: 'G4' },
-        { id: 'guild-5', name: 'G5', tag: 'G5' },
       ]);
-
-      mockPrisma.guildBossAttempt.findMany.mockResolvedValue([
-        createMockGuildBossAttempt({ damage: BigInt(100) }),
-      ]);
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1', displayName: 'User' }]);
-
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
-        const tx = {
-          guild: { update: vi.fn() },
-          guildMember: { updateMany: vi.fn() },
-        };
-        return await callback(tx);
-      });
 
       const result = await finalizeBoss('2026-W02');
 
       expect(result.success).toBe(true);
-      // Check reward amounts
-      const rewardsByRank = result.topGuilds!.reduce(
-        (acc, g) => ({ ...acc, [g.rank]: g.reward }),
-        {} as Record<number, number>
-      );
-      expect(rewardsByRank[1]).toBe(500); // 1st place
-      expect(rewardsByRank[2]).toBe(300); // 2nd place
-      expect(rewardsByRank[3]).toBe(200); // 3rd place
-      expect(rewardsByRank[4]).toBe(100); // 4-10 place
-      expect(rewardsByRank[5]).toBe(100); // 4-10 place
+      expect(result.topGuilds).toHaveLength(3);
+      expect(result.topGuilds![0].rank).toBe(1);
+      expect(result.topGuilds![0].totalDamage).toBe(500);
+      expect(result.topGuilds![1].rank).toBe(2);
+      expect(result.topGuilds![1].totalDamage).toBe(400);
+      expect(result.topGuilds![2].rank).toBe(3);
+      expect(result.topGuilds![2].totalDamage).toBe(300);
     });
   });
 

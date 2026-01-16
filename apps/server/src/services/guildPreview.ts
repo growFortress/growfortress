@@ -6,14 +6,17 @@
 import { prisma } from '../lib/prisma.js';
 import { redis } from '../lib/redis.js';
 import {
-  GUILD_LEVEL_TABLE,
-  GUILD_CONSTANTS,
   type GuildPreviewResponse,
   type GuildPreviewBonuses,
   type GuildPreviewMember,
-  type GuildTechLevels,
   type GuildRole,
 } from '@arcade/protocol';
+import {
+  getMemberCapacity,
+  getGoldBonus,
+  getXpBonus,
+  getStatBonus,
+} from './guildStructures.js';
 
 // Cache configuration
 const CACHE_KEY_PREFIX = 'guild:preview:';
@@ -39,11 +42,11 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
       name: true,
       tag: true,
       description: true,
-      level: true,
-      xp: true,
-      totalXp: true,
       honor: true,
-      techLevels: true,
+      structureKwatera: true,
+      structureSkarbiec: true,
+      structureAkademia: true,
+      structureZbrojownia: true,
       trophies: true,
       createdAt: true,
       members: {
@@ -77,42 +80,14 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
     return null;
   }
 
-  // Get level info for calculating XP to next level
-  const currentLevelData = GUILD_LEVEL_TABLE.find(l => l.level === guild.level);
-  const nextLevelData = GUILD_LEVEL_TABLE.find(l => l.level === guild.level + 1);
-  const xpToNextLevel = nextLevelData
-    ? Math.max(0, nextLevelData.xpRequired - guild.totalXp)
-    : 0;
-  const maxMembers = currentLevelData?.memberCap ?? 10;
+  // Get max members from Kwatera structure level
+  const maxMembers = getMemberCapacity(guild.structureKwatera);
 
-  // Parse tech levels
-  const techLevels = (guild.techLevels as GuildTechLevels) ?? {
-    fortress: { hp: 0, damage: 0, regen: 0 },
-    hero: { hp: 0, damage: 0, cooldown: 0 },
-    turret: { damage: 0, speed: 0, range: 0 },
-    economy: { gold: 0, dust: 0, xp: 0 },
-  };
-
-  // Calculate bonuses from tech levels (2% per level)
-  const bonusPerLevel = GUILD_CONSTANTS.TECH_BONUS_PER_LEVEL;
+  // Calculate bonuses from structure levels
   const bonuses: GuildPreviewBonuses = {
-    // Economy bonuses from guild level
-    goldPercent: currentLevelData?.goldBoost ?? 0,
-    xpPercent: currentLevelData?.xpBoost ?? 0,
-    // Stat boost from guild level (applies to fortress/heroes HP & damage)
-    statBoostPercent: currentLevelData?.statBoost ?? 0,
-    // Fortress bonuses from tech tree
-    fortressHpPercent: techLevels.fortress.hp * bonusPerLevel,
-    fortressDamagePercent: techLevels.fortress.damage * bonusPerLevel,
-    fortressRegenPercent: techLevels.fortress.regen * bonusPerLevel,
-    // Hero bonuses from tech tree
-    heroHpPercent: techLevels.hero.hp * bonusPerLevel,
-    heroDamagePercent: techLevels.hero.damage * bonusPerLevel,
-    heroCooldownPercent: techLevels.hero.cooldown * bonusPerLevel,
-    // Turret bonuses from tech tree
-    turretDamagePercent: techLevels.turret.damage * bonusPerLevel,
-    turretSpeedPercent: techLevels.turret.speed * bonusPerLevel,
-    turretRangePercent: techLevels.turret.range * bonusPerLevel,
+    goldBoost: getGoldBonus(guild.structureSkarbiec),
+    xpBoost: getXpBonus(guild.structureAkademia),
+    statBoost: getStatBonus(guild.structureZbrojownia),
   };
 
   // Build top 5 members sorted by role priority (LEADER > OFFICER > MEMBER) then power
@@ -142,14 +117,16 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
     name: guild.name,
     tag: guild.tag,
     description: guild.description,
-    level: guild.level,
-    xp: guild.xp,
-    xpToNextLevel,
     honor: guild.honor,
     memberCount: guild._count.members,
     maxMembers,
     trophies: (guild.trophies as string[]) ?? [],
-    techLevels,
+    structures: {
+      kwatera: guild.structureKwatera,
+      skarbiec: guild.structureSkarbiec,
+      akademia: guild.structureAkademia,
+      zbrojownia: guild.structureZbrojownia,
+    },
     bonuses,
     topMembers,
     createdAt: guild.createdAt.toISOString(),
@@ -163,7 +140,7 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
 
 /**
  * Invalidate guild preview cache
- * Call this when guild is updated (level up, tech upgrade, member changes, etc.)
+ * Call this when guild is updated (structure upgrade, member changes, etc.)
  */
 export async function invalidateGuildPreviewCache(guildId: string): Promise<void> {
   await redis.del(`${CACHE_KEY_PREFIX}${guildId}`);

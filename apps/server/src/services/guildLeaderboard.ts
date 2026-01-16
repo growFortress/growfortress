@@ -35,7 +35,6 @@ export interface LeaderboardResult {
 export interface MemberContribution {
   userId: string;
   displayName: string;
-  xpContributed: number;
   goldDonated: number;
   dustDonated: number;
   battlesParticipated: number;
@@ -124,9 +123,8 @@ export async function getWeeklyLeaderboard(
           guildId: guild.id,
           guildName: guild.name,
           guildTag: guild.tag,
-          level: guild.level,
           honor: guild.honor,
-          totalScore: guild.totalXp,
+          totalScore: guild.honor, // Use honor as the total score
           battlesWon: stats.won,
           battlesLost: stats.lost,
           memberCount: guild._count.members,
@@ -145,7 +143,6 @@ export async function getWeeklyLeaderboard(
               select: {
                 name: true,
                 tag: true,
-                level: true,
                 _count: { select: { members: true } },
               },
             },
@@ -159,7 +156,6 @@ export async function getWeeklyLeaderboard(
         guildId: entry.guildId,
         guildName: entry.guild.name,
         guildTag: entry.guild.tag,
-        level: entry.guild.level,
         honor: entry.honor,
         totalScore: entry.totalScore,
         battlesWon: entry.battlesWon,
@@ -271,13 +267,12 @@ export async function getMemberContributions(
         select: { displayName: true },
       },
     },
-    orderBy: { weeklyXpContributed: "desc" },
+    orderBy: { totalGoldDonated: "desc" },
   });
 
   return members.map((member) => ({
     userId: member.userId,
     displayName: member.user.displayName,
-    xpContributed: member.weeklyXpContributed,
     goldDonated: member.totalGoldDonated,
     dustDonated: member.totalDustDonated,
     battlesParticipated: member.battlesParticipated,
@@ -334,7 +329,7 @@ export async function snapshotWeeklyRankings(weekKey: string): Promise<void> {
       },
       update: {
         honor: guild.honor,
-        totalScore: guild.totalXp,
+        totalScore: guild.honor, // Use honor as the total score
         battlesWon,
         battlesLost,
         memberCount: guild._count.members,
@@ -343,7 +338,7 @@ export async function snapshotWeeklyRankings(weekKey: string): Promise<void> {
         weekKey,
         guildId: guild.id,
         honor: guild.honor,
-        totalScore: guild.totalXp,
+        totalScore: guild.honor, // Use honor as the total score
         battlesWon,
         battlesLost,
         memberCount: guild._count.members,

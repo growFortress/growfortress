@@ -30,10 +30,14 @@ import {
   kickMember,
   updateMemberRole,
   transferLeadership,
-  getGuildBonuses,
-  getMemberCapacity,
   joinGuildDirect,
 } from '../services/guild.js';
+import {
+  getMemberCapacity,
+  getStructuresInfo,
+  upgradeStructure,
+  getGuildBonusesFromStructures,
+} from '../services/guildStructures.js';
 import {
   createInvitation,
   getGuildInvitations,
@@ -57,7 +61,6 @@ import {
   withdraw,
   getTreasuryLogs,
 } from '../services/guildTreasury.js';
-import { getGuildLevelInfo } from '../services/guildProgression.js';
 import {
   getGuildBattles,
   getBattle,
@@ -132,9 +135,6 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(404).send({ error: GUILD_ERROR_CODES.GUILD_NOT_FOUND });
     }
 
-    // Add level info
-    const levelInfo = getGuildLevelInfo(guild.level, guild.xp, guild.totalXp);
-
     // Check if user is an authenticated member of this guild
     let isGuildMember = false;
     if (request.userId) {
@@ -147,14 +147,28 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       ? guild.members
       : guild.members.slice(0, 5);
 
+    // Get structure bonuses
+    const bonuses = getGuildBonusesFromStructures({
+      kwatera: guild.structureKwatera,
+      skarbiec: guild.structureSkarbiec,
+      akademia: guild.structureAkademia,
+      zbrojownia: guild.structureZbrojownia,
+    });
+
     return reply.send({
       guild: {
         ...guild,
         members: limitedMembers,
         memberCount: guild._count.members,
-        maxMembers: getMemberCapacity(guild.level),
+        maxMembers: getMemberCapacity(guild.structureKwatera),
       },
-      levelInfo,
+      structures: {
+        kwatera: guild.structureKwatera,
+        skarbiec: guild.structureSkarbiec,
+        akademia: guild.structureAkademia,
+        zbrojownia: guild.structureZbrojownia,
+      },
+      bonuses,
       isFullMemberList: isGuildMember,
     });
   });
@@ -220,11 +234,19 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         guild: null,
         membership: null,
         bonuses: null,
+        structures: null,
       });
     }
 
     const guildWithDetails = await getGuild(membership.guildId);
-    const bonuses = getGuildBonuses(membership.guild.level);
+
+    // Get bonuses from structure levels
+    const bonuses = guildWithDetails ? getGuildBonusesFromStructures({
+      kwatera: guildWithDetails.structureKwatera,
+      skarbiec: guildWithDetails.structureSkarbiec,
+      akademia: guildWithDetails.structureAkademia,
+      zbrojownia: guildWithDetails.structureZbrojownia,
+    }) : null;
 
     return reply.send({
       guild: guildWithDetails,
@@ -233,6 +255,12 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         displayName: membership.user.displayName,
       },
       bonuses,
+      structures: guildWithDetails ? {
+        kwatera: guildWithDetails.structureKwatera,
+        skarbiec: guildWithDetails.structureSkarbiec,
+        akademia: guildWithDetails.structureAkademia,
+        zbrojownia: guildWithDetails.structureZbrojownia,
+      } : null,
     });
   });
 
@@ -610,6 +638,62 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       const { applicationId } = request.params as { applicationId: string };
       await cancelApplication(applicationId, request.userId);
       return reply.send({ success: true });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // ============================================================================
+  // STRUCTURES
+  // ============================================================================
+
+  // Get structures info
+  fastify.get('/v1/guilds/:guildId/structures', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const { guildId } = request.params as { guildId: string };
+
+    // Security: Verify user is a member of this guild
+    const membershipCheck = await requireGuildMembership(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
+    const structures = await getStructuresInfo(guildId);
+    return reply.send({ structures });
+  });
+
+  // Upgrade a structure
+  fastify.post('/v1/guilds/:guildId/structures/:structure/upgrade', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId, structure } = request.params as { guildId: string; structure: string };
+
+      // Validate structure type
+      const validStructures = ['kwatera', 'skarbiec', 'akademia', 'zbrojownia'];
+      if (!validStructures.includes(structure)) {
+        return reply.status(400).send({ error: 'INVALID_STRUCTURE_TYPE' });
+      }
+
+      const result = await upgradeStructure(
+        guildId,
+        request.userId,
+        structure as 'kwatera' | 'skarbiec' | 'akademia' | 'zbrojownia'
+      );
+
+      if (!result.success) {
+        return reply.status(400).send({ error: result.error });
+      }
+
+      return reply.send(result.result);
     } catch (error: any) {
       if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
         return reply.status(400).send({ error: error.message });
@@ -1225,7 +1309,6 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         attemptedAt: result.attempt!.attemptedAt.toISOString(),
       },
       bossCurrentHp: result.bossCurrentHp?.toString(),
-      guildCoinsEarned: result.guildCoinsEarned,
     });
   });
 

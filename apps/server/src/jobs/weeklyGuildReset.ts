@@ -4,7 +4,6 @@ import {
   GuildWeeklyResetJob,
   createWorker,
 } from '../lib/queue.js';
-import { resetWeeklyContributions } from '../services/guildProgression.js';
 import { finalizeRace } from '../services/guildTowerRace.js';
 import { finalizeBoss } from '../services/guildBoss.js';
 
@@ -14,7 +13,6 @@ import { finalizeBoss } from '../services/guildBoss.js';
  * This job runs every Monday at 00:00 UTC and:
  * 1. Finalizes Tower Race for the previous week and distributes rewards
  * 2. Finalizes Guild Boss for the previous week and distributes rewards
- * 3. Resets weekly XP contributions for all guild members
  */
 async function processWeeklyGuildReset(job: Job<GuildWeeklyResetJob>): Promise<void> {
   // Get the week that just ended (the job runs at the start of a new week)
@@ -45,11 +43,6 @@ async function processWeeklyGuildReset(job: Job<GuildWeeklyResetJob>): Promise<v
     } else {
       console.log(`[WeeklyGuildReset] Guild Boss: ${bossResult.error ?? 'No boss to finalize'}`);
     }
-
-    // Step 3: Reset weekly XP contributions for all guild members
-    console.log(`[WeeklyGuildReset] Resetting weekly XP contributions...`);
-    const resetCount = await resetWeeklyContributions();
-    console.log(`[WeeklyGuildReset] Reset weekly contributions for ${resetCount} guild members`);
 
     const duration = Date.now() - startTime;
     console.log(`[WeeklyGuildReset] Weekly guild reset completed in ${duration}ms`);

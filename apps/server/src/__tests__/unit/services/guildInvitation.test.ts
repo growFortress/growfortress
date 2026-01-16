@@ -21,15 +21,20 @@ import {
 } from '../../mocks/prisma.js';
 import { GUILD_ERROR_CODES } from '@arcade/protocol';
 import * as guildModule from '../../../services/guild.js';
+import * as guildStructuresModule from '../../../services/guildStructures.js';
 
 // Mock the guild module
 vi.mock('../../../services/guild.js', () => ({
   hasPermission: vi.fn(),
+}));
+
+// Mock the guildStructures module
+vi.mock('../../../services/guildStructures.js', () => ({
   getMemberCapacity: vi.fn(),
 }));
 
 const mockHasPermission = guildModule.hasPermission as ReturnType<typeof vi.fn>;
-const mockGetMemberCapacity = guildModule.getMemberCapacity as ReturnType<typeof vi.fn>;
+const mockGetMemberCapacity = guildStructuresModule.getMemberCapacity as ReturnType<typeof vi.fn>;
 
 // Helper to create mock invitation
 function createMockInvitation(overrides: Record<string, unknown> = {}) {
@@ -60,8 +65,8 @@ describe('Guild Invitation Service', () => {
       }
       return false;
     });
-    mockGetMemberCapacity.mockImplementation((level: number) => {
-      return 10 + Math.floor(level / 2);
+    mockGetMemberCapacity.mockImplementation((kwateraLevel: number) => {
+      return 10 + kwateraLevel; // Base 10 + 1 per kwatera level
     });
     // Set default behavior for messaging mocks (used by createGuildInviteNotification)
     mockPrisma.messageThread.create.mockResolvedValue({
@@ -143,7 +148,7 @@ describe('Guild Invitation Service', () => {
 
     it('throws GUILD_FULL if guild at capacity', async () => {
       const member = createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' });
-      const guild = createMockGuild({ level: 1, _count: { members: 10 } }); // level 1 = 10 max
+      const guild = createMockGuild({ structureKwatera: 0, _count: { members: 10 } }); // kwatera 0 = 10 max
       mockPrisma.guildMember.findUnique.mockResolvedValue(member);
       mockPrisma.guild.findUnique.mockResolvedValue({ ...guild, _count: { members: 10 } });
 
@@ -359,7 +364,7 @@ describe('Guild Invitation Service', () => {
   describe('acceptInvitation', () => {
     it('accepts invitation and creates membership', async () => {
       const invitation = createMockInvitation({
-        guild: { name: 'Test', tag: 'TST', level: 5, disbanded: false, _count: { members: 5 } },
+        guild: { name: 'Test', tag: 'TST', structureKwatera: 5, disbanded: false, _count: { members: 5 } },
       });
       mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
       mockPrisma.guildMember.findUnique.mockResolvedValue(null); // Not in any guild
@@ -397,7 +402,7 @@ describe('Guild Invitation Service', () => {
       const invitation = createMockInvitation({
         expiresAt: new Date(Date.now() - 1000), // Expired
         inviteeId: 'user-456',
-        guild: { name: 'Test', tag: 'TST', level: 5, disbanded: false, _count: { members: 5 } },
+        guild: { name: 'Test', tag: 'TST', structureKwatera: 5, disbanded: false, _count: { members: 5 } },
       });
       mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
       mockPrisma.guildInvitation.update.mockResolvedValue({});
@@ -416,7 +421,7 @@ describe('Guild Invitation Service', () => {
     it('throws GUILD_DISBANDED if guild is disbanded', async () => {
       const invitation = createMockInvitation({
         inviteeId: 'user-456',
-        guild: { name: 'Test', tag: 'TST', level: 5, disbanded: true, _count: { members: 5 } },
+        guild: { name: 'Test', tag: 'TST', structureKwatera: 5, disbanded: true, _count: { members: 5 } },
       });
       mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
 
@@ -427,7 +432,7 @@ describe('Guild Invitation Service', () => {
     it('throws ALREADY_IN_GUILD if user already in guild', async () => {
       const invitation = createMockInvitation({
         inviteeId: 'user-456',
-        guild: { name: 'Test', tag: 'TST', level: 5, disbanded: false, _count: { members: 5 } },
+        guild: { name: 'Test', tag: 'TST', structureKwatera: 5, disbanded: false, _count: { members: 5 } },
       });
       const existingMembership = createMockGuildMember();
 
@@ -441,7 +446,7 @@ describe('Guild Invitation Service', () => {
     it('throws GUILD_FULL if guild at capacity', async () => {
       const invitation = createMockInvitation({
         inviteeId: 'user-456',
-        guild: { name: 'Test', tag: 'TST', level: 1, disbanded: false, _count: { members: 10 } },
+        guild: { name: 'Test', tag: 'TST', structureKwatera: 0, disbanded: false, _count: { members: 10 } },
       });
 
       mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
@@ -454,7 +459,7 @@ describe('Guild Invitation Service', () => {
     it('cancels other pending invitations on accept', async () => {
       const invitation = createMockInvitation({
         inviteeId: 'user-456',
-        guild: { name: 'Test', tag: 'TST', level: 5, disbanded: false, _count: { members: 5 } },
+        guild: { name: 'Test', tag: 'TST', structureKwatera: 5, disbanded: false, _count: { members: 5 } },
       });
       mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
       mockPrisma.guildMember.findUnique.mockResolvedValue(null);
