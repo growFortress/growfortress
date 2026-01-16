@@ -4,8 +4,8 @@
 import { useState } from 'preact/hooks';
 import type { GuildAccessMode } from '@arcade/protocol';
 import { useTranslation } from '../../i18n/useTranslation.js';
-import { showGuildCreate, closeGuildCreate } from '../../state/guild.signals.js';
-import { createGuild } from '../../api/guild.js';
+import { showGuildCreate, closeGuildCreate, openGuildPanel, setGuildData, closeGuildSearch } from '../../state/guild.signals.js';
+import { createGuild, getMyGuild } from '../../api/guild.js';
 import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
 import styles from './GuildCreateModal.module.css';
@@ -82,13 +82,25 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
         },
       });
 
+      // Fetch the newly created guild data
+      const myGuildData = await getMyGuild();
+      setGuildData({
+        guild: myGuildData.guild,
+        membership: myGuildData.membership,
+        bonuses: myGuildData.bonuses,
+      });
+
       // Reset form
       setName('');
       setTag('');
       setDescription('');
       setAccessMode('INVITE_ONLY');
       setMinLevel(1);
+
+      // Close modals and open guild panel
       closeGuildCreate();
+      closeGuildSearch();
+      openGuildPanel('info');
 
       // Callback to refresh guild data
       onSuccess?.();

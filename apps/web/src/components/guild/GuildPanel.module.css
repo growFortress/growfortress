@@ -1,206 +1,170 @@
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--color-bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
+/* ============================================================================
+   GUILD PANEL - Full-screen Sci-fi Design
+   ============================================================================ */
 
-.panel {
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  max-width: 700px;
-  width: 95%;
-  max-height: 85vh;
+/* ============================================================================
+   FULLSCREEN CONTAINER
+   ============================================================================ */
+
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: var(--color-bg);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: panelEnter 0.4s var(--ease-spring);
 }
 
-.header {
+@keyframes panelEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animated background grid */
+.bgGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  animation: gridPulse 8s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================================
+   TOP BAR
+   ============================================================================ */
+
+.topBar {
+  position: relative;
+  height: 64px;
+  background: var(--glass-bg-dark);
+  border-bottom: 1px solid var(--color-primary-30);
+  backdrop-filter: blur(var(--glass-blur-md));
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0 var(--spacing-xl);
+  flex-shrink: 0;
+  z-index: 10;
 }
 
-.headerLeft {
+.topBar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary-50), transparent);
+}
+
+.topBarLeft {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--spacing-lg);
 }
 
-.title {
+.topBarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.backBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-10);
+  border: 1px solid var(--color-primary-30);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.backBtn:hover {
+  background: var(--color-primary-20);
+  border-color: var(--color-primary);
+  transform: translateX(-2px);
+}
+
+.backIcon {
+  font-size: 1.25rem;
+}
+
+.guildIdentity {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.guildIcon {
+  font-size: 1.75rem;
+  filter: drop-shadow(0 0 8px var(--color-primary-50));
+}
+
+.guildName {
   font-family: var(--font-display);
   font-size: 1.5rem;
+  font-weight: 600;
   color: var(--color-text);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  text-shadow: 0 0 20px var(--color-primary-30);
 }
 
 .guildTag {
-  font-size: 0.9rem;
   color: var(--color-primary);
-  font-weight: 600;
-}
-
-.icon {
-  font-size: 1.5rem;
-}
-
-.closeBtn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-60);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  line-height: 1;
-  transition: color 0.2s;
-}
-
-.closeBtn:hover {
-  color: var(--color-text);
-}
-
-/* Stats Bar */
-.statsBar {
-  display: flex;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.statItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 70px;
-}
-
-.statLabel {
-  font-size: 0.7rem;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.statValue {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.statValueHonor {
-  color: var(--color-gold);
-}
-
-.statValueLevel {
-  color: var(--color-primary);
-}
-
-.statValueBonus {
-  color: var(--color-success);
-}
-
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
-  padding: 0.25rem;
-}
-
-.tab {
-  flex: 1;
-  padding: 0.625rem 0.75rem;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-60);
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.tab:hover {
-  color: var(--color-text-80);
-  background: var(--color-bg-hover);
-}
-
-.tabActive {
-  background: transparent;
-  color: var(--color-primary);
-}
-
-/* Underline indicator for active tab */
-.tabActive::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 1rem;
-  right: 1rem;
-  height: 3px;
-  background: var(--color-primary);
-  border-radius: 3px 3px 0 0;
-}
-
-.tabBadge {
-  position: absolute;
-  top: 0.1rem;
-  right: 0.2rem;
-  background: var(--color-danger);
-  color: white;
-  font-size: 0.65rem;
+  font-size: 1rem;
+  margin-left: var(--spacing-sm);
   font-weight: 700;
-  padding: 0.15rem 0.4rem;
-  border-radius: 999px;
-  min-width: 1rem;
-  text-align: center;
-  animation: badgePulse 2s ease-in-out infinite;
 }
 
-@keyframes badgePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-.refreshBtn {
+.refreshBtn,
+.closeBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
-  border: none;
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-md);
   color: var(--color-text-60);
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: var(--radius-sm);
   transition: all 0.2s;
 }
 
-.refreshBtn:hover {
-  color: var(--color-text);
+.refreshBtn:hover,
+.closeBtn:hover {
   background: var(--color-bg-hover);
+  border-color: var(--color-text-60);
+  color: var(--color-text);
 }
 
-.refreshBtnSpinning {
+.refreshIcon {
+  font-size: 1.25rem;
+}
+
+.refreshBtn.refreshing .refreshIcon {
   animation: spin 1s linear infinite;
 }
 
@@ -209,488 +173,384 @@
   to { transform: rotate(360deg); }
 }
 
-/* Content */
-.content {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 300px;
+.closeBtn:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
 }
 
-/* No Guild State */
-.noGuild {
+/* ============================================================================
+   MAIN LAYOUT
+   ============================================================================ */
+
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ============================================================================
+   SIDEBAR
+   ============================================================================ */
+
+.sidebar {
+  width: 260px;
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur-md));
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+  gap: var(--spacing-lg);
+  overflow-y: auto;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, var(--color-primary-30), transparent, var(--color-primary-30));
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.navLabel {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-60);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  position: relative;
+  text-align: left;
+  width: 100%;
+}
+
+.navItem:hover {
+  background: var(--color-primary-10);
+  color: var(--color-text);
+  border-color: var(--color-primary-20);
+}
+
+.navItemActive {
+  background: linear-gradient(135deg, var(--color-primary-15), var(--color-primary-10));
+  border-color: var(--color-primary-40);
+  color: var(--color-primary);
+}
+
+.navItemActive:hover {
+  background: linear-gradient(135deg, var(--color-primary-20), var(--color-primary-15));
+}
+
+.navIcon {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.navText {
+  font-size: 0.9rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.navBadge {
+  background: var(--color-danger);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  min-width: 1.25rem;
+  text-align: center;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+
+.navIndicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--color-primary);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 10px var(--color-primary);
+}
+
+/* Stats Card */
+.statsCard {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  backdrop-filter: blur(var(--glass-blur-sm));
+}
+
+.statsCardTitle {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: var(--spacing-md);
+}
+
+.statsCardDivider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary-30), transparent);
+  margin: var(--spacing-md) 0;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.statHonor {
+  color: var(--color-gold);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+.statLevel {
+  color: var(--color-primary);
+  text-shadow: 0 0 10px var(--color-primary-50);
+}
+
+.statBonus {
+  color: var(--color-success);
+}
+
+/* ============================================================================
+   MAIN CONTENT
+   ============================================================================ */
+
+.content {
+  flex: 1;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+  background: linear-gradient(135deg, var(--color-bg) 0%, rgba(13, 13, 26, 1) 100%);
+  position: relative;
+}
+
+.tabContent {
+  animation: contentFadeIn 0.3s var(--ease-spring);
+}
+
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   LOADING & ERROR STATES
+   ============================================================================ */
+
+.loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  gap: var(--spacing-lg);
+  padding: 4rem;
+  color: var(--color-text-60);
+  font-size: 0.95rem;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: 3rem;
   text-align: center;
-  gap: 1.5rem;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-lg);
+  margin: var(--spacing-xl);
+}
+
+.errorIcon {
+  font-size: 2rem;
+}
+
+/* ============================================================================
+   NO GUILD STATE
+   ============================================================================ */
+
+.noGuild {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: var(--spacing-xl);
+}
+
+.noGuildCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 4rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--glass-blur-md));
+  max-width: 500px;
 }
 
 .noGuildIcon {
-  font-size: 4rem;
-  opacity: 0.5;
+  font-size: 5rem;
+  margin-bottom: var(--spacing-lg);
+  filter: grayscale(0.5) opacity(0.6);
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .noGuildTitle {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: var(--color-text);
-  margin: 0;
+  margin: 0 0 var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .noGuildText {
   color: var(--color-text-60);
-  font-size: 0.9rem;
-  max-width: 300px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 var(--spacing-xl);
+  max-width: 350px;
 }
 
 .noGuildActions {
   display: flex;
-  gap: 1rem;
+  gap: var(--spacing-md);
   flex-wrap: wrap;
   justify-content: center;
 }
 
-/* Guild Info Tab */
-.infoSection {
+.invitationsNotice {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.guildDescription {
-  padding: 1rem;
-  background: var(--color-bg-surface);
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-primary-10);
+  border: 1px solid var(--color-primary-30);
   border-radius: var(--radius-md);
-  color: var(--color-text-80);
   font-size: 0.9rem;
-  line-height: 1.5;
+  color: var(--color-text-80);
 }
 
-.bonusesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
-}
-
-.bonusCard {
-  padding: 0.75rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  text-align: center;
-}
-
-.bonusLabel {
-  font-size: 0.7rem;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.bonusValue {
+.invitationsIcon {
   font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-success);
 }
 
-.progressSection {
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
-}
+/* ============================================================================
+   SHARED STYLES (used by tabs - keeping for compatibility)
+   ============================================================================ */
 
-.progressLabel {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-  margin-bottom: 0.5rem;
-}
-
-.progressBar {
-  height: 8px;
-  background: var(--color-bg-hover);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--color-primary);
-  transition: width 0.3s ease;
-}
-
-/* Members Tab */
-.membersList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.memberCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-guild);
-  border-radius: var(--radius-md);
-  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-
-.memberCard:hover {
-  border-color: var(--color-border-guild-hover);
-  transform: translateX(2px);
-}
-
-/* Role-based card styling */
-.memberCardLeader {
-  border-left: 3px solid var(--color-gold);
-}
-
-.memberCardOfficer {
-  border-left: 3px solid var(--color-primary);
-}
-
-.memberInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.memberAvatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--color-bg-hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-}
-
-.memberDetails {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.memberName {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.memberRole {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.roleLeader {
-  color: var(--color-gold);
-}
-
-.roleOfficer {
-  color: var(--color-primary);
-}
-
-.roleMember {
-  color: var(--color-text-60);
-}
-
-.memberStats {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.memberActions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* Treasury Tab */
-.treasurySection {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.treasuryBalance {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-.treasuryItem {
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--color-bg-surface), rgba(251, 191, 36, 0.03));
-  border: 1px solid var(--color-gold-20);
-  border-radius: var(--radius-md);
-  text-align: center;
-  transition: border-color 0.2s, transform 0.2s;
-}
-
-.treasuryItem:hover {
-  border-color: var(--color-gold-30);
-  transform: translateY(-2px);
-}
-
-.treasuryLabel {
-  font-size: 0.7rem;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.treasuryValue {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.treasuryGold {
-  color: var(--color-gold);
-}
-
-.treasuryDust {
-  color: var(--color-dust);
-}
-
-.treasurySigils {
-  color: var(--color-primary);
-}
-
-.treasuryActions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.treasuryLogs {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.logEntry {
+/* Section headers */
+.sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  margin-bottom: var(--spacing-lg);
 }
 
-.logType {
-  color: var(--color-text-60);
-}
-
-.logAmount {
-  font-weight: 500;
-}
-
-.logAmountPositive {
-  color: var(--color-success);
-}
-
-.logAmountNegative {
-  color: var(--color-danger);
-}
-
-.logTime {
-  color: var(--color-text-60);
-  font-size: 0.7rem;
-}
-
-/* Battles Tab */
-.battlesList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.battleCard {
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-guild);
-  border-radius: var(--radius-md);
-  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-
-.battleCard:hover {
-  border-color: var(--color-border-guild-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--elevation-1);
-}
-
-/* Status-based battle card styling */
-.battleCardPending {
-  border-left: 3px solid var(--color-warning);
-}
-
-.battleCardActive {
-  border-left: 3px solid var(--color-primary);
-}
-
-.battleCardResolved {
-  border-left: 3px solid var(--color-success);
-}
-
-.battleHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.battleGuilds {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-}
-
-.battleVs {
-  color: var(--color-text-60);
-  font-size: 0.8rem;
-}
-
-.battleStatus {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.statusPending {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.4);
-}
-
-.statusPending::before {
-  content: '\23F1';
-}
-
-.statusAccepted {
-  background: rgba(0, 229, 255, 0.15);
-  color: var(--color-primary);
-  border: 1px solid rgba(0, 229, 255, 0.3);
-}
-
-.statusAccepted::before {
-  content: '\2713';
-}
-
-.statusInProgress {
-  background: rgba(0, 229, 255, 0.15);
-  color: var(--color-primary);
-  border: 1px solid rgba(0, 229, 255, 0.3);
-}
-
-.statusInProgress::before {
-  content: '\26A1';
-}
-
-.statusResolved {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.4);
-}
-
-.statusResolved::before {
-  content: '\2714';
-}
-
-.statusDeclined {
-  background: rgba(156, 163, 175, 0.15);
-  color: var(--color-text-60);
-  border: 1px solid rgba(156, 163, 175, 0.3);
-}
-
-.statusDeclined::before {
-  content: '\2717';
-}
-
-.statusExpired {
-  background: rgba(156, 163, 175, 0.15);
-  color: var(--color-text-60);
-  border: 1px solid rgba(156, 163, 175, 0.3);
-}
-
-.statusExpired::before {
-  content: '\231B';
-}
-
-.statusCancelled {
-  background: rgba(156, 163, 175, 0.15);
-  color: var(--color-text-60);
-  border: 1px solid rgba(156, 163, 175, 0.3);
-}
-
-.statusCancelled::before {
-  content: '\2012';
-}
-
-.battleMeta {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-  margin-bottom: 0.5rem;
-}
-
-.battleActions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.battleResult {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-sm);
-  margin-top: 0.5rem;
-}
-
-.resultWin {
-  color: var(--color-success);
-  font-weight: 600;
-}
-
-.resultLoss {
-  color: var(--color-danger);
-  font-weight: 600;
-}
-
-.honorChange {
+.sectionTitle {
+  font-family: var(--font-display);
   font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-80);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
-.honorPositive {
-  color: var(--color-success);
+.sectionTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-primary-30), transparent);
+  min-width: 50px;
 }
 
-.honorNegative {
-  color: var(--color-danger);
+/* Cards */
+.card {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  transition: all 0.2s var(--ease-spring);
+}
+
+.card:hover {
+  border-color: var(--color-primary-30);
+  box-shadow: 0 0 20px var(--color-primary-10);
 }
 
 /* Empty state */
@@ -699,1638 +559,364 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
-  color: var(--color-text-60);
+  padding: 4rem 2rem;
   text-align: center;
 }
 
 .emptyIcon {
   font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.6;
-  background: var(--color-primary-10);
-  padding: 1rem;
-  border-radius: var(--radius-lg);
-  border: 2px dashed var(--color-primary-30);
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.4;
 }
 
 .emptyText {
   font-size: 1rem;
-  color: var(--color-text-80);
-  max-width: 280px;
+  color: var(--color-text-60);
+  max-width: 300px;
   line-height: 1.5;
 }
 
 .emptyHint {
-  margin-top: 0.75rem;
+  margin-top: var(--spacing-md);
   font-size: 0.85rem;
   color: var(--color-primary);
   opacity: 0.8;
 }
 
-/* Loading */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-}
-
-/* Error */
-.error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: var(--color-danger);
-  text-align: center;
-}
-
-/* Invitations badge in header */
-.invitationsBadge {
-  background: var(--color-primary);
-  color: white;
-  font-size: 0.7rem;
-  padding: 0.15rem 0.4rem;
-  border-radius: 999px;
-  margin-left: 0.5rem;
-}
-
-/* Section headers */
-.sectionHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.sectionTitle {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-80);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.sectionTitle::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, var(--color-primary-30), transparent);
-}
-
-/* Deposit/Withdraw form */
-.depositForm {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
-}
-
-.depositInput {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.depositInput input {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
+/* Form controls */
+.input {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
   background: var(--color-bg);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: 0.9rem;
+  transition: all 0.2s;
 }
 
-.depositInput input:focus {
+.input:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-20);
 }
 
-/* Battle Hero Section */
-.battleHeroSection {
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
+.input::placeholder {
+  color: var(--color-text-40);
 }
 
-.currentBattleHero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.battleHeroInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.battleHeroName {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.battleHeroStats {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.selectBattleHero {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.heroSelect {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
+.select {
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-bg);
-  border: 1px solid var(--color-border-subtle);
+  border: 1px solid var(--color-neutral);
   border-radius: var(--radius-sm);
   color: var(--color-text);
   font-size: 0.9rem;
   cursor: pointer;
 }
 
-.heroSelect option {
+.select option {
   background: #1a1a2e;
   color: #e0e0e0;
 }
 
-.heroSelect:focus {
+.select:focus {
   outline: none;
   border-color: var(--color-primary);
 }
 
-.heroSelect:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.battleHeroHint {
-  margin: 0.75rem 0 0;
-  padding: 0.5rem;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  color: var(--color-text-60);
-  line-height: 1.4;
-}
-
-.sectionBadge {
-  font-size: 0.65rem;
-  padding: 0.15rem 0.4rem;
-  background: var(--color-primary);
-  color: white;
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Battle List in Battles Tab */
-.battleList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  text-align: center;
-  color: var(--color-text-80);
-}
-
-.hint {
-  font-size: 0.85rem;
-  color: var(--color-primary);
-  margin-top: 0.5rem;
-  opacity: 0.8;
-}
-
+/* Badge */
 .badge {
-  background: var(--color-bg-hover);
-  color: var(--color-text-60);
-  font-size: 0.75rem;
-  padding: 0.15rem 0.4rem;
-  border-radius: var(--radius-sm);
-  margin-left: 0.5rem;
-}
-
-.tabContent {
-  padding: 0.5rem 0;
-}
-
-.resultDraw {
-  color: var(--color-warning);
-  font-weight: 600;
-}
-
-.survivors {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.revengeBadge {
-  font-size: 0.65rem;
-  padding: 0.1rem 0.3rem;
-  background: var(--color-warning);
-  color: var(--color-bg);
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.replayBtn {
-  margin-left: auto;
-  padding: 0.3rem 0.6rem;
-  background: var(--color-primary);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.replayBtn:hover {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-}
-
-/* ============================================================================
-   ROSTER TAB (Leader view)
-   ============================================================================ */
-
-.rosterHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.rosterStats {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.rosterStatItem {
-  display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
-}
-
-.rosterStatValue {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.rosterStatReady {
-  color: var(--color-success);
-}
-
-.rosterStatLabel {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.rosterFilter {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.filterSelect {
-  padding: 0.4rem 0.6rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.filterSelect option {
-  background: #1a1a2e;
-  color: #e0e0e0;
-}
-
-.filterSelect:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-/* Roster Table */
-.rosterTable {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.rosterTableHeader {
-  display: flex;
-  background: var(--color-bg-hover);
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding: 0.75rem 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.rosterTableHeader .rosterCol {
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.2s;
-}
-
-.rosterTableHeader .rosterCol:hover {
-  color: var(--color-primary);
-}
-
-.rosterTableBody {
-  max-height: 350px;
-  overflow-y: auto;
-}
-
-.rosterRow {
-  display: flex;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border-subtle);
-  font-size: 0.85rem;
-  transition: background 0.2s;
-}
-
-.rosterRow:last-child {
-  border-bottom: none;
-}
-
-.rosterRow:hover {
-  background: var(--color-bg-hover);
-}
-
-.rosterRowReady {
-  background: rgba(34, 197, 94, 0.05);
-}
-
-.rosterRowReady:hover {
-  background: rgba(34, 197, 94, 0.1);
-}
-
-.rosterCol {
-  display: flex;
-  align-items: center;
-}
-
-.rosterColName {
-  flex: 2;
-  min-width: 100px;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.rosterColRole {
-  flex: 1;
-  min-width: 60px;
-}
-
-.rosterColPower {
-  flex: 1;
-  min-width: 60px;
-  font-weight: 500;
-  color: var(--color-primary);
-}
-
-.rosterColWave {
-  flex: 0.8;
-  min-width: 50px;
-  color: var(--color-text-60);
-}
-
-.rosterColHero {
-  flex: 2;
-  min-width: 120px;
-}
-
-.battleHeroCell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.battleHeroCellName {
-  font-weight: 500;
-  color: var(--color-success);
-}
-
-.battleHeroCellStats {
-  font-size: 0.7rem;
-  color: var(--color-text-60);
-}
-
-.noBattleHero {
-  color: var(--color-text-60);
-  font-style: italic;
-}
-
-.rosterEmpty {
-  padding: 2rem;
-  text-align: center;
-  color: var(--color-text-60);
-}
-
-.rosterHint {
-  margin: 1rem 0 0;
-  padding: 0.75rem;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  color: var(--color-text-60);
-  line-height: 1.4;
-}
-
-/* ============================================================================
-   TOWER RACE TAB
-   ============================================================================ */
-
-.raceHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--color-bg-surface) 0%, var(--color-bg-hover) 100%);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-}
-
-.raceInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.raceTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.raceWeek {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.raceStatus {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
-}
-
-.statusBadge {
-  font-size: 0.7rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-}
-
-.statusActive {
-  background: rgba(34, 197, 94, 0.2);
-  color: var(--color-success);
-}
-
-.statusEnded {
-  background: rgba(156, 163, 175, 0.2);
-  color: var(--color-text-60);
-}
-
-.timeRemaining {
-  font-size: 0.85rem;
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-/* My Guild Stats in Tower Race */
-.myGuildStats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-primary);
-  border-left: 4px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-}
-
-.myGuildRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.myGuildLabel {
-  font-size: 0.85rem;
-  color: var(--color-text-60);
-}
-
-.myGuildRank {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-gold);
-}
-
-.myGuildWaves {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.myContribution {
-  font-size: 0.9rem;
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-/* Toggle Button */
-.toggleBtn {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-60);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 1rem;
-}
-
-.toggleBtn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text);
-}
-
-/* Guild Contributions List */
-.contributionsList {
-  margin-bottom: 1rem;
-}
-
-.contributionsTable {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.contributionRow {
-  display: flex;
-  align-items: center;
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.contributionRow:last-child {
-  border-bottom: none;
-}
-
-.contributionRank {
-  width: 40px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-60);
-}
-
-.contributionName {
-  flex: 1;
-  font-size: 0.9rem;
-  color: var(--color-text);
-}
-
-.contributionWaves {
-  font-size: 0.85rem;
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-/* Leaderboard */
-.leaderboardList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.leaderboardEntry {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  transition: all 0.2s;
-}
-
-.leaderboardEntry:hover {
-  background: var(--color-bg-hover);
-}
-
-.leaderboardEntryMine {
-  border-color: var(--color-primary);
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.leaderboardEntryMine:hover {
-  background: rgba(59, 130, 246, 0.1);
-}
-
-.entryRank {
-  width: 50px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-60);
-}
-
-.rankGold {
-  color: var(--color-gold);
-}
-
-.rankSilver {
-  color: #9ca3af;
-}
-
-.rankBronze {
-  color: #d97706;
-}
-
-.entryGuild {
-  flex: 1;
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.entryGuildName {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.entryGuildTag {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.entryWaves {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-/* Rewards Info */
-.rewardsInfo {
-  padding: 1rem;
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: var(--radius-md);
-}
-
-.rewardsInfo h4 {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-gold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.rewardsList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.rewardRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-}
-
-.rewardRank {
-  color: var(--color-text-60);
-}
-
-.rewardAmount {
-  color: var(--color-gold);
-  font-weight: 500;
-}
-
-/* ============================================================================
-   GUILD BOSS TAB
-   ============================================================================ */
-
-.bossHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, var(--color-bg-surface) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-}
-
-.bossInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.bossTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-danger);
-  margin: 0;
-}
-
-.bossWeek {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.bossStatus {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
-}
-
-/* Boss HP Bar */
-.bossHpSection {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.bossHpBar {
-  height: 24px;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  margin-bottom: 0.5rem;
-}
-
-.bossHpFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-danger) 0%, rgba(239, 68, 68, 0.8) 100%);
-  transition: width 0.5s ease;
-}
-
-.bossHpText {
-  text-align: center;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: 0.5rem;
-}
-
-.bossWeakness {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.weaknessType {
-  color: var(--color-warning);
-  font-weight: 600;
-}
-
-/* Attack Section */
-.attackSection {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.alreadyAttacked {
-  text-align: center;
-  padding: 0.75rem;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-60);
-  font-size: 0.9rem;
-}
-
-.attackResult {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-radius: var(--radius-md);
-  text-align: center;
-}
-
-.attackDamage {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-danger);
-  margin-bottom: 0.25rem;
-}
-
-.attackCoins {
-  font-size: 0.85rem;
-  color: var(--color-gold);
-  font-weight: 500;
-}
-
-.todaysAttempt {
-  margin-top: 0.75rem;
-  padding: 0.5rem;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--color-text-60);
-}
-
-.attackError {
-  margin-top: 0.75rem;
-  padding: 0.5rem;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--color-danger);
-}
-
-/* Boss Stats (reuse myGuildStats pattern) */
-.myBossStats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-danger);
-  border-left: 4px solid var(--color-danger);
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-}
-
-/* Boss Leaderboard Entry - additional styles for damage display */
-.entryBossDamage {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
-}
-
-.entryDamage {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-danger);
-}
-
-.entryParticipants {
-  font-size: 0.7rem;
-  color: var(--color-text-60);
-}
-
-/* ============================================================================
-   ATTACK CONTROLS SECTION
-   ============================================================================ */
-
-.attackControls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.attackStats {
-  display: flex;
-  gap: 1.5rem;
-  font-size: 0.875rem;
-  color: var(--color-text-60);
-}
-
-.attackStat {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.attackStatValue {
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.attackStatReady {
-  color: var(--color-success);
-}
-
-.attackActions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-/* Shield Section */
-.shieldSection {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.shieldActive {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-success);
-  font-weight: 600;
-}
-
-.shieldIcon {
-  font-size: 1.25rem;
-}
-
-.shieldInactive {
-  color: var(--color-text-60);
-}
-
-.shieldTimer {
-  font-size: 0.85rem;
-  color: var(--color-warning);
-  font-weight: 500;
-}
-
-.shieldLimit {
-  font-size: 0.75rem;
-  color: var(--color-text-60);
-}
-
-/* ============================================================================
-   ATTACK MODAL
-   ============================================================================ */
-
-.attackModalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--color-bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2100;
-}
-
-.attackModal {
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-lg);
-  width: 500px;
-  max-width: 95%;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-lg);
-}
-
-.attackModalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.attackModalTitle {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.attackModalSubtitle {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-  margin: 0;
-  margin-top: 0.25rem;
-}
-
-.attackModalClose {
-  background: transparent;
-  border: none;
-  color: var(--color-text-60);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  line-height: 1;
-  transition: color 0.2s;
-}
-
-.attackModalClose:hover {
-  color: var(--color-text);
-}
-
-.attackModalContent {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem 1.25rem;
-}
-
-.attackModalFooter {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-/* Target Search */
-.targetSearch {
-  margin-bottom: 1rem;
-}
-
-.targetSearchInput {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  font-size: 0.9rem;
-}
-
-.targetSearchInput:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.targetSearchInput::placeholder {
-  color: var(--color-text-60);
-}
-
-.targetList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.targetCard {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.targetCard:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-border);
-}
-
-.targetCardSelected {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: var(--color-primary);
-}
-
-.targetCardShielded {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.targetCardShielded:hover {
-  background: var(--color-bg-surface);
-  border-color: var(--color-border-subtle);
-}
-
-.targetCardInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.targetCardName {
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.targetCardTag {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.targetCardHonor {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-gold);
-}
-
-.targetCardShieldBadge {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.4rem;
-  background: rgba(34, 197, 94, 0.2);
-  color: var(--color-success);
-  border-radius: var(--radius-sm);
-}
-
-.targetEmpty {
-  text-align: center;
-  padding: 2rem;
-  color: var(--color-text-60);
-}
-
-/* Member Selection */
-.memberSelectHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.memberSelectCount {
-  font-size: 0.9rem;
-  color: var(--color-text-60);
-}
-
-.memberSelectCountValue {
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.memberSelectList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 280px;
-  overflow-y: auto;
-}
-
-.memberSelectRow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.memberSelectRow:hover {
-  background: var(--color-bg-hover);
-}
-
-.memberSelectRowSelected {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: var(--color-success);
-}
-
-.memberSelectRowDisabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.memberSelectRowDisabled:hover {
-  background: var(--color-bg-surface);
-}
-
-.memberSelectCheckbox {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--color-success);
-}
-
-.memberSelectInfo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.memberSelectName {
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.memberSelectHero {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.memberSelectPower {
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.selectionSummary {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-md);
-  margin-top: 1rem;
-}
-
-.selectionSummaryLabel {
-  color: var(--color-text-60);
-}
-
-.teamPower {
-  font-weight: 600;
-  color: var(--color-gold);
-}
-
-/* Confirmation Step */
-.confirmSection {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.confirmTarget {
-  text-align: center;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
-}
-
-.confirmTargetLabel {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-  margin-bottom: 0.25rem;
-}
-
-.confirmTargetName {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.confirmTargetHonor {
-  font-size: 0.9rem;
-  color: var(--color-gold);
-  margin-top: 0.25rem;
-}
-
-.confirmTeam {
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
-}
-
-.confirmTeamTitle {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-80);
-  margin-bottom: 0.75rem;
-}
-
-.confirmTeamList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.confirmTeamMember {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.confirmTeamMember:last-child {
-  border-bottom: none;
-}
-
-.confirmTeamMemberName {
-  color: var(--color-text);
-}
-
-.confirmTeamMemberHero {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-.honorWarning {
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  padding: 0.75rem;
-  border-radius: var(--radius-md);
-}
-
-.honorWarningTitle {
-  font-size: 0.8rem;
-  color: var(--color-warning);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.honorWarningRow {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  margin-bottom: 0.25rem;
-}
-
-.honorWin {
-  color: var(--color-success);
-  font-weight: 500;
-}
-
-.honorLose {
-  color: var(--color-danger);
-  font-weight: 500;
-}
-
-/* Attack Modal Loading */
-.attackModalLoading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-
-/* Attack Modal Error */
-.attackModalError {
-  padding: 0.75rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-md);
-  color: var(--color-danger);
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
-}
-
-/* ============================================================================
-   ANIMATIONS
-   ============================================================================ */
-
-/* Staggered entrance animation for lists */
-@keyframes slideIn {
-  0% {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.memberCard {
-  animation: slideIn 0.3s ease-out backwards;
-}
-
-.memberCard:nth-child(1) { animation-delay: 0ms; }
-.memberCard:nth-child(2) { animation-delay: 40ms; }
-.memberCard:nth-child(3) { animation-delay: 80ms; }
-.memberCard:nth-child(4) { animation-delay: 120ms; }
-.memberCard:nth-child(5) { animation-delay: 160ms; }
-.memberCard:nth-child(6) { animation-delay: 200ms; }
-.memberCard:nth-child(7) { animation-delay: 240ms; }
-.memberCard:nth-child(8) { animation-delay: 280ms; }
-
-.battleCard {
-  animation: slideIn 0.3s ease-out backwards;
-}
-
-.battleCard:nth-child(1) { animation-delay: 0ms; }
-.battleCard:nth-child(2) { animation-delay: 60ms; }
-.battleCard:nth-child(3) { animation-delay: 120ms; }
-.battleCard:nth-child(4) { animation-delay: 180ms; }
-.battleCard:nth-child(5) { animation-delay: 240ms; }
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .memberCard,
-  .battleCard {
-    animation: none;
-  }
-
-  .tabBadge {
-    animation: none;
-  }
-}
-
-/* ============================================================================
-   GUILD APPLICATIONS
-   ============================================================================ */
-
-.applicationsList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.applicationCard {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  gap: 1rem;
-  transition: border-color 0.2s;
-}
-
-.applicationCard:hover {
-  border-color: var(--color-primary-40);
-}
-
-.applicationInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.applicationHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.applicantName {
-  font-weight: 600;
-  color: var(--color-text);
-  font-size: 0.95rem;
-}
-
-.applicationExpiry {
-  font-size: 0.75rem;
-  color: var(--color-text-60);
-  white-space: nowrap;
-}
-
-.applicantStats {
-  display: flex;
-  gap: 0.75rem;
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-  margin-bottom: 0.5rem;
-}
-
-.applicationMessage {
-  font-size: 0.85rem;
-  color: var(--color-text-80);
-  font-style: italic;
-  padding: 0.5rem;
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-sm);
-  margin-top: 0.5rem;
-}
-
-.applicationError {
-  font-size: 0.8rem;
-  color: var(--color-danger);
-  margin-top: 0.5rem;
-}
-
-.applicationActions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.loadingState {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: var(--color-text-60);
-}
-
-.errorBanner {
-  background: var(--color-danger-10);
-  color: var(--color-danger);
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.pageInfo {
-  font-size: 0.85rem;
-  color: var(--color-text-60);
-}
-
-/* Access Mode Icons */
-.accessModeIcon {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--color-primary-20);
+  color: var(--color-primary);
   border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .guildName {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .sidebar::after {
+    display: none;
+  }
+
+  .nav {
+    flex-direction: row;
+    gap: var(--spacing-xs);
+    flex: 1;
+  }
+
+  .navLabel {
+    display: none;
+  }
+
+  .navItem {
+    flex-direction: column;
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-width: auto;
+    gap: var(--spacing-xs);
+  }
+
+  .navText {
+    font-size: 0.7rem;
+  }
+
+  .navIndicator {
+    left: 50%;
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .statsCard {
+    display: none;
+  }
+
+  .content {
+    padding: var(--spacing-lg);
+  }
+
+  .topBar {
+    padding: 0 var(--spacing-lg);
+  }
+
+  .guildName {
+    font-size: 1rem;
+  }
+
+  .guildTag {
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fullscreen,
+  .tabContent,
+  .navItem,
+  .card {
+    animation: none;
+  }
+
+  .bgGrid {
+    animation: none;
+    opacity: 0.5;
+  }
+
+  .navBadge {
+    animation: none;
+  }
+
+  .noGuildIcon {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   INFO TAB STYLES
+   ============================================================================ */
+
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.guildDescription {
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-text-80);
+  min-height: 60px;
+}
+
+textarea.guildDescription {
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Progress section */
+.progressSection {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
   font-size: 0.9rem;
 }
 
-.accessModeOpen {
-  background: var(--color-success-20);
-  color: var(--color-success);
+.progressLabel span:first-child {
+  color: var(--color-text-80);
+  font-weight: 500;
 }
 
-.accessModeApply {
-  background: var(--color-primary-20);
+.progressLabel span:last-child {
   color: var(--color-primary);
+  font-family: var(--font-display);
+  font-weight: 600;
 }
 
-.accessModeInviteOnly {
-  background: var(--color-warning-20);
-  color: var(--color-warning);
+.progressBar {
+  height: 8px;
+  background: var(--color-bg);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
 }
 
-.accessModeClosed {
-  background: var(--color-danger-20);
-  color: var(--color-danger);
+.progressBar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--color-primary-10), var(--color-primary-20));
+  border-radius: inherit;
 }
 
-/* Settings Form */
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  border-radius: inherit;
+  position: relative;
+  transition: width 0.5s var(--ease-spring);
+  box-shadow: 0 0 10px var(--color-primary-50);
+}
+
+.progressFill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+  border-radius: inherit;
+}
+
+/* Bonuses grid */
+.bonusesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.bonusCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.bonusCard:hover {
+  border-color: var(--color-primary-30);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px var(--color-primary-10);
+}
+
+.bonusLabel {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.bonusValue {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-success);
+  text-shadow: 0 0 15px currentColor;
+}
+
+/* Settings form */
 .settingsForm {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
 }
 
 .settingsRow {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--spacing-sm);
 }
 
 .settingsLabel {
   font-size: 0.85rem;
-  color: var(--color-text-80);
   font-weight: 500;
+  color: var(--color-text-80);
 }
 
 .settingsSelect {
-  padding: 0.5rem 0.75rem;
-  background: var(--color-bg-panel);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.settingsSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-20);
 }
 
 .settingsSelect option {
@@ -2338,68 +924,429 @@
   color: #e0e0e0;
 }
 
-.settingsSelect:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
 .settingsInput {
-  padding: 0.5rem 0.75rem;
-  background: var(--color-bg-panel);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: 0.9rem;
-  width: 100px;
+  max-width: 120px;
+  transition: all 0.2s;
 }
 
 .settingsInput:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-20);
 }
 
 .settingsHint {
-  font-size: 0.75rem;
-  color: var(--color-text-60);
-  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+  line-height: 1.4;
 }
 
 .settingsError {
-  font-size: 0.85rem;
+  padding: var(--spacing-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
   color: var(--color-danger);
-  padding: 0.5rem 0.75rem;
-  background: var(--color-danger-10);
-  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
 }
 
 .settingsActions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
 }
 
-/* Settings Display */
+/* Settings display (read-only view) */
 .settingsDisplay {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
 }
 
 .settingsDisplayItem {
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settingsDisplayItem:last-child {
+  border-bottom: none;
 }
 
 .settingsDisplayLabel {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--color-text-60);
 }
 
 .settingsDisplayValue {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+/* ============================================================================
+   MEMBERS TAB STYLES
+   ============================================================================ */
+
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.memberRow:hover {
+  border-color: var(--color-primary-30);
+  background: var(--glass-bg);
+}
+
+.memberAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary-20);
+  border: 2px solid var(--color-primary-30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.memberRole {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.memberStats {
+  display: flex;
+  gap: var(--spacing-lg);
   font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.memberStat {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.memberStatValue {
   color: var(--color-text);
   font-weight: 500;
+  font-family: var(--font-display);
+}
+
+.memberActions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Role badges */
+.roleBadge {
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.roleBadge.leader {
+  background: linear-gradient(135deg, var(--color-gold), #f59e0b);
+  color: #000;
+}
+
+.roleBadge.officer {
+  background: var(--color-primary-30);
+  color: var(--color-primary);
+}
+
+.roleBadge.member {
+  background: var(--color-neutral);
+  color: var(--color-text-60);
+}
+
+/* ============================================================================
+   TREASURY TAB STYLES
+   ============================================================================ */
+
+.treasuryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.treasuryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xl);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.treasuryIcon {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.treasuryLabel {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.treasuryValue {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+}
+
+/* Transaction log */
+.logList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.logEntry {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.logIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.logContent {
+  flex: 1;
+}
+
+.logAmount {
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+
+.logAmount.positive {
+  color: var(--color-success);
+}
+
+.logAmount.negative {
+  color: var(--color-danger);
+}
+
+.logTime {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+}
+
+/* ============================================================================
+   BATTLES TAB STYLES
+   ============================================================================ */
+
+.battlesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.battleCard {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  gap: var(--spacing-lg);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.battleCard:hover {
+  border-color: var(--color-primary-30);
+}
+
+.battleGuild {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.battleGuildName {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.battleGuildTag {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.battleVs {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.battleResult {
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.battleResult.victory {
+  background: var(--color-success-20);
+  color: var(--color-success);
+}
+
+.battleResult.defeat {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+}
+
+.battleResult.pending {
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+}
+
+.battleScore {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ============================================================================
+   APPLICATIONS TAB STYLES
+   ============================================================================ */
+
+.applicationsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.applicationCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.applicationCard:hover {
+  border-color: var(--color-primary-30);
+}
+
+.applicationHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.applicationAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary-20);
+  border: 2px solid var(--color-primary-30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.applicationInfo {
+  flex: 1;
+}
+
+.applicationName {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.applicationMeta {
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.applicationMessage {
+  padding: var(--spacing-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  color: var(--color-text-80);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.applicationActions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
 }

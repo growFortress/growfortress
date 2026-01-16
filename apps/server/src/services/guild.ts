@@ -137,14 +137,21 @@ export async function createGuild(
 
   // Create guild with leader in a transaction
   const guild = await prisma.$transaction(async (tx) => {
+    // Build settings object
+    const settings = {
+      minLevel: input.settings?.minLevel ?? 1,
+      autoAcceptInvites: false,
+      battleCooldownHours: 24,
+      accessMode: input.settings?.accessMode ?? 'INVITE_ONLY',
+    };
+
     // Create the guild
     const newGuild = await tx.guild.create({
       data: {
         name: input.name,
         tag: input.tag.toUpperCase(),
         description: input.description || '',
-        ...(input.settings?.accessMode && { accessMode: input.settings.accessMode }),
-        ...(input.settings?.minLevel && { minLevel: input.settings.minLevel }),
+        settings,
       },
     });
 

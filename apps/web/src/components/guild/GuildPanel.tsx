@@ -1,5 +1,6 @@
 /**
- * Guild Panel - Main guild interface component
+ * Guild Panel - Full-screen guild interface
+ * Sci-fi themed with sidebar navigation
  */
 import { useEffect, useCallback, useState } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
@@ -46,6 +47,14 @@ import styles from './GuildPanel.module.css';
 
 type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications';
 
+interface NavItem {
+  id: TabType;
+  label: string;
+  icon: string;
+  officerOnly?: boolean;
+  badge?: number;
+}
+
 export function GuildPanel() {
   const { t } = useTranslation('common');
   const [refreshing, setRefreshing] = useState(false);
@@ -57,12 +66,22 @@ export function GuildPanel() {
     }
   }, [showGuildPanel.value]);
 
+  // Handle Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showGuildPanel.value) {
+        closeGuildPanel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const loadGuildData = useCallback(async () => {
     guildLoading.value = true;
     guildError.value = null;
 
     try {
-      // Load main guild data
       const myGuildData = await getMyGuild();
       setGuildData({
         guild: myGuildData.guild,
@@ -70,27 +89,22 @@ export function GuildPanel() {
         bonuses: myGuildData.bonuses,
       });
 
-      // Level info is computed from guild level
       if (myGuildData.guild) {
         guildLevelInfo.value = {
           level: myGuildData.guild.level,
           xp: myGuildData.guild.xp,
           totalXp: myGuildData.guild.totalXp,
-          xpToNextLevel: 10000 * myGuildData.guild.level, // Simplified
+          xpToNextLevel: 10000 * myGuildData.guild.level,
           bonuses: myGuildData.bonuses || { goldBoost: 0, dustBoost: 0, xpBoost: 0 },
           memberCapacity: 10 + myGuildData.guild.level,
         };
-      }
 
-      // If player is in a guild, load additional data
-      if (myGuildData.guild) {
         await Promise.all([
           loadTreasuryData(myGuildData.guild.id),
           loadBattlesData(myGuildData.guild.id),
         ]);
       }
 
-      // Load received invitations regardless of guild membership
       const invitationsData = await getReceivedInvitations({ status: 'PENDING', limit: 20, offset: 0 });
       receivedInvitations.value = invitationsData.invitations;
     } catch (error) {
@@ -149,163 +163,160 @@ export function GuildPanel() {
   const bonuses = guildBonuses.value;
   const pendingInvitations = invitationCount.value;
 
+  // Navigation items
+  const navItems: NavItem[] = [
+    { id: 'info', label: t('guild.tabs.info'), icon: '📊' },
+    { id: 'members', label: t('guild.tabs.members'), icon: '👥' },
+    { id: 'treasury', label: t('guild.tabs.treasury'), icon: '💰' },
+    { id: 'battles', label: t('guild.tabs.battles'), icon: '⚔️' },
+    { id: 'tower-race', label: t('guild.tabs.race'), icon: '🏆' },
+    { id: 'boss', label: t('guild.tabs.boss'), icon: '👹' },
+    { id: 'roster', label: t('guild.tabs.roster'), icon: '📋', officerOnly: true },
+    { id: 'applications', label: 'Podania', icon: '📨', officerOnly: true, badge: pendingApplicationsCount.value },
+  ];
+
   return (
-    <div
-      class={styles.overlay}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) closeGuildPanel();
-      }}
-    >
-      <div class={styles.panel}>
-        {/* Header */}
-        <div class={styles.header}>
-          <div class={styles.headerLeft}>
-            <span class={styles.icon}>🏰</span>
-            <h2 class={styles.title}>
+    <div class={styles.fullscreen}>
+      {/* Animated background grid */}
+      <div class={styles.bgGrid} />
+
+      {/* Top Bar */}
+      <header class={styles.topBar}>
+        <div class={styles.topBarLeft}>
+          <button class={styles.backBtn} onClick={closeGuildPanel} title="Zamknij">
+            <span class={styles.backIcon}>←</span>
+          </button>
+          <div class={styles.guildIdentity}>
+            <span class={styles.guildIcon}>🏰</span>
+            <h1 class={styles.guildName}>
               {guild ? guild.name : t('guild.title')}
-              {guild && <span class={styles.guildTag}> [{guild.tag}]</span>}
-            </h2>
-            {pendingInvitations > 0 && !isInGuild.value && (
-              <span class={styles.invitationsBadge}>{pendingInvitations}</span>
-            )}
+              {guild && <span class={styles.guildTag}>[{guild.tag}]</span>}
+            </h1>
           </div>
+        </div>
+        <div class={styles.topBarRight}>
+          <button
+            class={`${styles.refreshBtn} ${refreshing ? styles.refreshing : ''}`}
+            onClick={refreshData}
+            disabled={refreshing}
+            title={t('guild.refresh')}
+          >
+            <span class={styles.refreshIcon}>⟳</span>
+          </button>
           <button class={styles.closeBtn} onClick={closeGuildPanel}>
-            ×
+            ✕
           </button>
         </div>
+      </header>
 
-        {/* Loading state */}
-        {guildLoading.value && (
-          <div class={styles.loading}>
-            <Spinner />
-          </div>
-        )}
+      {/* Main Layout */}
+      <div class={styles.layout}>
+        {/* Sidebar */}
+        {isInGuild.value && guild && (
+          <aside class={styles.sidebar}>
+            {/* Navigation */}
+            <nav class={styles.nav}>
+              <div class={styles.navLabel}>NAWIGACJA</div>
+              {navItems
+                .filter(item => !item.officerOnly || isGuildOfficer.value)
+                .map(item => (
+                  <button
+                    key={item.id}
+                    class={`${styles.navItem} ${activeTab === item.id ? styles.navItemActive : ''}`}
+                    onClick={() => handleTabClick(item.id)}
+                  >
+                    <span class={styles.navIcon}>{item.icon}</span>
+                    <span class={styles.navText}>{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span class={styles.navBadge}>{item.badge}</span>
+                    )}
+                    {activeTab === item.id && <span class={styles.navIndicator} />}
+                  </button>
+                ))}
+            </nav>
 
-        {/* Error state */}
-        {guildError.value && (
-          <div class={styles.error}>{guildError.value}</div>
-        )}
-
-        {/* No guild state */}
-        {!guildLoading.value && !guildError.value && !isInGuild.value && (
-          <NoGuildView
-            pendingInvitations={pendingInvitations}
-            onRefresh={refreshData}
-            t={t}
-          />
-        )}
-
-        {/* Guild content */}
-        {!guildLoading.value && !guildError.value && isInGuild.value && guild && (
-          <>
-            {/* Stats Bar */}
-            <div class={styles.statsBar}>
-              <div class={styles.statItem}>
-                <span class={styles.statLabel}>{t('guild.honor')}</span>
-                <span class={`${styles.statValue} ${styles.statValueHonor}`}>
+            {/* Stats Card */}
+            <div class={styles.statsCard}>
+              <div class={styles.statsCardTitle}>STATYSTYKI</div>
+              <div class={styles.statRow}>
+                <span class={styles.statLabel}>Honor</span>
+                <span class={`${styles.statValue} ${styles.statHonor}`}>
                   {guild.honor.toLocaleString()}
                 </span>
               </div>
-              <div class={styles.statItem}>
-                <span class={styles.statLabel}>{t('guild.members')}</span>
+              <div class={styles.statRow}>
+                <span class={styles.statLabel}>Poziom</span>
+                <span class={`${styles.statValue} ${styles.statLevel}`}>
+                  {guild.level}
+                </span>
+              </div>
+              <div class={styles.statRow}>
+                <span class={styles.statLabel}>Członkowie</span>
                 <span class={styles.statValue}>
                   {memberCount.value}/{guildLevelInfo.value?.memberCapacity || 10}
                 </span>
               </div>
-              <div class={styles.statItem}>
-                <span class={styles.statLabel}>{t('guild.level')}</span>
-                <span class={`${styles.statValue} ${styles.statValueLevel}`}>
-                  {guild.level}
-                </span>
-              </div>
               {bonuses && (
                 <>
-                  <div class={styles.statItem}>
-                    <span class={styles.statLabel}>Gold+</span>
-                    <span class={`${styles.statValue} ${styles.statValueBonus}`}>
-                      {bonuses.goldBoost}%
+                  <div class={styles.statsCardDivider} />
+                  <div class={styles.statsCardTitle}>BONUSY</div>
+                  <div class={styles.statRow}>
+                    <span class={styles.statLabel}>Gold</span>
+                    <span class={`${styles.statValue} ${styles.statBonus}`}>
+                      +{bonuses.goldBoost}%
                     </span>
                   </div>
-                  <div class={styles.statItem}>
-                    <span class={styles.statLabel}>Dust+</span>
-                    <span class={`${styles.statValue} ${styles.statValueBonus}`}>
-                      {bonuses.dustBoost}%
+                  <div class={styles.statRow}>
+                    <span class={styles.statLabel}>Dust</span>
+                    <span class={`${styles.statValue} ${styles.statBonus}`}>
+                      +{bonuses.dustBoost}%
+                    </span>
+                  </div>
+                  <div class={styles.statRow}>
+                    <span class={styles.statLabel}>XP</span>
+                    <span class={`${styles.statValue} ${styles.statBonus}`}>
+                      +{bonuses.xpBoost}%
                     </span>
                   </div>
                 </>
               )}
             </div>
+          </aside>
+        )}
 
-            {/* Tabs */}
-            <div class={styles.tabs}>
-              <button
-                class={`${styles.tab} ${activeTab === 'info' ? styles.tabActive : ''}`}
-                onClick={() => handleTabClick('info')}
-              >
-                {t('guild.tabs.info')}
-              </button>
-              <button
-                class={`${styles.tab} ${activeTab === 'members' ? styles.tabActive : ''}`}
-                onClick={() => handleTabClick('members')}
-              >
-                {t('guild.tabs.members')}
-              </button>
-              <button
-                class={`${styles.tab} ${activeTab === 'treasury' ? styles.tabActive : ''}`}
-                onClick={() => handleTabClick('treasury')}
-              >
-                {t('guild.tabs.treasury')}
-              </button>
-              <button
-                class={`${styles.tab} ${activeTab === 'battles' ? styles.tabActive : ''}`}
-                onClick={() => handleTabClick('battles')}
-              >
-                {t('guild.tabs.battles')}
-              </button>
-              <button
-                class={`${styles.tab} ${activeTab === 'tower-race' ? styles.tabActive : ''}`}
-                onClick={() => handleTabClick('tower-race')}
-              >
-                {t('guild.tabs.race')}
-              </button>
-              <button
-                class={`${styles.tab} ${activeTab === 'boss' ? styles.tabActive : ''}`}
-                onClick={() => handleTabClick('boss')}
-              >
-                {t('guild.tabs.boss')}
-              </button>
-              {/* Roster tab - only for officers */}
-              {isGuildOfficer.value && (
-                <button
-                  class={`${styles.tab} ${activeTab === 'roster' ? styles.tabActive : ''}`}
-                  onClick={() => handleTabClick('roster')}
-                >
-                  {t('guild.tabs.roster')}
-                </button>
-              )}
-              {/* Applications tab - only for officers */}
-              {isGuildOfficer.value && (
-                <button
-                  class={`${styles.tab} ${activeTab === 'applications' ? styles.tabActive : ''}`}
-                  onClick={() => handleTabClick('applications')}
-                >
-                  Podania
-                  {pendingApplicationsCount.value > 0 && (
-                    <span class={styles.tabBadge}>{pendingApplicationsCount.value}</span>
-                  )}
-                </button>
-              )}
-              <button
-                class={`${styles.refreshBtn} ${refreshing ? styles.refreshBtnSpinning : ''}`}
-                onClick={refreshData}
-                title={t('guild.refresh')}
-              >
-                🔄
-              </button>
+        {/* Main Content */}
+        <main class={styles.content}>
+          {/* Loading state */}
+          {guildLoading.value && (
+            <div class={styles.loading}>
+              <Spinner />
+              <span>Ładowanie danych gildii...</span>
             </div>
+          )}
 
-            {/* Content */}
-            <div class={styles.content}>
+          {/* Error state */}
+          {guildError.value && (
+            <div class={styles.error}>
+              <span class={styles.errorIcon}>⚠️</span>
+              <span>{guildError.value}</span>
+              <Button variant="ghost" size="sm" onClick={refreshData}>
+                Spróbuj ponownie
+              </Button>
+            </div>
+          )}
+
+          {/* No guild state */}
+          {!guildLoading.value && !guildError.value && !isInGuild.value && (
+            <NoGuildView
+              pendingInvitations={pendingInvitations}
+              onRefresh={refreshData}
+              t={t}
+            />
+          )}
+
+          {/* Guild content */}
+          {!guildLoading.value && !guildError.value && isInGuild.value && guild && (
+            <div class={styles.tabContent}>
               {activeTab === 'info' && <GuildInfoTab onRefresh={refreshData} />}
               {activeTab === 'members' && <GuildMembersTab onRefresh={refreshData} />}
               {activeTab === 'treasury' && <GuildTreasuryTab onRefresh={refreshData} />}
@@ -315,8 +326,8 @@ export function GuildPanel() {
               {activeTab === 'roster' && <GuildRosterTab />}
               {activeTab === 'applications' && <GuildApplicationsTab onRefresh={refreshData} />}
             </div>
-          </>
-        )}
+          )}
+        </main>
       </div>
     </div>
   );
@@ -331,29 +342,40 @@ interface NoGuildViewProps {
 function NoGuildView({ pendingInvitations, onRefresh, t }: NoGuildViewProps) {
   return (
     <div class={styles.noGuild}>
-      <span class={styles.noGuildIcon}>🏰</span>
-      <h3 class={styles.noGuildTitle}>{t('guild.notInGuild')}</h3>
-      <p class={styles.noGuildText}>
-        {t('guild.joinBenefits')}
-      </p>
-      <div class={styles.noGuildActions}>
-        <Button variant="primary" onClick={() => { closeGuildPanel(); openGuildSearch(); }}>
-          {t('guild.searchGuild')}
-        </Button>
-        <Button variant="secondary" onClick={() => { closeGuildPanel(); openGuildCreate(); }}>
-          {t('guild.createGuild')}
-        </Button>
-      </div>
-      {pendingInvitations > 0 && (
-        <div style={{ marginTop: '1rem' }}>
-          <p class={styles.noGuildText}>
-            {t('guild.pendingInvitations', { count: pendingInvitations })}
-          </p>
-          <Button variant="ghost" size="sm" onClick={onRefresh}>
-            {t('guild.showInvitations')}
+      <div class={styles.noGuildCard}>
+        <div class={styles.noGuildIcon}>🏰</div>
+        <h2 class={styles.noGuildTitle}>{t('guild.notInGuild')}</h2>
+        <p class={styles.noGuildText}>{t('guild.joinBenefits')}</p>
+
+        <div class={styles.noGuildActions}>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => { closeGuildPanel(); openGuildSearch(); }}
+          >
+            <span style={{ marginRight: '0.5rem' }}>🔍</span>
+            {t('guild.searchGuild')}
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => { closeGuildPanel(); openGuildCreate(); }}
+          >
+            <span style={{ marginRight: '0.5rem' }}>➕</span>
+            {t('guild.createGuild')}
           </Button>
         </div>
-      )}
+
+        {pendingInvitations > 0 && (
+          <div class={styles.invitationsNotice}>
+            <span class={styles.invitationsIcon}>📨</span>
+            <span>{t('guild.pendingInvitations', { count: pendingInvitations })}</span>
+            <Button variant="ghost" size="sm" onClick={onRefresh}>
+              {t('guild.showInvitations')}
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
