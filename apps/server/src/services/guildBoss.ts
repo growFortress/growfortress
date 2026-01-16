@@ -9,7 +9,7 @@
 import { randomInt } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
 import type { GuildBoss, GuildBossAttempt } from '@prisma/client';
-import { getCurrentWeekKey } from './guildTowerRace.js';
+import { getCurrentWeekKey, getWeekEnd } from '../lib/weekUtils.js';
 import { GUILD_CONSTANTS } from '@arcade/protocol';
 
 // ============================================================================
@@ -65,22 +65,10 @@ const FORTRESS_WEAKNESSES = ['castle', 'arcane', 'nature', 'shadow', 'forge'];
 
 /**
  * Get boss end time (Sunday 23:59:59 UTC of current week)
+ * Uses centralized weekUtils for consistent calculation
  */
 function getBossEndTime(weekKey: string): Date {
-  const match = weekKey.match(/^(\d{4})-W(\d{2})$/);
-  if (!match) throw new Error(`Invalid week key: ${weekKey}`);
-
-  const year = parseInt(match[1], 10);
-  const week = parseInt(match[2], 10);
-
-  const jan1 = new Date(Date.UTC(year, 0, 1));
-  const jan1Day = jan1.getUTCDay();
-  const daysToFirstMonday = jan1Day === 0 ? 1 : (jan1Day === 1 ? 0 : 8 - jan1Day);
-
-  const targetMonday = new Date(jan1.getTime() + (daysToFirstMonday + (week - 1) * 7) * 86400000);
-  const sundayEnd = new Date(targetMonday.getTime() + 6 * 86400000 + 23 * 3600000 + 59 * 60000 + 59 * 1000);
-
-  return sundayEnd;
+  return getWeekEnd(weekKey);
 }
 
 /**
@@ -180,17 +168,20 @@ export async function getBossStatus(guildId: string, userId: string): Promise<Gu
   });
   const guildTotalDamage = Number(guildDamageResult._sum.damage || 0);
 
-  // Calculate guild rank
+  // Calculate guild rank - count guilds with higher total damage
   let guildRank: number | null = null;
   if (guildTotalDamage > 0) {
-    const higherGuilds = await prisma.$queryRaw<{ count: bigint }[]>`
-      SELECT COUNT(DISTINCT "guildId") as count
-      FROM "GuildBossAttempt"
-      WHERE "guildBossId" = ${boss.id}
-      GROUP BY "guildId"
-      HAVING SUM(damage) > ${BigInt(guildTotalDamage)}
+    // Fixed: Use subquery to correctly count guilds with higher damage
+    const higherGuildsResult = await prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count FROM (
+        SELECT "guildId"
+        FROM "GuildBossAttempt"
+        WHERE "guildBossId" = ${boss.id}
+        GROUP BY "guildId"
+        HAVING SUM(damage) > ${BigInt(guildTotalDamage)}
+      ) as higher_guilds
     `;
-    guildRank = (higherGuilds[0]?.count ? Number(higherGuilds[0].count) : 0) + 1;
+    guildRank = (higherGuildsResult[0]?.count ? Number(higherGuildsResult[0].count) : 0) + 1;
   }
 
   const canAttack = !todaysAttempt && new Date() < boss.endsAt;
@@ -212,9 +203,12 @@ export async function getBossStatus(guildId: string, userId: string): Promise<Gu
 /**
  * Attack the boss
  * Uses the player's Battle Hero
+ * @param userId The attacking user
+ * @param expectedGuildId Optional guildId to validate against (from URL param)
  */
 export async function attackBoss(
-  userId: string
+  userId: string,
+  expectedGuildId?: string
 ): Promise<AttackBossResult> {
   // Get membership and Battle Hero
   const membership = await prisma.guildMember.findUnique({
@@ -225,6 +219,11 @@ export async function attackBoss(
   });
 
   if (!membership || membership.guild.disbanded) {
+    return { success: false, error: 'NOT_IN_GUILD' };
+  }
+
+  // Security: Validate expectedGuildId matches user's actual guild
+  if (expectedGuildId && membership.guildId !== expectedGuildId) {
     return { success: false, error: 'NOT_IN_GUILD' };
   }
 

@@ -1,5 +1,9 @@
 import { Queue, Worker, Job } from 'bullmq';
 import { redis } from './redis.js';
+import {
+  getCurrentWeekKey as getWeekKeyFromUtils,
+  getPreviousWeekKey as getPrevWeekKeyFromUtils,
+} from './weekUtils.js';
 
 // Queue definitions
 export const leaderboardQueue = new Queue('leaderboard', {
@@ -34,6 +38,14 @@ export const playerLeaderboardQueue = new Queue('player-leaderboard', {
   },
 });
 
+export const guildWeeklyQueue = new Queue('guild-weekly', {
+  connection: redis,
+  defaultJobOptions: {
+    removeOnComplete: 50,
+    removeOnFail: 50,
+  },
+});
+
 // Job types
 export interface LeaderboardSnapshotJob {
   type: 'snapshot';
@@ -46,6 +58,11 @@ export interface CleanupExpiredRunsJob {
 
 export interface PlayerLeaderboardResetJob {
   type: 'weekly_reset';
+  weekKey: string; // The week that just ended
+}
+
+export interface GuildWeeklyResetJob {
+  type: 'guild_weekly_reset';
   weekKey: string; // The week that just ended
 }
 
@@ -95,28 +112,34 @@ export async function initializeJobs(): Promise<void> {
       },
     }
   );
+
+  // Weekly guild reset - every Monday at 00:05 UTC (5 min after player reset)
+  await guildWeeklyQueue.add(
+    'guild_weekly_reset',
+    { type: 'guild_weekly_reset', weekKey: getPreviousWeekKey() },
+    {
+      repeat: {
+        pattern: '5 0 * * 1', // Monday 00:05 UTC
+        tz: 'UTC',
+      },
+    }
+  );
 }
 
 /**
  * Get current week key in ISO format (e.g., "2024-W01")
+ * Uses centralized weekUtils for consistent calculation
  */
 export function getCurrentWeekKey(): string {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  return `${now.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+  return getWeekKeyFromUtils();
 }
 
 /**
  * Get previous week key (the week before current)
+ * Uses centralized weekUtils for consistent calculation
  */
 export function getPreviousWeekKey(): string {
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const startOfYear = new Date(oneWeekAgo.getFullYear(), 0, 1);
-  const days = Math.floor((oneWeekAgo.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  return `${oneWeekAgo.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+  return getPrevWeekKeyFromUtils();
 }
 
 /**

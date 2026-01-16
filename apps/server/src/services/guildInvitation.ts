@@ -4,6 +4,7 @@ import {
   GUILD_ERROR_CODES,
   type GuildRole,
   type GuildInvitationStatus,
+  type GuildSettings,
 } from '@arcade/protocol';
 import { hasPermission, getMemberCapacity } from './guild.js';
 import { createGuildInviteNotification } from './messages.js';
@@ -55,7 +56,13 @@ export async function createInvitation(
   // Check guild exists and not disbanded
   const guild = await prisma.guild.findUnique({
     where: { id: guildId },
-    include: { _count: { select: { members: true } } },
+    select: {
+      id: true,
+      level: true,
+      disbanded: true,
+      settings: true,
+      _count: { select: { members: true } },
+    },
   });
 
   if (!guild || guild.disbanded) {
@@ -71,10 +78,23 @@ export async function createInvitation(
   // Check invitee exists
   const invitee = await prisma.user.findUnique({
     where: { id: inviteeId },
+    select: {
+      id: true,
+      highestWave: true,
+    },
   });
 
   if (!invitee) {
     throw new Error(GUILD_ERROR_CODES.USER_NOT_FOUND);
+  }
+
+  // Check invitee meets guild's minLevel requirement (based on highest wave reached)
+  const guildSettings = guild.settings as GuildSettings | null;
+  const minLevel = guildSettings?.minLevel ?? 1;
+  const inviteeLevel = invitee.highestWave ?? 1;
+
+  if (inviteeLevel < minLevel) {
+    throw new Error(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
   }
 
   // Check invitee is not already in a guild

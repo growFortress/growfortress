@@ -83,6 +83,11 @@ import {
   getTopDamageDealers,
 } from '../services/guildBoss.js';
 import { getCurrentWeekKey } from '../lib/queue.js';
+import {
+  requireGuildMembership,
+  requireGuildPermission,
+  verifyGuildIdMatchesUserGuild,
+} from '../lib/guildMembershipCheck.js';
 
 const guildRoutes: FastifyPluginAsync = async (fastify) => {
   // ============================================================================
@@ -119,13 +124,27 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     // Add level info
     const levelInfo = getGuildLevelInfo(guild.level, guild.xp, guild.totalXp);
 
+    // Check if user is an authenticated member of this guild
+    let isGuildMember = false;
+    if (request.userId) {
+      const membership = await getUserGuild(request.userId);
+      isGuildMember = membership?.guildId === guildId;
+    }
+
+    // For non-members/public: limit member data to count and top 5 members only
+    const limitedMembers = isGuildMember
+      ? guild.members
+      : guild.members.slice(0, 5);
+
     return reply.send({
       guild: {
         ...guild,
+        members: limitedMembers,
         memberCount: guild._count.members,
         maxMembers: getMemberCapacity(guild.level),
       },
       levelInfo,
+      isFullMemberList: isGuildMember,
     });
   });
 
@@ -346,6 +365,13 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const { guildId } = request.params as { guildId: string };
+
+    // Security: Verify user is a member with battle permission (LEADER/OFFICER)
+    const membershipCheck = await requireGuildPermission(request.userId, guildId, 'battle');
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
     const roster = await getGuildBattleRoster(guildId);
 
     return reply.send({
@@ -467,6 +493,13 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const { guildId } = request.params as { guildId: string };
+
+    // Security: Verify user is a member of this guild
+    const membershipCheck = await requireGuildMembership(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
     const [treasury, withdrawStatus, logsResult] = await Promise.all([
       getTreasury(guildId),
       canWithdraw(guildId, request.userId),
@@ -551,6 +584,13 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const { guildId } = request.params as { guildId: string };
+
+    // Security: Verify user is a member of this guild
+    const membershipCheck = await requireGuildMembership(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
     const query = TreasuryLogsQuerySchema.parse(request.query);
     const result = await getTreasuryLogs(guildId, query.limit, query.offset);
     return reply.send({
@@ -771,12 +811,22 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     const query = request.query as { week?: string };
     const weekKey = query.week || getCurrentWeekKey();
 
-    const contributions = await getMemberContributions(guildId, weekKey);
+    try {
+      const contributions = await getMemberContributions(guildId, weekKey);
 
-    return reply.send({
-      weekKey,
-      contributions,
-    });
+      return reply.send({
+        weekKey,
+        contributions,
+      });
+    } catch (error: any) {
+      if (error.message === 'HISTORICAL_CONTRIBUTIONS_NOT_AVAILABLE') {
+        return reply.status(400).send({
+          error: 'HISTORICAL_CONTRIBUTIONS_NOT_AVAILABLE',
+          message: 'Historical contribution data is not available. Only current week is supported.',
+        });
+      }
+      throw error;
+    }
   });
 
   // ============================================================================
@@ -977,6 +1027,13 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const { guildId } = request.params as { guildId: string };
+
+    // Security: Verify user belongs to the guild specified in guildId param
+    const membershipCheck = await verifyGuildIdMatchesUserGuild(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
     const status = await getBossStatus(guildId, request.userId);
 
     return reply.send({
@@ -1009,7 +1066,15 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
 
-    const result = await attackBoss(request.userId);
+    const { guildId } = request.params as { guildId: string };
+
+    // Security: Verify user belongs to the guild specified in guildId param
+    const membershipCheck = await verifyGuildIdMatchesUserGuild(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
+    const result = await attackBoss(request.userId, guildId);
 
     if (!result.success) {
       return reply.status(400).send({ error: result.error });

@@ -15,7 +15,6 @@ import {
   claimingQuest,
   claimingAll,
   unclaimedCompletedCount,
-  unclaimedDustTotal,
   timeUntilReset,
   overallProgress,
   fetchDailyQuests,
@@ -48,7 +47,6 @@ export function DailyQuestsModal() {
   const claiming = claimingQuest.value;
   const claimingAllRewards = claimingAll.value;
   const unclaimedCount = unclaimedCompletedCount.value;
-  const unclaimedDust = unclaimedDustTotal.value;
   const resetTime = timeUntilReset.value;
   const progress = overallProgress.value;
 

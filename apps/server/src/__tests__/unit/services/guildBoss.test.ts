@@ -20,9 +20,10 @@ import {
   createMockGuildBossAttempt,
 } from '../../mocks/prisma.js';
 
-// Mock getCurrentWeekKey from guildTowerRace
-vi.mock('../../../services/guildTowerRace.js', () => ({
+// Mock getCurrentWeekKey from weekUtils
+vi.mock('../../../lib/weekUtils.js', () => ({
   getCurrentWeekKey: vi.fn(() => '2026-W02'),
+  getWeekEnd: vi.fn(() => new Date('2026-01-18T23:59:59.999Z')),
 }));
 
 describe('Guild Boss Service', () => {

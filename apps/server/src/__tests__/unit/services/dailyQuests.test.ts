@@ -183,9 +183,9 @@ describe('Daily Quests Service', () => {
       const result = await getDailyQuests('user-123');
 
       const waveHunter = result.quests.find(q => q.questId === 'wave_hunter');
-      expect(waveHunter?.dustReward).toBe(18);
+      expect(waveHunter?.dustReward).toBe(10); // from DAILY_QUEST_DEFINITIONS
       expect(waveHunter?.bonusType).toBe('gold');
-      expect(waveHunter?.bonusValue).toBe(100);
+      expect(waveHunter?.bonusValue).toBe(150); // from DAILY_QUEST_DEFINITIONS
     });
   });
 
@@ -293,20 +293,12 @@ describe('Daily Quests Service', () => {
       expect(eliteSlayerCall).toBeDefined();
     });
 
-    it('updates boss_rush_daily for bosses killed', async () => {
+    it('updates boss_slayer for bosses killed', async () => {
       await updateQuestsFromRun('user-123', { bossesKilled: 3 });
 
       const calls = mockPrisma.dailyQuestProgress.upsert.mock.calls;
-      const bossRushCall = calls.find(c => c[0].where.userId_questId_resetAt.questId === 'boss_rush_daily');
-      expect(bossRushCall).toBeDefined();
-    });
-
-    it('updates pillar_master for pillars completed', async () => {
-      await updateQuestsFromRun('user-123', { pillarsCompleted: 1 });
-
-      const calls = mockPrisma.dailyQuestProgress.upsert.mock.calls;
-      const pillarMasterCall = calls.find(c => c[0].where.userId_questId_resetAt.questId === 'pillar_master');
-      expect(pillarMasterCall).toBeDefined();
+      const bossSlayerCall = calls.find(c => c[0].where.userId_questId_resetAt.questId === 'boss_slayer');
+      expect(bossSlayerCall).toBeDefined();
     });
 
     it('updates multiple quests at once', async () => {
@@ -316,7 +308,8 @@ describe('Daily Quests Service', () => {
         elitesKilled: 2,
       });
 
-      expect(mockPrisma.dailyQuestProgress.upsert).toHaveBeenCalledTimes(3);
+      // runsCompleted updates first_blood + dedicated (2), enemiesKilled updates wave_hunter (1), elitesKilled updates elite_slayer (1) = 4 total
+      expect(mockPrisma.dailyQuestProgress.upsert).toHaveBeenCalledTimes(4);
     });
 
     it('skips updates for zero values', async () => {
@@ -408,32 +401,7 @@ describe('Daily Quests Service', () => {
       const result = await claimQuestReward('user-123', 'wave_hunter');
 
       expect(result.success).toBe(true);
-      expect(result.bonusAwarded).toEqual({ type: 'gold', value: 100 });
-    });
-
-    it('awards material bonus when applicable', async () => {
-      mockPrisma.dailyQuestProgress.findUnique.mockResolvedValue({
-        id: 'progress-1',
-        completed: true,
-        claimed: false,
-      });
-
-      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
-        return callback(mockPrisma);
-      });
-
-      mockPrisma.dailyQuestProgress.update.mockResolvedValue({});
-      mockPrisma.inventory.findUnique.mockResolvedValue(createMockInventory());
-      mockPrisma.inventory.update.mockResolvedValue({
-        dust: 125,
-        gold: 100,
-        materials: { rare_essence: 1 },
-      });
-
-      const result = await claimQuestReward('user-123', 'boss_rush_daily');
-
-      expect(result.success).toBe(true);
-      expect(result.bonusAwarded).toEqual({ type: 'material', value: 'rare_essence' });
+      expect(result.bonusAwarded).toEqual({ type: 'gold', value: 150 }); // wave_hunter bonus is 150
     });
 
     it('returns updated inventory in response', async () => {
@@ -525,7 +493,8 @@ describe('Daily Quests Service', () => {
       expect(result.totalDustAwarded).toBe(
         (firstBloodDef?.dustReward ?? 0) + (waveHunterDef?.dustReward ?? 0)
       );
-      expect(result.totalGoldAwarded).toBe(100); // wave_hunter gold bonus
+      // first_blood bonus (50) + wave_hunter bonus (150) = 200
+      expect(result.totalGoldAwarded).toBe(200);
     });
 
     it('returns updated inventory', async () => {

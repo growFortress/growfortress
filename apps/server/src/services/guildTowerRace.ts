@@ -7,6 +7,11 @@
 
 import { prisma } from '../lib/prisma.js';
 import type { GuildTowerRace, GuildTowerRaceEntry } from '@prisma/client';
+import {
+  getCurrentWeekKey as getWeekKey,
+  getWeekStart,
+  getWeekEnd,
+} from '../lib/weekUtils.js';
 
 // ============================================================================
 // TYPES
@@ -50,44 +55,10 @@ export interface TowerRaceStatus {
 
 /**
  * Get current week key (YYYY-Www format, ISO week)
+ * Re-exported from weekUtils for backward compatibility
  */
 export function getCurrentWeekKey(): string {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-
-  // Calculate ISO week number
-  const jan4 = new Date(Date.UTC(year, 0, 4));
-  const dayOfYear = Math.floor((now.getTime() - new Date(Date.UTC(year, 0, 1)).getTime()) / 86400000) + 1;
-  const weekNumber = Math.ceil((dayOfYear + jan4.getUTCDay() - 1) / 7);
-
-  return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
-}
-
-/**
- * Get race end time (Sunday 23:59:59 UTC)
- */
-function getRaceEndTime(weekKey: string): Date {
-  // Parse week key
-  const match = weekKey.match(/^(\d{4})-W(\d{2})$/);
-  if (!match) throw new Error(`Invalid week key: ${weekKey}`);
-
-  const year = parseInt(match[1]);
-  const week = parseInt(match[2]);
-
-  // Find first day of the year
-  const jan1 = new Date(Date.UTC(year, 0, 1));
-
-  // Calculate first Monday of week 1
-  const jan1Day = jan1.getUTCDay();
-  const daysToFirstMonday = jan1Day === 0 ? 1 : (jan1Day === 1 ? 0 : 8 - jan1Day);
-
-  // Calculate the Monday of the target week
-  const targetMonday = new Date(jan1.getTime() + (daysToFirstMonday + (week - 1) * 7) * 86400000);
-
-  // Sunday 23:59:59 UTC
-  const sundayEnd = new Date(targetMonday.getTime() + 6 * 86400000 + 23 * 3600000 + 59 * 60000 + 59 * 1000);
-
-  return sundayEnd;
+  return getWeekKey();
 }
 
 // ============================================================================
@@ -106,9 +77,9 @@ export async function getCurrentRace(): Promise<GuildTowerRace> {
   });
 
   if (!race) {
-    // Create new race
-    const startedAt = new Date();
-    const endsAt = getRaceEndTime(weekKey);
+    // Create new race - use week boundaries for consistent timing
+    const startedAt = getWeekStart(weekKey);
+    const endsAt = getWeekEnd(weekKey);
 
     race = await prisma.guildTowerRace.create({
       data: {

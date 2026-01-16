@@ -10,7 +10,6 @@
 
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
-import { updateQuestsFromRun } from './dailyQuests.js';
 import type {
   PillarId,
   PillarChallengeTier,
@@ -644,10 +643,7 @@ export async function submitPillarChallenge(
         });
       }
 
-      // Update daily quest progress for pillar_master quest
-      await updateQuestsFromRun(userId, {
-        pillarsCompleted: 1,
-      });
+      // Note: pillar_master quest not yet implemented in protocol
     }
 
     // Get updated crystal progress

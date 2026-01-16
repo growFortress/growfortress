@@ -265,7 +265,8 @@ describe('Guild Battle Service', () => {
           'guild-123',
           'user-123',
           expect.any(Number),
-          'shield'
+          'shield',
+          'SHIELD_PURCHASE'
         );
       });
     });

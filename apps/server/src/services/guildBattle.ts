@@ -20,6 +20,7 @@ import {
 } from './guildBattleHero.js';
 import { payBattleCost } from './guildTreasury.js';
 import { runGuildArena, type GuildBattleHero } from '@arcade/sim-core';
+import { getCurrentWeekKey } from '../lib/weekUtils.js';
 
 // ============================================================================
 // TYPES
@@ -60,18 +61,6 @@ export interface ShieldStatus {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-
-/**
- * Get current week key (YYYY-Www format)
- */
-function getCurrentWeekKey(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const oneJan = new Date(year, 0, 1);
-  const dayOfYear = Math.floor((now.getTime() - oneJan.getTime()) / 86400000) + 1;
-  const weekNumber = Math.ceil(dayOfYear / 7);
-  return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
-}
 
 /**
  * Get start of today (UTC midnight)
@@ -187,9 +176,9 @@ export async function activateShield(
     return { success: false, error: GUILD_ERROR_CODES.SHIELD_WEEKLY_LIMIT };
   }
 
-  // Pay the cost from treasury
+  // Pay the cost from treasury with correct transaction type
   try {
-    await payBattleCost(guildId, userId, GUILD_CONSTANTS.SHIELD_GOLD_COST, 'shield');
+    await payBattleCost(guildId, userId, GUILD_CONSTANTS.SHIELD_GOLD_COST, 'shield', 'SHIELD_PURCHASE');
   } catch {
     return { success: false, error: GUILD_ERROR_CODES.TREASURY_INSUFFICIENT };
   }
@@ -488,6 +477,21 @@ export async function instantAttack(
         data: { honor: { increment: defenderHonorChange } },
       });
     }
+
+    // Distribute guild coins based on battle outcome
+    const attackerWon = winnerGuildId === attackerGuildId;
+    const attackerCoins = attackerWon ? GUILD_CONSTANTS.COINS_ARENA_WIN : GUILD_CONSTANTS.COINS_ARENA_LOSS;
+    const defenderCoins = attackerWon ? GUILD_CONSTANTS.COINS_ARENA_LOSS : GUILD_CONSTANTS.COINS_ARENA_WIN;
+
+    await tx.guild.update({
+      where: { id: attackerGuildId },
+      data: { guildCoins: { increment: attackerCoins } },
+    });
+
+    await tx.guild.update({
+      where: { id: defenderGuildId },
+      data: { guildCoins: { increment: defenderCoins } },
+    });
 
     // Create battle record
     const battleRecord = await tx.guildBattle.create({

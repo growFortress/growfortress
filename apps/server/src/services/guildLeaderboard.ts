@@ -250,11 +250,20 @@ export async function getGuildRank(
 
 /**
  * Get member contributions for a guild
+ * Note: Currently only supports current week data.
+ * Historical week data requires snapshot tables (planned for future).
  */
 export async function getMemberContributions(
   guildId: string,
-  _weekKey: string = getCurrentWeekKey(),
+  weekKey: string = getCurrentWeekKey(),
 ): Promise<MemberContribution[]> {
+  const currentWeek = getCurrentWeekKey();
+
+  // Only current week is supported - historical data requires snapshot tables
+  if (weekKey !== currentWeek) {
+    throw new Error('HISTORICAL_CONTRIBUTIONS_NOT_AVAILABLE');
+  }
+
   const members = await prisma.guildMember.findMany({
     where: { guildId },
     include: {

@@ -211,7 +211,7 @@ export function createMockUser(overrides: Record<string, unknown> = {}) {
     role: 'USER',
     createdAt: new Date(),
     currentWave: 0,
-    highestWave: 0,
+    highestWave: 10, // Default to level 10 to pass guild minLevel requirements
     activeGameSessionId: null,
     onboardingCompleted: false,
     defaultFortressClass: null,

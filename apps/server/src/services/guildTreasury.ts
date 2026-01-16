@@ -88,6 +88,35 @@ export async function canWithdraw(
 }
 
 /**
+ * Get user's donation total for today
+ */
+async function getTodayDonationTotal(
+  guildId: string,
+  userId: string
+): Promise<{ gold: number; dust: number }> {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const result = await prisma.guildTreasuryLog.aggregate({
+    where: {
+      guildId,
+      userId,
+      transactionType: { in: ['DEPOSIT_GOLD', 'DEPOSIT_DUST'] },
+      createdAt: { gte: today },
+    },
+    _sum: {
+      goldAmount: true,
+      dustAmount: true,
+    },
+  });
+
+  return {
+    gold: result._sum.goldAmount || 0,
+    dust: result._sum.dustAmount || 0,
+  };
+}
+
+/**
  * Deposit resources to treasury
  */
 export async function deposit(
@@ -110,6 +139,16 @@ export async function deposit(
 
   if (!membership || membership.guildId !== guildId) {
     throw new Error(GUILD_ERROR_CODES.NOT_IN_GUILD);
+  }
+
+  // Check daily donation limits
+  const todayTotal = await getTodayDonationTotal(guildId, userId);
+
+  if (goldAmount > 0 && todayTotal.gold + goldAmount > GUILD_CONSTANTS.MAX_DAILY_DONATION_GOLD) {
+    throw new Error(GUILD_ERROR_CODES.DONATION_LIMIT_EXCEEDED);
+  }
+  if (dustAmount > 0 && todayTotal.dust + dustAmount > GUILD_CONSTANTS.MAX_DAILY_DONATION_DUST) {
+    throw new Error(GUILD_ERROR_CODES.DONATION_LIMIT_EXCEEDED);
   }
 
   // Check user has enough resources
@@ -279,12 +318,14 @@ export async function withdraw(
 
 /**
  * Pay battle cost from treasury
+ * @param transactionType - Type of transaction (default: BATTLE_COST, use SHIELD_PURCHASE for shields)
  */
 export async function payBattleCost(
   guildId: string,
   userId: string,
   amount: number,
-  battleId: string
+  referenceId: string,
+  transactionType: PrismaTxType = 'BATTLE_COST'
 ): Promise<void> {
   const treasury = await prisma.guildTreasury.findUnique({
     where: { guildId },
@@ -293,6 +334,11 @@ export async function payBattleCost(
   if (!treasury || treasury.gold < amount) {
     throw new Error(GUILD_ERROR_CODES.TREASURY_INSUFFICIENT);
   }
+
+  // Determine description based on transaction type
+  const description = transactionType === 'SHIELD_PURCHASE'
+    ? 'Guild shield activation cost'
+    : 'Guild battle initiation cost';
 
   await prisma.$transaction(async (tx) => {
     const updated = await tx.guildTreasury.update({
@@ -307,11 +353,11 @@ export async function payBattleCost(
       data: {
         guildId,
         userId,
-        transactionType: 'BATTLE_COST',
+        transactionType,
         goldAmount: -amount,
         dustAmount: 0,
-        description: 'Guild battle initiation cost',
-        referenceId: battleId,
+        description,
+        referenceId,
         balanceAfterGold: updated.gold,
         balanceAfterDust: updated.dust,
       },

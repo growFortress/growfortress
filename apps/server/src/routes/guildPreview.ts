@@ -8,10 +8,10 @@ import { z } from 'zod';
 import { getGuildPreview } from '../services/guildPreview.js';
 
 const guildPreviewRoutes: FastifyPluginAsync = async (fastify) => {
-  // Get guild preview for a specific guild (requires authentication)
+  // Get guild preview for a specific guild (public - for viewing other guilds)
   fastify.get<{
     Params: { guildId: string };
-  }>('/v1/guilds/:guildId/preview', { config: { public: false } }, async (request, reply) => {
+  }>('/v1/guilds/:guildId/preview', { config: { public: true } }, async (request, reply) => {
     const paramsSchema = z.object({
       guildId: z.string().min(1),
     });

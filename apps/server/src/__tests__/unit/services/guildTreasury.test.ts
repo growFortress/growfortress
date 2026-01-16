@@ -24,6 +24,10 @@ import { GUILD_ERROR_CODES } from '@arcade/protocol';
 describe('Guild Treasury Service', () => {
   beforeEach(() => {
     resetPrismaMock();
+    // Mock daily donation total aggregate (for donation limits)
+    mockPrisma.guildTreasuryLog.aggregate.mockResolvedValue({
+      _sum: { goldAmount: 0, dustAmount: 0 },
+    });
   });
 
   // ============================================================================
