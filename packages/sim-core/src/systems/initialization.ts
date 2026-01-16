@@ -24,13 +24,16 @@ import { createDefaultPlayerPowerData, type PlayerPowerData } from '../data/powe
  * @param fortressX - X position of the fortress (for formation positioning)
  * @param powerData - Player's power upgrade data (stat bonuses)
  * @param heroTiers - Map of heroId -> tier (1-3) for tier progression
+ * @param equippedArtifacts - Map of heroId -> artifactId for equipped artifacts
+ * @param guildStatBoost - Guild stat boost (0-0.20 = 0-20% HP bonus)
  */
 export function initializeHeroes(
   heroIds: string[],
   fortressX: number,
   powerData?: PlayerPowerData,
   heroTiers?: Record<string, number>,
-  equippedArtifacts?: Record<string, string> // heroId -> artifactId mapping
+  equippedArtifacts?: Record<string, string>,
+  guildStatBoost?: number
 ): ActiveHero[] {
   const heroes: ActiveHero[] = [];
   const heroCount = heroIds.filter(id => getHeroById(id)).length;
@@ -38,6 +41,7 @@ export function initializeHeroes(
   // Use default power data if none provided
   const effectivePowerData = powerData || createDefaultPlayerPowerData();
   const effectiveHeroTiers = heroTiers || {};
+  const guildBoost = 1 + (guildStatBoost ?? 0);
 
   let validHeroIndex = 0;
 
@@ -56,7 +60,8 @@ export function initializeHeroes(
 
     // Apply power upgrades to hero stats (multiplicative with tier bonus)
     const powerMultipliers = getHeroPowerMultipliers(effectivePowerData, heroId);
-    let modifiedHp = Math.floor(tierStats.hp * powerMultipliers.hpMultiplier);
+    // Apply guild stat boost to HP
+    let modifiedHp = Math.floor(tierStats.hp * powerMultipliers.hpMultiplier * guildBoost);
 
     // Apply artifact bonuses
     const artifactId = equippedArtifacts?.[heroId];

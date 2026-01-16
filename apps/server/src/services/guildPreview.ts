@@ -98,8 +98,9 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
   const bonuses: GuildPreviewBonuses = {
     // Economy bonuses from guild level
     goldPercent: currentLevelData?.goldBoost ?? 0,
-    dustPercent: currentLevelData?.dustBoost ?? 0,
     xpPercent: currentLevelData?.xpBoost ?? 0,
+    // Stat boost from guild level (applies to fortress/heroes HP & damage)
+    statBoostPercent: currentLevelData?.statBoost ?? 0,
     // Fortress bonuses from tech tree
     fortressHpPercent: techLevels.fortress.hp * bonusPerLevel,
     fortressDamagePercent: techLevels.fortress.damage * bonusPerLevel,

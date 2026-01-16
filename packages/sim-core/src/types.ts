@@ -707,6 +707,9 @@ export interface SimConfig {
     // Turret tier progression (1-3)
     turretTiers: Record<string, number>;
   };
+
+  // Guild stat boost (0-0.20 = 0-20% HP/damage bonus for fortress and heroes)
+  guildStatBoost?: number;
 }
 
 // Main game state

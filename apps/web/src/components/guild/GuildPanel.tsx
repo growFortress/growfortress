@@ -95,7 +95,7 @@ export function GuildPanel() {
           xp: myGuildData.guild.xp,
           totalXp: myGuildData.guild.totalXp,
           xpToNextLevel: 10000 * myGuildData.guild.level,
-          bonuses: myGuildData.bonuses || { goldBoost: 0, dustBoost: 0, xpBoost: 0 },
+          bonuses: myGuildData.bonuses || { goldBoost: 0, statBoost: 0, xpBoost: 0 },
           memberCapacity: 10 + myGuildData.guild.level,
         };
 
@@ -263,19 +263,19 @@ export function GuildPanel() {
                   <div class={styles.statRow}>
                     <span class={styles.statLabel}>Gold</span>
                     <span class={`${styles.statValue} ${styles.statBonus}`}>
-                      +{bonuses.goldBoost}%
+                      +{Math.round(bonuses.goldBoost * 100)}%
                     </span>
                   </div>
                   <div class={styles.statRow}>
-                    <span class={styles.statLabel}>Dust</span>
+                    <span class={styles.statLabel}>Statystyki</span>
                     <span class={`${styles.statValue} ${styles.statBonus}`}>
-                      +{bonuses.dustBoost}%
+                      +{Math.round(bonuses.statBoost * 100)}%
                     </span>
                   </div>
                   <div class={styles.statRow}>
                     <span class={styles.statLabel}>XP</span>
                     <span class={`${styles.statValue} ${styles.statBonus}`}>
-                      +{bonuses.xpBoost}%
+                      +{Math.round(bonuses.xpBoost * 100)}%
                     </span>
                   </div>
                 </>

@@ -190,6 +190,7 @@ export type SimConfigSnapshot = Pick<
   | "fortressBaseDamage"
   | "waveIntervalTicks"
   | "equippedArtifacts"
+  | "guildStatBoost"
 >;
 
 export interface RunTokenPayload {

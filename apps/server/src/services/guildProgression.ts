@@ -73,7 +73,7 @@ export function getGuildLevelInfo(level: number, xp: number, totalXp: number): G
     memberCapacity: levelData.memberCap,
     bonuses: {
       goldBoost: levelData.goldBoost,
-      dustBoost: levelData.dustBoost,
+      statBoost: levelData.statBoost,
       xpBoost: levelData.xpBoost,
     },
   };

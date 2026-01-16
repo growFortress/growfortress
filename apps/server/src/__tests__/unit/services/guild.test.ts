@@ -77,21 +77,21 @@ describe('Guild Service', () => {
     it('returns 0 bonuses for level 1', () => {
       const bonuses = getGuildBonuses(1);
       expect(bonuses.goldBoost).toBe(0);
-      expect(bonuses.dustBoost).toBe(0);
+      expect(bonuses.statBoost).toBe(0);
       expect(bonuses.xpBoost).toBe(0);
     });
 
     it('returns correct bonuses for level 10', () => {
       const bonuses = getGuildBonuses(10);
       expect(bonuses.goldBoost).toBe(0.18);
-      expect(bonuses.dustBoost).toBe(0.09);
+      expect(bonuses.statBoost).toBe(0.09);
       expect(bonuses.xpBoost).toBe(0.10);
     });
 
     it('returns max bonuses for level 20', () => {
       const bonuses = getGuildBonuses(20);
       expect(bonuses.goldBoost).toBe(0.40);
-      expect(bonuses.dustBoost).toBe(0.20);
+      expect(bonuses.statBoost).toBe(0.20);
       expect(bonuses.xpBoost).toBe(0.30);
     });
   });

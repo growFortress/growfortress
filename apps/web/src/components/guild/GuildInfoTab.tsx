@@ -194,15 +194,15 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
       <div class={styles.bonusesGrid}>
         <div class={styles.bonusCard}>
           <span class={styles.bonusLabel}>Gold Boost</span>
-          <span class={styles.bonusValue}>+{bonuses?.goldBoost || 0}%</span>
+          <span class={styles.bonusValue}>+{Math.round((bonuses?.goldBoost || 0) * 100)}%</span>
         </div>
         <div class={styles.bonusCard}>
-          <span class={styles.bonusLabel}>Dust Boost</span>
-          <span class={styles.bonusValue}>+{bonuses?.dustBoost || 0}%</span>
+          <span class={styles.bonusLabel}>Stat Boost</span>
+          <span class={styles.bonusValue}>+{Math.round((bonuses?.statBoost || 0) * 100)}%</span>
         </div>
         <div class={styles.bonusCard}>
           <span class={styles.bonusLabel}>XP Boost</span>
-          <span class={styles.bonusValue}>+{bonuses?.xpBoost || 0}%</span>
+          <span class={styles.bonusValue}>+{Math.round((bonuses?.xpBoost || 0) * 100)}%</span>
         </div>
       </div>
 

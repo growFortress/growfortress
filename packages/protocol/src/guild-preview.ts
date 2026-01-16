@@ -25,8 +25,9 @@ export type GuildPreviewMember = z.infer<typeof GuildPreviewMemberSchema>;
 export const GuildPreviewBonusesSchema = z.object({
   // Economy bonuses (from guild level)
   goldPercent: z.number().min(0),
-  dustPercent: z.number().min(0),
   xpPercent: z.number().min(0),
+  // Stat boost (from guild level - applies to fortress/heroes HP & damage)
+  statBoostPercent: z.number().min(0),
   // Fortress bonuses (from tech tree)
   fortressHpPercent: z.number().min(0),
   fortressDamagePercent: z.number().min(0),

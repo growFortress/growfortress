@@ -148,7 +148,7 @@ export function GuildPreviewModal() {
                   levels={data.techLevels.economy}
                   bonuses={{
                     gold: data.bonuses.goldPercent,
-                    dust: data.bonuses.dustPercent,
+                    statBoost: data.bonuses.statBoostPercent,
                     xp: data.bonuses.xpPercent,
                   }}
                 />
@@ -219,7 +219,7 @@ function TechCategory({ title, icon, levels, bonuses }: TechCategoryProps) {
     speed: 'Szybkosc',
     range: 'Zasieg',
     gold: 'Zloto',
-    dust: 'Pyl',
+    statBoost: 'Statystyki',
     xp: 'XP',
   };
 

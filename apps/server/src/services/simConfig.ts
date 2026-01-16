@@ -54,6 +54,7 @@ export interface BuildSimConfigParams {
     fortressBaseDamage: number;
     waveIntervalTicks: number;
   };
+  guildStatBoost?: number; // Guild stat boost (0-0.20 = 0-20% HP/damage bonus)
 }
 
 export function buildSimConfigSnapshot(
@@ -121,6 +122,7 @@ export function buildSimConfigSnapshot(
     fortressBaseHp: params.remoteConfig?.fortressBaseHp ?? 100,
     fortressBaseDamage: params.remoteConfig?.fortressBaseDamage ?? 10,
     waveIntervalTicks: params.remoteConfig?.waveIntervalTicks ?? 90,
+    guildStatBoost: params.guildStatBoost,
   };
 
   return {
@@ -151,5 +153,6 @@ export function applySimConfigSnapshot(
   config.fortressBaseHp = snapshot.fortressBaseHp;
   config.fortressBaseDamage = snapshot.fortressBaseDamage;
   config.waveIntervalTicks = snapshot.waveIntervalTicks;
+  config.guildStatBoost = snapshot.guildStatBoost;
   return config;
 }

@@ -212,7 +212,7 @@ export const MyGuildResponseSchema = z.object({
   membership: GuildMemberSchema.nullable(),
   bonuses: z.object({
     goldBoost: z.number().min(0).max(1),
-    dustBoost: z.number().min(0).max(1),
+    statBoost: z.number().min(0).max(1),
     xpBoost: z.number().min(0).max(1),
   }).nullable(),
 });
@@ -611,7 +611,7 @@ export const GuildLevelInfoSchema = z.object({
   memberCapacity: z.number().int().min(10).max(20),
   bonuses: z.object({
     goldBoost: z.number().min(0).max(1),
-    dustBoost: z.number().min(0).max(1),
+    statBoost: z.number().min(0).max(1),
     xpBoost: z.number().min(0).max(1),
   }),
 });
@@ -875,27 +875,28 @@ export const GUILD_CONSTANTS = {
 } as const;
 
 // Guild level progression table
+// Bonuses: goldBoost (0-40%), statBoost (0-20% HP/damage for fortress/heroes), xpBoost (0-30%)
 export const GUILD_LEVEL_TABLE = [
-  { level: 1, xpRequired: 0, memberCap: 10, goldBoost: 0, dustBoost: 0, xpBoost: 0 },
-  { level: 2, xpRequired: 1000, memberCap: 10, goldBoost: 0.02, dustBoost: 0.01, xpBoost: 0.01 },
-  { level: 3, xpRequired: 2500, memberCap: 11, goldBoost: 0.04, dustBoost: 0.02, xpBoost: 0.02 },
-  { level: 4, xpRequired: 5000, memberCap: 11, goldBoost: 0.06, dustBoost: 0.03, xpBoost: 0.03 },
-  { level: 5, xpRequired: 10000, memberCap: 12, goldBoost: 0.08, dustBoost: 0.04, xpBoost: 0.04 },
-  { level: 6, xpRequired: 17500, memberCap: 12, goldBoost: 0.10, dustBoost: 0.05, xpBoost: 0.05 },
-  { level: 7, xpRequired: 27500, memberCap: 13, goldBoost: 0.12, dustBoost: 0.06, xpBoost: 0.06 },
-  { level: 8, xpRequired: 40000, memberCap: 13, goldBoost: 0.14, dustBoost: 0.07, xpBoost: 0.07 },
-  { level: 9, xpRequired: 55000, memberCap: 14, goldBoost: 0.16, dustBoost: 0.08, xpBoost: 0.08 },
-  { level: 10, xpRequired: 75000, memberCap: 14, goldBoost: 0.18, dustBoost: 0.09, xpBoost: 0.10 },
-  { level: 11, xpRequired: 100000, memberCap: 15, goldBoost: 0.20, dustBoost: 0.10, xpBoost: 0.12 },
-  { level: 12, xpRequired: 130000, memberCap: 15, goldBoost: 0.22, dustBoost: 0.11, xpBoost: 0.14 },
-  { level: 13, xpRequired: 165000, memberCap: 16, goldBoost: 0.24, dustBoost: 0.12, xpBoost: 0.16 },
-  { level: 14, xpRequired: 205000, memberCap: 16, goldBoost: 0.26, dustBoost: 0.13, xpBoost: 0.18 },
-  { level: 15, xpRequired: 250000, memberCap: 17, goldBoost: 0.28, dustBoost: 0.14, xpBoost: 0.20 },
-  { level: 16, xpRequired: 300000, memberCap: 17, goldBoost: 0.30, dustBoost: 0.15, xpBoost: 0.22 },
-  { level: 17, xpRequired: 360000, memberCap: 18, goldBoost: 0.32, dustBoost: 0.16, xpBoost: 0.24 },
-  { level: 18, xpRequired: 430000, memberCap: 18, goldBoost: 0.34, dustBoost: 0.17, xpBoost: 0.26 },
-  { level: 19, xpRequired: 510000, memberCap: 19, goldBoost: 0.36, dustBoost: 0.18, xpBoost: 0.28 },
-  { level: 20, xpRequired: 600000, memberCap: 20, goldBoost: 0.40, dustBoost: 0.20, xpBoost: 0.30 },
+  { level: 1, xpRequired: 0, memberCap: 10, goldBoost: 0, statBoost: 0, xpBoost: 0 },
+  { level: 2, xpRequired: 1000, memberCap: 10, goldBoost: 0.02, statBoost: 0.01, xpBoost: 0.01 },
+  { level: 3, xpRequired: 2500, memberCap: 11, goldBoost: 0.04, statBoost: 0.02, xpBoost: 0.02 },
+  { level: 4, xpRequired: 5000, memberCap: 11, goldBoost: 0.06, statBoost: 0.03, xpBoost: 0.03 },
+  { level: 5, xpRequired: 10000, memberCap: 12, goldBoost: 0.08, statBoost: 0.04, xpBoost: 0.04 },
+  { level: 6, xpRequired: 17500, memberCap: 12, goldBoost: 0.10, statBoost: 0.05, xpBoost: 0.05 },
+  { level: 7, xpRequired: 27500, memberCap: 13, goldBoost: 0.12, statBoost: 0.06, xpBoost: 0.06 },
+  { level: 8, xpRequired: 40000, memberCap: 13, goldBoost: 0.14, statBoost: 0.07, xpBoost: 0.07 },
+  { level: 9, xpRequired: 55000, memberCap: 14, goldBoost: 0.16, statBoost: 0.08, xpBoost: 0.08 },
+  { level: 10, xpRequired: 75000, memberCap: 14, goldBoost: 0.18, statBoost: 0.09, xpBoost: 0.10 },
+  { level: 11, xpRequired: 100000, memberCap: 15, goldBoost: 0.20, statBoost: 0.10, xpBoost: 0.12 },
+  { level: 12, xpRequired: 130000, memberCap: 15, goldBoost: 0.22, statBoost: 0.11, xpBoost: 0.14 },
+  { level: 13, xpRequired: 165000, memberCap: 16, goldBoost: 0.24, statBoost: 0.12, xpBoost: 0.16 },
+  { level: 14, xpRequired: 205000, memberCap: 16, goldBoost: 0.26, statBoost: 0.13, xpBoost: 0.18 },
+  { level: 15, xpRequired: 250000, memberCap: 17, goldBoost: 0.28, statBoost: 0.14, xpBoost: 0.20 },
+  { level: 16, xpRequired: 300000, memberCap: 17, goldBoost: 0.30, statBoost: 0.15, xpBoost: 0.22 },
+  { level: 17, xpRequired: 360000, memberCap: 18, goldBoost: 0.32, statBoost: 0.16, xpBoost: 0.24 },
+  { level: 18, xpRequired: 430000, memberCap: 18, goldBoost: 0.34, statBoost: 0.17, xpBoost: 0.26 },
+  { level: 19, xpRequired: 510000, memberCap: 19, goldBoost: 0.36, statBoost: 0.18, xpBoost: 0.28 },
+  { level: 20, xpRequired: 600000, memberCap: 20, goldBoost: 0.40, statBoost: 0.20, xpBoost: 0.30 },
 ] as const;
 
 // Trophy definitions

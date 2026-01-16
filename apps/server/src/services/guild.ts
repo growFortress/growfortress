@@ -25,7 +25,7 @@ export interface GuildMemberWithGuild extends GuildMember {
 
 export interface GuildBonuses {
   goldBoost: number;
-  dustBoost: number;
+  statBoost: number;
   xpBoost: number;
 }
 
@@ -71,9 +71,47 @@ export function getGuildBonuses(level: number): GuildBonuses {
   const levelData = getLevelInfo(level);
   return {
     goldBoost: levelData.goldBoost,
-    dustBoost: levelData.dustBoost,
+    statBoost: levelData.statBoost,
     xpBoost: levelData.xpBoost,
   };
+}
+
+// Cache for user guild bonuses (TTL: 60 seconds)
+const userGuildBonusesCache = new Map<string, { bonuses: GuildBonuses | null; expiry: number }>();
+
+/**
+ * Get guild bonuses for a user (cached for 60 seconds)
+ * Used during reward calculation to avoid N+1 queries
+ */
+export async function getUserGuildBonuses(userId: string): Promise<GuildBonuses | null> {
+  const now = Date.now();
+  const cached = userGuildBonusesCache.get(userId);
+
+  if (cached && cached.expiry > now) {
+    return cached.bonuses;
+  }
+
+  const membership = await prisma.guildMember.findUnique({
+    where: { userId },
+    include: { guild: { select: { level: true, disbanded: true } } },
+  });
+
+  if (!membership || membership.guild.disbanded) {
+    userGuildBonusesCache.set(userId, { bonuses: null, expiry: now + 60_000 });
+    return null;
+  }
+
+  const bonuses = getGuildBonuses(membership.guild.level);
+  userGuildBonusesCache.set(userId, { bonuses, expiry: now + 60_000 });
+  return bonuses;
+}
+
+/**
+ * Invalidate guild bonuses cache for a user
+ * Call this when user joins/leaves guild or guild levels up
+ */
+export function invalidateUserGuildBonusesCache(userId: string): void {
+  userGuildBonusesCache.delete(userId);
 }
 
 /**

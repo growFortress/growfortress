@@ -40,7 +40,7 @@ export const playerGuild = signal<GuildWithMembers | null>(null);
 export const playerMembership = signal<GuildMember | null>(null);
 
 /** Guild bonuses for the player */
-export const guildBonuses = signal<{ goldBoost: number; dustBoost: number; xpBoost: number } | null>(null);
+export const guildBonuses = signal<{ goldBoost: number; statBoost: number; xpBoost: number } | null>(null);
 
 /** Guild level info */
 export const guildLevelInfo = signal<GuildLevelInfo | null>(null);
@@ -316,7 +316,7 @@ export function resetGuildState() {
 export function setGuildData(data: {
   guild: GuildWithMembers | null;
   membership: GuildMember | null;
-  bonuses: { goldBoost: number; dustBoost: number; xpBoost: number } | null;
+  bonuses: { goldBoost: number; statBoost: number; xpBoost: number } | null;
 }) {
   playerGuild.value = data.guild;
   playerMembership.value = data.membership;

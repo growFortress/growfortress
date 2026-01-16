@@ -18,6 +18,7 @@ import { applySimConfigSnapshot, buildSimConfigSnapshot } from './simConfig.js';
 import { getGameConfig } from './gameConfig.js';
 import { getActiveMultipliers } from './events.js';
 import { updateQuestsFromRun } from './dailyQuests.js';
+import { getUserGuildBonuses } from './guild.js';
 
 /** Simulation tick rate - 30Hz provides smooth gameplay while being computationally manageable */
 const TICK_HZ = 30;
@@ -260,6 +261,10 @@ export async function startGameSession(
     }
   }
 
+  // Fetch guild stat boost for fortress/hero HP and damage
+  const guildBonuses = await getUserGuildBonuses(userId);
+  const guildStatBoost = guildBonuses?.statBoost;
+
   const { simConfig } = buildSimConfigSnapshot({
     commanderLevel,
     progressionBonuses: bonuses,
@@ -276,7 +281,8 @@ export async function startGameSession(
         fortressBaseHp: remoteConfig.fortressBaseHp ?? 100,
         fortressBaseDamage: remoteConfig.fortressBaseDamage ?? 10,
         waveIntervalTicks: remoteConfig.waveIntervalTicks ?? 90,
-    }
+    },
+    guildStatBoost,
   });
 
   // Atomic session creation - check for existing, end it, and create new in one transaction
@@ -513,10 +519,15 @@ export async function submitSegment(
 
   // Segment verified - apply rewards
   const eventMultipliers = await getActiveMultipliers();
-  
-  const goldEarned = Math.floor(sim.state.segmentGoldEarned * eventMultipliers.gold);
+  const guildBonuses = await getUserGuildBonuses(session.userId);
+
+  // Apply event multipliers and guild bonuses (multiplicative)
+  const goldMultiplier = eventMultipliers.gold * (1 + (guildBonuses?.goldBoost ?? 0));
+  const xpMultiplier = eventMultipliers.xp * (1 + (guildBonuses?.xpBoost ?? 0));
+
+  const goldEarned = Math.floor(sim.state.segmentGoldEarned * goldMultiplier);
   const dustEarned = Math.floor(sim.state.segmentDustEarned * eventMultipliers.dust);
-  const xpEarned = Math.floor(sim.state.segmentXpEarned * eventMultipliers.xp);
+  const xpEarned = Math.floor(sim.state.segmentXpEarned * xpMultiplier);
   const materialsEarned = sim.state.segmentMaterialsEarned || {};
 
   // Update inventory and session in transaction
@@ -704,9 +715,15 @@ export async function endGameSession(
   // Add partial rewards (from incomplete segment)
   if (sanitizedPartialRewards) {
     const eventMultipliers = await getActiveMultipliers();
-    partialGoldToApply = Math.floor(sanitizedPartialRewards.gold * eventMultipliers.gold);
+    const guildBonuses = await getUserGuildBonuses(session.userId);
+
+    // Apply event multipliers and guild bonuses (multiplicative)
+    const goldMultiplier = eventMultipliers.gold * (1 + (guildBonuses?.goldBoost ?? 0));
+    const xpMultiplier = eventMultipliers.xp * (1 + (guildBonuses?.xpBoost ?? 0));
+
+    partialGoldToApply = Math.floor(sanitizedPartialRewards.gold * goldMultiplier);
     partialDustToApply = Math.floor(sanitizedPartialRewards.dust * eventMultipliers.dust);
-    partialXpToApply = Math.floor(sanitizedPartialRewards.xp * eventMultipliers.xp);
+    partialXpToApply = Math.floor(sanitizedPartialRewards.xp * xpMultiplier);
     totalGoldEarned += partialGoldToApply;
     totalDustEarned += partialDustToApply;
     totalXpEarned += partialXpToApply;

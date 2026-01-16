@@ -183,7 +183,9 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
   const hpBonus = calculateTotalHpBonus(config.commanderLevel);
   // Apply power upgrade HP bonus (additive: 0.15 = 15%)
   const powerHpMultiplier = 1 + baseModifiers.maxHpBonus;
-  const maxHp = Math.floor((config.fortressBaseHp * hpBonus * powerHpMultiplier) / 16384);
+  // Apply guild stat boost (0-0.20 = 0-20%)
+  const guildBoost = 1 + (config.guildStatBoost ?? 0);
+  const maxHp = Math.floor((config.fortressBaseHp * hpBonus * powerHpMultiplier * guildBoost) / 16384);
 
   // Initialize heroes with max slots based on commander level
   const maxHeroSlots = getMaxHeroSlots(config.commanderLevel);
@@ -202,7 +204,8 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     config.fortressX,
     powerDataForHeroes,
     heroTiers,
-    config.equippedArtifacts
+    config.equippedArtifacts,
+    config.guildStatBoost
   );
 
   // Initialize turrets with max slots based on commander level
@@ -346,6 +349,11 @@ export class Simulation {
     // Apply commander level damage bonus (fixed-point: 16384 = 1.0, convert to additive)
     const commanderDamageBonus = calculateTotalDamageBonus(config.commanderLevel);
     this.state.modifiers.damageBonus += (commanderDamageBonus / 16384) - 1;
+
+    // Apply guild stat boost to damage (additive: 0.20 = 20% more damage)
+    if (config.guildStatBoost) {
+      this.state.modifiers.damageBonus += config.guildStatBoost;
+    }
   }
 
   /**

@@ -147,7 +147,7 @@ describe('Guild Progression Service', () => {
       const info = getGuildLevelInfo(5, 1000, 5000);
 
       expect(info.bonuses).toHaveProperty('goldBoost');
-      expect(info.bonuses).toHaveProperty('dustBoost');
+      expect(info.bonuses).toHaveProperty('statBoost');
       expect(info.bonuses).toHaveProperty('xpBoost');
     });
 
