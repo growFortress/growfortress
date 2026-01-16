@@ -242,7 +242,7 @@ export function LeaderboardModal() {
   if (!isVisible) return null;
 
   return (
-    <Modal isOpen={isVisible} onClose={closeLeaderboardModal} title={`🏆 ${t('leaderboard.title')}`} size="large" bodyClass={styles.modalBody}>
+    <Modal isOpen={isVisible} onClose={closeLeaderboardModal} title={`🏆 ${t('leaderboard.title')}`} size="large" class={styles.modalContent} bodyClass={styles.modalBody}>
       <div class={styles.modalPanel}>
 
         {/* Main Tab Bar */}
@@ -423,7 +423,6 @@ function UserRankCard({ rank, score, userName, category, t }: UserRankCardProps)
         <div class={styles.userRank}>
           {rank ? `#${rank}` : <span class={styles.userRankUnranked}>—</span>}
         </div>
-        <div class={styles.userAvatar}>👤</div>
         <div class={styles.userInfo}>
           <div class={styles.userName}>{userName}</div>
         </div>
@@ -453,7 +452,6 @@ function GuildRankCard({ rank, guildName, guildTag, honor, t }: GuildRankCardPro
         <div class={styles.userRank}>
           {rank ? `#${rank}` : <span class={styles.userRankUnranked}>—</span>}
         </div>
-        <div class={styles.userAvatar}>🏰</div>
         <div class={styles.userInfo}>
           <div class={styles.userName}>{guildName}</div>
           <div class={styles.userGuildTag}>[{guildTag}]</div>
@@ -514,10 +512,6 @@ function LeaderboardEntry({ entry, category, isCurrentUser, t }: LeaderboardEntr
       <div class={styles.entryRank}>
         {entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `#${entry.rank}`}
       </div>
-      <div class={styles.entryAvatar}>
-        👤
-        {entry.isOnline && <span class={styles.onlineIndicator} title="Online" />}
-      </div>
       <div class={styles.entryInfo}>
         <div class={styles.entryNameRow}>
           <span class={styles.entryName}>{entry.displayName}</span>
@@ -572,7 +566,6 @@ function GuildLeaderboardEntryRow({ entry, isMyGuild, t }: GuildLeaderboardEntry
       <div class={styles.entryRank}>
         {entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `#${entry.rank}`}
       </div>
-      <div class={styles.entryAvatar}>🏰</div>
       <div class={styles.entryInfo}>
         <div class={styles.entryNameRow}>
           <span class={styles.entryName}>{entry.guildName}</span>
@@ -580,7 +573,6 @@ function GuildLeaderboardEntryRow({ entry, isMyGuild, t }: GuildLeaderboardEntry
         </div>
         <div class={styles.entryMeta}>
           <span>👥 {entry.memberCount} {t('leaderboard.members')}</span>
-          <span>⚔️ {t('leaderboard.wins')}: {entry.battlesWon} / {t('leaderboard.losses')}: {entry.battlesLost}</span>
         </div>
       </div>
       <div class={styles.entryScore}>

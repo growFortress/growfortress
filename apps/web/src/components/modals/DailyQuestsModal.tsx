@@ -180,10 +180,7 @@ export function DailyQuestsModal() {
                     glow={isCompleted && !isClaimed}
                   />
                   <span class={styles.questProgressText}>
-                    {quest.progress}/{quest.target}{' '}
-                    <span class={styles.progressPercent}>
-                      ({Math.round(questProgressPercent)}%)
-                    </span>
+                    {quest.progress}/{quest.target}
                   </span>
                 </div>
               </div>
@@ -192,7 +189,7 @@ export function DailyQuestsModal() {
               <div class={styles.questRight}>
                 <div class={styles.rewardsList}>
                   <div class={`${styles.rewardItem} ${styles.dustReward}`}>
-                    <span class={styles.rewardIcon}>💨</span>
+                    <span class={styles.rewardIcon}>✨</span>
                     <span>{quest.dustReward}</span>
                   </div>
                   {quest.bonusType && (
@@ -221,9 +218,7 @@ export function DailyQuestsModal() {
                     </button>
                   ) : isClaimed ? (
                     <div class={styles.claimedCheckmark}>✓</div>
-                  ) : (
-                    <div class={styles.lockedIndicator}>In Progress</div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>

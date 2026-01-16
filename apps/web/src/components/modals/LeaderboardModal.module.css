@@ -2,6 +2,11 @@
    LEADERBOARD MODAL STYLES
    ========================================== */
 
+.modalContent {
+  border: var(--border-primary);
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
 .modalBody {
   padding: 0 !important;
   overflow: hidden !important;
