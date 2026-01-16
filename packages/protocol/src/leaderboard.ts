@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Leaderboard entry
 export const LeaderboardEntrySchema = z.object({
@@ -38,14 +38,16 @@ export type LeaderboardResponse = z.infer<typeof LeaderboardResponseSchema>;
 
 // Player leaderboard categories
 export const PlayerLeaderboardCategorySchema = z.enum([
-  'totalWaves',
-  'honor',
-  'level',
-  'weeklyWaves',
-  'weeklyHonor',
+  "totalWaves",
+  "honor",
+  "level",
+  "weeklyWaves",
+  "weeklyHonor",
 ]);
 
-export type PlayerLeaderboardCategory = z.infer<typeof PlayerLeaderboardCategorySchema>;
+export type PlayerLeaderboardCategory = z.infer<
+  typeof PlayerLeaderboardCategorySchema
+>;
 
 // Player leaderboard entry (with extended info)
 export const PlayerLeaderboardEntrySchema = z.object({
@@ -61,7 +63,9 @@ export const PlayerLeaderboardEntrySchema = z.object({
   isOnline: z.boolean().optional(),
 });
 
-export type PlayerLeaderboardEntry = z.infer<typeof PlayerLeaderboardEntrySchema>;
+export type PlayerLeaderboardEntry = z.infer<
+  typeof PlayerLeaderboardEntrySchema
+>;
 
 // Time until weekly reset
 export const TimeUntilResetSchema = z.object({
@@ -82,7 +86,9 @@ export const PlayerLeaderboardResponseSchema = z.object({
   timeUntilReset: TimeUntilResetSchema.optional(),
 });
 
-export type PlayerLeaderboardResponse = z.infer<typeof PlayerLeaderboardResponseSchema>;
+export type PlayerLeaderboardResponse = z.infer<
+  typeof PlayerLeaderboardResponseSchema
+>;
 
 // User rank info for a single category
 export const UserRankInfoSchema = z.object({
@@ -107,11 +113,10 @@ export type UserRanksResponse = z.infer<typeof UserRanksResponseSchema>;
 export const AvailableRewardSchema = z.object({
   id: z.string(),
   weekKey: z.string(),
-  category: z.enum(['waves', 'honor']),
+  category: z.enum(["waves", "honor"]),
   rank: z.number().int().min(1),
   goldAmount: z.number().int().min(0),
   dustAmount: z.number().int().min(0),
-  sigilsAmount: z.number().int().min(0),
   itemIds: z.array(z.string()),
   expiresAt: z.string().datetime(),
 });
@@ -123,7 +128,9 @@ export const AvailableRewardsResponseSchema = z.object({
   rewards: z.array(AvailableRewardSchema),
 });
 
-export type AvailableRewardsResponse = z.infer<typeof AvailableRewardsResponseSchema>;
+export type AvailableRewardsResponse = z.infer<
+  typeof AvailableRewardsResponseSchema
+>;
 
 // Claim reward request
 export const ClaimRewardRequestSchema = z.object({
@@ -137,7 +144,6 @@ export const ClaimRewardResponseSchema = z.object({
   success: z.boolean(),
   goldAmount: z.number().int().min(0),
   dustAmount: z.number().int().min(0),
-  sigilsAmount: z.number().int().min(0),
   itemIds: z.array(z.string()),
   newExclusiveItems: z.array(z.string()),
 });
@@ -154,9 +160,20 @@ export const PlayerWeeksResponseSchema = z.object({
 export type PlayerWeeksResponse = z.infer<typeof PlayerWeeksResponseSchema>;
 
 // Exclusive item type/rarity
-export const ExclusiveItemTypeSchema = z.enum(['frame', 'title', 'badge', 'aura', 'effect']);
-export const ExclusiveItemRaritySchema = z.enum(['rare', 'epic', 'legendary', 'mythic']);
-export const ExclusiveItemCategorySchema = z.enum(['waves', 'honor']);
+export const ExclusiveItemTypeSchema = z.enum([
+  "frame",
+  "title",
+  "badge",
+  "aura",
+  "effect",
+]);
+export const ExclusiveItemRaritySchema = z.enum([
+  "rare",
+  "epic",
+  "legendary",
+  "mythic",
+]);
+export const ExclusiveItemCategorySchema = z.enum(["waves", "honor"]);
 
 export type ExclusiveItemType = z.infer<typeof ExclusiveItemTypeSchema>;
 export type ExclusiveItemRarity = z.infer<typeof ExclusiveItemRaritySchema>;
@@ -184,4 +201,6 @@ export const ExclusiveItemsResponseSchema = z.object({
   items: z.array(ExclusiveItemSchema),
 });
 
-export type ExclusiveItemsResponse = z.infer<typeof ExclusiveItemsResponseSchema>;
+export type ExclusiveItemsResponse = z.infer<
+  typeof ExclusiveItemsResponseSchema
+>;

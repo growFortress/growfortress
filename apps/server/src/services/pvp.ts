@@ -1,6 +1,6 @@
-import { randomInt } from 'node:crypto';
-import { prisma } from '../lib/prisma.js';
-import { Prisma, PvpChallengeStatus } from '@prisma/client';
+import { randomInt } from "node:crypto";
+import { prisma } from "../lib/prisma.js";
+import { Prisma, PvpChallengeStatus } from "@prisma/client";
 import {
   runArenaBattle,
   getProgressionBonuses,
@@ -13,9 +13,9 @@ import {
   type FortressClass,
   type StatUpgrades,
   type ArenaHeroConfig,
-} from '@arcade/sim-core';
-import { PVP_CONSTANTS, PVP_ERROR_CODES } from '@arcade/protocol';
-import { recordWeeklyHonorGain } from './playerLeaderboard.js';
+} from "@arcade/sim-core";
+import { PVP_CONSTANTS, PVP_ERROR_CODES } from "@arcade/protocol";
+import { recordWeeklyHonorGain } from "./playerLeaderboard.js";
 
 // ============================================================================
 // ERROR CLASS
@@ -24,10 +24,10 @@ import { recordWeeklyHonorGain } from './playerLeaderboard.js';
 export class PvpError extends Error {
   constructor(
     message: string,
-    public readonly code: keyof typeof PVP_ERROR_CODES
+    public readonly code: keyof typeof PVP_ERROR_CODES,
   ) {
     super(message);
-    this.name = 'PvpError';
+    this.name = "PvpError";
   }
 }
 
@@ -41,7 +41,11 @@ interface UserBuildData {
   commanderLevel: number;
   fortressClass: FortressClass;
   heroIds: string[];
-  turretConfigs: Array<{ definitionId: string; slotIndex: number; class: FortressClass }>;
+  turretConfigs: Array<{
+    definitionId: string;
+    slotIndex: number;
+    class: FortressClass;
+  }>;
   damageMultiplier: number;
   hpMultiplier: number;
   power: number;
@@ -66,7 +70,7 @@ const HONOR_MAX_LOSS = 50;
 function calculateHonorChange(
   winnerPower: number,
   loserPower: number,
-  isWinner: boolean
+  isWinner: boolean,
 ): number {
   // Power ratio > 1 means the opponent was stronger
   const powerRatio = loserPower / Math.max(winnerPower, 1);
@@ -116,30 +120,35 @@ async function getUserArenaPower(userId: string): Promise<number> {
   // Get hero IDs (active loadout)
   const maxHeroSlots = getMaxHeroSlots(commanderLevel);
   const unlockedHeroes = user.inventory?.unlockedHeroIds ?? [];
-  const defaultHero = user.defaultHeroId ?? 'vanguard';
-  const heroIds = unlockedHeroes.length > 0
-    ? unlockedHeroes.slice(0, maxHeroSlots)
-    : [defaultHero];
+  const defaultHero = user.defaultHeroId ?? "vanguard";
+  const heroIds =
+    unlockedHeroes.length > 0
+      ? unlockedHeroes.slice(0, maxHeroSlots)
+      : [defaultHero];
 
   // Parse power upgrades
   const powerUpgrades = user.powerUpgrades;
-  const fortressUpgrades = (powerUpgrades?.fortressUpgrades as unknown as {
-    statUpgrades?: StatUpgrades;
-  } | null)?.statUpgrades ?? createDefaultStatUpgrades();
+  const fortressUpgrades =
+    (
+      powerUpgrades?.fortressUpgrades as unknown as {
+        statUpgrades?: StatUpgrades;
+      } | null
+    )?.statUpgrades ?? createDefaultStatUpgrades();
 
-  const heroUpgradesData = (powerUpgrades?.heroUpgrades as unknown as Array<{
-    heroId: string;
-    statUpgrades: StatUpgrades;
-  }>) ?? [];
+  const heroUpgradesData =
+    (powerUpgrades?.heroUpgrades as unknown as Array<{
+      heroId: string;
+      statUpgrades: StatUpgrades;
+    }>) ?? [];
 
   // Build hero configs with their upgrades and equipped artifacts
   const artifactMap = new Map(
-    user.artifacts.map(a => [a.equippedToHeroId, a.artifactId])
+    user.artifacts.map((a) => [a.equippedToHeroId, a.artifactId]),
   );
 
   // Hero tiers default to 1 (tier progression not implemented in this schema)
-  const activeHeroes: ArenaHeroConfig[] = heroIds.map(heroId => {
-    const heroUpgrade = heroUpgradesData.find(h => h.heroId === heroId);
+  const activeHeroes: ArenaHeroConfig[] = heroIds.map((heroId) => {
+    const heroUpgrade = heroUpgradesData.find((h) => h.heroId === heroId);
     return {
       heroId,
       tier: 1 as const,
@@ -172,26 +181,30 @@ async function getUserBuildData(userId: string): Promise<UserBuildData | null> {
   const progressionBonuses = getProgressionBonuses(commanderLevel);
 
   // Get fortress class
-  const requestedClass = user.defaultFortressClass ?? 'natural';
+  const requestedClass = user.defaultFortressClass ?? "natural";
   const fortressClass = isClassUnlockedAtLevel(requestedClass, commanderLevel)
     ? (requestedClass as FortressClass)
-    : 'natural';
+    : "natural";
 
   // Get hero IDs (use default hero if no specific loadout)
-  const maxHeroSlots = progressionBonuses.maxHeroSlots || getMaxHeroSlots(commanderLevel);
+  const maxHeroSlots =
+    progressionBonuses.maxHeroSlots || getMaxHeroSlots(commanderLevel);
   const unlockedHeroes = user.inventory?.unlockedHeroIds ?? [];
-  const defaultHero = user.defaultHeroId ?? 'vanguard';
-  const heroIds = unlockedHeroes.length > 0
-    ? unlockedHeroes.slice(0, maxHeroSlots)
-    : [defaultHero];
+  const defaultHero = user.defaultHeroId ?? "vanguard";
+  const heroIds =
+    unlockedHeroes.length > 0
+      ? unlockedHeroes.slice(0, maxHeroSlots)
+      : [defaultHero];
 
   // Get turret configs
-  const maxTurretSlots = progressionBonuses.maxTurretSlots || getMaxTurretSlots(commanderLevel);
+  const maxTurretSlots =
+    progressionBonuses.maxTurretSlots || getMaxTurretSlots(commanderLevel);
   const unlockedTurrets = user.inventory?.unlockedTurretIds ?? [];
-  const defaultTurret = user.defaultTurretType ?? 'railgun';
-  const turretTypes = unlockedTurrets.length > 0
-    ? unlockedTurrets.slice(0, maxTurretSlots)
-    : [defaultTurret];
+  const defaultTurret = user.defaultTurretType ?? "railgun";
+  const turretTypes =
+    unlockedTurrets.length > 0
+      ? unlockedTurrets.slice(0, maxTurretSlots)
+      : [defaultTurret];
 
   const turretConfigs = turretTypes.map((definitionId, index) => ({
     definitionId,
@@ -251,11 +264,16 @@ function toBuildConfig(data: UserBuildData): ArenaBuildConfig {
 /**
  * Check if user can challenge another user (cooldown check)
  */
-async function canChallengeUser(challengerId: string, challengedId: string): Promise<{
+async function canChallengeUser(
+  challengerId: string,
+  challengedId: string,
+): Promise<{
   canChallenge: boolean;
   cooldownEndsAt?: Date;
 }> {
-  const since = new Date(Date.now() - PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000);
+  const since = new Date(
+    Date.now() - PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000,
+  );
 
   const recentChallenges = await prisma.pvpChallenge.findMany({
     where: {
@@ -263,7 +281,7 @@ async function canChallengeUser(challengerId: string, challengedId: string): Pro
       challengedId,
       createdAt: { gte: since },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: PVP_CONSTANTS.MAX_CHALLENGES_PER_OPPONENT,
   });
 
@@ -274,7 +292,8 @@ async function canChallengeUser(challengerId: string, challengedId: string): Pro
   // Calculate when cooldown ends (oldest challenge + 24h)
   const oldestChallenge = recentChallenges[recentChallenges.length - 1];
   const cooldownEndsAt = new Date(
-    oldestChallenge.createdAt.getTime() + PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000
+    oldestChallenge.createdAt.getTime() +
+      PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000,
   );
 
   return {
@@ -293,7 +312,7 @@ async function canChallengeUser(challengerId: string, challengedId: string): Pro
 export async function getOpponents(
   userId: string,
   limit: number = 20,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<{
   opponents: Array<{
     userId: string;
@@ -318,8 +337,12 @@ export async function getOpponents(
   });
 
   const matchingPower = userPower?.cachedTotalPower ?? myPower;
-  const minPower = Math.floor(matchingPower * (1 - PVP_CONSTANTS.POWER_RANGE_PERCENT));
-  const maxPower = Math.ceil(matchingPower * (1 + PVP_CONSTANTS.POWER_RANGE_PERCENT));
+  const minPower = Math.floor(
+    matchingPower * (1 - PVP_CONSTANTS.POWER_RANGE_PERCENT),
+  );
+  const maxPower = Math.ceil(
+    matchingPower * (1 + PVP_CONSTANTS.POWER_RANGE_PERCENT),
+  );
 
   // Find opponents within power range
   const [users, total] = await Promise.all([
@@ -340,7 +363,7 @@ export async function getOpponents(
         },
       },
       orderBy: {
-        powerUpgrades: { cachedTotalPower: 'desc' },
+        powerUpgrades: { cachedTotalPower: "desc" },
       },
       skip: offset,
       take: limit,
@@ -372,7 +395,7 @@ export async function getOpponents(
         canChallenge: cooldownInfo.canChallenge,
         challengeCooldownEndsAt: cooldownInfo.cooldownEndsAt?.toISOString(),
       };
-    })
+    }),
   );
 
   return { opponents, total, myPower };
@@ -383,7 +406,7 @@ export async function getOpponents(
  */
 export async function createChallenge(
   challengerId: string,
-  challengedId: string
+  challengedId: string,
 ): Promise<{
   id: string;
   challengerId: string;
@@ -398,7 +421,7 @@ export async function createChallenge(
 }> {
   // Validate not challenging self
   if (challengerId === challengedId) {
-    throw new PvpError('Cannot challenge yourself', 'CANNOT_CHALLENGE_SELF');
+    throw new PvpError("Cannot challenge yourself", "CANNOT_CHALLENGE_SELF");
   }
 
   // Get both users
@@ -414,11 +437,11 @@ export async function createChallenge(
   ]);
 
   if (!challenger) {
-    throw new PvpError('Challenger not found', 'USER_NOT_FOUND');
+    throw new PvpError("Challenger not found", "USER_NOT_FOUND");
   }
 
   if (!challenged) {
-    throw new PvpError('Opponent not found', 'OPPONENT_NOT_FOUND');
+    throw new PvpError("Opponent not found", "OPPONENT_NOT_FOUND");
   }
 
   // Check cooldown
@@ -426,7 +449,7 @@ export async function createChallenge(
   if (!cooldownInfo.canChallenge) {
     throw new PvpError(
       `Challenge cooldown active until ${cooldownInfo.cooldownEndsAt?.toISOString()}`,
-      'COOLDOWN_ACTIVE'
+      "COOLDOWN_ACTIVE",
     );
   }
 
@@ -437,11 +460,13 @@ export async function createChallenge(
   const maxPower = challengerPower * (1 + PVP_CONSTANTS.POWER_RANGE_PERCENT);
 
   if (challengedPower < minPower || challengedPower > maxPower) {
-    throw new PvpError('Opponent power out of range', 'POWER_OUT_OF_RANGE');
+    throw new PvpError("Opponent power out of range", "POWER_OUT_OF_RANGE");
   }
 
   // Create challenge
-  const expiresAt = new Date(Date.now() + PVP_CONSTANTS.CHALLENGE_EXPIRY_HOURS * 60 * 60 * 1000);
+  const expiresAt = new Date(
+    Date.now() + PVP_CONSTANTS.CHALLENGE_EXPIRY_HOURS * 60 * 60 * 1000,
+  );
 
   const challenge = await prisma.pvpChallenge.create({
     data: {
@@ -472,10 +497,10 @@ export async function createChallenge(
  */
 export async function getChallenges(
   userId: string,
-  type: 'sent' | 'received' | 'all' = 'all',
+  type: "sent" | "received" | "all" = "all",
   status?: PvpChallengeStatus,
   limit: number = 20,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<{
   challenges: Array<{
     id: string;
@@ -496,15 +521,12 @@ export async function getChallenges(
 }> {
   const whereClause: Prisma.PvpChallengeWhereInput = {};
 
-  if (type === 'sent') {
+  if (type === "sent") {
     whereClause.challengerId = userId;
-  } else if (type === 'received') {
+  } else if (type === "received") {
     whereClause.challengedId = userId;
   } else {
-    whereClause.OR = [
-      { challengerId: userId },
-      { challengedId: userId },
-    ];
+    whereClause.OR = [{ challengerId: userId }, { challengedId: userId }];
   }
 
   if (status) {
@@ -518,7 +540,7 @@ export async function getChallenges(
         challenger: { select: { displayName: true } },
         challenged: { select: { displayName: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip: offset,
       take: limit,
     }),
@@ -550,7 +572,7 @@ export async function getChallenges(
  */
 export async function getChallenge(
   challengeId: string,
-  userId: string
+  userId: string,
 ): Promise<{
   id: string;
   challengerId: string;
@@ -569,8 +591,16 @@ export async function getChallenge(
     id: string;
     winnerId: string | null;
     winReason: string;
-    challengerStats: { finalHp: number; damageDealt: number; heroesAlive: number };
-    challengedStats: { finalHp: number; damageDealt: number; heroesAlive: number };
+    challengerStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    challengedStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
     duration: number;
     resolvedAt: string;
   };
@@ -585,12 +615,15 @@ export async function getChallenge(
   });
 
   if (!challenge) {
-    throw new PvpError('Challenge not found', 'CHALLENGE_NOT_FOUND');
+    throw new PvpError("Challenge not found", "CHALLENGE_NOT_FOUND");
   }
 
   // Check if user is part of this challenge
   if (challenge.challengerId !== userId && challenge.challengedId !== userId) {
-    throw new PvpError('Not authorized to view this challenge', 'CHALLENGE_FORBIDDEN');
+    throw new PvpError(
+      "Not authorized to view this challenge",
+      "CHALLENGE_FORBIDDEN",
+    );
   }
 
   return {
@@ -634,7 +667,7 @@ export async function getChallenge(
  */
 export async function acceptChallenge(
   challengeId: string,
-  userId: string
+  userId: string,
 ): Promise<{
   challenge: {
     id: string;
@@ -649,8 +682,16 @@ export async function acceptChallenge(
   result: {
     winnerId: string | null;
     winReason: string;
-    challengerStats: { finalHp: number; damageDealt: number; heroesAlive: number };
-    challengedStats: { finalHp: number; damageDealt: number; heroesAlive: number };
+    challengerStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    challengedStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
     duration: number;
   };
 }> {
@@ -660,26 +701,29 @@ export async function acceptChallenge(
   });
 
   if (!challenge) {
-    throw new PvpError('Challenge not found', 'CHALLENGE_NOT_FOUND');
+    throw new PvpError("Challenge not found", "CHALLENGE_NOT_FOUND");
   }
 
   // Validate user is the challenged player
   if (challenge.challengedId !== userId) {
-    throw new PvpError('Only the challenged player can accept', 'CHALLENGE_FORBIDDEN');
+    throw new PvpError(
+      "Only the challenged player can accept",
+      "CHALLENGE_FORBIDDEN",
+    );
   }
 
   // Validate challenge is pending
-  if (challenge.status !== 'PENDING') {
-    throw new PvpError('Challenge is not pending', 'CHALLENGE_NOT_PENDING');
+  if (challenge.status !== "PENDING") {
+    throw new PvpError("Challenge is not pending", "CHALLENGE_NOT_PENDING");
   }
 
   // Check if expired
   if (challenge.expiresAt < new Date()) {
     await prisma.pvpChallenge.update({
       where: { id: challengeId },
-      data: { status: 'EXPIRED' },
+      data: { status: "EXPIRED" },
     });
-    throw new PvpError('Challenge has expired', 'CHALLENGE_EXPIRED');
+    throw new PvpError("Challenge has expired", "CHALLENGE_EXPIRED");
   }
 
   // Get both players' builds
@@ -689,7 +733,7 @@ export async function acceptChallenge(
   ]);
 
   if (!challengerBuild || !challengedBuild) {
-    throw new PvpError('Could not load player builds', 'USER_NOT_FOUND');
+    throw new PvpError("Could not load player builds", "USER_NOT_FOUND");
   }
 
   // Generate cryptographically secure battle seed
@@ -704,9 +748,9 @@ export async function acceptChallenge(
 
   // Determine winner ID
   let winnerId: string | null = null;
-  if (battleResult.winner === 'left') {
+  if (battleResult.winner === "left") {
     winnerId = challenge.challengerId;
-  } else if (battleResult.winner === 'right') {
+  } else if (battleResult.winner === "right") {
     winnerId = challenge.challengedId;
   }
 
@@ -719,12 +763,14 @@ export async function acceptChallenge(
   let challengedHonorChange = 0;
 
   if (winnerId) {
-    const winnerPower = winnerId === challenge.challengerId
-      ? challengerBuild.power
-      : challengedBuild.power;
-    const loserPower = winnerId === challenge.challengerId
-      ? challengedBuild.power
-      : challengerBuild.power;
+    const winnerPower =
+      winnerId === challenge.challengerId
+        ? challengerBuild.power
+        : challengedBuild.power;
+    const loserPower =
+      winnerId === challenge.challengerId
+        ? challengedBuild.power
+        : challengerBuild.power;
 
     const winnerHonorGain = calculateHonorChange(winnerPower, loserPower, true);
     const loserHonorLoss = calculateHonorChange(loserPower, winnerPower, false);
@@ -744,7 +790,7 @@ export async function acceptChallenge(
     prisma.pvpChallenge.update({
       where: { id: challengeId },
       data: {
-        status: 'RESOLVED',
+        status: "RESOLVED",
         seed,
         acceptedAt: new Date(),
         resolvedAt: new Date(),
@@ -764,9 +810,15 @@ export async function acceptChallenge(
         challengedDamageDealt: battleResult.rightStats.damageDealt,
         challengedHeroesAlive,
         duration: battleResult.duration,
-        challengerBuild: challengerConfig as unknown as Parameters<typeof prisma.pvpResult.create>[0]['data']['challengerBuild'],
-        challengedBuild: challengedConfig as unknown as Parameters<typeof prisma.pvpResult.create>[0]['data']['challengedBuild'],
-        replayEvents: battleResult.replayEvents as unknown as Parameters<typeof prisma.pvpResult.create>[0]['data']['replayEvents'],
+        challengerBuild: challengerConfig as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["challengerBuild"],
+        challengedBuild: challengedConfig as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["challengedBuild"],
+        replayEvents: battleResult.replayEvents as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["replayEvents"],
       },
     }),
     // Update challenger stats (wins/losses + honor)
@@ -779,7 +831,6 @@ export async function acceptChallenge(
             ? { pvpLosses: { increment: 1 } }
             : {}),
         honor: { increment: challengerHonorChange },
-        weeklyHonor: { increment: Math.max(0, challengerHonorChange) }, // Only track gains
       },
     }),
     // Update challenged stats (wins/losses + honor)
@@ -792,23 +843,26 @@ export async function acceptChallenge(
             ? { pvpLosses: { increment: 1 } }
             : {}),
         honor: { increment: challengedHonorChange },
-        weeklyHonor: { increment: Math.max(0, challengedHonorChange) }, // Only track gains
       },
     }),
   ]);
 
   // Record weekly honor gains in leaderboard tracking (fire and forget)
   if (challengerHonorChange > 0) {
-    recordWeeklyHonorGain(challenge.challengerId, challengerHonorChange).catch(() => {});
+    recordWeeklyHonorGain(challenge.challengerId, challengerHonorChange).catch(
+      () => {},
+    );
   }
   if (challengedHonorChange > 0) {
-    recordWeeklyHonorGain(challenge.challengedId, challengedHonorChange).catch(() => {});
+    recordWeeklyHonorGain(challenge.challengedId, challengedHonorChange).catch(
+      () => {},
+    );
   }
 
   return {
     challenge: {
       id: challengeId,
-      status: 'RESOLVED',
+      status: "RESOLVED",
       winnerId: winnerId ?? undefined,
     },
     battleData: {
@@ -839,27 +893,30 @@ export async function acceptChallenge(
  */
 export async function declineChallenge(
   challengeId: string,
-  userId: string
+  userId: string,
 ): Promise<{ id: string; status: PvpChallengeStatus }> {
   const challenge = await prisma.pvpChallenge.findUnique({
     where: { id: challengeId },
   });
 
   if (!challenge) {
-    throw new PvpError('Challenge not found', 'CHALLENGE_NOT_FOUND');
+    throw new PvpError("Challenge not found", "CHALLENGE_NOT_FOUND");
   }
 
   if (challenge.challengedId !== userId) {
-    throw new PvpError('Only the challenged player can decline', 'CHALLENGE_FORBIDDEN');
+    throw new PvpError(
+      "Only the challenged player can decline",
+      "CHALLENGE_FORBIDDEN",
+    );
   }
 
-  if (challenge.status !== 'PENDING') {
-    throw new PvpError('Challenge is not pending', 'CHALLENGE_NOT_PENDING');
+  if (challenge.status !== "PENDING") {
+    throw new PvpError("Challenge is not pending", "CHALLENGE_NOT_PENDING");
   }
 
   const updated = await prisma.pvpChallenge.update({
     where: { id: challengeId },
-    data: { status: 'DECLINED' },
+    data: { status: "DECLINED" },
   });
 
   return { id: updated.id, status: updated.status };
@@ -870,27 +927,27 @@ export async function declineChallenge(
  */
 export async function cancelChallenge(
   challengeId: string,
-  userId: string
+  userId: string,
 ): Promise<{ id: string; status: PvpChallengeStatus }> {
   const challenge = await prisma.pvpChallenge.findUnique({
     where: { id: challengeId },
   });
 
   if (!challenge) {
-    throw new PvpError('Challenge not found', 'CHALLENGE_NOT_FOUND');
+    throw new PvpError("Challenge not found", "CHALLENGE_NOT_FOUND");
   }
 
   if (challenge.challengerId !== userId) {
-    throw new PvpError('Only the challenger can cancel', 'CHALLENGE_FORBIDDEN');
+    throw new PvpError("Only the challenger can cancel", "CHALLENGE_FORBIDDEN");
   }
 
-  if (challenge.status !== 'PENDING') {
-    throw new PvpError('Challenge is not pending', 'CHALLENGE_NOT_PENDING');
+  if (challenge.status !== "PENDING") {
+    throw new PvpError("Challenge is not pending", "CHALLENGE_NOT_PENDING");
   }
 
   const updated = await prisma.pvpChallenge.update({
     where: { id: challengeId },
-    data: { status: 'CANCELLED' },
+    data: { status: "CANCELLED" },
   });
 
   return { id: updated.id, status: updated.status };
@@ -901,7 +958,7 @@ export async function cancelChallenge(
  */
 export async function getReplayData(
   challengeId: string,
-  userId: string
+  userId: string,
 ): Promise<{
   seed: number;
   challengerBuild: ArenaBuildConfig;
@@ -909,8 +966,16 @@ export async function getReplayData(
   result: {
     winnerId: string | null;
     winReason: string;
-    challengerStats: { finalHp: number; damageDealt: number; heroesAlive: number };
-    challengedStats: { finalHp: number; damageDealt: number; heroesAlive: number };
+    challengerStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    challengedStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
     duration: number;
   };
   replayEvents: unknown[];
@@ -921,22 +986,30 @@ export async function getReplayData(
   });
 
   if (!challenge) {
-    throw new PvpError('Challenge not found', 'CHALLENGE_NOT_FOUND');
+    throw new PvpError("Challenge not found", "CHALLENGE_NOT_FOUND");
   }
 
   // Check if user is part of this challenge
   if (challenge.challengerId !== userId && challenge.challengedId !== userId) {
-    throw new PvpError('Not authorized to view this replay', 'CHALLENGE_FORBIDDEN');
+    throw new PvpError(
+      "Not authorized to view this replay",
+      "CHALLENGE_FORBIDDEN",
+    );
   }
 
-  if (challenge.status !== 'RESOLVED' || !challenge.result) {
-    throw new PvpError('Challenge is not resolved yet', 'CHALLENGE_NOT_PENDING');
+  if (challenge.status !== "RESOLVED" || !challenge.result) {
+    throw new PvpError(
+      "Challenge is not resolved yet",
+      "CHALLENGE_NOT_PENDING",
+    );
   }
 
   return {
     seed: challenge.seed!,
-    challengerBuild: challenge.result.challengerBuild as unknown as ArenaBuildConfig,
-    challengedBuild: challenge.result.challengedBuild as unknown as ArenaBuildConfig,
+    challengerBuild: challenge.result
+      .challengerBuild as unknown as ArenaBuildConfig,
+    challengedBuild: challenge.result
+      .challengedBuild as unknown as ArenaBuildConfig,
     result: {
       winnerId: challenge.result.winnerId,
       winReason: challenge.result.winReason,
@@ -974,7 +1047,7 @@ export async function getUserPvpStats(userId: string): Promise<{
     prisma.pvpChallenge.count({
       where: {
         challengedId: userId,
-        status: 'PENDING',
+        status: "PENDING",
         expiresAt: { gt: new Date() },
       },
     }),

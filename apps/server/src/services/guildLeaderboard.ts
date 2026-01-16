@@ -1,25 +1,25 @@
-import { prisma } from '../lib/prisma.js';
-import { redis } from '../lib/redis.js';
-import { getCurrentWeekKey } from '../lib/queue.js';
-import { distributeRewards } from './guildTreasury.js';
-import { awardChampionsTrophy } from './guildProgression.js';
-import type { GuildLeaderboardEntry } from '@arcade/protocol';
+import { prisma } from "../lib/prisma.js";
+import { redis } from "../lib/redis.js";
+import { getCurrentWeekKey } from "../lib/queue.js";
+import { distributeRewards } from "./guildTreasury.js";
+import { awardChampionsTrophy } from "./guildProgression.js";
+import type { GuildLeaderboardEntry } from "@arcade/protocol";
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-const GUILD_LEADERBOARD_CACHE_KEY = 'leaderboard:guild:';
+const GUILD_LEADERBOARD_CACHE_KEY = "leaderboard:guild:";
 const CACHE_TTL = 300; // 5 minutes
 const MAX_CACHED_ENTRIES = 100;
 
 // Weekly rewards by rank (dust reduced by 50%)
 const WEEKLY_REWARDS = [
-  { rank: 1, gold: 50000, dust: 500 },   // Reduced from 1000
-  { rank: 2, gold: 30000, dust: 300 },   // Reduced from 600
-  { rank: 3, gold: 20000, dust: 200 },   // Reduced from 400
-  { rank: 10, gold: 10000, dust: 100 },  // Reduced from 200 (4-10)
-  { rank: 25, gold: 5000, dust: 50 },    // Reduced from 100 (11-25)
+  { rank: 1, gold: 50000, dust: 500 }, // Reduced from 1000
+  { rank: 2, gold: 30000, dust: 300 }, // Reduced from 600
+  { rank: 3, gold: 20000, dust: 200 }, // Reduced from 400
+  { rank: 10, gold: 10000, dust: 100 }, // Reduced from 200 (4-10)
+  { rank: 25, gold: 5000, dust: 50 }, // Reduced from 100 (11-25)
 ] as const;
 
 // ============================================================================
@@ -52,7 +52,7 @@ export interface MemberContribution {
 export async function getWeeklyLeaderboard(
   weekKey: string = getCurrentWeekKey(),
   limit = 20,
-  offset = 0
+  offset = 0,
 ): Promise<LeaderboardResult> {
   const cacheKey = `${GUILD_LEADERBOARD_CACHE_KEY}${weekKey}:full`;
   const cached = await redis.get(cacheKey);
@@ -61,82 +61,130 @@ export async function getWeeklyLeaderboard(
   let total: number;
 
   if (cached) {
-    const parsedCache = JSON.parse(cached) as { entries: GuildLeaderboardEntry[]; total: number };
+    const parsedCache = JSON.parse(cached) as {
+      entries: GuildLeaderboardEntry[];
+      total: number;
+    };
     allEntries = parsedCache.entries;
     total = parsedCache.total;
   } else {
-    // Get guilds ordered by honor (live ranking)
-    const [guilds, count] = await Promise.all([
-      prisma.guild.findMany({
-        where: { disbanded: false },
-        orderBy: { honor: 'desc' },
-        take: MAX_CACHED_ENTRIES,
-        include: {
-          _count: { select: { members: true } },
+    const isCurrentWeek = weekKey === getCurrentWeekKey();
+
+    if (isCurrentWeek) {
+      // Get guilds ordered by honor (live ranking)
+      const [guilds, count] = await Promise.all([
+        prisma.guild.findMany({
+          where: { disbanded: false },
+          orderBy: { honor: "desc" },
+          take: MAX_CACHED_ENTRIES,
+          include: {
+            _count: { select: { members: true } },
+          },
+        }),
+        prisma.guild.count({ where: { disbanded: false } }),
+      ]);
+
+      // Count battles for each guild
+      const guildIds = guilds.map((g) => g.id);
+      const battleStats = await prisma.guildBattle.groupBy({
+        by: ["attackerGuildId", "defenderGuildId", "winnerGuildId"],
+        where: {
+          status: "RESOLVED",
+          OR: [
+            { attackerGuildId: { in: guildIds } },
+            { defenderGuildId: { in: guildIds } },
+          ],
         },
-      }),
-      prisma.guild.count({ where: { disbanded: false } }),
-    ]);
+      });
 
-    // Count battles for each guild
-    const guildIds = guilds.map(g => g.id);
-    const battleStats = await prisma.guildBattle.groupBy({
-      by: ['attackerGuildId', 'defenderGuildId', 'winnerGuildId'],
-      where: {
-        status: 'RESOLVED',
-        OR: [
-          { attackerGuildId: { in: guildIds } },
-          { defenderGuildId: { in: guildIds } },
-        ],
-      },
-    });
-
-    // Aggregate battle stats per guild
-    const guildBattleStats = new Map<string, { won: number; lost: number }>();
-    for (const guildId of guildIds) {
-      guildBattleStats.set(guildId, { won: 0, lost: 0 });
-    }
-
-    for (const stat of battleStats) {
-      if (stat.winnerGuildId) {
-        const winner = guildBattleStats.get(stat.winnerGuildId);
-        if (winner) winner.won++;
-
-        const loserId = stat.attackerGuildId === stat.winnerGuildId
-          ? stat.defenderGuildId
-          : stat.attackerGuildId;
-        const loser = guildBattleStats.get(loserId);
-        if (loser) loser.lost++;
+      // Aggregate battle stats per guild
+      const guildBattleStats = new Map<string, { won: number; lost: number }>();
+      for (const guildId of guildIds) {
+        guildBattleStats.set(guildId, { won: 0, lost: 0 });
       }
-    }
 
-    allEntries = guilds.map((guild, index) => {
-      const stats = guildBattleStats.get(guild.id) || { won: 0, lost: 0 };
-      return {
+      for (const stat of battleStats) {
+        if (stat.winnerGuildId) {
+          const winner = guildBattleStats.get(stat.winnerGuildId);
+          if (winner) winner.won++;
+
+          const loserId =
+            stat.attackerGuildId === stat.winnerGuildId
+              ? stat.defenderGuildId
+              : stat.attackerGuildId;
+          const loser = guildBattleStats.get(loserId);
+          if (loser) loser.lost++;
+        }
+      }
+
+      allEntries = guilds.map((guild, index) => {
+        const stats = guildBattleStats.get(guild.id) || { won: 0, lost: 0 };
+        return {
+          rank: index + 1,
+          guildId: guild.id,
+          guildName: guild.name,
+          guildTag: guild.tag,
+          level: guild.level,
+          honor: guild.honor,
+          totalScore: guild.totalXp,
+          battlesWon: stats.won,
+          battlesLost: stats.lost,
+          memberCount: guild._count.members,
+        };
+      });
+
+      total = count;
+    } else {
+      const [entries, count] = await Promise.all([
+        prisma.guildLeaderboardEntry.findMany({
+          where: { weekKey },
+          orderBy: { honor: "desc" },
+          take: MAX_CACHED_ENTRIES,
+          include: {
+            guild: {
+              select: {
+                name: true,
+                tag: true,
+                level: true,
+                _count: { select: { members: true } },
+              },
+            },
+          },
+        }),
+        prisma.guildLeaderboardEntry.count({ where: { weekKey } }),
+      ]);
+
+      allEntries = entries.map((entry, index) => ({
         rank: index + 1,
-        guildId: guild.id,
-        guildName: guild.name,
-        guildTag: guild.tag,
-        level: guild.level,
-        honor: guild.honor,
-        totalScore: guild.totalXp,
-        battlesWon: stats.won,
-        battlesLost: stats.lost,
-        memberCount: guild._count.members,
-      };
-    });
+        guildId: entry.guildId,
+        guildName: entry.guild.name,
+        guildTag: entry.guild.tag,
+        level: entry.guild.level,
+        honor: entry.honor,
+        totalScore: entry.totalScore,
+        battlesWon: entry.battlesWon,
+        battlesLost: entry.battlesLost,
+        memberCount: entry.memberCount || entry.guild._count.members,
+      }));
 
-    total = count;
+      total = count;
+    }
 
     // Cache full result
-    await redis.setex(cacheKey, CACHE_TTL, JSON.stringify({ entries: allEntries, total }));
+    await redis.setex(
+      cacheKey,
+      CACHE_TTL,
+      JSON.stringify({ entries: allEntries, total }),
+    );
   }
 
   // Paginate in memory
-  const paginatedEntries = allEntries.slice(offset, offset + limit).map((entry, index) => ({
-    ...entry,
-    rank: offset + index + 1,
-  }));
+  const paginatedEntries = allEntries
+    .slice(offset, offset + limit)
+    .map((entry, index) => ({
+      ...entry,
+      rank: offset + index + 1,
+    }));
 
   return {
     weekKey,
@@ -150,8 +198,35 @@ export async function getWeeklyLeaderboard(
  */
 export async function getGuildRank(
   guildId: string,
-  _weekKey: string = getCurrentWeekKey()
+  weekKey: string = getCurrentWeekKey(),
 ): Promise<{ rank: number; honor: number } | null> {
+  if (weekKey !== getCurrentWeekKey()) {
+    const entry = await prisma.guildLeaderboardEntry.findUnique({
+      where: {
+        weekKey_guildId: {
+          weekKey,
+          guildId,
+        },
+      },
+    });
+
+    if (!entry) {
+      return null;
+    }
+
+    const higherHonorCount = await prisma.guildLeaderboardEntry.count({
+      where: {
+        weekKey,
+        honor: { gt: entry.honor },
+      },
+    });
+
+    return {
+      rank: higherHonorCount + 1,
+      honor: entry.honor,
+    };
+  }
+
   const guild = await prisma.guild.findUnique({
     where: { id: guildId },
   });
@@ -160,7 +235,6 @@ export async function getGuildRank(
     return null;
   }
 
-  // Count guilds with higher honor
   const higherHonorCount = await prisma.guild.count({
     where: {
       disbanded: false,
@@ -179,7 +253,7 @@ export async function getGuildRank(
  */
 export async function getMemberContributions(
   guildId: string,
-  _weekKey: string = getCurrentWeekKey()
+  _weekKey: string = getCurrentWeekKey(),
 ): Promise<MemberContribution[]> {
   const members = await prisma.guildMember.findMany({
     where: { guildId },
@@ -188,10 +262,10 @@ export async function getMemberContributions(
         select: { displayName: true },
       },
     },
-    orderBy: { weeklyXpContributed: 'desc' },
+    orderBy: { weeklyXpContributed: "desc" },
   });
 
-  return members.map(member => ({
+  return members.map((member) => ({
     userId: member.userId,
     displayName: member.user.displayName,
     xpContributed: member.weeklyXpContributed,
@@ -215,9 +289,9 @@ export async function snapshotWeeklyRankings(weekKey: string): Promise<void> {
 
   // Get battle stats
   const battleStats = await prisma.guildBattle.groupBy({
-    by: ['winnerGuildId'],
+    by: ["winnerGuildId"],
     where: {
-      status: 'RESOLVED',
+      status: "RESOLVED",
     },
     _count: true,
   });
@@ -234,7 +308,7 @@ export async function snapshotWeeklyRankings(weekKey: string): Promise<void> {
     const battlesWon = battleWinsMap.get(guild.id) || 0;
     const battlesLost = await prisma.guildBattle.count({
       where: {
-        status: 'RESOLVED',
+        status: "RESOLVED",
         OR: [
           { attackerGuildId: guild.id, winnerGuildId: { not: guild.id } },
           { defenderGuildId: guild.id, winnerGuildId: { not: guild.id } },
@@ -296,7 +370,7 @@ export async function distributeWeeklyRewards(weekKey: string): Promise<void> {
     await distributeRewards(
       entry.guildId,
       { gold: reward.gold, dust: reward.dust },
-      `Weekly leaderboard reward (Rank #${entry.rank})`
+      `Weekly leaderboard reward (Rank #${entry.rank})`,
     );
 
     // Award champions trophy for top 10
@@ -309,7 +383,9 @@ export async function distributeWeeklyRewards(weekKey: string): Promise<void> {
 /**
  * Invalidate leaderboard cache
  */
-export async function invalidateLeaderboardCache(weekKey: string = getCurrentWeekKey()): Promise<void> {
+export async function invalidateLeaderboardCache(
+  weekKey: string = getCurrentWeekKey(),
+): Promise<void> {
   const cacheKey = `${GUILD_LEADERBOARD_CACHE_KEY}${weekKey}:full`;
   await redis.del(cacheKey);
 }
@@ -319,11 +395,11 @@ export async function invalidateLeaderboardCache(weekKey: string = getCurrentWee
  */
 export async function getAvailableWeeks(limit = 10): Promise<string[]> {
   const weeks = await prisma.guildLeaderboardEntry.findMany({
-    distinct: ['weekKey'],
-    orderBy: { weekKey: 'desc' },
+    distinct: ["weekKey"],
+    orderBy: { weekKey: "desc" },
     take: limit,
     select: { weekKey: true },
   });
 
-  return weeks.map(w => w.weekKey);
+  return weeks.map((w) => w.weekKey);
 }

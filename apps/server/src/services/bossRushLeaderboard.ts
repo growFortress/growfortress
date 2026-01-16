@@ -1,8 +1,8 @@
-import { prisma } from '../lib/prisma.js';
-import { redis } from '../lib/redis.js';
-import { getCurrentWeekKey } from '../lib/queue.js';
+import { prisma } from "../lib/prisma.js";
+import { redis } from "../lib/redis.js";
+import { getCurrentWeekKey } from "../lib/queue.js";
 
-const BOSS_RUSH_LEADERBOARD_CACHE_KEY = 'leaderboard:boss_rush:';
+const BOSS_RUSH_LEADERBOARD_CACHE_KEY = "leaderboard:boss_rush:";
 const CACHE_TTL = 300; // 5 minutes
 
 export interface BossRushLeaderboardEntry {
@@ -23,7 +23,7 @@ export async function upsertBossRushLeaderboardEntry(
   sessionId: string,
   totalDamage: bigint,
   bossesKilled: number,
-  weekKey: string = getCurrentWeekKey()
+  weekKey: string = getCurrentWeekKey(),
 ): Promise<void> {
   // Check if user already has an entry for this week
   const existing = await prisma.bossRushLeaderboard.findUnique({
@@ -62,7 +62,7 @@ export async function upsertBossRushLeaderboardEntry(
   });
 
   // Invalidate cache
-  await redis.del(BOSS_RUSH_LEADERBOARD_CACHE_KEY + weekKey);
+  await redis.del(`${BOSS_RUSH_LEADERBOARD_CACHE_KEY}${weekKey}:full`);
 }
 
 /**
@@ -71,53 +71,72 @@ export async function upsertBossRushLeaderboardEntry(
 export async function getBossRushLeaderboard(
   weekKey: string = getCurrentWeekKey(),
   limit: number = 10,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<{
   weekKey: string;
   entries: BossRushLeaderboardEntry[];
   total: number;
 }> {
   // Try cache first
-  const cacheKey = `${BOSS_RUSH_LEADERBOARD_CACHE_KEY}${weekKey}:${limit}:${offset}`;
+  const cacheKey = `${BOSS_RUSH_LEADERBOARD_CACHE_KEY}${weekKey}:full`;
   const cached = await redis.get(cacheKey);
 
+  let allEntries: BossRushLeaderboardEntry[];
+  let total: number;
+
   if (cached) {
-    return JSON.parse(cached);
-  }
-
-  // Get entries from database
-  const [entries, total] = await Promise.all([
-    prisma.bossRushLeaderboard.findMany({
-      where: { weekKey },
-      orderBy: { totalDamage: 'desc' },
-      skip: offset,
-      take: limit,
-      include: {
-        user: {
-          select: { displayName: true },
+    const parsedCache = JSON.parse(cached) as {
+      entries: BossRushLeaderboardEntry[];
+      total: number;
+    };
+    allEntries = parsedCache.entries;
+    total = parsedCache.total;
+  } else {
+    // Get entries from database
+    const [entries, count] = await Promise.all([
+      prisma.bossRushLeaderboard.findMany({
+        where: { weekKey },
+        orderBy: { totalDamage: "desc" },
+        take: 100,
+        include: {
+          user: {
+            select: { displayName: true },
+          },
         },
-      },
-    }),
-    prisma.bossRushLeaderboard.count({ where: { weekKey } }),
-  ]);
+      }),
+      prisma.bossRushLeaderboard.count({ where: { weekKey } }),
+    ]);
 
-  const result = {
-    weekKey,
-    entries: entries.map((entry, index) => ({
-      rank: offset + index + 1,
+    allEntries = entries.map((entry, index) => ({
+      rank: index + 1,
       userId: entry.userId,
       displayName: entry.user.displayName,
       totalDamage: Number(entry.totalDamage),
       bossesKilled: entry.bossesKilled,
       createdAt: entry.createdAt.toISOString(),
-    })),
+    }));
+    total = count;
+
+    // Cache result
+    await redis.setex(
+      cacheKey,
+      CACHE_TTL,
+      JSON.stringify({ entries: allEntries, total }),
+    );
+  }
+
+  const paginatedEntries = allEntries
+    .slice(offset, offset + limit)
+    .map((entry, index) => ({
+      ...entry,
+      rank: offset + index + 1,
+    }));
+
+  return {
+    weekKey,
+    entries: paginatedEntries,
     total,
   };
-
-  // Cache result
-  await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(result));
-
-  return result;
 }
 
 /**
@@ -125,7 +144,7 @@ export async function getBossRushLeaderboard(
  */
 export async function getUserBossRushRank(
   userId: string,
-  weekKey: string = getCurrentWeekKey()
+  weekKey: string = getCurrentWeekKey(),
 ): Promise<{ rank: number; totalDamage: number } | null> {
   const entry = await prisma.bossRushLeaderboard.findUnique({
     where: {
@@ -159,11 +178,11 @@ export async function getUserBossRushRank(
  */
 export async function getBossRushAvailableWeeks(limit = 10): Promise<string[]> {
   const weeks = await prisma.bossRushLeaderboard.findMany({
-    distinct: ['weekKey'],
-    orderBy: { weekKey: 'desc' },
+    distinct: ["weekKey"],
+    orderBy: { weekKey: "desc" },
     take: limit,
     select: { weekKey: true },
   });
 
-  return weeks.map(w => w.weekKey);
+  return weeks.map((w) => w.weekKey);
 }

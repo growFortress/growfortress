@@ -3,27 +3,29 @@
  * Handles permanent rankings (totalWaves, honor, level) and weekly rankings
  */
 
-import { prisma } from '../lib/prisma.js';
-import { redis } from '../lib/redis.js';
-import { getCurrentWeekKey } from '../lib/queue.js';
-import { getRewardTierForRank } from '@arcade/sim-core';
+import { prisma } from "../lib/prisma.js";
+import { redis } from "../lib/redis.js";
+import { getCurrentWeekKey } from "../lib/queue.js";
+import { getRewardTierForRank } from "@arcade/sim-core";
 
 // Cache keys and TTLs
 const CACHE_TTL = 300; // 5 minutes
 const MAX_CACHED_ENTRIES = 100;
 
 const CACHE_KEYS = {
-  totalWaves: 'player-leaderboard:totalWaves',
-  honor: 'player-leaderboard:honor',
-  level: 'player-leaderboard:level',
+  totalWaves: "player-leaderboard:totalWaves",
+  honor: "player-leaderboard:honor",
+  level: "player-leaderboard:level",
   weeklyWaves: (weekKey: string) => `player-leaderboard:weeklyWaves:${weekKey}`,
   weeklyHonor: (weekKey: string) => `player-leaderboard:weeklyHonor:${weekKey}`,
 } as const;
 
 // Leaderboard category types
-export type PermanentLeaderboardCategory = 'totalWaves' | 'honor' | 'level';
-export type WeeklyLeaderboardCategory = 'weeklyWaves' | 'weeklyHonor';
-export type LeaderboardCategory = PermanentLeaderboardCategory | WeeklyLeaderboardCategory;
+export type PermanentLeaderboardCategory = "totalWaves" | "honor" | "level";
+export type WeeklyLeaderboardCategory = "weeklyWaves" | "weeklyHonor";
+export type LeaderboardCategory =
+  | PermanentLeaderboardCategory
+  | WeeklyLeaderboardCategory;
 
 // Entry interfaces
 export interface PlayerLeaderboardEntry {
@@ -48,7 +50,7 @@ export interface UserRankInfo {
 export interface AvailableReward {
   id: string;
   weekKey: string;
-  category: 'waves' | 'honor';
+  category: "waves" | "honor";
   rank: number;
   goldAmount: number;
   dustAmount: number;
@@ -73,44 +75,49 @@ export interface ClaimRewardResult {
  */
 export async function getTotalWavesLeaderboard(
   limit: number = 25,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
-  return getCachedPermanentLeaderboard('totalWaves', limit, offset, async () => {
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where: { totalWaves: { gt: 0 }, banned: false },
-        orderBy: { totalWaves: 'desc' },
-        take: MAX_CACHED_ENTRIES,
-        select: {
-          id: true,
-          displayName: true,
-          totalWaves: true,
-          exclusiveItems: true,
-          guildMembership: {
-            select: { guildId: true, guild: { select: { tag: true } } },
+  return getCachedPermanentLeaderboard(
+    "totalWaves",
+    limit,
+    offset,
+    async () => {
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where: { totalWaves: { gt: 0 }, banned: false },
+          orderBy: { totalWaves: "desc" },
+          take: MAX_CACHED_ENTRIES,
+          select: {
+            id: true,
+            displayName: true,
+            totalWaves: true,
+            exclusiveItems: true,
+            guildMembership: {
+              select: { guildId: true, guild: { select: { tag: true } } },
+            },
+            progression: {
+              select: { level: true },
+            },
           },
-          progression: {
-            select: { level: true },
-          },
-        },
-      }),
-      prisma.user.count({ where: { totalWaves: { gt: 0 }, banned: false } }),
-    ]);
+        }),
+        prisma.user.count({ where: { totalWaves: { gt: 0 }, banned: false } }),
+      ]);
 
-    return {
-      entries: users.map((user, index) => ({
-        rank: index + 1,
-        userId: user.id,
-        displayName: user.displayName,
-        guildId: user.guildMembership?.guildId ?? null,
-        guildTag: user.guildMembership?.guild.tag ?? null,
-        level: user.progression?.level ?? 1,
-        score: user.totalWaves,
-        exclusiveItems: user.exclusiveItems,
-      })),
-      total,
-    };
-  });
+      return {
+        entries: users.map((user, index) => ({
+          rank: index + 1,
+          userId: user.id,
+          displayName: user.displayName,
+          guildId: user.guildMembership?.guildId ?? null,
+          guildTag: user.guildMembership?.guild.tag ?? null,
+          level: user.progression?.level ?? 1,
+          score: user.totalWaves,
+          exclusiveItems: user.exclusiveItems,
+        })),
+        total,
+      };
+    },
+  );
 }
 
 /**
@@ -118,13 +125,13 @@ export async function getTotalWavesLeaderboard(
  */
 export async function getHonorLeaderboard(
   limit: number = 25,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
-  return getCachedPermanentLeaderboard('honor', limit, offset, async () => {
+  return getCachedPermanentLeaderboard("honor", limit, offset, async () => {
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where: { banned: false },
-        orderBy: { honor: 'desc' },
+        orderBy: { honor: "desc" },
         take: MAX_CACHED_ENTRIES,
         select: {
           id: true,
@@ -163,13 +170,13 @@ export async function getHonorLeaderboard(
  */
 export async function getLevelLeaderboard(
   limit: number = 25,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
-  return getCachedPermanentLeaderboard('level', limit, offset, async () => {
+  return getCachedPermanentLeaderboard("level", limit, offset, async () => {
     const [progressions, total] = await Promise.all([
       prisma.progression.findMany({
         where: { user: { banned: false } },
-        orderBy: { level: 'desc' },
+        orderBy: { level: "desc" },
         take: MAX_CACHED_ENTRIES,
         select: {
           level: true,
@@ -214,8 +221,12 @@ export async function getLevelLeaderboard(
 export async function getWeeklyWavesLeaderboard(
   weekKey: string = getCurrentWeekKey(),
   limit: number = 25,
-  offset: number = 0
-): Promise<{ entries: PlayerLeaderboardEntry[]; total: number; weekKey: string }> {
+  offset: number = 0,
+): Promise<{
+  entries: PlayerLeaderboardEntry[];
+  total: number;
+  weekKey: string;
+}> {
   const cacheKey = CACHE_KEYS.weeklyWaves(weekKey);
   const cached = await redis.get(cacheKey);
 
@@ -226,8 +237,8 @@ export async function getWeeklyWavesLeaderboard(
   } else {
     const [entries, total] = await Promise.all([
       prisma.weeklyPlayerLeaderboard.findMany({
-        where: { weekKey, wavesThisWeek: { gt: 0 } },
-        orderBy: { wavesThisWeek: 'desc' },
+        where: { weekKey, wavesThisWeek: { gt: 0 }, user: { banned: false } },
+        orderBy: { wavesThisWeek: "desc" },
         take: MAX_CACHED_ENTRIES,
         select: {
           userId: true,
@@ -247,7 +258,7 @@ export async function getWeeklyWavesLeaderboard(
         },
       }),
       prisma.weeklyPlayerLeaderboard.count({
-        where: { weekKey, wavesThisWeek: { gt: 0 } },
+        where: { weekKey, wavesThisWeek: { gt: 0 }, user: { banned: false } },
       }),
     ]);
 
@@ -269,10 +280,12 @@ export async function getWeeklyWavesLeaderboard(
   }
 
   // Paginate in memory
-  const paginatedEntries = data.entries.slice(offset, offset + limit).map((entry, index) => ({
-    ...entry,
-    rank: offset + index + 1,
-  }));
+  const paginatedEntries = data.entries
+    .slice(offset, offset + limit)
+    .map((entry, index) => ({
+      ...entry,
+      rank: offset + index + 1,
+    }));
 
   return {
     entries: paginatedEntries,
@@ -287,8 +300,12 @@ export async function getWeeklyWavesLeaderboard(
 export async function getWeeklyHonorLeaderboard(
   weekKey: string = getCurrentWeekKey(),
   limit: number = 25,
-  offset: number = 0
-): Promise<{ entries: PlayerLeaderboardEntry[]; total: number; weekKey: string }> {
+  offset: number = 0,
+): Promise<{
+  entries: PlayerLeaderboardEntry[];
+  total: number;
+  weekKey: string;
+}> {
   const cacheKey = CACHE_KEYS.weeklyHonor(weekKey);
   const cached = await redis.get(cacheKey);
 
@@ -299,8 +316,8 @@ export async function getWeeklyHonorLeaderboard(
   } else {
     const [entries, total] = await Promise.all([
       prisma.weeklyPlayerLeaderboard.findMany({
-        where: { weekKey, honorGained: { gt: 0 } },
-        orderBy: { honorGained: 'desc' },
+        where: { weekKey, honorGained: { gt: 0 }, user: { banned: false } },
+        orderBy: { honorGained: "desc" },
         take: MAX_CACHED_ENTRIES,
         select: {
           userId: true,
@@ -320,7 +337,7 @@ export async function getWeeklyHonorLeaderboard(
         },
       }),
       prisma.weeklyPlayerLeaderboard.count({
-        where: { weekKey, honorGained: { gt: 0 } },
+        where: { weekKey, honorGained: { gt: 0 }, user: { banned: false } },
       }),
     ]);
 
@@ -342,10 +359,12 @@ export async function getWeeklyHonorLeaderboard(
   }
 
   // Paginate in memory
-  const paginatedEntries = data.entries.slice(offset, offset + limit).map((entry, index) => ({
-    ...entry,
-    rank: offset + index + 1,
-  }));
+  const paginatedEntries = data.entries
+    .slice(offset, offset + limit)
+    .map((entry, index) => ({
+      ...entry,
+      rank: offset + index + 1,
+    }));
 
   return {
     entries: paginatedEntries,
@@ -363,7 +382,7 @@ export async function getWeeklyHonorLeaderboard(
  */
 export async function getUserRanks(
   userId: string,
-  weekKey: string = getCurrentWeekKey()
+  weekKey: string = getCurrentWeekKey(),
 ): Promise<UserRankInfo[]> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -390,76 +409,83 @@ export async function getUserRanks(
   const weeklyData = user.weeklyPlayerLeaderboards[0];
 
   // Get ranks in parallel
-  const [totalWavesRank, honorRank, levelRank, weeklyWavesRank, weeklyHonorRank] =
-    await Promise.all([
-      // Total waves rank
-      user.totalWaves > 0
-        ? prisma.user.count({
-            where: {
-              totalWaves: { gt: user.totalWaves },
-              banned: false,
-            },
-          })
-        : null,
-      // Honor rank
-      prisma.user.count({
-        where: {
-          honor: { gt: user.honor },
-          banned: false,
-        },
-      }),
-      // Level rank
-      user.progression
-        ? prisma.progression.count({
-            where: {
-              level: { gt: user.progression.level },
-              user: { banned: false },
-            },
-          })
-        : null,
-      // Weekly waves rank
-      weeklyData && weeklyData.wavesThisWeek > 0
-        ? prisma.weeklyPlayerLeaderboard.count({
-            where: {
-              weekKey,
-              wavesThisWeek: { gt: weeklyData.wavesThisWeek },
-            },
-          })
-        : null,
-      // Weekly honor rank
-      weeklyData && weeklyData.honorGained > 0
-        ? prisma.weeklyPlayerLeaderboard.count({
-            where: {
-              weekKey,
-              honorGained: { gt: weeklyData.honorGained },
-            },
-          })
-        : null,
-    ]);
+  const [
+    totalWavesRank,
+    honorRank,
+    levelRank,
+    weeklyWavesRank,
+    weeklyHonorRank,
+  ] = await Promise.all([
+    // Total waves rank
+    user.totalWaves > 0
+      ? prisma.user.count({
+          where: {
+            totalWaves: { gt: user.totalWaves },
+            banned: false,
+          },
+        })
+      : null,
+    // Honor rank
+    prisma.user.count({
+      where: {
+        honor: { gt: user.honor },
+        banned: false,
+      },
+    }),
+    // Level rank
+    user.progression
+      ? prisma.progression.count({
+          where: {
+            level: { gt: user.progression.level },
+            user: { banned: false },
+          },
+        })
+      : null,
+    // Weekly waves rank
+    weeklyData && weeklyData.wavesThisWeek > 0
+      ? prisma.weeklyPlayerLeaderboard.count({
+          where: {
+            weekKey,
+            wavesThisWeek: { gt: weeklyData.wavesThisWeek },
+            user: { banned: false },
+          },
+        })
+      : null,
+    // Weekly honor rank
+    weeklyData && weeklyData.honorGained > 0
+      ? prisma.weeklyPlayerLeaderboard.count({
+          where: {
+            weekKey,
+            honorGained: { gt: weeklyData.honorGained },
+            user: { banned: false },
+          },
+        })
+      : null,
+  ]);
 
   return [
     {
-      category: 'totalWaves',
+      category: "totalWaves",
       rank: totalWavesRank !== null ? totalWavesRank + 1 : null,
       score: user.totalWaves,
     },
     {
-      category: 'honor',
+      category: "honor",
       rank: honorRank + 1,
       score: user.honor,
     },
     {
-      category: 'level',
+      category: "level",
       rank: levelRank !== null ? levelRank + 1 : null,
       score: user.progression?.level ?? 1,
     },
     {
-      category: 'weeklyWaves',
+      category: "weeklyWaves",
       rank: weeklyWavesRank !== null ? weeklyWavesRank + 1 : null,
       score: weeklyData?.wavesThisWeek ?? 0,
     },
     {
-      category: 'weeklyHonor',
+      category: "weeklyHonor",
       rank: weeklyHonorRank !== null ? weeklyHonorRank + 1 : null,
       score: weeklyData?.honorGained ?? 0,
     },
@@ -473,20 +499,22 @@ export async function getUserRanks(
 /**
  * Get available unclaimed rewards for a user
  */
-export async function getAvailableRewards(userId: string): Promise<AvailableReward[]> {
+export async function getAvailableRewards(
+  userId: string,
+): Promise<AvailableReward[]> {
   const rewards = await prisma.weeklyPlayerReward.findMany({
     where: {
       userId,
       claimed: false,
       expiresAt: { gt: new Date() },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   return rewards.map((r) => ({
     id: r.id,
     weekKey: r.weekKey,
-    category: r.category as 'waves' | 'honor',
+    category: r.category as "waves" | "honor",
     rank: r.rank,
     goldAmount: r.goldAmount,
     dustAmount: r.dustAmount,
@@ -500,22 +528,22 @@ export async function getAvailableRewards(userId: string): Promise<AvailableRewa
  */
 export async function claimWeeklyReward(
   userId: string,
-  rewardId: string
+  rewardId: string,
 ): Promise<ClaimRewardResult> {
   const reward = await prisma.weeklyPlayerReward.findUnique({
     where: { id: rewardId },
   });
 
   if (!reward || reward.userId !== userId) {
-    throw new Error('Reward not found');
+    throw new Error("Reward not found");
   }
 
   if (reward.claimed) {
-    throw new Error('Reward already claimed');
+    throw new Error("Reward already claimed");
   }
 
   if (reward.expiresAt < new Date()) {
-    throw new Error('Reward expired');
+    throw new Error("Reward expired");
   }
 
   // Get user's current exclusive items
@@ -526,7 +554,9 @@ export async function claimWeeklyReward(
 
   // Determine which items are new
   const existingItems = new Set(user?.exclusiveItems ?? []);
-  const newExclusiveItems = reward.itemIds.filter((id) => !existingItems.has(id));
+  const newExclusiveItems = reward.itemIds.filter(
+    (id) => !existingItems.has(id),
+  );
 
   // Claim reward in transaction
   await prisma.$transaction([
@@ -581,7 +611,7 @@ export async function claimWeeklyReward(
  */
 export async function incrementTotalWaves(
   userId: string,
-  wavesCleared: number
+  wavesCleared: number,
 ): Promise<void> {
   const weekKey = getCurrentWeekKey();
 
@@ -611,7 +641,7 @@ export async function incrementTotalWaves(
  */
 export async function recordWeeklyHonorGain(
   userId: string,
-  honorGained: number
+  honorGained: number,
 ): Promise<void> {
   if (honorGained <= 0) return;
 
@@ -648,7 +678,7 @@ export async function distributeWeeklyRewards(weekKey: string): Promise<{
   // Get waves rankings
   const wavesEntries = await prisma.weeklyPlayerLeaderboard.findMany({
     where: { weekKey, wavesThisWeek: { gt: 0 } },
-    orderBy: { wavesThisWeek: 'desc' },
+    orderBy: { wavesThisWeek: "desc" },
     take: 100, // Top 100 get rewards
     select: { userId: true },
   });
@@ -656,17 +686,17 @@ export async function distributeWeeklyRewards(weekKey: string): Promise<{
   // Create waves rewards
   for (let i = 0; i < wavesEntries.length; i++) {
     const rank = i + 1;
-    const tier = getRewardTierForRank(rank, 'waves');
+    const tier = getRewardTierForRank(rank, "waves");
     if (!tier) continue;
 
     await prisma.weeklyPlayerReward.create({
       data: {
         weekKey,
         userId: wavesEntries[i].userId,
-        category: 'waves',
+        category: "waves",
         rank,
         goldAmount: tier.gold,
-        dustAmount: tier.dust + (tier.sigils * 10), // Convert sigils to dust (10:1)
+        dustAmount: tier.dust + tier.sigils * 10,
         itemIds: tier.items,
         expiresAt,
       },
@@ -677,7 +707,7 @@ export async function distributeWeeklyRewards(weekKey: string): Promise<{
   // Get honor rankings
   const honorEntries = await prisma.weeklyPlayerLeaderboard.findMany({
     where: { weekKey, honorGained: { gt: 0 } },
-    orderBy: { honorGained: 'desc' },
+    orderBy: { honorGained: "desc" },
     take: 50, // Top 50 get rewards
     select: { userId: true },
   });
@@ -685,17 +715,17 @@ export async function distributeWeeklyRewards(weekKey: string): Promise<{
   // Create honor rewards
   for (let i = 0; i < honorEntries.length; i++) {
     const rank = i + 1;
-    const tier = getRewardTierForRank(rank, 'honor');
+    const tier = getRewardTierForRank(rank, "honor");
     if (!tier) continue;
 
     await prisma.weeklyPlayerReward.create({
       data: {
         weekKey,
         userId: honorEntries[i].userId,
-        category: 'honor',
+        category: "honor",
         rank,
         goldAmount: tier.gold,
-        dustAmount: tier.dust + (tier.sigils * 10), // Convert sigils to dust (10:1)
+        dustAmount: tier.dust + tier.sigils * 10,
         itemIds: tier.items,
         expiresAt,
       },
@@ -711,11 +741,9 @@ export async function distributeWeeklyRewards(weekKey: string): Promise<{
  * Called by scheduled job at start of new week
  */
 export async function resetWeeklyHonor(): Promise<number> {
-  const result = await prisma.user.updateMany({
-    where: { weeklyHonor: { gt: 0 } },
+  const result = await prisma.weeklyPlayerLeaderboard.updateMany({
     data: {
-      weeklyHonor: 0,
-      weeklyHonorResetAt: new Date(),
+      honorGained: 0,
     },
   });
 
@@ -727,8 +755,8 @@ export async function resetWeeklyHonor(): Promise<number> {
  */
 export async function getAvailablePlayerWeeks(limit = 10): Promise<string[]> {
   const weeks = await prisma.weeklyPlayerLeaderboard.findMany({
-    distinct: ['weekKey'],
-    orderBy: { weekKey: 'desc' },
+    distinct: ["weekKey"],
+    orderBy: { weekKey: "desc" },
     take: limit,
     select: { weekKey: true },
   });
@@ -755,7 +783,9 @@ export function getTimeUntilWeeklyReset(): {
 
   const totalMs = nextMonday.getTime() - now.getTime();
   const days = Math.floor(totalMs / (24 * 60 * 60 * 1000));
-  const hours = Math.floor((totalMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  const hours = Math.floor(
+    (totalMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000),
+  );
   const minutes = Math.floor((totalMs % (60 * 60 * 1000)) / (60 * 1000));
 
   return { days, hours, minutes, totalMs };
@@ -769,7 +799,7 @@ async function getCachedPermanentLeaderboard(
   category: PermanentLeaderboardCategory,
   limit: number,
   offset: number,
-  fetchFn: () => Promise<{ entries: PlayerLeaderboardEntry[]; total: number }>
+  fetchFn: () => Promise<{ entries: PlayerLeaderboardEntry[]; total: number }>,
 ): Promise<{ entries: PlayerLeaderboardEntry[]; total: number }> {
   const cacheKey = CACHE_KEYS[category];
   const cached = await redis.get(cacheKey);
@@ -784,10 +814,12 @@ async function getCachedPermanentLeaderboard(
   }
 
   // Paginate in memory
-  const paginatedEntries = data.entries.slice(offset, offset + limit).map((entry, index) => ({
-    ...entry,
-    rank: offset + index + 1,
-  }));
+  const paginatedEntries = data.entries
+    .slice(offset, offset + limit)
+    .map((entry, index) => ({
+      ...entry,
+      rank: offset + index + 1,
+    }));
 
   return {
     entries: paginatedEntries,
