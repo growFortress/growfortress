@@ -110,7 +110,7 @@ export interface BossRushSimConfig {
 export function getDefaultBossRushConfig(): BossRushSimConfig {
   return {
     tickHz: 30,
-    fortressBaseHp: 100,
+    fortressBaseHp: 200,
     fortressBaseDamage: 10,
     fortressAttackInterval: 15,
     fieldWidth: FP.fromInt(40),

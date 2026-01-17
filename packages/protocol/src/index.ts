@@ -21,6 +21,7 @@ export {
   CompleteOnboardingResponseSchema,
   ForgotPasswordRequestSchema,
   ResetPasswordRequestSchema,
+  GameConfigSchema,
   type AuthRegisterRequest,
   type AuthRegisterResponse,
   type AuthLoginRequest,
@@ -39,6 +40,7 @@ export {
   type CompleteOnboardingResponse,
   type ForgotPasswordRequest,
   type ResetPasswordRequest,
+  type GameConfig,
 } from './auth.js';
 
 // Events

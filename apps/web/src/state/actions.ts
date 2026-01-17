@@ -69,6 +69,14 @@ export function updateFromProfile(data: ProfileResponse): void {
     if (data.inventory.materials) {
       updatePlayerMaterials(data.inventory.materials);
     }
+
+    // Update game config from server
+    if (data.gameConfig) {
+      profile.gameConfig.value = {
+        fortressBaseHp: data.gameConfig.fortressBaseHp,
+        fortressBaseDamage: data.gameConfig.fortressBaseDamage,
+      };
+    }
   });
 }
 

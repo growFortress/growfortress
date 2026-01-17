@@ -18,7 +18,9 @@ export {
   defaultLoadout,
   showOnboardingModal,
   resetProfileState,
+  gameConfig,
   type DefaultLoadout,
+  type GameConfig,
 } from './profile.signals.js';
 
 // Game signals

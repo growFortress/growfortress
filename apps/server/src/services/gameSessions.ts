@@ -278,7 +278,7 @@ export async function startGameSession(
     },
     defaults: profile.defaultLoadout,
     remoteConfig: {
-        fortressBaseHp: remoteConfig.fortressBaseHp ?? 100,
+        fortressBaseHp: remoteConfig.fortressBaseHp ?? 200,
         fortressBaseDamage: remoteConfig.fortressBaseDamage ?? 10,
         waveIntervalTicks: remoteConfig.waveIntervalTicks ?? 90,
     },

@@ -20,6 +20,17 @@ export const isAdmin = computed(() => userRole.value === 'ADMIN');
 // Onboarding status
 export const onboardingCompleted = signal(false);
 
+// Game config (from server)
+export interface GameConfig {
+  fortressBaseHp: number;
+  fortressBaseDamage: number;
+}
+
+export const gameConfig = signal<GameConfig>({
+  fortressBaseHp: 200, // Default, will be overwritten by server
+  fortressBaseDamage: 10,
+});
+
 // Default loadout (from server profile)
 export interface DefaultLoadout {
   fortressClass: FortressClass | null;
@@ -75,4 +86,8 @@ export function resetProfileState(): void {
     turretType: null,
   };
   showOnboardingModal.value = false;
+  gameConfig.value = {
+    fortressBaseHp: 200,
+    fortressBaseDamage: 10,
+  };
 }

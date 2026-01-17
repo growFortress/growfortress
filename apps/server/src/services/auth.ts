@@ -20,6 +20,7 @@ import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from "@arcade/protocol";
 import { sendPasswordResetEmail } from "./email.js";
 import { createSystemMessage } from "./messages.js";
 import { recalculateCachedPower } from "./power-upgrades.js";
+import { DEFAULT_REMOTE_CONFIG } from "./gameConfig.js";
 
 const SALT_ROUNDS = 12;
 
@@ -456,6 +457,10 @@ export async function getUserProfile(userId: string): Promise<{
   };
   unlockedHeroes: string[];
   unlockedTurrets: string[];
+  gameConfig: {
+    fortressBaseHp: number;
+    fortressBaseDamage: number;
+  };
 } | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -541,6 +546,10 @@ export async function getUserProfile(userId: string): Promise<{
     },
     unlockedHeroes,
     unlockedTurrets,
+    gameConfig: {
+      fortressBaseHp: DEFAULT_REMOTE_CONFIG.fortressBaseHp,
+      fortressBaseDamage: DEFAULT_REMOTE_CONFIG.fortressBaseDamage,
+    },
   };
 }
 

@@ -125,7 +125,7 @@ export function getDefaultConfig(availableRelics: string[] = RELICS.map(r => r.i
     tickHz: 30,
     segmentSize: 5,             // 5 waves per segment for verification
     startingWave: 0,            // Resume point for endless
-    fortressBaseHp: 100,
+    fortressBaseHp: 200,
     fortressBaseDamage: 10,
     fortressAttackInterval: 15, // 0.5 seconds at 30Hz
     skillCooldownTicks: 300,    // 10 seconds

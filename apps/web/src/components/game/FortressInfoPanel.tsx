@@ -32,6 +32,7 @@ import {
   showErrorToast,
   classSelectionVisible,
   isAuthenticated,
+  gameConfig,
 } from '../../state/index.js';
 import { updatePlayerDescription } from '../../api/client.js';
 import { fetchUserRanks } from '../../api/leaderboard.js';
@@ -64,10 +65,8 @@ const STAT_ICONS: Record<string, string> = {
   armor: '🛡️',
 };
 
-// Base fortress stats
-const FORTRESS_BASE_HP = 100;
-const FORTRESS_BASE_DAMAGE = 10;
-const FP_BASE = 16384; // Fixed point base (1.0)
+// Fixed point base (1.0)
+const FP_BASE = 16384;
 
 // API function for fortress upgrades
 async function upgradeFortressStat(stat: string): Promise<{
@@ -148,6 +147,10 @@ export function FortressInfoPanel() {
   }, [state.fortressUpgrades, fortressLevel]);
 
   const fortressStats = useMemo(() => {
+    // Get base values from server config
+    const serverBaseHp = gameConfig.value.fortressBaseHp;
+    const serverBaseDamage = gameConfig.value.fortressBaseDamage;
+
     // Level bonuses (fixed point, 16384 = 1.0)
     const levelHpBonusFP = calculateTotalHpBonus(fortressLevel);
     const levelDmgBonusFP = calculateTotalDamageBonus(fortressLevel);
@@ -166,8 +169,8 @@ export function FortressInfoPanel() {
     const guildStatPercent = Math.round(guildStatBoost * 100);
 
     // Calculate base stats (from level + upgrades, without guild)
-    const baseHp = Math.floor(FORTRESS_BASE_HP * (levelHpBonusFP / FP_BASE) * upgradeHpMult);
-    const baseDamage = Math.floor(FORTRESS_BASE_DAMAGE * (levelDmgBonusFP / FP_BASE) * upgradeDmgMult);
+    const baseHp = Math.floor(serverBaseHp * (levelHpBonusFP / FP_BASE) * upgradeHpMult);
+    const baseDamage = Math.floor(serverBaseDamage * (levelDmgBonusFP / FP_BASE) * upgradeDmgMult);
     const baseArmor = upgradeArmorPercent;
 
     // Calculate total stats (with guild bonus)
@@ -180,7 +183,7 @@ export function FortressInfoPanel() {
       damage: { base: baseDamage, total: totalDamage, guildBonus: guildStatPercent },
       armor: { base: baseArmor, total: totalArmor, guildBonus: guildStatPercent },
     };
-  }, [fortressLevel, state.fortressUpgrades, guildBonuses.value?.statBoost]);
+  }, [fortressLevel, state.fortressUpgrades, guildBonuses.value?.statBoost, gameConfig.value]);
 
   const classColor = fortressClass ? CLASS_COLORS[fortressClass] : '#888888';
 

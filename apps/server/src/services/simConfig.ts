@@ -119,7 +119,7 @@ export function buildSimConfigSnapshot(
     startingHeroes,
     startingTurrets,
     equippedArtifacts: params.equippedArtifacts,
-    fortressBaseHp: params.remoteConfig?.fortressBaseHp ?? 100,
+    fortressBaseHp: params.remoteConfig?.fortressBaseHp ?? 200,
     fortressBaseDamage: params.remoteConfig?.fortressBaseDamage ?? 10,
     waveIntervalTicks: params.remoteConfig?.waveIntervalTicks ?? 90,
     guildStatBoost: params.guildStatBoost,

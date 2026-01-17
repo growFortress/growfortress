@@ -19,7 +19,7 @@ const UNIT_STORM: HeroDefinition = {
   role: 'dps',
   rarity: 'starter',
   baseStats: {
-    hp: 150,
+    hp: 280,
     damage: 25,
     attackSpeed: 1.2,
     range: FP.fromInt(6),
@@ -146,7 +146,7 @@ const UNIT_FORGE: HeroDefinition = {
   role: 'dps',
   rarity: 'common',
   baseStats: {
-    hp: 120,
+    hp: 220,
     damage: 30,
     attackSpeed: 1.5,
     range: FP.fromInt(8),
@@ -273,7 +273,7 @@ const UNIT_TITAN: HeroDefinition = {
   role: 'tank',
   rarity: 'epic',
   baseStats: {
-    hp: 300,
+    hp: 500,
     damage: 35,
     attackSpeed: 0.7,
     range: FP.fromInt(3),
@@ -406,7 +406,7 @@ const UNIT_VANGUARD: HeroDefinition = {
   role: 'tank',
   rarity: 'starter',
   baseStats: {
-    hp: 200,
+    hp: 380,
     damage: 18,
     attackSpeed: 1.0,
     range: FP.fromInt(5),
@@ -538,7 +538,7 @@ const UNIT_RIFT: HeroDefinition = {
   role: 'support',
   rarity: 'rare',
   baseStats: {
-    hp: 90,
+    hp: 180,
     damage: 35,
     attackSpeed: 0.8,
     range: FP.fromInt(10),
@@ -666,7 +666,7 @@ const UNIT_FROST: HeroDefinition = {
   role: 'crowd_control',
   rarity: 'common',
   baseStats: {
-    hp: 80, damage: 28, attackSpeed: 1.8, range: FP.fromInt(12),
+    hp: 170, damage: 28, attackSpeed: 1.8, range: FP.fromInt(12),
     moveSpeed: FP.fromFloat(0.1), deployCooldown: 210
   },
   colors: { primary: 0x00bfff, secondary: 0xe0ffff, glow: 0xadd8e6 },
@@ -787,7 +787,7 @@ const UNIT_SPECTRE: HeroDefinition = {
   role: 'dps',
   rarity: 'rare', // Exclusive rare - costs only gold
   baseStats: {
-    hp: 140,
+    hp: 260,
     damage: 33,
     attackSpeed: 1.6,
     range: FP.fromInt(9),
@@ -911,7 +911,7 @@ const UNIT_OMEGA: HeroDefinition = {
   role: 'assassin',
   rarity: 'legendary', // Exclusive legendary - costs only dust
   baseStats: {
-    hp: 110,
+    hp: 220,
     damage: 45,
     attackSpeed: 1.1,
     range: FP.fromInt(7),
@@ -1041,7 +1041,7 @@ const UNIT_INFERNO: HeroDefinition = {
   role: 'dps',
   rarity: 'epic',
   baseStats: {
-    hp: 130,
+    hp: 240,
     damage: 42,
     attackSpeed: 1.3,
     range: FP.fromInt(7),
@@ -1178,7 +1178,7 @@ const UNIT_GLACIER: HeroDefinition = {
   role: 'tank',
   rarity: 'epic',
   baseStats: {
-    hp: 280,
+    hp: 460,
     damage: 22,
     attackSpeed: 0.8,
     range: FP.fromInt(4),

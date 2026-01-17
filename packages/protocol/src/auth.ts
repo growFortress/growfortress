@@ -146,6 +146,13 @@ export type DefaultLoadout = z.infer<typeof DefaultLoadoutSchema>;
 export const UserRoleSchema = z.enum(["USER", "ADMIN"]);
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
+// Game config schema (server-side balance values)
+export const GameConfigSchema = z.object({
+  fortressBaseHp: z.number().int().min(1),
+  fortressBaseDamage: z.number().int().min(1),
+});
+export type GameConfig = z.infer<typeof GameConfigSchema>;
+
 export const ProfileResponseSchema = z.object({
   userId: z.string(),
   displayName: z.string(),
@@ -161,6 +168,8 @@ export const ProfileResponseSchema = z.object({
   // Unlocked units
   unlockedHeroes: z.array(HeroIdSchema),
   unlockedTurrets: z.array(TurretTypeSchema),
+  // Game config
+  gameConfig: GameConfigSchema,
 });
 
 export type ProfileResponse = z.infer<typeof ProfileResponseSchema>;

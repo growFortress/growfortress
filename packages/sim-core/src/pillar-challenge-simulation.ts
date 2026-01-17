@@ -179,7 +179,7 @@ export function getDefaultPillarChallengeConfig(
     tickHz: 30,
     segmentSize: tierConfig.waveCount,
     startingWave: 0,
-    fortressBaseHp: 100,
+    fortressBaseHp: 200,
     fortressBaseDamage: 10,
     fortressAttackInterval: 15,
     skillCooldownTicks: 300,
