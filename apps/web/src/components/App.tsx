@@ -26,6 +26,7 @@ import { DailyQuestsModal } from "./modals/DailyQuestsModal.js";
 import { ShopModal } from "./modals/ShopModal.js";
 import { LegalModal } from "./modals/LegalModal.js";
 import { ArtifactsModal } from "./modals/ArtifactsModal.js";
+import { IdleRewardsModal } from "./modals/IdleRewardsModal.js";
 import { AdminBroadcastPanel, AdminModerationPanel } from "./admin/index.js";
 import { ErrorBoundary } from "./shared/ErrorBoundary.js";
 import { LoadingScreen } from "./shared/LoadingScreen.js";
@@ -167,6 +168,10 @@ function AppContent() {
       } else {
         initializeHubFromLoadout();
       }
+
+      // Check for idle rewards and daily quests after profile loads
+      checkIdleRewards();
+      fetchDailyQuests();
 
       // Po krótkiej chwili na inicjalizację - gotowe
       const timer = setTimeout(() => {
@@ -479,6 +484,7 @@ function AppContent() {
         <DailyQuestsModal />
         <ShopModal />
         <ArtifactsModal />
+        <IdleRewardsModal />
         <AdminBroadcastPanel />
         <AdminModerationPanel />
       </ErrorBoundary>
