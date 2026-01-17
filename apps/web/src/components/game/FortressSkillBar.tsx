@@ -1,5 +1,5 @@
 import { getClassById, type SkillDefinition, type SkillEffect } from '@arcade/sim-core';
-import { gameState, gamePhase, selectedFortressClass } from '../../state/index.js';
+import { gameState, gamePhase, selectedFortressClass, selectedTargetedSkill, selectSkillForTargeting, clearSelectedSkill } from '../../state/index.js';
 import styles from './FortressSkillBar.module.css';
 
 // Skill icons by effect type
@@ -120,6 +120,7 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
   const state = gameState.value;
   const phase = gamePhase.value;
   const fortressClass = selectedFortressClass.value;
+  const currentSelectedSkill = selectedTargetedSkill.value;
 
   // Only show during gameplay with a selected class
   if (phase === 'idle' || !fortressClass) {
@@ -133,6 +134,26 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
 
   const activeSkills = state?.fortressActiveSkills || [];
   const skillCooldowns = state?.fortressSkillCooldowns || {};
+
+  /**
+   * Handle click on a skill slot
+   */
+  const handleSkillClick = (skill: SkillDefinition) => {
+    const cooldown = skillCooldowns[skill.id] || 0;
+    const isReady = cooldown === 0;
+
+    if (!isReady) return; // Can't select skill on cooldown
+
+    if (skill.requiresTarget) {
+      // Toggle selection for targeted skills
+      if (currentSelectedSkill === skill.id) {
+        clearSelectedSkill();
+      } else {
+        selectSkillForTargeting(skill.id);
+      }
+    }
+    // Non-targeted skills (target: 'all') are auto-used, no click action needed
+  };
 
   // Filter to only show unlocked skills
   const unlockedSkills = classDef.skills.filter(skill =>
@@ -160,12 +181,15 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
           const cooldownPercent = cooldown / maxCooldown;
           const isReady = cooldown === 0;
           const icon = getSkillIcon(skill);
+          const isSelected = currentSelectedSkill === skill.id;
+          const isTargetable = skill.requiresTarget && isReady;
 
           return (
             <div
               key={skill.id}
-              class={`${styles.skillSlot} ${isReady ? styles.ready : ''}`}
-              title={getSkillTooltip(skill)}
+              class={`${styles.skillSlot} ${isReady ? styles.ready : ''} ${isSelected ? styles.selected : ''} ${isTargetable ? styles.targetable : ''}`}
+              title={getSkillTooltip(skill) + (skill.requiresTarget ? '\n\n🎯 Kliknij aby wybrać, potem kliknij na mapę' : '')}
+              onClick={() => handleSkillClick(skill)}
             >
               {/* Cooldown fill */}
               <div
@@ -174,6 +198,14 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
               />
               {/* Skill icon */}
               <span class={styles.skillIcon}>{icon}</span>
+              {/* Target indicator for targetable skills */}
+              {isTargetable && !isSelected && (
+                <span class={styles.targetIndicator}>🎯</span>
+              )}
+              {/* Selection indicator */}
+              {isSelected && (
+                <span class={styles.selectedIndicator}>✓</span>
+              )}
               {/* Skill name (compact only shows icon) */}
               {!compact && (
                 <span class={styles.skillName}>{skill.name.slice(0, 8)}</span>

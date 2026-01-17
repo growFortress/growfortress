@@ -29,6 +29,19 @@ import {
   HIT_FLASH_TICKS,
   DEFAULT_EFFECT_DURATION,
 } from './constants.js';
+import { trackDamageHit, getArmorBreakMultiplier, type ComboTrigger } from './combos.js';
+
+// Store combo triggers for this tick (for VFX)
+let pendingComboTriggers: ComboTrigger[] = [];
+
+/**
+ * Get and clear pending combo triggers (for VFX)
+ */
+export function popComboTriggers(): ComboTrigger[] {
+  const triggers = pendingComboTriggers;
+  pendingComboTriggers = [];
+  return triggers;
+}
 
 /**
  * Update all projectiles - movement and collision
@@ -96,9 +109,21 @@ function applyProjectileDamage(projectile: ActiveProjectile, state: GameState): 
   const enemy = state.enemies.find(e => e.id === projectile.targetEnemyId);
 
   if (enemy && enemy.hp > 0) {
-    const damageDealt = Math.min(projectile.damage, enemy.hp);
-    enemy.hp -= projectile.damage;
+    // Apply armor break multiplier from shatter combo (if active)
+    const armorMultiplier = getArmorBreakMultiplier(enemy);
+    const baseDamage = Math.floor(projectile.damage * armorMultiplier);
+
+    const damageDealt = Math.min(baseDamage, enemy.hp);
+    enemy.hp -= baseDamage;
     enemy.hitFlashTicks = HIT_FLASH_TICKS;
+
+    // Track damage hit for combo system
+    if (projectile.class) {
+      const comboTrigger = trackDamageHit(enemy, projectile.class, damageDealt, state);
+      if (comboTrigger) {
+        pendingComboTriggers.push(comboTrigger);
+      }
+    }
 
     analytics.trackDamage(
       projectile.sourceType,

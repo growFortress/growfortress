@@ -88,6 +88,10 @@ export function createGameState(overrides: Partial<GameState> = {}): GameState {
     artifactsEarnedThisRun: [],
     segmentArtifactsEarned: [],
     pendingArtifactDrops: [],
+    // Kill streak system
+    killStreak: 0,
+    lastKillTick: -1000,
+    highestKillStreak: 0,
     ...overrides,
   };
 }
@@ -113,6 +117,9 @@ export function createEnemy(overrides: Partial<Enemy> = {}): Enemy {
     hitFlashTicks: 0,
     lastAttackTick: 0,
     lane: 1, // Middle lane
+    targetLane: 1, // Same as current lane
+    canSwitchLane: false, // No lane switching by default in tests
+    laneSwitchCooldown: 0,
     activeEffects: [],
     ...overrides,
   };

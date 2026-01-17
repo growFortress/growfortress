@@ -425,16 +425,38 @@ export class BossRushSimulation {
   private applyBossRushEvent(event: GameEvent): void {
     // Handle events - Boss Rush uses same event types as regular runs
     switch (event.type) {
-      case 'HERO_COMMAND':
+      case 'HERO_COMMAND': {
         // Handle hero positioning command
-        // Find hero by definitionId and set command target
-        const hero = this.state.heroes.find(h => h.definitionId === event.heroId);
-        if (hero && hero.state !== 'dead' && hero.state !== 'cooldown') {
-          hero.commandTarget = { x: event.targetX, y: event.targetY };
-          hero.isCommanded = true;
-          hero.state = 'commanded';
+        const commandType = event.commandType || 'move';
+        if (commandType === 'move') {
+          // Find hero by definitionId and set command target
+          const hero = this.state.heroes.find(h => h.definitionId === event.heroId);
+          if (hero && hero.state !== 'dead' && hero.state !== 'cooldown' &&
+              event.targetX !== undefined && event.targetY !== undefined) {
+            hero.commandTarget = { x: event.targetX, y: event.targetY };
+            hero.isCommanded = true;
+            hero.state = 'commanded';
+          }
+        } else if (commandType === 'focus') {
+          // Focus on target enemy - set for all heroes
+          for (const hero of this.state.heroes) {
+            if (hero.state !== 'dead' && hero.state !== 'cooldown') {
+              hero.focusTargetId = event.targetEnemyId;
+            }
+          }
+        } else if (commandType === 'retreat') {
+          // All heroes retreat
+          for (const hero of this.state.heroes) {
+            if (hero.state !== 'dead' && hero.state !== 'cooldown') {
+              hero.isRetreating = true;
+              hero.focusTargetId = undefined;
+              hero.commandTarget = undefined;
+              hero.isCommanded = false;
+            }
+          }
         }
         break;
+      }
 
       case 'ACTIVATE_SNAP':
         // Snap ability - deal massive damage to current boss

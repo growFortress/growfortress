@@ -18,6 +18,7 @@ import {
   parallaxBackground,
   ParallaxBackground,
 } from "../effects/ParallaxBackground.js";
+import { filterManager } from "../effects/FilterManager.js";
 import {
   LAYOUT,
   screenXToGameUnit,
@@ -89,6 +90,13 @@ export class GameScene {
 
   private width = 0;
   private height = 0;
+
+  // Track waves for wave complete effects
+  private prevWavesCleared = 0;
+
+  // Track elite kills for hitstop effect
+  private prevEliteKills = 0;
+  private hitstopRemaining = 0; // Frames to skip for hitstop
 
   // Click callback for tactical commands
   private onFieldClick: ((worldX: number, worldY: number) => void) | null =
@@ -280,6 +288,36 @@ export class GameScene {
     if (state) {
       // Enable interactive layer during gameplay for tactical commands
       this.interactiveLayer.eventMode = "static";
+
+      // Wave complete effect - trigger when wavesCleared increases
+      if (state.wavesCleared > this.prevWavesCleared && this.prevWavesCleared > 0) {
+        this.triggerWaveCompleteEffect(state.wavesCleared);
+      }
+      this.prevWavesCleared = state.wavesCleared;
+
+      // Low HP warning effect
+      const hpPercent = state.fortressHp / state.fortressMaxHp;
+      if (hpPercent < 0.15) {
+        filterManager.setLowHpWarning(2); // Critical
+      } else if (hpPercent < 0.30) {
+        filterManager.setLowHpWarning(1); // Warning
+      } else {
+        filterManager.setLowHpWarning(0); // Clear
+      }
+
+      // Hitstop on elite kill - freeze visuals for a brief moment
+      if (state.eliteKills > this.prevEliteKills) {
+        this.hitstopRemaining = 3; // ~50ms at 60fps (3 frames)
+      }
+      this.prevEliteKills = state.eliteKills;
+
+      // Skip visual updates during hitstop for dramatic pause effect
+      if (this.hitstopRemaining > 0) {
+        this.hitstopRemaining--;
+        // Still update VFX and particles (they look better continuing)
+        this.vfx.update(16.66);
+        return; // Skip rest of update - freeze frame effect
+      }
 
       // Update Turret System (platforms and turrets)
       this.turretSystem.update(state, this.width, this.height);
@@ -667,5 +705,19 @@ export class GameScene {
         alpha: 0.5,
       });
     }
+  }
+
+  /**
+   * Trigger visual effects when a wave is completed.
+   * White screen flash + "WAVE X COMPLETE" floating text.
+   */
+  private triggerWaveCompleteEffect(wave: number) {
+    // Screen flash
+    filterManager.applyScreenFlash("white", 200, 0.3);
+
+    // Floating text in center of screen
+    const centerX = this.width / 2;
+    const centerY = this.height / 3;
+    this.vfx.spawnFloatingText(centerX, centerY, `WAVE ${wave} COMPLETE!`, 0x00ff9d);
   }
 }

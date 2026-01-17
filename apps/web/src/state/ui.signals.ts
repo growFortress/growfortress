@@ -98,6 +98,30 @@ export function dismissErrorToast(id: number): void {
 }
 
 // ============================================================================
+// TARGETED FORTRESS SKILL
+// ============================================================================
+
+/**
+ * Currently selected fortress skill for targeted activation.
+ * When set, the next field click will activate this skill at that location.
+ */
+export const selectedTargetedSkill = signal<string | null>(null);
+
+/**
+ * Select a fortress skill for targeted activation
+ */
+export function selectSkillForTargeting(skillId: string): void {
+  selectedTargetedSkill.value = skillId;
+}
+
+/**
+ * Clear the selected targeted skill
+ */
+export function clearSelectedSkill(): void {
+  selectedTargetedSkill.value = null;
+}
+
+// ============================================================================
 // UNLOCK NOTIFICATIONS
 // ============================================================================
 

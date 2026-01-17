@@ -73,6 +73,10 @@ export {
   errorToasts,
   showErrorToast,
   dismissErrorToast,
+  // Targeted fortress skill
+  selectedTargetedSkill,
+  selectSkillForTargeting,
+  clearSelectedSkill,
   // Unlock notifications
   unlockNotifications,
   queueUnlockNotifications,

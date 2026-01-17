@@ -191,6 +191,15 @@ export function updateHeroes(
 
   // Phase 3: State machine updates
   for (const hero of state.heroes) {
+    // Check for retreat command (team-wide immediate return)
+    if (hero.isRetreating && hero.state !== 'dead' && hero.state !== 'cooldown') {
+      hero.state = 'returning';
+      hero.isRetreating = false;
+      hero.currentTargetId = undefined;
+      hero.commandTarget = undefined;
+      hero.isCommanded = false;
+    }
+
     switch (hero.state) {
       case 'idle':
         updateHeroIdle(hero, state, config);
@@ -379,12 +388,27 @@ function performHeroAttack(
 
     // Find target using AI-based targeting (or random if weakness triggers)
     let target: Enemy | null;
-    if (behavioralEffects.randomTarget && enemiesInRange.length > 1) {
-      // Random target instead of AI selection (weakness override)
+
+    // Priority 1: Focus target if set (team-wide focus fire command)
+    if (hero.focusTargetId !== undefined) {
+      const focusEnemy = enemiesInRange.find(e => e.id === hero.focusTargetId);
+      if (focusEnemy) {
+        target = focusEnemy;
+      } else {
+        // Focus target not in range, use normal AI
+        target = selectBestTarget(hero, enemiesInRange, state, config);
+        // Clear focus if enemy is dead
+        const focusStillExists = state.enemies.some(e => e.id === hero.focusTargetId);
+        if (!focusStillExists) {
+          hero.focusTargetId = undefined;
+        }
+      }
+    } else if (behavioralEffects.randomTarget && enemiesInRange.length > 1) {
+      // Priority 2: Random target if weakness override
       const randomIndex = Math.floor(rng.nextFloat() * enemiesInRange.length);
       target = enemiesInRange[randomIndex];
     } else {
-      // Use Utility AI to select best target
+      // Priority 3: Use Utility AI to select best target
       target = selectBestTarget(hero, enemiesInRange, state, config);
     }
 

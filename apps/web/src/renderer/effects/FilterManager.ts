@@ -407,6 +407,49 @@ export class FilterManager {
     this.activeEffects = [];
   }
 
+  // Persistent low HP warning filter
+  private lowHpFilter: ColorMatrixFilter | null = null;
+  private lowHpActive = false;
+
+  /**
+   * Set low HP warning effect - red vignette-like tint when HP is low.
+   * @param level 0 = no warning, 1 = mild (< 30% HP), 2 = critical (< 15% HP)
+   */
+  public setLowHpWarning(level: 0 | 1 | 2) {
+    if (!this.globalContainer) return;
+
+    // Remove existing filter if any
+    if (this.lowHpFilter && this.lowHpActive) {
+      this.removeFilterFromContainer(this.globalContainer, this.lowHpFilter);
+      this.lowHpActive = false;
+    }
+
+    if (level === 0) {
+      this.lowHpFilter = null;
+      return;
+    }
+
+    // Create or reuse filter
+    if (!this.lowHpFilter) {
+      this.lowHpFilter = new ColorMatrixFilter();
+    }
+
+    // Apply red tint based on warning level
+    const intensity = level === 2 ? 0.4 : 0.2;
+    this.lowHpFilter.reset();
+    // Shift towards red and slightly desaturate
+    this.lowHpFilter.saturate(-0.3 * intensity);
+    this.lowHpFilter.brightness(1 - intensity * 0.1, false);
+    // Add red tint by adjusting color matrix
+    const matrix = this.lowHpFilter.matrix;
+    matrix[0] = 1 + intensity * 0.5;  // Boost red
+    matrix[6] = 1 - intensity * 0.2;  // Reduce green
+    matrix[12] = 1 - intensity * 0.3; // Reduce blue
+
+    this.addFilterToContainer(this.globalContainer, this.lowHpFilter);
+    this.lowHpActive = true;
+  }
+
   /**
    * Destroy and cleanup
    */

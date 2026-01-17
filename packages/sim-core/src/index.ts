@@ -651,3 +651,14 @@ export {
   calculateHeroArtifactHealthBonus,
   applyArtifactBonusesToStats,
 } from './systems/artifacts.js';
+
+// Combo System
+export {
+  popComboTriggers,
+} from './systems/projectile.js';
+
+export {
+  COMBOS,
+  type ComboTrigger,
+  type ComboDefinition,
+} from './systems/combos.js';

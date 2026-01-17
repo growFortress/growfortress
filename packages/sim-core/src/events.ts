@@ -37,6 +37,9 @@ export function validateEvent(
     case 'HERO_COMMAND':
       return validateHeroCommand(event, state);
 
+    case 'ACTIVATE_SKILL':
+      return validateActivateSkill(event, state);
+
     default:
       return { valid: false, reason: 'Unknown event type' };
   }
@@ -115,7 +118,15 @@ function validateActivateSnap(
 }
 
 function validateHeroCommand(
-  event: { type: 'HERO_COMMAND'; tick: number; heroId: string; targetX: number; targetY: number },
+  event: {
+    type: 'HERO_COMMAND';
+    tick: number;
+    heroId?: string;
+    targetX?: number;
+    targetY?: number;
+    commandType?: 'move' | 'focus' | 'retreat';
+    targetEnemyId?: number;
+  },
   state: GameState
 ): EventValidation {
   // Game must not be ended
@@ -123,19 +134,58 @@ function validateHeroCommand(
     return { valid: false, reason: 'Game has ended' };
   }
 
-  // Hero must exist
-  const hero = state.heroes.find(h => h.definitionId === event.heroId);
-  if (!hero) {
-    return { valid: false, reason: 'Hero not found' };
+  const commandType = event.commandType || 'move';
+
+  // For 'move' command, hero must be specified and valid
+  if (commandType === 'move') {
+    if (!event.heroId) {
+      return { valid: false, reason: 'Hero ID required for move command' };
+    }
+    const hero = state.heroes.find(h => h.definitionId === event.heroId);
+    if (!hero) {
+      return { valid: false, reason: 'Hero not found' };
+    }
+    if (hero.state === 'dead') {
+      return { valid: false, reason: 'Hero is dead' };
+    }
+    if (hero.state === 'cooldown') {
+      return { valid: false, reason: 'Hero is on cooldown' };
+    }
   }
 
-  // Hero must be alive and not on cooldown
-  if (hero.state === 'dead') {
-    return { valid: false, reason: 'Hero is dead' };
+  // For 'focus' command, target enemy must exist
+  if (commandType === 'focus') {
+    if (event.targetEnemyId === undefined) {
+      return { valid: false, reason: 'Target enemy ID required for focus command' };
+    }
+    const enemy = state.enemies.find(e => e.id === event.targetEnemyId);
+    if (!enemy) {
+      return { valid: false, reason: 'Target enemy not found' };
+    }
   }
 
-  if (hero.state === 'cooldown') {
-    return { valid: false, reason: 'Hero is on cooldown' };
+  // 'retreat' command has no special requirements
+
+  return { valid: true };
+}
+
+function validateActivateSkill(
+  event: { type: 'ACTIVATE_SKILL'; tick: number; skillId: string; targetX: number; targetY: number },
+  state: GameState
+): EventValidation {
+  // Game must not be ended
+  if (state.ended) {
+    return { valid: false, reason: 'Game has ended' };
+  }
+
+  // Skill must be unlocked
+  if (!state.activeSkills.includes(event.skillId)) {
+    return { valid: false, reason: 'Skill not unlocked' };
+  }
+
+  // Skill must not be on cooldown
+  if ((state.skillCooldowns[event.skillId] ?? 0) > 0) {
+    return { valid: false, reason: 'Skill is on cooldown' };
   }
 
   return { valid: true };
@@ -168,6 +218,10 @@ export function applyEvent(
 
     case 'HERO_COMMAND':
       return applyHeroCommand(event, state);
+
+    case 'ACTIVATE_SKILL':
+      // Skill execution happens in simulation.processEvents() after this event is applied
+      return true;
 
     default:
       return false;
@@ -240,21 +294,58 @@ function applyActivateSnap(
 }
 
 function applyHeroCommand(
-  event: { type: 'HERO_COMMAND'; tick: number; heroId: string; targetX: number; targetY: number },
+  event: {
+    type: 'HERO_COMMAND';
+    tick: number;
+    heroId?: string;
+    targetX?: number;
+    targetY?: number;
+    commandType?: 'move' | 'focus' | 'retreat';
+    targetEnemyId?: number;
+  },
   state: GameState
 ): boolean {
-  const hero = state.heroes.find(h => h.definitionId === event.heroId);
-  if (!hero) return false;
+  const commandType = event.commandType || 'move';
 
-  // Can only command heroes that are alive and not on cooldown
-  if (hero.state === 'dead' || hero.state === 'cooldown') {
-    return false;
+  switch (commandType) {
+    case 'move': {
+      // Single hero move command
+      if (!event.heroId) return false;
+      const hero = state.heroes.find(h => h.definitionId === event.heroId);
+      if (!hero) return false;
+      if (hero.state === 'dead' || hero.state === 'cooldown') return false;
+      if (event.targetX === undefined || event.targetY === undefined) return false;
+
+      hero.commandTarget = { x: event.targetX, y: event.targetY };
+      hero.isCommanded = true;
+      hero.state = 'commanded';
+      return true;
+    }
+
+    case 'focus': {
+      // All heroes focus fire on target enemy
+      if (event.targetEnemyId === undefined) return false;
+      const enemy = state.enemies.find(e => e.id === event.targetEnemyId);
+      if (!enemy) return false;
+
+      // Set focus target on all alive heroes
+      for (const hero of state.heroes) {
+        if (hero.state === 'dead' || hero.state === 'cooldown') continue;
+        hero.focusTargetId = event.targetEnemyId;
+      }
+      return true;
+    }
+
+    case 'retreat': {
+      // All heroes immediately retreat to fortress
+      for (const hero of state.heroes) {
+        if (hero.state === 'dead' || hero.state === 'cooldown') continue;
+        hero.isRetreating = true;
+        hero.focusTargetId = undefined; // Clear any focus target
+        hero.commandTarget = undefined;
+        hero.isCommanded = false;
+      }
+      return true;
+    }
   }
-
-  // Set command target and switch to commanded state
-  hero.commandTarget = { x: event.targetX, y: event.targetY };
-  hero.isCommanded = true;
-  hero.state = 'commanded';
-
-  return true;
 }

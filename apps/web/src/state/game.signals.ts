@@ -51,6 +51,7 @@ export interface GameStateSnapshot {
   wavesCleared: number;
   kills: number;
   eliteKills: number;
+  killStreak: number;
   goldEarned: number;
   dustEarned: number;
   segmentXpEarned: number;

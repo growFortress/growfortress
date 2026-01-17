@@ -35,6 +35,7 @@ import {
   updateTurrets,
   updateProjectiles,
   updateFortressSkills,
+  activateTargetedSkill,
   calculateSynergyBonuses,
   calculatePillarModifiers,
   initializeHeroes,
@@ -315,6 +316,11 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     artifactsEarnedThisRun: [],
     segmentArtifactsEarned: [],
     pendingArtifactDrops: [],
+
+    // Kill streak system
+    killStreak: 0,
+    lastKillTick: -1000, // Start with no recent kill
+    highestKillStreak: 0,
   };
 }
 
@@ -489,6 +495,18 @@ export class Simulation {
         this.executeSnap();
       }
 
+      // If SKILL was activated, execute it at target location
+      if (event.type === 'ACTIVATE_SKILL') {
+        activateTargetedSkill(
+          event.skillId,
+          event.targetX,
+          event.targetY,
+          this.state,
+          this.config,
+          this.rng
+        );
+      }
+
       this.eventIndex++;
     }
   }
@@ -601,6 +619,9 @@ export class Simulation {
 
       // Lane info
       lane,
+      targetLane: lane, // Start targeting current lane
+      canSwitchLane: this.rng.nextFloat() < 0.15, // 15% of enemies can switch lanes
+      laneSwitchCooldown: 0,
 
       // Status effects
       activeEffects: [],
@@ -926,6 +947,49 @@ export class Simulation {
         // Apply friction for smooth movement
         applyFriction(enemy, ENEMY_PHYSICS.friction);
 
+        // Lane switching logic for enemies that can switch
+        if (enemy.canSwitchLane) {
+          // Cooldown decrement
+          if (enemy.laneSwitchCooldown > 0) {
+            enemy.laneSwitchCooldown--;
+          }
+
+          // Decide to switch lane randomly when off cooldown
+          if (enemy.laneSwitchCooldown === 0 && enemy.lane === enemy.targetLane) {
+            // 1% chance per tick to decide to switch (when ready)
+            if (this.rng.nextFloat() < 0.01) {
+              // Pick a different lane
+              const possibleLanes = [0, 1, 2].filter(l => l !== enemy.lane);
+              const newLane = possibleLanes[Math.floor(this.rng.nextFloat() * possibleLanes.length)];
+              enemy.targetLane = newLane;
+              enemy.laneSwitchCooldown = 90; // 3 seconds before can switch again
+            }
+          }
+
+          // Move towards target lane
+          if (enemy.lane !== enemy.targetLane) {
+            const physicsConfig = {
+              ...DEFAULT_PHYSICS_CONFIG,
+              fieldMinY: FP.fromInt(0),
+              fieldMaxY: this.config.fieldHeight,
+            };
+            const targetY = getLaneY(enemy.targetLane, physicsConfig);
+            const diff = FP.sub(targetY, enemy.y);
+            const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(0.5)); // Switch at half speed
+
+            if (Math.abs(FP.toFloat(diff)) < 2) {
+              // Close enough - snap to lane
+              enemy.y = targetY;
+              enemy.lane = enemy.targetLane;
+              enemy.vy = 0;
+            } else if (diff > 0) {
+              enemy.vy = switchSpeed;
+            } else {
+              enemy.vy = FP.mul(switchSpeed, FP.fromInt(-1));
+            }
+          }
+        }
+
         // Ensure minimum velocity towards fortress
         if (enemy.vx > FP.mul(enemy.speed, FP.fromInt(-1))) {
           enemy.vx = FP.mul(enemy.speed, FP.fromInt(-1));
@@ -992,6 +1056,18 @@ export class Simulation {
         this.state.kills++;
         if (enemy.isElite) {
           this.state.eliteKills++;
+        }
+
+        // Kill streak tracking (combo window = 30 ticks = 1 second)
+        const KILL_STREAK_WINDOW = 30;
+        if (this.state.tick - this.state.lastKillTick <= KILL_STREAK_WINDOW) {
+          this.state.killStreak++;
+        } else {
+          this.state.killStreak = 1;
+        }
+        this.state.lastKillTick = this.state.tick;
+        if (this.state.killStreak > this.state.highestKillStreak) {
+          this.state.highestKillStreak = this.state.killStreak;
         }
 
         this.state.enemies.splice(idx, 1);

@@ -592,6 +592,31 @@ export class Game {
     this.simulation.setEvents([...this.events]);
   }
 
+  /** Activate a fortress skill at a target location */
+  activateFortressSkill(skillId: string, targetX: number, targetY: number): void {
+    if (!this.simulation || this.phase !== 'playing') return;
+
+    const state = this.simulation.state;
+
+    // Verify skill is unlocked
+    if (!state.activeSkills.includes(skillId)) return;
+
+    // Verify skill is not on cooldown
+    if ((state.skillCooldowns[skillId] || 0) > 0) return;
+
+    const event: GameEvent = {
+      type: 'ACTIVATE_SKILL',
+      tick: state.tick,
+      skillId,
+      targetX,
+      targetY,
+    };
+
+    audioManager.playSfx('skill_activate');
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
   /** Check if Annihilation Wave is ready to use */
   isAnnihilationReady(): boolean {
     if (!this.simulation) return false;
@@ -809,6 +834,9 @@ export class Game {
 
       // Lane info
       lane: 1, // Center lane
+      targetLane: 1,
+      canSwitchLane: false, // Bosses don't switch lanes
+      laneSwitchCooldown: 0,
 
       // Status effects
       activeEffects: [],

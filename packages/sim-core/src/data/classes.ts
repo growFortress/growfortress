@@ -20,6 +20,7 @@ const STANDARD_SKILLS: SkillDefinition[] = [
     damage: 40,
     radius: 15,
     unlockedAtFortressLevel: 1,
+    requiresTarget: true,
     effects: [
       { type: 'damage', amount: 40, target: 'area' },
       { type: 'slow', percent: 30, duration: 90 }
@@ -33,6 +34,7 @@ const STANDARD_SKILLS: SkillDefinition[] = [
     damage: 0,
     radius: 8,
     unlockedAtFortressLevel: 5,
+    requiresTarget: true,
     effects: [
       { type: 'stun', duration: 60 }
     ]
@@ -49,6 +51,7 @@ const CRYO_SKILLS: SkillDefinition[] = [
     radius: 12,
     duration: 180,
     unlockedAtFortressLevel: 1,
+    requiresTarget: true,
     effects: [
       { type: 'damage', amount: 15, target: 'area' },
       { type: 'slow', percent: 50, duration: 180 }
@@ -61,6 +64,7 @@ const CRYO_SKILLS: SkillDefinition[] = [
     cooldownTicks: 300, // 10s
     damage: 80,
     unlockedAtFortressLevel: 5,
+    requiresTarget: true, // Target single enemy
     effects: [
       { type: 'damage', amount: 80, target: 'single' },
       { type: 'freeze', duration: 90 }
@@ -77,6 +81,7 @@ const THERMAL_SKILLS: SkillDefinition[] = [
     damage: 100,
     radius: 10,
     unlockedAtFortressLevel: 1,
+    requiresTarget: true,
     effects: [
       { type: 'damage', amount: 100, target: 'area' },
       { type: 'burn', damagePerTick: 5, duration: 150 }
@@ -89,6 +94,7 @@ const THERMAL_SKILLS: SkillDefinition[] = [
     cooldownTicks: 360, // 12s
     damage: 50,
     unlockedAtFortressLevel: 5,
+    // No requiresTarget - hits all enemies (auto-use)
     effects: [
       { type: 'damage', amount: 50, target: 'all' },
       { type: 'burn', damagePerTick: 3, duration: 90 }
@@ -105,6 +111,7 @@ const ELECTRIC_SKILLS: SkillDefinition[] = [
     damage: 60,
     duration: 180,
     unlockedAtFortressLevel: 1,
+    requiresTarget: true,
     effects: [
       { type: 'damage', amount: 60, target: 'area' },
       { type: 'stun', duration: 30 }
@@ -117,6 +124,7 @@ const ELECTRIC_SKILLS: SkillDefinition[] = [
     cooldownTicks: 240, // 8s
     damage: 45,
     unlockedAtFortressLevel: 5,
+    requiresTarget: true, // Target first enemy in chain
     effects: [
       { type: 'damage', amount: 45, target: 'single' }
       // Chain effect handled by modifier system
@@ -132,6 +140,7 @@ const QUANTUM_SKILLS: SkillDefinition[] = [
     cooldownTicks: 300, // 10s
     damage: 35,
     unlockedAtFortressLevel: 1,
+    requiresTarget: true,
     effects: [
       { type: 'damage', amount: 35, target: 'area' }
     ]
@@ -143,6 +152,7 @@ const QUANTUM_SKILLS: SkillDefinition[] = [
     cooldownTicks: 480, // 16s
     damage: 40,
     unlockedAtFortressLevel: 5,
+    // No requiresTarget - hits all enemies (auto-use)
     effects: [
       { type: 'damage', amount: 40, target: 'all' },
       { type: 'buff', stat: 'damageBonus', amount: 0.3, duration: 240 }
@@ -159,6 +169,7 @@ const VOID_SKILLS: SkillDefinition[] = [
     damage: 70,
     radius: 8,
     unlockedAtFortressLevel: 1,
+    requiresTarget: true,
     effects: [
       { type: 'damage', amount: 70, target: 'area' },
       { type: 'slow', percent: 35, duration: 120 }
@@ -171,6 +182,7 @@ const VOID_SKILLS: SkillDefinition[] = [
     cooldownTicks: 540, // 18s
     damage: 90,
     unlockedAtFortressLevel: 5,
+    // No requiresTarget - hits all enemies (auto-use)
     effects: [
       { type: 'damage', amount: 90, target: 'all' },
       { type: 'stun', duration: 45 }

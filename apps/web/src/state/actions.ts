@@ -136,6 +136,7 @@ export function syncGameState(gameInstance: Game): void {
         wavesCleared: state.wavesCleared,
         kills: state.kills,
         eliteKills: state.eliteKills,
+        killStreak: state.killStreak,
         goldEarned: state.goldEarned,
         dustEarned: state.dustEarned,
         segmentXpEarned: state.segmentXpEarned,

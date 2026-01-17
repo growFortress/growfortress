@@ -73,6 +73,8 @@ export interface SkillDefinition {
   duration?: number;
   effects: SkillEffect[];
   unlockedAtFortressLevel: number;
+  /** If true, skill requires player to target a location (not auto-used) */
+  requiresTarget?: boolean;
 }
 
 export type ProjectileType = 'physical' | 'icicle' | 'fireball' | 'bolt' | 'laser' | 'plasma_beam' | 'void_slash';
@@ -206,6 +208,8 @@ export interface ActiveHero {
   // Command system (player-issued orders)
   commandTarget?: { x: number; y: number };  // Target position (fixed-point)
   isCommanded?: boolean;                      // Whether hero is executing a command
+  focusTargetId?: number;                     // Enemy ID to focus fire (team-wide)
+  isRetreating?: boolean;                     // Retreat to fortress immediately
 }
 
 export interface ActiveBuff {
@@ -535,9 +539,24 @@ export interface Enemy {
 
   // Lane information
   lane: number;     // Which lane enemy is in (0, 1, 2)
+  targetLane: number;  // Lane enemy is moving towards (for lane switching)
+  canSwitchLane: boolean;  // Whether this enemy can switch lanes
+  laneSwitchCooldown: number;  // Ticks until next lane switch allowed
 
   // Active status effects
   activeEffects: StatusEffect[];
+
+  // Combo system - tracks recent damage for elemental combos
+  recentDamageHits?: DamageHit[];
+}
+
+/**
+ * Represents a recent damage hit for combo detection
+ */
+export interface DamageHit {
+  damageClass: FortressClass;
+  tick: number;
+  damage: number;
 }
 
 // Relic system
@@ -827,6 +846,11 @@ export interface GameState {
   artifactsEarnedThisRun: string[];           // Artifact IDs earned during this run
   segmentArtifactsEarned: string[];           // Artifacts earned in current segment
   pendingArtifactDrops: PendingArtifactDrop[]; // Drops waiting to be processed/shown
+
+  // Kill streak system (for juice/feedback)
+  killStreak: number;        // Current consecutive kills within combo window
+  lastKillTick: number;      // Tick of the last kill (for combo timing)
+  highestKillStreak: number; // Best streak this run (for stats)
 }
 
 // NEW: Pending artifact drop (for UI notification)

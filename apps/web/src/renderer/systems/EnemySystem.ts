@@ -1,9 +1,10 @@
 import { Container, Graphics } from 'pixi.js';
 import type { GameState, Enemy, EnemyType, StatusEffectType } from '@arcade/sim-core';
+import { popComboTriggers } from '@arcade/sim-core';
 import { VFXSystem } from './VFXSystem.js';
 import { audioManager } from '../../game/AudioManager.js';
 import { EnemyVisualPool, type EnemyVisualBundle } from '../ObjectPool.js';
-import { fpXToScreen, calculateEnemyLaneY } from '../CoordinateSystem.js';
+import { fpXToScreen, fpYToScreen, calculateEnemyLaneY } from '../CoordinateSystem.js';
 
 // --- CONSTANTS ---
 const THEME = {
@@ -128,6 +129,11 @@ export class EnemySystem {
   private lastHp: Map<number, number> = new Map();
   private visualHp: Map<number, number> = new Map(); // For smooth separation
   private prevKills = 0;
+  private prevKillStreak = 0;
+  private lastStreakMilestone = 0; // Track which milestone was last shown
+
+  // Kill streak thresholds for effects
+  private static readonly STREAK_THRESHOLDS = [3, 5, 10, 15, 20];
 
   // Track status effects for dirty flag optimization
   private lastEffectKeys: Map<number, string> = new Map(); // Serialized effect types
@@ -174,12 +180,12 @@ export class EnemySystem {
       // --- VISUAL POLISH ---
       const previousHp = this.lastHp.get(enemy.id) ?? enemy.hp;
       
-      // 1. Floating Damage Numbers
+      // 1. Floating Damage Numbers (with scaling based on damage)
       if (previousHp > enemy.hp && vfx) {
         const damage = previousHp - enemy.hp;
-        // Check threshold to avoid spamming small ticks (optional, keeping it simple for now)
+        // Check threshold to avoid spamming small ticks
         if (damage >= 1) {
-             vfx.spawnFloatingText(visual.x, visual.y - 20, Math.round(damage).toString(), 0xffaa00);
+             vfx.spawnDamageNumber(visual.x, visual.y - 20, damage);
              audioManager.playSfx('hit');
         }
       }
@@ -222,8 +228,10 @@ export class EnemySystem {
 
     // 2. Remove dead sprites (release back to pool instead of destroying)
     const killsIncreased = state.kills > this.prevKills;
+    let lastDeathPosition = { x: 0, y: 0 }; // Track for kill streak effect
     for (const [id, bundle] of this.visuals) {
       if (!currentIds.has(id)) {
+        lastDeathPosition = { x: bundle.container.x, y: bundle.container.y };
         if (killsIncreased && vfx) {
           vfx.spawnExplosion(bundle.container.x, bundle.container.y, 0xffaa00);
         }
@@ -235,6 +243,41 @@ export class EnemySystem {
         this.lastEffectKeys.delete(id);
       }
     }
+
+    // Kill streak effects - trigger when crossing a new milestone
+    if (killsIncreased && vfx && state.killStreak > 0) {
+      // Find the current milestone the streak is at or above
+      const currentMilestone = EnemySystem.STREAK_THRESHOLDS
+        .filter(t => state.killStreak >= t)
+        .pop() || 0;
+
+      // Only trigger effect if we just crossed into a new milestone
+      // (streak increased AND we're at a threshold we weren't at before)
+      if (currentMilestone > 0 && currentMilestone > this.lastStreakMilestone) {
+        vfx.spawnKillStreakEffect(lastDeathPosition.x, lastDeathPosition.y, state.killStreak);
+        this.lastStreakMilestone = currentMilestone;
+      }
+
+      // Reset milestone tracking when streak resets
+      if (state.killStreak < this.prevKillStreak) {
+        this.lastStreakMilestone = 0;
+      }
+
+      this.prevKillStreak = state.killStreak;
+    }
+
+    // Combo effects - trigger VFX for elemental combos
+    if (vfx) {
+      const comboTriggers = popComboTriggers();
+      for (const trigger of comboTriggers) {
+        // Convert fixed-point position to screen coordinates
+        const screenX = fpXToScreen(trigger.x, viewWidth);
+        const screenY = fpYToScreen(trigger.y, viewHeight);
+        vfx.spawnComboEffect(screenX, screenY, trigger.comboId, trigger.bonusDamage);
+        audioManager.playSfx('combo'); // Play combo sound if available
+      }
+    }
+
     this.prevKills = state.kills;
   }
 

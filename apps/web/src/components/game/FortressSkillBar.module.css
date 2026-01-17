@@ -137,3 +137,59 @@
   0%, 100% { opacity: 0.3; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(1.05); }
 }
+
+/* Targetable skill (can be clicked to select) */
+.skillSlot.targetable {
+  cursor: pointer;
+}
+
+.skillSlot.targetable:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--glow-accent);
+}
+
+/* Selected skill (waiting for map click) */
+.skillSlot.selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 12px var(--color-accent), inset 0 0 8px rgba(255, 200, 0, 0.3);
+  animation: selectedPulse 0.8s var(--ease-standard) infinite;
+}
+
+.skillSlot.selected::after {
+  animation: none;
+  border-color: var(--color-accent);
+  opacity: 1;
+}
+
+@keyframes selectedPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* Target indicator */
+.targetIndicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 10px;
+  z-index: 3;
+  filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.8));
+}
+
+/* Selected indicator */
+.selectedIndicator {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 12px;
+  z-index: 3;
+  color: var(--color-accent);
+  font-weight: bold;
+  text-shadow: 0 0 4px var(--color-accent);
+  animation: checkPulse 0.5s var(--ease-standard) infinite;
+}
+
+@keyframes checkPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+}

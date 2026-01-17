@@ -837,6 +837,70 @@ export class VFXSystem {
     });
   }
 
+  /**
+   * Spawn damage number with scaling based on damage amount.
+   * Bigger damage = bigger text for more satisfying feedback.
+   */
+  public spawnDamageNumber(
+    x: number,
+    y: number,
+    damage: number,
+    options: {
+      isCrit?: boolean;
+      color?: number;
+    } = {}
+  ) {
+    if (!graphicsSettings.value.damageNumbers) return;
+
+    const { isCrit = false, color } = options;
+
+    // Scale font size with damage (logarithmic scaling for balance)
+    // Base: 16, scales up to ~32 for 1000+ damage
+    const baseSize = 16;
+    const scaledSize = baseSize + Math.pow(damage, 0.25) * 2;
+    const fontSize = Math.min(scaledSize, 40); // Cap at 40
+
+    // Crit gets yellow color and "!" suffix, otherwise use provided or default orange
+    const textColor = isCrit ? 0xffff00 : (color ?? 0xffaa00);
+    const displayText = isCrit ? `${Math.round(damage)}!` : Math.round(damage).toString();
+
+    const style = new TextStyle({
+      fontFamily: 'monospace',
+      fontSize: fontSize,
+      fontWeight: 'bold',
+      fill: textColor,
+      stroke: { width: isCrit ? 4 : 3, color: '#000000' },
+      dropShadow: {
+        color: '#000000',
+        blur: isCrit ? 4 : 2,
+        angle: Math.PI / 4,
+        distance: isCrit ? 3 : 2,
+      },
+    });
+
+    const pixiText = new Text({ text: displayText, style });
+    pixiText.x = x + (Math.random() - 0.5) * 10; // Slight random offset
+    pixiText.y = y;
+    pixiText.anchor.set(0.5);
+
+    // Crits start bigger and have a pop-in effect
+    const startScale = isCrit ? 0.7 : 0.4;
+    pixiText.scale.set(startScale);
+
+    this.container.addChild(pixiText);
+    this.floatingTexts.push({
+      text: pixiText,
+      life: isCrit ? 1.0 : 0.8, // Crits last slightly longer
+      maxLife: isCrit ? 1.0 : 0.8,
+      vy: isCrit ? -40 : -50, // Crits float slower
+    });
+
+    // Screen shake for very high damage (1000+)
+    if (damage >= 1000) {
+      this.triggerScreenShake(2, 100);
+    }
+  }
+
   // --- CONFETTI ---
   public spawnConfetti(x: number, y: number) {
     const particleCount = Math.floor(50 * this.particleMultiplier);
@@ -866,6 +930,155 @@ export class VFXSystem {
       
       this.particles.push(p);
     }
+  }
+
+  // --- KILL STREAK ---
+  /**
+   * Spawn kill streak effects based on streak count.
+   * Escalating feedback: text → flash → shake → confetti
+   */
+  public spawnKillStreakEffect(x: number, y: number, streak: number) {
+    // Define streak thresholds and names
+    const STREAK_CONFIG: Array<{ threshold: number; name: string; color: number }> = [
+      { threshold: 3, name: 'DOUBLE KILL!', color: 0xffcc00 },
+      { threshold: 5, name: 'TRIPLE KILL!', color: 0xff8800 },
+      { threshold: 10, name: 'RAMPAGE!', color: 0xff4400 },
+      { threshold: 15, name: 'DOMINATING!', color: 0xff0066 },
+      { threshold: 20, name: 'GODLIKE!', color: 0xff00ff },
+    ];
+
+    // Find the highest matching streak tier
+    let matchedConfig: { threshold: number; name: string; color: number } | null = null;
+    for (const config of STREAK_CONFIG) {
+      if (streak >= config.threshold) {
+        matchedConfig = config;
+      }
+    }
+
+    if (!matchedConfig) return; // Streak too low for any effect
+
+    // Always show floating text for any streak milestone
+    const style = new TextStyle({
+      fontFamily: 'monospace',
+      fontSize: 24 + (streak * 0.5), // Bigger text for bigger streaks
+      fontWeight: 'bold',
+      fill: matchedConfig.color,
+      stroke: { width: 4, color: '#000000' },
+      dropShadow: {
+        color: '#000000',
+        blur: 4,
+        angle: Math.PI / 4,
+        distance: 3,
+      },
+    });
+
+    const pixiText = new Text({ text: matchedConfig.name, style });
+    pixiText.x = x;
+    pixiText.y = y - 30; // Above the kill
+    pixiText.anchor.set(0.5);
+    pixiText.scale.set(0.3); // Start small for pop-in effect
+
+    this.container.addChild(pixiText);
+    this.floatingTexts.push({
+      text: pixiText,
+      life: 1.2, // Longer than normal floating text
+      maxLife: 1.2,
+      vy: -30, // Slower float
+    });
+
+    // Add screen flash for 5+ kills
+    if (streak >= 5) {
+      // Map streak to flash color (yellow for most, red for high streaks)
+      const flashColor: 'yellow' | 'red' | 'white' = streak >= 15 ? 'red' : 'yellow';
+      filterManager.applyScreenFlash(flashColor, 150, 0.2);
+    }
+
+    // Add screen shake for 10+ kills
+    if (streak >= 10) {
+      this.triggerScreenShake(3 + Math.floor(streak / 5), 200);
+    }
+
+    // Add confetti for 20+ kills
+    if (streak >= 20) {
+      this.spawnConfetti(x, y);
+    }
+
+    // Spawn burst particles around the text
+    const particleCount = Math.floor((5 + streak * 0.5) * this.particleMultiplier);
+    for (let i = 0; i < particleCount; i++) {
+      const p = this.pool.acquire();
+      const angle = (i / particleCount) * Math.PI * 2;
+      p.x = x;
+      p.y = y - 30;
+      p.vx = Math.cos(angle) * (80 + streak * 2);
+      p.vy = Math.sin(angle) * (80 + streak * 2);
+      p.life = 0.6;
+      p.maxLife = 0.6;
+      p.size = 4 + Math.random() * 3;
+      p.color = matchedConfig.color;
+      p.shape = 'star';
+      p.startAlpha = 1;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+  }
+
+  // --- COMBO EFFECTS ---
+  /**
+   * Spawn combo effect when elemental combo triggers.
+   * Shows combo name and burst of particles.
+   */
+  public spawnComboEffect(
+    x: number,
+    y: number,
+    comboId: string,
+    bonusDamage?: number
+  ) {
+    // Combo visual config
+    const COMBO_CONFIG: Record<string, { name: string; color: number; particleColor: number }> = {
+      steam_burst: { name: 'STEAM BURST!', color: 0xff8844, particleColor: 0xffccaa },
+      electrocute: { name: 'ELECTROCUTE!', color: 0x44aaff, particleColor: 0x88ccff },
+      shatter: { name: 'SHATTER!', color: 0xcc88ff, particleColor: 0xddaaff },
+    };
+
+    const config = COMBO_CONFIG[comboId];
+    if (!config) return;
+
+    // Floating combo text
+    this.spawnFloatingText(x, y - 20, config.name, config.color);
+
+    // If bonus damage, show it too
+    if (bonusDamage && bonusDamage > 0) {
+      setTimeout(() => {
+        this.spawnDamageNumber(x, y, bonusDamage, { isCrit: true }); // isCrit=true for emphasis
+      }, 100);
+    }
+
+    // Screen flash for combo
+    filterManager.applyScreenFlash('white', 100, 0.15);
+
+    // Spawn burst particles
+    const particleCount = Math.floor(20 * this.particleMultiplier);
+    for (let i = 0; i < particleCount; i++) {
+      const p = this.pool.acquire();
+      const angle = (i / particleCount) * Math.PI * 2;
+      const speed = 100 + Math.random() * 50;
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 0.5;
+      p.maxLife = 0.5;
+      p.size = 4 + Math.random() * 3;
+      p.color = config.particleColor;
+      p.shape = 'circle';
+      p.startAlpha = 1;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+
+    // Add ring shockwave
+    this.spawnShockwave(x, y);
   }
 
   // --- HEAL/BUFF EFFECTS ---

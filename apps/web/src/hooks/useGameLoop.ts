@@ -31,6 +31,8 @@ import {
   commandSelectedHeroId,
   setCommandTarget,
   cancelCommand,
+  selectedTargetedSkill,
+  clearSelectedSkill,
   baseGold,
   baseDust,
   baseLevel,
@@ -232,25 +234,34 @@ export function useGameLoop(
           upgradePanelVisible.value = true;
         });
 
-        // Set up field click handler for tactical commands during waves
+        // Set up field click handler for tactical commands and targeted skills
         renderer.setOnFieldClick((worldX: number, worldY: number) => {
-          // Only handle if a hero is selected for command
-          if (!commandSelectedHeroId.value) return;
-
           // Convert world coordinates to fixed-point
           const fpX = FP.fromFloat(worldX);
           const fpY = FP.fromFloat(worldY);
 
-          // Set the target position
-          setCommandTarget(fpX, fpY);
-
-          // Issue command to game
-          if (game) {
-            game.issueHeroCommand(commandSelectedHeroId.value, fpX, fpY);
+          // Priority 1: Handle targeted fortress skill activation
+          if (selectedTargetedSkill.value) {
+            if (game) {
+              game.activateFortressSkill(selectedTargetedSkill.value, fpX, fpY);
+            }
+            clearSelectedSkill();
+            return;
           }
 
-          // Clear selection after issuing command
-          cancelCommand();
+          // Priority 2: Handle hero tactical command
+          if (commandSelectedHeroId.value) {
+            // Set the target position
+            setCommandTarget(fpX, fpY);
+
+            // Issue command to game
+            if (game) {
+              game.issueHeroCommand(commandSelectedHeroId.value, fpX, fpY);
+            }
+
+            // Clear selection after issuing command
+            cancelCommand();
+          }
         });
 
         // Initial sync

@@ -317,6 +317,10 @@ export function createPillarChallengeGameState(
     artifactsEarnedThisRun: [],
     segmentArtifactsEarned: [],
     pendingArtifactDrops: [],
+    // Kill streak system
+    killStreak: 0,
+    lastKillTick: -1000,
+    highestKillStreak: 0,
   };
 }
 
@@ -702,6 +706,9 @@ export class PillarChallengeSimulation {
       isElite: entry.isElite,
       hitFlashTicks: 0,
       lane: entry.lane ?? 0,
+      targetLane: entry.lane ?? 0,
+      canSwitchLane: false, // No lane switching in Pillar Challenge
+      laneSwitchCooldown: 0,
       activeEffects: [],
     };
 

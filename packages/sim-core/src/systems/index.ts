@@ -25,6 +25,7 @@ export {
   updateProjectiles,
   updateEnemyStatusEffects,
   createFortressProjectile,
+  popComboTriggers,
   // Internal exports for other modules
   createHeroProjectile,
   createTurretProjectile,
@@ -32,10 +33,23 @@ export {
 } from './projectile.js';
 
 // ============================================================================
+// COMBO SYSTEM
+// ============================================================================
+
+export {
+  trackDamageHit,
+  getArmorBreakMultiplier,
+  cleanupExpiredDamageHits,
+  COMBOS,
+  type ComboTrigger,
+  type ComboDefinition,
+} from './combos.js';
+
+// ============================================================================
 // FORTRESS SKILLS
 // ============================================================================
 
-export { updateFortressSkills } from './fortress-skills.js';
+export { updateFortressSkills, activateTargetedSkill } from './fortress-skills.js';
 
 // ============================================================================
 // SYNERGY SYSTEM
