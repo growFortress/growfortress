@@ -330,13 +330,16 @@ export class HeroSystem {
 
   /**
    * Start spawn animation
+   * @param targetState - Optional target state to animate to (defaults to visual.lastState)
    */
-  private startSpawnAnimation(visual: HeroVisual): void {
+  private startSpawnAnimation(visual: HeroVisual, targetState?: HeroState): void {
     visual.animation.isSpawning = true;
     visual.animation.spawnProgress = 0;
 
+    // Use provided target state or fall back to lastState
+    const targetVisuals = STATE_VISUALS[targetState ?? visual.lastState];
+
     // Scale from 0 to target with elastic bounce
-    const targetVisuals = STATE_VISUALS[visual.lastState];
     visual.scaleTween = new Tween(0, targetVisuals.scale, ANIMATION.spawn, {
       easing: easeOutElastic,
       onComplete: () => {
@@ -387,6 +390,15 @@ export class HeroSystem {
   private onStateChange(visual: HeroVisual, fromState: HeroState, toState: HeroState): void {
     visual.animation.isTransitioning = true;
     visual.animation.transitionProgress = 0;
+
+    // Reset death animation when transitioning from dead to any other state (e.g., returning to hub)
+    if (fromState === 'dead' && toState !== 'dead') {
+      visual.animation.isDying = false;
+      visual.animation.deathProgress = 0;
+      // Trigger spawn animation to "revive" the hero visually with correct target state alpha
+      this.startSpawnAnimation(visual, toState);
+      return; // Spawn animation handles the transition
+    }
 
     const fromVisuals = STATE_VISUALS[fromState];
     const toVisuals = STATE_VISUALS[toState];
@@ -1252,5 +1264,16 @@ export class HeroSystem {
         // Unknown hero - use generic class effect based on projectile class
         vfx.spawnSkillActivation(heroX, heroY, 'natural');
     }
+  }
+
+  /**
+   * Clear all hero visuals - used when transitioning between scenes
+   */
+  public clearAll(): void {
+    for (const visual of this.visuals.values()) {
+      this.container.removeChild(visual.container);
+      visual.container.destroy({ children: true });
+    }
+    this.visuals.clear();
   }
 }

@@ -130,6 +130,9 @@ export function useGameLoop(
           currentWave.value = finalWave;
         }
 
+        // CRITICAL: Stop the game loop so hub loop can take over
+        loop.stop();
+
         // Reinitialize hub state from loadout for proper display
         initializeHubFromLoadout();
 
@@ -143,6 +146,9 @@ export function useGameLoop(
         showRewardsToast(gold, dust, xp);
       },
       onBossRushEnd: () => {
+        // CRITICAL: Stop the game loop so hub loop can take over
+        loop.stop();
+
         // Reinitialize hub state from loadout for proper display
         initializeHubFromLoadout();
 

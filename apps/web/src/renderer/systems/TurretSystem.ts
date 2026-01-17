@@ -602,12 +602,16 @@ export class TurretSystem {
       visual.dirty.tierBadge = false;
     }
 
-    // Range circle only shown during gameplay and only redraws when needed
-    if (visual.dirty.rangeCircle) {
-      visual.rangeCircle.clear();
-      if (hasEnemies) {
+    // Range circle only shown during gameplay when enemies present
+    if (hasEnemies) {
+      if (visual.dirty.rangeCircle) {
+        visual.rangeCircle.clear();
         this.drawRangeCircle(visual.rangeCircle, turret, viewWidth);
+        visual.dirty.rangeCircle = false;
       }
+    } else {
+      // Always clear range circle when no enemies (hub mode)
+      visual.rangeCircle.clear();
       visual.dirty.rangeCircle = false;
     }
   }
@@ -1598,5 +1602,24 @@ export class TurretSystem {
     const g = ((color >> 8) & 0xff) * (1 - factor);
     const b = (color & 0xff) * (1 - factor);
     return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b);
+  }
+
+  /**
+   * Clear all turret visuals - used when transitioning between scenes
+   */
+  public clearAll(): void {
+    // Clear slot visuals
+    for (const visual of this.slotVisuals.values()) {
+      this.container.removeChild(visual);
+      visual.destroy({ children: true });
+    }
+    this.slotVisuals.clear();
+
+    // Clear turret visuals
+    for (const visual of this.turretVisuals.values()) {
+      this.container.removeChild(visual.container);
+      visual.container.destroy({ children: true });
+    }
+    this.turretVisuals.clear();
   }
 }
