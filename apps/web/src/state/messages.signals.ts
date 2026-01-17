@@ -362,12 +362,16 @@ export function initMessagesWebSocket(): void {
       threads.value = [updatedThread, ...updatedThreads];
     }
 
-    // If viewing this thread, add message
+    // If viewing this thread, add message (only if not already added)
     if (selectedThreadId.value === data.threadId && selectedThread.value) {
-      selectedThread.value = {
-        ...selectedThread.value,
-        messages: [...selectedThread.value.messages, data.message],
-      };
+      // Check if message already exists (prevents duplicates from optimistic updates)
+      const messageExists = selectedThread.value.messages.some(m => m.id === data.message.id);
+      if (!messageExists) {
+        selectedThread.value = {
+          ...selectedThread.value,
+          messages: [...selectedThread.value.messages, data.message],
+        };
+      }
       // Mark as read
       markThreadRead(data.threadId).catch(() => {});
     }

@@ -335,8 +335,6 @@ export const RATE_LIMITS = {
   THREADS_PER_HOUR: 10,
   // Minimum seconds between messages
   MESSAGE_COOLDOWN_SECONDS: 5,
-  // Messages per day for new accounts (< 24h old)
-  NEW_ACCOUNT_MESSAGES_PER_DAY: 5,
   // Flood detection: max identical messages in short time
   FLOOD_IDENTICAL_MESSAGES: 3,
   FLOOD_WINDOW_SECONDS: 60,

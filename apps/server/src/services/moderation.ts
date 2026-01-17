@@ -8,7 +8,6 @@ import { prisma } from '../lib/prisma.js';
 import { broadcastToUser } from './websocket.js';
 import {
   validateAndFilterContent,
-  isNewAccount,
   RATE_LIMITS,
 } from '../lib/contentFilter.js';
 import type {
@@ -79,25 +78,6 @@ export async function canUserSendMessage(userId: string): Promise<{ allowed: boo
       return {
         allowed: false,
         reason: `Poczekaj ${Math.ceil(RATE_LIMITS.MESSAGE_COOLDOWN_SECONDS - secondsSinceLastMessage)} sekund przed wysłaniem kolejnej wiadomości`,
-      };
-    }
-  }
-
-  // Check daily limit for new accounts
-  if (isNewAccount(user.createdAt)) {
-    // Reset counter if needed
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (!user.messagesResetAt || user.messagesResetAt < today) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { messagesToday: 0, messagesResetAt: new Date() },
-      });
-    } else if (user.messagesToday >= RATE_LIMITS.NEW_ACCOUNT_MESSAGES_PER_DAY) {
-      return {
-        allowed: false,
-        reason: `Nowe konta mogą wysłać maksymalnie ${RATE_LIMITS.NEW_ACCOUNT_MESSAGES_PER_DAY} wiadomości dziennie. Spróbuj ponownie jutro.`,
       };
     }
   }

@@ -9,6 +9,7 @@ import {
   getFortressTier,
   getFortressTierName,
   getStatBonusPercent,
+  getStatMultiplier,
   FORTRESS_STAT_UPGRADES,
   getUpgradeCost,
 } from '@arcade/sim-core';
@@ -31,11 +32,14 @@ import {
   openGuildSearch,
   showErrorToast,
   classSelectionVisible,
+  isAuthenticated,
 } from '../../state/index.js';
 import { updatePlayerDescription } from '../../api/client.js';
 import { fetchUserRanks } from '../../api/leaderboard.js';
+import { getMyGuild } from '../../api/guild.js';
 import { getAccessToken } from '../../api/auth.js';
 import { setUserRanks } from '../../state/leaderboard.signals.js';
+import { setGuildData } from '../../state/guild.signals.js';
 import { TierEvolutionModal } from '../modals/TierEvolutionModal.js';
 import { Button } from '../shared/Button.js';
 import { announce } from '../shared/ScreenReaderAnnouncer.js';
@@ -60,6 +64,11 @@ const STAT_ICONS: Record<string, string> = {
   damage: '⚔️',
   armor: '🛡️',
 };
+
+// Base fortress stats
+const FORTRESS_BASE_HP = 100;
+const FORTRESS_BASE_DAMAGE = 10;
+const FP_BASE = 16384; // Fixed point base (1.0)
 
 // API function for fortress upgrades
 async function upgradeFortressStat(stat: string): Promise<{
@@ -102,8 +111,12 @@ export function FortressInfoPanel() {
     setLocalDescription(playerDescription.value);
   }, []);
 
-  // Fetch user ranks on mount
+  // Fetch user ranks and guild data when authenticated
+  const authenticated = isAuthenticated.value;
   useEffect(() => {
+    if (!authenticated) return;
+
+    // Fetch ranks
     fetchUserRanks().then((data) => {
       if (data) {
         setUserRanks(data.ranks, data.weekKey, data.timeUntilReset);
@@ -111,7 +124,18 @@ export function FortressInfoPanel() {
     }).catch(() => {
       // Silent fail - ranks are optional
     });
-  }, []);
+
+    // Fetch guild data
+    getMyGuild().then((data) => {
+      setGuildData({
+        guild: data.guild,
+        membership: data.membership,
+        bonuses: data.bonuses,
+      });
+    }).catch(() => {
+      // Silent fail - guild is optional
+    });
+  }, [authenticated]);
 
   // Memoized calculations
   const fortressPower = useMemo(() => {
@@ -124,33 +148,38 @@ export function FortressInfoPanel() {
     return calculateFortressPower(fortressUpgrades, fortressLevel).totalPower;
   }, [state.fortressUpgrades, fortressLevel]);
 
-  const totalBonuses = useMemo(() => {
-    const levelHpBonus = calculateTotalHpBonus(fortressLevel);
-    const levelDmgBonus = calculateTotalDamageBonus(fortressLevel);
-    const levelHpPercent = Math.round(((levelHpBonus / 16384) - 1) * 100);
-    const levelDmgPercent = Math.round(((levelDmgBonus / 16384) - 1) * 100);
+  const fortressStats = useMemo(() => {
+    // Level bonuses (fixed point, 16384 = 1.0)
+    const levelHpBonusFP = calculateTotalHpBonus(fortressLevel);
+    const levelDmgBonusFP = calculateTotalDamageBonus(fortressLevel);
 
-    const upgradeHpPercent = getStatBonusPercent(
-      FORTRESS_STAT_UPGRADES.find(u => u.stat === 'hp')!,
-      state.fortressUpgrades.hp || 0
-    );
-    const upgradeDmgPercent = getStatBonusPercent(
-      FORTRESS_STAT_UPGRADES.find(u => u.stat === 'damage')!,
-      state.fortressUpgrades.damage || 0
-    );
-    const upgradeArmorPercent = getStatBonusPercent(
-      FORTRESS_STAT_UPGRADES.find(u => u.stat === 'armor')!,
-      state.fortressUpgrades.armor || 0
-    );
+    // Upgrade multipliers
+    const hpConfig = FORTRESS_STAT_UPGRADES.find(u => u.stat === 'hp')!;
+    const dmgConfig = FORTRESS_STAT_UPGRADES.find(u => u.stat === 'damage')!;
+    const armorConfig = FORTRESS_STAT_UPGRADES.find(u => u.stat === 'armor')!;
 
-    // Add guild stat boost
-    const guildStatPercent = Math.round((guildBonuses.value?.statBoost ?? 0) * 100);
+    const upgradeHpMult = getStatMultiplier(hpConfig, state.fortressUpgrades.hp || 0);
+    const upgradeDmgMult = getStatMultiplier(dmgConfig, state.fortressUpgrades.damage || 0);
+    const upgradeArmorPercent = getStatBonusPercent(armorConfig, state.fortressUpgrades.armor || 0);
+
+    // Guild stat boost
+    const guildStatBoost = guildBonuses.value?.statBoost ?? 0;
+    const guildStatPercent = Math.round(guildStatBoost * 100);
+
+    // Calculate base stats (from level + upgrades, without guild)
+    const baseHp = Math.floor(FORTRESS_BASE_HP * (levelHpBonusFP / FP_BASE) * upgradeHpMult);
+    const baseDamage = Math.floor(FORTRESS_BASE_DAMAGE * (levelDmgBonusFP / FP_BASE) * upgradeDmgMult);
+    const baseArmor = upgradeArmorPercent;
+
+    // Calculate total stats (with guild bonus)
+    const totalHp = Math.floor(baseHp * (1 + guildStatBoost));
+    const totalDamage = Math.floor(baseDamage * (1 + guildStatBoost));
+    const totalArmor = baseArmor + guildStatPercent;
 
     return {
-      hp: levelHpPercent + upgradeHpPercent + guildStatPercent,
-      damage: levelDmgPercent + upgradeDmgPercent + guildStatPercent,
-      armor: upgradeArmorPercent + guildStatPercent,
-      guildBonus: guildStatPercent,
+      hp: { base: baseHp, total: totalHp, guildBonus: guildStatPercent },
+      damage: { base: baseDamage, total: totalDamage, guildBonus: guildStatPercent },
+      armor: { base: baseArmor, total: totalArmor, guildBonus: guildStatPercent },
     };
   }, [fortressLevel, state.fortressUpgrades, guildBonuses.value?.statBoost]);
 
@@ -253,7 +282,7 @@ export function FortressInfoPanel() {
                 onClick={handleGuildClick}
                 aria-label={t('fortressPanel.openGuildPanel', { name: guild.name })}
               >
-                [{guild.tag}] {t(`fortressPanel.guildRoles.${membership?.role || 'MEMBER'}`, { defaultValue: membership?.role })}
+                {guild.name}
               </button>
             ) : (
               <Button
@@ -393,11 +422,23 @@ export function FortressInfoPanel() {
             const cost = getUpgradeCost(config, currentLevel);
             const canAfford = gold >= cost && currentLevel < config.maxLevel;
             const isMaxed = currentLevel >= config.maxLevel;
-            const currentBonus = getStatBonusPercent(config, currentLevel);
-            const nextBonus = getStatBonusPercent(config, currentLevel + 1);
             const progressPercent = (currentLevel / config.maxLevel) * 100;
             const isLoading = loadingStat === config.stat;
-            const totalBonus = totalBonuses[config.stat as keyof typeof totalBonuses] || currentBonus;
+
+            // Get actual stat values
+            const statData = fortressStats[config.stat as keyof typeof fortressStats];
+            const isArmor = config.stat === 'armor';
+
+            // Format display value
+            const displayValue = isArmor
+              ? `${statData.total.toFixed(0)}%`
+              : statData.total.toLocaleString();
+
+            // Format tooltip
+            const hasGuildBonus = statData.guildBonus > 0;
+            const tooltipText = hasGuildBonus
+              ? `${t('fortressPanel.base')}: ${isArmor ? `${statData.base.toFixed(0)}%` : statData.base.toLocaleString()}\n${t('fortressPanel.total')}: ${displayValue}\n${t('fortressPanel.guildBonus')}: +${statData.guildBonus}%`
+              : undefined;
 
             const upgradeName = t(`fortressPanel.statUpgrades.${config.stat}`, { defaultValue: config.name });
 
@@ -419,10 +460,16 @@ export function FortressInfoPanel() {
                 </div>
 
                 <div class={styles.upgradeBonusRow}>
-                  <span class={styles.totalBonusLabel}>{t('fortressPanel.total')}</span>
-                  <span class={styles.totalBonusValue}>+{totalBonus.toFixed(0)}%</span>
-                  {!isMaxed && (
-                    <span class={styles.nextBonusHint}>(+{(nextBonus - currentBonus).toFixed(1)}%)</span>
+                  <span
+                    class={styles.statValue}
+                    title={tooltipText}
+                  >
+                    {displayValue}
+                  </span>
+                  {hasGuildBonus && (
+                    <span class={styles.guildBonusIndicator} title={t('fortressPanel.guildBonusTooltip')}>
+                      +{statData.guildBonus}%
+                    </span>
                   )}
                 </div>
 

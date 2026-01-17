@@ -14,6 +14,7 @@ import {
   claimAllQuestRewards as apiClaimAllQuestRewards,
 } from '../api/dailyQuests.js';
 import { updatePlayerMaterials, addMaterialDrop } from './materials.signals.js';
+import { baseGold, baseDust } from './profile.signals.js';
 import { DAILY_QUEST_DEFINITIONS, type DailyQuestId, type DailyQuestProgress } from '@arcade/protocol';
 import type { MaterialType } from '@arcade/sim-core';
 
@@ -147,15 +148,13 @@ export async function claimQuestReward(questId: DailyQuestId): Promise<boolean> 
       return false;
     }
 
-    // Update materials inventory
-    if (response.newInventory?.materials) {
-      updatePlayerMaterials(response.newInventory.materials);
-    }
-
-    // Show drop notifications for bonus materials
-    if (response.bonusAwarded?.type === 'material' || response.bonusAwarded?.type === 'random_material') {
-      // For materials, we need to check if materials were updated
-      // The actual material drops would be in the inventory update
+    // Update inventory (gold, dust, materials)
+    if (response.newInventory) {
+      baseGold.value = response.newInventory.gold;
+      baseDust.value = response.newInventory.dust;
+      if (response.newInventory.materials) {
+        updatePlayerMaterials(response.newInventory.materials);
+      }
     }
 
     // Refresh quest state
@@ -188,9 +187,13 @@ export async function claimAllQuestRewards(): Promise<boolean> {
       return false;
     }
 
-    // Update materials inventory
-    if (response.newInventory?.materials) {
-      updatePlayerMaterials(response.newInventory.materials);
+    // Update inventory (gold, dust, materials)
+    if (response.newInventory) {
+      baseGold.value = response.newInventory.gold;
+      baseDust.value = response.newInventory.dust;
+      if (response.newInventory.materials) {
+        updatePlayerMaterials(response.newInventory.materials);
+      }
     }
 
     // Show drop notifications for materials

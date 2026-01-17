@@ -10,6 +10,21 @@
   display: flex;
   justify-content: center;
   align-items: center;
+
+  /* Entrance animation */
+  opacity: 0;
+  animation: overlayEnter 0.3s ease-out forwards;
+}
+
+@keyframes overlayEnter {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
 }
 
 .modal {
@@ -24,6 +39,22 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
+
+  /* Spring entrance animation */
+  opacity: 0;
+  transform: scale(0.95) translateY(20px);
+  animation: modalEnter 0.4s var(--ease-spring) forwards;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .header {
@@ -33,6 +64,18 @@
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--color-neutral-dark);
   background: rgba(0, 0, 0, 0.2);
+
+  /* Staggered entrance */
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: headerEnter 0.3s ease-out 0.1s forwards;
+}
+
+@keyframes headerEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .title {
@@ -111,6 +154,18 @@
   flex: 1;
   display: flex;
   overflow: hidden;
+
+  /* Staggered entrance */
+  opacity: 0;
+  transform: translateY(10px);
+  animation: contentEnter 0.3s ease-out 0.15s forwards;
+}
+
+@keyframes contentEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .threadList {
@@ -649,5 +704,26 @@
 @media (min-width: 769px) {
   .backBtn {
     display: none;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+    opacity: 1;
+  }
+
+  .modal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .header,
+  .content {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
