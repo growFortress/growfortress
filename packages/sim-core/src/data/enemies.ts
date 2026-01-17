@@ -259,8 +259,8 @@ export function getEnemyRewards(
   const archetype = ENEMY_ARCHETYPES[type];
   // Elite enemies give 3x rewards (balanced from 5x to prevent late-game economy breaking)
   const eliteMult = isElite ? 3 : 1;
-  // Economy balance: halved rewards per enemy since enemy count is doubled
-  const economyBalanceMult = 0.5;
+  // Economy balance: 75% rewards per enemy since enemy count is doubled
+  const economyBalanceMult = 0.75;
 
   return {
     gold: Math.floor(archetype.goldReward * eliteMult * goldMult * economyBalanceMult),
