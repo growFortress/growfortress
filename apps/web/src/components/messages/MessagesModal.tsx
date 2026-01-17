@@ -205,7 +205,7 @@ function ThreadView({ onBack, t, locale }: ThreadViewProps) {
   };
 
   const participants = thread.participants.map(p => p.displayName).join(', ');
-  const canReply = thread.type !== 'GUILD_KICK' && thread.type !== 'SYSTEM';
+  const canReply = thread.type !== 'GUILD_KICK' && thread.type !== 'SYSTEM' && thread.type !== 'GUILD_INVITE';
 
   return (
     <div class={styles.threadView}>

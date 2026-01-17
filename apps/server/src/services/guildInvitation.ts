@@ -8,6 +8,7 @@ import {
 import { hasPermission } from './guild.js';
 import { getMemberCapacity } from './guildStructures.js';
 import { createGuildInviteNotification } from './messages.js';
+import { broadcastToUser } from './websocket.js';
 import type { GuildInvitation } from '@prisma/client';
 
 // ============================================================================
@@ -328,6 +329,15 @@ export async function acceptInvitation(
       data: { status: 'CANCELLED' },
     }),
   ]);
+
+  // Broadcast invitation status change so thread views update
+  broadcastToUser(userId, {
+    type: 'guild:invitation_status',
+    data: {
+      invitationId,
+      status: 'ACCEPTED',
+    },
+  });
 }
 
 /**
@@ -358,6 +368,15 @@ export async function declineInvitation(
     data: {
       status: 'DECLINED',
       respondedAt: new Date(),
+    },
+  });
+
+  // Broadcast invitation status change so thread views update
+  broadcastToUser(userId, {
+    type: 'guild:invitation_status',
+    data: {
+      invitationId,
+      status: 'DECLINED',
     },
   });
 }

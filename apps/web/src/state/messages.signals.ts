@@ -396,6 +396,117 @@ export function initMessagesWebSocket(): void {
     unreadCounts.value = data.unreadCounts;
   });
 
+  // Handle participant added to thread
+  onWebSocketEvent<{
+    threadId: string;
+    userId: string;
+    displayName: string;
+    addedBy: string;
+  }>('thread:participant_added', (data) => {
+    // Update selected thread if viewing it
+    if (selectedThreadId.value === data.threadId && selectedThread.value) {
+      const alreadyExists = selectedThread.value.participants.some(p => p.userId === data.userId);
+      if (!alreadyExists) {
+        selectedThread.value = {
+          ...selectedThread.value,
+          participants: [
+            ...selectedThread.value.participants,
+            { userId: data.userId, displayName: data.displayName },
+          ],
+        };
+      }
+    }
+
+    // Update thread in list
+    const threadIndex = threads.value.findIndex(t => t.id === data.threadId);
+    if (threadIndex !== -1) {
+      const updatedThreads = [...threads.value];
+      updatedThreads[threadIndex] = {
+        ...updatedThreads[threadIndex],
+        participantCount: updatedThreads[threadIndex].participantCount + 1,
+      };
+      threads.value = updatedThreads;
+    }
+  });
+
+  // Handle participant left thread
+  onWebSocketEvent<{
+    threadId: string;
+    userId: string;
+    displayName: string;
+  }>('thread:participant_left', (data) => {
+    // Update selected thread if viewing it
+    if (selectedThreadId.value === data.threadId && selectedThread.value) {
+      selectedThread.value = {
+        ...selectedThread.value,
+        participants: selectedThread.value.participants.filter(p => p.userId !== data.userId),
+      };
+    }
+
+    // Update thread in list
+    const threadIndex = threads.value.findIndex(t => t.id === data.threadId);
+    if (threadIndex !== -1) {
+      const updatedThreads = [...threads.value];
+      updatedThreads[threadIndex] = {
+        ...updatedThreads[threadIndex],
+        participantCount: Math.max(0, updatedThreads[threadIndex].participantCount - 1),
+      };
+      threads.value = updatedThreads;
+    }
+  });
+
+  // Handle guild invitation status change
+  onWebSocketEvent<{
+    invitationId: string;
+    status: string;
+  }>('guild:invitation_status', (data) => {
+    // Update thread in list if it has this invitation
+    const threadIndex = threads.value.findIndex(t => t.linkedInvitationId === data.invitationId);
+    if (threadIndex !== -1) {
+      const updatedThreads = [...threads.value];
+      updatedThreads[threadIndex] = {
+        ...updatedThreads[threadIndex],
+        linkedInvitationStatus: data.status,
+      };
+      threads.value = updatedThreads;
+    }
+
+    // Update selected thread if it has this invitation
+    if (selectedThread.value?.linkedInvitationId === data.invitationId) {
+      const isPending = data.status === 'PENDING';
+      selectedThread.value = {
+        ...selectedThread.value,
+        canAcceptInvitation: isPending,
+        canDeclineInvitation: isPending,
+      };
+    }
+  });
+
+  // Handle moderation warning
+  onWebSocketEvent<{
+    reason: string;
+    threadId: string;
+  }>('moderation:warning', (data) => {
+    console.warn('[Moderation] Warning received:', data.reason);
+    // The thread:new event will add the warning message to the thread list
+    // This event is for additional client-side handling if needed (e.g., showing a toast)
+  });
+
+  // Handle being muted
+  onWebSocketEvent<{
+    reason: string;
+    expiresAt: string | null;
+  }>('moderation:muted', (data) => {
+    console.warn('[Moderation] Account muted:', data.reason, 'Expires:', data.expiresAt);
+    // Client can use this to disable message sending UI
+  });
+
+  // Handle being unmuted
+  onWebSocketEvent<Record<string, never>>('moderation:unmuted', () => {
+    console.info('[Moderation] Account unmuted');
+    // Client can use this to re-enable message sending UI
+  });
+
   // Connect WebSocket
   connectWebSocket();
 }

@@ -434,14 +434,14 @@ export async function warnUser(
 
   const content = `**Ostrzeżenie**\n\nOtrzymałeś ostrzeżenie za naruszenie regulaminu.\n\nPowód: ${reason}${details ? `\n\nSzczegóły: ${details}` : ''}\n\nPamiętaj, że kolejne naruszenia mogą skutkować czasowym lub stałym wyciszeniem.`;
 
-  await createSystemMessage(userId, 'Ostrzeżenie od moderacji', content);
+  const threadId = await createSystemMessage(userId, 'Ostrzeżenie od moderacji', content);
 
-  // Send WebSocket notification
+  // Send WebSocket notification with the created thread ID for deep-linking
   broadcastToUser(userId, {
     type: 'moderation:warning',
     data: {
       reason,
-      threadId: '', // Will be set by createSystemMessage
+      threadId,
     },
   });
 }

@@ -389,8 +389,8 @@ export async function replyToThread(
     throw new Error('Wątek nie istnieje lub nie masz do niego dostępu');
   }
 
-  // Check if thread type allows replies
-  if (thread.type === 'GUILD_KICK') {
+  // Check if thread type allows replies (SYSTEM, GUILD_INVITE, GUILD_KICK are non-replyable)
+  if (thread.type === 'GUILD_KICK' || thread.type === 'SYSTEM' || thread.type === 'GUILD_INVITE') {
     throw new Error('Nie możesz odpowiadać na powiadomienia systemowe');
   }
 
@@ -664,15 +664,27 @@ export async function markThreadRead(threadId: string, userId: string): Promise<
  * Delete a thread (soft delete for user)
  */
 export async function deleteThread(threadId: string, userId: string): Promise<void> {
-  await prisma.messageParticipant.updateMany({
+  // Only delete if not already deleted, and capture result to know if we actually deleted
+  const result = await prisma.messageParticipant.updateMany({
     where: {
       threadId,
       userId,
+      deletedAt: null, // Guard against repeated deletions
     },
     data: {
       deletedAt: new Date(),
+      unreadCount: 0, // Clear unread count for deleted thread
     },
   });
+
+  // Only update unread counts if we actually deleted something
+  if (result.count > 0) {
+    const counts = await getUnreadCounts(userId);
+    broadcastToUser(userId, {
+      type: 'unread:update',
+      data: counts,
+    });
+  }
 }
 
 // ============================================================================
@@ -762,6 +774,10 @@ export async function createSystemMessage(
   subject: string,
   content: string
 ): Promise<string> {
+  // Filter content even for system messages (admins may paste unsafe text)
+  const contentCheck = filterMessageContent(content);
+  const filteredContent = contentCheck.allowed ? contentCheck.filteredContent : content;
+
   const thread = await prisma.messageThread.create({
     data: {
       subject,
@@ -776,14 +792,14 @@ export async function createSystemMessage(
       messages: {
         create: {
           senderId: null, // System message
-          content,
+          content: filteredContent,
         },
       },
     },
   });
 
-  // Send WebSocket notification
-  const counts = await getUnreadCounts(userId);
+  // Broadcast thread:new first, then fetch and broadcast updated unread counts
+  // This ensures counts include the new system message
   broadcastToUser(userId, {
     type: 'thread:new',
     data: {
@@ -792,7 +808,7 @@ export async function createSystemMessage(
         subject,
         type: 'SYSTEM',
         lastMessageAt: thread.lastMessageAt.toISOString(),
-        lastMessagePreview: content.slice(0, 100),
+        lastMessagePreview: filteredContent.slice(0, 100),
         participants: [],
         unreadCount: 1,
         linkedInvitationId: null,
@@ -802,6 +818,9 @@ export async function createSystemMessage(
       },
     },
   });
+
+  // Fetch counts AFTER thread creation and broadcast
+  const counts = await getUnreadCounts(userId);
   broadcastToUser(userId, {
     type: 'unread:update',
     data: counts,

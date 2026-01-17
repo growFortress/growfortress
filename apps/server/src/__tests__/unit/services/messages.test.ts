@@ -13,7 +13,7 @@ vi.mock('../../../services/websocket.js', () => ({
 
 vi.mock('../../../services/moderation.js', () => ({
   canUserSendMessage: vi.fn(() => ({ allowed: true })),
-  filterMessageContent: vi.fn((content: string) => ({ allowed: true, content })),
+  filterMessageContent: vi.fn((content: string) => ({ allowed: true, filteredContent: content, warnings: [] })),
   trackMessageSent: vi.fn(),
   areUsersBlocked: vi.fn(() => false),
 }));
