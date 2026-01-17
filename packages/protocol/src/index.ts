@@ -621,15 +621,21 @@ export {
   type BroadcastHistoryResponse,
 } from './messages.js';
 
-// Idle Rewards
+// Idle Rewards & Colonies
 export {
+  ColonyStatusSchema,
   PendingIdleRewardsResponseSchema,
   ClaimedRewardsSchema,
   NewInventorySchema,
   ClaimIdleRewardsResponseSchema,
+  UpgradeColonyRequestSchema,
+  UpgradeColonyResponseSchema,
   IdleRewardsConfigResponseSchema,
+  type ColonyStatus,
   type PendingIdleRewardsResponse,
   type ClaimIdleRewardsResponse,
+  type UpgradeColonyRequest,
+  type UpgradeColonyResponse,
   type IdleRewardsConfigResponse,
 } from './idle.js';
 

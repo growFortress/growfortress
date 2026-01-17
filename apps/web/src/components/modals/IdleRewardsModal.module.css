@@ -288,3 +288,191 @@
     transform: scale(1.1);
   }
 }
+
+/* Colonies section */
+.coloniesSection {
+  margin-bottom: 20px;
+}
+
+.coloniesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.colonyCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--color-bg) 0%, #1a2a1a 100%);
+  border: var(--border-width) solid var(--color-success);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-interactive-normal);
+}
+
+.colonyCard:hover {
+  background: var(--color-bg-elevated);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 30%, transparent);
+}
+
+.colonyCard.locked {
+  background: var(--color-bg);
+  border-color: var(--color-neutral);
+  opacity: 0.6;
+}
+
+.colonyIcon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 4px var(--color-success));
+}
+
+.colonyCard.locked .colonyIcon {
+  filter: grayscale(0.8);
+}
+
+.colonyInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.colonyHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colonyName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-success);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.colonyCard.locked .colonyName {
+  color: var(--color-text-60);
+}
+
+.colonyLevel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-bg-elevated);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+}
+
+.colonyStats {
+  display: flex;
+  gap: 16px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.colonyStat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.colonyStatValue {
+  font-weight: 600;
+  color: var(--color-gold, #ffd700);
+}
+
+.colonyPending {
+  color: var(--color-success);
+}
+
+.colonyUpgradeBtn {
+  background: linear-gradient(135deg, var(--color-success) 0%, #006600 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  white-space: nowrap;
+}
+
+.colonyUpgradeBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-success) 50%, transparent);
+}
+
+.colonyUpgradeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.colonyUnlockInfo {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-40);
+}
+
+.colonyMaxLevel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-gold, #ffd700);
+  padding: 6px 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+/* Gold reward */
+.goldReward {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, var(--color-bg) 0%, #2a2a1a 100%);
+  border: var(--border-width) solid var(--color-gold, #ffd700);
+  border-radius: var(--radius-sm);
+}
+
+.goldIcon {
+  font-size: 24px;
+}
+
+.goldLabel {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gold, #ffd700);
+  text-transform: uppercase;
+}
+
+.goldAmount {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* Total gold per hour */
+.goldPerHour {
+  text-align: center;
+  padding: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+  margin-top: 8px;
+}
+
+.goldPerHourValue {
+  color: var(--color-gold, #ffd700);
+  font-weight: 600;
+}

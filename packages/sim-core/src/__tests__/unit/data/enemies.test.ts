@@ -141,79 +141,81 @@ describe('getEnemyStats', () => {
 });
 
 describe('getEnemyRewards', () => {
-  // Note: Base rewards are halved (economyBalanceMult = 0.5) since enemy count is doubled
-  describe('base rewards (halved for economy balance)', () => {
+  // Note: Economy balance multiplier is 1.0 (no penalty)
+  // Elite multiplier is 3.5x
+  // Wave scaling: +5% per 10 waves
+  describe('base rewards (no economy penalty)', () => {
     it('returns correct base rewards for runner', () => {
-      const rewards = getEnemyRewards('runner', false, 1.0, 1.0);
-      // Base: gold=2, dust=1 * 0.5 = gold=1, dust=0
-      expect(rewards.gold).toBe(1);
-      expect(rewards.dust).toBe(0);
-    });
-
-    it('returns correct base rewards for bruiser', () => {
-      const rewards = getEnemyRewards('bruiser', false, 1.0, 1.0);
-      // Base: gold=7, dust=3 * 0.5 = gold=3, dust=1
-      expect(rewards.gold).toBe(3);
+      const rewards = getEnemyRewards('runner', false, 1.0, 1.0, 1);
+      // Base: gold=2, dust=1 (no penalty)
+      expect(rewards.gold).toBe(2);
       expect(rewards.dust).toBe(1);
     });
 
+    it('returns correct base rewards for bruiser', () => {
+      const rewards = getEnemyRewards('bruiser', false, 1.0, 1.0, 1);
+      // Base: gold=7, dust=2 (no penalty)
+      expect(rewards.gold).toBe(7);
+      expect(rewards.dust).toBe(2);
+    });
+
     it('returns correct base rewards for leech', () => {
-      const rewards = getEnemyRewards('leech', false, 1.0, 1.0);
-      // Base: gold=5, dust=1 * 0.5 = gold=2, dust=0
-      expect(rewards.gold).toBe(2);
-      expect(rewards.dust).toBe(0);
+      const rewards = getEnemyRewards('leech', false, 1.0, 1.0, 1);
+      // Base: gold=5, dust=1 (no penalty)
+      expect(rewards.gold).toBe(5);
+      expect(rewards.dust).toBe(1);
     });
   });
 
   describe('elite multiplier', () => {
-    it('applies elite multiplier (approximately 3x)', () => {
+    it('applies elite multiplier (approximately 3.5x)', () => {
       // Use mafia_boss for higher base values to avoid floor() issues
-      const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
-      const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0);
+      const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
+      const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0, 1);
 
-      // Elite gives significantly more (close to 3x, accounting for floor())
-      expect(elite.gold).toBeGreaterThan(normal.gold * 2);
-      expect(elite.gold).toBeLessThanOrEqual(normal.gold * 3 + 1);
-      expect(elite.dust).toBeGreaterThan(normal.dust * 2);
-      expect(elite.dust).toBeLessThanOrEqual(normal.dust * 3 + 1);
+      // Elite gives significantly more (close to 3.5x, accounting for floor())
+      expect(elite.gold).toBeGreaterThan(normal.gold * 3);
+      expect(elite.gold).toBeLessThanOrEqual(normal.gold * 4);
+      expect(elite.dust).toBeGreaterThan(normal.dust * 3);
+      expect(elite.dust).toBeLessThanOrEqual(normal.dust * 4);
     });
   });
 
   describe('gold/dust multipliers', () => {
     it('applies gold multiplier', () => {
-      const rewards = getEnemyRewards('runner', false, 2.0, 1.0);
-      // Base: 2 * 0.5 * 2.0 = 2
-      expect(rewards.gold).toBe(2);
-      expect(rewards.dust).toBe(0); // Unaffected
+      const rewards = getEnemyRewards('runner', false, 2.0, 1.0, 1);
+      // Base: 2 * 2.0 = 4
+      expect(rewards.gold).toBe(4);
+      expect(rewards.dust).toBe(1); // Unaffected by gold mult
     });
 
     it('applies dust multiplier', () => {
-      const rewards = getEnemyRewards('runner', false, 1.0, 2.0);
-      expect(rewards.gold).toBe(1); // Unaffected
-      // Base: 1 * 0.5 * 2.0 = 1
-      expect(rewards.dust).toBe(1);
+      const rewards = getEnemyRewards('runner', false, 1.0, 2.0, 1);
+      expect(rewards.gold).toBe(2); // Unaffected by dust mult
+      // Base: 1 * 2.0 = 2
+      expect(rewards.dust).toBe(2);
     });
 
     it('combines all multipliers', () => {
-      const rewards = getEnemyRewards('runner', true, 1.5, 2.0);
-      // Gold: 2 * 3 (elite) * 1.5 * 0.5 = 4.5 = 4
-      expect(rewards.gold).toBe(4);
-      // Dust: 1 * 3 (elite) * 2.0 * 0.5 = 3
-      expect(rewards.dust).toBe(3);
+      const rewards = getEnemyRewards('runner', true, 1.5, 2.0, 1);
+      // Gold: 2 * 3.5 (elite) * 1.5 = 10.5 = 10
+      expect(rewards.gold).toBe(10);
+      // Dust: 1 * 3.5 (elite) * 2.0 = 7
+      expect(rewards.dust).toBe(7);
     });
   });
 
   describe('floor behavior', () => {
     it('floors gold reward', () => {
-      const rewards = getEnemyRewards('runner', false, 1.1, 1.0);
-      // 2 * 0.5 * 1.1 = 1.1, floored to 1
-      expect(rewards.gold).toBe(1);
+      const rewards = getEnemyRewards('runner', false, 1.1, 1.0, 1);
+      // 2 * 1.1 = 2.2, floored to 2
+      expect(rewards.gold).toBe(2);
     });
 
     it('floors dust reward', () => {
-      const rewards = getEnemyRewards('runner', false, 1.0, 1.3);
-      // 1 * 0.5 * 1.3 = 0.65, floored to 0
-      expect(rewards.dust).toBe(0);
+      const rewards = getEnemyRewards('runner', false, 1.0, 1.3, 1);
+      // 1 * 1.3 = 1.3, floored to 1
+      expect(rewards.dust).toBe(1);
     });
   });
 });

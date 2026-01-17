@@ -625,27 +625,26 @@ describe('Leech Enemy', () => {
 // ============================================================================
 
 describe('Enemy Rewards System', () => {
-  // Note: Base rewards are halved (economyBalanceMult = 0.5) since enemy count is doubled
-  // With floor() and economyBalanceMult, exact multiplier relationships may not hold
-  // Use enemies with higher base rewards to avoid floor() rounding issues
-  it('elite enemies give approximately 3x rewards', () => {
+  // Note: Economy balance multiplier is 1.0 (no penalty)
+  // Elite multiplier is 3.5x
+  // Wave scaling: +5% per 10 waves, cycle bonus: +50% per cycle
+  it('elite enemies give approximately 3.5x rewards', () => {
     // Use mafia_boss which has higher rewards (gold=25, dust=10)
-    // to avoid floor() issues with small numbers
-    const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
-    const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0);
+    const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
+    const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0, 1);
 
-    // With economyBalanceMult=0.5: normal gold = floor(25*0.5)=12, elite gold = floor(25*3*0.5)=37
-    // Elite should give significantly more (close to 3x)
-    expect(elite.gold).toBeGreaterThan(normal.gold * 2);
-    expect(elite.gold).toBeLessThanOrEqual(normal.gold * 3 + 1); // Allow for rounding
-    expect(elite.dust).toBeGreaterThan(normal.dust * 2);
-    expect(elite.dust).toBeLessThanOrEqual(normal.dust * 3 + 1);
+    // Normal gold = 25, elite gold = floor(25*3.5) = 87
+    // Elite should give significantly more (close to 3.5x)
+    expect(elite.gold).toBeGreaterThan(normal.gold * 3);
+    expect(elite.gold).toBeLessThanOrEqual(normal.gold * 4); // Allow for rounding
+    expect(elite.dust).toBeGreaterThan(normal.dust * 3);
+    expect(elite.dust).toBeLessThanOrEqual(normal.dust * 4);
   });
 
   it('gold multiplier affects rewards', () => {
     // Use mafia_boss for higher base values
-    const base = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
-    const boosted = getEnemyRewards('mafia_boss', false, 2.0, 1.0);
+    const base = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
+    const boosted = getEnemyRewards('mafia_boss', false, 2.0, 1.0, 1);
 
     // With floor(), 2x multiplier should roughly double the rewards
     expect(boosted.gold).toBeGreaterThan(base.gold);
@@ -653,25 +652,25 @@ describe('Enemy Rewards System', () => {
   });
 
   it('dust multiplier affects rewards', () => {
-    const base = getEnemyRewards('mafia_boss', false, 1.0, 1.0);
-    const boosted = getEnemyRewards('mafia_boss', false, 1.0, 2.0);
+    const base = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
+    const boosted = getEnemyRewards('mafia_boss', false, 1.0, 2.0, 1);
 
     expect(boosted.dust).toBeGreaterThan(base.dust);
     expect(boosted.dust).toBeLessThanOrEqual(base.dust * 2 + 1);
   });
 
-  it('boss enemies give substantial rewards (halved for economy balance)', () => {
-    const bossReward = getEnemyRewards('god', false, 1.0, 1.0);
-    // Base: gold=100, dust=25 * 0.5 = gold=50, dust=12
-    expect(bossReward.gold).toBe(50);
-    expect(bossReward.dust).toBe(12);
+  it('boss enemies give substantial rewards', () => {
+    const bossReward = getEnemyRewards('god', false, 1.0, 1.0, 1);
+    // Base: gold=100, dust=25 (no economy penalty)
+    expect(bossReward.gold).toBe(100);
+    expect(bossReward.dust).toBe(25);
   });
 
-  it('elite boss gives massive rewards (halved for economy balance)', () => {
-    const eliteBoss = getEnemyRewards('god', true, 1.0, 1.0);
-    // Base: gold=100, dust=25 * 3 (elite) * 0.5 = gold=150, dust=37
-    expect(eliteBoss.gold).toBe(150);
-    expect(eliteBoss.dust).toBe(37);
+  it('elite boss gives massive rewards', () => {
+    const eliteBoss = getEnemyRewards('god', true, 1.0, 1.0, 1);
+    // Base: gold=100, dust=25 * 3.5 (elite) = gold=350, dust=87
+    expect(eliteBoss.gold).toBe(350);
+    expect(eliteBoss.dust).toBe(87);
   });
 });
 

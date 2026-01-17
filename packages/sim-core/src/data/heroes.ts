@@ -55,7 +55,7 @@ const UNIT_STORM: HeroDefinition = {
         {
           id: 'storm_passive',
           name: 'Protokół Burzowy',
-          description: '+15% chain damage',
+          description: 'Ataki łańcuchują do 2 dodatkowych celów (70% DMG per skok)',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
@@ -84,7 +84,7 @@ const UNIT_STORM: HeroDefinition = {
         {
           id: 'storm_lord',
           name: 'Władca Piorunów',
-          description: '+30% chain damage, +10% chain chance',
+          description: 'Chain: +1 cel (3 total), 80% DMG per skok zamiast 70%',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
@@ -442,7 +442,7 @@ const UNIT_VANGUARD: HeroDefinition = {
         {
           id: 'command_aura',
           name: 'Aura Dowodzenia',
-          description: '+10% damage to allies',
+          description: '+10% damage dla sojuszników, taunts wrogów w zasięgu 4',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
@@ -471,7 +471,7 @@ const UNIT_VANGUARD: HeroDefinition = {
         {
           id: 'veteran',
           name: 'Weteran',
-          description: '+25% damage reduction',
+          description: '+25% damage reduction, +20% armor dla sojuszników, 5% DMG twierdzy absorbowane',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
@@ -636,12 +636,12 @@ const UNIT_RIFT: HeroDefinition = {
         {
           id: 'thermal_annihilation',
           name: 'Anihilacja Termiczna',
-          description: 'ULTIMATE: Natychmiast zadaje 50% HP wszystkim wrogom',
+          description: 'ULTIMATE: Zadaje 50% HP wrogom (max 500+10/lv)',
           cooldownTicks: 1200,
           isPassive: false,
           isUltimate: true,
           unlockedAtLevel: 25,
-          effects: [{ type: 'percent_current_hp_damage', percent: 50, target: 'all' }]
+          effects: [{ type: 'percent_current_hp_damage', percent: 50, target: 'all', maxBaseDamage: 500, scalingPerLevel: 10 }]
         }
       ],
       visualChanges: {
@@ -979,7 +979,7 @@ const UNIT_OMEGA: HeroDefinition = {
         {
           id: 'hunter_instinct',
           name: 'Instynkt Łowcy',
-          description: '+40% crit damage, execute threshold 40%',
+          description: '+40% crit damage, execute threshold 25%/20%/15% (regular/elite/boss)',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
@@ -1144,14 +1144,14 @@ const UNIT_INFERNO: HeroDefinition = {
         {
           id: 'thermal_apocalypse',
           name: 'Apokalipsa Termiczna',
-          description: 'ULTIMATE: Piekielna eksplozja spalajaca wszystkich wrogow',
+          description: 'ULTIMATE: 200 DMG + 50% HP wroga (max 500+10/lv) do wszystkich',
           cooldownTicks: 840,
           isPassive: false,
           isUltimate: true,
           unlockedAtLevel: 25,
           effects: [
             { type: 'damage', amount: 200, target: 'all' },
-            { type: 'percent_current_hp_damage', percent: 50, target: 'all' },
+            { type: 'percent_current_hp_damage', percent: 50, target: 'all', maxBaseDamage: 500, scalingPerLevel: 10 },
             { type: 'slow', percent: 50, duration: 150 }
           ]
         }

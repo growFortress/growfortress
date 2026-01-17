@@ -16,6 +16,15 @@ import { applyEffectToEnemy } from './projectile.js';
 import { HIT_FLASH_TICKS } from './constants.js';
 
 /**
+ * Calculate skill damage with commander level scaling
+ * +5% per level above 1
+ */
+function getScaledSkillDamage(baseDamage: number, commanderLevel: number): number {
+  const levelMultiplier = 1 + (commanderLevel - 1) * 0.05;
+  return Math.floor(baseDamage * levelMultiplier);
+}
+
+/**
  * Update fortress class skills
  */
 export function updateFortressSkills(
@@ -166,12 +175,15 @@ function executeSkillAtPosition(
 
   if (targetEnemies.length === 0) return;
 
-  // Apply skill effects with additive damage bonuses
+  // Apply skill effects with additive damage bonuses and level scaling
   const totalDamageBonus =
     (state.modifiers.damageBonus ?? 0) +
     (state.synergyModifiers.damageBonus ?? 0) +
     (state.pillarModifiers.damageBonus ?? 0);
-  const baseDamage = Math.floor(skill.damage * (1 + totalDamageBonus));
+
+  // Scale base damage with commander level (+5% per level)
+  const scaledBaseDamage = getScaledSkillDamage(skill.damage, state.commanderLevel);
+  const baseDamage = Math.floor(scaledBaseDamage * (1 + totalDamageBonus));
 
   for (const enemy of targetEnemies) {
     enemy.hp -= baseDamage;

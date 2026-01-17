@@ -12,18 +12,16 @@ import { FP } from './fixed.js';
 import type { GameState, Enemy, ActiveHero, HeroRole } from './types.js';
 import { getHeroById } from './data/heroes.js';
 
-/** HP threshold for retreat (30%) */
-const RETREAT_THRESHOLD = 0.3;
-
 /** Get hero's role from definition */
 export function getHeroRole(heroId: string): HeroRole {
   const def = getHeroById(heroId);
   return def?.role ?? 'dps';
 }
 
-/** Check if hero should retreat based on HP */
-export function shouldHeroRetreat(hero: ActiveHero): boolean {
-  return hero.currentHp / hero.maxHp < RETREAT_THRESHOLD;
+/** Check if hero should retreat - disabled, heroes have lifesteal now */
+export function shouldHeroRetreat(_hero: ActiveHero): boolean {
+  // Heroes no longer retreat - they have lifesteal to sustain in combat
+  return false;
 }
 
 /** Check if hero is a frontliner (tank or aggressive dps) */

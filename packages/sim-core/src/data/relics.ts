@@ -142,14 +142,14 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
   {
     id: 'glass-cannon',
     name: 'Glass Cannon',
-    description: '+100% damage, -40% max HP',
+    description: '+60% damage, -50% max HP (high risk, high reward)',
     category: 'build_defining',
     rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageBonus: 1.0,      // +100%
-      maxHpBonus: -0.4,      // -40%
+      damageBonus: 0.6,      // +60% (nerfed from +100%, lifesteal doesn't fully compensate)
+      maxHpBonus: -0.5,      // -50% (increased from -40%)
     },
     synergies: [],
   },

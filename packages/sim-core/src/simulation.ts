@@ -1021,11 +1021,13 @@ export class Simulation {
         const enemy = this.state.enemies[idx];
 
         // Grant rewards (convert additive bonuses to multipliers for reward calculation)
+        // Rewards now scale with wave number and cycle
         const rewards = getEnemyRewards(
           enemy.type,
           enemy.isElite,
           1 + this.state.modifiers.goldBonus + this.state.modifiers.goldFindBonus,
-          1 + this.state.modifiers.dustBonus
+          1 + this.state.modifiers.dustBonus,
+          this.state.wave
         );
         this.state.gold += rewards.gold;
         this.state.dust += rewards.dust;

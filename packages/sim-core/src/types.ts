@@ -60,6 +60,8 @@ export interface SkillEffect {
   unitType?: string;
   count?: number;
   damage?: number; // For burn/poison damage per tick
+  maxBaseDamage?: number; // Max base damage cap for percent_current_hp_damage
+  scalingPerLevel?: number; // Additional max damage per hero level
 }
 
 export interface SkillDefinition {
@@ -899,6 +901,7 @@ export interface ActiveProjectile {
   spawnTick: number;
   class: FortressClass;   // For visual styling
   skillId?: string;       // Skill ID that fired this projectile (for special effects)
+  isChained?: boolean;    // True if this is a chain projectile (prevents infinite chaining)
 }
 
 // Wave spawn configuration

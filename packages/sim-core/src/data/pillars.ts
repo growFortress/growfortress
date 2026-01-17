@@ -128,7 +128,7 @@ const PILLAR_STREETS: PillarDefinition = {
     { class: 'tech', damageMultiplier: 18842 as FP, description: 'Gadżety przydatne w mieście (+15% DMG)' },
     { class: 'ice', damageMultiplier: 16384 as FP, description: 'Neutralne' },
     { class: 'lightning', damageMultiplier: 16384 as FP, description: 'Neutralne' },
-    { class: 'fire', damageMultiplier: 14746 as FP, description: 'Ryzyko pożaru ogranicza użycie (-10% DMG)' },
+    { class: 'fire', damageMultiplier: 14746 as FP, description: 'Ryzyko pożaru ogranicza użycie (-10% DMG)' },  // Penalty capped at -10%
   ],
 
   enemies: [
@@ -367,7 +367,7 @@ const PILLAR_COSMOS: PillarDefinition = {
     { class: 'lightning', damageMultiplier: 18842 as FP, description: 'Energia kosmiczna (+15% DMG)' },
     { class: 'fire', damageMultiplier: 18842 as FP, description: 'Słońca i wybuchy (+15% DMG)' },
     { class: 'ice', damageMultiplier: 14746 as FP, description: 'W próżni lód jest mniej skuteczny (-10% DMG)' },
-    { class: 'natural', damageMultiplier: 12288 as FP, description: 'Siła fizyczna niewystarczająca (-25% DMG)' },
+    { class: 'natural', damageMultiplier: 13107 as FP, description: 'Siła fizyczna mniej skuteczna (-20% DMG)' },  // Capped from -25%
   ],
 
   enemies: [
@@ -451,7 +451,7 @@ const PILLAR_MAGIC: PillarDefinition = {
     { class: 'ice', damageMultiplier: 18022 as FP, description: 'Zamrażanie bytów wymiarowych (+10% DMG)' },
     { class: 'lightning', damageMultiplier: 16384 as FP, description: 'Neutralne' },
     { class: 'natural', damageMultiplier: 13107 as FP, description: 'Prawa fizyki nie obowiązują (-20% DMG)' },
-    { class: 'tech', damageMultiplier: 11469 as FP, description: 'Technologia nie działa w innych wymiarach (-30% DMG)' },
+    { class: 'tech', damageMultiplier: 13107 as FP, description: 'Technologia mniej skuteczna w wymiarach (-20% DMG)' },  // Capped from -30%
   ],
 
   enemies: [
@@ -534,7 +534,7 @@ const PILLAR_GODS: PillarDefinition = {
     { class: 'fire', damageMultiplier: 19661 as FP, description: 'Boskie płomienie (+20% DMG)' },
     { class: 'natural', damageMultiplier: 18022 as FP, description: 'Prymitywna siła bogów (+10% DMG)' },
     { class: 'ice', damageMultiplier: 16384 as FP, description: 'Neutralne' },
-    { class: 'tech', damageMultiplier: 9830 as FP, description: 'Technologia to zabawki dla bogów (-40% DMG)' },
+    { class: 'tech', damageMultiplier: 13107 as FP, description: 'Technologia słaba przeciw bogom (-20% DMG)' },  // Capped from -40%
   ],
 
   enemies: [

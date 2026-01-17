@@ -2,10 +2,12 @@ import { signal, computed } from '@preact/signals';
 import {
   getPendingIdleRewards,
   claimIdleRewards as apiClaimIdleRewards,
+  upgradeColony as apiUpgradeColony,
 } from '../api/client.js';
 import { updatePlayerMaterials, addMaterialDrop } from './materials.signals.js';
-import { baseDust } from './profile.signals.js';
+import { baseDust, baseGold } from './profile.signals.js';
 import type { MaterialType } from '@arcade/sim-core';
+import type { ColonyStatus } from '@arcade/protocol';
 
 // Types
 export interface IdleRewardsState {
@@ -13,8 +15,12 @@ export interface IdleRewardsState {
   cappedHours: number;
   pendingMaterials: Record<string, number>;
   pendingDust: number;
+  pendingGold: number;
   canClaim: boolean;
   minutesUntilNextClaim: number;
+  // Colony data
+  colonies: ColonyStatus[];
+  totalGoldPerHour: number;
 }
 
 // Signals
@@ -31,7 +37,22 @@ export const hasPendingRewards = computed(() => {
 
   const hasMaterials = Object.keys(state.pendingMaterials).length > 0;
   const hasDust = state.pendingDust > 0;
-  return hasMaterials || hasDust;
+  const hasGold = state.pendingGold > 0;
+  return hasMaterials || hasDust || hasGold;
+});
+
+// Computed: total pending gold from colonies
+export const totalPendingGold = computed(() => {
+  const state = idleRewardsState.value;
+  if (!state) return 0;
+  return state.pendingGold;
+});
+
+// Computed: total gold per hour from all colonies
+export const totalColonyGoldPerHour = computed(() => {
+  const state = idleRewardsState.value;
+  if (!state) return 0;
+  return state.totalGoldPerHour;
 });
 
 // Computed: total pending materials count
@@ -84,6 +105,11 @@ export async function claimIdleRewards(): Promise<boolean> {
     // Update dust inventory
     if (response.newInventory?.dust !== undefined) {
       baseDust.value = response.newInventory.dust;
+    }
+
+    // Update gold inventory (from colonies)
+    if (response.newInventory?.gold !== undefined) {
+      baseGold.value = response.newInventory.gold;
     }
 
     // Show drop notifications for claimed materials
@@ -149,4 +175,42 @@ export function resetIdleState(): void {
   idleRewardsError.value = null;
   idleRewardsModalVisible.value = false;
   claimingRewards.value = false;
+  upgradingColony.value = null;
+}
+
+// Colony upgrade state
+export const upgradingColony = signal<string | null>(null);
+
+/**
+ * Upgrade a colony building
+ */
+export async function upgradeColony(colonyId: string): Promise<boolean> {
+  if (upgradingColony.value) return false;
+
+  upgradingColony.value = colonyId;
+  idleRewardsError.value = null;
+
+  try {
+    const response = await apiUpgradeColony({ colonyId });
+
+    if (!response.success) {
+      idleRewardsError.value = response.error || 'Failed to upgrade colony';
+      return false;
+    }
+
+    // Update gold inventory
+    if (response.newInventoryGold !== undefined) {
+      baseGold.value = response.newInventoryGold;
+    }
+
+    // Refresh idle rewards state to get updated colony data
+    await checkIdleRewards();
+
+    return true;
+  } catch (error) {
+    idleRewardsError.value = error instanceof Error ? error.message : 'Failed to upgrade colony';
+    return false;
+  } finally {
+    upgradingColony.value = null;
+  }
 }

@@ -662,3 +662,66 @@ export {
   type ComboTrigger,
   type ComboDefinition,
 } from './systems/combos.js';
+
+// Colonies (Offline Income System)
+export {
+  COLONY_DEFINITIONS,
+  getColonyById,
+  getUnlockedColonies,
+  getNextColonyToUnlock,
+  calculateColonyGoldPerHour,
+  calculateTotalGoldPerHour,
+  calculateUpgradeCost as calculateColonyUpgradeCost,
+  canUpgradeColony,
+  calculatePendingGold,
+  getColonyStatus,
+  getDefaultColonies,
+  getAvailableColoniesToBuild,
+  type ColonyDefinition,
+  type ActiveColony,
+} from './data/colonies.js';
+
+// Wave Modifiers (Content Variety)
+export {
+  WAVE_MODIFIERS,
+  getWaveModifiers,
+  getCombinedModifierEffect,
+  getCombinedRewardMultiplier,
+  getWaveModifierByType,
+  type WaveModifierType,
+  type WaveModifierEffect,
+  type WaveModifier,
+} from './data/wave-modifiers.js';
+
+// Element Counter System (Rock-Paper-Scissors)
+export {
+  ELEMENT_COUNTERS,
+  HERO_ELEMENTS,
+  PILLAR_ELEMENTS,
+  getHeroElement,
+  getPillarElement,
+  getElementMultiplier,
+  getHeroElementEffectiveness,
+  getEffectivenessDescription,
+  getEffectiveHeroesForPillar,
+  getWeakHeroesForPillar,
+  type ElementType,
+} from './data/elements.js';
+
+// Milestones (Permanent Unlocks)
+export {
+  MILESTONES,
+  getMilestoneById,
+  getMilestoneForWave,
+  getMilestonesUpToWave,
+  getNextMilestone as getNextMilestoneForWave,
+  isMilestoneAchieved,
+  calculateGoldMultiplierFromMilestones,
+  calculateDamageMultiplierFromMilestones,
+  calculateHpMultiplierFromMilestones,
+  getHeroSlotsFromMilestones,
+  getUnlockedFeaturesFromMilestones,
+  isFeatureUnlocked,
+  type Milestone,
+  type MilestoneReward,
+} from './data/milestones.js';

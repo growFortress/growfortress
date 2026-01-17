@@ -22,6 +22,43 @@ function applyCritDiminishingReturns(rawCritChance: number): number {
 }
 
 /**
+ * Apply diminishing returns to damage bonus
+ * Soft cap at 200%, hard cap at 500%
+ * Above soft cap, bonuses are 30% as effective
+ */
+function applyDamageDiminishingReturns(rawBonus: number): number {
+  const DAMAGE_SOFT_CAP = 2.0;  // 200% bonus
+  const DAMAGE_HARD_CAP = 5.0;  // 500% max
+
+  if (rawBonus <= DAMAGE_SOFT_CAP) {
+    return rawBonus;
+  }
+
+  const excess = rawBonus - DAMAGE_SOFT_CAP;
+  const diminished = excess * 0.3;  // 30% effectiveness above soft cap
+
+  return Math.min(DAMAGE_SOFT_CAP + diminished, DAMAGE_HARD_CAP);
+}
+
+/**
+ * Apply diminishing returns to attack speed bonus
+ * Soft cap at 100%, hard cap at 300%
+ */
+function applyAttackSpeedDiminishingReturns(rawBonus: number): number {
+  const SOFT_CAP = 1.0;   // 100% bonus
+  const HARD_CAP = 3.0;   // 300% max
+
+  if (rawBonus <= SOFT_CAP) {
+    return rawBonus;
+  }
+
+  const excess = rawBonus - SOFT_CAP;
+  const diminished = excess * 0.4;  // 40% effectiveness above soft cap
+
+  return Math.min(SOFT_CAP + diminished, HARD_CAP);
+}
+
+/**
  * Apply curse penalty to bonus accumulators
  */
 function applyCurse(
@@ -213,9 +250,9 @@ export function computeModifiers(relics: ActiveRelic[]): ModifierSet {
 
   // === ASSIGN FINAL VALUES WITH CAPS ===
 
-  // Additive bonuses (no caps unless specified)
-  result.damageBonus = bonuses.damage;
-  result.attackSpeedBonus = bonuses.attackSpeed;
+  // Additive bonuses with diminishing returns to prevent power creep
+  result.damageBonus = applyDamageDiminishingReturns(bonuses.damage);
+  result.attackSpeedBonus = applyAttackSpeedDiminishingReturns(bonuses.attackSpeed);
   result.cooldownReduction = Math.min(bonuses.cooldown, 0.75); // Cap at 75% CDR
   result.goldBonus = bonuses.gold;
   result.dustBonus = bonuses.dust;

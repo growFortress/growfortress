@@ -211,6 +211,185 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   },
 };
 
+// ============================================================================
+// BOSS MECHANICS (Phases & Abilities)
+// ============================================================================
+
+export type BossAbilityType =
+  | 'summon_minions'
+  | 'damage_shield'
+  | 'enrage'
+  | 'heal_burst'
+  | 'stun_aura';
+
+export interface BossAbility {
+  type: BossAbilityType;
+  // Ability-specific params
+  count?: number;           // For summon_minions
+  enemyType?: EnemyType;    // For summon_minions
+  duration?: number;        // For damage_shield, stun_aura (in ticks)
+  reduction?: number;       // For damage_shield (0.5 = 50% reduction)
+  damageBoost?: number;     // For enrage
+  speedBoost?: number;      // For enrage
+  healPercent?: number;     // For heal_burst
+  radius?: number;          // For stun_aura
+}
+
+export interface BossPhase {
+  hpThreshold: number;      // 0.75 = activates at 75% HP
+  ability: BossAbility;
+  announcement: string;
+}
+
+/**
+ * Boss phases by enemy type
+ * Each boss has unique phases that trigger at HP thresholds
+ */
+export const BOSS_PHASES: Partial<Record<EnemyType, BossPhase[]>> = {
+  mafia_boss: [
+    {
+      hpThreshold: 0.75,
+      ability: { type: 'summon_minions', count: 5, enemyType: 'gangster' },
+      announcement: 'Wzywa ochronę!',
+    },
+    {
+      hpThreshold: 0.50,
+      ability: { type: 'damage_shield', duration: 60, reduction: 0.5 },
+      announcement: 'Zakłada kamizelkę kuloodporną!',
+    },
+    {
+      hpThreshold: 0.25,
+      ability: { type: 'enrage', damageBoost: 1.5, speedBoost: 1.3 },
+      announcement: 'Wścieka się!',
+    },
+  ],
+  ai_core: [
+    {
+      hpThreshold: 0.80,
+      ability: { type: 'summon_minions', count: 8, enemyType: 'drone' },
+      announcement: 'Aktywuje drony bojowe!',
+    },
+    {
+      hpThreshold: 0.50,
+      ability: { type: 'stun_aura', radius: 5, duration: 30 },
+      announcement: 'EMP Burst!',
+    },
+    {
+      hpThreshold: 0.20,
+      ability: { type: 'heal_burst', healPercent: 0.15 },
+      announcement: 'Samonaprawa!',
+    },
+  ],
+  cosmic_beast: [
+    {
+      hpThreshold: 0.70,
+      ability: { type: 'enrage', damageBoost: 1.3, speedBoost: 1.2 },
+      announcement: 'Kosmiczna Furia!',
+    },
+    {
+      hpThreshold: 0.40,
+      ability: { type: 'damage_shield', duration: 90, reduction: 0.6 },
+      announcement: 'Aktywuje kosmiczną tarczę!',
+    },
+  ],
+  dimensional_being: [
+    {
+      hpThreshold: 0.75,
+      ability: { type: 'summon_minions', count: 4, enemyType: 'demon' },
+      announcement: 'Otwiera portale!',
+    },
+    {
+      hpThreshold: 0.50,
+      ability: { type: 'heal_burst', healPercent: 0.20 },
+      announcement: 'Absorbuje energię wymiarową!',
+    },
+    {
+      hpThreshold: 0.25,
+      ability: { type: 'enrage', damageBoost: 2.0, speedBoost: 1.4 },
+      announcement: 'Wchodzi w szał wymiarowy!',
+    },
+  ],
+  god: [
+    {
+      hpThreshold: 0.90,
+      ability: { type: 'damage_shield', duration: 120, reduction: 0.75 },
+      announcement: 'Boska Bariera!',
+    },
+    {
+      hpThreshold: 0.60,
+      ability: { type: 'summon_minions', count: 3, enemyType: 'einherjar' },
+      announcement: 'Wzywa Einherjarów!',
+    },
+    {
+      hpThreshold: 0.30,
+      ability: { type: 'enrage', damageBoost: 2.0, speedBoost: 1.5 },
+      announcement: 'Gniew Bogów!',
+    },
+  ],
+  titan: [
+    {
+      hpThreshold: 0.80,
+      ability: { type: 'stun_aura', radius: 6, duration: 45 },
+      announcement: 'Ziemia drży!',
+    },
+    {
+      hpThreshold: 0.50,
+      ability: { type: 'enrage', damageBoost: 1.8, speedBoost: 1.0 },
+      announcement: 'Tytaniczna moc!',
+    },
+    {
+      hpThreshold: 0.20,
+      ability: { type: 'heal_burst', healPercent: 0.25 },
+      announcement: 'Regeneracja prymalnej siły!',
+    },
+  ],
+  sentinel: [
+    {
+      hpThreshold: 0.60,
+      ability: { type: 'damage_shield', duration: 60, reduction: 0.5 },
+      announcement: 'Aktywuje pole siłowe!',
+    },
+    {
+      hpThreshold: 0.30,
+      ability: { type: 'summon_minions', count: 4, enemyType: 'drone' },
+      announcement: 'Wzywa wsparcie!',
+    },
+  ],
+};
+
+/**
+ * Get boss phases for an enemy type
+ */
+export function getBossPhases(type: EnemyType): BossPhase[] {
+  return BOSS_PHASES[type] ?? [];
+}
+
+/**
+ * Check if enemy type is a boss
+ */
+export function isBossType(type: EnemyType): boolean {
+  return BOSS_PHASES[type] !== undefined;
+}
+
+/**
+ * Get current boss phase based on HP percent
+ */
+export function getCurrentBossPhase(type: EnemyType, hpPercent: number): BossPhase | null {
+  const phases = getBossPhases(type);
+  // Find the first phase that hasn't been triggered yet (hp is above threshold)
+  // Phases are ordered from high HP to low HP
+  for (const phase of phases) {
+    if (hpPercent <= phase.hpThreshold) {
+      return phase;
+    }
+  }
+  return null;
+}
+
+// ============================================================================
+// ENEMY STATS
+// ============================================================================
+
 /**
  * Get enemy stats scaled by wave (supports endless mode with cycle scaling)
  */
@@ -248,23 +427,30 @@ export function getEnemyStats(
 
 /**
  * Get rewards for killing enemy
- * Base rewards are halved to compensate for doubled enemy count in waves
+ * Rewards scale with wave number and cycle
  */
 export function getEnemyRewards(
   type: EnemyType,
   isElite: boolean,
   goldMult: number,
-  dustMult: number
+  dustMult: number,
+  wave: number = 1
 ): { gold: number; dust: number } {
   const archetype = ENEMY_ARCHETYPES[type];
-  // Elite enemies give 3x rewards (balanced from 5x to prevent late-game economy breaking)
-  const eliteMult = isElite ? 3 : 1;
-  // Economy balance: 75% rewards per enemy since enemy count is doubled
-  const economyBalanceMult = 0.75;
+
+  // Elite enemies give 3.5x rewards (increased for better late-game economy)
+  const eliteMult = isElite ? 3.5 : 1;
+
+  // Wave scaling: gold grows 5% per 10 waves
+  const waveMultiplier = 1 + Math.floor(wave / 10) * 0.05;
+
+  // Cycle bonus: +50% per cycle (cycle 0 = waves 1-100, cycle 1 = 101-200, etc.)
+  const cycle = Math.floor((wave - 1) / 100);
+  const cycleMultiplier = 1 + cycle * 0.5;
 
   return {
-    gold: Math.floor(archetype.goldReward * eliteMult * goldMult * economyBalanceMult),
-    dust: Math.floor(archetype.dustReward * eliteMult * dustMult * economyBalanceMult),
+    gold: Math.floor(archetype.goldReward * eliteMult * goldMult * waveMultiplier * cycleMultiplier),
+    dust: Math.floor(archetype.dustReward * eliteMult * dustMult * waveMultiplier * cycleMultiplier),
   };
 }
 

@@ -6,8 +6,9 @@ import {
   calculatePendingIdleRewards,
   claimIdleRewards,
   getIdleRewardsConfig,
+  upgradeColony,
 } from '../../../services/idleRewards.js';
-import { mockPrisma, createMockUser, createMockInventory, createMockProgression } from '../../mocks/prisma.js';
+import { mockPrisma, createMockUser, createMockInventory, createMockProgression, createMockColonyProgress } from '../../mocks/prisma.js';
 
 describe('Idle Rewards Service', () => {
   describe('calculatePendingIdleRewards', () => {
@@ -194,9 +195,11 @@ describe('Idle Rewards Service', () => {
       mockPrisma.user.update.mockResolvedValue({});
       mockPrisma.inventory.findUnique.mockResolvedValue(createMockInventory());
       mockPrisma.inventory.update.mockResolvedValue({
+        gold: 100,
         dust: 100,
         materials: { iron: 5 },
       });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
 
       const result = await claimIdleRewards('user-123');
 
@@ -220,9 +223,11 @@ describe('Idle Rewards Service', () => {
       mockPrisma.user.update.mockResolvedValue({});
       mockPrisma.inventory.findUnique.mockResolvedValue(createMockInventory());
       mockPrisma.inventory.update.mockResolvedValue({
+        gold: 100,
         dust: 100,
         materials: {},
       });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
 
       await claimIdleRewards('user-123');
 
@@ -249,9 +254,11 @@ describe('Idle Rewards Service', () => {
         createMockInventory({ materials: { existingMat: 10 } })
       );
       mockPrisma.inventory.update.mockResolvedValue({
+        gold: 100,
         dust: 100,
         materials: { existingMat: 10, newMat: 5 },
       });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
 
       const result = await claimIdleRewards('user-123');
 
@@ -274,9 +281,11 @@ describe('Idle Rewards Service', () => {
       mockPrisma.user.update.mockResolvedValue({});
       mockPrisma.inventory.findUnique.mockResolvedValue(createMockInventory({ dust: 50 }));
       mockPrisma.inventory.update.mockResolvedValue({
+        gold: 100,
         dust: 100,
         materials: {},
       });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
 
       await claimIdleRewards('user-123');
 
@@ -331,6 +340,268 @@ describe('Idle Rewards Service', () => {
       expect(config.expectedDustMax).toBe(
         Math.floor(config.maxAccrualHours * config.expectedDustPerHour)
       );
+    });
+  });
+
+  describe('upgradeColony', () => {
+    it('returns error for invalid colony ID', async () => {
+      const result = await upgradeColony('user-123', 'invalid-colony');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Invalid colony ID');
+    });
+
+    it('returns error if user not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      const result = await upgradeColony('nonexistent', 'farm');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not found');
+    });
+
+    it('returns error if colony not unlocked due to level requirement', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 1 }), // Level 1, mine requires level 25
+        inventory: createMockInventory({ gold: 10000 }),
+        colonyProgress: null,
+      });
+
+      const result = await upgradeColony('user-123', 'mine');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('requires commander level');
+    });
+
+    it('returns error if colony is at max level', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 50 }),
+        inventory: createMockInventory({ gold: 100000 }),
+        colonyProgress: createMockColonyProgress({
+          colonyLevels: { farm: 50, mine: 0, market: 0, factory: 0 }, // Farm max is 50
+        }),
+      });
+
+      const result = await upgradeColony('user-123', 'farm');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('maximum level');
+    });
+
+    it('returns error if not enough gold', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 10 }),
+        inventory: createMockInventory({ gold: 10 }), // Not enough gold
+        colonyProgress: null,
+      });
+
+      const result = await upgradeColony('user-123', 'farm');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Not enough gold');
+    });
+
+    it('successfully upgrades colony from level 0 to 1', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 10 }),
+        inventory: createMockInventory({ gold: 1000 }),
+        colonyProgress: null,
+      });
+
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+        return callback(mockPrisma);
+      });
+      mockPrisma.inventory.update.mockResolvedValue({ gold: 900 });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
+
+      const result = await upgradeColony('user-123', 'farm');
+
+      expect(result.success).toBe(true);
+      expect(result.colony).toBeDefined();
+      expect(result.colony!.level).toBe(1);
+      expect(result.colony!.id).toBe('farm');
+      expect(result.goldSpent).toBeGreaterThan(0);
+    });
+
+    it('successfully upgrades existing colony to next level', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 10 }),
+        inventory: createMockInventory({ gold: 5000 }),
+        colonyProgress: createMockColonyProgress({
+          colonyLevels: { farm: 5, mine: 0, market: 0, factory: 0 },
+        }),
+      });
+
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+        return callback(mockPrisma);
+      });
+      mockPrisma.inventory.update.mockResolvedValue({ gold: 4500 });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
+
+      const result = await upgradeColony('user-123', 'farm');
+
+      expect(result.success).toBe(true);
+      expect(result.colony!.level).toBe(6);
+    });
+
+    it('deducts correct amount of gold', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 10 }),
+        inventory: createMockInventory({ gold: 1000 }),
+        colonyProgress: null,
+      });
+
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+        return callback(mockPrisma);
+      });
+      mockPrisma.inventory.update.mockResolvedValue({ gold: 900 });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
+
+      await upgradeColony('user-123', 'farm');
+
+      expect(mockPrisma.inventory.update).toHaveBeenCalledWith({
+        where: { userId: 'user-123' },
+        data: {
+          gold: { decrement: expect.any(Number) },
+        },
+      });
+    });
+
+    it('updates colony levels in colonyProgress', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 10 }),
+        inventory: createMockInventory({ gold: 1000 }),
+        colonyProgress: null,
+      });
+
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+        return callback(mockPrisma);
+      });
+      mockPrisma.inventory.update.mockResolvedValue({ gold: 900 });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
+
+      await upgradeColony('user-123', 'farm');
+
+      expect(mockPrisma.colonyProgress.upsert).toHaveBeenCalledWith({
+        where: { userId: 'user-123' },
+        create: expect.objectContaining({
+          userId: 'user-123',
+          colonyLevels: expect.objectContaining({ farm: 1 }),
+        }),
+        update: {
+          colonyLevels: expect.objectContaining({ farm: 1 }),
+        },
+      });
+    });
+
+    it('returns remaining gold after upgrade', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 10 }),
+        inventory: createMockInventory({ gold: 1000 }),
+        colonyProgress: null,
+      });
+
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+        return callback(mockPrisma);
+      });
+      mockPrisma.inventory.update.mockResolvedValue({ gold: 900 });
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
+
+      const result = await upgradeColony('user-123', 'farm');
+
+      expect(result.success).toBe(true);
+      expect(result.remainingGold).toBe(900);
+    });
+
+    it('returns correct canUpgrade status based on remaining gold', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        progression: createMockProgression({ level: 10 }),
+        inventory: createMockInventory({ gold: 200 }), // Just enough for first upgrade
+        colonyProgress: null,
+      });
+
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+        return callback(mockPrisma);
+      });
+      mockPrisma.inventory.update.mockResolvedValue({ gold: 100 }); // Not enough for next upgrade
+      mockPrisma.colonyProgress.upsert.mockResolvedValue({});
+
+      const result = await upgradeColony('user-123', 'farm');
+
+      expect(result.success).toBe(true);
+      expect(result.colony!.canUpgrade).toBe(false); // Can't afford next upgrade
+    });
+  });
+
+  describe('calculatePendingIdleRewards with colonies', () => {
+    it('includes colony gold in pending rewards', async () => {
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        lastIdleClaimAt: fourHoursAgo,
+        progression: createMockProgression({ level: 10 }),
+        colonyProgress: createMockColonyProgress({
+          colonyLevels: { farm: 5, mine: 0, market: 0, factory: 0 },
+          lastClaimAt: fourHoursAgo,
+          pendingGold: 0,
+        }),
+      });
+
+      const result = await calculatePendingIdleRewards('user-123');
+
+      expect(result).not.toBeNull();
+      expect(result!.pendingGold).toBeGreaterThan(0);
+      expect(result!.colonies).toBeDefined();
+      expect(result!.colonies.length).toBeGreaterThan(0);
+    });
+
+    it('returns colony status for unlocked colonies', async () => {
+      const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        lastIdleClaimAt: oneHourAgo,
+        progression: createMockProgression({ level: 10 }), // Farm unlocks at level 10
+        colonyProgress: createMockColonyProgress({
+          colonyLevels: { farm: 3, mine: 0, market: 0, factory: 0 },
+        }),
+      });
+
+      const result = await calculatePendingIdleRewards('user-123');
+
+      expect(result!.colonies).toBeDefined();
+      const farm = result!.colonies.find(c => c.id === 'farm');
+      expect(farm).toBeDefined();
+      expect(farm!.level).toBe(3);
+      expect(farm!.unlocked).toBe(true);
+      expect(farm!.goldPerHour).toBeGreaterThan(0);
+    });
+
+    it('returns total gold per hour from all colonies', async () => {
+      const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        lastIdleClaimAt: oneHourAgo,
+        progression: createMockProgression({ level: 50 }), // High level to unlock multiple
+        colonyProgress: createMockColonyProgress({
+          colonyLevels: { farm: 10, mine: 5, market: 0, factory: 0 },
+        }),
+      });
+
+      const result = await calculatePendingIdleRewards('user-123');
+
+      expect(result!.totalGoldPerHour).toBeGreaterThan(0);
     });
   });
 });

@@ -30,7 +30,6 @@ import { Xorshift32 } from '../rng.js';
 import { getHeroById, calculateHeroStats, hasHeroPassive } from '../data/heroes.js';
 import {
   selectTarget as simpleSelectTarget,
-  shouldHeroRetreat as simpleHeroRetreat,
   resetSimpleAI,
 } from '../simple-ai.js';
 
@@ -82,16 +81,8 @@ function selectBestTarget(
   return simpleSelectTarget(hero, enemiesInRange, state, FP.toInt(config.fortressX));
 }
 
-/**
- * Check if hero should retreat (simple HP threshold)
- */
-function shouldHeroRetreat(
-  hero: ActiveHero,
-  _state: GameState,
-  _config: SimConfig
-): boolean {
-  return simpleHeroRetreat(hero);
-}
+// NOTE: Retreat behavior has been removed.
+// Heroes now rely on lifesteal to sustain in combat.
 
 // ============================================================================
 // PHYSICS HELPERS
@@ -486,10 +477,15 @@ function performHeroAttack(
       }
     }
 
-    // Hunter Instinct (Omega): execute at 40% HP
+    // Hunter Instinct (Omega): tiered execute thresholds
+    // Regular: 25%, Elite: 20%, Boss: 15% (nerfed from flat 40%)
     if (hasHeroPassive(hero.definitionId, 'hunter_instinct', heroTier as 1 | 2 | 3, heroLevel)) {
       const targetHpPercent = target.hp / target.maxHp;
-      if (targetHpPercent <= 0.4) {
+      // Determine execute threshold based on enemy type
+      const isBoss = ['mafia_boss', 'ai_core', 'cosmic_beast', 'dimensional_being', 'god', 'titan', 'sentinel'].includes(target.type);
+      const executeThreshold = isBoss ? 0.15 : (target.isElite ? 0.20 : 0.25);
+
+      if (targetHpPercent <= executeThreshold) {
         // Execute - deal remaining HP as damage
         finalDamage = target.hp;
       }
@@ -523,6 +519,11 @@ function performHeroAttack(
 
     // Create projectile
     createHeroProjectile(hero, target, state, heroDef.class, finalDamage);
+
+    // Lifesteal - 10% of damage dealt heals hero
+    const LIFESTEAL_PERCENT = 0.10;
+    const healAmount = Math.floor(finalDamage * LIFESTEAL_PERCENT);
+    hero.currentHp = Math.min(hero.currentHp + healAmount, hero.maxHp);
   }
 }
 
@@ -538,12 +539,7 @@ function updateHeroCombat(
   const heroDef = getHeroById(hero.definitionId);
   if (!heroDef) return;
 
-  // Check HP threshold for retreat using AI-based assessment
-  if (shouldHeroRetreat(hero, state, config)) {
-    hero.state = 'returning';
-    hero.currentTargetId = undefined;
-    return;
-  }
+  // Heroes no longer retreat - they have lifesteal to sustain in combat
 
   // Check if enemies in range (2D distance)
   const attackRange = getHeroAttackRange(heroDef.role);

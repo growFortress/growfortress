@@ -3,6 +3,7 @@ import {
   calculatePendingIdleRewards,
   claimIdleRewards,
   getIdleRewardsConfig,
+  upgradeColony,
 } from '../services/idleRewards.js';
 import { prisma } from '../lib/prisma.js';
 
@@ -67,6 +68,30 @@ const idleRoutes: FastifyPluginAsync = async (fastify) => {
       commanderLevel: progression.level,
       ...config,
     });
+  });
+
+  /**
+   * POST /v1/idle/colony/upgrade
+   * Upgrade a colony building to increase gold production
+   */
+  fastify.post<{ Body: { colonyId: string } }>('/v1/idle/colony/upgrade', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const { colonyId } = request.body;
+
+    if (!colonyId || typeof colonyId !== 'string') {
+      return reply.status(400).send({ error: 'Colony ID is required' });
+    }
+
+    const result = await upgradeColony(request.userId, colonyId);
+
+    if (!result.success) {
+      return reply.status(400).send({ error: result.error });
+    }
+
+    return reply.send(result);
   });
 };
 

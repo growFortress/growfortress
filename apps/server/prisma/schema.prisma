@@ -108,6 +108,12 @@ model User {
   // Mastery System (Class Skill Trees)
   masteryProgress MasteryProgress?
 
+  // Colony System (Offline Gold Income)
+  colonyProgress ColonyProgress?
+
+  // Milestone System (Permanent Unlocks)
+  milestones PlayerMilestones?
+
   // Daily Quests
   dailyQuestProgress DailyQuestProgress[]
 
@@ -185,6 +191,43 @@ model MasteryProgress {
   // Per-class progress stored as JSON: { [class]: { pointsSpent: number, unlockedNodes: string[] } }
   classProgress   Json     @default("{}")
   version         Int      @default(1)
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Colony System - Offline Gold Income
+// Stores colony upgrade levels and pending gold from offline time
+model ColonyProgress {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  // Colony levels stored as JSON: { [colonyId]: level }
+  // e.g., { "farm": 5, "mine": 3, "market": 0, "factory": 0 }
+  colonyLevels  Json     @default("{\"farm\":0,\"mine\":0,\"market\":0,\"factory\":0}")
+  // Last time gold was collected/calculated
+  lastClaimAt   DateTime @default(now())
+  // Pending gold from offline time (calculated on next login)
+  pendingGold   Int      @default(0)
+  version       Int      @default(1)
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Milestone Progress - Permanent Unlocks from Wave Achievements
+// Tracks which milestones have been achieved and claimed
+model PlayerMilestones {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  // Array of milestone IDs that have been achieved
+  achievedIds     String[] @default([])
+  // Array of milestone IDs whose rewards have been claimed
+  claimedIds      String[] @default([])
+  // Cached total multipliers from milestones (for quick access)
+  goldMultiplier   Float   @default(1.0)
+  damageMultiplier Float   @default(1.0)
+  hpMultiplier     Float   @default(1.0)
+  bonusHeroSlots   Int     @default(0)
+  // Unlocked features (e.g., 'challenge_modes', 'colony_mine')
+  unlockedFeatures String[] @default([])
   updatedAt       DateTime @updatedAt
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

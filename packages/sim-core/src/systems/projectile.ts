@@ -30,6 +30,7 @@ import {
   DEFAULT_EFFECT_DURATION,
 } from './constants.js';
 import { trackDamageHit, getArmorBreakMultiplier, type ComboTrigger } from './combos.js';
+import { hasHeroPassive } from '../data/heroes.js';
 
 // Store combo triggers for this tick (for VFX)
 let pendingComboTriggers: ComboTrigger[] = [];
@@ -168,6 +169,47 @@ function applyProjectileDamage(projectile: ActiveProjectile, state: GameState): 
     // Apply additional effects
     for (const effect of projectile.effects) {
       applyEffectToEnemy(effect, enemy, state);
+    }
+
+    // Chain Lightning mechanic for STORM hero
+    if (projectile.sourceType === 'hero' && projectile.sourceId === 'storm' && !projectile.isChained) {
+      const hero = state.heroes.find(h => h.definitionId === 'storm');
+      if (hero) {
+        const heroTier = (hero.tier || 1) as 1 | 2 | 3;
+        const heroLevel = hero.level || 1;
+
+        // Check passives for chain parameters
+        const hasStormPassive = hasHeroPassive('storm', 'storm_passive', heroTier, heroLevel);
+        const hasStormLord = hasHeroPassive('storm', 'storm_lord', heroTier, heroLevel);
+
+        if (hasStormPassive) {
+          // Base: 2 additional targets, 70% damage decay
+          // With storm_lord: 3 additional targets, 80% damage decay
+          const maxChainTargets = hasStormLord ? 3 : 2;
+          const chainDamageMultiplier = hasStormLord ? 0.80 : 0.70;
+          const chainRange = FP.fromInt(4); // 4 units max between chain targets
+
+          // Find nearby enemies to chain to (excluding already hit enemy)
+          const nearbyEnemies = state.enemies
+            .filter(e => e.id !== enemy.id && e.hp > 0)
+            .filter(e => {
+              const dx = e.x - enemy.x;
+              const dy = e.y - enemy.y;
+              const distSq = FP.mul(dx, dx) + FP.mul(dy, dy);
+              return distSq <= FP.mul(chainRange, chainRange);
+            })
+            .slice(0, maxChainTargets);
+
+          // Create chain projectiles with reduced damage
+          let currentDamage = baseDamage;
+          for (const chainTarget of nearbyEnemies) {
+            currentDamage = Math.floor(currentDamage * chainDamageMultiplier);
+            if (currentDamage <= 0) break;
+
+            createChainProjectile(enemy, chainTarget, state, currentDamage, projectile.effects);
+          }
+        }
+      }
     }
   }
 }
@@ -349,6 +391,40 @@ export function createHeroProjectile(
     effects: [],
     spawnTick: state.tick,
     class: heroClass,
+  };
+
+  state.projectiles.push(projectile);
+}
+
+/**
+ * Create a chain lightning projectile (for STORM)
+ * Originates from the previously hit enemy, marked as chained to prevent infinite chaining
+ */
+function createChainProjectile(
+  fromEnemy: Enemy,
+  target: Enemy,
+  state: GameState,
+  damage: number,
+  effects: SkillEffect[]
+): void {
+  const projectile: ActiveProjectile = {
+    id: state.nextProjectileId++,
+    type: 'bolt', // Chain lightning uses bolt projectile type
+    sourceType: 'hero',
+    sourceId: 'storm',
+    targetEnemyId: target.id,
+    x: fromEnemy.x,
+    y: fromEnemy.y,
+    startX: fromEnemy.x,
+    startY: fromEnemy.y,
+    targetX: target.x,
+    targetY: target.y,
+    speed: PROJECTILE_BASE_SPEED * 1.5, // Chain lightning is faster
+    damage: damage,
+    effects: effects,
+    spawnTick: state.tick,
+    class: 'lightning',
+    isChained: true, // Mark as chained to prevent infinite recursion
   };
 
   state.projectiles.push(projectile);

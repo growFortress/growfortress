@@ -94,6 +94,10 @@ interface MockPrisma {
   pillarChallengeSession: MockPrismaOperations;
   pillarChallengeLimits: MockPrismaOperations;
   crystalProgress: MockPrismaOperations;
+  // Colony system (offline income)
+  colonyProgress: MockPrismaOperations;
+  // Milestones system
+  playerMilestones: MockPrismaOperations;
   $transaction: ReturnType<typeof vi.fn>;
   $connect: ReturnType<typeof vi.fn>;
   $disconnect: ReturnType<typeof vi.fn>;
@@ -157,6 +161,10 @@ export const mockPrisma: MockPrisma = {
   pillarChallengeSession: createMockOperations(),
   pillarChallengeLimits: createMockOperations(),
   crystalProgress: createMockOperations(),
+  // Colony system (offline income)
+  colonyProgress: createMockOperations(),
+  // Milestones system
+  playerMilestones: createMockOperations(),
   $transaction: vi.fn(async (input: unknown): Promise<unknown> => {
     if (typeof input === 'function') {
       return input(mockPrisma);
@@ -799,6 +807,49 @@ export function createMockCrystalProgress(overrides: Record<string, unknown> = {
     mindFragments: 0,
     fullCrystals: [] as string[],
     matrixAssembled: false,
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// COLONY SYSTEM MOCKS
+// ============================================================================
+
+/**
+ * Helper to create mock colony progress data
+ */
+export function createMockColonyProgress(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'colony-123',
+    userId: 'user-123',
+    colonyLevels: { farm: 0, mine: 0, market: 0, factory: 0 },
+    lastClaimAt: new Date(),
+    pendingGold: 0,
+    version: 1,
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// MILESTONES SYSTEM MOCKS
+// ============================================================================
+
+/**
+ * Helper to create mock player milestones data
+ */
+export function createMockPlayerMilestones(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'milestones-123',
+    userId: 'user-123',
+    achievedIds: [] as string[],
+    claimedIds: [] as string[],
+    goldMultiplier: 1.0,
+    damageMultiplier: 1.0,
+    hpMultiplier: 1.0,
+    bonusHeroSlots: 0,
+    unlockedFeatures: [] as string[],
     updatedAt: new Date(),
     ...overrides,
   };

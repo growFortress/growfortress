@@ -1,6 +1,16 @@
 import { randomInt } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
-import { MATERIAL_DEFINITIONS, type MaterialDefinition } from '@arcade/sim-core';
+import {
+  MATERIAL_DEFINITIONS,
+  type MaterialDefinition,
+  // Colony imports
+  COLONY_DEFINITIONS,
+  getColonyById,
+  calculateColonyGoldPerHour,
+  calculateTotalGoldPerHour,
+  calculateColonyUpgradeCost,
+  type ActiveColony,
+} from '@arcade/sim-core';
 
 /**
  * Generate a cryptographically secure random float between 0 and 1
@@ -37,11 +47,27 @@ const IDLE_CONFIG = {
   legendaryLevelBonus: 0.005,
 };
 
+export interface ColonyStatus {
+  id: string;
+  name: string;
+  level: number;
+  maxLevel: number;
+  goldPerHour: number;
+  upgradeCost: number;
+  canUpgrade: boolean;
+  unlocked: boolean;
+  unlockLevel: number;
+  icon: string;
+}
+
 export interface PendingIdleRewards {
   hoursOffline: number;
   cappedHours: number;
   pendingMaterials: Record<string, number>;
   pendingDust: number;
+  pendingGold: number;  // NEW: Gold from colonies
+  colonies: ColonyStatus[];  // NEW: Colony status for UI
+  totalGoldPerHour: number;  // NEW: Total colony gold production
   canClaim: boolean;
   minutesUntilNextClaim: number;
 }
@@ -51,10 +77,12 @@ export interface ClaimResult {
   claimed?: {
     materials: Record<string, number>;
     dust: number;
+    gold: number;  // NEW: Gold from colonies
   };
   newInventory?: {
     materials: Record<string, number>;
     dust: number;
+    gold: number;  // NEW: Total gold after claim
   };
   error?: string;
 }
@@ -136,12 +164,82 @@ function generateIdleDrops(
 }
 
 /**
+ * Parse colony levels from database JSON
+ */
+function parseColonyLevels(colonyLevelsJson: unknown): Record<string, number> {
+  if (typeof colonyLevelsJson === 'object' && colonyLevelsJson !== null) {
+    return colonyLevelsJson as Record<string, number>;
+  }
+  // Default to all level 0
+  return { farm: 0, mine: 0, market: 0, factory: 0 };
+}
+
+/**
+ * Convert colony levels to ActiveColony array
+ */
+function toActiveColonies(colonyLevels: Record<string, number>): ActiveColony[] {
+  return COLONY_DEFINITIONS.map(def => ({
+    id: def.id,
+    level: colonyLevels[def.id] || 0,
+    pendingGold: 0,  // Calculated separately
+  }));
+}
+
+/**
+ * Get colony status for display
+ */
+function getColonyStatusList(
+  colonyLevels: Record<string, number>,
+  commanderLevel: number,
+  fortressLevel: number,
+  availableGold: number
+): ColonyStatus[] {
+  return COLONY_DEFINITIONS.map(def => {
+    const level = colonyLevels[def.id] || 0;
+    const unlocked = commanderLevel >= def.unlockLevel;
+    const goldPerHour = level > 0 ? calculateColonyGoldPerHour(def.id, level, fortressLevel) : def.baseGoldPerHour;
+    const upgradeCost = level > 0 ? calculateColonyUpgradeCost(def.id, level) : def.baseUpgradeCost;
+    const canUpgrade = unlocked && level < def.maxLevel && availableGold >= upgradeCost;
+
+    return {
+      id: def.id,
+      name: def.name,
+      level,
+      maxLevel: def.maxLevel,
+      goldPerHour,
+      upgradeCost: upgradeCost === Infinity ? 0 : upgradeCost,
+      canUpgrade,
+      unlocked,
+      unlockLevel: def.unlockLevel,
+      icon: def.icon,
+    };
+  });
+}
+
+/**
+ * Calculate gold from colonies for time offline
+ */
+function calculateColonyGold(
+  colonies: ActiveColony[],
+  hoursOffline: number,
+  fortressLevel: number
+): number {
+  const cappedHours = Math.min(hoursOffline, IDLE_CONFIG.maxAccrualHours);
+  const goldPerHour = calculateTotalGoldPerHour(colonies, fortressLevel);
+  return Math.floor(goldPerHour * cappedHours);
+}
+
+/**
  * Calculate pending idle rewards for a user
  */
 export async function calculatePendingIdleRewards(userId: string): Promise<PendingIdleRewards | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { progression: true },
+    include: {
+      progression: true,
+      inventory: true,
+      colonyProgress: true,
+    },
   });
 
   if (!user || !user.progression) {
@@ -164,11 +262,34 @@ export async function calculatePendingIdleRewards(userId: string): Promise<Pendi
   const dustPerHour = IDLE_CONFIG.baseDustPerHour + (user.progression.level - 1) * IDLE_CONFIG.dustLevelScaling;
   const pendingDust = Math.floor(cappedHours * dustPerHour);
 
+  // Colony gold calculation
+  const colonyLevels = user.colonyProgress
+    ? parseColonyLevels(user.colonyProgress.colonyLevels)
+    : { farm: 0, mine: 0, market: 0, factory: 0 };
+  const colonies = toActiveColonies(colonyLevels);
+  const fortressLevel = user.progression.level;  // Use commander level as fortress level
+  const pendingGold = calculateColonyGold(colonies, cappedHours, fortressLevel);
+  const totalGoldPerHour = calculateTotalGoldPerHour(colonies, fortressLevel);
+
+  // Get available gold for canUpgrade calculations
+  const availableGold = (user.inventory?.gold || 0) + pendingGold;
+
+  // Build colony status list for UI
+  const colonyStatusList = getColonyStatusList(
+    colonyLevels,
+    user.progression.level,
+    fortressLevel,
+    availableGold
+  );
+
   return {
     hoursOffline: Math.round(hoursOffline * 100) / 100,
     cappedHours: Math.round(cappedHours * 100) / 100,
     pendingMaterials,
     pendingDust,
+    pendingGold,
+    colonies: colonyStatusList,
+    totalGoldPerHour,
     canClaim,
     minutesUntilNextClaim: Math.ceil(minutesUntilNextClaim),
   };
@@ -193,8 +314,9 @@ export async function claimIdleRewards(userId: string): Promise<ClaimResult> {
 
   const hasMaterials = Object.keys(pending.pendingMaterials).length > 0;
   const hasDust = pending.pendingDust > 0;
+  const hasGold = pending.pendingGold > 0;
 
-  if (!hasMaterials && !hasDust) {
+  if (!hasMaterials && !hasDust && !hasGold) {
     return { success: false, error: 'No rewards to claim' };
   }
 
@@ -223,18 +345,35 @@ export async function claimIdleRewards(userId: string): Promise<ClaimResult> {
       updatedMaterials[materialId] = (updatedMaterials[materialId] || 0) + amount;
     }
 
-    // Update inventory
+    // Update inventory with materials, dust, AND gold
     const updatedInventory = await tx.inventory.update({
       where: { userId },
       data: {
         materials: updatedMaterials,
         dust: { increment: pending.pendingDust },
+        gold: { increment: pending.pendingGold },
+      },
+    });
+
+    // Update colony progress lastClaimAt if it exists
+    await tx.colonyProgress.upsert({
+      where: { userId },
+      create: {
+        userId,
+        colonyLevels: { farm: 0, mine: 0, market: 0, factory: 0 },
+        lastClaimAt: new Date(),
+        pendingGold: 0,
+      },
+      update: {
+        lastClaimAt: new Date(),
+        pendingGold: 0,
       },
     });
 
     return {
       newMaterials: updatedMaterials,
       newDust: updatedInventory.dust,
+      newGold: updatedInventory.gold,
     };
   });
 
@@ -243,10 +382,12 @@ export async function claimIdleRewards(userId: string): Promise<ClaimResult> {
     claimed: {
       materials: pending.pendingMaterials,
       dust: pending.pendingDust,
+      gold: pending.pendingGold,
     },
     newInventory: {
       materials: result.newMaterials,
       dust: result.newDust,
+      gold: result.newGold,
     },
   };
 }
@@ -273,5 +414,124 @@ export function getIdleRewardsConfig(commanderLevel: number): {
     expectedDustPerHour: Math.round(dustPerHour * 100) / 100,
     expectedDustMax: Math.floor(IDLE_CONFIG.maxAccrualHours * dustPerHour),
     legendaryChance: Math.round(legendaryChance * 100),
+  };
+}
+
+/**
+ * Colony upgrade result
+ */
+export interface ColonyUpgradeResult {
+  success: boolean;
+  colony?: ColonyStatus;
+  goldSpent?: number;
+  remainingGold?: number;
+  error?: string;
+}
+
+/**
+ * Upgrade a colony
+ */
+export async function upgradeColony(userId: string, colonyId: string): Promise<ColonyUpgradeResult> {
+  // Validate colony exists
+  const colonyDef = getColonyById(colonyId);
+  if (!colonyDef) {
+    return { success: false, error: 'Invalid colony ID' };
+  }
+
+  // Get user data
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      progression: true,
+      inventory: true,
+      colonyProgress: true,
+    },
+  });
+
+  if (!user || !user.progression || !user.inventory) {
+    return { success: false, error: 'User not found' };
+  }
+
+  // Check if colony is unlocked
+  if (user.progression.level < colonyDef.unlockLevel) {
+    return { success: false, error: `Colony requires commander level ${colonyDef.unlockLevel}` };
+  }
+
+  // Get current colony levels
+  const colonyLevels = user.colonyProgress
+    ? parseColonyLevels(user.colonyProgress.colonyLevels)
+    : { farm: 0, mine: 0, market: 0, factory: 0 };
+
+  const currentLevel = colonyLevels[colonyId] || 0;
+
+  // Check if at max level
+  if (currentLevel >= colonyDef.maxLevel) {
+    return { success: false, error: 'Colony is at maximum level' };
+  }
+
+  // Calculate upgrade cost
+  const upgradeCost = calculateColonyUpgradeCost(colonyId, currentLevel);
+
+  // Check if user has enough gold
+  if (user.inventory.gold < upgradeCost) {
+    return { success: false, error: 'Not enough gold' };
+  }
+
+  // Perform upgrade in transaction
+  const result = await prisma.$transaction(async (tx) => {
+    // Deduct gold
+    const updatedInventory = await tx.inventory.update({
+      where: { userId },
+      data: {
+        gold: { decrement: upgradeCost },
+      },
+    });
+
+    // Update colony level
+    const newLevel = currentLevel + 1;
+    const updatedLevels = { ...colonyLevels, [colonyId]: newLevel };
+
+    await tx.colonyProgress.upsert({
+      where: { userId },
+      create: {
+        userId,
+        colonyLevels: updatedLevels,
+        lastClaimAt: new Date(),
+        pendingGold: 0,
+      },
+      update: {
+        colonyLevels: updatedLevels,
+      },
+    });
+
+    return {
+      newLevel,
+      remainingGold: updatedInventory.gold,
+    };
+  });
+
+  // Calculate new colony status
+  const fortressLevel = user.progression.level;
+  const newGoldPerHour = calculateColonyGoldPerHour(colonyId, result.newLevel, fortressLevel);
+  const newUpgradeCost = result.newLevel < colonyDef.maxLevel
+    ? calculateColonyUpgradeCost(colonyId, result.newLevel)
+    : 0;
+
+  return {
+    success: true,
+    colony: {
+      id: colonyId,
+      name: colonyDef.name,
+      level: result.newLevel,
+      maxLevel: colonyDef.maxLevel,
+      goldPerHour: newGoldPerHour,
+      upgradeCost: newUpgradeCost,
+      canUpgrade: result.newLevel < colonyDef.maxLevel && result.remainingGold >= newUpgradeCost,
+      unlocked: true,
+      unlockLevel: colonyDef.unlockLevel,
+      icon: colonyDef.icon,
+    },
+    goldSpent: upgradeCost,
+    remainingGold: result.remainingGold,
   };
 }

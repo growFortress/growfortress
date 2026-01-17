@@ -453,8 +453,9 @@ describe('Class Modifiers Per Pillar', () => {
       expect(getPillarClassModifier('cosmos', 'tech')?.damageMultiplier).toBe(19661);
     });
 
-    it('Natural is very weak (-25%)', () => {
-      expect(getPillarClassModifier('cosmos', 'natural')?.damageMultiplier).toBe(12288);
+    it('Natural is weak (-20% cap)', () => {
+      // Capped at -20% (was -25%)
+      expect(getPillarClassModifier('cosmos', 'natural')?.damageMultiplier).toBe(13107);
     });
   });
 
@@ -463,8 +464,9 @@ describe('Class Modifiers Per Pillar', () => {
       expect(getPillarClassModifier('magic', 'fire')?.damageMultiplier).toBe(21299);
     });
 
-    it('Tech is weakest (-30%)', () => {
-      expect(getPillarClassModifier('magic', 'tech')?.damageMultiplier).toBe(11469);
+    it('Tech is weak (-20% cap)', () => {
+      // Capped at -20% (was -30%)
+      expect(getPillarClassModifier('magic', 'tech')?.damageMultiplier).toBe(13107);
     });
   });
 
@@ -473,8 +475,9 @@ describe('Class Modifiers Per Pillar', () => {
       expect(getPillarClassModifier('gods', 'lightning')?.damageMultiplier).toBe(20480);
     });
 
-    it('Tech is extremely weak (-40%)', () => {
-      expect(getPillarClassModifier('gods', 'tech')?.damageMultiplier).toBe(9830);
+    it('Tech is weak (-20% cap)', () => {
+      // Capped at -20% (was -40%)
+      expect(getPillarClassModifier('gods', 'tech')?.damageMultiplier).toBe(13107);
     });
   });
 

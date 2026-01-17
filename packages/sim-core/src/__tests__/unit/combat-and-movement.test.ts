@@ -640,7 +640,7 @@ describe('Hero State Machine', () => {
     expect(hero.state).toBe('combat');
   });
 
-  it('hero transitions combat -> returning when HP is low', () => {
+  it('hero stays in combat with low HP (no retreat, has lifesteal)', () => {
     const config = getDefaultConfig();
     config.startingHeroes = ['storm'];
 
@@ -652,18 +652,19 @@ describe('Hero State Machine', () => {
     const hero = sim.state.heroes[0];
     hero.state = 'combat';
 
-    // Drop HP very low (below retreat threshold)
-    hero.currentHp = 1;
+    // Drop HP low
+    hero.currentHp = 50;
 
-    // Run several ticks
+    // Run several ticks - hero should stay in combat (has lifesteal)
     for (let i = 0; i < 30; i++) {
       sim.step();
-      // Use type assertion since sim.step() can change state
-      if ((hero.state as string) === 'returning') break;
     }
 
-    // Hero should retreat when HP is critical
-    expect(['returning', 'cooldown', 'dead']).toContain(hero.state);
+    // Hero should stay in combat or transition normally (not retreat)
+    // With lifesteal, hero may heal while fighting
+    expect(['combat', 'deploying', 'cooldown', 'dead']).toContain(hero.state);
+    // Hero no longer retreats - they fight until death or victory
+    expect(hero.state).not.toBe('returning');
   });
 
   it('hero transitions returning -> cooldown when reaches fortress', () => {

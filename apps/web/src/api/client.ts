@@ -42,6 +42,8 @@ import type {
   RemoveMaterialsResponse,
   PendingIdleRewardsResponse,
   ClaimIdleRewardsResponse,
+  UpgradeColonyRequest,
+  UpgradeColonyResponse,
   IdleRewardsConfigResponse,
   BulkReward,
   ClaimBulkRewardResponse,
@@ -158,9 +160,11 @@ export type {
   MaterialsResponse,
   AddMaterialsResponse,
   RemoveMaterialsResponse,
-  // Idle Rewards
+  // Idle Rewards & Colonies
   PendingIdleRewardsResponse,
   ClaimIdleRewardsResponse,
+  UpgradeColonyRequest,
+  UpgradeColonyResponse,
   IdleRewardsConfigResponse,
   // Bulk Rewards
   BulkReward,
@@ -370,6 +374,15 @@ export async function claimIdleRewards(): Promise<ClaimIdleRewardsResponse> {
 
 export async function getIdleRewardsConfig(): Promise<IdleRewardsConfigResponse> {
   return request<IdleRewardsConfigResponse>("/v1/idle/config");
+}
+
+export async function upgradeColony(
+  data: UpgradeColonyRequest,
+): Promise<UpgradeColonyResponse> {
+  return request<UpgradeColonyResponse>("/v1/idle/colony/upgrade", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 // Bulk Rewards

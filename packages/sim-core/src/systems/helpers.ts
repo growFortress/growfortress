@@ -206,10 +206,14 @@ export function applySkillEffects(
   let damageAmount = 0;
   const projectileEffects: SkillEffect[] = [];
   const immediateEffects: SkillEffect[] = [];
+  let percentHpDamageEffect: SkillEffect | null = null;
 
   for (const effect of effects) {
     if (effect.type === 'damage') {
       damageAmount = effect.amount || 0;
+    } else if (effect.type === 'percent_current_hp_damage') {
+      // Store for special processing against each enemy
+      percentHpDamageEffect = effect;
     } else if (effect.type === 'slow' || effect.type === 'stun' || effect.type === 'freeze' || effect.type === 'burn' || effect.type === 'poison') {
       // These effects should be applied when projectile hits
       projectileEffects.push(effect);
@@ -273,6 +277,30 @@ export function applySkillEffects(
         // Use proper effect application with duration tracking and speed recalculation
         applyEffectToEnemy(effect, enemy, state);
       }
+    }
+  }
+
+  // Handle percent_current_hp_damage effect (INFERNO/RIFT ultimates)
+  // This deals damage as a percentage of enemy's current HP, with a cap
+  if (percentHpDamageEffect && enemies.length > 0) {
+    const percent = (percentHpDamageEffect.percent || 50) / 100;
+    const maxBaseDamage = percentHpDamageEffect.maxBaseDamage ?? 500;
+    const scalingPerLevel = percentHpDamageEffect.scalingPerLevel ?? 10;
+    const maxDamage = maxBaseDamage + (hero.level * scalingPerLevel);
+
+    const targetType = percentHpDamageEffect.target || 'all';
+    const targetEnemies = targetType === 'single'
+      ? [findClosestEnemy2D(enemies, hero.x, hero.y)].filter((e): e is Enemy => e !== null)
+      : enemies;
+
+    for (const enemy of targetEnemies) {
+      // Calculate percent damage based on current HP
+      let percentDamage = Math.floor(enemy.hp * percent);
+      // Apply damage cap
+      percentDamage = Math.min(percentDamage, maxDamage);
+
+      // Create projectile for the capped damage
+      createSkillProjectile(hero, enemy, state, heroClass, percentDamage, projectileEffects, skillId);
     }
   }
 }
