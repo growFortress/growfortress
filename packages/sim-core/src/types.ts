@@ -590,6 +590,8 @@ export interface ModifierSet {
   // === DEFENSE ===
   hpRegen: number;               // Flat HP regen per interval
   incomingDamageReduction: number; // Damage reduction (negative = more damage)
+  lifesteal: number;             // % of damage dealt healed (0.08 = 8%)
+  reflectDamage: number;         // % of incoming damage reflected (0.10 = 10%)
 
   // === PHYSICS-BASED DEFENSE ===
   massBonus: number;             // +X% mass (harder to push)

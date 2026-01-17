@@ -23,6 +23,7 @@ import type {
 } from '../types.js';
 import { analytics } from '../analytics.js';
 import { calculateHeroStoneLifesteal } from './infinity-stones.js';
+import { calculateArtifactLifesteal, getArtifactOnHitEffect } from './artifacts.js';
 import {
   PROJECTILE_BASE_SPEED,
   HIT_FLASH_TICKS,
@@ -105,15 +106,28 @@ function applyProjectileDamage(projectile: ActiveProjectile, state: GameState): 
       damageDealt
     );
 
-    // Apply lifesteal for hero projectiles
+    // Apply lifesteal for hero projectiles (from infinity stones and artifacts)
     if (projectile.sourceType === 'hero') {
       const hero = state.heroes.find(h => h.definitionId === projectile.sourceId);
-      if (hero && hero.infinityStone) {
-        const lifestealPercent = calculateHeroStoneLifesteal(hero.infinityStone);
-        if (lifestealPercent > 0) {
-          const healAmount = Math.floor(damageDealt * lifestealPercent);
+      if (hero) {
+        // Calculate total lifesteal from both infinity stone and artifact
+        const stoneLifesteal = hero.infinityStone ? calculateHeroStoneLifesteal(hero.infinityStone) : 0;
+        const artifactLifesteal = calculateArtifactLifesteal(hero.equippedArtifact);
+        const totalLifesteal = stoneLifesteal + artifactLifesteal;
+
+        if (totalLifesteal > 0) {
+          const healAmount = Math.floor(damageDealt * totalLifesteal);
           hero.currentHp = Math.min(hero.currentHp + healAmount, hero.maxHp);
           analytics.trackHealing(String(projectile.sourceId), healAmount);
+        }
+
+        // Apply artifact on-hit effects (slow, freeze, burn)
+        // Use deterministic pseudo-random based on projectile id and tick
+        const rngSeed = ((projectile.id * 2654435761) ^ state.tick) >>> 0;
+        const rngValue = (rngSeed % 10000) / 10000; // 0.0 - 0.9999
+        const onHitEffect = getArtifactOnHitEffect(hero.equippedArtifact, rngValue);
+        if (onHitEffect) {
+          applyEffectToEnemy(onHitEffect, enemy, state);
         }
       }
     }

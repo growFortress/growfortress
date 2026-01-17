@@ -1,254 +1,36 @@
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--color-bg-overlay);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2100;
-  animation: fadeIn var(--duration-normal) var(--ease-standard);
+/**
+ * CraftingModal Styles - Two-Column Layout Redesign
+ */
+
+/* ============================================
+   MODAL CONTAINER
+   ============================================ */
+.craftingModal {
+  min-width: 900px;
+  max-width: 1000px;
 }
 
-.modal {
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  min-width: 550px;
-  max-width: 750px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg), var(--glow-primary);
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: var(--border-neutral);
-}
-
-.title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: var(--glow-primary);
-}
-
-.closeBtn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-60);
-  font-size: 24px;
-  cursor: pointer;
-  transition: color var(--duration-normal) var(--ease-standard);
-  padding: 4px 8px;
-}
-
-.closeBtn:hover {
-  color: var(--color-text);
-}
-
-.recipeList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.recipeCard {
-  background: var(--color-bg);
-  border: var(--border-width) solid var(--rarity-color, var(--color-neutral));
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  display: flex;
-  gap: 16px;
-  transition: var(--transition-interactive-normal);
-  box-shadow: var(--shadow-sm);
-}
-
-.recipeCard:hover {
-  background: var(--color-bg-elevated);
-}
-
-.recipeCard.owned {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.recipeCard.canCraft {
-  border-color: var(--color-success);
-  box-shadow: var(--shadow-sm), 0 0 15px var(--color-success-20);
-}
-
-.recipeIcon {
-  font-size: 48px;
-  filter: drop-shadow(0 0 8px var(--rarity-color));
-}
-
-.recipeInfo {
-  flex: 1;
-}
-
-.recipeName {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--rarity-color);
-  margin-bottom: 4px;
-}
-
-.recipeDesc {
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--color-text-60);
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-.requirements {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.requirement {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-size: 11px;
-}
-
-.requirement.met {
-  color: var(--color-success);
-}
-
-/* WCAG: Add non-color indicator (checkmark) for met requirements */
-.requirement.met::before {
-  content: "✓ ";
-  font-size: 10px;
-}
-
-.requirement.notMet {
-  color: var(--color-accent);
-  opacity: 0.8;
-}
-
-/* WCAG: Add non-color indicator (X) for unmet requirements */
-.requirement.notMet::before {
-  content: "✗ ";
-  font-size: 10px;
-}
-
-.reqIcon {
-  font-size: 14px;
-}
-
-.costs {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.cost {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--color-text);
-}
-
-/* WCAG compliant cost indicators */
-.cost.met {
-  color: var(--color-success);
-}
-
-.cost.met::before {
-  content: "✓ ";
-  font-size: 10px;
-}
-
-.cost.notMet {
-  color: var(--color-accent);
-  opacity: 0.8;
-}
-
-.cost.notMet::before {
-  content: "✗ ";
-  font-size: 10px;
-}
-
-.costIcon {
-  font-size: 14px;
-}
-
-.craftBtn {
-  padding: 8px 16px;
-  background: var(--color-success-20);
-  border: var(--border-width) solid var(--color-success);
-  border-radius: var(--radius-sm);
-  color: var(--color-success);
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: var(--transition-interactive-normal);
-}
-
-.craftBtn:hover:not(:disabled) {
-  background: var(--color-success-30);
-  box-shadow: var(--shadow-sm), 0 0 15px var(--color-success-50);
-}
-
-.craftBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  border-color: var(--color-neutral);
-  color: var(--color-neutral);
-  background: transparent;
-}
-
-.ownedBadge {
-  padding: 6px 12px;
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-60);
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: var(--color-text-60);
-  font-family: var(--font-body);
-  font-size: 14px;
-}
-
+/* ============================================
+   FILTERS
+   ============================================ */
 .filters {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  padding: 8px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-dark);
 }
 
 .filterBtn {
-  padding: 6px 12px;
-  background: var(--color-bg);
-  border: var(--border-neutral);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 2px solid transparent;
   border-radius: var(--radius-sm);
   color: var(--color-text-60);
   font-family: var(--font-body);
@@ -270,13 +52,708 @@
   color: var(--color-primary);
 }
 
-/* Rarity colors */
-.legendary { --rarity-color: var(--color-primary); }
-.epic { --rarity-color: #a855f7; }
-.rare { --rarity-color: #3b82f6; }
-.common { --rarity-color: var(--color-neutral); }
+.filterIcon {
+  font-size: 14px;
+}
 
+.filterLabel {
+  display: none;
+}
+
+@media (min-width: 800px) {
+  .filterLabel {
+    display: inline;
+  }
+}
+
+/* ============================================
+   TWO-COLUMN LAYOUT
+   ============================================ */
+.craftingContent {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  min-height: 480px;
+  max-height: 60vh;
+}
+
+/* ============================================
+   LEFT PANEL - RECIPE LIST
+   ============================================ */
+.recipeListPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  min-height: 0;
+
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-30) var(--color-bg);
+}
+
+.recipeListPanel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recipeListPanel::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: var(--radius-full);
+}
+
+.recipeListPanel::-webkit-scrollbar-thumb {
+  background: var(--color-primary-30);
+  border-radius: var(--radius-full);
+}
+
+.recipeListPanel::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-50);
+}
+
+.emptyList {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-40);
+  font-size: 13px;
+}
+
+/* ============================================
+   RECIPE LIST ITEM
+   ============================================ */
+.recipeListItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  text-align: left;
+  width: 100%;
+}
+
+.recipeListItem:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: var(--glass-border);
+}
+
+.recipeListItem.selected {
+  background: var(--color-primary-10);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px var(--color-primary-20);
+  animation: selectPulse 0.4s var(--ease-spring) forwards;
+}
+
+.recipeListItem.owned {
+  opacity: 0.5;
+}
+
+.recipeListItem.canCraft:not(.owned) {
+  border-color: var(--color-success-50);
+}
+
+.recipeListItem.canCraft:not(.owned):not(.selected) {
+  box-shadow: 0 0 10px var(--color-success-20);
+}
+
+@keyframes selectPulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-primary-50);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px var(--color-primary-30);
+  }
+  100% {
+    box-shadow: 0 0 15px 0 var(--color-primary-20);
+  }
+}
+
+.recipeListIcon {
+  flex-shrink: 0;
+  font-size: 32px;
+  filter: drop-shadow(0 0 8px var(--rarity-color, var(--color-primary-30)));
+}
+
+.recipeListInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recipeListName {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rarity-color, var(--color-text));
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recipeListSlot {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text-40);
+  text-transform: capitalize;
+}
+
+.ownedBadgeSmall {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+}
+
+/* ============================================
+   RIGHT PANEL - DETAIL VIEW
+   ============================================ */
+.detailPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  overflow-y: auto;
+
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-30) transparent;
+}
+
+.detailPanel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.detailPanel::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: var(--radius-full);
+}
+
+.detailPanel::-webkit-scrollbar-thumb {
+  background: var(--color-primary-30);
+  border-radius: var(--radius-full);
+}
+
+.detailPanel::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-50);
+}
+
+.emptyDetail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  color: var(--color-text-40);
+  font-size: 14px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+/* ============================================
+   DETAIL HEADER
+   ============================================ */
+.detailHeader {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.artifactIconLarge {
+  flex-shrink: 0;
+  font-size: 64px;
+  filter: drop-shadow(0 0 12px var(--rarity-glow, var(--color-primary-30)));
+}
+
+.detailHeaderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.artifactName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--rarity-color, var(--color-text));
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.artifactMeta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rarityTag {
+  padding: 4px 10px;
+  background: var(--rarity-color, var(--color-neutral));
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-bg);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.slotTag {
+  padding: 4px 10px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: capitalize;
+}
+
+.artifactDescription {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-60);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ============================================
+   SECTIONS
+   ============================================ */
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+}
+
+/* ============================================
+   EFFECTS SECTION
+   ============================================ */
+.effectsSection {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.effectsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.effectTag {
+  padding: 6px 12px;
+  background: var(--color-primary-10);
+  border: 1px solid var(--color-primary-30);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-primary);
+}
+
+/* ============================================
+   MATERIALS SECTION
+   ============================================ */
+.materialsSection {
+  flex: 1;
+}
+
+.materialsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.materialRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-interactive-normal);
+}
+
+.materialRow.met {
+  background: rgba(0, 229, 255, 0.05);
+}
+
+.materialRow.notMet {
+  background: rgba(255, 42, 42, 0.05);
+}
+
+.materialIndicator {
+  flex-shrink: 0;
+  width: 16px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.materialRow.met .materialIndicator {
+  color: var(--color-success);
+}
+
+.materialRow.notMet .materialIndicator {
+  color: var(--color-accent);
+}
+
+.materialIcon {
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+.materialProgress {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.materialHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.materialName {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.materialQuantity {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-60);
+}
+
+.materialRow.met .materialQuantity {
+  color: var(--color-success);
+}
+
+.materialRow.notMet .materialQuantity {
+  color: var(--color-accent);
+}
+
+/* ============================================
+   PROGRESS BAR
+   ============================================ */
+.progressBarContainer {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.4s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+.progressBar.complete {
+  background: linear-gradient(90deg, var(--color-success-60), var(--color-success));
+}
+
+.progressBar.incomplete {
+  background: linear-gradient(90deg, var(--color-accent-60), var(--color-accent));
+}
+
+/* Shimmer effect for incomplete progress */
+.progressBar.incomplete::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: progressShimmer 2s ease-in-out infinite;
+}
+
+@keyframes progressShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ============================================
+   GOLD ROW
+   ============================================ */
+.goldRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+}
+
+.goldRow.met {
+  background: rgba(0, 229, 255, 0.05);
+}
+
+.goldRow.notMet {
+  background: rgba(255, 42, 42, 0.05);
+}
+
+.goldIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.goldProgress {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ============================================
+   CRAFT BUTTON
+   ============================================ */
+.craftButtonContainer {
+  position: relative;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.craftBtn {
+  width: 100%;
+  padding: 14px 24px;
+  background: var(--color-bg-elevated);
+  border: 3px solid var(--color-neutral);
+  border-radius: var(--radius-md);
+  color: var(--color-neutral);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.craftBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.craftBtn.craftReady {
+  background: var(--color-success-20);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  animation: craftReady 2s ease-in-out infinite;
+}
+
+.craftBtn.craftReady:hover:not(:disabled) {
+  background: var(--color-success-30);
+  box-shadow: var(--shadow-sm), 0 0 25px var(--color-success-50);
+  transform: translateY(-1px);
+}
+
+@keyframes craftReady {
+  0%, 100% {
+    box-shadow: var(--shadow-sm), 0 0 15px var(--color-success-30);
+  }
+  50% {
+    box-shadow: var(--shadow-sm), 0 0 25px var(--color-success-50);
+  }
+}
+
+.craftBtn.craftSuccess {
+  background: var(--color-success-30);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  animation: craftSuccessAnim 0.6s var(--ease-spring) forwards;
+}
+
+@keyframes craftSuccessAnim {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px var(--color-success-50);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.successIcon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-neutral);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Particle burst effect */
+.craftParticles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--color-success-50) 0%, transparent 70%);
+  animation: particleBurst 0.8s ease-out forwards;
+  border-radius: var(--radius-md);
+}
+
+@keyframes particleBurst {
+  0% {
+    opacity: 1;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* ============================================
+   OWNED BADGE
+   ============================================ */
+.ownedContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.ownedBadgeLarge {
+  padding: 12px 24px;
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-neutral);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ============================================
+   RARITY COLORS
+   ============================================ */
+.legendary {
+  --rarity-color: var(--color-primary);
+  --rarity-glow: var(--color-primary-30);
+}
+
+.epic {
+  --rarity-color: #a855f7;
+  --rarity-glow: rgba(168, 85, 247, 0.3);
+}
+
+.rare {
+  --rarity-color: #3b82f6;
+  --rarity-glow: rgba(59, 130, 246, 0.3);
+}
+
+.common {
+  --rarity-color: var(--color-neutral);
+  --rarity-glow: rgba(58, 74, 90, 0.3);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .recipeListItem.selected,
+  .craftBtn.craftReady,
+  .craftBtn.craftSuccess,
+  .craftParticles,
+  .progressBar.incomplete::after {
+    animation: none;
+  }
+
+  .progressBar {
+    transition: none;
+  }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+  .craftingModal {
+    min-width: auto;
+    max-width: 95vw;
+  }
+
+  .craftingContent {
+    grid-template-columns: 1fr;
+    max-height: none;
+  }
+
+  .recipeListPanel {
+    max-height: 200px;
+  }
+
+  .detailPanel {
+    min-height: 400px;
+  }
 }

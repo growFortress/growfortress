@@ -8,7 +8,7 @@
  * - Consumable items
  */
 
-import type { ActiveHero, FortressClass, ModifierSet } from '../types.js';
+import type { ActiveHero, FortressClass, ModifierSet, SkillEffect } from '../types.js';
 import { getArtifactById, getItemById } from '../data/artifacts.js';
 import { analytics } from '../analytics.js';
 import { FP_BASE } from './constants.js';
@@ -250,4 +250,116 @@ export function applyArtifactBonusesToStats(
     range: baseStats.range,
     moveSpeed: baseStats.moveSpeed,
   };
+}
+
+/**
+ * Calculate lifesteal from an equipped Artifact
+ * @returns Lifesteal percentage (0.08 = 8%)
+ */
+export function calculateArtifactLifesteal(artifactId: string | undefined): number {
+  if (!artifactId) return 0;
+
+  const artifact = getArtifactById(artifactId);
+  if (!artifact) return 0;
+
+  // Check for lifesteal passive
+  for (const effect of artifact.effects) {
+    if (effect.type === 'passive' && effect.description) {
+      // Parse lifesteal from description like "8% kradzieży życia" or "20% kradzieży życia"
+      const lifestealMatch = effect.description.match(/(\d+)%\s*kradzież/i);
+      if (lifestealMatch) {
+        return parseInt(lifestealMatch[1], 10) / 100;
+      }
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Calculate reflect damage from an equipped Artifact
+ * @returns Reflect percentage (0.10 = 10% of incoming damage reflected)
+ */
+export function getArtifactReflectDamage(artifactId: string | undefined): number {
+  if (!artifactId) return 0;
+
+  const artifact = getArtifactById(artifactId);
+  if (!artifact) return 0;
+
+  // Check for reflect passive
+  for (const effect of artifact.effects) {
+    if (effect.type === 'passive' && effect.description) {
+      // Parse reflect from description like "Odbija 10% obrażeń" or "15% odbicie obrażeń"
+      const reflectMatch = effect.description.match(/(\d+)%\s*(?:odbij|odbicie)/i);
+      if (reflectMatch) {
+        return parseInt(reflectMatch[1], 10) / 100;
+      }
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Get on-hit effect from an equipped Artifact (slow, freeze, burn)
+ * @param artifactId - Equipped artifact ID
+ * @param rngValue - Random value 0-1 for chance-based effects
+ * @returns SkillEffect to apply on projectile hit, or null if no on-hit effect
+ */
+export function getArtifactOnHitEffect(
+  artifactId: string | undefined,
+  rngValue: number
+): SkillEffect | null {
+  if (!artifactId) return null;
+
+  const artifact = getArtifactById(artifactId);
+  if (!artifact) return null;
+
+  // Check for on-hit passives
+  for (const effect of artifact.effects) {
+    if (effect.type === 'passive' && effect.description) {
+      const desc = effect.description.toLowerCase();
+
+      // Slow on hit: "15% szansa na spowolnienie" or "slow 25%"
+      const slowMatch = desc.match(/(\d+)%\s*(?:szansa\s*na\s*)?(?:spowolnienie|slow)/i);
+      if (slowMatch) {
+        const chance = parseInt(slowMatch[1], 10) / 100;
+        // Only trigger based on chance
+        if (rngValue < chance) {
+          return {
+            type: 'slow',
+            percent: 0.25, // 25% slow
+            duration: 60,  // 2 seconds at 30Hz
+          };
+        }
+        return null;
+      }
+
+      // Freeze on hit: "25% szansa na zamrożenie" or "freeze chance"
+      const freezeMatch = desc.match(/(\d+)%\s*(?:szansa\s*na\s*)?(?:zamrożenie|freeze)/i);
+      if (freezeMatch) {
+        const chance = parseInt(freezeMatch[1], 10) / 100;
+        if (rngValue < chance) {
+          return {
+            type: 'freeze',
+            duration: 30, // 1 second at 30Hz
+          };
+        }
+        return null;
+      }
+
+      // Burn on hit: "Podpalenie: 3 DMG/s przez 3s" or "burn X DMG"
+      const burnMatch = desc.match(/(?:podpalenie|burn)[:\s]*(\d+)\s*(?:dmg|damage|obrażeń)/i);
+      if (burnMatch) {
+        const dps = parseInt(burnMatch[1], 10);
+        return {
+          type: 'burn',
+          damagePerTick: dps,
+          duration: 90, // 3 seconds at 30Hz
+        };
+      }
+    }
+  }
+
+  return null;
 }

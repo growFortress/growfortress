@@ -27,6 +27,8 @@ const MODIFIER_CONFIG: Record<keyof ModifierSet, { name: string; format: 'percen
   // Defense
   hpRegen: { name: 'HP Regen', format: 'flat', positive: true },
   incomingDamageReduction: { name: 'Damage Reduction', format: 'percent', positive: true },
+  lifesteal: { name: 'Lifesteal', format: 'percent', positive: true },
+  reflectDamage: { name: 'Reflect Damage', format: 'percent', positive: true },
 
   // Physics defense
   massBonus: { name: 'Mass', format: 'percent', positive: true },
@@ -64,6 +66,8 @@ const MODIFIER_PRIORITY: (keyof ModifierSet)[] = [
   'lowHpThreshold',
   'maxHpBonus',
   'hpRegen',
+  'lifesteal',
+  'reflectDamage',
   'incomingDamageReduction',
   'massBonus',
   'knockbackResistance',

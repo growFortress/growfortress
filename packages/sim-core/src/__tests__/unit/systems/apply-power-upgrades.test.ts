@@ -42,6 +42,8 @@ function createBaseModifiers(): ModifierSet {
     // Defense
     hpRegen: 0,
     incomingDamageReduction: 0,
+    lifesteal: 0,
+    reflectDamage: 0,
 
     // Physics-based defense
     massBonus: 0,

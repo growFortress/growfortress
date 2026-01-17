@@ -181,7 +181,7 @@
 
 /* Scrollbar styling */
 .body::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .body::-webkit-scrollbar-track {
@@ -189,12 +189,12 @@
 }
 
 .body::-webkit-scrollbar-thumb {
-  background: var(--color-text-20);
-  border-radius: 4px;
+  background: var(--color-primary-30);
+  border-radius: var(--radius-full);
 }
 
 .body::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-30);
+  background: var(--color-primary-50);
 }
 
 /* Modal footer */
@@ -262,7 +262,7 @@
 /* Custom scrollbar for Firefox */
 .body {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-text-20) transparent;
+  scrollbar-color: var(--color-primary-30) transparent;
 }
 
 /* Reduced motion */

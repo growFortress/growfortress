@@ -805,7 +805,13 @@ export class Simulation {
 
       if (distSq <= meleeRangeSq) {
         // Attack hero
-        applyDamageToHero(hero, enemy.damage, this.rng);
+        const { damageTaken, reflectDamage } = applyDamageToHero(hero, enemy.damage, this.rng);
+
+        // Apply reflect damage back to enemy
+        if (reflectDamage > 0) {
+          enemy.hp -= reflectDamage;
+          enemy.hitFlashTicks = 3; // Visual feedback for reflect
+        }
 
         // Check if hero died
         if (hero.currentHp <= 0) {
@@ -813,8 +819,8 @@ export class Simulation {
           hero.currentHp = 0;
         }
 
-        // Leech special: heal on attack
-        if (enemy.type === 'leech') {
+        // Leech special: heal on attack (only if dealt damage)
+        if (enemy.type === 'leech' && damageTaken > 0) {
           const healAmount = Math.floor(enemy.maxHp * LEECH_HEAL_PERCENT);
           enemy.hp = Math.min(enemy.hp + healAmount, enemy.maxHp);
         }

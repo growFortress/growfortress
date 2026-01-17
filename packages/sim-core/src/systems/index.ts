@@ -47,7 +47,7 @@ export { calculateSynergyBonuses, calculatePillarModifiers } from './synergy.js'
 // DAMAGE SYSTEM
 // ============================================================================
 
-export { applyDamageToHero, applyDamageToTurret } from './damage.js';
+export { applyDamageToHero, applyDamageToTurret, type HeroDamageResult } from './damage.js';
 
 // ============================================================================
 // INITIALIZATION
@@ -91,6 +91,9 @@ export {
   applyItemToHero,
   calculateHeroArtifactDodgeChance,
   calculateHeroArtifactBlockChance,
+  calculateArtifactLifesteal,
+  getArtifactReflectDamage,
+  getArtifactOnHitEffect,
   hasArtifactPassive,
 } from './artifacts.js';
 

@@ -15,19 +15,28 @@ import { calculateWeaknessDamageMultiplier } from './weakness.js';
 import {
   calculateHeroArtifactDodgeChance,
   calculateHeroArtifactBlockChance,
+  getArtifactReflectDamage,
   hasArtifactPassive,
 } from './artifacts.js';
 
 /**
+ * Result of damage application to hero
+ */
+export interface HeroDamageResult {
+  damageTaken: number;
+  reflectDamage: number;
+}
+
+/**
  * Apply damage to hero with artifact defensive effects (dodge, block) and weakness vulnerabilities
- * @returns actual damage taken (after dodge/block)
+ * @returns object with actual damage taken and reflect damage to apply to attacker
  */
 export function applyDamageToHero(
   hero: ActiveHero,
   damage: number,
   rng: Xorshift32,
   incomingDamageClass?: FortressClass
-): number {
+): HeroDamageResult {
   const heroDef = getHeroById(hero.definitionId);
 
   // Apply weakness damage vulnerability (e.g., Thunderlord +25% from Magic)
@@ -38,7 +47,7 @@ export function applyDamageToHero(
   // Check dodge (Cloak of Levitation)
   const dodgeChance = calculateHeroArtifactDodgeChance(hero.equippedArtifact);
   if (dodgeChance > 0 && rng.nextFloat() < dodgeChance) {
-    return 0; // Dodged!
+    return { damageTaken: 0, reflectDamage: 0 }; // Dodged!
   }
 
   // Check block (Captain's Shield)
@@ -70,13 +79,17 @@ export function applyDamageToHero(
     }
   }
 
+  // Calculate reflect damage before applying damage
+  const reflectPercent = getArtifactReflectDamage(hero.equippedArtifact);
+  const reflectDamage = reflectPercent > 0 ? Math.floor(damage * reflectPercent) : 0;
+
   if (hero.definitionId) {
     analytics.trackDamageTaken(hero.definitionId, damage);
   }
 
   hero.currentHp -= damage;
   analytics.trackDamage('fortress', 'fortress', damage); // Technically hero taking damage, but for now we track this flow
-  return damage;
+  return { damageTaken: damage, reflectDamage };
 }
 
 /**

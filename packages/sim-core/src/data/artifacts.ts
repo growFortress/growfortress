@@ -154,8 +154,10 @@ const PLASMA_HAMMER: ArtifactDefinition = {
       description: '+25% obrażeń Elektrycznych',
     },
     {
-      type: 'passive',
-      description: 'Kondensator: Jednostka może przywoływać wyładowania (dodatkowy atak co 5s)',
+      type: 'stat_boost',
+      stat: 'attackSpeed',
+      value: 18842 as FP, // +15%
+      description: '+15% szybkość ataku',
     },
   ],
 
@@ -213,8 +215,10 @@ const STORM_CLEAVER: ArtifactDefinition = {
       description: '+35% obrażeń',
     },
     {
-      type: 'passive',
-      description: 'Pogromca: +100% DMG vs bossów',
+      type: 'stat_boost',
+      stat: 'eliteDamageBonus',
+      value: 24576 as FP, // +50% (cap)
+      description: '+50% obrażeń vs bossów',
     },
   ],
 
@@ -335,10 +339,6 @@ const QUANTUM_ARMOR: ArtifactDefinition = {
       type: 'passive',
       description: 'Nano-Naprawa: +20 HP regeneracji na sekundę',
     },
-    {
-      type: 'passive',
-      description: 'Adaptacyjna Broń: Może zmieniać broń w locie (laser/rakiety/tarcza)',
-    },
   ],
 
   visuals: {
@@ -390,14 +390,16 @@ const GRAPPLE_LAUNCHER: ArtifactDefinition = {
 
   effects: [
     {
-      type: 'passive',
-      description: 'Nieograniczone Linki: Brak limitu użyć sieci',
+      type: 'stat_boost',
+      stat: 'damageMultiplier',
+      value: 20480 as FP, // +25%
+      description: '+25% obrażeń',
     },
     {
       type: 'stat_boost',
-      stat: 'slowEffect',
-      value: 20480 as FP, // +25%
-      description: '+25% efekt spowolnienia sieci',
+      stat: 'cooldownReduction',
+      value: 19661 as FP, // +20%
+      description: '-20% cooldown umiejętności',
     },
   ],
 
@@ -447,18 +449,16 @@ const GRAVITY_HARNESS: ArtifactDefinition = {
 
   effects: [
     {
-      type: 'passive',
-      description: 'Lot: Jednostka może latać (ignoruje przeszkody naziemne)',
+      type: 'stat_boost',
+      stat: 'dodgeChance',
+      value: 20480 as FP, // +25%
+      description: '+25% szansa na unik',
     },
     {
       type: 'stat_boost',
-      stat: 'dodgeChance',
-      value: 21299 as FP, // +30%
-      description: '+30% szansa na unik',
-    },
-    {
-      type: 'passive',
-      description: 'Autonomiczna Ochrona: AI automatycznie blokuje 1 śmiertelny cios na falę',
+      stat: 'critChance',
+      value: 18842 as FP, // +15%
+      description: '+15% szansa na krytyczne',
     },
   ],
 
@@ -510,14 +510,16 @@ const TEMPORAL_SCANNER: ArtifactDefinition = {
 
   effects: [
     {
-      type: 'passive',
-      description: 'Slot Kryształu: Może przechowywać Kryształ Czasu z podwójnym efektem',
+      type: 'stat_boost',
+      stat: 'cooldownReduction',
+      value: 21299 as FP, // +30%
+      description: '-30% cooldown umiejętności',
     },
     {
       type: 'stat_boost',
-      stat: 'spellPower',
+      stat: 'damageMultiplier',
       value: 19661 as FP, // +20%
-      description: '+20% mocy energetycznej',
+      description: '+20% obrażeń',
     },
   ],
 
@@ -567,13 +569,15 @@ const VOID_CODEX: ArtifactDefinition = {
   effects: [
     {
       type: 'stat_boost',
-      stat: 'chaosMagic',
+      stat: 'damageMultiplier',
       value: 21299 as FP, // +30%
-      description: '+30% obrażeń energii Próżni',
+      description: '+30% obrażeń',
     },
     {
-      type: 'passive',
-      description: 'Ryzyko Korupcji: 10% szansa na uszkodzenie siebie przy każdym użyciu',
+      type: 'stat_boost',
+      stat: 'cooldownReduction',
+      value: 22118 as FP, // +35%
+      description: '-35% cooldown umiejętności',
     },
   ],
 
@@ -624,13 +628,15 @@ const GUARDIAN_PROTOCOLS: ArtifactDefinition = {
   effects: [
     {
       type: 'stat_boost',
-      stat: 'defensiveSpells',
-      value: 22938 as FP, // +40%
-      description: '+40% efektywność pól ochronnych',
+      stat: 'maxHpBonus',
+      value: 22118 as FP, // +35%
+      description: '+35% HP',
     },
     {
-      type: 'passive',
-      description: 'Oczyszczenie: Usuwa negatywne efekty z sojuszników',
+      type: 'stat_boost',
+      stat: 'ccResistance',
+      value: 20480 as FP, // +25%
+      description: '+25% odporność na CC',
     },
   ],
 
@@ -680,13 +686,15 @@ const CRYO_MATRIX: ArtifactDefinition = {
   effects: [
     {
       type: 'stat_boost',
-      stat: 'iceDamage',
+      stat: 'damageMultiplier',
       value: 22118 as FP, // +35%
-      description: '+35% obrażeń Ice',
+      description: '+35% obrażeń',
     },
     {
-      type: 'passive',
-      description: 'Aura Mrozu: Wrogowie w pobliżu są automatycznie spowalniani',
+      type: 'stat_boost',
+      stat: 'ccResistance',
+      value: 21299 as FP, // +30%
+      description: '+30% odporność na CC',
     },
   ],
 
@@ -745,10 +753,6 @@ const OBSIDIAN_EDGE: ArtifactDefinition = {
       type: 'passive',
       description: 'Klątwa Krwi: Każdy atak kosztuje 1% HP',
     },
-    {
-      type: 'passive',
-      description: 'Niezniszczalny: Nie można zniszczyć, nie można stracić',
-    },
   ],
 
   visuals: {
@@ -798,12 +802,16 @@ const CRYSTAL_MATRIX: ArtifactDefinition = {
 
   effects: [
     {
-      type: 'passive',
-      description: 'Sloty Kryształów: Może przechowywać wszystkie 6 Starożytnych Kryształów',
+      type: 'stat_boost',
+      stat: 'allStats',
+      value: 22118 as FP, // +35% (capped from 200%)
+      description: '+35% wszystkie statystyki',
     },
     {
-      type: 'passive',
-      description: 'Bonus Pełnego Zestawu: +200% wszystkie statystyki gdy wszystkie kryształy są zebrane',
+      type: 'stat_boost',
+      stat: 'cooldownReduction',
+      value: 20480 as FP, // +25%
+      description: '-25% cooldown umiejętności',
     },
   ],
 
@@ -947,7 +955,7 @@ const THUNDER_LANCE: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'damageMultiplier', value: 17695 as FP, description: '+8% obrażeń' },
-    { type: 'passive', description: '20% szansa na łańcuchowe trafienie' },
+    { type: 'stat_boost', stat: 'chainChance', value: 19661 as FP, description: '20% szansa na łańcuch' },
   ],
 
   visuals: {
@@ -1078,7 +1086,7 @@ const CRYO_SHELL: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'maxHpBonus', value: 17695 as FP, description: '+8% HP' },
-    { type: 'passive', description: 'Aura spowolnienia 15% w pobliżu' },
+    { type: 'stat_boost', stat: 'incomingDamageReduction', value: 17695 as FP, description: '+8% redukcja obrażeń' },
   ],
 
   visuals: {
@@ -1121,7 +1129,7 @@ const FLAME_WARD: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'maxHpBonus', value: 17695 as FP, description: '+8% HP' },
-    { type: 'passive', description: 'Odbicie 5% otrzymanych obrażeń' },
+    { type: 'stat_boost', stat: 'incomingDamageReduction', value: 17203 as FP, description: '+5% redukcja obrażeń' },
   ],
 
   visuals: {
@@ -1251,7 +1259,7 @@ const FROST_CHARM: ArtifactDefinition = {
   },
 
   effects: [
-    { type: 'passive', description: '+15% czas trwania spowolnień' },
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 17695 as FP, description: '+8% obrażeń' },
     { type: 'stat_boost', stat: 'critChance', value: 17695 as FP, description: '+8% szansa na krytyczne' },
   ],
 
@@ -1294,8 +1302,8 @@ const FLAME_CORE: ArtifactDefinition = {
   },
 
   effects: [
-    { type: 'passive', description: '+20% obrażeń od podpaleń' },
-    { type: 'stat_boost', stat: 'damageMultiplier', value: 17203 as FP, description: '+5% obrażeń' },
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 18022 as FP, description: '+10% obrażeń' },
+    { type: 'stat_boost', stat: 'critDamageBonus', value: 17695 as FP, description: '+8% obrażeń krytycznych' },
   ],
 
   visuals: {
@@ -1479,7 +1487,7 @@ const PLASMA_CUTTER: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'damageMultiplier', value: 19661 as FP, description: '+20% obrażeń' },
-    { type: 'passive', description: 'Przebija 2 cele' },
+    { type: 'stat_boost', stat: 'pierceCount', value: 32768 as FP, description: 'Przebija 2 cele' },
   ],
 
   visuals: {
@@ -1573,7 +1581,7 @@ const STORM_AEGIS: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'maxHpBonus', value: 18842 as FP, description: '+15% HP' },
-    { type: 'passive', description: '+15% odporność na łańcuchowe ataki' },
+    { type: 'stat_boost', stat: 'incomingDamageReduction', value: 18842 as FP, description: '+15% redukcja obrażeń' },
   ],
 
   visuals: {
@@ -1711,7 +1719,7 @@ const ICE_FORTRESS: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'maxHpBonus', value: 20480 as FP, description: '+25% HP' },
-    { type: 'passive', description: '-10% szybkość ruchu' },
+    { type: 'stat_boost', stat: 'knockbackResistance', value: 19661 as FP, description: '+20% odporność na knockback' },
   ],
 
   visuals: {
@@ -1949,7 +1957,7 @@ const ION_CANNON: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'damageMultiplier', value: 20480 as FP, description: '+25% obrażeń' },
-    { type: 'passive', description: 'Ataki łańcuchują do 3 celów' },
+    { type: 'stat_boost', stat: 'chainCount', value: 49152 as FP, description: 'Łańcuch do 3 celów' },
   ],
 
   visuals: {
@@ -2041,7 +2049,7 @@ const QUANTUM_EDGE: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'damageMultiplier', value: 21299 as FP, description: '+30% obrażeń' },
-    { type: 'passive', description: '15% szansa na fazowe trafienie (ignoruje zbroję)' },
+    { type: 'stat_boost', stat: 'critChance', value: 18842 as FP, description: '+15% szansa na krytyczne' },
   ],
 
   visuals: {
@@ -2089,7 +2097,7 @@ const PLASMA_SHIELD: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'maxHpBonus', value: 19333 as FP, description: '+18% HP' },
-    { type: 'passive', description: 'Odbija 10% obrażeń' },
+    { type: 'stat_boost', stat: 'incomingDamageReduction', value: 18022 as FP, description: '+10% redukcja obrażeń' },
     { type: 'stat_boost', stat: 'dodgeChance', value: 18022 as FP, description: '+10% unik' },
   ],
 
@@ -2183,7 +2191,7 @@ const DIMENSIONAL_MAIL: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'maxHpBonus', value: 19661 as FP, description: '+20% HP' },
-    { type: 'passive', description: '25% szansa na fazowe uniknięcie (atak trafia w inny wymiar)' },
+    { type: 'stat_boost', stat: 'dodgeChance', value: 20480 as FP, description: '+25% szansa na unik' },
   ],
 
   visuals: {
@@ -2278,7 +2286,7 @@ const VOID_HEART: ArtifactDefinition = {
 
   effects: [
     { type: 'stat_boost', stat: 'eliteDamageBonus', value: 20480 as FP, description: '+25% vs bossy' },
-    { type: 'passive', description: '20% kradzieży życia' },
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 19661 as FP, description: '+20% obrażeń' },
   ],
 
   visuals: {
@@ -2557,13 +2565,15 @@ const FOUNDERS_MEDAL: ArtifactDefinition = {
     },
     {
       type: 'stat_boost',
-      stat: 'healthMultiplier',
-      value: 18022 as FP, // 1.1x multiplier (16384 * 1.1 = 18022)
-      description: '+10% zdrowia',
+      stat: 'maxHpBonus',
+      value: 18022 as FP, // +10%
+      description: '+10% HP',
     },
     {
-      type: 'passive',
-      description: 'Aura Założyciela: +5% XP z każdej fali',
+      type: 'stat_boost',
+      stat: 'attackSpeed',
+      value: 17695 as FP, // +8%
+      description: '+8% szybkość ataku',
     },
   ],
 

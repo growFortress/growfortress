@@ -26,7 +26,6 @@ import {
   playerPrimaryRank,
   openLeaderboardModal,
   playerGuild,
-  playerMembership,
   isInGuild,
   openGuildPanel,
   openGuildSearch,
@@ -254,7 +253,6 @@ export function FortressInfoPanel() {
 
   // Guild info
   const guild = playerGuild.value;
-  const membership = playerMembership.value;
   const rank = playerPrimaryRank.value;
 
   return (
