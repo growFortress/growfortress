@@ -336,7 +336,8 @@ export async function getOpponents(
     select: { cachedTotalPower: true },
   });
 
-  const matchingPower = userPower?.cachedTotalPower ?? myPower;
+  // Use cachedTotalPower if available and > 0, otherwise use calculated myPower
+  const matchingPower = userPower?.cachedTotalPower || myPower;
   const minPower = Math.floor(
     matchingPower * (1 - PVP_CONSTANTS.POWER_RANGE_PERCENT),
   );

@@ -19,6 +19,7 @@ import {
 import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from "@arcade/protocol";
 import { sendPasswordResetEmail } from "./email.js";
 import { createSystemMessage } from "./messages.js";
+import { recalculateCachedPower } from "./power-upgrades.js";
 
 const SALT_ROUNDS = 12;
 
@@ -134,6 +135,13 @@ export async function registerUser(
       ),
     },
   });
+
+  // Calculate initial power for PvP matching
+  try {
+    await recalculateCachedPower(user.id);
+  } catch (error) {
+    console.error(`[Auth] Failed to calculate initial power for user ${user.id}:`, error);
+  }
 
   // =========================================================================
   // WELCOME PACKAGE - Launch promotion

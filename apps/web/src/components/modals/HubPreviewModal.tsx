@@ -2,7 +2,10 @@
  * HubPreviewModal - View other players' hub configurations
  * Shows fortress class, heroes, turrets, and player stats
  */
+import { useState } from 'preact/hooks';
 import { Modal } from '../shared/Modal.js';
+import { Button } from '../shared/Button.js';
+import { Spinner } from '../shared/Spinner.js';
 import type { HubPreviewHero, HubPreviewTurret, HubPreviewArtifact } from '@arcade/protocol';
 import { getHeroById, getTurretById, getArtifactById } from '@arcade/sim-core';
 import {
@@ -12,6 +15,9 @@ import {
   hubPreviewModalOpen,
   closeHubPreview,
 } from '../../state/hubPreview.signals.js';
+import { createChallenge, PvpApiError } from '../../api/pvp.js';
+import { getUserId } from '../../api/auth.js';
+import { showErrorToast } from '../../state/index.js';
 import { GuildTag } from '../shared/GuildTag.js';
 import styles from './HubPreviewModal.module.css';
 
@@ -43,6 +49,37 @@ export function HubPreviewModal() {
   const loading = hubPreviewLoading.value;
   const error = hubPreviewError.value;
 
+  const [challengeLoading, setChallengeLoading] = useState(false);
+
+  // Check if this is the current user's profile
+  const currentUserId = getUserId();
+  const isOwnProfile = data?.userId === currentUserId;
+
+  const handleChallenge = async () => {
+    if (!data || challengeLoading || isOwnProfile) return;
+
+    setChallengeLoading(true);
+    try {
+      await createChallenge(data.userId);
+      showErrorToast(`Wyzwanie wysłane do ${data.displayName}!`, 'info');
+      closeHubPreview();
+    } catch (err) {
+      if (err instanceof PvpApiError) {
+        if (err.code === 'COOLDOWN_ACTIVE') {
+          showErrorToast('Musisz poczekać przed kolejnym wyzwaniem tego gracza');
+        } else if (err.code === 'POWER_OUT_OF_RANGE') {
+          showErrorToast('Moc przeciwnika poza zakresem');
+        } else {
+          showErrorToast(err.message);
+        }
+      } else {
+        showErrorToast('Nie udało się wysłać wyzwania');
+      }
+    } finally {
+      setChallengeLoading(false);
+    }
+  };
+
   if (!isVisible) return null;
 
   const classColor = data?.fortressClass ? CLASS_COLORS[data.fortressClass] ?? '#888888' : '#888888';
@@ -51,7 +88,7 @@ export function HubPreviewModal() {
     <Modal
       isOpen={isVisible}
       onClose={closeHubPreview}
-      title={data ? `${data.displayName}` : 'Podglad gracza'}
+      title="Profil gracza"
       size="large"
       bodyClass={styles.modalBody}
     >
@@ -145,6 +182,27 @@ export function HubPreviewModal() {
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* PvP Challenge Button - only show for other players */}
+            {!isOwnProfile && (
+              <div class={styles.actions}>
+                <Button
+                  variant="skill"
+                  onClick={handleChallenge}
+                  disabled={challengeLoading}
+                  class={styles.challengeButton}
+                >
+                  {challengeLoading ? (
+                    <>
+                      <Spinner size="sm" />
+                      Wysyłanie...
+                    </>
+                  ) : (
+                    '⚔️ Wyzwij do PvP'
+                  )}
+                </Button>
               </div>
             )}
           </>

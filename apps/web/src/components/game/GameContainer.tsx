@@ -227,6 +227,9 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     } catch {
       setLeaderboardError();
     }
+
+    // Start a new session
+    await handleStartSession();
   };
 
   // Boss Rush handlers

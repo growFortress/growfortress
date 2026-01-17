@@ -11,6 +11,7 @@ import { listBugReports, getBugReport } from '../services/bugReports.js';
 import { getSessionStateAtTick } from '../services/debug.js';
 import { createSystemBroadcast } from '../services/messages.js';
 import { BroadcastRequestSchema } from '@arcade/protocol';
+import { recalculateAllZeroPower, recalculateCachedPower } from '../services/power-upgrades.js';
 
 // ============================================================================
 // Zod Schemas for Admin API validation
@@ -702,5 +703,29 @@ export async function adminRoutes(fastify: FastifyInstance) {
       page,
       totalPages: Math.ceil(total / limit),
     };
+  });
+
+  // ============================================================================
+  // POWER RECALCULATION
+  // ============================================================================
+
+  // POST /admin/power/recalculate-all - Recalculate power for all users with 0 power
+  fastify.post('/power/recalculate-all', async (request, _reply) => {
+    const updatedCount = await recalculateAllZeroPower();
+    await createAuditLog(request.userId!, 'RECALCULATE_POWER', 'ALL_ZERO', { updatedCount });
+    return { success: true, updatedCount };
+  });
+
+  // POST /admin/users/:id/recalculate-power - Recalculate power for a specific user
+  fastify.post('/users/:id/recalculate-power', async (request, reply) => {
+    const parseResult = UserIdParamSchema.safeParse(request.params);
+    if (!parseResult.success) {
+      return reply.code(400).send({ error: 'Invalid user ID', details: parseResult.error.flatten() });
+    }
+    const { id } = parseResult.data;
+
+    const newPower = await recalculateCachedPower(id);
+    await createAuditLog(request.userId!, 'RECALCULATE_POWER', id, { newPower });
+    return { success: true, newPower };
   });
 }

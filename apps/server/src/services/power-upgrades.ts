@@ -72,6 +72,10 @@ async function getOrCreatePowerUpgrades(userId: string): Promise<{
 
   if (!powerUpgrades) {
     const defaultData = createDefaultPlayerPowerData();
+    // Get commander level to calculate initial power
+    const commanderLevel = await getCommanderLevel(userId);
+    const initialPower = calculateQuickTotalPower(defaultData, commanderLevel);
+
     powerUpgrades = await prisma.powerUpgrades.create({
       data: {
         userId,
@@ -79,7 +83,7 @@ async function getOrCreatePowerUpgrades(userId: string): Promise<{
         heroUpgrades: JSON.stringify(defaultData.heroUpgrades),
         turretUpgrades: JSON.stringify(defaultData.turretUpgrades),
         itemTiers: JSON.stringify(defaultData.itemTiers),
-        cachedTotalPower: 0,
+        cachedTotalPower: initialPower,
         fortressPrestige: DEFAULT_FORTRESS_PRESTIGE,
         turretPrestige: [],
       },
@@ -941,4 +945,47 @@ export async function getPrestigeStatus(userId: string): Promise<{
 }> {
   const { fortressPrestige, turretPrestige } = await getOrCreatePowerUpgrades(userId);
   return { fortressPrestige, turretPrestige };
+}
+
+// ============================================================================
+// RECALCULATE CACHED POWER
+// ============================================================================
+
+/**
+ * Recalculate and update the cached total power for a user
+ * Use this to fix users with stale/incorrect cached power values
+ */
+export async function recalculateCachedPower(userId: string): Promise<number> {
+  const [{ powerData }, commanderLevel] = await Promise.all([
+    getOrCreatePowerUpgrades(userId),
+    getCommanderLevel(userId),
+  ]);
+
+  const newTotalPower = calculateQuickTotalPower(powerData, commanderLevel);
+
+  await prisma.powerUpgrades.update({
+    where: { userId },
+    data: { cachedTotalPower: newTotalPower },
+  });
+
+  return newTotalPower;
+}
+
+/**
+ * Recalculate cached power for all users with cachedTotalPower = 0
+ * Returns the number of users updated
+ */
+export async function recalculateAllZeroPower(): Promise<number> {
+  const usersWithZeroPower = await prisma.powerUpgrades.findMany({
+    where: { cachedTotalPower: 0 },
+    select: { userId: true },
+  });
+
+  let updated = 0;
+  for (const { userId } of usersWithZeroPower) {
+    await recalculateCachedPower(userId);
+    updated++;
+  }
+
+  return updated;
 }

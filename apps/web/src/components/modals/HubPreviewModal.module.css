@@ -347,3 +347,20 @@
   font-weight: 600;
   color: var(--color-primary);
 }
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: var(--border-neutral);
+}
+
+.challengeButton {
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
