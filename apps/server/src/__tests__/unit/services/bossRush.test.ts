@@ -21,6 +21,7 @@ vi.mock('../../../lib/prisma.js', () => ({
 vi.mock('../../../lib/tokens.js', () => ({
   createBossRushToken: vi.fn().mockResolvedValue('mock-session-token'),
   verifyBossRushToken: vi.fn(),
+  resetTokenSecrets: vi.fn(),
 }));
 
 // Mock auth service

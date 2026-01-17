@@ -76,10 +76,8 @@ describe('PvP Routes Integration', () => {
     });
 
     it('should return opponents within power range', async () => {
-      // First call: auth plugin checks if user is admin
-      mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
-
-      // Second call: getUserArenaPower (user lookup with includes)
+      // Note: Mock auth plugin doesn't call prisma.user.findUnique
+      // First call: getUserArenaPower (user lookup with includes)
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         id: 'user-123',
         displayName: 'TestUser',
@@ -130,10 +128,8 @@ describe('PvP Routes Integration', () => {
     });
 
     it('should respect limit and offset parameters', async () => {
-      // First call: auth plugin checks if user is admin
-      mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
-
-      // Second call: getUserArenaPower (user lookup with includes)
+      // Note: Mock auth plugin doesn't call prisma.user.findUnique
+      // First call: getUserArenaPower (user lookup with includes)
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         id: 'user-123',
         displayName: 'TestUser',

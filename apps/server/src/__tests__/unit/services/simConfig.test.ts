@@ -187,7 +187,7 @@ describe('SimConfig Service', () => {
     it('uses default values when no remote config', () => {
       const result = buildSimConfigSnapshot(baseParams);
 
-      expect(result.simConfig.fortressBaseHp).toBe(100);
+      expect(result.simConfig.fortressBaseHp).toBe(200);
       expect(result.simConfig.fortressBaseDamage).toBe(10);
       expect(result.simConfig.waveIntervalTicks).toBe(90);
     });

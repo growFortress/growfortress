@@ -30,6 +30,7 @@ vi.mock('../../config.js', () => ({
     RUN_TOKEN_EXPIRY_SECONDS: 600,
     RATE_LIMIT_MAX: 100,
     RATE_LIMIT_WINDOW_MS: 60000,
+    API_PREFIX: '',
   },
   parseDuration: (duration: string): number => {
     const match = duration.match(/^(\d+)([smhd])$/);
@@ -47,9 +48,14 @@ vi.mock('../../config.js', () => ({
 }));
 
 // Reset all mocks before each test
-beforeEach(() => {
+beforeEach(async () => {
   resetPrismaMock();
   resetRedisMock();
+
+  // Dynamically import to ensure config mock is applied first
+  const { resetTokenSecrets } = await import('../../lib/tokens.js');
+  resetTokenSecrets();
+
   vi.clearAllMocks();
 
   // Set default mocks for commonly used Prisma models

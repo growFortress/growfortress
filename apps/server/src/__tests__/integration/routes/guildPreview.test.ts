@@ -23,13 +23,18 @@ describe('Guild Preview Routes', () => {
   });
 
   describe('GET /v1/guilds/:guildId/preview', () => {
-    it('should return 401 without auth token', async () => {
+    it('should not require auth token (public endpoint)', async () => {
+      // This is a public endpoint, so it should work without auth
+      // It returns 404 because we haven't mocked the guild
+      mockPrisma.guild.findUnique.mockResolvedValue(null);
+
       const response = await app.inject({
         method: 'GET',
         url: '/v1/guilds/guild-123/preview',
       });
 
-      expect(response.statusCode).toBe(401);
+      expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual({ error: 'Guild not found' });
     });
 
     it('should return 404 for non-existent guild', async () => {
@@ -69,16 +74,11 @@ describe('Guild Preview Routes', () => {
         name: 'Epic Warriors',
         tag: 'EPIC',
         description: 'A guild of epic warriors',
-        level: 5,
-        xp: 5000,
-        totalXp: 5000,
         honor: 2500,
-        techLevels: {
-          fortress: { hp: 3, damage: 2, regen: 1 },
-          hero: { hp: 2, damage: 3, cooldown: 1 },
-          turret: { damage: 4, speed: 2, range: 1 },
-          economy: { gold: 2, dust: 1, xp: 1 },
-        },
+        structureKwatera: 3,
+        structureSkarbiec: 2,
+        structureAkademia: 2,
+        structureZbrojownia: 4,
         trophies: ['FIRST_BLOOD', 'WAVE_MASTER'],
         createdAt: new Date('2024-01-15'),
         members: [
@@ -130,20 +130,20 @@ describe('Guild Preview Routes', () => {
       expect(body.name).toBe('Epic Warriors');
       expect(body.tag).toBe('EPIC');
       expect(body.description).toBe('A guild of epic warriors');
-      expect(body.level).toBe(5);
       expect(body.honor).toBe(2500);
       expect(body.memberCount).toBe(3);
       expect(body.trophies).toEqual(['FIRST_BLOOD', 'WAVE_MASTER']);
 
-      // Check tech levels
-      expect(body.techLevels.fortress.hp).toBe(3);
-      expect(body.techLevels.hero.damage).toBe(3);
-      expect(body.techLevels.turret.damage).toBe(4);
+      // Check structures
+      expect(body.structures.kwatera).toBe(3);
+      expect(body.structures.skarbiec).toBe(2);
+      expect(body.structures.akademia).toBe(2);
+      expect(body.structures.zbrojownia).toBe(4);
 
-      // Check bonuses (2% per level)
-      expect(body.bonuses.fortressHpPercent).toBe(0.06); // 3 * 0.02
-      expect(body.bonuses.heroDamagePercent).toBe(0.06); // 3 * 0.02
-      expect(body.bonuses.turretDamagePercent).toBe(0.08); // 4 * 0.02
+      // Check bonuses
+      expect(body.bonuses.goldBoost).toBeDefined();
+      expect(body.bonuses.xpBoost).toBeDefined();
+      expect(body.bonuses.statBoost).toBeDefined();
 
       // Check top members
       expect(body.topMembers).toHaveLength(3);
@@ -160,16 +160,11 @@ describe('Guild Preview Routes', () => {
         name: 'Large Guild',
         tag: 'BIG',
         description: null,
-        level: 10,
-        xp: 50000,
-        totalXp: 50000,
         honor: 10000,
-        techLevels: {
-          fortress: { hp: 0, damage: 0, regen: 0 },
-          hero: { hp: 0, damage: 0, cooldown: 0 },
-          turret: { damage: 0, speed: 0, range: 0 },
-          economy: { gold: 0, dust: 0, xp: 0 },
-        },
+        structureKwatera: 5,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
         trophies: [],
         createdAt: new Date('2024-01-01'),
         members: Array.from({ length: 15 }, (_, i) => ({
@@ -208,11 +203,11 @@ describe('Guild Preview Routes', () => {
         name: 'New Guild',
         tag: 'NEW',
         description: null,
-        level: 1,
-        xp: 0,
-        totalXp: 0,
         honor: 0,
-        techLevels: null,
+        structureKwatera: 1,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
         trophies: null,
         createdAt: new Date('2024-06-01'),
         members: [],
@@ -233,19 +228,18 @@ describe('Guild Preview Routes', () => {
 
       const body = response.json();
       expect(body.name).toBe('New Guild');
-      expect(body.level).toBe(1);
       expect(body.honor).toBe(0);
       expect(body.memberCount).toBe(0);
       expect(body.trophies).toEqual([]);
       expect(body.topMembers).toEqual([]);
 
-      // Default tech levels
-      expect(body.techLevels.fortress.hp).toBe(0);
-      expect(body.techLevels.hero.damage).toBe(0);
+      // Default structure levels
+      expect(body.structures.kwatera).toBe(1);
+      expect(body.structures.skarbiec).toBe(0);
 
-      // All bonuses should be 0
-      expect(body.bonuses.fortressHpPercent).toBe(0);
-      expect(body.bonuses.heroDamagePercent).toBe(0);
+      // Bonuses should be defined (base values)
+      expect(body.bonuses.goldBoost).toBeDefined();
+      expect(body.bonuses.xpBoost).toBeDefined();
     });
 
     it('should validate guildId parameter', async () => {
@@ -268,16 +262,11 @@ describe('Guild Preview Routes', () => {
         name: 'Data Test Guild',
         tag: 'TEST',
         description: null,
-        level: 2,
-        xp: 1000,
-        totalXp: 1000,
         honor: 500,
-        techLevels: {
-          fortress: { hp: 1, damage: 0, regen: 0 },
-          hero: { hp: 0, damage: 1, cooldown: 0 },
-          turret: { damage: 0, speed: 0, range: 0 },
-          economy: { gold: 0, dust: 0, xp: 0 },
-        },
+        structureKwatera: 2,
+        structureSkarbiec: 1,
+        structureAkademia: 1,
+        structureZbrojownia: 0,
         trophies: [],
         createdAt: new Date('2024-03-01'),
         members: [

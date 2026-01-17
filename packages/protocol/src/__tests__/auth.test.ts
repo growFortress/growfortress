@@ -270,6 +270,7 @@ describe("Auth Schemas", () => {
         unlockedHeroes: ["vanguard"],
         unlockedTurrets: ["arrow"],
         role: "USER",
+        gameConfig: { fortressBaseHp: 1000, fortressBaseDamage: 10 },
       });
 
       expect(result.success).toBe(true);
@@ -289,6 +290,7 @@ describe("Auth Schemas", () => {
         unlockedHeroes: [],
         unlockedTurrets: [],
         role: "USER",
+        gameConfig: { fortressBaseHp: 1000, fortressBaseDamage: 10 },
       });
 
       expect(result.success).toBe(true);

@@ -2,8 +2,25 @@ import * as jose from "jose";
 import type { SimConfig } from "@arcade/sim-core";
 import { config } from "../config.js";
 
-// JWT for access/refresh tokens
-const jwtSecret = new TextEncoder().encode(config.JWT_SECRET);
+// JWT for access/refresh tokens - lazy initialized for test mocking compatibility
+let _jwtSecret: Uint8Array | null = null;
+function getJwtSecret(): Uint8Array {
+  if (!_jwtSecret) {
+    _jwtSecret = new TextEncoder().encode(config.JWT_SECRET);
+  }
+  return _jwtSecret;
+}
+
+/**
+ * Reset cached secrets - used for testing to ensure mocks are picked up
+ */
+export function resetTokenSecrets(): void {
+  _jwtSecret = null;
+  _runTokenSecret = null;
+}
+
+// Forward declaration for resetTokenSecrets
+let _runTokenSecret: Uint8Array | null = null;
 
 export interface AccessTokenPayload {
   sub: string; // userId
@@ -38,7 +55,7 @@ export async function createAccessToken(userId: string): Promise<string> {
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(config.JWT_ACCESS_EXPIRY)
-    .sign(jwtSecret);
+    .sign(getJwtSecret());
 
   return token;
 }
@@ -58,7 +75,7 @@ export async function createRefreshToken(
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(config.JWT_REFRESH_EXPIRY)
-    .sign(jwtSecret);
+    .sign(getJwtSecret());
 
   return token;
 }
@@ -74,7 +91,7 @@ export async function createAdminAccessToken(userId: string): Promise<string> {
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(config.JWT_ACCESS_EXPIRY)
-    .sign(jwtSecret);
+    .sign(getJwtSecret());
 
   return token;
 }
@@ -94,7 +111,7 @@ export async function createAdminRefreshToken(
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(config.JWT_REFRESH_EXPIRY)
-    .sign(jwtSecret);
+    .sign(getJwtSecret());
 
   return token;
 }
@@ -106,7 +123,7 @@ export async function verifyAccessToken(
   token: string,
 ): Promise<AccessTokenPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, jwtSecret);
+    const { payload } = await jose.jwtVerify(token, getJwtSecret());
     if (payload.type !== "access") return null;
     return {
       sub: payload.sub as string,
@@ -124,7 +141,7 @@ export async function verifyRefreshToken(
   token: string,
 ): Promise<RefreshTokenPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, jwtSecret);
+    const { payload } = await jose.jwtVerify(token, getJwtSecret());
     if (payload.type !== "refresh") return null;
     return {
       sub: payload.sub as string,
@@ -143,7 +160,7 @@ export async function verifyAdminAccessToken(
   token: string,
 ): Promise<AdminAccessTokenPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, jwtSecret);
+    const { payload } = await jose.jwtVerify(token, getJwtSecret());
     if (payload.type !== "admin_access") return null;
     return {
       sub: payload.sub as string,
@@ -161,7 +178,7 @@ export async function verifyAdminRefreshToken(
   token: string,
 ): Promise<AdminRefreshTokenPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, jwtSecret);
+    const { payload } = await jose.jwtVerify(token, getJwtSecret());
     if (payload.type !== "admin_refresh") return null;
     return {
       sub: payload.sub as string,
@@ -173,8 +190,13 @@ export async function verifyAdminRefreshToken(
   }
 }
 
-// Run Token (HMAC for run verification)
-const runTokenSecret = new TextEncoder().encode(config.RUN_TOKEN_SECRET);
+// Run Token (HMAC for run verification) - lazy initialized for test mocking compatibility
+function getRunTokenSecret(): Uint8Array {
+  if (!_runTokenSecret) {
+    _runTokenSecret = new TextEncoder().encode(config.RUN_TOKEN_SECRET);
+  }
+  return _runTokenSecret;
+}
 
 export type SimConfigSnapshot = Pick<
   SimConfig,
@@ -223,7 +245,7 @@ export async function createRunToken(
     fullPayload as unknown as jose.JWTPayload,
   )
     .setProtectedHeader({ alg: "HS256" })
-    .sign(runTokenSecret);
+    .sign(getRunTokenSecret());
 
   return token;
 }
@@ -235,7 +257,7 @@ export async function verifyRunToken(
   token: string,
 ): Promise<RunTokenPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, runTokenSecret);
+    const { payload } = await jose.jwtVerify(token, getRunTokenSecret());
 
     // Check expiration
     const now = Math.floor(Date.now() / 1000);
@@ -279,7 +301,7 @@ export async function createSessionToken(
     fullPayload as unknown as jose.JWTPayload,
   )
     .setProtectedHeader({ alg: "HS256" })
-    .sign(runTokenSecret);
+    .sign(getRunTokenSecret());
 
   return token;
 }
@@ -291,7 +313,7 @@ export async function verifySessionToken(
   token: string,
 ): Promise<SessionTokenPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, runTokenSecret);
+    const { payload } = await jose.jwtVerify(token, getRunTokenSecret());
 
     // Check expiration
     const now = Math.floor(Date.now() / 1000);
@@ -334,7 +356,7 @@ export async function createBossRushToken(
     fullPayload as unknown as jose.JWTPayload,
   )
     .setProtectedHeader({ alg: "HS256" })
-    .sign(runTokenSecret);
+    .sign(getRunTokenSecret());
 
   return token;
 }
@@ -346,7 +368,7 @@ export async function verifyBossRushToken(
   token: string,
 ): Promise<BossRushTokenPayload | null> {
   try {
-    const { payload } = await jose.jwtVerify(token, runTokenSecret);
+    const { payload } = await jose.jwtVerify(token, getRunTokenSecret());
 
     // Check expiration
     const now = Math.floor(Date.now() / 1000);

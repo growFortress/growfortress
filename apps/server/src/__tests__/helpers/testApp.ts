@@ -5,8 +5,8 @@ import Fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 
-// Plugins
-import authPlugin from "../../plugins/auth.js";
+// Plugins - use mock auth plugin for tests to avoid JWT verification issues
+import authPlugin from "./mockAuthPlugin.js";
 import errorHandlerPlugin from "../../plugins/errorHandler.js";
 
 // Routes

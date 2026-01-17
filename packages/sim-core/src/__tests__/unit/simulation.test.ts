@@ -16,7 +16,7 @@ describe('getDefaultConfig', () => {
     expect(config.tickHz).toBe(30);
     expect(config.segmentSize).toBe(5);
     expect(config.startingWave).toBe(0);
-    expect(config.fortressBaseHp).toBe(100);
+    expect(config.fortressBaseHp).toBe(200);
     expect(config.fortressBaseDamage).toBe(10);
     expect(config.fortressAttackInterval).toBe(15);
     expect(config.skillCooldownTicks).toBe(300);

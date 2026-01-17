@@ -35,17 +35,15 @@ describe('Sessions Routes Integration', () => {
       const mockInventory = createMockInventory({ gold: 500 });
       const mockProgression = createMockProgression({ level: 1 });
 
-      // Auth plugin role check
-      mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
-
-      // Profile lookup (getUserProfile)
+      // Note: Mock auth plugin doesn't call prisma.user.findUnique
+      // First call: Profile lookup (getUserProfile)
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         ...mockUser,
         inventory: mockInventory,
         progression: mockProgression,
       });
 
-      // User lookup for session creation (startGameSession)
+      // Second call: User lookup for session creation (startGameSession)
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         ...mockUser,
         inventory: mockInventory,
@@ -55,9 +53,20 @@ describe('Sessions Routes Integration', () => {
       // GameConfig lookup
       mockPrisma.gameConfig.findMany.mockResolvedValue([]);
 
-      // Game session creation
+      // PowerUpgrades lookup (uses default power data if null)
+      mockPrisma.powerUpgrades.findUnique.mockResolvedValue(null);
+
+      // PlayerArtifact lookup (equipped artifacts)
+      mockPrisma.playerArtifact.findMany.mockResolvedValue([]);
+
+      // GuildMember lookup (for guild bonuses - returns null if not in guild)
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+
+      // Game session creation (inside transaction)
       const mockSession = createMockGameSession();
       mockPrisma.gameSession.create.mockResolvedValue(mockSession);
+      mockPrisma.gameSession.findFirst.mockResolvedValue(null); // No existing active session
+      mockPrisma.gameSession.updateMany.mockResolvedValue({ count: 0 }); // No sessions to end
 
       // User update for active session
       mockPrisma.user.update.mockResolvedValue({ ...mockUser, activeGameSessionId: mockSession.id });
@@ -149,8 +158,7 @@ describe('Sessions Routes Integration', () => {
       const mockInventory = createMockInventory();
       const mockProgression = createMockProgression();
 
-      // Auth plugin role check
-      mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
+      // Note: Mock auth plugin doesn't call prisma.user.findUnique
 
       mockPrisma.gameSession.findUnique.mockResolvedValue({
         ...mockSession,

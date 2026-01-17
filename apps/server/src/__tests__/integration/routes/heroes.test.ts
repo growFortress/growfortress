@@ -6,7 +6,7 @@ import { FastifyInstance } from 'fastify';
 import { buildTestApp, generateTestToken } from '../../helpers/testApp.js';
 import { mockPrisma, createMockInventory } from '../../mocks/prisma.js';
 
-// Import test setup (mocks prisma, redis, config)
+// Import test setup (mocks prisma, redis)
 import '../../helpers/setup.js';
 
 describe('Heroes Routes', () => {

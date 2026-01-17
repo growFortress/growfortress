@@ -123,7 +123,9 @@ describe('Guild Routes Integration', () => {
       const body = JSON.parse(response.body);
       expect(body.guild).toBeDefined();
       expect(body.guild.name).toBe('Test Guild');
-      expect(body.levelInfo).toBeDefined();
+      // Response includes structures and bonuses, not levelInfo
+      expect(body.structures).toBeDefined();
+      expect(body.bonuses).toBeDefined();
     });
 
     it('should return 404 for non-existent guild', async () => {
@@ -271,7 +273,11 @@ describe('Guild Routes Integration', () => {
     it('should return treasury info', async () => {
       const mockTreasury = createMockGuildTreasury({ gold: 5000, dust: 200 });
       mockPrisma.guildTreasury.findUnique.mockResolvedValue(mockTreasury);
-      mockPrisma.guildMember.findUnique.mockResolvedValue(createMockGuildMember({ role: 'LEADER' }));
+      // requireGuildMembership needs guild.disbanded to be present
+      mockPrisma.guildMember.findUnique.mockResolvedValue({
+        ...createMockGuildMember({ role: 'LEADER' }),
+        guild: { disbanded: false },
+      });
       mockPrisma.guildTreasuryLog.findFirst.mockResolvedValue(null);
       mockPrisma.guildTreasuryLog.findMany.mockResolvedValue([]);
       mockPrisma.guildTreasuryLog.count.mockResolvedValue(0);

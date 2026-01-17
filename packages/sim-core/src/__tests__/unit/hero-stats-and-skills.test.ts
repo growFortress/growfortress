@@ -59,7 +59,7 @@ describe('Hero Base Stats', () => {
     const hero = getHeroById('storm')!;
 
     it('has correct base stats', () => {
-      expect(hero.baseStats.hp).toBe(150);
+      expect(hero.baseStats.hp).toBe(280);
       expect(hero.baseStats.damage).toBe(25);
       expect(hero.baseStats.attackSpeed).toBe(1.2);
     });
@@ -74,7 +74,7 @@ describe('Hero Base Stats', () => {
     const hero = getHeroById('titan')!;
 
     it('has highest HP (tank)', () => {
-      expect(hero.baseStats.hp).toBe(300);
+      expect(hero.baseStats.hp).toBe(500);
       expect(hero.role).toBe('tank');
     });
 
@@ -106,19 +106,19 @@ describe('calculateHeroStats', () => {
   describe('tier multipliers', () => {
     it('tier 1 has 1.0x multiplier', () => {
       const stats = calculateHeroStats(storm, 1, 1);
-      expect(stats.hp).toBe(150); // 150 * 1.0 * 1.0
+      expect(stats.hp).toBe(280); // 280 * 1.0 * 1.0
       expect(stats.damage).toBe(25); // 25 * 1.0 * 1.0
     });
 
     it('tier 2 has 1.5x multiplier', () => {
       const stats = calculateHeroStats(storm, 2, 1);
-      expect(stats.hp).toBe(225); // 150 * 1.5 * 1.0
+      expect(stats.hp).toBe(420); // 280 * 1.5 * 1.0
       expect(stats.damage).toBe(37); // floor(25 * 1.5 * 1.0) = 37
     });
 
     it('tier 3 has 2.0x multiplier', () => {
       const stats = calculateHeroStats(storm, 3, 1);
-      expect(stats.hp).toBe(300); // 150 * 2.0 * 1.0
+      expect(stats.hp).toBe(560); // 280 * 2.0 * 1.0
       expect(stats.damage).toBe(50); // 25 * 2.0 * 1.0
     });
   });
@@ -126,42 +126,42 @@ describe('calculateHeroStats', () => {
   describe('level bonuses (+2% per level)', () => {
     it('level 1 has no bonus', () => {
       const stats = calculateHeroStats(storm, 1, 1);
-      expect(stats.hp).toBe(150);
+      expect(stats.hp).toBe(280);
     });
 
     it('level 2 has +2% bonus', () => {
       const stats = calculateHeroStats(storm, 1, 2);
-      // 150 * 1.0 * 1.02 = 153
-      expect(stats.hp).toBe(153);
+      // 280 * 1.0 * 1.02 = 285.6 -> 285
+      expect(stats.hp).toBe(285);
     });
 
     it('level 10 has +18% bonus', () => {
       const stats = calculateHeroStats(storm, 1, 10);
-      // 150 * 1.0 * 1.18 = 177
-      expect(stats.hp).toBe(177);
+      // 280 * 1.0 * 1.18 = 330.4 -> 330
+      expect(stats.hp).toBe(330);
     });
 
     it('level 20 has +38% bonus', () => {
       const stats = calculateHeroStats(storm, 1, 20);
-      // 150 * 1.0 * 1.38 = 207 (may be 206 due to floating point)
-      expect(stats.hp).toBeGreaterThanOrEqual(206);
-      expect(stats.hp).toBeLessThanOrEqual(207);
+      // 280 * 1.0 * 1.38 = 386.4 (may be 386 or 387 due to floating point)
+      expect(stats.hp).toBeGreaterThanOrEqual(386);
+      expect(stats.hp).toBeLessThanOrEqual(387);
     });
   });
 
   describe('combined tier and level', () => {
     it('tier 2 level 10 combines multipliers', () => {
       const stats = calculateHeroStats(storm, 2, 10);
-      // HP: 150 * 1.5 * 1.18 = 265.5 -> 265
-      expect(stats.hp).toBe(265);
+      // HP: 280 * 1.5 * 1.18 = 495.6 -> 495
+      expect(stats.hp).toBe(495);
       // Damage: 25 * 1.5 * 1.18 = 44.25 -> 44
       expect(stats.damage).toBe(44);
     });
 
     it('tier 3 level 25 combines multipliers', () => {
       const stats = calculateHeroStats(storm, 3, 25);
-      // HP: 150 * 2.0 * 1.48 = 444
-      expect(stats.hp).toBe(444);
+      // HP: 280 * 2.0 * 1.48 = 828.8 -> 828
+      expect(stats.hp).toBe(828);
       // Damage: 25 * 2.0 * 1.48 = 74
       expect(stats.damage).toBe(74);
     });
