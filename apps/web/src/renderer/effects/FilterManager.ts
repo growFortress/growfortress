@@ -373,27 +373,23 @@ export class FilterManager {
 
   /**
    * Add a filter to a container safely
+   * Note: PixiJS returns a frozen array for filters, so we must create a new array
    */
   private addFilterToContainer(container: Container, filter: Filter) {
-    if (!container.filters) {
-      container.filters = [];
-    }
-    (container.filters as Filter[]).push(filter);
+    const currentFilters = container.filters ? [...container.filters] : [];
+    currentFilters.push(filter);
+    container.filters = currentFilters;
   }
 
   /**
    * Remove a filter from a container safely
+   * Note: PixiJS returns a frozen array for filters, so we must create a new array
    */
   private removeFilterFromContainer(container: Container, filter: Filter) {
     if (container.filters) {
-      const index = (container.filters as Filter[]).indexOf(filter);
-      if (index !== -1) {
-        (container.filters as Filter[]).splice(index, 1);
-      }
+      const newFilters = container.filters.filter(f => f !== filter);
       // Clean up empty array
-      if (container.filters.length === 0) {
-        container.filters = null;
-      }
+      container.filters = newFilters.length > 0 ? newFilters : null;
     }
   }
 
