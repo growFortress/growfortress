@@ -111,7 +111,15 @@ function applyProjectileDamage(projectile: ActiveProjectile, state: GameState): 
   if (enemy && enemy.hp > 0) {
     // Apply armor break multiplier from shatter combo (if active)
     const armorMultiplier = getArmorBreakMultiplier(enemy);
-    const baseDamage = Math.floor(projectile.damage * armorMultiplier);
+    let baseDamage = Math.floor(projectile.damage * armorMultiplier);
+
+    // Shatter Shot: double damage vs frozen targets
+    if (projectile.skillId === 'shatter_shot') {
+      const isFrozen = enemy.activeEffects.some(e => e.type === 'freeze' && e.remainingTicks > 0);
+      if (isFrozen) {
+        baseDamage *= 2;
+      }
+    }
 
     const damageDealt = Math.min(baseDamage, enemy.hp);
     enemy.hp -= baseDamage;
@@ -186,14 +194,41 @@ export function updateEnemyStatusEffects(state: GameState): void {
 
       // Remove expired effects
       if (effect.remainingTicks <= 0) {
+        const expiredType = effect.type;
         enemy.activeEffects.splice(i, 1);
 
-        // Restore speed for slow/freeze/stun when they expire
-        // Note: This is simplified - in a more complex system we'd recalculate
-        // the combined slow effect from all remaining slow effects
+        // Recalculate speed when slow/freeze/stun expire
+        if (expiredType === 'slow' || expiredType === 'freeze' || expiredType === 'stun') {
+          recalculateEnemySpeed(enemy);
+        }
       }
     }
   }
+}
+
+/**
+ * Recalculate enemy speed based on baseSpeed and active effects
+ */
+function recalculateEnemySpeed(enemy: Enemy): void {
+  // Start with base speed
+  let newSpeed = enemy.baseSpeed;
+
+  // Check for freeze/stun first - they set speed to 0
+  const hasHardCC = enemy.activeEffects.some(e => e.type === 'freeze' || e.type === 'stun');
+  if (hasHardCC) {
+    enemy.speed = 0;
+    return;
+  }
+
+  // Apply all slow effects multiplicatively
+  for (const effect of enemy.activeEffects) {
+    if (effect.type === 'slow') {
+      // strength is already stored as decimal (e.g. 0.3 for 30% slow)
+      newSpeed = FP.mul(newSpeed, FP.fromFloat(1 - effect.strength));
+    }
+  }
+
+  enemy.speed = newSpeed;
 }
 
 /**
@@ -206,11 +241,15 @@ export function applyEffectToEnemy(effect: SkillEffect, enemy: Enemy, state: Gam
     case 'damage':
       enemy.hp -= effect.amount || 0;
       break;
-    case 'slow':
+    case 'slow': {
+      // Convert percent to decimal if needed (30 -> 0.3, 0.3 -> 0.3)
+      const slowPercent = (effect.percent || 30) > 1 ? (effect.percent || 30) / 100 : (effect.percent || 0.3);
       // Apply slow effect and track it
-      addStatusEffect(enemy, 'slow', effectDuration, effect.percent || 0.3, state.tick);
-      enemy.speed = FP.mul(enemy.speed, FP.fromFloat(1 - (effect.percent || 0.3)));
+      addStatusEffect(enemy, 'slow', effectDuration, slowPercent, state.tick);
+      // Recalculate speed from baseSpeed with all active slow effects
+      recalculateEnemySpeed(enemy);
       break;
+    }
     case 'burn':
       // Track burn DOT effect
       addStatusEffect(enemy, 'burn', effectDuration, effect.damagePerTick || 5, state.tick);
@@ -226,12 +265,12 @@ export function applyEffectToEnemy(effect: SkillEffect, enemy: Enemy, state: Gam
     case 'freeze':
       // Track freeze effect
       addStatusEffect(enemy, 'freeze', effectDuration, 1.0, state.tick);
-      enemy.speed = 0;
+      recalculateEnemySpeed(enemy);
       break;
     case 'stun':
       // Track stun effect
       addStatusEffect(enemy, 'stun', effectDuration, 1.0, state.tick);
-      enemy.speed = 0;
+      recalculateEnemySpeed(enemy);
       break;
   }
 }

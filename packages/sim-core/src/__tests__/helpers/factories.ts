@@ -110,6 +110,7 @@ export function createEnemy(overrides: Partial<Enemy> = {}): Enemy {
     vx: FP.fromFloat(-0.1), // Moving left
     vy: 0,
     speed: FP.fromFloat(0.1),
+    baseSpeed: FP.fromFloat(0.1),
     radius: FP.fromFloat(0.8),
     mass: FP.fromFloat(1.0),
     damage: 5,

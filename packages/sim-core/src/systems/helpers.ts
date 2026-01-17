@@ -12,6 +12,7 @@ import { FP } from '../fixed.js';
 import type { Enemy, ActiveHero, SkillEffect, GameState, FortressClass, ActiveProjectile } from '../types.js';
 import { HERO_ATTACK_RANGE_BASE, PROJECTILE_BASE_SPEED } from './constants.js';
 import { getHeroById } from '../data/heroes.js';
+import { applyEffectToEnemy } from './projectile.js';
 
 /**
  * Find closest enemy to a position (1D - X only, legacy)
@@ -161,7 +162,8 @@ function createSkillProjectile(
   state: GameState,
   heroClass: FortressClass,
   damage: number,
-  additionalEffects: SkillEffect[]
+  additionalEffects: SkillEffect[],
+  skillId?: string
 ): void {
   const projectile: ActiveProjectile = {
     id: state.nextProjectileId++,
@@ -180,6 +182,7 @@ function createSkillProjectile(
     effects: additionalEffects,
     spawnTick: state.tick,
     class: heroClass,
+    skillId,
   };
 
   state.projectiles.push(projectile);
@@ -193,7 +196,8 @@ export function applySkillEffects(
   hero: ActiveHero,
   state: GameState,
   enemies: Enemy[],
-  _rng: unknown
+  _rng: unknown,
+  skillId?: string
 ): void {
   const heroDef = getHeroById(hero.definitionId);
   const heroClass = heroDef?.class || 'natural';
@@ -237,7 +241,9 @@ export function applySkillEffects(
         break;
 
       case 'shield':
-        hero.currentHp += effect.amount || 0;
+        // Apply temporary shield that absorbs damage
+        hero.shieldAmount = (hero.shieldAmount || 0) + (effect.amount || 0);
+        hero.shieldExpiresTick = state.tick + (effect.duration || 300); // Default 10s
         break;
     }
   }
@@ -252,27 +258,20 @@ export function applySkillEffects(
       // Single target - fire at closest enemy
       const closest = findClosestEnemy2D(enemies, hero.x, hero.y);
       if (closest) {
-        createSkillProjectile(hero, closest, state, heroClass, damageAmount, projectileEffects);
+        createSkillProjectile(hero, closest, state, heroClass, damageAmount, projectileEffects, skillId);
       }
     } else {
       // Area or all - fire at all enemies in range
       for (const enemy of enemies) {
-        createSkillProjectile(hero, enemy, state, heroClass, damageAmount, projectileEffects);
+        createSkillProjectile(hero, enemy, state, heroClass, damageAmount, projectileEffects, skillId);
       }
     }
   } else if (projectileEffects.length > 0 && enemies.length > 0) {
     // Non-damage effects only (like pure slow) - apply immediately since no projectile needed
     for (const effect of projectileEffects) {
       for (const enemy of enemies) {
-        switch (effect.type) {
-          case 'slow':
-            enemy.speed = FP.mul(enemy.speed, FP.fromFloat(1 - (effect.percent || 0.3)));
-            break;
-          case 'stun':
-          case 'freeze':
-            enemy.speed = 0;
-            break;
-        }
+        // Use proper effect application with duration tracking and speed recalculation
+        applyEffectToEnemy(effect, enemy, state);
       }
     }
   }

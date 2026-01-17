@@ -609,6 +609,7 @@ export class Simulation {
       vx: FP.mul(stats.speed, FP.fromInt(-1)), // Moving left
       vy: 0,
       speed: stats.speed,
+      baseSpeed: stats.speed, // Store original speed for effect recovery
       radius: ENEMY_PHYSICS.defaultRadius,
       mass: ENEMY_PHYSICS.defaultMass,
 
@@ -1364,18 +1365,69 @@ export class Simulation {
   }
 
   /**
-   * Find the closest enemy to the fortress
+   * Find the best enemy to target (priority targeting)
    */
   private findClosestEnemy(): Enemy | null {
     if (this.state.enemies.length === 0) return null;
 
-    let closest = this.state.enemies[0];
+    // Priority targeting: consider position, HP, and danger level
+    let bestTarget = this.state.enemies[0];
+    let bestScore = this.calculateTargetScore(bestTarget);
+
     for (const enemy of this.state.enemies) {
-      if (enemy.x < closest.x) {
-        closest = enemy;
+      const score = this.calculateTargetScore(enemy);
+      if (score > bestScore) {
+        bestTarget = enemy;
+        bestScore = score;
       }
     }
-    return closest;
+    return bestTarget;
+  }
+
+  /**
+   * Calculate priority score for targeting
+   * Higher score = higher priority target
+   */
+  private calculateTargetScore(enemy: Enemy): number {
+    let score = 0;
+
+    // Priority 1: Distance to fortress (closer = higher priority)
+    // Scale: 0-100 points, inversely proportional to distance
+    const distToFortress = FP.toFloat(FP.sub(enemy.x, this.config.fortressX));
+    score += Math.max(0, 100 - distToFortress * 3);
+
+    // Priority 2: Low HP enemies (finish kills)
+    // Scale: 0-50 points, inversely proportional to HP percentage
+    const hpPercent = enemy.hp / enemy.maxHp;
+    score += (1 - hpPercent) * 50;
+
+    // Priority 3: Dangerous enemy types
+    switch (enemy.type) {
+      case 'leech':
+        score += 30; // High priority - heals on attack
+        break;
+      case 'bruiser':
+        score += 20; // High HP enemy, needs focused damage
+        break;
+      // Boss-type enemies
+      case 'mafia_boss':
+      case 'ai_core':
+      case 'cosmic_beast':
+      case 'dimensional_being':
+      case 'god':
+        score += 25;
+        break;
+      case 'runner':
+        score += 10; // Fast enemies, prioritize slightly
+        break;
+    }
+
+    // Priority 4: Elite enemies (more dangerous)
+    if (enemy.isElite) {
+      score += 25;
+    }
+
+    return score;
   }
 
   /**

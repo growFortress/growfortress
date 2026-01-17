@@ -700,6 +700,7 @@ export class PillarChallengeSimulation {
       maxHp: scaledHp,
       damage: scaledDmg,
       speed: scaledSpd,
+      baseSpeed: scaledSpd, // Store original speed for effect recovery
       radius: FP.fromFloat(0.5),
       mass: FP.ONE,
       lastAttackTick: 0,
@@ -766,13 +767,22 @@ export class PillarChallengeSimulation {
   }
 
   private calculateEffectiveSpeed(enemy: Enemy): number {
-    let speed = enemy.speed;
+    // Użyj baseSpeed jako podstawy (jeśli istnieje)
+    let speed = enemy.baseSpeed ?? enemy.speed;
+
+    // Sprawdź hard CC (freeze/stun)
+    const hasHardCC = enemy.activeEffects.some(
+      e => (e.type === 'freeze' || e.type === 'stun') && e.remainingTicks > 0
+    );
+    if (hasHardCC) {
+      return 0;
+    }
 
     // Aplikuj slow ze status effects
     for (const effect of enemy.activeEffects) {
-      if (effect.type === 'slow' && effect.strength && effect.remainingTicks > 0) {
-        // strength to procent spowolnienia (np. 50 = 50% slow)
-        const slowMult = (100 - effect.strength) / 100;
+      if (effect.type === 'slow' && effect.strength > 0 && effect.remainingTicks > 0) {
+        // strength jest zapisane jako decimal (0.3 = 30% slow)
+        const slowMult = 1 - effect.strength;
         speed = FP.fromFloat(FP.toFloat(speed) * slowMult);
       }
     }

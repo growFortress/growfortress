@@ -1397,6 +1397,64 @@ export function getHeroTier(heroId: string, tier: 1 | 2 | 3): HeroTier | undefin
   return hero.tiers[tier - 1];
 }
 
+/**
+ * Check if a hero has a specific passive skill unlocked
+ * @param heroId - Hero definition ID
+ * @param passiveId - Passive skill ID to check for
+ * @param heroTier - Current tier (1-3)
+ * @param heroLevel - Current level
+ * @returns true if the passive is unlocked and available
+ */
+export function hasHeroPassive(heroId: string, passiveId: string, heroTier: 1 | 2 | 3, heroLevel: number): boolean {
+  const hero = getHeroById(heroId);
+  if (!hero) return false;
+
+  // Check all tiers up to current tier
+  for (let t = 0; t < heroTier; t++) {
+    const tier = hero.tiers[t];
+    if (!tier) continue;
+
+    for (const skill of tier.skills) {
+      if (skill.id === passiveId && skill.isPassive) {
+        // Check if level requirement is met
+        if (heroLevel >= skill.unlockedAtLevel) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Get all unlocked passive skills for a hero
+ * @param heroId - Hero definition ID
+ * @param heroTier - Current tier (1-3)
+ * @param heroLevel - Current level
+ * @returns Array of passive skill IDs
+ */
+export function getHeroPassives(heroId: string, heroTier: 1 | 2 | 3, heroLevel: number): string[] {
+  const hero = getHeroById(heroId);
+  if (!hero) return [];
+
+  const passives: string[] = [];
+
+  // Check all tiers up to current tier
+  for (let t = 0; t < heroTier; t++) {
+    const tier = hero.tiers[t];
+    if (!tier) continue;
+
+    for (const skill of tier.skills) {
+      if (skill.isPassive && heroLevel >= skill.unlockedAtLevel) {
+        passives.push(skill.id);
+      }
+    }
+  }
+
+  return passives;
+}
+
 export function calculateHeroStats(hero: HeroDefinition, tier: 1 | 2 | 3, level: number) {
   const tierDef = hero.tiers[tier - 1];
   const levelBonus = 1 + (level - 1) * 0.02; // +2% per level

@@ -824,6 +824,7 @@ export class Game {
       vx: FP.mul(bossStats.speed, FP.fromInt(-1)), // Moving left toward fortress
       vy: 0,
       speed: bossStats.speed,
+      baseSpeed: bossStats.speed, // Store original speed for effect recovery
       radius: ENEMY_PHYSICS.defaultRadius,
       mass: ENEMY_PHYSICS.defaultMass,
 

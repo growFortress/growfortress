@@ -208,8 +208,15 @@ export interface ActiveHero {
   // Command system (player-issued orders)
   commandTarget?: { x: number; y: number };  // Target position (fixed-point)
   isCommanded?: boolean;                      // Whether hero is executing a command
+
+  // Shield system (temporary HP that absorbs damage)
+  shieldAmount?: number;       // Current shield HP
+  shieldExpiresTick?: number;  // When shield expires
   focusTargetId?: number;                     // Enemy ID to focus fire (team-wide)
   isRetreating?: boolean;                     // Retreat to fortress immediately
+
+  // Damage tracking for passives (Heart of Winter)
+  lastDamagedTick?: number;    // When hero was last damaged
 }
 
 export interface ActiveBuff {
@@ -264,6 +271,9 @@ export interface ActiveTurret {
   targetingMode: TurretTargetingMode;
   currentHp: number;
   maxHp: number;
+  // Active ability buffs
+  damageBoostMultiplier?: number;  // FP format multiplier (e.g. 32768 = 2.0x)
+  damageBoostExpiresTick?: number; // Tick when boost expires
 }
 
 export interface TurretSlot {
@@ -528,7 +538,8 @@ export interface Enemy {
   // Physics (fixed-point) - 2D velocity-based movement
   vx: number;       // Velocity X
   vy: number;       // Velocity Y
-  speed: number;    // Base movement speed (units per tick)
+  speed: number;    // Current movement speed (modified by effects)
+  baseSpeed: number; // Original movement speed (for effect recovery)
   radius: number;   // Collision radius
   mass: number;     // Mass for collision resolution
 
@@ -887,6 +898,7 @@ export interface ActiveProjectile {
   effects: SkillEffect[]; // Effects to apply on hit
   spawnTick: number;
   class: FortressClass;   // For visual styling
+  skillId?: string;       // Skill ID that fired this projectile (for special effects)
 }
 
 // Wave spawn configuration

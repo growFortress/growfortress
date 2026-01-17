@@ -9,7 +9,7 @@
 
 import type { ActiveHero, ActiveTurret, FortressClass } from '../types.js';
 import { Xorshift32 } from '../rng.js';
-import { getHeroById } from '../data/heroes.js';
+import { getHeroById, hasHeroPassive } from '../data/heroes.js';
 import { analytics } from '../analytics.js';
 import { calculateWeaknessDamageMultiplier } from './weakness.js';
 import {
@@ -25,6 +25,7 @@ import {
 export interface HeroDamageResult {
   damageTaken: number;
   reflectDamage: number;
+  slowAttacker?: boolean; // Cryo Armor - attacker should be slowed
 }
 
 /**
@@ -35,7 +36,8 @@ export function applyDamageToHero(
   hero: ActiveHero,
   damage: number,
   rng: Xorshift32,
-  incomingDamageClass?: FortressClass
+  incomingDamageClass?: FortressClass,
+  currentTick?: number
 ): HeroDamageResult {
   const heroDef = getHeroById(hero.definitionId);
 
@@ -44,10 +46,27 @@ export function applyDamageToHero(
     const weaknessMultiplier = calculateWeaknessDamageMultiplier(heroDef.weaknesses, incomingDamageClass);
     damage = Math.floor(damage * weaknessMultiplier);
   }
+
+  // Hero passive damage reduction
+  const heroTier = hero.tier || 1;
+  const heroLevel = hero.level || 1;
+
+  // Veteran (Vanguard): +25% damage reduction
+  if (hasHeroPassive(hero.definitionId, 'veteran', heroTier as 1 | 2 | 3, heroLevel)) {
+    damage = Math.floor(damage * 0.75);
+  }
+
+  // Cryo Armor (Glacier): +20% damage reduction, attackers are slowed
+  let hasCryoArmor = false;
+  if (hasHeroPassive(hero.definitionId, 'cryo_armor', heroTier as 1 | 2 | 3, heroLevel)) {
+    damage = Math.floor(damage * 0.8);
+    hasCryoArmor = true;
+  }
+
   // Check dodge (Cloak of Levitation)
   const dodgeChance = calculateHeroArtifactDodgeChance(hero.equippedArtifact);
   if (dodgeChance > 0 && rng.nextFloat() < dodgeChance) {
-    return { damageTaken: 0, reflectDamage: 0 }; // Dodged!
+    return { damageTaken: 0, reflectDamage: 0, slowAttacker: hasCryoArmor }; // Dodged!
   }
 
   // Check block (Captain's Shield)
@@ -87,9 +106,28 @@ export function applyDamageToHero(
     analytics.trackDamageTaken(hero.definitionId, damage);
   }
 
+  // Consume shield before HP
+  if (hero.shieldAmount && hero.shieldAmount > 0) {
+    if (hero.shieldAmount >= damage) {
+      // Shield absorbs all damage
+      hero.shieldAmount -= damage;
+      damage = 0;
+    } else {
+      // Shield absorbs partial damage
+      damage -= hero.shieldAmount;
+      hero.shieldAmount = 0;
+    }
+  }
+
   hero.currentHp -= damage;
   analytics.trackDamage('fortress', 'fortress', damage); // Technically hero taking damage, but for now we track this flow
-  return { damageTaken: damage, reflectDamage };
+
+  // Track when hero was last damaged (for Heart of Winter passive)
+  if (damage > 0 && currentTick !== undefined) {
+    hero.lastDamagedTick = currentTick;
+  }
+
+  return { damageTaken: damage, reflectDamage, slowAttacker: hasCryoArmor };
 }
 
 /**

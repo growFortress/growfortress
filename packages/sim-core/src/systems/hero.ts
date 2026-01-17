@@ -27,7 +27,7 @@ import {
   type PhysicsConfig,
 } from '../physics.js';
 import { Xorshift32 } from '../rng.js';
-import { getHeroById, calculateHeroStats } from '../data/heroes.js';
+import { getHeroById, calculateHeroStats, hasHeroPassive } from '../data/heroes.js';
 import {
   selectTarget as simpleSelectTarget,
   shouldHeroRetreat as simpleHeroRetreat,
@@ -446,6 +446,55 @@ function performHeroAttack(
       }
     }
 
+    // Hero passive damage bonuses
+    const heroTier = hero.tier || 1;
+    const heroLevel = hero.level || 1;
+
+    // Void Absorption (Titan): damage increases with HP loss (up to +100% at 0 HP)
+    if (hasHeroPassive(hero.definitionId, 'void_absorption', heroTier as 1 | 2 | 3, heroLevel)) {
+      const hpLostPercent = 1 - (hero.currentHp / hero.maxHp);
+      finalDamage = Math.floor(finalDamage * (1 + hpLostPercent));
+    }
+
+    // Void Resonance (Titan Tier 2): +100% damage when HP below 30%
+    if (hasHeroPassive(hero.definitionId, 'void_resonance', heroTier as 1 | 2 | 3, heroLevel)) {
+      const hpPercent = hero.currentHp / hero.maxHp;
+      if (hpPercent < 0.3) {
+        finalDamage = Math.floor(finalDamage * 2);
+      }
+    }
+
+    // Burning Heart (Inferno): +20% damage vs burning targets
+    if (hasHeroPassive(hero.definitionId, 'burning_heart', heroTier as 1 | 2 | 3, heroLevel)) {
+      const isBurning = target.activeEffects.some(e => e.type === 'burn' && e.remainingTicks > 0);
+      if (isBurning) {
+        finalDamage = Math.floor(finalDamage * 1.2);
+      }
+    }
+
+    // Fire Mastery (Inferno Tier 2): +35% fire damage
+    if (hasHeroPassive(hero.definitionId, 'fire_mastery', heroTier as 1 | 2 | 3, heroLevel)) {
+      if (heroDef.class === 'fire') {
+        finalDamage = Math.floor(finalDamage * 1.35);
+      }
+    }
+
+    // Ice Mastery (Frost Tier 2): +25% ice damage
+    if (hasHeroPassive(hero.definitionId, 'ice_mastery', heroTier as 1 | 2 | 3, heroLevel)) {
+      if (heroDef.class === 'ice') {
+        finalDamage = Math.floor(finalDamage * 1.25);
+      }
+    }
+
+    // Hunter Instinct (Omega): execute at 40% HP
+    if (hasHeroPassive(hero.definitionId, 'hunter_instinct', heroTier as 1 | 2 | 3, heroLevel)) {
+      const targetHpPercent = target.hp / target.maxHp;
+      if (targetHpPercent <= 0.4) {
+        // Execute - deal remaining HP as damage
+        finalDamage = target.hp;
+      }
+    }
+
     // Apply conditional weakness penalties to damage
     const isFirstAttack = hero.lastAttackTick === state.tick;
     const isMeleeRange = getHeroAttackRange(heroDef.role) <= FP.fromInt(3);
@@ -660,10 +709,56 @@ function updateHeroSkillCooldowns(hero: ActiveHero, _state: GameState): void {
 }
 
 /**
- * Update buff durations
+ * Update buff durations and shield expiration
  */
 function updateHeroBuffs(hero: ActiveHero, state: GameState): void {
   hero.buffs = hero.buffs.filter(buff => buff.expirationTick > state.tick);
+
+  // Clear expired shield
+  if (hero.shieldExpiresTick && state.tick >= hero.shieldExpiresTick) {
+    hero.shieldAmount = 0;
+    hero.shieldExpiresTick = undefined;
+  }
+
+  // Apply passive effects
+  const heroTier = hero.tier || 1;
+  const heroLevel = hero.level || 1;
+
+  // Heart of Winter (Glacier): regeneration when not attacked for 3 seconds (90 ticks)
+  if (hasHeroPassive(hero.definitionId, 'heart_of_winter', heroTier as 1 | 2 | 3, heroLevel)) {
+    const ticksSinceLastDamage = hero.lastDamagedTick ? state.tick - hero.lastDamagedTick : Infinity;
+    if (ticksSinceLastDamage >= 90) {
+      // Regenerate 2% max HP per tick while unattacked
+      const regenAmount = Math.floor(hero.maxHp * 0.02);
+      hero.currentHp = Math.min(hero.currentHp + regenAmount, hero.maxHp);
+    }
+  }
+
+  // Command Aura (Vanguard): +10% damage to nearby allies
+  if (hasHeroPassive(hero.definitionId, 'command_aura', heroTier as 1 | 2 | 3, heroLevel)) {
+    // Apply buff to all other heroes if not already present
+    for (const ally of state.heroes) {
+      if (ally === hero || ally.state === 'dead') continue;
+
+      // Check if hero is within 5 units (fixed-point)
+      const distSq = FP.distSq(hero.x, hero.y, ally.x, ally.y);
+      const auraRange = FP.fromInt(5);
+      const auraRangeSq = FP.mul(auraRange, auraRange);
+
+      if (distSq <= auraRangeSq) {
+        // Check if already has command aura buff
+        const hasAuraBuff = ally.buffs.some(b => b.id === 'command_aura_buff');
+        if (!hasAuraBuff) {
+          ally.buffs.push({
+            id: 'command_aura_buff',
+            stat: 'damageBonus',
+            amount: 0.1, // +10% damage
+            expirationTick: state.tick + 30, // Refresh every second
+          });
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -695,6 +790,6 @@ function useHeroSkills(
     hero.skillCooldowns[skill.id] = adjustedCooldown;
 
     // Apply skill effects
-    applySkillEffects(skill.effects, hero, state, enemiesInRange, rng);
+    applySkillEffects(skill.effects, hero, state, enemiesInRange, rng, skill.id);
   }
 }

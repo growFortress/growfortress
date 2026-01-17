@@ -17,7 +17,7 @@ import type {
 } from '../types.js';
 import { Xorshift32 } from '../rng.js';
 import { getTurretById, calculateTurretStats, TURRET_SLOTS } from '../data/turrets.js';
-import { createTurretProjectile } from './projectile.js';
+import { createTurretProjectile, applyEffectToEnemy } from './projectile.js';
 import { TURRET_ATTACK_INTERVAL_BASE, HIT_FLASH_TICKS } from './constants.js';
 
 /**
@@ -112,6 +112,16 @@ export function updateTurrets(
       if (state.modifiers.damageBonus > 0) {
         turretDamage = turretDamage * (1 + state.modifiers.damageBonus);
       }
+
+      // Apply damage boost from ability (if active)
+      if (turret.damageBoostMultiplier && turret.damageBoostExpiresTick && state.tick < turret.damageBoostExpiresTick) {
+        turretDamage = turretDamage * (turret.damageBoostMultiplier / 16384);
+      } else if (turret.damageBoostExpiresTick && state.tick >= turret.damageBoostExpiresTick) {
+        // Clear expired boost
+        turret.damageBoostMultiplier = undefined;
+        turret.damageBoostExpiresTick = undefined;
+      }
+
       createTurretProjectile(turret, target, state, turretX, turretY, turret.currentClass, turretDamage);
     }
 
@@ -135,65 +145,67 @@ export function updateTurrets(
  * Apply turret special ability
  */
 function applyTurretAbility(
-  _turret: ActiveTurret,
+  turret: ActiveTurret,
   ability: any,
   state: GameState,
   enemies: Enemy[],
   _rng: Xorshift32
 ): void {
+  // Get turret base damage for abilities that need it
+  const turretDef = getTurretById(turret.definitionId);
+  const baseDamage = turretDef ? turretDef.baseStats.damage / 16384 : 15;
+
   switch (ability.effect.type) {
     case 'damage_boost':
-      // Buff self for next attacks (handled in attack logic)
+      // Apply damage boost buff to turret
+      turret.damageBoostMultiplier = ability.effect.value || 32768; // Default 2.0x
+      turret.damageBoostExpiresTick = state.tick + (ability.effect.duration || 150);
       break;
-    case 'aoe_attack':
-      // Deal damage to all enemies in area
+    case 'aoe_attack': {
+      // Deal boosted damage to all enemies in area
+      // value is in FP 16384 scale (e.g. 32768 = 2.0x)
+      const damageMultiplier = ability.effect.value ? ability.effect.value / 16384 : 2.0;
+      const aoeDamage = Math.floor(baseDamage * damageMultiplier);
       for (const enemy of enemies) {
-        const damage = ability.effect.value ? ability.effect.value * 10 : 50;
-        enemy.hp -= damage;
+        enemy.hp -= aoeDamage;
         enemy.hitFlashTicks = HIT_FLASH_TICKS;
       }
       break;
-    case 'guaranteed_crit':
-      // Next attack crits (handled in projectile logic)
-      break;
+    }
     case 'chain_all':
-      // Hit all enemies
+      // Hit all enemies with turret's base damage
       for (const enemy of enemies) {
-        enemy.hp -= 15;
+        enemy.hp -= Math.floor(baseDamage);
         enemy.hitFlashTicks = HIT_FLASH_TICKS;
       }
       break;
-    case 'freeze_all':
-      // Freeze all enemies (reduce speed)
+    case 'freeze_all': {
+      // Freeze all enemies
+      const freezeDuration = ability.effect.duration || 90;
       for (const enemy of enemies) {
-        enemy.speed = FP.mul(enemy.speed, FP.fromFloat(0.5));
+        applyEffectToEnemy({ type: 'freeze', duration: freezeDuration }, enemy, state);
       }
       break;
-    case 'zone_damage':
-      // Create damage zone (simplified: instant damage)
-      for (const enemy of enemies) {
-        enemy.hp -= 20;
-        enemy.hitFlashTicks = HIT_FLASH_TICKS;
-      }
-      break;
+    }
     case 'buff_allies':
       // Buff all heroes
       for (const hero of state.heroes) {
         hero.buffs.push({
           id: 'power_surge',
           stat: 'damageBonus',
-          amount: ability.effect.value || 0.5,
+          amount: ability.effect.value ? ability.effect.value / 16384 : 0.5,
           expirationTick: state.tick + (ability.effect.duration || 240),
         });
       }
       break;
-    case 'poison_all':
-      // Apply poison stacks
+    case 'poison_all': {
+      // Apply poison DOT to all enemies
+      const poisonDamage = ability.effect.value ? ability.effect.value / 16384 : 5;
+      const poisonDuration = ability.effect.duration || 150;
       for (const enemy of enemies) {
-        // Simplified: deal damage over time
-        enemy.hp -= 10;
-        enemy.hitFlashTicks = HIT_FLASH_TICKS;
+        applyEffectToEnemy({ type: 'poison', damagePerTick: poisonDamage, duration: poisonDuration }, enemy, state);
       }
       break;
+    }
   }
 }

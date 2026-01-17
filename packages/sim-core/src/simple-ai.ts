@@ -71,21 +71,105 @@ export function selectTarget(
   }
 }
 
-/** Find enemy closest to fortress */
+/** Find enemy closest to fortress (with priority for dangerous enemies) */
 function findClosestToFortress(enemies: Enemy[], fortressX: number): Enemy {
   const fxFP = FP.fromInt(fortressX);
-  return enemies.reduce((closest, enemy) => {
-    const distA = FP.abs(FP.sub(closest.x, fxFP));
-    const distB = FP.abs(FP.sub(enemy.x, fxFP));
-    return distB < distA ? enemy : closest;
+  return enemies.reduce((best, enemy) => {
+    const bestScore = calculateTankTargetScore(best, fxFP);
+    const enemyScore = calculateTankTargetScore(enemy, fxFP);
+    return enemyScore > bestScore ? enemy : best;
   });
 }
 
-/** Find enemy with lowest HP */
+/** Calculate priority score for tank targeting */
+function calculateTankTargetScore(enemy: Enemy, fortressX: number): number {
+  let score = 0;
+
+  // Priority 1: Distance to fortress (closer = higher priority)
+  // Scale: 0-100 points
+  const distToFortress = FP.abs(FP.sub(enemy.x, fortressX));
+  score += Math.max(0, 100 - FP.toFloat(distToFortress) * 3);
+
+  // Priority 2: Dangerous enemy types (intercept these first)
+  switch (enemy.type) {
+    case 'leech':
+      score += 30; // Heals on attack, needs to be stopped
+      break;
+    case 'bruiser':
+      score += 25; // High HP enemies need tank attention
+      break;
+    case 'runner':
+      score += 15; // Fast enemies, intercept quickly
+      break;
+    // Boss-type enemies
+    case 'mafia_boss':
+    case 'ai_core':
+    case 'cosmic_beast':
+    case 'dimensional_being':
+    case 'god':
+      score += 20;
+      break;
+  }
+
+  // Priority 3: Elite enemies are more dangerous
+  if (enemy.isElite) {
+    score += 25;
+  }
+
+  return score;
+}
+
+/** Find enemy with lowest HP (prioritize killable targets and dangerous enemies) */
 function findLowestHp(enemies: Enemy[]): Enemy {
-  return enemies.reduce((lowest, enemy) =>
-    enemy.hp < lowest.hp ? enemy : lowest
+  return enemies.reduce((best, enemy) => {
+    // Calculate priority score for each enemy
+    const bestScore = calculateDpsTargetScore(best);
+    const enemyScore = calculateDpsTargetScore(enemy);
+    return enemyScore > bestScore ? enemy : best;
+  });
+}
+
+/** Calculate priority score for DPS targeting */
+function calculateDpsTargetScore(enemy: Enemy): number {
+  let score = 0;
+
+  // Priority 1: Low HP (inversely proportional)
+  // Scale: 0-100 points, enemies close to death are higher priority
+  const hpPercent = enemy.hp / enemy.maxHp;
+  score += (1 - hpPercent) * 100;
+
+  // Priority 2: Dangerous enemy types (finish them first)
+  switch (enemy.type) {
+    case 'leech':
+      score += 30; // High priority - heals on attack
+      break;
+    case 'bruiser':
+      score += 15; // High HP enemies need focused fire
+      break;
+    // Boss-type enemies
+    case 'mafia_boss':
+    case 'ai_core':
+    case 'cosmic_beast':
+    case 'dimensional_being':
+    case 'god':
+      score += 20;
+      break;
+  }
+
+  // Priority 3: Prefer non-frozen/stunned enemies (don't waste damage on CCd)
+  const isHardCCd = enemy.activeEffects.some(
+    e => (e.type === 'freeze' || e.type === 'stun') && e.remainingTicks > 0
   );
+  if (isHardCCd) {
+    score -= 30; // Lower priority for CCd enemies
+  }
+
+  // Priority 4: Elite enemies
+  if (enemy.isElite) {
+    score += 15;
+  }
+
+  return score;
 }
 
 /** Find enemy closest to hero */
