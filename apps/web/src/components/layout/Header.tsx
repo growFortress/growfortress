@@ -26,6 +26,7 @@ import {
   showShopModal,
 } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { Tooltip } from '../shared/Tooltip.js';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -121,78 +122,84 @@ export function Header(_props: HeaderProps) {
 
           {/* Buttons */}
           <div class={styles.buttonGroup}>
-            <button
-              class={styles.dailyQuestsBtn}
-              onClick={() => showDailyQuestsPanel()}
-              aria-label={hasUnclaimedQuestRewards.value ? t('header.dailyQuestsWithRewards', { count: unclaimedCompletedCount.value }) : t('common:navigation.dailyQuests')}
-              title={t('common:navigation.dailyQuests')}
-            >
-              <span aria-hidden="true">📋</span>
-              {hasUnclaimedQuestRewards.value && (
-                <span class={styles.questBadge} aria-hidden="true">
-                  {unclaimedCompletedCount.value}
-                </span>
-              )}
-            </button>
+            <Tooltip content={t('common:navigation.dailyQuests')} position="bottom">
+              <button
+                class={styles.dailyQuestsBtn}
+                onClick={() => showDailyQuestsPanel()}
+                aria-label={hasUnclaimedQuestRewards.value ? t('header.dailyQuestsWithRewards', { count: unclaimedCompletedCount.value }) : t('common:navigation.dailyQuests')}
+              >
+                <span aria-hidden="true">📋</span>
+                {hasUnclaimedQuestRewards.value && (
+                  <span class={styles.questBadge} aria-hidden="true">
+                    {unclaimedCompletedCount.value}
+                  </span>
+                )}
+              </button>
+            </Tooltip>
 
-            <button
-              class={styles.leaderboardBtn}
-              onClick={() => openLeaderboardModal()}
-              aria-label={hasUnclaimedRewards.value ? t('header.leaderboardsWithRewards') : t('common:navigation.leaderboards')}
-              title={t('common:navigation.leaderboards')}
-            >
-              <span aria-hidden="true">🏆</span>
-              {hasUnclaimedRewards.value && (
-                <span class={styles.rewardBadge} aria-label={t('header.rewardsToClaim')} />
-              )}
-            </button>
+            <Tooltip content={t('common:navigation.leaderboards')} position="bottom">
+              <button
+                class={styles.leaderboardBtn}
+                onClick={() => openLeaderboardModal()}
+                aria-label={hasUnclaimedRewards.value ? t('header.leaderboardsWithRewards') : t('common:navigation.leaderboards')}
+              >
+                <span aria-hidden="true">🏆</span>
+                {hasUnclaimedRewards.value && (
+                  <span class={styles.rewardBadge} aria-label={t('header.rewardsToClaim')} />
+                )}
+              </button>
+            </Tooltip>
 
-            <button
-              class={styles.messagesBtn}
-              onClick={() => openMessagesModal()}
-              aria-label={hasUnreadMessages.value ? t('header.messagesWithUnread', { count: unreadCounts.value.total }) : t('common:navigation.messages')}
-              title={t('common:navigation.messages')}
-            >
-              <span aria-hidden="true">✉️</span>
-              {hasUnreadMessages.value && (
-                <span class={styles.messagesBadge} aria-hidden="true">
-                  {unreadCounts.value.total > 99 ? '99+' : unreadCounts.value.total}
-                </span>
-              )}
-            </button>
+            <Tooltip content={t('common:navigation.messages')} position="bottom">
+              <button
+                class={styles.messagesBtn}
+                onClick={() => openMessagesModal()}
+                aria-label={hasUnreadMessages.value ? t('header.messagesWithUnread', { count: unreadCounts.value.total }) : t('common:navigation.messages')}
+              >
+                <span aria-hidden="true">✉️</span>
+                {hasUnreadMessages.value && (
+                  <span class={styles.messagesBadge} aria-hidden="true">
+                    {unreadCounts.value.total > 99 ? '99+' : unreadCounts.value.total}
+                  </span>
+                )}
+              </button>
+            </Tooltip>
 
-            <button
-              class={styles.guildBtn}
-              onClick={() => openGuildPanel()}
-              aria-label={t('header.openGuildPanel')}
-              title={isInGuild.value ? (playerGuild.value?.name || t('common:navigation.guild')) : t('common:navigation.guild')}
-            >
-              <span aria-hidden="true">🏰</span>
-              {isInGuild.value && playerGuild.value && (
-                <span class={styles.guildTag}>[{playerGuild.value.tag}]</span>
-              )}
-              {hasNewInvitations.value && !isInGuild.value && (
-                <span class={styles.guildBadge} aria-label={t('header.newInvitations')} />
-              )}
-            </button>
+            <Tooltip content={isInGuild.value ? (playerGuild.value?.name || t('common:navigation.guild')) : t('common:navigation.guild')} position="bottom">
+              <button
+                class={styles.guildBtn}
+                onClick={() => openGuildPanel()}
+                aria-label={t('header.openGuildPanel')}
+              >
+                <span aria-hidden="true">🏰</span>
+                {isInGuild.value && playerGuild.value && (
+                  <span class={styles.guildTag}>[{playerGuild.value.tag}]</span>
+                )}
+                {hasNewInvitations.value && !isInGuild.value && (
+                  <span class={styles.guildBadge} aria-label={t('header.newInvitations')} />
+                )}
+              </button>
+            </Tooltip>
 
-            <button
-              class={styles.shopBtn}
-              onClick={() => showShopModal()}
-              aria-label={t('common:navigation.shop')}
-              title={t('common:navigation.shop')}
-            >
-              <span aria-hidden="true">🛒</span>
-            </button>
+            <Tooltip content={t('common:navigation.shop')} position="bottom">
+              <button
+                class={styles.shopBtn}
+                onClick={() => showShopModal()}
+                aria-label={t('common:navigation.shop')}
+              >
+                <span aria-hidden="true">🛒</span>
+              </button>
+            </Tooltip>
 
-            <button
-              class={styles.settingsBtn}
-              onClick={openSettingsMenu}
-              aria-label={t('common:navigation.settings')}
-              title={t('common:navigation.settings')}
-            >
-              <span aria-hidden="true">⚙️</span>
-            </button>
+            <Tooltip content={t('common:navigation.settings')} position="bottom">
+              <button
+                class={styles.settingsBtn}
+                onClick={openSettingsMenu}
+                aria-label={t('common:navigation.settings')}
+              >
+                <span aria-hidden="true">⚙️</span>
+              </button>
+            </Tooltip>
           </div>
         </nav>
       )}

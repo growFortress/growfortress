@@ -38,12 +38,12 @@
   --color-bg-elevated: #1a1a2a;
   --color-bg-overlay: rgba(10, 10, 18, 0.9);
 
-  /* 4. TEXT: White with opacity variants */
+  /* 4. TEXT: White with opacity variants (improved for contrast) */
   --color-text: #ffffff;
-  --color-text-80: rgba(255, 255, 255, 0.8);
-  --color-text-60: rgba(255, 255, 255, 0.6);
-  --color-text-50: rgba(255, 255, 255, 0.5);
-  --color-text-40: rgba(255, 255, 255, 0.4);
+  --color-text-80: rgba(255, 255, 255, 0.85);
+  --color-text-60: rgba(255, 255, 255, 0.7);
+  --color-text-50: rgba(255, 255, 255, 0.6);
+  --color-text-40: rgba(255, 255, 255, 0.55);
 
   /* 5. NEUTRAL: Cyan-tinted gray */
   --color-neutral: #3a4a5a;
@@ -68,16 +68,32 @@
   --color-border-guild: rgba(0, 229, 255, 0.2);
   --color-border-guild-hover: rgba(0, 229, 255, 0.35);
 
+  /* 9. DUST/CRAFTING: Purple - consistently for dust currency */
+  --color-dust: #E040FB;
+  --color-dust-70: rgba(224, 64, 251, 0.7);
+  --color-dust-50: rgba(224, 64, 251, 0.5);
+  --color-dust-30: rgba(224, 64, 251, 0.3);
+  --color-dust-20: rgba(224, 64, 251, 0.2);
+
+  /* 10. POSITIVE: Green - for growth/heal/OK states (not decorative) */
+  --color-positive: #4ade80;
+  --color-positive-70: rgba(74, 222, 128, 0.7);
+  --color-positive-50: rgba(74, 222, 128, 0.5);
+  --color-positive-30: rgba(74, 222, 128, 0.3);
+  --color-positive-20: rgba(74, 222, 128, 0.2);
+
   /* =========================
      SEMANTIC ALIASES
      ========================= */
-  --color-success: var(--color-primary);
-  --color-success-50: var(--color-primary-50);
-  --color-success-30: var(--color-primary-30);
-  --color-success-20: var(--color-primary-20);
+  --color-success: var(--color-positive);
+  --color-success-50: var(--color-positive-50);
+  --color-success-30: var(--color-positive-30);
+  --color-success-20: var(--color-positive-20);
   --color-warning: var(--color-skill);
   --color-danger: var(--color-accent);
   --color-info: var(--color-primary-50);
+  --color-economy: var(--color-gold);
+  --color-crafting: var(--color-dust);
 
   /* Legacy aliases for compatibility */
   --color-bg-deep: var(--color-bg);

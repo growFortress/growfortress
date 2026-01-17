@@ -155,7 +155,7 @@
 }
 
 .resourceValue.dust {
-  color: #E040FB;
+  color: var(--color-dust);
   text-shadow: 0 0 8px rgba(224, 64, 251, 0.4);
 }
 
@@ -326,8 +326,8 @@
 
 .dailyQuestsBtn:hover {
   background: var(--color-bg-elevated);
-  border-color: #E040FB;
-  color: #E040FB;
+  border-color: var(--color-dust);
+  color: var(--color-dust);
   box-shadow: 0 0 12px rgba(224, 64, 251, 0.3);
 }
 
@@ -337,7 +337,7 @@
   right: -4px;
   min-width: 18px;
   height: 18px;
-  background: #E040FB;
+  background: var(--color-dust);
   color: var(--color-bg);
   font-size: 10px;
   font-weight: 700;
