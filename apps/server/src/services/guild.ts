@@ -41,6 +41,7 @@ export interface CreateGuildInput {
 
 export interface UpdateGuildInput {
   name?: string;
+  tag?: string;
   description?: string;
   settings?: Partial<GuildSettings>;
 }
@@ -267,6 +268,19 @@ export async function updateGuild(
       throw new Error(GUILD_ERROR_CODES.NAME_TAKEN);
     }
     updateData.name = input.name;
+  }
+
+  if (input.tag) {
+    // Normalize to uppercase
+    const normalizedTag = input.tag.toUpperCase();
+    // Check if tag is taken
+    const existingTag = await prisma.guild.findFirst({
+      where: { tag: normalizedTag, id: { not: guildId } },
+    });
+    if (existingTag) {
+      throw new Error(GUILD_ERROR_CODES.TAG_TAKEN);
+    }
+    updateData.tag = normalizedTag;
   }
 
   if (input.description !== undefined) {

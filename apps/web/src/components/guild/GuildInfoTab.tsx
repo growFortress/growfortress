@@ -43,8 +43,12 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
 
   // Settings state
   const [editingSettings, setEditingSettings] = useState(false);
+  const [settingsName, setSettingsName] = useState('');
+  const [settingsTag, setSettingsTag] = useState('');
   const [settingsAccessMode, setSettingsAccessMode] = useState<GuildAccessMode>('INVITE_ONLY');
   const [settingsMinLevel, setSettingsMinLevel] = useState(1);
+  const [settingsAutoAccept, setSettingsAutoAccept] = useState(false);
+  const [settingsBattleCooldown, setSettingsBattleCooldown] = useState(24);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
 
@@ -144,21 +148,30 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
   };
 
   const handleEditSettings = () => {
+    setSettingsName(guild?.name || '');
+    setSettingsTag(guild?.tag || '');
     setSettingsAccessMode((guild as any).accessMode || 'INVITE_ONLY');
     setSettingsMinLevel((guild as any).minLevel || 1);
+    setSettingsAutoAccept((guild as any).autoAcceptInvites || false);
+    setSettingsBattleCooldown((guild as any).battleCooldownHours || 24);
     setSettingsError(null);
     setEditingSettings(true);
   };
 
   const handleSaveSettings = async () => {
+    if (!guild) return;
     setSettingsLoading(true);
     setSettingsError(null);
 
     try {
       await updateGuild(guild.id, {
+        name: settingsName !== guild.name ? settingsName : undefined,
+        tag: settingsTag !== guild.tag ? settingsTag : undefined,
         settings: {
           accessMode: settingsAccessMode,
           minLevel: settingsMinLevel,
+          autoAcceptInvites: settingsAutoAccept,
+          battleCooldownHours: settingsBattleCooldown,
         },
       });
       setEditingSettings(false);
@@ -331,6 +344,38 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
 
           {editingSettings ? (
             <div class={styles.settingsForm}>
+              {/* Guild Name */}
+              <div class={styles.settingsRow}>
+                <label class={styles.settingsLabel}>Nazwa gildii</label>
+                <input
+                  type="text"
+                  class={styles.settingsInput}
+                  value={settingsName}
+                  onInput={(e) => setSettingsName((e.target as HTMLInputElement).value)}
+                  minLength={3}
+                  maxLength={24}
+                  style={{ maxWidth: '100%' }}
+                />
+                <span class={styles.settingsHint}>3-24 znakow</span>
+              </div>
+
+              {/* Guild Tag */}
+              <div class={styles.settingsRow}>
+                <label class={styles.settingsLabel}>Tag gildii</label>
+                <input
+                  type="text"
+                  class={styles.settingsInput}
+                  value={settingsTag}
+                  onInput={(e) => setSettingsTag((e.target as HTMLInputElement).value.toUpperCase())}
+                  minLength={3}
+                  maxLength={5}
+                  pattern="[A-Z0-9]+"
+                  style={{ maxWidth: '120px' }}
+                />
+                <span class={styles.settingsHint}>3-5 wielkich liter lub cyfr</span>
+              </div>
+
+              {/* Access Mode */}
               <div class={styles.settingsRow}>
                 <label class={styles.settingsLabel}>Tryb dostepu</label>
                 <select
@@ -346,6 +391,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
                 </select>
               </div>
 
+              {/* Min Level */}
               <div class={styles.settingsRow}>
                 <label class={styles.settingsLabel}>Min. poziom (fala)</label>
                 <input
@@ -359,6 +405,38 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
                 <span class={styles.settingsHint}>
                   Gracz musi miec conajmniej tyle fal aby dolaczyc (nie dotyczy zaproszen)
                 </span>
+              </div>
+
+              {/* Auto-accept invites */}
+              <div class={styles.settingsRow}>
+                <label class={styles.settingsLabel} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settingsAutoAccept}
+                    onChange={(e) => setSettingsAutoAccept((e.target as HTMLInputElement).checked)}
+                  />
+                  Automatycznie akceptuj zaproszenia
+                </label>
+                <span class={styles.settingsHint}>
+                  Zaproszeni gracze automatycznie dolaczaja do gildii
+                </span>
+              </div>
+
+              {/* Battle Cooldown */}
+              <div class={styles.settingsRow}>
+                <label class={styles.settingsLabel}>Przerwa miedzy bitwami (godziny)</label>
+                <input
+                  type="number"
+                  class={styles.settingsInput}
+                  value={settingsBattleCooldown}
+                  onChange={(e) => setSettingsBattleCooldown(
+                    Math.min(168, Math.max(1, parseInt((e.target as HTMLInputElement).value) || 24))
+                  )}
+                  min={1}
+                  max={168}
+                  style={{ maxWidth: '100px' }}
+                />
+                <span class={styles.settingsHint}>1-168 godzin (domyslnie 24)</span>
               </div>
 
               {settingsError && (
@@ -396,6 +474,18 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
                 <span class={styles.settingsDisplayLabel}>Min. poziom:</span>
                 <span class={styles.settingsDisplayValue}>
                   Fala {(guild as any).minLevel || 1}
+                </span>
+              </div>
+              <div class={styles.settingsDisplayItem}>
+                <span class={styles.settingsDisplayLabel}>Auto-akceptacja:</span>
+                <span class={styles.settingsDisplayValue}>
+                  {(guild as any).autoAcceptInvites ? 'Wlaczona' : 'Wylaczona'}
+                </span>
+              </div>
+              <div class={styles.settingsDisplayItem}>
+                <span class={styles.settingsDisplayLabel}>Przerwa miedzy bitwami:</span>
+                <span class={styles.settingsDisplayValue}>
+                  {(guild as any).battleCooldownHours || 24} godz.
                 </span>
               </div>
             </div>

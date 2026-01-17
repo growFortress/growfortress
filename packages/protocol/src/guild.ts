@@ -213,6 +213,7 @@ export type CreateGuildResponse = z.infer<typeof CreateGuildResponseSchema>;
 
 export const UpdateGuildRequestSchema = z.object({
   name: z.string().min(3).max(24).optional(),
+  tag: z.string().min(3).max(5).regex(/^[A-Z0-9]+$/, 'Tag must be uppercase letters and numbers only').optional(),
   description: z.string().max(200).optional(),
   settings: GuildSettingsSchema.partial().optional(),
 });
