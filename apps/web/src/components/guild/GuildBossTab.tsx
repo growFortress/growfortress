@@ -383,10 +383,10 @@ function formatTimeRemaining(ms: number): string {
 function formatNumber(numStr: string): string {
   const num = BigInt(numStr);
   if (num >= BigInt(1_000_000_000)) {
-    return `${(Number(num) / 1_000_000_000).toFixed(1)}B`;
+    return `${(Number(num) / 1_000_000_000).toFixed(2)}B`;
   }
   if (num >= BigInt(1_000_000)) {
-    return `${(Number(num) / 1_000_000).toFixed(1)}M`;
+    return `${(Number(num) / 1_000_000).toFixed(2)}M`;
   }
   if (num >= BigInt(1_000)) {
     return `${(Number(num) / 1_000).toFixed(1)}K`;

@@ -215,7 +215,7 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     ...t,
     tier: (turretTiers[t.definitionId] || 1) as 1 | 2 | 3,
   }));
-  const turrets = initializeTurrets(turretConfigsWithTiers);
+  const turrets = initializeTurrets(turretConfigsWithTiers, config.guildStatBoost);
 
   // Initialize active skills based on commander level
   const activeSkills = initializeActiveSkills(config.fortressClass, config.commanderLevel);
@@ -350,9 +350,10 @@ export class Simulation {
     const commanderDamageBonus = calculateTotalDamageBonus(config.commanderLevel);
     this.state.modifiers.damageBonus += (commanderDamageBonus / 16384) - 1;
 
-    // Apply guild stat boost to damage (additive: 0.20 = 20% more damage)
+    // Apply guild stat boost to damage and attack speed (additive: 0.20 = 20% more)
     if (config.guildStatBoost) {
       this.state.modifiers.damageBonus += config.guildStatBoost;
+      this.state.modifiers.attackSpeedBonus += config.guildStatBoost;
     }
   }
 

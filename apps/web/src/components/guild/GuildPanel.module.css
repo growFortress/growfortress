@@ -1437,3 +1437,1214 @@ textarea.guildDescription {
   gap: var(--spacing-md);
   justify-content: flex-end;
 }
+
+/* ============================================================================
+   SHARED STATUS & TOGGLE STYLES
+   ============================================================================ */
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statusActive {
+  background: var(--color-success-20);
+  color: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success-20);
+}
+
+.statusEnded {
+  background: var(--color-neutral);
+  color: var(--color-text-60);
+}
+
+.timeRemaining {
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+  font-family: var(--font-display);
+  margin-left: var(--spacing-sm);
+}
+
+.toggleBtn {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: var(--spacing-md) 0;
+}
+
+.toggleBtn:hover {
+  background: var(--color-primary-10);
+  border-color: var(--color-primary-30);
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: var(--color-text-40);
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   MY GUILD STATS (shared between Race and Boss tabs)
+   ============================================================================ */
+
+.myGuildStats,
+.myBossStats {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.myGuildRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+}
+
+.myGuildRow:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.myGuildLabel {
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+}
+
+.myGuildRank {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+.myGuildWaves {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.myContribution {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+/* ============================================================================
+   CONTRIBUTIONS LIST (shared between Race and Boss tabs)
+   ============================================================================ */
+
+.contributionsList {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.contributionsTable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.contributionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.contributionRank {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-40);
+  min-width: 2.5rem;
+}
+
+.contributionName {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.contributionWaves {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* ============================================================================
+   LEADERBOARD (shared between Race and Boss tabs)
+   ============================================================================ */
+
+.leaderboardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xl);
+}
+
+.leaderboardEntry {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.leaderboardEntry:hover {
+  border-color: var(--color-primary-30);
+}
+
+.leaderboardEntryMine {
+  background: linear-gradient(135deg, var(--color-primary-15), var(--color-primary-10));
+  border-color: var(--color-primary-40);
+}
+
+.entryRank {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  min-width: 3rem;
+  color: var(--color-text-60);
+}
+
+.rankGold {
+  color: var(--color-gold);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+.rankSilver {
+  color: #94a3b8;
+  text-shadow: 0 0 10px rgba(148, 163, 184, 0.5);
+}
+
+.rankBronze {
+  color: #cd7f32;
+  text-shadow: 0 0 10px rgba(205, 127, 50, 0.5);
+}
+
+.entryGuild {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.entryGuildName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.entryWaves {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: right;
+  min-width: 5rem;
+}
+
+.entryBossDamage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-xs);
+  min-width: 6rem;
+}
+
+.entryDamage {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.entryParticipants {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+}
+
+/* ============================================================================
+   REWARDS INFO (shared between Race and Boss tabs)
+   ============================================================================ */
+
+.rewardsInfo {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.rewardsInfo h4 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-80);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 var(--spacing-md);
+}
+
+.rewardsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.rewardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+}
+
+.rewardRow:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rewardRank {
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+}
+
+.rewardAmount {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-gold);
+}
+
+/* ============================================================================
+   BATTLES TAB - ATTACK CONTROLS
+   ============================================================================ */
+
+.attackControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.attackActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.attackStats {
+  display: flex;
+  gap: var(--spacing-xl);
+}
+
+.attackStat {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+}
+
+.attackStatValue {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.attackStatReady {
+  color: var(--color-success);
+}
+
+/* Shield Section */
+.shieldSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.shieldActive {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.shieldInactive {
+  color: var(--color-text-40);
+  font-size: 0.9rem;
+}
+
+.shieldIcon {
+  font-size: 1.25rem;
+}
+
+.shieldTimer {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+  margin-left: auto;
+}
+
+.shieldLimit {
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+  margin-left: auto;
+}
+
+/* ============================================================================
+   BATTLES TAB - BATTLE CARDS
+   ============================================================================ */
+
+.battleList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.battleCardResolved {
+  opacity: 1;
+}
+
+.battleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.battleGuilds {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.battleVs {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.battleStatus {
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.statusResolved {
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+}
+
+.battleMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+  margin-bottom: var(--spacing-md);
+}
+
+.revengeBadge {
+  background: var(--color-danger-20, rgba(239, 68, 68, 0.2));
+  color: var(--color-danger);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Battle Result Section */
+.battleResult {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+}
+
+.resultWin {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-success);
+  text-shadow: 0 0 10px var(--color-success-20);
+}
+
+.resultLoss {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-danger);
+}
+
+.resultDraw {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-60);
+}
+
+.survivors {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.honorChange {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.honorPositive {
+  color: var(--color-success);
+}
+
+.honorNegative {
+  color: var(--color-danger);
+}
+
+.replayBtn {
+  padding: 0.4rem 0.75rem;
+  background: var(--color-primary-20);
+  border: 1px solid var(--color-primary-30);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.replayBtn:hover {
+  background: var(--color-primary-30);
+  border-color: var(--color-primary);
+}
+
+/* ============================================================================
+   TOWER RACE TAB
+   ============================================================================ */
+
+.raceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.raceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.raceTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.raceWeek {
+  font-size: 0.85rem;
+  color: var(--color-text-40);
+}
+
+.raceStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* ============================================================================
+   GUILD BOSS TAB
+   ============================================================================ */
+
+.bossHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.bossInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.bossTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-danger);
+  margin: 0;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.bossWeek {
+  font-size: 0.85rem;
+  color: var(--color-text-40);
+}
+
+.bossStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Boss HP Bar */
+.bossHpSection {
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.bossHpBar {
+  height: 24px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: var(--spacing-sm);
+}
+
+.bossHpFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-danger), #f87171);
+  border-radius: var(--radius-md);
+  transition: width 0.5s var(--ease-spring);
+  position: relative;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.bossHpFill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+  border-radius: inherit;
+}
+
+.bossHpText {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.bossWeakness {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+  text-align: center;
+}
+
+.weaknessType {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Boss Attack Section */
+.attackSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.noBattleHero {
+  padding: var(--spacing-md);
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--color-gold);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.alreadyAttacked {
+  padding: var(--spacing-md);
+  background: var(--color-primary-10);
+  border: 1px solid var(--color-primary-30);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.attackResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-success-20), rgba(16, 185, 129, 0.1));
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-lg);
+  animation: resultPulse 0.5s ease-out;
+}
+
+@keyframes resultPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.attackDamage {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-success);
+  text-shadow: 0 0 10px var(--color-success-20);
+}
+
+.attackCoins {
+  font-size: 0.9rem;
+  color: var(--color-gold);
+  font-weight: 600;
+}
+
+.todaysAttempt {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+  text-align: center;
+}
+
+.attackError {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ============================================================================
+   ROSTER TAB
+   ============================================================================ */
+
+.rosterHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.rosterStats {
+  display: flex;
+  gap: var(--spacing-xl);
+}
+
+.rosterStatItem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.rosterStatValue {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.rosterStatLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.rosterStatReady {
+  color: var(--color-success);
+}
+
+.rosterFilter {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.filterSelect {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Roster Table */
+.rosterTable {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+.rosterTableHeader {
+  display: flex;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.rosterTableBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.rosterCol {
+  padding: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+}
+
+.rosterColName {
+  flex: 2;
+  min-width: 120px;
+}
+
+.rosterColRole {
+  flex: 1;
+  min-width: 80px;
+}
+
+.rosterColPower {
+  flex: 1;
+  min-width: 80px;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.rosterColWave {
+  flex: 1;
+  min-width: 60px;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.rosterColHero {
+  flex: 2;
+  min-width: 150px;
+}
+
+.rosterRow {
+  display: flex;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.2s;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.rosterRow:hover {
+  background: var(--color-bg);
+}
+
+.rosterRow:last-child {
+  border-bottom: none;
+}
+
+.rosterRowReady {
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.rosterRowReady:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.rosterEmpty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-40);
+  font-size: 0.9rem;
+}
+
+.rosterHint {
+  font-size: 0.85rem;
+  color: var(--color-text-40);
+  line-height: 1.5;
+  text-align: center;
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+/* Role badges in roster */
+.roleLeader {
+  color: var(--color-gold);
+  font-weight: 600;
+}
+
+.roleOfficer {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.roleMember {
+  color: var(--color-text-60);
+}
+
+/* Battle Hero Cell */
+.battleHeroCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.battleHeroCellName {
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.battleHeroCellStats {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+}
+
+/* ============================================================================
+   TREASURY TAB - ADDITIONAL STYLES
+   ============================================================================ */
+
+.treasurySection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.treasuryBalance {
+  display: flex;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.treasuryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  flex: 1;
+  min-width: 120px;
+}
+
+.treasuryGold {
+  color: var(--color-gold);
+  text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+}
+
+.treasuryDust {
+  color: var(--color-dust, #a78bfa);
+  text-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+}
+
+/* Deposit/Withdraw Form */
+.depositForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.depositInput {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.depositInput input {
+  flex: 1;
+  min-width: 80px;
+  max-width: 150px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.depositInput input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.depositInput input::placeholder {
+  color: var(--color-text-40);
+}
+
+.depositInput input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Treasury Logs */
+.treasuryLogs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.logType {
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+}
+
+.logAmountPositive {
+  color: var(--color-success);
+}
+
+.logAmountNegative {
+  color: var(--color-danger);
+}
+
+/* ============================================================================
+   MEMBERS TAB - ADDITIONAL STYLES
+   ============================================================================ */
+
+.sectionBadge {
+  padding: 0.15rem 0.5rem;
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Battle Hero Section */
+.battleHeroSection {
+  padding: var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.currentBattleHero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.battleHeroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.battleHeroName {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.battleHeroStats {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.selectBattleHero {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.heroSelect {
+  flex: 1;
+  min-width: 150px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.heroSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.heroSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.heroSelect option {
+  background: #1a1a2e;
+  color: #e0e0e0;
+}
+
+.battleHeroHint {
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+  line-height: 1.5;
+  margin-top: var(--spacing-md);
+  margin-bottom: 0;
+}
+
+/* Member Card Styles */
+.memberCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.memberCard:hover {
+  border-color: var(--color-primary-30);
+  background: var(--glass-bg);
+}
+
+.memberCardLeader {
+  border-color: var(--color-gold);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent);
+}
+
+.memberCardLeader:hover {
+  border-color: var(--color-gold);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), transparent);
+}
+
+.memberCardOfficer {
+  border-color: var(--color-primary-30);
+  background: linear-gradient(135deg, var(--color-primary-10), transparent);
+}
+
+.memberCardOfficer:hover {
+  border-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary-15), transparent);
+}
+
+.memberDetails {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Empty state styling */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: var(--color-text-60);
+}
+
+.empty p {
+  margin: 0;
+}
+
+.empty .hint {
+  margin-top: var(--spacing-sm);
+  font-size: 0.85rem;
+  color: var(--color-text-40);
+}

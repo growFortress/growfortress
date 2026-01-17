@@ -366,7 +366,9 @@ function performHeroAttack(
 
   // Apply stat penalties from weaknesses (e.g., -20% move speed for Iron Sentinel)
   const attackSpeedPenalty = calculateWeaknessStatPenalty(heroDef.weaknesses, 'attackSpeedMultiplier');
-  const effectiveAttackSpeed = stats.attackSpeed * attackSpeedPenalty;
+  // Apply guild stat boost to attack speed
+  const guildBoost = 1 + (config.guildStatBoost ?? 0);
+  const effectiveAttackSpeed = stats.attackSpeed * attackSpeedPenalty * guildBoost;
   const attackInterval = Math.floor(HERO_BASE_ATTACK_INTERVAL / effectiveAttackSpeed);
 
   if (state.tick - hero.lastAttackTick >= attackInterval) {
@@ -430,6 +432,11 @@ function performHeroAttack(
       pillarId: state.currentPillar,
       hasWeapon: !!hero.equippedArtifact,
     });
+
+    // Apply global damage bonus (includes guild stat boost, synergies, etc.)
+    if (state.modifiers.damageBonus > 0) {
+      finalDamage = Math.floor(finalDamage * (1 + state.modifiers.damageBonus));
+    }
 
     // No killing blow weakness (Spider Sentinel) - cap damage to not kill
     if (behavioralEffects.noKillingBlow && target.hp <= finalDamage) {

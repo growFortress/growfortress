@@ -44,6 +44,7 @@ import {
   unequippedArtifacts,
   updateArtifact,
 } from '../../state/artifacts.signals.js';
+import { guildBonuses } from '../../state/guild.signals.js';
 import { getAccessToken } from '../../api/auth.js';
 import styles from './HeroDetailsModal.module.css';
 
@@ -352,11 +353,13 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
   const hpLevel = heroUpgrades?.statUpgrades.hp || 0;
   const dmgLevel = heroUpgrades?.statUpgrades.damage || 0;
 
-  // Calculate upgraded stats (base stats * upgrade multiplier)
+  // Calculate upgraded stats (base stats * upgrade multiplier * guild bonus)
   const hpMultiplier = hpConfig ? getStatMultiplier(hpConfig, hpLevel) : 1;
   const dmgMultiplier = dmgConfig ? getStatMultiplier(dmgConfig, dmgLevel) : 1;
-  const upgradedHp = Math.floor(currentStats.hp * hpMultiplier);
-  const upgradedDamage = Math.floor(currentStats.damage * dmgMultiplier);
+  const guildStatBoost = 1 + (guildBonuses.value?.statBoost ?? 0);
+  const upgradedHp = Math.floor(currentStats.hp * hpMultiplier * guildStatBoost);
+  const upgradedDamage = Math.floor(currentStats.damage * dmgMultiplier * guildStatBoost);
+  const upgradedAttackSpeed = currentStats.attackSpeed * guildStatBoost;
 
   // Calculate hero power (with equipped artifact)
   const heroPowerBreakdown = calculateHeroPower(
@@ -428,7 +431,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
                 <HeroStatRow
                   icon="⚡"
                   label="AS"
-                  value={currentStats.attackSpeed.toFixed(2)}
+                  value={upgradedAttackSpeed.toFixed(2)}
                 />
               </div>
               {/* XP Progress */}

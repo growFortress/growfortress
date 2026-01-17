@@ -90,7 +90,9 @@ export function updateTurrets(
 
     // Calculate attack interval
     // NOTE: turret stats use 16384 as 1.0 scale
-    const attackSpeed = stats.attackSpeed / 16384;
+    // Apply guild stat boost to attack speed
+    const guildBoost = 1 + (config.guildStatBoost ?? 0);
+    const attackSpeed = (stats.attackSpeed / 16384) * guildBoost;
     const attackInterval = Math.floor(TURRET_ATTACK_INTERVAL_BASE / attackSpeed);
 
     if (state.tick - turret.lastAttackTick >= attackInterval) {
@@ -105,7 +107,12 @@ export function updateTurrets(
       );
 
       // Create projectile (damage also uses 16384 scale)
-      createTurretProjectile(turret, target, state, turretX, turretY, turret.currentClass, stats.damage / 16384);
+      // Apply global damage bonus (includes guild stat boost)
+      let turretDamage = stats.damage / 16384;
+      if (state.modifiers.damageBonus > 0) {
+        turretDamage = turretDamage * (1 + state.modifiers.damageBonus);
+      }
+      createTurretProjectile(turret, target, state, turretX, turretY, turret.currentClass, turretDamage);
     }
 
     // Check special ability

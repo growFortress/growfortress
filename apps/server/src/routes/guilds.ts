@@ -248,11 +248,28 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       zbrojownia: guildWithDetails.structureZbrojownia,
     }) : null;
 
+    // Transform battleHero fields to expected schema format
+    const battleHero = membership.battleHeroId ? {
+      heroId: membership.battleHeroId,
+      tier: membership.battleHeroTier ?? 1,
+      power: membership.battleHeroPower ?? 0,
+    } : null;
+
     return reply.send({
       guild: guildWithDetails,
       membership: {
-        ...membership,
+        id: membership.id,
+        guildId: membership.guildId,
+        userId: membership.userId,
         displayName: membership.user.displayName,
+        role: membership.role,
+        battleHero,
+        battleHeroUpdatedAt: membership.battleHeroUpdatedAt?.toISOString() ?? null,
+        totalGoldDonated: membership.totalGoldDonated,
+        totalDustDonated: membership.totalDustDonated,
+        battlesParticipated: membership.battlesParticipated,
+        battlesWon: membership.battlesWon,
+        joinedAt: membership.joinedAt.toISOString(),
       },
       bonuses,
       structures: guildWithDetails ? {

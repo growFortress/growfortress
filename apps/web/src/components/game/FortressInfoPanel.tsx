@@ -40,6 +40,7 @@ import { TierEvolutionModal } from '../modals/TierEvolutionModal.js';
 import { Button } from '../shared/Button.js';
 import { announce } from '../shared/ScreenReaderAnnouncer.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { guildBonuses } from '../../state/guild.signals.js';
 import styles from './FortressInfoPanel.module.css';
 
 // Class colors
@@ -142,12 +143,16 @@ export function FortressInfoPanel() {
       state.fortressUpgrades.armor || 0
     );
 
+    // Add guild stat boost
+    const guildStatPercent = Math.round((guildBonuses.value?.statBoost ?? 0) * 100);
+
     return {
-      hp: levelHpPercent + upgradeHpPercent,
-      damage: levelDmgPercent + upgradeDmgPercent,
-      armor: upgradeArmorPercent,
+      hp: levelHpPercent + upgradeHpPercent + guildStatPercent,
+      damage: levelDmgPercent + upgradeDmgPercent + guildStatPercent,
+      armor: upgradeArmorPercent + guildStatPercent,
+      guildBonus: guildStatPercent,
     };
-  }, [fortressLevel, state.fortressUpgrades]);
+  }, [fortressLevel, state.fortressUpgrades, guildBonuses.value?.statBoost]);
 
   const classColor = fortressClass ? CLASS_COLORS[fortressClass] : '#888888';
 

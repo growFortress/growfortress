@@ -116,16 +116,20 @@ export function initializeHeroes(
 /**
  * Initialize turrets from config
  * Note: Turret power upgrades (damage/attackSpeed/range) are applied during combat, not at initialization
+ * @param guildStatBoost - Guild stat boost (0-0.20 = 0-20% HP bonus)
  */
 export function initializeTurrets(
-  turretConfigs: Array<{ definitionId: string; slotIndex: number; class: FortressClass; tier?: 1 | 2 | 3 }>
+  turretConfigs: Array<{ definitionId: string; slotIndex: number; class: FortressClass; tier?: 1 | 2 | 3 }>,
+  guildStatBoost?: number
 ): ActiveTurret[] {
   const turrets: ActiveTurret[] = [];
+  const guildBoost = 1 + (guildStatBoost ?? 0);
 
   for (const config of turretConfigs) {
     const turretDef = getTurretById(config.definitionId);
     const tier = config.tier || 1;
-    const maxHp = turretDef ? calculateTurretHp(turretDef, tier) : 150;
+    const baseHp = turretDef ? calculateTurretHp(turretDef, tier) : 150;
+    const maxHp = Math.floor(baseHp * guildBoost);
 
     const turret: ActiveTurret = {
       definitionId: config.definitionId,
