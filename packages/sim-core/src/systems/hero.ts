@@ -31,6 +31,7 @@ import { getHeroById, calculateHeroStats, hasHeroPassive } from '../data/heroes.
 import {
   selectTarget as simpleSelectTarget,
   resetSimpleAI,
+  resetTargetCounts,
 } from '../simple-ai.js';
 
 import {
@@ -143,6 +144,9 @@ export function updateHeroes(
 ): void {
   const physicsConfig = getPhysicsConfig(config);
 
+  // Reset target distribution tracking for this tick
+  resetTargetCounts(state.tick);
+
   // Phase 1: Calculate steering forces and update velocities
   for (const hero of state.heroes) {
     // Clean up expired movement modifiers
@@ -216,10 +220,36 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, _config: SimConf
 
   switch (hero.state) {
     case 'combat': {
-      // Move towards closest enemy while attacking
-      const closestEnemy = findClosestEnemy2D(state.enemies, hero.x, hero.y);
-      if (closestEnemy) {
-        const steering = steerTowards(hero, closestEnemy.x, closestEnemy.y, maxSpeed, HERO_ARRIVAL_RADIUS);
+      // Move towards the hero's actual target (not just closest enemy)
+      // Priority: focusTarget > currentTarget > closest
+      let moveTarget: { x: number; y: number } | null = null;
+
+      // Priority 1: Focus target (team-wide command from player)
+      if (hero.focusTargetId !== undefined) {
+        const focusEnemy = state.enemies.find(e => e.id === hero.focusTargetId);
+        if (focusEnemy) {
+          moveTarget = focusEnemy;
+        }
+      }
+
+      // Priority 2: Current attack target
+      if (!moveTarget && hero.currentTargetId !== undefined) {
+        const currentEnemy = state.enemies.find(e => e.id === hero.currentTargetId);
+        if (currentEnemy) {
+          moveTarget = currentEnemy;
+        }
+      }
+
+      // Priority 3: Fall back to closest enemy
+      if (!moveTarget) {
+        const closestEnemy = findClosestEnemy2D(state.enemies, hero.x, hero.y);
+        if (closestEnemy) {
+          moveTarget = closestEnemy;
+        }
+      }
+
+      if (moveTarget) {
+        const steering = steerTowards(hero, moveTarget.x, moveTarget.y, maxSpeed, HERO_ARRIVAL_RADIUS);
         hero.vx = FP.add(hero.vx, steering.ax);
         hero.vy = FP.add(hero.vy, steering.ay);
       }

@@ -12,6 +12,43 @@ import { FP } from './fixed.js';
 import type { GameState, Enemy, ActiveHero, HeroRole } from './types.js';
 import { getHeroById } from './data/heroes.js';
 
+// ============================================================================
+// TARGET DISTRIBUTION TRACKING
+// ============================================================================
+
+/** Track how many heroes are targeting each enemy (per tick) */
+let heroTargetCounts: Map<number, number> = new Map();
+let lastTargetCountTick: number = -1;
+
+/**
+ * Reset target counts at the start of each tick
+ * Called from hero.ts updateHeroes()
+ */
+export function resetTargetCounts(currentTick: number): void {
+  if (currentTick !== lastTargetCountTick) {
+    heroTargetCounts.clear();
+    lastTargetCountTick = currentTick;
+  }
+}
+
+/**
+ * Register that a hero is targeting an enemy
+ */
+export function registerTarget(enemyId: number): void {
+  heroTargetCounts.set(enemyId, (heroTargetCounts.get(enemyId) || 0) + 1);
+}
+
+/**
+ * Get count of heroes already targeting an enemy
+ */
+export function getTargetCount(enemyId: number): number {
+  return heroTargetCounts.get(enemyId) || 0;
+}
+
+// ============================================================================
+// ROLE HELPERS
+// ============================================================================
+
 /** Get hero's role from definition */
 export function getHeroRole(heroId: string): HeroRole {
   const def = getHeroById(heroId);
@@ -37,46 +74,112 @@ export function isSupport(heroId: string): boolean {
 }
 
 /**
- * Select best target for a hero based on role
+ * Select best target for a hero based on role with intelligent distribution
+ * Heroes prefer targets that aren't already being attacked by others
  */
 export function selectTarget(
   hero: ActiveHero,
   enemiesInRange: Enemy[],
-  _state: GameState,
+  state: GameState,
   fortressX: number
 ): Enemy | null {
   if (enemiesInRange.length === 0) return null;
 
-  const role = getHeroRole(hero.definitionId);
+  // Target stickiness: if current target is still valid, prefer to keep it
+  // This prevents heroes from constantly switching targets
+  if (hero.currentTargetId !== undefined) {
+    const currentTarget = enemiesInRange.find(e => e.id === hero.currentTargetId);
+    if (currentTarget) {
+      // Check if this target is heavily over-targeted
+      const targetCount = getTargetCount(currentTarget.id);
+      const combatHeroCount = state.heroes.filter(h => h.state === 'combat').length;
+      const maxPerTarget = Math.max(1, Math.ceil(combatHeroCount / Math.max(1, enemiesInRange.length)));
 
-  switch (role) {
-    case 'tank':
-      // Target enemy closest to fortress (intercept)
-      return findClosestToFortress(enemiesInRange, fortressX);
-
-    case 'dps':
-      // Target lowest HP enemy (secure kills)
-      return findLowestHp(enemiesInRange);
-
-    case 'crowd_control':
-      // Target enemy in largest cluster (maximize AoE)
-      return findInLargestCluster(enemiesInRange);
-
-    case 'support':
-    default:
-      // Target closest enemy
-      return findClosestToHero(hero, enemiesInRange);
+      // Keep current target unless it's over-targeted AND there are alternatives
+      if (targetCount <= maxPerTarget + 1 || enemiesInRange.length === 1) {
+        registerTarget(currentTarget.id);
+        return currentTarget;
+      }
+    }
   }
+
+  // Select new target with distribution awareness
+  const target = selectBestTargetWithDistribution(hero, enemiesInRange, fortressX);
+
+  if (target) {
+    registerTarget(target.id);
+  }
+
+  return target;
 }
 
-/** Find enemy closest to fortress (with priority for dangerous enemies) */
-function findClosestToFortress(enemies: Enemy[], fortressX: number): Enemy {
+/**
+ * Select best target considering both role priorities and target distribution
+ */
+function selectBestTargetWithDistribution(
+  hero: ActiveHero,
+  enemies: Enemy[],
+  fortressX: number
+): Enemy | null {
+  if (enemies.length === 0) return null;
+  if (enemies.length === 1) return enemies[0];
+
+  const role = getHeroRole(hero.definitionId);
   const fxFP = FP.fromInt(fortressX);
-  return enemies.reduce((best, enemy) => {
-    const bestScore = calculateTankTargetScore(best, fxFP);
-    const enemyScore = calculateTankTargetScore(enemy, fxFP);
-    return enemyScore > bestScore ? enemy : best;
+
+  // Score each enemy based on role + distribution bonus
+  const scoredEnemies = enemies.map(enemy => {
+    let baseScore: number;
+
+    switch (role) {
+      case 'tank':
+        baseScore = calculateTankTargetScore(enemy, fxFP);
+        break;
+      case 'dps':
+        baseScore = calculateDpsTargetScore(enemy);
+        break;
+      case 'crowd_control':
+        baseScore = calculateCCTargetScore(enemy, enemies);
+        break;
+      case 'support':
+      default:
+        // Support targets closest enemy
+        baseScore = 100 - FP.toFloat(FP.distSq(hero.x, hero.y, enemy.x, enemy.y)) * 0.5;
+        break;
+    }
+
+    // Distribution bonus: prefer targets with fewer attackers
+    // +25 points for each hero NOT targeting this enemy (up to +75)
+    const existingTargeters = getTargetCount(enemy.id);
+    const distributionBonus = Math.max(0, (3 - existingTargeters) * 25);
+
+    return {
+      enemy,
+      score: baseScore + distributionBonus,
+    };
   });
+
+  // Sort by score descending and pick best
+  scoredEnemies.sort((a, b) => b.score - a.score);
+  return scoredEnemies[0].enemy;
+}
+
+/**
+ * Calculate priority score for crowd control targeting (cluster-based)
+ */
+function calculateCCTargetScore(enemy: Enemy, allEnemies: Enemy[]): number {
+  const CLUSTER_RADIUS = FP.fromInt(3);
+  const clusterRadiusSq = FP.mul(CLUSTER_RADIUS, CLUSTER_RADIUS);
+
+  let clusterSize = 0;
+  for (const other of allEnemies) {
+    if (FP.distSq(enemy.x, enemy.y, other.x, other.y) <= clusterRadiusSq) {
+      clusterSize++;
+    }
+  }
+
+  // Score based on cluster size (0-100 scale)
+  return clusterSize * 20;
 }
 
 /** Calculate priority score for tank targeting */
@@ -115,16 +218,6 @@ function calculateTankTargetScore(enemy: Enemy, fortressX: number): number {
   }
 
   return score;
-}
-
-/** Find enemy with lowest HP (prioritize killable targets and dangerous enemies) */
-function findLowestHp(enemies: Enemy[]): Enemy {
-  return enemies.reduce((best, enemy) => {
-    // Calculate priority score for each enemy
-    const bestScore = calculateDpsTargetScore(best);
-    const enemyScore = calculateDpsTargetScore(enemy);
-    return enemyScore > bestScore ? enemy : best;
-  });
 }
 
 /** Calculate priority score for DPS targeting */
@@ -170,38 +263,6 @@ function calculateDpsTargetScore(enemy: Enemy): number {
   return score;
 }
 
-/** Find enemy closest to hero */
-function findClosestToHero(hero: ActiveHero, enemies: Enemy[]): Enemy {
-  return enemies.reduce((closest, enemy) => {
-    const distA = FP.distSq(hero.x, hero.y, closest.x, closest.y);
-    const distB = FP.distSq(hero.x, hero.y, enemy.x, enemy.y);
-    return distB < distA ? enemy : closest;
-  });
-}
-
-/** Find enemy in largest cluster (for AoE heroes) */
-function findInLargestCluster(enemies: Enemy[]): Enemy {
-  const CLUSTER_RADIUS = FP.fromInt(3);
-
-  let bestEnemy = enemies[0];
-  let bestClusterSize = 0;
-
-  for (const enemy of enemies) {
-    let clusterSize = 0;
-    for (const other of enemies) {
-      if (FP.distSq(enemy.x, enemy.y, other.x, other.y) <= FP.mul(CLUSTER_RADIUS, CLUSTER_RADIUS)) {
-        clusterSize++;
-      }
-    }
-    if (clusterSize > bestClusterSize) {
-      bestClusterSize = clusterSize;
-      bestEnemy = enemy;
-    }
-  }
-
-  return bestEnemy;
-}
-
 // ============================================================================
 // LEGACY API COMPATIBILITY
 // ============================================================================
@@ -220,7 +281,8 @@ export function getSimpleBattlefieldState(state: GameState): SimpleBattlefieldSt
   };
 }
 
-/** Reset AI state (no-op for simple AI) */
+/** Reset AI state - clears target distribution tracking */
 export function resetSimpleAI(): void {
-  // No state to reset in simple AI
+  heroTargetCounts.clear();
+  lastTargetCountTick = -1;
 }
