@@ -21,6 +21,7 @@ import { HeroSkillBar } from "./HeroSkillBar.js";
 import { TurretSkillBar } from "./TurretSkillBar.js";
 import { FortressSkillBar } from "./FortressSkillBar.js";
 import { FortressInfoPanel } from "./FortressInfoPanel.js";
+import { DuoAttackPanel } from "./DuoAttackPanel.js";
 import {
   hasUnclaimedRewards,
   showRewardsModal,
@@ -150,6 +151,7 @@ export function Hud() {
             <TurretSkillBar compact />
             <FortressSkillBar compact />
           </div>
+          <DuoAttackPanel compact />
         </div>
       )}
     </div>

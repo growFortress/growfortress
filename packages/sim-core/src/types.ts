@@ -396,6 +396,82 @@ export interface ArtifactSynergyBonus {
 }
 
 // ============================================================================
+// HERO-SPECIFIC ARTIFACT SYSTEM
+// ============================================================================
+
+/** Requirement for hero-specific artifacts */
+export interface HeroSpecificRequirement {
+  /** Specific hero IDs that can equip this artifact (empty = any hero) */
+  heroIds: string[];
+  /** Flavor text explaining why this artifact is hero-specific */
+  flavorText: string;
+}
+
+// ============================================================================
+// DUO-ATTACK SYSTEM
+// ============================================================================
+
+/** Effect types for duo-attacks */
+export type DuoAttackEffectType = 'damage' | 'buff' | 'debuff' | 'summon' | 'terrain';
+
+/** Single effect within a duo-attack */
+export interface DuoAttackEffect {
+  type: DuoAttackEffectType;
+  /** Direct damage amount */
+  damage?: number;
+  /** Effect radius (FP format) */
+  radius?: number;
+  /** Effect duration in ticks */
+  duration?: number;
+  /** Stat to buff (for buff type) */
+  buffStat?: keyof ModifierSet;
+  /** Buff amount (for buff type) */
+  buffAmount?: number;
+  /** Status effect to apply (for debuff type) */
+  statusEffect?: SkillEffect;
+}
+
+/** Definition of a duo-attack (two heroes combining powers) */
+export interface DuoAttackDefinition {
+  id: string;
+  name: string;
+  description: string;
+  /** Hero pair required (order doesn't matter) */
+  heroes: [string, string];
+  /** Maximum distance between heroes to trigger (FP format) */
+  activationRange: number;
+  /** Cooldown between uses in ticks */
+  cooldownTicks: number;
+  /** Effects applied when triggered */
+  effects: DuoAttackEffect[];
+  /** Visual effect identifier for rendering */
+  visualEffect: string;
+  /** Audio effect identifier */
+  audioEffect: string;
+}
+
+/** Trigger event for VFX system */
+export interface DuoAttackTrigger {
+  duoAttackId: string;
+  hero1Id: string;
+  hero2Id: string;
+  /** Center position X (FP format) */
+  x: number;
+  /** Center position Y (FP format) */
+  y: number;
+  /** Tick when triggered */
+  tick: number;
+  /** Total damage dealt (for VFX scaling) */
+  damage?: number;
+}
+
+/** Active cooldown tracking for duo-attacks */
+export interface ActiveDuoAttackCooldown {
+  duoAttackId: string;
+  expirationTick: number;
+}
+
+// ============================================================================
 // ARTIFACT VISUAL SYSTEM (Procedural)
 // ============================================================================
 

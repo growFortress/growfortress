@@ -41,6 +41,7 @@ export interface ArtifactEffect {
 
 export interface ArtifactRequirement {
   heroId?: string;          // Specyficzny bohater (legacy)
+  heroIds?: string[];       // Lista bohaterów którzy mogą używać artefaktu (hero-specific)
   heroClass?: FortressClass; // @deprecated - use synergy instead
   heroTier?: number;         // Minimalny tier
   materials?: { type: MaterialType; amount: number }[]; // Do craftingu
@@ -2602,10 +2603,435 @@ const FOUNDERS_MEDAL: ArtifactDefinition = {
 };
 
 // ============================================================================
+// HERO-SPECIFIC ARTIFACTS (tylko dla konkretnych bohaterów)
+// ============================================================================
+
+// === STORM (lightning/dps) ===
+const STORM_CORE: ArtifactDefinition = {
+  id: 'storm_core',
+  name: 'Storm Core',
+  polishName: 'Rdzeń Burzy',
+  description: 'Reaktor plazmowy stworzony specjalnie dla Storm - maksymalizuje moc łańcuchową.',
+  lore: 'Serce pierwotnej burzy, ujarzmione i skondensowane w reaktor.',
+  rarity: 'legendary',
+  slot: 'weapon',
+  slotType: 'weapon',
+  requirements: { heroIds: ['storm'], heroTier: 2 },
+  synergy: { synergyClasses: ['lightning'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Storm' },
+  effects: [
+    { type: 'stat_boost', stat: 'chainDamagePercent', value: 26214 as FP, description: '+40% obrażeń łańcuchowych' },
+    { type: 'stat_boost', stat: 'chainCount', value: 32768 as FP, description: '+2 cele łańcucha' },
+    { type: 'passive', description: '100% szansa na łańcuch' },
+  ],
+  visuals: { shape: 'crystal', primaryColor: 0x00bfff, secondaryColor: 0xffffff, glowColor: 0x87ceeb, animation: 'pulse', particles: 'lightning', particleIntensity: 0.9, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'cosmic_dust', amount: 10 }], goldCost: 5000 },
+};
+
+const ARC_REACTOR_MK2: ArtifactDefinition = {
+  id: 'arc_reactor_mk2',
+  name: 'Arc Reactor MK2',
+  polishName: 'Reaktor Łukowy MK2',
+  description: 'Ulepszona wersja reaktora dla Storm - każde zabójstwo regeneruje energię.',
+  lore: 'Druga generacja technologii reaktorowej, zoptymalizowana pod kąt wydajności bojowej.',
+  rarity: 'epic',
+  slot: 'armor',
+  slotType: 'armor',
+  requirements: { heroIds: ['storm'], heroTier: 1 },
+  synergy: { synergyClasses: ['lightning'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Storm' },
+  effects: [
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 21299 as FP, description: '+30% obrażeń' },
+    { type: 'stat_boost', stat: 'attackSpeed', value: 20480 as FP, description: '+25% szybkość ataku' },
+    { type: 'passive', description: 'Zabójstwa leczą 5% HP' },
+  ],
+  visuals: { shape: 'circle', primaryColor: 0x00bfff, secondaryColor: 0x191970, glowColor: 0x00ffff, animation: 'pulse', particles: 'lightning', particleIntensity: 0.7, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Cosmos', dropChance: 656 as FP },
+};
+
+// === FORGE (tech/dps) ===
+const ORBITAL_TARGETING: ArtifactDefinition = {
+  id: 'orbital_targeting',
+  name: 'Orbital Targeting System',
+  polishName: 'Orbitalny System Celowania',
+  description: 'Zaawansowany system celowania dla Forge - krytyki powodują eksplozje.',
+  lore: 'Satelitarny system naprowadzania, połączony z siecią obronną planety.',
+  rarity: 'legendary',
+  slot: 'accessory',
+  slotType: 'accessory',
+  requirements: { heroIds: ['forge'], heroTier: 2 },
+  synergy: { synergyClasses: ['tech'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Forge' },
+  effects: [
+    { type: 'stat_boost', stat: 'critDamageBonus', value: 24576 as FP, description: '+50% obrażeń krytycznych' },
+    { type: 'passive', description: 'Krytyki zadają obrażenia obszarowe' },
+  ],
+  visuals: { shape: 'gear', primaryColor: 0x808080, secondaryColor: 0x00ff00, glowColor: 0x32cd32, animation: 'rotate', particles: 'sparkles', particleIntensity: 0.6, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'vibranium', amount: 8 }], goldCost: 6000 },
+};
+
+const NANO_CONSTRUCTOR: ArtifactDefinition = {
+  id: 'nano_constructor',
+  name: 'Nano Constructor',
+  polishName: 'Nano Konstruktor',
+  description: 'Rój nanorobotów dla Forge - automatyczna naprawa i wzmocnienie.',
+  lore: 'Miliardy mikrobotów działających w doskonałej synchronizacji.',
+  rarity: 'epic',
+  slot: 'armor',
+  slotType: 'armor',
+  requirements: { heroIds: ['forge'], heroTier: 1 },
+  synergy: { synergyClasses: ['tech'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Forge' },
+  effects: [
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 19661 as FP, description: '+20% wszystkich statystyk' },
+    { type: 'stat_boost', stat: 'maxHpBonus', value: 19661 as FP, description: '+20% HP' },
+    { type: 'passive', description: 'Regeneruje 3% HP/s gdy poniżej 50% HP' },
+  ],
+  visuals: { shape: 'hexagon', primaryColor: 0x2f4f4f, secondaryColor: 0x00ced1, glowColor: 0x00ffff, animation: 'shimmer', particles: 'sparkles', particleIntensity: 0.5, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Science', dropChance: 656 as FP },
+};
+
+// === TITAN (void/tank) ===
+const DIMENSIONAL_ANCHOR: ArtifactDefinition = {
+  id: 'dimensional_anchor',
+  name: 'Dimensional Anchor',
+  polishName: 'Kotwica Wymiarowa',
+  description: 'Stabilizator próżniowy dla Titan - niemożliwy do odepchnięcia, prowokuje wrogów.',
+  lore: 'Zakotwicza użytkownika w wielu wymiarach jednocześnie.',
+  rarity: 'legendary',
+  slot: 'armor',
+  slotType: 'armor',
+  requirements: { heroIds: ['titan'], heroTier: 2 },
+  synergy: { synergyClasses: ['void'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Titan' },
+  effects: [
+    { type: 'stat_boost', stat: 'maxHpBonus', value: 24576 as FP, description: '+50% HP' },
+    { type: 'passive', description: 'Odporność na odrzut, prowokuje wrogów w zasięgu 5' },
+  ],
+  visuals: { shape: 'shield', primaryColor: 0x4b0082, secondaryColor: 0x9400d3, glowColor: 0x8a2be2, animation: 'float', particles: 'void', particleIntensity: 0.8, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'darkforce', amount: 12 }], goldCost: 7000 },
+};
+
+const VOID_HEART_TITAN: ArtifactDefinition = {
+  id: 'void_heart_titan',
+  name: 'Void Heart',
+  polishName: 'Serce Próżni',
+  description: 'Rdzeń z czarnej dziury dla Titan - obrażenia rosną gdy HP spada.',
+  lore: 'Fragment singularności, pulsujący energią destrukcji.',
+  rarity: 'epic',
+  slot: 'accessory',
+  slotType: 'accessory',
+  requirements: { heroIds: ['titan'], heroTier: 1 },
+  synergy: { synergyClasses: ['void'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Titan' },
+  effects: [
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 16384 as FP, description: 'Bazowe obrażenia' },
+    { type: 'passive', description: 'Obrażenia +150% przy 1 HP (skalowane z brakującym HP)' },
+  ],
+  visuals: { shape: 'crystal', primaryColor: 0x000000, secondaryColor: 0x4b0082, glowColor: 0x9400d3, animation: 'pulse', particles: 'void', particleIntensity: 0.9, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Magic', dropChance: 656 as FP },
+};
+
+// === VANGUARD (natural/tank) ===
+const COMMANDERS_INSIGNIA: ArtifactDefinition = {
+  id: 'commanders_insignia',
+  name: "Commander's Insignia",
+  polishName: 'Insygnia Dowódcy',
+  description: 'Symbol przywództwa dla Vanguard - wzmacnia wszystkich sojuszników w pobliżu.',
+  lore: 'Noszone przez największych generałów w historii, inspiruje do wielkich czynów.',
+  rarity: 'legendary',
+  slot: 'accessory',
+  slotType: 'accessory',
+  requirements: { heroIds: ['vanguard'], heroTier: 2 },
+  synergy: { synergyClasses: ['natural'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Vanguard' },
+  effects: [
+    { type: 'passive', description: 'Sojusznicy w zasięgu 6: +20% obrażeń, +15% szybkości ataku' },
+  ],
+  visuals: { shape: 'star', primaryColor: 0xffd700, secondaryColor: 0xb8860b, glowColor: 0xffdf00, animation: 'pulse', particles: 'sparkles', particleIntensity: 0.7, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'adamantium', amount: 10 }], goldCost: 6500 },
+};
+
+const KINETIC_BARRIER_MK3: ArtifactDefinition = {
+  id: 'kinetic_barrier_mk3',
+  name: 'Kinetic Barrier MK3',
+  polishName: 'Bariera Kinetyczna MK3',
+  description: 'Zaawansowana tarcza dla Vanguard - blokuje ataki i leczy.',
+  lore: 'Trzecia generacja technologii obronnej, prawie nieprzebijalna.',
+  rarity: 'epic',
+  slot: 'armor',
+  slotType: 'armor',
+  requirements: { heroIds: ['vanguard'], heroTier: 1 },
+  synergy: { synergyClasses: ['natural'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Vanguard' },
+  effects: [
+    { type: 'passive', description: '60% szansa na blok, blokowane ataki leczą 5% HP' },
+    { type: 'stat_boost', stat: 'maxHpBonus', value: 21299 as FP, description: '+30% HP' },
+  ],
+  visuals: { shape: 'shield', primaryColor: 0x228b22, secondaryColor: 0xadff2f, glowColor: 0x7fff00, animation: 'shimmer', particles: 'sparkles', particleIntensity: 0.5, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Streets', dropChance: 656 as FP },
+};
+
+// === FROST (ice/cc) ===
+const ABSOLUTE_ZERO_CORE: ArtifactDefinition = {
+  id: 'absolute_zero_core',
+  name: 'Absolute Zero Core',
+  polishName: 'Rdzeń Zera Absolutnego',
+  description: 'Kriogeniczny rdzeń dla Frost - spowolnienia stają się zamrożeniami.',
+  lore: 'Temperatura bliska zeru absolutnemu, skondensowana w stabilny rdzeń.',
+  rarity: 'legendary',
+  slot: 'weapon',
+  slotType: 'weapon',
+  requirements: { heroIds: ['frost'], heroTier: 2 },
+  synergy: { synergyClasses: ['ice'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Frost' },
+  effects: [
+    { type: 'passive', description: 'Spowolnienia stają się zamrożeniami' },
+    { type: 'passive', description: '+50% czas trwania zamrożenia' },
+  ],
+  visuals: { shape: 'crystal', primaryColor: 0x00ffff, secondaryColor: 0xf0ffff, glowColor: 0xe0ffff, animation: 'shimmer', particles: 'frost', particleIntensity: 0.9, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'cosmic_dust', amount: 8 }, { material: 'vibranium', amount: 5 }], goldCost: 7500 },
+};
+
+const CRYO_SNIPER_SCOPE: ArtifactDefinition = {
+  id: 'cryo_sniper_scope',
+  name: 'Cryo Sniper Scope',
+  polishName: 'Kriogeniczny Celownik',
+  description: 'Precyzyjny celownik dla Frost - zwiększony zasięg i obrażenia vs zamrożonych.',
+  lore: 'Celownik działający w temperaturach bliskich zeru absolutnemu.',
+  rarity: 'epic',
+  slot: 'accessory',
+  slotType: 'accessory',
+  requirements: { heroIds: ['frost'], heroTier: 1 },
+  synergy: { synergyClasses: ['ice'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Frost' },
+  effects: [
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 22938 as FP, description: '+40% obrażeń vs zamrożonych' },
+    { type: 'passive', description: '+50% zasięg' },
+  ],
+  visuals: { shape: 'circle', primaryColor: 0x87ceeb, secondaryColor: 0x4682b4, glowColor: 0xb0e0e6, animation: 'static', particles: 'frost', particleIntensity: 0.4, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Science', dropChance: 656 as FP },
+};
+
+// === INFERNO (fire/dps) ===
+const SOLAR_CORE: ArtifactDefinition = {
+  id: 'solar_core',
+  name: 'Solar Core',
+  polishName: 'Rdzeń Słoneczny',
+  description: 'Fragment gwiazdy dla Inferno - podpalone cele eksplodują przy śmierci.',
+  lore: 'Skompresowana plazma słoneczna, paląca się w nieskończoność.',
+  rarity: 'legendary',
+  slot: 'weapon',
+  slotType: 'weapon',
+  requirements: { heroIds: ['inferno'], heroTier: 2 },
+  synergy: { synergyClasses: ['fire'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Inferno' },
+  effects: [
+    { type: 'passive', description: 'Podpalenia zadają 3x obrażeń' },
+    { type: 'passive', description: 'Podpaleni wrogowie eksplodują przy śmierci' },
+  ],
+  visuals: { shape: 'star', primaryColor: 0xff4500, secondaryColor: 0xffd700, glowColor: 0xff6347, animation: 'pulse', particles: 'flames', particleIntensity: 1.0, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'extremis', amount: 10 }], goldCost: 7000 },
+};
+
+const INFERNAL_ENGINE: ArtifactDefinition = {
+  id: 'infernal_engine',
+  name: 'Infernal Engine',
+  polishName: 'Piekielny Silnik',
+  description: 'Termiczny silnik dla Inferno - szybkość ataku rośnie z każdym podpalonym wrogiem.',
+  lore: 'Napędzany piekielnym ogniem, im więcej płonie, tym szybciej działa.',
+  rarity: 'epic',
+  slot: 'armor',
+  slotType: 'armor',
+  requirements: { heroIds: ['inferno'], heroTier: 1 },
+  synergy: { synergyClasses: ['fire'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Inferno' },
+  effects: [
+    { type: 'passive', description: '+25% szybkość ataku za każdego podpalonego wroga (max 100%)' },
+  ],
+  visuals: { shape: 'gear', primaryColor: 0x8b0000, secondaryColor: 0xff4500, glowColor: 0xff6347, animation: 'rotate', particles: 'flames', particleIntensity: 0.8, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Mutants', dropChance: 656 as FP },
+};
+
+// === GLACIER (ice/tank) ===
+const PERMAFROST_SHELL: ArtifactDefinition = {
+  id: 'permafrost_shell',
+  name: 'Permafrost Shell',
+  polishName: 'Pancerz Wiecznej Zmarzliny',
+  description: 'Lodowy pancerz dla Glacier - atakujący zostają zamrożeni.',
+  lore: 'Lód tak stary jak sama planeta, nigdy nie topniejący.',
+  rarity: 'legendary',
+  slot: 'armor',
+  slotType: 'armor',
+  requirements: { heroIds: ['glacier'], heroTier: 2 },
+  synergy: { synergyClasses: ['ice'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Glacier' },
+  effects: [
+    { type: 'stat_boost', stat: 'maxHpBonus', value: 26214 as FP, description: '+60% HP' },
+    { type: 'passive', description: 'Atakujący są zamrażani na 1s' },
+  ],
+  visuals: { shape: 'shield', primaryColor: 0xb0e0e6, secondaryColor: 0x00ced1, glowColor: 0xafeeee, animation: 'shimmer', particles: 'frost', particleIntensity: 0.8, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'vibranium', amount: 10 }, { material: 'cosmic_dust', amount: 5 }], goldCost: 8000 },
+};
+
+const ICE_AGE_PROTOCOL: ArtifactDefinition = {
+  id: 'ice_age_protocol',
+  name: 'Ice Age Protocol',
+  polishName: 'Protokół Epoki Lodowej',
+  description: 'Kriogeniczna aura dla Glacier - spowalnia wszystkich wrogów w pobliżu.',
+  lore: 'Aktywacja protokołu obniża temperaturę do poziomu epoki lodowej.',
+  rarity: 'epic',
+  slot: 'accessory',
+  slotType: 'accessory',
+  requirements: { heroIds: ['glacier'], heroTier: 1 },
+  synergy: { synergyClasses: ['ice'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Glacier' },
+  effects: [
+    { type: 'passive', description: 'Aura: wrogowie w zasięgu 4 są spowolnieni o 40%' },
+  ],
+  visuals: { shape: 'hexagon', primaryColor: 0x87ceeb, secondaryColor: 0x4682b4, glowColor: 0xb0c4de, animation: 'pulse', particles: 'frost', particleIntensity: 0.6, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Gods', dropChance: 656 as FP },
+};
+
+// === SPECTRE (plasma/dps) ===
+const PHASE_CLOAK: ArtifactDefinition = {
+  id: 'phase_cloak',
+  name: 'Phase Cloak',
+  polishName: 'Płaszcz Fazowy',
+  description: 'Płaszcz niewidzialności dla Spectre - uniki dają potężny kontratak.',
+  lore: 'Przesunięcie fazowe pozwala na chwilowe zniknięcie z tego wymiaru.',
+  rarity: 'legendary',
+  slot: 'armor',
+  slotType: 'armor',
+  requirements: { heroIds: ['spectre'], heroTier: 2 },
+  synergy: { synergyClasses: ['plasma'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Spectre' },
+  effects: [
+    { type: 'passive', description: '+30% szansa na unik' },
+    { type: 'passive', description: 'Pierwszy atak po uniku zadaje 200% obrażeń' },
+  ],
+  visuals: { shape: 'diamond', primaryColor: 0x9370db, secondaryColor: 0x8a2be2, glowColor: 0xdda0dd, animation: 'shimmer', particles: 'plasma', particleIntensity: 0.7, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'pym_particles', amount: 8 }], goldCost: 6500 },
+};
+
+const GHOST_MATRIX: ArtifactDefinition = {
+  id: 'ghost_matrix',
+  name: 'Ghost Matrix',
+  polishName: 'Matryca Widmo',
+  description: 'Fazowa matryca dla Spectre - ataki mogą trafiać dwukrotnie.',
+  lore: 'Ataki istnieją w wielu wymiarach jednocześnie.',
+  rarity: 'epic',
+  slot: 'weapon',
+  slotType: 'weapon',
+  requirements: { heroIds: ['spectre'], heroTier: 1 },
+  synergy: { synergyClasses: ['plasma'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Spectre' },
+  effects: [
+    { type: 'passive', description: '25% szansa że atak trafi dwukrotnie' },
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 18842 as FP, description: '+15% obrażeń' },
+  ],
+  visuals: { shape: 'crystal', primaryColor: 0xba55d3, secondaryColor: 0x9932cc, glowColor: 0xda70d6, animation: 'float', particles: 'plasma', particleIntensity: 0.6, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Magic', dropChance: 656 as FP },
+};
+
+// === OMEGA (void/assassin) ===
+const EXECUTIONERS_MARK: ArtifactDefinition = {
+  id: 'executioners_mark',
+  name: "Executioner's Mark",
+  polishName: 'Piętno Kata',
+  description: 'Znak egzekutora dla Omega - egzekucje powodują eksplozje.',
+  lore: 'Piętno nadane przez samą śmierć, gwarantujące czysty cios.',
+  rarity: 'legendary',
+  slot: 'weapon',
+  slotType: 'weapon',
+  requirements: { heroIds: ['omega'], heroTier: 2 },
+  synergy: { synergyClasses: ['void'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Omega' },
+  effects: [
+    { type: 'stat_boost', stat: 'executeThreshold', value: 19661 as FP, description: '+10% próg egzekucji' },
+    { type: 'passive', description: 'Egzekucje zadają 50% obrażeń jako AoE' },
+  ],
+  visuals: { shape: 'blade', primaryColor: 0x2f2f2f, secondaryColor: 0x8b0000, glowColor: 0xdc143c, animation: 'pulse', particles: 'void', particleIntensity: 0.9, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'darkforce', amount: 10 }, { material: 'mutant_dna', amount: 5 }], goldCost: 7500 },
+};
+
+const OMEGA_PROTOCOL_CHIP: ArtifactDefinition = {
+  id: 'omega_protocol_chip',
+  name: 'Omega Protocol Chip',
+  polishName: 'Chip Protokołu Omega',
+  description: 'Tajny protokół dla Omega - ultimate resetuje się po zabójstwie.',
+  lore: 'Ostateczny protokół bojowy, aktywowany tylko w ekstremalnych sytuacjach.',
+  rarity: 'epic',
+  slot: 'accessory',
+  slotType: 'accessory',
+  requirements: { heroIds: ['omega'], heroTier: 1 },
+  synergy: { synergyClasses: ['void'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Omega' },
+  effects: [
+    { type: 'passive', description: 'Ultimate resetuje się po zabójstwie' },
+    { type: 'stat_boost', stat: 'damageMultiplier', value: 32768 as FP, description: '+100% obrażeń ultimate' },
+  ],
+  visuals: { shape: 'hexagon', primaryColor: 0x1a1a2e, secondaryColor: 0x4a0080, glowColor: 0x6a0dad, animation: 'static', particles: 'void', particleIntensity: 0.5, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Gods', dropChance: 656 as FP },
+};
+
+// === RIFT (fire/support) ===
+const PROBABILITY_ENGINE: ArtifactDefinition = {
+  id: 'probability_engine',
+  name: 'Probability Engine',
+  polishName: 'Silnik Prawdopodobieństwa',
+  description: 'Manipulator chaosu dla Rift - krytyki mogą wyzwalać kolejne krytyki.',
+  lore: 'Zmienia fundamentalne prawa prawdopodobieństwa.',
+  rarity: 'legendary',
+  slot: 'accessory',
+  slotType: 'accessory',
+  requirements: { heroIds: ['rift'], heroTier: 2 },
+  synergy: { synergyClasses: ['fire'], bonusMultiplier: 1.20, bonusDescription: '+20% dla Rift' },
+  effects: [
+    { type: 'stat_boost', stat: 'critChance', value: 21299 as FP, description: '+30% szansa na krytyk' },
+    { type: 'passive', description: 'Krytyki mają 30% szansę na ponowny krytyk' },
+  ],
+  visuals: { shape: 'gear', primaryColor: 0xff6347, secondaryColor: 0xffd700, glowColor: 0xff7f50, animation: 'rotate', particles: 'flames', particleIntensity: 0.7, hasOuterRing: true, hasInnerGlow: true },
+  source: { type: 'craft', craftRecipe: [{ material: 'extremis', amount: 8 }, { material: 'cosmic_dust', amount: 5 }], goldCost: 7000 },
+};
+
+const CHAOS_AMPLIFIER: ArtifactDefinition = {
+  id: 'chaos_amplifier',
+  name: 'Chaos Amplifier',
+  polishName: 'Wzmacniacz Chaosu',
+  description: 'Wzmacniacz losowości dla Rift - co 10s losowy bonus do statystyk.',
+  lore: 'Wzmacnia chaos, czyniąc nieprzewidywalne nieuniknionym.',
+  rarity: 'epic',
+  slot: 'weapon',
+  slotType: 'weapon',
+  requirements: { heroIds: ['rift'], heroTier: 1 },
+  synergy: { synergyClasses: ['fire'], bonusMultiplier: 1.15, bonusDescription: '+15% dla Rift' },
+  effects: [
+    { type: 'passive', description: 'Co 10s: +25% do losowej statystyki (obrażenia/szybkość/krytyk)' },
+  ],
+  visuals: { shape: 'crystal', primaryColor: 0xff4500, secondaryColor: 0xff8c00, glowColor: 0xffa500, animation: 'pulse', particles: 'flames', particleIntensity: 0.6, hasOuterRing: false, hasInnerGlow: true },
+  source: { type: 'drop', location: 'Magic', dropChance: 656 as FP },
+};
+
+// ============================================================================
 // EKSPORT
 // ============================================================================
 
 export const ARTIFACT_DEFINITIONS: ArtifactDefinition[] = [
+  // ============ HERO-SPECIFIC (20) ============
+  // Storm
+  STORM_CORE,
+  ARC_REACTOR_MK2,
+  // Forge
+  ORBITAL_TARGETING,
+  NANO_CONSTRUCTOR,
+  // Titan
+  DIMENSIONAL_ANCHOR,
+  VOID_HEART_TITAN,
+  // Vanguard
+  COMMANDERS_INSIGNIA,
+  KINETIC_BARRIER_MK3,
+  // Frost
+  ABSOLUTE_ZERO_CORE,
+  CRYO_SNIPER_SCOPE,
+  // Inferno
+  SOLAR_CORE,
+  INFERNAL_ENGINE,
+  // Glacier
+  PERMAFROST_SHELL,
+  ICE_AGE_PROTOCOL,
+  // Spectre
+  PHASE_CLOAK,
+  GHOST_MATRIX,
+  // Omega
+  EXECUTIONERS_MARK,
+  OMEGA_PROTOCOL_CHIP,
+  // Rift
+  PROBABILITY_ENGINE,
+  CHAOS_AMPLIFIER,
+
   // ============ SPECIAL / EVENT ============
   FOUNDERS_MEDAL,
 
@@ -2723,12 +3149,12 @@ export function getArtifactsByRarity(rarity: ArtifactRarity): ArtifactDefinition
 
 /**
  * Sprawdza czy bohater może użyć artefaktu
- * W nowym systemie każdy bohater może używać każdego artefaktu,
- * jedynym ograniczeniem jest minimalny tier.
+ * - Hero-specific artefakty: tylko dla określonych bohaterów (heroIds)
+ * - Pozostałe: dostępne dla wszystkich (z bonusem synergii)
  */
 export function canHeroEquipArtifact(
   artifactId: string,
-  _heroId: string, // unused in new system
+  heroId: string,
   _heroClass: FortressClass, // unused - synergy gives bonus, not restriction
   heroTier: number
 ): boolean {
@@ -2737,11 +3163,40 @@ export function canHeroEquipArtifact(
 
   const req = artifact.requirements;
 
-  // W nowym systemie tylko tier jest wymagany
-  // heroId i heroClass są ignorowane (synergy zamiast restrykcji)
+  // Hero-specific artifact check (nowy system)
+  if (req.heroIds && req.heroIds.length > 0) {
+    if (!req.heroIds.includes(heroId)) return false;
+  }
+
+  // Legacy single hero check
+  if (req.heroId && req.heroId !== heroId) return false;
+
+  // Tier requirement
   if (req.heroTier && heroTier < req.heroTier) return false;
 
   return true;
+}
+
+/**
+ * Pobiera artefakty specyficzne dla danego bohatera
+ * @param heroId - ID bohatera
+ * @returns Lista artefaktów zaprojektowanych specjalnie dla tego bohatera
+ */
+export function getHeroSpecificArtifacts(heroId: string): ArtifactDefinition[] {
+  return ARTIFACT_DEFINITIONS.filter(a => {
+    const req = a.requirements;
+    return (req.heroIds && req.heroIds.includes(heroId)) || req.heroId === heroId;
+  });
+}
+
+/**
+ * Sprawdza czy artefakt jest hero-specific
+ */
+export function isHeroSpecificArtifact(artifactId: string): boolean {
+  const artifact = getArtifactById(artifactId);
+  if (!artifact) return false;
+  const req = artifact.requirements;
+  return (req.heroIds && req.heroIds.length > 0) || !!req.heroId;
 }
 
 /**
@@ -2793,16 +3248,27 @@ export function calculateTotalSynergyMultiplier(
 
 /**
  * Pobiera artefakty dostępne dla bohatera
- * W nowym systemie zwraca wszystkie artefakty spełniające wymagania tier
+ * Uwzględnia hero-specific artifacts (tylko dla określonych bohaterów)
  */
 export function getAvailableArtifactsForHero(
-  _heroId: string,
+  heroId: string,
   _heroClass: FortressClass,
   heroTier: number
 ): ArtifactDefinition[] {
   return ARTIFACT_DEFINITIONS.filter(a => {
     const req = a.requirements;
+
+    // Hero-specific check
+    if (req.heroIds && req.heroIds.length > 0) {
+      if (!req.heroIds.includes(heroId)) return false;
+    }
+
+    // Legacy single hero check
+    if (req.heroId && req.heroId !== heroId) return false;
+
+    // Tier requirement
     if (req.heroTier && heroTier < req.heroTier) return false;
+
     return true;
   });
 }

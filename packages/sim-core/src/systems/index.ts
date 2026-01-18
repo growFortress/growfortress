@@ -118,6 +118,27 @@ export {
 export { findClosestEnemy } from './helpers.js';
 
 // ============================================================================
+// DUO-ATTACK SYSTEM
+// ============================================================================
+
+export {
+  updateDuoAttacks,
+  popDuoAttackTriggers,
+  resetDuoAttackCooldowns,
+  getDuoAttackCooldownRemaining,
+  getAvailableDuoAttacksForState,
+} from './duo-attacks.js';
+
+export {
+  DUO_ATTACK_DEFINITIONS,
+  getDuoAttackById,
+  getDuoAttacksForHero,
+  getDuoAttackForPair,
+  canPerformDuoAttack,
+  getAvailableDuoAttacks,
+} from '../data/duo-attacks.js';
+
+// ============================================================================
 // CONSTANTS (for external use if needed)
 // ============================================================================
 

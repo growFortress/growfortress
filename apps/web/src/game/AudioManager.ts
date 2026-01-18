@@ -191,6 +191,48 @@ class AudioManager {
       case 'boss_spawn':
         this.playBossSpawnSound();
         break;
+      case 'combo':
+        this.playComboSound();
+        break;
+      case 'duo_attack':
+        this.playDuoAttackSound();
+        break;
+      case 'duo_thunder_guard':
+        this.playDuoThunderGuardSound();
+        break;
+      case 'duo_void_storm':
+        this.playDuoVoidStormSound();
+        break;
+      case 'duo_frozen_inferno':
+        this.playDuoFrozenInfernoSound();
+        break;
+      case 'duo_phase_strike':
+        this.playDuoPhaseStrikeSound();
+        break;
+      case 'duo_cryo_artillery':
+        this.playDuoCryoArtillerySound();
+        break;
+      case 'duo_reality_tear':
+        this.playDuoRealityTearSound();
+        break;
+      case 'duo_inferno_storm':
+        this.playDuoInfernoStormSound();
+        break;
+      case 'duo_glacier_shield':
+        this.playDuoGlacierShieldSound();
+        break;
+      case 'duo_phantom_frost':
+        this.playDuoPhantomFrostSound();
+        break;
+      case 'duo_tech_void':
+        this.playDuoTechVoidSound();
+        break;
+      case 'duo_nature_fire':
+        this.playDuoNatureFireSound();
+        break;
+      case 'duo_plasma_phase':
+        this.playDuoPlasmaPhaseSound();
+        break;
       default:
         // Default blip for unknown sounds
         this.playBlip(440, 0.1);
@@ -505,6 +547,685 @@ class AudioManager {
     
     osc.start(now);
     osc.stop(now + duration);
+  }
+
+  /**
+   * Combo activation sound - energetic dual tones
+   */
+  private playComboSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Rising sweep
+    const osc = this.context.createOscillator();
+    const gain = this.context.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(now);
+    osc.stop(now + 0.2);
+
+    // Impact
+    const impactOsc = this.context.createOscillator();
+    const impactGain = this.context.createGain();
+
+    impactOsc.type = 'triangle';
+    impactOsc.frequency.setValueAtTime(600, now + 0.1);
+
+    impactGain.gain.setValueAtTime(0, now + 0.1);
+    impactGain.gain.linearRampToValueAtTime(0.3, now + 0.12);
+    impactGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+    impactOsc.connect(impactGain);
+    impactGain.connect(this.sfxGain);
+
+    impactOsc.start(now + 0.1);
+    impactOsc.stop(now + 0.25);
+  }
+
+  /**
+   * Generic duo-attack sound - powerful harmonic burst
+   */
+  private playDuoAttackSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Dual harmonics for "duo" effect
+    [1, 1.5].forEach((mult) => {
+      const osc = this.context!.createOscillator();
+      const gain = this.context!.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200 * mult, now);
+      osc.frequency.exponentialRampToValueAtTime(600 * mult, now + 0.2);
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.25, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+
+      osc.start(now);
+      osc.stop(now + 0.4);
+    });
+
+    // Impact burst
+    this.playExplosionSound();
+  }
+
+  /**
+   * Thunder Guard - electric crackle with shield resonance
+   */
+  private playDuoThunderGuardSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Lightning crackle (noise burst)
+    const bufferSize = this.context.sampleRate * 0.3;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 5) * (Math.random() > 0.7 ? 1 : 0.3);
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 2000;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGain);
+    noise.start(now);
+
+    // Shield resonance (low hum)
+    const shieldOsc = this.context.createOscillator();
+    const shieldGain = this.context.createGain();
+
+    shieldOsc.type = 'sine';
+    shieldOsc.frequency.setValueAtTime(100, now);
+
+    shieldGain.gain.setValueAtTime(0.3, now);
+    shieldGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    shieldOsc.connect(shieldGain);
+    shieldGain.connect(this.sfxGain);
+
+    shieldOsc.start(now);
+    shieldOsc.stop(now + 0.5);
+  }
+
+  /**
+   * Void Storm - deep rumble with swirling effect
+   */
+  private playDuoVoidStormSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Deep void rumble
+    const osc1 = this.context.createOscillator();
+    const osc2 = this.context.createOscillator();
+    const gain = this.context.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'sine';
+    osc1.frequency.setValueAtTime(50, now);
+    osc2.frequency.setValueAtTime(75, now);
+
+    // Modulate for swirl effect
+    const lfo = this.context.createOscillator();
+    const lfoGain = this.context.createGain();
+    lfo.frequency.value = 8;
+    lfoGain.gain.value = 20;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc1.frequency);
+    lfo.start(now);
+    lfo.stop(now + 0.6);
+
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.6);
+    osc2.stop(now + 0.6);
+  }
+
+  /**
+   * Frozen Inferno - ice crack followed by fire whoosh
+   */
+  private playDuoFrozenInfernoSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Ice crack
+    const crackOsc = this.context.createOscillator();
+    const crackGain = this.context.createGain();
+
+    crackOsc.type = 'square';
+    crackOsc.frequency.setValueAtTime(2000, now);
+    crackOsc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+
+    crackGain.gain.setValueAtTime(0.3, now);
+    crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+    crackOsc.connect(crackGain);
+    crackGain.connect(this.sfxGain);
+
+    crackOsc.start(now);
+    crackOsc.stop(now + 0.1);
+
+    // Fire whoosh (filtered noise)
+    const bufferSize = this.context.sampleRate * 0.4;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      data[i] = (Math.random() * 2 - 1) * (1 - t);
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(300, now + 0.1);
+    filter.frequency.exponentialRampToValueAtTime(1500, now + 0.3);
+
+    const noiseGain = this.context.createGain();
+    noiseGain.gain.setValueAtTime(0, now + 0.1);
+    noiseGain.gain.linearRampToValueAtTime(0.4, now + 0.2);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.sfxGain);
+
+    noise.start(now + 0.1);
+  }
+
+  /**
+   * Phase Strike - quick phase shift with sharp impact
+   */
+  private playDuoPhaseStrikeSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Phase shift whoosh (descending)
+    const phaseOsc = this.context.createOscillator();
+    const phaseGain = this.context.createGain();
+
+    phaseOsc.type = 'sine';
+    phaseOsc.frequency.setValueAtTime(1500, now);
+    phaseOsc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+
+    phaseGain.gain.setValueAtTime(0.25, now);
+    phaseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    phaseOsc.connect(phaseGain);
+    phaseGain.connect(this.sfxGain);
+
+    phaseOsc.start(now);
+    phaseOsc.stop(now + 0.15);
+
+    // Sharp impact
+    const impactOsc = this.context.createOscillator();
+    const impactGain = this.context.createGain();
+
+    impactOsc.type = 'triangle';
+    impactOsc.frequency.setValueAtTime(800, now + 0.12);
+    impactOsc.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+
+    impactGain.gain.setValueAtTime(0, now + 0.12);
+    impactGain.gain.linearRampToValueAtTime(0.4, now + 0.13);
+    impactGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+    impactOsc.connect(impactGain);
+    impactGain.connect(this.sfxGain);
+
+    impactOsc.start(now + 0.12);
+    impactOsc.stop(now + 0.25);
+  }
+
+  /**
+   * Cryo Artillery - orbital descent with ice impact
+   */
+  private playDuoCryoArtillerySound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Incoming whistle
+    const whistleOsc = this.context.createOscillator();
+    const whistleGain = this.context.createGain();
+
+    whistleOsc.type = 'sine';
+    whistleOsc.frequency.setValueAtTime(2000, now);
+    whistleOsc.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+
+    whistleGain.gain.setValueAtTime(0.1, now);
+    whistleGain.gain.linearRampToValueAtTime(0.3, now + 0.25);
+    whistleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    whistleOsc.connect(whistleGain);
+    whistleGain.connect(this.sfxGain);
+
+    whistleOsc.start(now);
+    whistleOsc.stop(now + 0.35);
+
+    // Ice explosion impact
+    const impactOsc = this.context.createOscillator();
+    const impactGain = this.context.createGain();
+
+    impactOsc.type = 'sawtooth';
+    impactOsc.frequency.setValueAtTime(150, now + 0.3);
+    impactOsc.frequency.exponentialRampToValueAtTime(50, now + 0.5);
+
+    impactGain.gain.setValueAtTime(0, now + 0.3);
+    impactGain.gain.linearRampToValueAtTime(0.4, now + 0.32);
+    impactGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+    impactOsc.connect(impactGain);
+    impactGain.connect(this.sfxGain);
+
+    impactOsc.start(now + 0.3);
+    impactOsc.stop(now + 0.6);
+  }
+
+  /**
+   * Reality Tear - dimensional rip with echoing void
+   */
+  private playDuoRealityTearSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Tearing sound (noise with envelope)
+    const bufferSize = this.context.sampleRate * 0.5;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      // Tearing pattern
+      data[i] = (Math.random() * 2 - 1) * Math.sin(t * Math.PI) * (Math.random() > 0.5 ? 1 : 0.5);
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 800;
+    filter.Q.value = 2;
+
+    const noiseGain = this.context.createGain();
+    noiseGain.gain.setValueAtTime(0.35, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.sfxGain);
+
+    noise.start(now);
+
+    // Void echo (low reverberating tone)
+    const voidOsc = this.context.createOscillator();
+    const voidGain = this.context.createGain();
+
+    voidOsc.type = 'sine';
+    voidOsc.frequency.setValueAtTime(60, now);
+
+    voidGain.gain.setValueAtTime(0.3, now);
+    voidGain.gain.setValueAtTime(0.15, now + 0.3);
+    voidGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+    voidOsc.connect(voidGain);
+    voidGain.connect(this.sfxGain);
+
+    voidOsc.start(now);
+    voidOsc.stop(now + 0.8);
+  }
+
+  /**
+   * Inferno Storm - Fire and lightning combined
+   */
+  private playDuoInfernoStormSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Fire crackle noise
+    const bufferSize = this.context.sampleRate * 0.4;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      // Crackling fire pattern with lightning spikes
+      const spike = Math.random() > 0.95 ? Math.random() * 2 : 1;
+      data[i] = (Math.random() * 2 - 1) * spike * Math.pow(1 - t, 0.5);
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 2000;
+
+    const noiseGain = this.context.createGain();
+    noiseGain.gain.setValueAtTime(0.35, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.sfxGain);
+
+    noise.start(now);
+
+    // Lightning zap
+    const lightning = this.context.createOscillator();
+    const lightningGain = this.context.createGain();
+
+    lightning.type = 'sawtooth';
+    lightning.frequency.setValueAtTime(1200, now);
+    lightning.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+
+    lightningGain.gain.setValueAtTime(0.3, now);
+    lightningGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    lightning.connect(lightningGain);
+    lightningGain.connect(this.sfxGain);
+
+    lightning.start(now);
+    lightning.stop(now + 0.2);
+  }
+
+  /**
+   * Glacier Shield - Ice fortress forming
+   */
+  private playDuoGlacierShieldSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Ice crystal forming sounds
+    for (let i = 0; i < 4; i++) {
+      const delay = i * 0.08;
+      const freq = 800 + Math.random() * 400;
+
+      const osc = this.context.createOscillator();
+      const gain = this.context.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + delay);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.5, now + delay + 0.15);
+
+      gain.gain.setValueAtTime(0, now + delay);
+      gain.gain.linearRampToValueAtTime(0.2, now + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.15);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.2);
+    }
+
+    // Deep shield activation
+    const shield = this.context.createOscillator();
+    const shieldGain = this.context.createGain();
+
+    shield.type = 'sine';
+    shield.frequency.setValueAtTime(120, now + 0.2);
+
+    shieldGain.gain.setValueAtTime(0.25, now + 0.2);
+    shieldGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+    shield.connect(shieldGain);
+    shieldGain.connect(this.sfxGain);
+
+    shield.start(now + 0.2);
+    shield.stop(now + 0.6);
+  }
+
+  /**
+   * Phantom Frost - Ghostly ice shards
+   */
+  private playDuoPhantomFrostSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Ghost whoosh
+    const bufferSize = this.context.sampleRate * 0.35;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      // Ethereal swirl
+      data[i] = (Math.random() * 2 - 1) * Math.sin(t * Math.PI * 3) * 0.5;
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1500;
+    filter.Q.value = 3;
+
+    const noiseGain = this.context.createGain();
+    noiseGain.gain.setValueAtTime(0.25, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.sfxGain);
+
+    noise.start(now);
+
+    // Ice shard tinkle
+    const iceFreqs = [1400, 1700, 2000];
+    iceFreqs.forEach((freq, idx) => {
+      const osc = this.context!.createOscillator();
+      const gain = this.context!.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const delay = idx * 0.05;
+      gain.gain.setValueAtTime(0, now + delay);
+      gain.gain.linearRampToValueAtTime(0.15, now + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.15);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.2);
+    });
+  }
+
+  /**
+   * Tech Void - Heavy orbital bombardment
+   */
+  private playDuoTechVoidSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Orbital beam charging
+    const charge = this.context.createOscillator();
+    const chargeGain = this.context.createGain();
+
+    charge.type = 'sawtooth';
+    charge.frequency.setValueAtTime(100, now);
+    charge.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+
+    chargeGain.gain.setValueAtTime(0.15, now);
+    chargeGain.gain.linearRampToValueAtTime(0.35, now + 0.3);
+    chargeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    charge.connect(chargeGain);
+    chargeGain.connect(this.sfxGain);
+
+    charge.start(now);
+    charge.stop(now + 0.4);
+
+    // Heavy impact
+    const impact = this.context.createOscillator();
+    const impactGain = this.context.createGain();
+
+    impact.type = 'sine';
+    impact.frequency.setValueAtTime(80, now + 0.3);
+    impact.frequency.exponentialRampToValueAtTime(30, now + 0.6);
+
+    impactGain.gain.setValueAtTime(0, now + 0.3);
+    impactGain.gain.linearRampToValueAtTime(0.45, now + 0.32);
+    impactGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+    impact.connect(impactGain);
+    impactGain.connect(this.sfxGain);
+
+    impact.start(now + 0.3);
+    impact.stop(now + 0.7);
+  }
+
+  /**
+   * Nature Fire (Thermal Paradox) - Extreme temperature differential
+   */
+  private playDuoNatureFireSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Temperature clash sound (ice crack meets fire whoosh)
+    const bufferSize = this.context.sampleRate * 0.5;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      // Thermal shock wave
+      const shockwave = Math.sin(t * Math.PI * 20) * Math.exp(-t * 5);
+      const noise = (Math.random() * 2 - 1) * 0.5;
+      data[i] = (shockwave + noise) * Math.sin(t * Math.PI);
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 600;
+    filter.Q.value = 1.5;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGain);
+
+    source.start(now);
+
+    // Explosion bass
+    const bass = this.context.createOscillator();
+    const bassGain = this.context.createGain();
+
+    bass.type = 'sine';
+    bass.frequency.setValueAtTime(100, now);
+    bass.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+
+    bassGain.gain.setValueAtTime(0.35, now);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    bass.connect(bassGain);
+    bassGain.connect(this.sfxGain);
+
+    bass.start(now);
+    bass.stop(now + 0.4);
+  }
+
+  /**
+   * Plasma Phase - Cloaked drone plasma strikes
+   */
+  private playDuoPlasmaPhaseSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+
+    // Phase shift sound (subtle whoosh)
+    const phase = this.context.createOscillator();
+    const phaseGain = this.context.createGain();
+
+    phase.type = 'sine';
+    phase.frequency.setValueAtTime(300, now);
+    phase.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+    phase.frequency.exponentialRampToValueAtTime(400, now + 0.3);
+
+    phaseGain.gain.setValueAtTime(0.15, now);
+    phaseGain.gain.linearRampToValueAtTime(0.25, now + 0.15);
+    phaseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+    phase.connect(phaseGain);
+    phaseGain.connect(this.sfxGain);
+
+    phase.start(now);
+    phase.stop(now + 0.35);
+
+    // Plasma strike bursts
+    for (let i = 0; i < 3; i++) {
+      const delay = 0.1 + i * 0.1;
+
+      const plasma = this.context.createOscillator();
+      const plasmaGain = this.context.createGain();
+
+      plasma.type = 'sawtooth';
+      plasma.frequency.setValueAtTime(800 + i * 200, now + delay);
+      plasma.frequency.exponentialRampToValueAtTime(200, now + delay + 0.1);
+
+      plasmaGain.gain.setValueAtTime(0.2, now + delay);
+      plasmaGain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.1);
+
+      plasma.connect(plasmaGain);
+      plasmaGain.connect(this.sfxGain);
+
+      plasma.start(now + delay);
+      plasma.stop(now + delay + 0.15);
+    }
   }
 
   /**

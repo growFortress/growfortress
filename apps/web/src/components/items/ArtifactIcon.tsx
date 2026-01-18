@@ -8,6 +8,7 @@ import type { JSX } from 'preact';
 import { useEffect, useRef, useMemo } from 'preact/hooks';
 import { Application, Container } from 'pixi.js';
 import type { ArtifactVisualDefinition } from '@arcade/sim-core';
+import { isHeroSpecificArtifact, getArtifactById } from '@arcade/sim-core';
 import { ArtifactRenderer, ARTIFACT_VISUALS } from '../../renderer/items/index.js';
 import styles from './ArtifactIcon.module.css';
 
@@ -26,6 +27,8 @@ export interface ArtifactIconProps {
   class?: string;
   /** Show tooltip on hover */
   showTooltip?: boolean;
+  /** Show hero-specific badge (default: true) */
+  showHeroSpecificBadge?: boolean;
 }
 
 // Track active icons for cleanup
@@ -38,6 +41,7 @@ export function ArtifactIcon({
   animated = true,
   onClick,
   class: className,
+  showHeroSpecificBadge = true,
 }: ArtifactIconProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<Container | null>(null);
@@ -47,6 +51,19 @@ export function ArtifactIcon({
   const visual = useMemo<ArtifactVisualDefinition | undefined>(() => {
     return ARTIFACT_VISUALS[artifactId];
   }, [artifactId]);
+
+  // Check if this is a hero-specific artifact
+  const heroSpecificInfo = useMemo(() => {
+    if (!showHeroSpecificBadge) return null;
+    const isSpecific = isHeroSpecificArtifact(artifactId);
+    if (!isSpecific) return null;
+
+    const artifact = getArtifactById(artifactId);
+    if (!artifact) return null;
+
+    const heroIds = artifact.requirements.heroIds || (artifact.requirements.heroId ? [artifact.requirements.heroId] : []);
+    return { heroIds };
+  }, [artifactId, showHeroSpecificBadge]);
 
   useEffect(() => {
     if (!canvasRef.current || !visual) return;
@@ -120,13 +137,34 @@ export function ArtifactIcon({
     );
   }
 
+  // Calculate badge size based on icon size
+  const badgeSize = Math.max(16, Math.floor(size * 0.35));
+
   return (
-    <canvas
-      ref={canvasRef}
-      class={`${styles.artifactIcon} ${onClick ? styles.clickable : ''} ${className || ''}`}
-      style={{ width: size, height: size }}
+    <div
+      class={`${styles.artifactWrapper} ${onClick ? styles.clickable : ''} ${className || ''}`}
+      style={{ width: size, height: size, position: 'relative' }}
       onClick={onClick}
-    />
+    >
+      <canvas
+        ref={canvasRef}
+        class={styles.artifactIcon}
+        style={{ width: size, height: size }}
+      />
+      {heroSpecificInfo && (
+        <div
+          class={styles.heroSpecificBadge}
+          style={{
+            width: badgeSize,
+            height: badgeSize,
+            fontSize: `${badgeSize * 0.7}px`,
+          }}
+          title={`Hero-specific: ${heroSpecificInfo.heroIds.join(', ')}`}
+        >
+          ⭐
+        </div>
+      )}
+    </div>
   );
 }
 

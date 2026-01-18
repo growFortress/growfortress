@@ -268,6 +268,96 @@
   line-height: 1.4;
 }
 
+/* Filter Bar */
+.filterBar {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 12px;
+  background: var(--color-bg-elevated);
+}
+
+.filterButton {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-60);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+}
+
+.filterButton:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+.filterButton.filterActive {
+  background: var(--color-primary-10);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Incompatible Artifact */
+.artifactOption.incompatible {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.artifactOption.incompatible:hover {
+  background: var(--color-bg);
+  border-color: var(--color-neutral);
+}
+
+.incompatibleIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Hero-Specific Artifact */
+.artifactOption.heroSpecific {
+  position: relative;
+  border-left-color: #ffd700;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+}
+
+.artifactOption.heroSpecific::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 30%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.heroSpecificBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 14px;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(255, 215, 0, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(255, 215, 0, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 2px 10px rgba(255, 215, 0, 0.6);
+  }
+}
+
 /* Footer */
 .footer {
   display: flex;

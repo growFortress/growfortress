@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import type { GameState, Enemy, EnemyType, StatusEffectType } from '@arcade/sim-core';
-import { popComboTriggers } from '@arcade/sim-core';
+import { popComboTriggers, popDuoAttackTriggers } from '@arcade/sim-core';
 import { VFXSystem } from './VFXSystem.js';
 import { audioManager } from '../../game/AudioManager.js';
 import { EnemyVisualPool, type EnemyVisualBundle } from '../ObjectPool.js';
@@ -275,6 +275,16 @@ export class EnemySystem {
         const screenY = fpYToScreen(trigger.y, viewHeight);
         vfx.spawnComboEffect(screenX, screenY, trigger.comboId, trigger.bonusDamage);
         audioManager.playSfx('combo'); // Play combo sound if available
+      }
+
+      // Duo-attack effects - trigger VFX for hero duo-attacks
+      const duoTriggers = popDuoAttackTriggers();
+      for (const trigger of duoTriggers) {
+        const screenX = fpXToScreen(trigger.x, viewWidth);
+        const screenY = fpYToScreen(trigger.y, viewHeight);
+        vfx.spawnDuoAttackEffect(screenX, screenY, trigger.duoAttackId, trigger.damage);
+        // Play specific duo-attack sound based on ID
+        audioManager.playSfx(`duo_${trigger.duoAttackId}`);
       }
     }
 

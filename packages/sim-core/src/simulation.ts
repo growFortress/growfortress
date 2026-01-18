@@ -45,6 +45,8 @@ import {
   updateEnemyStatusEffects,
   applyDamageToHero,
   applyDamageToTurret,
+  updateDuoAttacks,
+  resetDuoAttackCooldowns,
 } from './systems.js';
 import { TURRET_SLOTS } from './data/turrets.js';
 import { getPillarForWave } from './data/pillars.js';
@@ -226,6 +228,9 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
   for (const skillId of activeSkills) {
     skillCooldowns[skillId] = 0;
   }
+
+  // Reset duo-attack cooldowns for new session
+  resetDuoAttackCooldowns();
 
   return {
     tick: 0,
@@ -422,6 +427,9 @@ export class Simulation {
 
     // NEW: Update heroes system
     updateHeroes(this.state, this.config, this.rng);
+
+    // NEW: Update duo-attacks (check for hero pair synergies)
+    updateDuoAttacks(this.state);
 
     // NEW: Update turrets system
     updateTurrets(this.state, this.config, this.rng);

@@ -1081,6 +1081,163 @@ export class VFXSystem {
     this.spawnShockwave(x, y);
   }
 
+  // --- DUO-ATTACK EFFECTS ---
+  public spawnDuoAttackEffect(
+    x: number,
+    y: number,
+    duoAttackId: string,
+    damage?: number
+  ) {
+    // Duo-attack visual config
+    const DUO_ATTACK_CONFIG: Record<string, {
+      name: string;
+      primaryColor: number;
+      secondaryColor: number;
+      particleShape: ParticleShape;
+      intensity: number;
+    }> = {
+      thunder_guard: {
+        name: 'THUNDER GUARD!',
+        primaryColor: 0x9932cc,
+        secondaryColor: 0xffd700,
+        particleShape: 'spark',
+        intensity: 1.2,
+      },
+      void_storm: {
+        name: 'VOID STORM!',
+        primaryColor: 0x4b0082,
+        secondaryColor: 0x00bfff,
+        particleShape: 'diamond',
+        intensity: 1.5,
+      },
+      frozen_inferno: {
+        name: 'FROZEN INFERNO!',
+        primaryColor: 0x00bfff,
+        secondaryColor: 0xff4500,
+        particleShape: 'star',
+        intensity: 1.3,
+      },
+      phase_strike: {
+        name: 'PHASE STRIKE!',
+        primaryColor: 0x8b008b,
+        secondaryColor: 0x00ffff,
+        particleShape: 'spark',
+        intensity: 1.4,
+      },
+      cryo_artillery: {
+        name: 'CRYO ARTILLERY!',
+        primaryColor: 0x00f0ff,
+        secondaryColor: 0x87ceeb,
+        particleShape: 'diamond',
+        intensity: 1.3,
+      },
+      reality_tear: {
+        name: 'REALITY TEAR!',
+        primaryColor: 0x9400d3,
+        secondaryColor: 0xff00ff,
+        particleShape: 'ring',
+        intensity: 1.6,
+      },
+    };
+
+    const config = DUO_ATTACK_CONFIG[duoAttackId];
+    if (!config) {
+      // Fallback for unknown duo-attacks
+      this.spawnExplosion(x, y, 0xffffff);
+      return;
+    }
+
+    // Large floating text
+    this.spawnFloatingText(x, y - 30, config.name, config.primaryColor);
+
+    // If damage, show it after a delay
+    if (damage && damage > 0) {
+      setTimeout(() => {
+        this.spawnDamageNumber(x, y + 10, damage, { isCrit: true });
+      }, 150);
+    }
+
+    // Screen flash with mixed colors
+    filterManager.applyScreenFlash('white', 150, 0.25 * config.intensity);
+
+    // Screen shake for powerful duo-attacks
+    this.triggerScreenShake(4 * config.intensity, 200);
+
+    // Dual-color shockwave rings
+    this.spawnShockwaveRing(x, y, config.primaryColor, config.intensity);
+    setTimeout(() => {
+      this.spawnShockwaveRing(x, y, config.secondaryColor, config.intensity * 0.8);
+    }, 50);
+
+    // Main particle burst - dual colored
+    const particleCount = Math.floor(35 * this.particleMultiplier * config.intensity);
+    for (let i = 0; i < particleCount; i++) {
+      const p = this.pool.acquire();
+      const angle = (i / particleCount) * Math.PI * 2;
+      const speed = 120 + Math.random() * 80;
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 0.6 + Math.random() * 0.3;
+      p.maxLife = p.life;
+      p.size = 5 + Math.random() * 4;
+      // Alternate colors
+      p.color = i % 2 === 0 ? config.primaryColor : config.secondaryColor;
+      p.shape = config.particleShape;
+      p.startAlpha = 1;
+      p.endAlpha = 0;
+      p.drag = 0.95;
+      this.particles.push(p);
+    }
+
+    // Central glow pulse
+    const glow = this.pool.acquire();
+    glow.x = x;
+    glow.y = y;
+    glow.vx = 0;
+    glow.vy = 0;
+    glow.life = 0.4;
+    glow.maxLife = 0.4;
+    glow.startSize = 20;
+    glow.endSize = 80 * config.intensity;
+    glow.size = glow.startSize;
+    glow.color = 0xffffff;
+    glow.shape = 'circle';
+    glow.startAlpha = 0.8;
+    glow.endAlpha = 0;
+    this.particles.push(glow);
+
+    // Orbiting sparks for extra flair
+    const sparkCount = Math.floor(8 * this.particleMultiplier);
+    for (let i = 0; i < sparkCount; i++) {
+      const startAngle = (i / sparkCount) * Math.PI * 2;
+      const orbitalSpeed = 8 + Math.random() * 4;
+      const orbitalRadius = 30 + Math.random() * 20;
+
+      const spark = this.pool.acquire();
+      spark.x = x + Math.cos(startAngle) * orbitalRadius;
+      spark.y = y + Math.sin(startAngle) * orbitalRadius;
+      spark.vx = Math.cos(startAngle + Math.PI / 2) * orbitalSpeed * 20;
+      spark.vy = Math.sin(startAngle + Math.PI / 2) * orbitalSpeed * 20;
+      spark.life = 0.5;
+      spark.maxLife = 0.5;
+      spark.size = 3;
+      spark.color = config.secondaryColor;
+      spark.shape = 'spark';
+      spark.rotation = startAngle;
+      spark.rotationSpeed = orbitalSpeed;
+      spark.startAlpha = 1;
+      spark.endAlpha = 0;
+      this.particles.push(spark);
+    }
+
+    // Apply shockwave filter for large effects
+    if (config.intensity >= 1.3) {
+      filterManager.applyScreenShockwave(x, y, 700);
+    }
+  }
+
   // --- HEAL/BUFF EFFECTS ---
   public spawnHealEffect(x: number, y: number, type: 'heal' | 'shield' | 'buff') {
     const colors = {

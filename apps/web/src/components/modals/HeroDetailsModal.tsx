@@ -536,6 +536,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
       <ArtifactPickerModal
         visible={showArtifactPicker}
         heroId={hero.definitionId}
+        heroTier={hero.tier}
         onClose={() => setShowArtifactPicker(false)}
         onEquip={handleEquipArtifact}
       />

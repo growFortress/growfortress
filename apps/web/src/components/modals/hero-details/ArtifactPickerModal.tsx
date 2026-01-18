@@ -1,6 +1,11 @@
-import { useState } from 'preact/hooks';
+import { useState, useMemo } from 'preact/hooks';
 import type { PlayerArtifact } from '@arcade/protocol';
-import type { ArtifactDefinition } from '@arcade/sim-core';
+import type { ArtifactDefinition, FortressClass } from '@arcade/sim-core';
+import {
+  canHeroEquipArtifact,
+  isHeroSpecificArtifact,
+  getHeroById,
+} from '@arcade/sim-core';
 import { unequippedArtifacts } from '../../../state/artifacts.signals.js';
 import { Button } from '../../shared/Button.js';
 import styles from './ArtifactPickerModal.module.css';
@@ -15,22 +20,61 @@ const SLOT_ICONS: Record<string, string> = {
   special: '⭐',
 };
 
+type FilterMode = 'compatible' | 'all';
+
 interface ArtifactPickerModalProps {
   visible: boolean;
   heroId: string;
+  heroTier: number;
   onClose: () => void;
   onEquip: (artifactInstanceId: string) => Promise<void>;
 }
 
 export function ArtifactPickerModal({
   visible,
-  heroId: _heroId,
+  heroId,
+  heroTier,
   onClose,
   onEquip,
 }: ArtifactPickerModalProps) {
-  const artifacts = unequippedArtifacts.value;
+  const allArtifacts = unequippedArtifacts.value;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [filterMode, setFilterMode] = useState<FilterMode>('compatible');
+
+  // Get hero definition for class info
+  const heroDef = getHeroById(heroId);
+  const heroClass: FortressClass = heroDef?.class || 'natural';
+
+  // Filter artifacts based on hero compatibility
+  const compatibleArtifacts = useMemo(() => {
+    const compatible: (PlayerArtifact & { definition: ArtifactDefinition })[] = [];
+
+    for (const artifact of allArtifacts) {
+      const canEquip = canHeroEquipArtifact(
+        artifact.definition.id,
+        heroId,
+        heroClass,
+        heroTier
+      );
+      if (canEquip) {
+        compatible.push(artifact);
+      }
+    }
+
+    // Sort: hero-specific first
+    compatible.sort((a, b) => {
+      const aHeroSpecific = isHeroSpecificArtifact(a.definition.id);
+      const bHeroSpecific = isHeroSpecificArtifact(b.definition.id);
+      if (aHeroSpecific && !bHeroSpecific) return -1;
+      if (!aHeroSpecific && bHeroSpecific) return 1;
+      return 0;
+    });
+
+    return compatible;
+  }, [allArtifacts, heroId, heroClass, heroTier]);
+
+  const artifacts = filterMode === 'compatible' ? compatibleArtifacts : allArtifacts;
 
   if (!visible) return null;
 
@@ -65,27 +109,57 @@ export function ArtifactPickerModal({
           <h3 class={styles.title}>Wybierz Artefakt</h3>
         </div>
 
+        {/* Filter Toggle */}
+        <div class={styles.filterBar}>
+          <button
+            class={`${styles.filterButton} ${filterMode === 'compatible' ? styles.filterActive : ''}`}
+            onClick={() => setFilterMode('compatible')}
+          >
+            Kompatybilne ({compatibleArtifacts.length})
+          </button>
+          <button
+            class={`${styles.filterButton} ${filterMode === 'all' ? styles.filterActive : ''}`}
+            onClick={() => setFilterMode('all')}
+          >
+            Wszystkie ({allArtifacts.length})
+          </button>
+        </div>
+
         {/* Content */}
         <div class={styles.content}>
           {artifacts.length === 0 ? (
             <div class={styles.emptyState}>
               <span class={styles.emptyIcon}>📦</span>
-              <p>Brak dostępnych artefaktów</p>
+              <p>{filterMode === 'compatible' ? 'Brak kompatybilnych artefaktów' : 'Brak dostępnych artefaktów'}</p>
               <span class={styles.emptyHint}>
-                Zdobywaj artefakty poprzez crafting lub gameplay
+                {filterMode === 'compatible'
+                  ? 'Spróbuj przełączyć na "Wszystkie" lub zdobądź więcej artefaktów'
+                  : 'Zdobywaj artefakty poprzez crafting lub gameplay'
+                }
               </span>
             </div>
           ) : (
             <>
               <div class={styles.artifactList}>
-                {artifacts.map((artifact) => (
-                  <ArtifactOption
-                    key={artifact.id}
-                    artifact={artifact}
-                    isSelected={selectedId === artifact.id}
-                    onSelect={() => setSelectedId(artifact.id)}
-                  />
-                ))}
+                {artifacts.map((artifact) => {
+                  const isCompatible = canHeroEquipArtifact(
+                    artifact.definition.id,
+                    heroId,
+                    heroClass,
+                    heroTier
+                  );
+                  const heroSpecific = isHeroSpecificArtifact(artifact.definition.id);
+                  return (
+                    <ArtifactOption
+                      key={artifact.id}
+                      artifact={artifact}
+                      isSelected={selectedId === artifact.id}
+                      isCompatible={isCompatible}
+                      isHeroSpecific={heroSpecific}
+                      onSelect={() => isCompatible && setSelectedId(artifact.id)}
+                    />
+                  );
+                })}
               </div>
 
               {selectedArtifact && (
@@ -127,17 +201,36 @@ export function ArtifactPickerModal({
 interface ArtifactOptionProps {
   artifact: PlayerArtifact & { definition: ArtifactDefinition };
   isSelected: boolean;
+  isCompatible: boolean;
+  isHeroSpecific: boolean;
   onSelect: () => void;
 }
 
-function ArtifactOption({ artifact, isSelected, onSelect }: ArtifactOptionProps) {
+function ArtifactOption({ artifact, isSelected, isCompatible, isHeroSpecific, onSelect }: ArtifactOptionProps) {
   const { definition } = artifact;
+
+  const classNames = [
+    styles.artifactOption,
+    styles[definition.rarity],
+    isSelected ? styles.selected : '',
+    !isCompatible ? styles.incompatible : '',
+    isHeroSpecific ? styles.heroSpecific : '',
+  ].filter(Boolean).join(' ');
 
   return (
     <button
-      class={`${styles.artifactOption} ${styles[definition.rarity]} ${isSelected ? styles.selected : ''}`}
+      class={classNames}
       onClick={onSelect}
+      disabled={!isCompatible}
+      title={!isCompatible ? 'Ten artefakt nie jest kompatybilny z tym bohaterem' : undefined}
     >
+      {/* Hero-specific badge */}
+      {isHeroSpecific && (
+        <span class={styles.heroSpecificBadge} title="Artefakt specyficzny dla bohatera">
+          ⭐
+        </span>
+      )}
+
       <span class={styles.artifactIcon}>
         {SLOT_ICONS[definition.slot] || '📦'}
       </span>
@@ -147,6 +240,7 @@ function ArtifactOption({ artifact, isSelected, onSelect }: ArtifactOptionProps)
       </div>
       <span class={styles.rarityBadge}>{definition.rarity}</span>
       {isSelected && <span class={styles.checkmark}>✓</span>}
+      {!isCompatible && <span class={styles.incompatibleIcon}>🚫</span>}
     </button>
   );
 }
