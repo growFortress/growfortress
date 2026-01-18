@@ -2,7 +2,7 @@ import { Container, Graphics, Text } from 'pixi.js';
 import type { GameState, ActiveHero, HeroState } from '@arcade/sim-core';
 import { FP } from '@arcade/sim-core';
 import { Tween, TweenManager } from '../animation/Tween.js';
-import { easeOutQuad, easeOutElastic, easeOutCubic, easeInOutSine } from '../animation/easing.js';
+import { easeOutQuad, easeOutElastic, easeOutCubic } from '../animation/easing.js';
 import type { VFXSystem } from './VFXSystem.js';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
 
@@ -207,7 +207,7 @@ export class HeroSystem {
       visual.tweenManager.update(deltaMs);
 
       // Update animation state
-      this.updateAnimationState(visual, hero, deltaMs, time);
+      this.updateAnimationState(visual, hero, deltaMs);
 
       // Update position
       const screenX = fpXToScreen(hero.x, viewWidth);
@@ -438,8 +438,7 @@ export class HeroSystem {
   private updateAnimationState(
     visual: HeroVisual,
     hero: ActiveHero,
-    deltaMs: number,
-    time: number
+    deltaMs: number
   ): void {
     const anim = visual.animation;
 
