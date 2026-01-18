@@ -145,12 +145,6 @@ function validateHeroCommand(
     if (!hero) {
       return { valid: false, reason: 'Hero not found' };
     }
-    if (hero.state === 'dead') {
-      return { valid: false, reason: 'Hero is dead' };
-    }
-    if (hero.state === 'cooldown') {
-      return { valid: false, reason: 'Hero is on cooldown' };
-    }
   }
 
   // For 'focus' command, target enemy must exist
@@ -313,7 +307,6 @@ function applyHeroCommand(
       if (!event.heroId) return false;
       const hero = state.heroes.find(h => h.definitionId === event.heroId);
       if (!hero) return false;
-      if (hero.state === 'dead' || hero.state === 'cooldown') return false;
       if (event.targetX === undefined || event.targetY === undefined) return false;
 
       hero.commandTarget = { x: event.targetX, y: event.targetY };
@@ -328,24 +321,14 @@ function applyHeroCommand(
       const enemy = state.enemies.find(e => e.id === event.targetEnemyId);
       if (!enemy) return false;
 
-      // Set focus target on all alive heroes
+      // Set focus target on all heroes
       for (const hero of state.heroes) {
-        if (hero.state === 'dead' || hero.state === 'cooldown') continue;
         hero.focusTargetId = event.targetEnemyId;
       }
       return true;
     }
 
-    case 'retreat': {
-      // All heroes immediately retreat to fortress
-      for (const hero of state.heroes) {
-        if (hero.state === 'dead' || hero.state === 'cooldown') continue;
-        hero.isRetreating = true;
-        hero.focusTargetId = undefined; // Clear any focus target
-        hero.commandTarget = undefined;
-        hero.isCommanded = false;
-      }
-      return true;
-    }
+    default:
+      return false;
   }
 }

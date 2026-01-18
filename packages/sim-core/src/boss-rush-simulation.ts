@@ -431,8 +431,7 @@ export class BossRushSimulation {
         if (commandType === 'move') {
           // Find hero by definitionId and set command target
           const hero = this.state.heroes.find(h => h.definitionId === event.heroId);
-          if (hero && hero.state !== 'dead' && hero.state !== 'cooldown' &&
-              event.targetX !== undefined && event.targetY !== undefined) {
+          if (hero && event.targetX !== undefined && event.targetY !== undefined) {
             hero.commandTarget = { x: event.targetX, y: event.targetY };
             hero.isCommanded = true;
             hero.state = 'commanded';
@@ -440,19 +439,7 @@ export class BossRushSimulation {
         } else if (commandType === 'focus') {
           // Focus on target enemy - set for all heroes
           for (const hero of this.state.heroes) {
-            if (hero.state !== 'dead' && hero.state !== 'cooldown') {
-              hero.focusTargetId = event.targetEnemyId;
-            }
-          }
-        } else if (commandType === 'retreat') {
-          // All heroes retreat
-          for (const hero of this.state.heroes) {
-            if (hero.state !== 'dead' && hero.state !== 'cooldown') {
-              hero.isRetreating = true;
-              hero.focusTargetId = undefined;
-              hero.commandTarget = undefined;
-              hero.isCommanded = false;
-            }
+            hero.focusTargetId = event.targetEnemyId;
           }
         }
         break;

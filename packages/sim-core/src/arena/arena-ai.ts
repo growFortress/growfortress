@@ -57,7 +57,7 @@ function getHeroRange(hero: ActiveHero): number {
  * Find alive heroes on a side
  */
 function getAliveHeroes(side: ArenaSide): ActiveHero[] {
-  return side.heroes.filter(h => h.state !== 'dead' && h.currentHp > 0);
+  return side.heroes.filter(h => h.currentHp > 0);
 }
 
 // ============================================================================

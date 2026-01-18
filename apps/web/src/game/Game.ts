@@ -575,10 +575,9 @@ export class Game {
 
     const state = this.simulation.state;
 
-    // Verify hero exists and can be commanded
+    // Verify hero exists
     const hero = state.heroes.find(h => h.definitionId === heroId);
     if (!hero) return;
-    if (hero.state === 'dead' || hero.state === 'cooldown') return;
 
     const event: GameEvent = {
       type: 'HERO_COMMAND',

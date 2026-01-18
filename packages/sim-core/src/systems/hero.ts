@@ -4,7 +4,7 @@
  * Main hero update loop including:
  * - AI and target selection
  * - Physics and movement
- * - State machine (idle, deploying, combat, returning, cooldown, commanded)
+ * - State machine (idle, combat, commanded)
  * - Combat and skill usage
  */
 
@@ -54,7 +54,6 @@ import { createHeroProjectile } from './projectile.js';
 import {
   findClosestEnemy2D,
   getHeroAttackRange,
-  getFormationPosition,
   applySkillEffects,
 } from './helpers.js';
 
@@ -146,8 +145,6 @@ export function updateHeroes(
 
   // Phase 1: Calculate steering forces and update velocities
   for (const hero of state.heroes) {
-    if (hero.state === 'dead') continue;
-
     // Clean up expired movement modifiers
     hero.movementModifiers = cleanupExpiredModifiers(hero.movementModifiers, state.tick);
 
@@ -158,7 +155,7 @@ export function updateHeroes(
   // Phase 2: Integrate physics (apply velocity to position)
   // Note: No ally collisions - heroes pass through each other
   for (const hero of state.heroes) {
-    if (hero.state === 'dead' || hero.state === 'idle' || hero.state === 'cooldown') continue;
+    if (hero.state === 'idle') continue;
 
     // Get effective speed considering modifiers
     const heroDef = getHeroById(hero.definitionId);
@@ -182,33 +179,12 @@ export function updateHeroes(
 
   // Phase 3: State machine updates
   for (const hero of state.heroes) {
-    // Check for retreat command (team-wide immediate return)
-    if (hero.isRetreating && hero.state !== 'dead' && hero.state !== 'cooldown') {
-      hero.state = 'returning';
-      hero.isRetreating = false;
-      hero.currentTargetId = undefined;
-      hero.commandTarget = undefined;
-      hero.isCommanded = false;
-    }
-
     switch (hero.state) {
       case 'idle':
         updateHeroIdle(hero, state, config);
         break;
-      case 'deploying':
-        updateHeroDeployingState(hero, state, config);
-        break;
       case 'combat':
         updateHeroCombat(hero, state, config, rng);
-        break;
-      case 'returning':
-        updateHeroReturningState(hero, state, config, rng);
-        break;
-      case 'cooldown':
-        updateHeroCooldown(hero, state, config);
-        break;
-      case 'dead':
-        // Dead heroes stay dead until resurrection or run end
         break;
       case 'commanded':
         updateHeroCommandedState(hero, state, config);
@@ -231,7 +207,7 @@ export function updateHeroes(
  * Update hero steering based on current state
  * Sets velocity direction, actual movement happens in physics phase
  */
-function updateHeroSteering(hero: ActiveHero, state: GameState, config: SimConfig): void {
+function updateHeroSteering(hero: ActiveHero, state: GameState, _config: SimConfig): void {
   const heroDef = getHeroById(hero.definitionId);
   if (!heroDef) return;
 
@@ -239,32 +215,14 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, config: SimConfi
   const maxSpeed = calculateEffectiveSpeed(stats.moveSpeed, hero.movementModifiers, state.tick);
 
   switch (hero.state) {
-    case 'deploying': {
-      // Steer towards closest enemy
+    case 'combat': {
+      // Move towards closest enemy while attacking
       const closestEnemy = findClosestEnemy2D(state.enemies, hero.x, hero.y);
       if (closestEnemy) {
         const steering = steerTowards(hero, closestEnemy.x, closestEnemy.y, maxSpeed, HERO_ARRIVAL_RADIUS);
         hero.vx = FP.add(hero.vx, steering.ax);
         hero.vy = FP.add(hero.vy, steering.ay);
       }
-      break;
-    }
-    case 'combat': {
-      // Slight movement towards current target if needed, but mostly stationary
-      // Heroes in combat stay mostly in place
-      hero.vx = FP.mul(hero.vx, FP.fromFloat(0.5)); // Reduce velocity while in combat
-      hero.vy = FP.mul(hero.vy, FP.fromFloat(0.5));
-      break;
-    }
-    case 'returning': {
-      // Steer back towards formation position
-      const heroIndex = state.heroes.indexOf(hero);
-      const formation = getFormationPosition(heroIndex >= 0 ? heroIndex : 0, state.heroes.length);
-      const targetX = config.fortressX + FP.fromFloat(formation.xOffset);
-      const targetY = FP.fromFloat(formation.yOffset);
-      const steering = steerTowards(hero, targetX, targetY, maxSpeed, HERO_ARRIVAL_RADIUS);
-      hero.vx = FP.add(hero.vx, steering.ax);
-      hero.vy = FP.add(hero.vy, steering.ay);
       break;
     }
     case 'commanded': {
@@ -295,44 +253,10 @@ function updateHeroIdle(hero: ActiveHero, state: GameState, _config: SimConfig):
   const deployCooldownTicks = heroDef.baseStats.deployCooldown;
   const canDeploy = state.tick - hero.lastDeployTick >= deployCooldownTicks;
 
-  // Deploy if there are enemies and cooldown is ready
+  // Enter combat if there are enemies and cooldown is ready
   if (canDeploy && state.enemies.length > 0) {
-    hero.state = 'deploying';
-    hero.lastDeployTick = state.tick;
-    // Keep current position - heroes start at fortress but stay where they finished fighting
-  }
-}
-
-/**
- * Hero deploying state logic - check for state transitions
- * Movement is handled by physics phase
- */
-function updateHeroDeployingState(hero: ActiveHero, state: GameState, _config: SimConfig): void {
-  const heroDef = getHeroById(hero.definitionId);
-  if (!heroDef) return;
-
-  // Find closest enemy (2D)
-  const closestEnemy = findClosestEnemy2D(state.enemies, hero.x, hero.y);
-
-  if (!closestEnemy) {
-    // No enemies, stay in place and wait
-    hero.state = 'idle';
-    hero.vx = 0;
-    hero.vy = 0;
-    return;
-  }
-
-  // Calculate range based on hero class
-  const attackRange = getHeroAttackRange(heroDef.role);
-
-  // Check if in attack range (2D distance)
-  const distSq = FP.distSq(hero.x, hero.y, closestEnemy.x, closestEnemy.y);
-  const rangeSq = FP.mul(attackRange, attackRange);
-
-  if (distSq <= rangeSq) {
-    // Enter combat
     hero.state = 'combat';
-    hero.currentTargetId = closestEnemy.id;
+    hero.lastDeployTick = state.tick;
   }
 }
 
@@ -550,15 +474,14 @@ function updateHeroCombat(
   });
 
   if (enemiesInRange.length === 0) {
-    // No enemies in range, move closer or return
-    const closestEnemy = findClosestEnemy2D(state.enemies, hero.x, hero.y);
-    if (closestEnemy) {
-      hero.state = 'deploying'; // Continue moving
-    } else {
-      hero.state = 'idle'; // Stay in place and wait
+    // No enemies in range
+    if (state.enemies.length === 0) {
+      // No enemies at all, go idle
+      hero.state = 'idle';
       hero.vx = 0;
       hero.vy = 0;
     }
+    // Otherwise stay in combat and keep moving toward enemies (handled by steering)
     hero.currentTargetId = undefined;
     return;
   }
@@ -571,99 +494,13 @@ function updateHeroCombat(
 }
 
 /**
- * Hero returning state logic - check for state transitions
- * Movement is handled by physics phase
- * Hero continues attacking enemies in range while retreating
- */
-function updateHeroReturningState(hero: ActiveHero, state: GameState, config: SimConfig, rng?: Xorshift32): void {
-  const heroDef = getHeroById(hero.definitionId);
-
-  // Check if should cancel retreat and return to combat
-  if (heroDef && state.enemies.length > 0) {
-    const hpPercent = hero.currentHp / hero.maxHp;
-
-    // Cancel retreat if HP recovered above 50% threshold
-    const cancelRetreatThreshold = 0.5;
-    if (hpPercent >= cancelRetreatThreshold) {
-      hero.state = 'deploying';
-      return;
-    }
-
-    // Cancel retreat if enemies are critically close to fortress (within 8 units)
-    const criticalDistance = FP.fromInt(8);
-    const closestEnemy = findClosestEnemy2D(state.enemies, config.fortressX, FP.div(config.fieldHeight, FP.fromInt(2)));
-    if (closestEnemy) {
-      const enemyDistFromFortress = FP.sub(closestEnemy.x, config.fortressX);
-      if (enemyDistFromFortress < criticalDistance && hpPercent > 0.2) {
-        // Emergency - enemies too close, return to fight even with low HP
-        hero.state = 'deploying';
-        return;
-      }
-    }
-
-    // Attack enemies in range while retreating
-    if (heroDef && rng) {
-      performHeroAttack(hero, state, config, rng);
-    }
-  }
-
-  // Check if reached formation position (within 1.5 units)
-  const heroIndex = state.heroes.indexOf(hero);
-  const formation = getFormationPosition(heroIndex >= 0 ? heroIndex : 0, state.heroes.length);
-  const targetX = config.fortressX + FP.fromFloat(formation.xOffset);
-  const targetY = FP.fromFloat(formation.yOffset);
-
-  const dx = FP.sub(hero.x, targetX);
-  const dy = FP.sub(hero.y, targetY);
-  const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
-  const arrivalRadiusSq = FP.fromFloat(2.25); // 1.5^2
-
-  if (distSq <= arrivalRadiusSq) {
-    // Arrived at formation position
-    hero.x = targetX;
-    hero.y = targetY;
-    hero.vx = 0;
-    hero.vy = 0;
-    hero.state = 'cooldown';
-    hero.currentTargetId = undefined;
-  }
-}
-
-/**
- * Hero on cooldown after returning
- */
-function updateHeroCooldown(hero: ActiveHero, state: GameState, _config: SimConfig): void {
-  const heroDef = getHeroById(hero.definitionId);
-  if (!heroDef) return;
-
-  // Regenerate some HP while in castle
-  let regenRate = heroDef.baseStats.hp * 0.02; // 2% per second
-
-  // Iron Man Armor Nano-Repair: +20 HP/s extra regeneration
-  if (hasArtifactPassive(hero.equippedArtifact, 'nano-repair')) {
-    regenRate += 20;
-  }
-
-  if (state.tick % 30 === 0) {
-    hero.currentHp = Math.min(hero.currentHp + regenRate, hero.maxHp);
-  }
-
-  // Check if ready to deploy again
-  // deployCooldown is already in ticks
-  const deployCooldownTicks = heroDef.baseStats.deployCooldown;
-  if (state.tick - hero.lastDeployTick >= deployCooldownTicks) {
-    hero.state = 'idle';
-  }
-}
-
-/**
  * Hero executing a player-issued command (moving to target position)
  */
 function updateHeroCommandedState(hero: ActiveHero, state: GameState, _config: SimConfig): void {
   // Validate command
   if (!hero.commandTarget || !hero.isCommanded) {
     // No valid command, return to normal AI
-    hero.state = state.enemies.length > 0 ? 'deploying' : 'idle';
+    hero.state = state.enemies.length > 0 ? 'combat' : 'idle';
     hero.isCommanded = false;
     hero.commandTarget = undefined;
     return;
@@ -734,7 +571,7 @@ function updateHeroBuffs(hero: ActiveHero, state: GameState): void {
   if (hasHeroPassive(hero.definitionId, 'command_aura', heroTier as 1 | 2 | 3, heroLevel)) {
     // Apply buff to all other heroes if not already present
     for (const ally of state.heroes) {
-      if (ally === hero || ally.state === 'dead') continue;
+      if (ally === hero) continue;
 
       // Check if hero is within 5 units (fixed-point)
       const distSq = FP.distSq(hero.x, hero.y, ally.x, ally.y);

@@ -23,7 +23,7 @@ const UNIT_STORM: HeroDefinition = {
     damage: 25,
     attackSpeed: 1.2,
     range: FP.fromInt(6),
-    moveSpeed: FP.fromFloat(0.08),
+    moveSpeed: FP.fromFloat(0.14),
     deployCooldown: 300
   },
   colors: { primary: 0x4169e1, secondary: 0x87ceeb, glow: 0xffff00 },
@@ -150,7 +150,7 @@ const UNIT_FORGE: HeroDefinition = {
     damage: 30,
     attackSpeed: 1.5,
     range: FP.fromInt(8),
-    moveSpeed: FP.fromFloat(0.1),
+    moveSpeed: FP.fromFloat(0.16),
     deployCooldown: 240
   },
   colors: { primary: 0xb22222, secondary: 0xffd700, glow: 0x00ffff },
@@ -277,7 +277,7 @@ const UNIT_TITAN: HeroDefinition = {
     damage: 35,
     attackSpeed: 0.7,
     range: FP.fromInt(3),
-    moveSpeed: FP.fromFloat(0.06),
+    moveSpeed: FP.fromFloat(0.17),
     deployCooldown: 360
   },
   colors: { primary: 0x4b0082, secondary: 0x8b008b, glow: 0x9400d3 },
@@ -410,7 +410,7 @@ const UNIT_VANGUARD: HeroDefinition = {
     damage: 18,
     attackSpeed: 1.0,
     range: FP.fromInt(5),
-    moveSpeed: FP.fromFloat(0.09),
+    moveSpeed: FP.fromFloat(0.15),
     deployCooldown: 270
   },
   colors: { primary: 0x4169e1, secondary: 0xdc143c, glow: 0xf0f0f0 },
@@ -542,7 +542,7 @@ const UNIT_RIFT: HeroDefinition = {
     damage: 35,
     attackSpeed: 0.8,
     range: FP.fromInt(10),
-    moveSpeed: FP.fromFloat(0.07),
+    moveSpeed: FP.fromFloat(0.12),
     deployCooldown: 300
   },
   colors: { primary: 0xdc143c, secondary: 0x8b0000, glow: 0xff69b4 },
@@ -667,7 +667,7 @@ const UNIT_FROST: HeroDefinition = {
   rarity: 'common',
   baseStats: {
     hp: 170, damage: 28, attackSpeed: 1.8, range: FP.fromInt(12),
-    moveSpeed: FP.fromFloat(0.1), deployCooldown: 210
+    moveSpeed: FP.fromFloat(0.16), deployCooldown: 210
   },
   colors: { primary: 0x00bfff, secondary: 0xe0ffff, glow: 0xadd8e6 },
   shape: 'triangle',
@@ -791,7 +791,7 @@ const UNIT_SPECTRE: HeroDefinition = {
     damage: 33,
     attackSpeed: 1.6,
     range: FP.fromInt(9),
-    moveSpeed: FP.fromFloat(0.09),
+    moveSpeed: FP.fromFloat(0.15),
     deployCooldown: 240
   },
   colors: { primary: 0x00ffff, secondary: 0xff00ff, glow: 0x00ffff },
@@ -915,7 +915,7 @@ const UNIT_OMEGA: HeroDefinition = {
     damage: 45,
     attackSpeed: 1.1,
     range: FP.fromInt(7),
-    moveSpeed: FP.fromFloat(0.11),
+    moveSpeed: FP.fromFloat(0.17),
     deployCooldown: 300
   },
   colors: { primary: 0xffd700, secondary: 0x1a1a2a, glow: 0xffd700 },
@@ -1045,7 +1045,7 @@ const UNIT_INFERNO: HeroDefinition = {
     damage: 42,
     attackSpeed: 1.3,
     range: FP.fromInt(7),
-    moveSpeed: FP.fromFloat(0.09),
+    moveSpeed: FP.fromFloat(0.15),
     deployCooldown: 270
   },
   colors: { primary: 0xff4500, secondary: 0xff8c00, glow: 0xffd700 },
@@ -1182,7 +1182,7 @@ const UNIT_GLACIER: HeroDefinition = {
     damage: 22,
     attackSpeed: 0.8,
     range: FP.fromInt(4),
-    moveSpeed: FP.fromFloat(0.065),
+    moveSpeed: FP.fromFloat(0.115),
     deployCooldown: 330
   },
   colors: { primary: 0x1e90ff, secondary: 0xb0e0e6, glow: 0x87ceeb },

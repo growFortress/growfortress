@@ -14,11 +14,8 @@ const COLORS = {
   text: '#fff',
   // Heroes
   heroIdle: '#4488ff',
-  heroDeploying: '#00ff88',
   heroCombat: '#ff4444',
-  heroReturning: '#ffaa00',
-  heroCooldown: '#888888',
-  heroDead: '#333333',
+  heroCommanded: '#00ffff',
   heroOutline: '#ffffff',
   // Turrets
   turretBase: '#555555',
@@ -730,27 +727,16 @@ export class Renderer {
 
     // State-based styling
     switch (hero.state) {
-      case 'deploying':
-        glowColor = COLORS.heroDeploying;
-        break;
       case 'combat':
         glowColor = COLORS.heroCombat;
         break;
-      case 'returning':
-        glowColor = COLORS.heroReturning;
-        break;
-      case 'cooldown':
-        fillColor = COLORS.heroCooldown;
-        glowColor = COLORS.heroCooldown;
-        break;
-      case 'dead':
-        fillColor = COLORS.heroDead;
-        glowColor = COLORS.heroDead;
+      case 'commanded':
+        glowColor = COLORS.heroCommanded || fillColor;
         break;
     }
 
     // Glow effect for active heroes
-    if (hero.state !== 'idle' && hero.state !== 'dead') {
+    if (hero.state !== 'idle') {
       ctx.shadowColor = glowColor;
       ctx.shadowBlur = 15;
     }

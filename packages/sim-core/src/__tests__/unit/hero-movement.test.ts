@@ -35,11 +35,11 @@ describe('Hero Movement', () => {
     // Hero should have moved (position changed)
     expect(finalX).not.toBe(initialX);
 
-    // Hero should be in deploying or combat state
-    expect(['deploying', 'combat']).toContain(finalState);
+    // Hero should be in combat state
+    expect(finalState).toBe('combat');
   });
 
-  it('hero state transitions from idle to deploying when enemies appear', () => {
+  it('hero state transitions from idle to combat when enemies appear', () => {
     const config = getDefaultConfig();
     config.startingHeroes = ['storm'];
 

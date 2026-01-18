@@ -96,7 +96,7 @@ export interface FortressClassDefinition {
 // ============================================================================
 
 export type HeroRole = 'tank' | 'dps' | 'support' | 'crowd_control' | 'assassin';
-export type HeroState = 'idle' | 'deploying' | 'combat' | 'returning' | 'cooldown' | 'dead' | 'commanded';
+export type HeroState = 'idle' | 'combat' | 'commanded';
 
 export interface HeroWeakness {
   id: string;
@@ -902,6 +902,8 @@ export interface ActiveProjectile {
   class: FortressClass;   // For visual styling
   skillId?: string;       // Skill ID that fired this projectile (for special effects)
   isChained?: boolean;    // True if this is a chain projectile (prevents infinite chaining)
+  pierceCount?: number;   // How many additional enemies this projectile can pierce through
+  hitEnemyIds?: number[]; // Track which enemies have already been hit (for pierce)
 }
 
 // Wave spawn configuration

@@ -9,15 +9,6 @@
 
 import type { ActiveHero, ActiveTurret, FortressClass } from '../types.js';
 import { Xorshift32 } from '../rng.js';
-import { getHeroById, hasHeroPassive } from '../data/heroes.js';
-import { analytics } from '../analytics.js';
-import { calculateWeaknessDamageMultiplier } from './weakness.js';
-import {
-  calculateHeroArtifactDodgeChance,
-  calculateHeroArtifactBlockChance,
-  getArtifactReflectDamage,
-  hasArtifactPassive,
-} from './artifacts.js';
 
 /**
  * Result of damage application to hero
@@ -33,101 +24,14 @@ export interface HeroDamageResult {
  * @returns object with actual damage taken and reflect damage to apply to attacker
  */
 export function applyDamageToHero(
-  hero: ActiveHero,
-  damage: number,
-  rng: Xorshift32,
-  incomingDamageClass?: FortressClass,
-  currentTick?: number
+  _hero: ActiveHero,
+  _damage: number,
+  _rng: Xorshift32,
+  _incomingDamageClass?: FortressClass,
+  _currentTick?: number
 ): HeroDamageResult {
-  const heroDef = getHeroById(hero.definitionId);
-
-  // Apply weakness damage vulnerability (e.g., Thunderlord +25% from Magic)
-  if (heroDef && incomingDamageClass) {
-    const weaknessMultiplier = calculateWeaknessDamageMultiplier(heroDef.weaknesses, incomingDamageClass);
-    damage = Math.floor(damage * weaknessMultiplier);
-  }
-
-  // Hero passive damage reduction
-  const heroTier = hero.tier || 1;
-  const heroLevel = hero.level || 1;
-
-  // Veteran (Vanguard): +25% damage reduction
-  if (hasHeroPassive(hero.definitionId, 'veteran', heroTier as 1 | 2 | 3, heroLevel)) {
-    damage = Math.floor(damage * 0.75);
-  }
-
-  // Cryo Armor (Glacier): +20% damage reduction, attackers are slowed
-  let hasCryoArmor = false;
-  if (hasHeroPassive(hero.definitionId, 'cryo_armor', heroTier as 1 | 2 | 3, heroLevel)) {
-    damage = Math.floor(damage * 0.8);
-    hasCryoArmor = true;
-  }
-
-  // Check dodge (Cloak of Levitation)
-  const dodgeChance = calculateHeroArtifactDodgeChance(hero.equippedArtifact);
-  if (dodgeChance > 0 && rng.nextFloat() < dodgeChance) {
-    return { damageTaken: 0, reflectDamage: 0, slowAttacker: hasCryoArmor }; // Dodged!
-  }
-
-  // Check block (Captain's Shield)
-  const blockChance = calculateHeroArtifactBlockChance(hero.equippedArtifact);
-  if (blockChance > 0 && rng.nextFloat() < blockChance) {
-    // Blocked - reduce damage by 75%
-    damage = Math.floor(damage * 0.25);
-
-    // Vibranium Absorption: heal when blocking
-    if (hasArtifactPassive(hero.equippedArtifact, 'vibranium absorption')) {
-      hero.currentHp = Math.min(hero.currentHp + Math.floor(damage * 0.5), hero.maxHp);
-    }
-  }
-
-  // Check Sentient Protection (Cloak - blocks one fatal hit per wave)
-  if (hero.currentHp - damage <= 0 && hasArtifactPassive(hero.equippedArtifact, 'sentient protection')) {
-    // Check if this passive was already used this wave
-    const usedThisWave = hero.buffs.some(b => b.id === 'sentient_protection_used');
-    if (!usedThisWave) {
-      // Block fatal damage, leave at 1 HP
-      damage = hero.currentHp - 1;
-      // Mark as used (using hpRegen as a marker with 0 effect)
-      hero.buffs.push({
-        id: 'sentient_protection_used',
-        stat: 'hpRegen',
-        amount: 0,
-        expirationTick: Infinity, // Cleared on wave end
-      });
-    }
-  }
-
-  // Calculate reflect damage before applying damage
-  const reflectPercent = getArtifactReflectDamage(hero.equippedArtifact);
-  const reflectDamage = reflectPercent > 0 ? Math.floor(damage * reflectPercent) : 0;
-
-  if (hero.definitionId) {
-    analytics.trackDamageTaken(hero.definitionId, damage);
-  }
-
-  // Consume shield before HP
-  if (hero.shieldAmount && hero.shieldAmount > 0) {
-    if (hero.shieldAmount >= damage) {
-      // Shield absorbs all damage
-      hero.shieldAmount -= damage;
-      damage = 0;
-    } else {
-      // Shield absorbs partial damage
-      damage -= hero.shieldAmount;
-      hero.shieldAmount = 0;
-    }
-  }
-
-  hero.currentHp -= damage;
-  analytics.trackDamage('fortress', 'fortress', damage); // Technically hero taking damage, but for now we track this flow
-
-  // Track when hero was last damaged (for Heart of Winter passive)
-  if (damage > 0 && currentTick !== undefined) {
-    hero.lastDamagedTick = currentTick;
-  }
-
-  return { damageTaken: damage, reflectDamage, slowAttacker: hasCryoArmor };
+  // Heroes are immortal - no damage taken
+  return { damageTaken: 0, reflectDamage: 0 };
 }
 
 /**

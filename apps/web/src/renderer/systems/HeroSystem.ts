@@ -39,23 +39,15 @@ const HERO_COLORS: Record<string, { primary: number; secondary: number; accent: 
 // State colors
 const STATE_COLORS: Record<HeroState, number> = {
   idle: 0x888888,
-  deploying: 0x00ff00,
   combat: 0xff4444,
-  returning: 0xffaa00,
-  cooldown: 0x4444ff,
-  dead: 0x333333,
-  commanded: 0x00ffff, // Cyan for player-commanded state
+  commanded: 0x00ffff,
 };
 
 // Target visual properties for each state
 const STATE_VISUALS: Record<HeroState, { scale: number; alpha: number }> = {
   idle: { scale: 1.0, alpha: 1.0 },
-  deploying: { scale: 1.0, alpha: 1.0 },
   combat: { scale: 1.0, alpha: 1.0 },
-  returning: { scale: 1.0, alpha: 1.0 },
-  cooldown: { scale: 1.0, alpha: 0.6 },
-  dead: { scale: 1.0, alpha: 0.3 },
-  commanded: { scale: 1.0, alpha: 1.0 }, // Full visibility when commanded
+  commanded: { scale: 1.0, alpha: 1.0 },
 };
 
 // HP bar colors
@@ -259,10 +251,11 @@ export class HeroSystem {
     body.label = 'body';
     container.addChild(body);
 
-    // HP bar
+    // HP bar (hidden - heroes are immortal)
     const hpBar = new Graphics();
     hpBar.label = 'hpBar';
     hpBar.position.y = -SIZES.heroBase - 15;
+    hpBar.visible = false;
     container.addChild(hpBar);
 
     // State indicator
@@ -391,15 +384,6 @@ export class HeroSystem {
     visual.animation.isTransitioning = true;
     visual.animation.transitionProgress = 0;
 
-    // Reset death animation when transitioning from dead to any other state (e.g., returning to hub)
-    if (fromState === 'dead' && toState !== 'dead') {
-      visual.animation.isDying = false;
-      visual.animation.deathProgress = 0;
-      // Trigger spawn animation to "revive" the hero visually with correct target state alpha
-      this.startSpawnAnimation(visual, toState);
-      return; // Spawn animation handles the transition
-    }
-
     const fromVisuals = STATE_VISUALS[fromState];
     const toVisuals = STATE_VISUALS[toState];
 
@@ -491,25 +475,10 @@ export class HeroSystem {
         // Static idle - no animation
         break;
 
-      case 'deploying':
-        // Static during deployment - no animation
-        break;
-
-      case 'combat': {
-        // Combat shake with intensity falloff
-        const shakeIntensity = 2 * easeInOutSine(Math.min(1, anim.combatIntensity));
-        anim.offsetX = Math.sin(time * 20) * shakeIntensity;
-        anim.offsetY = Math.cos(time * 25) * shakeIntensity * 0.3;
-
-        // Decay combat intensity for initial burst
-        if (anim.combatIntensity > 0) {
-          anim.combatIntensity = Math.max(0.5, anim.combatIntensity - deltaMs / 500);
-        }
-        break;
-      }
-
-      case 'returning':
-        // Static during return - no animation
+      case 'combat':
+        // No shake - heroes move smoothly while attacking
+        anim.offsetX = 0;
+        anim.offsetY = 0;
         break;
 
       default:

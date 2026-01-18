@@ -813,7 +813,7 @@ export class Simulation {
     // Priority 1: Attack heroes in melee range
     for (const hero of this.state.heroes) {
       // Skip inactive heroes
-      if (hero.state === 'dead' || hero.state === 'idle' || hero.state === 'cooldown') {
+      if (hero.state === 'idle') {
         continue;
       }
 
@@ -833,12 +833,6 @@ export class Simulation {
         if (reflectDamage > 0) {
           enemy.hp -= reflectDamage;
           enemy.hitFlashTicks = 3; // Visual feedback for reflect
-        }
-
-        // Check if hero died
-        if (hero.currentHp <= 0) {
-          hero.state = 'dead';
-          hero.currentHp = 0;
         }
 
         // Leech special: heal on attack (only if dealt damage)

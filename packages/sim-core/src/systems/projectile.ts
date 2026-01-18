@@ -28,6 +28,8 @@ import {
   PROJECTILE_BASE_SPEED,
   HIT_FLASH_TICKS,
   DEFAULT_EFFECT_DURATION,
+  PIERCE_HIT_RADIUS,
+  PIERCE_DAMAGE_MULTIPLIER,
 } from './constants.js';
 import { trackDamageHit, getArmorBreakMultiplier, type ComboTrigger } from './combos.js';
 import { hasHeroPassive } from '../data/heroes.js';
@@ -89,6 +91,11 @@ export function updateProjectiles(
       const direction = FP.normalize2D(dx, dy);
       projectile.x = FP.add(projectile.x, FP.mul(direction.x, projectile.speed));
       projectile.y = FP.add(projectile.y, FP.mul(direction.y, projectile.speed));
+
+      // Pierce mechanic: check collision with other enemies along the path
+      if (projectile.pierceCount !== undefined && projectile.pierceCount > 0) {
+        checkPierceCollisions(projectile, state);
+      }
     }
 
     // Check timeout (projectile lived too long)
@@ -100,6 +107,72 @@ export function updateProjectiles(
   // Remove finished projectiles using Set for O(1) lookup
   const removeSet = new Set(toRemove);
   state.projectiles = state.projectiles.filter(p => !removeSet.has(p.id));
+}
+
+/**
+ * Check for pierce collisions with enemies near the projectile
+ */
+function checkPierceCollisions(projectile: ActiveProjectile, state: GameState): void {
+  if (!projectile.pierceCount || projectile.pierceCount <= 0) return;
+
+  // Initialize hitEnemyIds if not present
+  if (!projectile.hitEnemyIds) {
+    projectile.hitEnemyIds = [];
+  }
+
+  const pierceRadiusSq = FP.mul(PIERCE_HIT_RADIUS, PIERCE_HIT_RADIUS);
+
+  for (const enemy of state.enemies) {
+    // Skip if this is the main target or already hit
+    if (enemy.id === projectile.targetEnemyId) continue;
+    if (enemy.hp <= 0) continue;
+    if (projectile.hitEnemyIds.includes(enemy.id)) continue;
+    if (projectile.pierceCount <= 0) break;
+
+    // Check distance to enemy
+    const dx = FP.sub(enemy.x, projectile.x);
+    const dy = FP.sub(enemy.y, projectile.y);
+    const distSq = FP.lengthSq2D(dx, dy);
+
+    if (distSq <= pierceRadiusSq) {
+      // Hit! Apply reduced damage
+      applyPierceDamage(projectile, enemy, state);
+      projectile.hitEnemyIds.push(enemy.id);
+      projectile.pierceCount--;
+    }
+  }
+}
+
+/**
+ * Apply reduced damage to a pierced enemy
+ */
+function applyPierceDamage(projectile: ActiveProjectile, enemy: Enemy, state: GameState): void {
+  // Apply armor break multiplier from shatter combo (if active)
+  const armorMultiplier = getArmorBreakMultiplier(enemy);
+  const baseDamage = Math.floor(projectile.damage * armorMultiplier * PIERCE_DAMAGE_MULTIPLIER);
+
+  const damageDealt = Math.min(baseDamage, enemy.hp);
+  enemy.hp -= baseDamage;
+  enemy.hitFlashTicks = HIT_FLASH_TICKS;
+
+  // Track damage hit for combo system
+  if (projectile.class) {
+    const comboTrigger = trackDamageHit(enemy, projectile.class, damageDealt, state);
+    if (comboTrigger) {
+      pendingComboTriggers.push(comboTrigger);
+    }
+  }
+
+  analytics.trackDamage(
+    projectile.sourceType,
+    String(projectile.sourceId),
+    damageDealt
+  );
+
+  // Apply status effects to pierced enemies too
+  for (const effect of projectile.effects) {
+    applyEffectToEnemy(effect, enemy, state);
+  }
 }
 
 /**
@@ -464,6 +537,9 @@ export function createTurretProjectile(
   state.projectiles.push(projectile);
 }
 
+/** Default pierce count for fortress projectiles */
+const FORTRESS_PIERCE_COUNT = 3;
+
 /**
  * Create a projectile from fortress attack
  */
@@ -490,6 +566,8 @@ export function createFortressProjectile(
     effects: [],
     spawnTick: state.tick,
     class: state.fortressClass,
+    pierceCount: FORTRESS_PIERCE_COUNT,
+    hitEnemyIds: [],
   };
 
   state.projectiles.push(projectile);

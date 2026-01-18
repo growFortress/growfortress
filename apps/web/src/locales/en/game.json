@@ -56,11 +56,7 @@
     "slotsOccupied": "{{count}} of {{total}} slots occupied",
     "state": {
       "idle": "idle",
-      "deploying": "deploying",
       "combat": "in combat",
-      "returning": "returning",
-      "cooldown": "on cooldown",
-      "dead": "defeated",
       "commanded": "under command"
     }
   },

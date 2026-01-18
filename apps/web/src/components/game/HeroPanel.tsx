@@ -87,22 +87,14 @@ const HERO_COLORS: Record<string, string> = {
 // State colors
 const STATE_COLORS: Record<string, string> = {
   idle: '#888888',
-  deploying: '#00ff00',
   combat: '#ff4444',
-  returning: '#ffaa00',
-  cooldown: '#4444ff',
-  dead: '#333333',
-  commanded: '#00ffff', // Cyan for player-commanded state
+  commanded: '#00ffff',
 };
 
 // State name translation keys (moved outside component to avoid recreation)
 const STATE_NAME_KEYS: Record<string, string> = {
   idle: 'heroPanel.state.idle',
-  deploying: 'heroPanel.state.deploying',
   combat: 'heroPanel.state.combat',
-  returning: 'heroPanel.state.returning',
-  cooldown: 'heroPanel.state.cooldown',
-  dead: 'heroPanel.state.dead',
   commanded: 'heroPanel.state.commanded',
 } as const;
 
@@ -152,10 +144,8 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
         return;
       }
 
-      // Can only command heroes that are alive and not on cooldown
-      if (hero.state !== 'dead' && hero.state !== 'cooldown') {
-        selectHeroForCommand(hero.definitionId);
-      }
+      // Heroes can always be commanded (they are immortal)
+      selectHeroForCommand(hero.definitionId);
     }
   };
 
@@ -198,7 +188,7 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
         onClick={() => handleHeroClick(hero)}
         aria-label={accessibleLabel}
         aria-pressed={isSelected}
-        aria-disabled={hero.state === 'dead' || hero.state === 'cooldown'}
+        aria-disabled={false}
         role="listitem"
       >
         <div class={styles.heroIcon} aria-hidden="true">{icon}</div>
@@ -240,12 +230,6 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
           aria-hidden="true"
         />
 
-        {/* Cooldown overlay */}
-        {hero.state === 'cooldown' && (
-          <div class={styles.cooldownOverlay} aria-hidden="true">
-            <span class={styles.cooldownText}>CD</span>
-          </div>
-        )}
       </button>
     );
   };

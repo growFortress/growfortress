@@ -169,7 +169,7 @@ export class ArenaSimulation {
     const enemySide = getEnemySide(this.state, side);
 
     for (const hero of ownSide.heroes) {
-      if (hero.state === 'dead' || hero.currentHp <= 0) continue;
+      if (hero.currentHp <= 0) continue;
 
       // Get attack target
       const target = selectHeroTarget(hero, side, this.state);
@@ -412,42 +412,13 @@ export class ArenaSimulation {
   }
 
   private damageHero(
-    targetHero: ActiveHero,
-    damage: number,
-    attackerSide: 'left' | 'right',
-    attackerData: ArenaSide,
-    targetSide: ArenaSide
+    _targetHero: ActiveHero,
+    _damage: number,
+    _attackerSide: 'left' | 'right',
+    _attackerData: ArenaSide,
+    _targetSide: ArenaSide
   ): void {
-    targetHero.currentHp -= damage;
-    targetSide.stats.damageReceived += damage;
-    attackerData.stats.damageDealt += damage;
-
-    // Record replay event
-    this.replayEvents.push({
-      tick: this.state.tick,
-      type: 'damage',
-      side: attackerSide,
-      data: {
-        targetHeroId: targetHero.definitionId,
-        damage,
-        remainingHp: targetHero.currentHp,
-      },
-    });
-
-    if (targetHero.currentHp <= 0) {
-      targetHero.currentHp = 0;
-      targetHero.state = 'dead';
-      attackerData.stats.heroesKilled++;
-      targetSide.stats.heroesLost++;
-
-      // Record death event
-      this.replayEvents.push({
-        tick: this.state.tick,
-        type: 'hero_death',
-        side: attackerSide === 'left' ? 'right' : 'left',
-        data: { heroId: targetHero.definitionId },
-      });
-    }
+    // Heroes are immortal - no damage taken
   }
 
   // ============================================================================
