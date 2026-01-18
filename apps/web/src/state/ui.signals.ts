@@ -164,6 +164,20 @@ export function clearUnlockNotifications(): void {
   unlockNotifications.value = [];
 }
 
+// ============================================================================
+// PILLAR UNLOCK MODAL
+// ============================================================================
+
+export const pillarUnlockModalVisible = signal(false);
+
+export function showPillarUnlockModal(): void {
+  pillarUnlockModalVisible.value = true;
+}
+
+export function closePillarUnlockModal(): void {
+  pillarUnlockModalVisible.value = false;
+}
+
 /**
  * Reset all UI state (on logout)
  */
@@ -184,4 +198,5 @@ export function resetUIState(): void {
   settingsMenuVisible.value = false;
   errorToasts.value = [];
   unlockNotifications.value = [];
+  pillarUnlockModalVisible.value = false;
 }

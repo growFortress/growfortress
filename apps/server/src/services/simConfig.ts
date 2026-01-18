@@ -1,4 +1,4 @@
-import type { FortressClass, SimConfig } from '@arcade/sim-core';
+import type { FortressClass, SimConfig, PillarId } from '@arcade/sim-core';
 import {
   getMaxHeroSlots,
   getMaxTurretSlots,
@@ -55,6 +55,7 @@ export interface BuildSimConfigParams {
     waveIntervalTicks: number;
   };
   guildStatBoost?: number; // Guild stat boost (0-0.20 = 0-20% HP/damage bonus)
+  unlockedPillars?: PillarId[]; // Dust-gated pillar unlocks (if undefined, all pillars available)
 }
 
 export function buildSimConfigSnapshot(
@@ -123,6 +124,7 @@ export function buildSimConfigSnapshot(
     fortressBaseDamage: params.remoteConfig?.fortressBaseDamage ?? 10,
     waveIntervalTicks: params.remoteConfig?.waveIntervalTicks ?? 90,
     guildStatBoost: params.guildStatBoost,
+    unlockedPillars: params.unlockedPillars,
   };
 
   return {
@@ -154,5 +156,6 @@ export function applySimConfigSnapshot(
   config.fortressBaseDamage = snapshot.fortressBaseDamage;
   config.waveIntervalTicks = snapshot.waveIntervalTicks;
   config.guildStatBoost = snapshot.guildStatBoost;
+  config.unlockedPillars = snapshot.unlockedPillars ? [...snapshot.unlockedPillars] : undefined;
   return config;
 }

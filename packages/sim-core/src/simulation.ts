@@ -548,15 +548,15 @@ export class Simulation {
     this.state.wave++;
     this.state.waveComplete = false;
 
-    // Update current pillar based on wave
-    const newPillar = getPillarForWave(this.state.wave);
+    // Update current pillar based on wave (filtered by unlocked pillars if set)
+    const newPillar = getPillarForWave(this.state.wave, this.config.unlockedPillars);
     if (newPillar && newPillar.id !== this.state.currentPillar) {
       this.state.currentPillar = newPillar.id;
       // Immediately recalculate pillar modifiers for new pillar
       this.updatePillarModifiers();
     }
 
-    const composition = getWaveComposition(this.state.wave, this.config.tickHz);
+    const composition = getWaveComposition(this.state.wave, this.config.tickHz, this.config.unlockedPillars);
     const queue: WaveSpawnEntry[] = [];
 
     let spawnTick = this.state.tick + this.config.waveIntervalTicks;

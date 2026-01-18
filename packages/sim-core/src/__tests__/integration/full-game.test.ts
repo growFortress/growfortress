@@ -406,19 +406,20 @@ describe('Full Game Integration', () => {
       expect(sim.state.gold).toBeGreaterThan(0);
     });
 
-    it('dust is earned from kills', () => {
+    it('dust is NOT earned from kills (removed from economy)', () => {
       const sim = new Simulation(12345, getDefaultConfig());
 
+      // Run many steps and kill enemies
       for (let i = 0; i < 1000; i++) {
         sim.step();
         for (const enemy of sim.state.enemies) {
           enemy.hp = 0;
         }
-        if (sim.state.dustEarned > 0) break;
       }
 
-      expect(sim.state.dustEarned).toBeGreaterThan(0);
-      expect(sim.state.dust).toBeGreaterThan(0);
+      // Dust is no longer earned from enemy kills - now earned only via daily quests
+      expect(sim.state.dustEarned).toBe(0);
+      expect(sim.state.dust).toBe(0);
     });
 
     it('gold multiplier affects earnings', () => {

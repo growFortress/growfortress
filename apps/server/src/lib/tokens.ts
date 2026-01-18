@@ -213,6 +213,7 @@ export type SimConfigSnapshot = Pick<
   | "waveIntervalTicks"
   | "equippedArtifacts"
   | "guildStatBoost"
+  | "unlockedPillars"
 >;
 
 export interface RunTokenPayload {

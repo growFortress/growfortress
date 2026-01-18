@@ -183,7 +183,7 @@ describe('Daily Quests Service', () => {
       const result = await getDailyQuests('user-123');
 
       const waveHunter = result.quests.find(q => q.questId === 'wave_hunter');
-      expect(waveHunter?.dustReward).toBe(10); // from DAILY_QUEST_DEFINITIONS
+      expect(waveHunter?.dustReward).toBe(7); // from DAILY_QUEST_DEFINITIONS (rebalanced)
       expect(waveHunter?.bonusType).toBe('gold');
       expect(waveHunter?.bonusValue).toBe(150); // from DAILY_QUEST_DEFINITIONS
     });

@@ -308,6 +308,29 @@
   box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
 }
 
+/* Worlds Exploration Button */
+.worldsBtn {
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-60);
+  padding: 8px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.worldsBtn:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: 0 0 12px var(--color-primary-30);
+}
+
 /* Daily Quests Button */
 .dailyQuestsBtn {
   position: relative;
@@ -347,6 +370,48 @@
   justify-content: center;
   padding: 0 4px;
   box-shadow: 0 0 8px rgba(224, 64, 251, 0.5);
+  animation: pulse 2s infinite;
+}
+
+/* Battle Pass Button */
+.battlePassBtn {
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-60);
+  padding: 8px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battlePassBtn:hover {
+  background: var(--color-bg-elevated);
+  border-color: #ffc107;
+  color: #ffc107;
+  box-shadow: 0 0 12px rgba(255, 193, 7, 0.3);
+}
+
+.bpBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  background: #ffc107;
+  color: #1a1a1a;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
   animation: pulse 2s infinite;
 }
 
@@ -664,6 +729,7 @@
   }
 
   .headerBtn,
+  .worldsBtn,
   .dailyQuestsBtn,
   .masteryBtn,
   .leaderboardBtn,

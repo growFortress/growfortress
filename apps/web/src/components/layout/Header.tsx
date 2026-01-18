@@ -24,9 +24,14 @@ import {
   hasUnclaimedQuestRewards,
   unclaimedCompletedCount,
   showShopModal,
+  showPillarUnlockModal,
+  showBattlePassModal,
+  hasUnclaimedBPRewards,
+  totalUnclaimedCount,
 } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Tooltip } from '../shared/Tooltip.js';
+import { EnergyBar } from '../game/EnergyBar.js';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -98,6 +103,9 @@ export function Header(_props: HeaderProps) {
             </div>
           </div>
 
+          {/* Energy bar */}
+          <EnergyBar compact />
+
           {/* Level with XP bar */}
           <div class={styles.levelSection} aria-label={t('header.levelLabel', { level: baseLevel.value })}>
             <span class={styles.levelLabel}>{t('common:labels.lv')}</span>
@@ -122,6 +130,16 @@ export function Header(_props: HeaderProps) {
 
           {/* Buttons */}
           <div class={styles.buttonGroup}>
+            <Tooltip content="Eksploracja Światów" position="bottom">
+              <button
+                class={styles.worldsBtn}
+                onClick={() => showPillarUnlockModal()}
+                aria-label="Eksploracja Światów"
+              >
+                <span aria-hidden="true">🌍</span>
+              </button>
+            </Tooltip>
+
             <Tooltip content={t('common:navigation.dailyQuests')} position="bottom">
               <button
                 class={styles.dailyQuestsBtn}
@@ -132,6 +150,21 @@ export function Header(_props: HeaderProps) {
                 {hasUnclaimedQuestRewards.value && (
                   <span class={styles.questBadge} aria-hidden="true">
                     {unclaimedCompletedCount.value}
+                  </span>
+                )}
+              </button>
+            </Tooltip>
+
+            <Tooltip content="Battle Pass" position="bottom">
+              <button
+                class={styles.battlePassBtn}
+                onClick={() => showBattlePassModal()}
+                aria-label={hasUnclaimedBPRewards.value ? `Battle Pass (${totalUnclaimedCount.value} rewards)` : 'Battle Pass'}
+              >
+                <span aria-hidden="true">🎖️</span>
+                {hasUnclaimedBPRewards.value && (
+                  <span class={styles.bpBadge} aria-hidden="true">
+                    {totalUnclaimedCount.value}
                   </span>
                 )}
               </button>

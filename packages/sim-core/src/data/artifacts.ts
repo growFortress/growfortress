@@ -3164,10 +3164,10 @@ export const PILLAR_ARTIFACT_DROPS: Record<PillarId, ArtifactPillarDropEntry[]> 
  * (Premium currency - reduced values for rarity)
  */
 export const ARTIFACT_DUPLICATE_DUST: Record<ArtifactRarity, number> = {
-  common: 100,
-  rare: 200,
-  epic: 300,
-  legendary: 400,
+  common: 25,
+  rare: 50,
+  epic: 100,
+  legendary: 200,
 };
 
 /**
@@ -3175,7 +3175,7 @@ export const ARTIFACT_DUPLICATE_DUST: Record<ArtifactRarity, number> = {
  */
 export function getArtifactDuplicateDustValue(artifactId: string): number {
   const artifact = getArtifactById(artifactId);
-  if (!artifact) return 500; // Default to common
+  if (!artifact) return 25; // Default to common (reduced for premium economy)
   return ARTIFACT_DUPLICATE_DUST[artifact.rarity];
 }
 

@@ -16,6 +16,7 @@ import { getUserProfile } from './auth.js';
 import { upsertBossRushLeaderboardEntry, getUserBossRushRank } from './bossRushLeaderboard.js';
 import { getCurrentWeekKey } from '../lib/queue.js';
 import { updateQuestsFromRun } from './dailyQuests.js';
+import { addPoints as addBattlePassPoints } from './battlepass.js';
 
 /** Simulation tick rate */
 const TICK_HZ = 30;
@@ -437,6 +438,11 @@ export async function finishBossRushSession(
   await updateQuestsFromRun(userId, {
     bossesKilled: summary.bossesKilled,
   });
+
+  // Grant Battle Pass points for each boss killed
+  if (summary.bossesKilled > 0) {
+    await addBattlePassPoints(userId, 'boss_rush', summary.bossesKilled);
+  }
 
   return {
     verified: true,

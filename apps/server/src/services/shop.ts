@@ -29,6 +29,7 @@ import {
   type ConvenienceItemType,
   type PremiumHeroProduct,
 } from '@arcade/protocol';
+import { grantPremiumStatus } from './battlepass.js';
 
 // Rare materials for Starter Pack (pick 3 random)
 const RARE_MATERIALS = ['mutant_dna', 'pym_particles', 'extremis', 'cosmic_dust'];
@@ -273,6 +274,29 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
 
   const userId = purchase.userId;
   const productId = purchase.productId;
+
+  // Handle Battle Pass purchases separately
+  if (purchase.productType === 'BATTLE_PASS') {
+    await grantPremiumStatus(userId);
+
+    await prisma.shopPurchase.update({
+      where: { id: purchase.id },
+      data: {
+        status: 'COMPLETED',
+        stripePaymentId: session.payment_intent as string,
+        completedAt: new Date(),
+      },
+    });
+
+    await prisma.userPurchaseLimit.upsert({
+      where: { userId_productId: { userId, productId } },
+      create: { userId, productId, purchaseCount: 1 },
+      update: { purchaseCount: { increment: 1 }, lastPurchase: new Date() },
+    });
+
+    return;
+  }
+
   const product = findProduct(productId);
 
   if (!product) {

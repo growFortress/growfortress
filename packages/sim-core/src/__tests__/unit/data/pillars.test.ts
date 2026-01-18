@@ -241,45 +241,45 @@ describe('getPillarForWave', () => {
 
 describe('Unlock Requirements (Pure Endless Mode)', () => {
   describe('isPillarUnlocked', () => {
-    it('all pillars are always unlocked (Endless mode)', () => {
-      // In Pure Endless mode, all pillars are always available
+    it('all pillars are unlocked when no unlock list provided (legacy/endless mode)', () => {
+      // Without unlock list, all valid pillars are available
       const allPillars: PillarId[] = ['streets', 'science', 'mutants', 'cosmos', 'magic', 'gods'];
       for (const pillarId of allPillars) {
-        expect(isPillarUnlocked(pillarId, 1)).toBe(true);
-        expect(isPillarUnlocked(pillarId, 10)).toBe(true);
-        expect(isPillarUnlocked(pillarId, 50)).toBe(true);
+        expect(isPillarUnlocked(pillarId)).toBe(true);
+        expect(isPillarUnlocked(pillarId, undefined)).toBe(true);
       }
     });
 
-    it('fortressLevel parameter is ignored (backward compatibility)', () => {
-      // Level parameter doesn't matter in Endless mode
-      expect(isPillarUnlocked('gods', 1)).toBe(true);
-      expect(isPillarUnlocked('magic', 1)).toBe(true);
-      expect(isPillarUnlocked('cosmos', 1)).toBe(true);
+    it('respects unlock list when provided', () => {
+      // With unlock list, only specified pillars are unlocked
+      const unlockedList: PillarId[] = ['streets', 'science'];
+      expect(isPillarUnlocked('streets', unlockedList)).toBe(true);
+      expect(isPillarUnlocked('science', unlockedList)).toBe(true);
+      expect(isPillarUnlocked('mutants', unlockedList)).toBe(false);
+      expect(isPillarUnlocked('gods', unlockedList)).toBe(false);
     });
 
     it('returns false for invalid pillar ID', () => {
-      expect(isPillarUnlocked('invalid' as PillarId, 50)).toBe(false);
+      expect(isPillarUnlocked('invalid' as PillarId)).toBe(false);
     });
   });
 
   describe('getUnlockedPillars', () => {
-    it('always returns all 6 pillars (Endless mode)', () => {
-      // All pillars are always unlocked regardless of level
-      const unlocked1 = getUnlockedPillars(1);
-      expect(unlocked1).toHaveLength(6);
-      expect(unlocked1.map(p => p.id)).toEqual(['streets', 'science', 'mutants', 'cosmos', 'magic', 'gods']);
-
-      const unlocked25 = getUnlockedPillars(25);
-      expect(unlocked25).toHaveLength(6);
-
-      const unlocked50 = getUnlockedPillars(50);
-      expect(unlocked50).toHaveLength(6);
-    });
-
-    it('works without level parameter', () => {
+    it('returns all 6 pillars when no unlock list provided (legacy/endless mode)', () => {
+      // Without unlock list, all pillars are available
       const unlocked = getUnlockedPillars();
       expect(unlocked).toHaveLength(6);
+      expect(unlocked.map(p => p.id)).toEqual(['streets', 'science', 'mutants', 'cosmos', 'magic', 'gods']);
+
+      const unlockedUndefined = getUnlockedPillars(undefined);
+      expect(unlockedUndefined).toHaveLength(6);
+    });
+
+    it('filters to unlock list when provided', () => {
+      const unlockedList: PillarId[] = ['streets', 'science', 'mutants'];
+      const unlocked = getUnlockedPillars(unlockedList);
+      expect(unlocked).toHaveLength(3);
+      expect(unlocked.map(p => p.id)).toEqual(['streets', 'science', 'mutants']);
     });
   });
 

@@ -433,7 +433,7 @@ export function getEnemyRewards(
   type: EnemyType,
   isElite: boolean,
   goldMult: number,
-  dustMult: number,
+  _dustMult: number, // Kept for API compatibility, dust no longer earned from kills
   wave: number = 1
 ): { gold: number; dust: number } {
   const archetype = ENEMY_ARCHETYPES[type];
@@ -450,7 +450,8 @@ export function getEnemyRewards(
 
   return {
     gold: Math.floor(archetype.goldReward * eliteMult * goldMult * waveMultiplier * cycleMultiplier),
-    dust: Math.floor(archetype.dustReward * eliteMult * dustMult * waveMultiplier * cycleMultiplier),
+    // Dust removed from enemy kills - now earned only via daily quests
+    dust: 0,
   };
 }
 
@@ -508,8 +509,15 @@ const PILLAR_ENEMIES: Record<PillarId, {
  * Generate wave composition based on wave number
  * Uses pillar-specific enemies when appropriate
  * Supports endless mode with cycle scaling
+ * @param wave - Wave number
+ * @param tickHz - Ticks per second
+ * @param unlockedPillars - Optional list of unlocked pillars (filters available enemies)
  */
-export function getWaveComposition(wave: number, tickHz: number): WaveComposition {
+export function getWaveComposition(
+  wave: number,
+  tickHz: number,
+  unlockedPillars?: PillarId[]
+): WaveComposition {
   // Endless mode: calculate cycle and effective wave
   const cycle = Math.floor((wave - 1) / 100);
   const effectiveWave = ((wave - 1) % 100) + 1;
@@ -528,8 +536,8 @@ export function getWaveComposition(wave: number, tickHz: number): WaveCompositio
 
   const enemies: Array<{ type: EnemyType; count: number }> = [];
 
-  // Get current pillar for this wave (handles cycles automatically)
-  const pillar = getPillarForWave(wave);
+  // Get current pillar for this wave (handles cycles automatically, filtered by unlocks)
+  const pillar = getPillarForWave(wave, unlockedPillars);
 
   if (pillar) {
     // Use pillar-specific enemies

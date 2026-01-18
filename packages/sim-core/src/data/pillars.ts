@@ -615,11 +615,39 @@ export function getPillarById(id: PillarId): PillarDefinition | undefined {
 
 /**
  * Pobiera filar dla danej fali (obsługuje endless mode - fale 101+)
+ * @param wave - Numer fali
+ * @param unlockedPillars - Opcjonalna lista odblokowanych filarów (z serwera)
+ *                         Jeśli nie podana, wszystkie filary są dostępne
+ *                         Jeśli podana, tylko odblokowane filary są używane
  */
-export function getPillarForWave(wave: number): PillarDefinition | undefined {
+export function getPillarForWave(
+  wave: number,
+  unlockedPillars?: PillarId[]
+): PillarDefinition | undefined {
   if (wave <= 0) return undefined;
 
-  // Dla fal 101+, cykl przez filary (1-100 powtarza się)
+  // Get available pillars (filtered by unlocks if provided)
+  const availablePillars = unlockedPillars !== undefined
+    ? PILLAR_DEFINITIONS.filter(p => unlockedPillars.includes(p.id))
+    : PILLAR_DEFINITIONS;
+
+  if (availablePillars.length === 0) {
+    // Fallback to streets if no pillars unlocked (shouldn't happen)
+    return PILLAR_DEFINITIONS[0];
+  }
+
+  // For unlocked pillars mode: cycle through available pillars evenly
+  if (unlockedPillars !== undefined && availablePillars.length < PILLAR_DEFINITIONS.length) {
+    // Calculate waves per pillar based on available count
+    // Each pillar gets 10 waves, then cycle
+    const wavesPerPillar = 10;
+    const totalCycleWaves = availablePillars.length * wavesPerPillar;
+    const effectiveWave = ((wave - 1) % totalCycleWaves) + 1;
+    const pillarIndex = Math.floor((effectiveWave - 1) / wavesPerPillar);
+    return availablePillars[pillarIndex];
+  }
+
+  // Legacy/full unlock mode: use original wave ranges
   const effectiveWave = ((wave - 1) % 100) + 1;
   return PILLAR_DEFINITIONS.find(p =>
     effectiveWave >= p.waveRange.start && effectiveWave <= p.waveRange.end
@@ -628,10 +656,19 @@ export function getPillarForWave(wave: number): PillarDefinition | undefined {
 
 /**
  * Sprawdza czy filar jest odblokowany
- * W trybie Endless wszystkie filary są zawsze odblokowane
+ * @param pillarId - ID filaru do sprawdzenia
+ * @param unlockedPillars - Opcjonalna lista odblokowanych filarów (z serwera)
+ *                         Jeśli nie podana, wszystkie filary są odblokowane (tryb legacy/endless)
  */
-export function isPillarUnlocked(pillarId: PillarId, _fortressLevel?: number): boolean {
-  // Endless mode: wszystkie filary zawsze odblokowane
+export function isPillarUnlocked(
+  pillarId: PillarId,
+  unlockedPillars?: PillarId[]
+): boolean {
+  // If unlock list provided, check against it
+  if (unlockedPillars !== undefined) {
+    return unlockedPillars.includes(pillarId);
+  }
+  // Legacy/endless mode: wszystkie filary odblokowane
   return getPillarById(pillarId) !== undefined;
 }
 
@@ -675,11 +712,16 @@ export function isHeroNaturalForPillar(pillarId: PillarId, heroId: string): bool
 }
 
 /**
- * Pobiera odblokowane filary dla danego poziomu twierdzy
- * W trybie Endless wszystkie filary są zawsze odblokowane
+ * Pobiera odblokowane filary
+ * @param unlockedPillars - Opcjonalna lista odblokowanych filarów (z serwera)
+ *                         Jeśli nie podana, wszystkie filary są odblokowane (tryb legacy/endless)
  */
-export function getUnlockedPillars(_fortressLevel?: number): PillarDefinition[] {
-  // Endless mode: wszystkie filary zawsze dostępne
+export function getUnlockedPillars(unlockedPillars?: PillarId[]): PillarDefinition[] {
+  // If unlock list provided, filter to only unlocked
+  if (unlockedPillars !== undefined) {
+    return PILLAR_DEFINITIONS.filter(p => unlockedPillars.includes(p.id));
+  }
+  // Legacy/endless mode: wszystkie filary dostępne
   return PILLAR_DEFINITIONS;
 }
 

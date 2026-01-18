@@ -42,6 +42,7 @@ import {
   currentWave,
   type GameEndState,
 } from '../state/index.js';
+import { consumeEnergyLocal } from '../state/energy.signals.js';
 import { FP } from '@arcade/sim-core';
 
 interface StartSessionOptions {
@@ -301,12 +302,18 @@ export function useGameLoop(
       startingTurrets: options.startingTurrets || [],
     };
 
-    const sessionInfo = await game.startEndlessSession(sessionOptions);
-    if (sessionInfo) {
-      updateFromSessionStart(sessionInfo.inventory);
-      loop.start();
+    try {
+      const sessionInfo = await game.startEndlessSession(sessionOptions);
+      if (sessionInfo) {
+        updateFromSessionStart(sessionInfo.inventory);
+        consumeEnergyLocal(); // Deduct 1 energy locally after successful session start
+        loop.start();
+      }
+      return sessionInfo;
+    } catch (error) {
+      // Re-throw to allow GameContainer to handle specific errors
+      throw error;
     }
-    return sessionInfo;
   }, []);
 
   const resumeSession = useCallback(async (snapshot: ActiveSessionSnapshot): Promise<SessionStartResponse | null> => {

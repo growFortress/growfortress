@@ -23,10 +23,12 @@ import { LeaderboardModal } from "./modals/LeaderboardModal.js";
 import { HubPreviewModal } from "./modals/HubPreviewModal.js";
 import { GuildPreviewModal } from "./modals/GuildPreviewModal.js";
 import { DailyQuestsModal } from "./modals/DailyQuestsModal.js";
+import { BattlePassModal } from "./modals/BattlePassModal.js";
 import { ShopModal } from "./modals/ShopModal.js";
 import { LegalModal } from "./modals/LegalModal.js";
 import { ArtifactsModal } from "./modals/ArtifactsModal.js";
 import { IdleRewardsModal } from "./modals/IdleRewardsModal.js";
+import { PillarUnlockModal } from "./modals/PillarUnlockModal.js";
 import { AdminBroadcastPanel, AdminModerationPanel } from "./admin/index.js";
 import { ErrorBoundary } from "./shared/ErrorBoundary.js";
 import { LoadingScreen } from "./shared/LoadingScreen.js";
@@ -76,7 +78,11 @@ import {
   updateFromProfile,
   updateItems,
   updateLeaderboard,
+  pillarUnlockModalVisible,
+  closePillarUnlockModal,
 } from "../state/index.js";
+import { fetchEnergy } from "../state/energy.signals.js";
+import { fetchPillarUnlocks } from "../state/pillarUnlocks.signals.js";
 
 import {
   useQuery,
@@ -172,6 +178,8 @@ function AppContent() {
       // Check for idle rewards and daily quests after profile loads
       checkIdleRewards();
       fetchDailyQuests();
+      fetchEnergy();
+      fetchPillarUnlocks();
 
       // Po krótkiej chwili na inicjalizację - gotowe
       const timer = setTimeout(() => {
@@ -370,6 +378,8 @@ function AppContent() {
 
       // Fetch daily quests status
       fetchDailyQuests();
+      fetchEnergy();
+      fetchPillarUnlocks();
     } catch {
       // Silently fail
     }
@@ -482,9 +492,14 @@ function AppContent() {
         <HubPreviewModal />
         <GuildPreviewModal />
         <DailyQuestsModal />
+        <BattlePassModal />
         <ShopModal />
         <ArtifactsModal />
         <IdleRewardsModal />
+        <PillarUnlockModal
+          visible={pillarUnlockModalVisible.value}
+          onClose={closePillarUnlockModal}
+        />
         <AdminBroadcastPanel />
         <AdminModerationPanel />
       </ErrorBoundary>

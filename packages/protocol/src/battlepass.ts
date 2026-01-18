@@ -145,6 +145,7 @@ export const PurchaseBattlePassResponseSchema = z.object({
   success: z.boolean(),
   checkoutUrl: z.string().url().optional(),   // For Stripe checkout
   sessionId: z.string().optional(),
+  error: z.string().optional(),
 });
 export type PurchaseBattlePassResponse = z.infer<typeof PurchaseBattlePassResponseSchema>;
 
@@ -163,6 +164,7 @@ export const ClaimBattlePassRewardResponseSchema = z.object({
   itemId: z.string().optional(),
   newDustBalance: z.number().int().optional(),
   newGoldBalance: z.number().int().optional(),
+  error: z.string().optional(),
 });
 export type ClaimBattlePassRewardResponse = z.infer<typeof ClaimBattlePassRewardResponseSchema>;
 
@@ -193,6 +195,7 @@ export const BuyBattlePassTiersResponseSchema = z.object({
   dustSpent: z.number().int(),
   newTier: z.number().int(),
   newDustBalance: z.number().int(),
+  error: z.string().optional(),
 });
 export type BuyBattlePassTiersResponse = z.infer<typeof BuyBattlePassTiersResponseSchema>;
 

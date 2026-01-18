@@ -626,10 +626,11 @@ describe('Leech Enemy', () => {
 
 describe('Enemy Rewards System', () => {
   // Note: Economy balance multiplier is 1.0 (no penalty)
-  // Elite multiplier is 3.5x
+  // Elite multiplier is 3.5x for gold only
+  // Dust removed from enemy kills - now earned only via daily quests
   // Wave scaling: +5% per 10 waves, cycle bonus: +50% per cycle
-  it('elite enemies give approximately 3.5x rewards', () => {
-    // Use mafia_boss which has higher rewards (gold=25, dust=10)
+  it('elite enemies give approximately 3.5x gold rewards', () => {
+    // Use mafia_boss which has higher gold rewards (gold=25)
     const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
     const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0, 1);
 
@@ -637,8 +638,9 @@ describe('Enemy Rewards System', () => {
     // Elite should give significantly more (close to 3.5x)
     expect(elite.gold).toBeGreaterThan(normal.gold * 3);
     expect(elite.gold).toBeLessThanOrEqual(normal.gold * 4); // Allow for rounding
-    expect(elite.dust).toBeGreaterThan(normal.dust * 3);
-    expect(elite.dust).toBeLessThanOrEqual(normal.dust * 4);
+    // Dust is always 0 (removed from enemy kills)
+    expect(elite.dust).toBe(0);
+    expect(normal.dust).toBe(0);
   });
 
   it('gold multiplier affects rewards', () => {
@@ -651,26 +653,27 @@ describe('Enemy Rewards System', () => {
     expect(boosted.gold).toBeLessThanOrEqual(base.gold * 2 + 1);
   });
 
-  it('dust multiplier affects rewards', () => {
+  it('dust is always 0 (removed from enemy kills)', () => {
     const base = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
     const boosted = getEnemyRewards('mafia_boss', false, 1.0, 2.0, 1);
 
-    expect(boosted.dust).toBeGreaterThan(base.dust);
-    expect(boosted.dust).toBeLessThanOrEqual(base.dust * 2 + 1);
+    // Dust is always 0 regardless of multiplier
+    expect(base.dust).toBe(0);
+    expect(boosted.dust).toBe(0);
   });
 
-  it('boss enemies give substantial rewards', () => {
+  it('boss enemies give substantial gold rewards', () => {
     const bossReward = getEnemyRewards('god', false, 1.0, 1.0, 1);
-    // Base: gold=100, dust=25 (no economy penalty)
+    // Base: gold=100, dust=0 (dust removed from enemy kills)
     expect(bossReward.gold).toBe(100);
-    expect(bossReward.dust).toBe(25);
+    expect(bossReward.dust).toBe(0);
   });
 
-  it('elite boss gives massive rewards', () => {
+  it('elite boss gives massive gold rewards', () => {
     const eliteBoss = getEnemyRewards('god', true, 1.0, 1.0, 1);
-    // Base: gold=100, dust=25 * 3.5 (elite) = gold=350, dust=87
+    // Base: gold=100 * 3.5 (elite) = gold=350, dust=0
     expect(eliteBoss.gold).toBe(350);
-    expect(eliteBoss.dust).toBe(87);
+    expect(eliteBoss.dust).toBe(0);
   });
 });
 

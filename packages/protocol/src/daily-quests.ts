@@ -143,7 +143,7 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
     name: 'Dedicated',
     description: 'Complete 3 runs',
     target: 3,
-    dustReward: 5,
+    dustReward: 8,
     bonusType: 'gold',
     bonusValue: 100,
   },
@@ -152,7 +152,7 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
     name: 'Wave Hunter',
     description: 'Defeat 500 enemies',
     target: 500,
-    dustReward: 10,
+    dustReward: 7,
     bonusType: 'gold',
     bonusValue: 150,
   },
@@ -161,7 +161,7 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
     name: 'Elite Slayer',
     description: 'Defeat 10 elite enemies',
     target: 10,
-    dustReward: 10,
+    dustReward: 5,
     bonusType: 'gold',
     bonusValue: 200,
   },
@@ -170,13 +170,13 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
     name: 'Boss Slayer',
     description: 'Defeat 3 bosses',
     target: 3,
-    dustReward: 15,
+    dustReward: 5,
     bonusType: 'gold',
     bonusValue: 300,
   },
 ];
 
-// Total dust from all daily quests: 5 + 5 + 10 + 10 + 15 = 45
+// Total dust from all daily quests: 5 + 8 + 7 + 5 + 5 = 30 (rebalanced for premium economy)
 // Total gold from all daily quests: 50 + 100 + 150 + 200 + 300 = 800
 export const TOTAL_DAILY_DUST = DAILY_QUEST_DEFINITIONS.reduce(
   (sum, q) => sum + q.dustReward,

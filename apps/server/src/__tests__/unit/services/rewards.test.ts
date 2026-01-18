@@ -43,7 +43,7 @@ describe('Rewards Service', () => {
         won: true,
       });
 
-      expect(rewards.dust).toBe(35); // 30 + 5 win bonus
+      expect(rewards.dust).toBe(30); // dust from run only, no win bonus
     });
 
     it('calculates XP from waves cleared (10 per wave)', () => {

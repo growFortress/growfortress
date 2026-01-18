@@ -9,6 +9,7 @@ import {
   type ClaimAllQuestsResponse,
 } from '@arcade/protocol';
 import { MATERIAL_DEFINITIONS } from '@arcade/sim-core';
+import { addPoints as addBattlePassPoints } from './battlepass.js';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -307,6 +308,9 @@ export async function claimQuestReward(
     };
   });
 
+  // Grant Battle Pass points for completing quest
+  await addBattlePassPoints(userId, 'daily_quest');
+
   return {
     success: true,
     dustAwarded,
@@ -417,6 +421,11 @@ export async function claimAllQuestRewards(userId: string): Promise<ClaimAllQues
       materials: updatedInventory.materials as Record<string, number>,
     };
   });
+
+  // Grant Battle Pass points for each claimed quest
+  if (unclaimedQuests.length > 0) {
+    await addBattlePassPoints(userId, 'daily_quest', unclaimedQuests.length);
+  }
 
   return {
     success: true,

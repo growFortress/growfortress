@@ -98,6 +98,10 @@ interface MockPrisma {
   colonyProgress: MockPrismaOperations;
   // Milestones system
   playerMilestones: MockPrismaOperations;
+  // Energy system
+  userEnergy: MockPrismaOperations;
+  // Pillar unlocks
+  userPillarUnlocks: MockPrismaOperations;
   $transaction: ReturnType<typeof vi.fn>;
   $connect: ReturnType<typeof vi.fn>;
   $disconnect: ReturnType<typeof vi.fn>;
@@ -165,6 +169,10 @@ export const mockPrisma: MockPrisma = {
   colonyProgress: createMockOperations(),
   // Milestones system
   playerMilestones: createMockOperations(),
+  // Energy system
+  userEnergy: createMockOperations(),
+  // Pillar unlocks
+  userPillarUnlocks: createMockOperations(),
   $transaction: vi.fn(async (input: unknown): Promise<unknown> => {
     if (typeof input === 'function') {
       return input(mockPrisma);

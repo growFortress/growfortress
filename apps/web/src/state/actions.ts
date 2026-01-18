@@ -18,6 +18,8 @@ import { resetMessagesState } from './messages.signals.js';
 import { resetPvpState } from './pvp.signals.js';
 import { resetBossRushState } from './boss-rush.signals.js';
 import { resetDailyQuestsState } from './dailyQuests.signals.js';
+import { resetEnergyState } from './energy.signals.js';
+import { resetPillarUnlocksState } from './pillarUnlocks.signals.js';
 import { getProfile } from '../api/client.js';
 
 // Track processed artifact drops to avoid duplicates
@@ -507,6 +509,12 @@ export function resetAllState(): void {
 
     // Reset Daily Quests state
     resetDailyQuestsState();
+
+    // Reset Energy state
+    resetEnergyState();
+
+    // Reset Pillar Unlocks state
+    resetPillarUnlocksState();
 
     // Reset UI state
     ui.resetUIState();

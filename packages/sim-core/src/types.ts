@@ -744,6 +744,11 @@ export interface SimConfig {
 
   // Guild stat boost (0-0.20 = 0-20% HP/damage bonus for fortress and heroes)
   guildStatBoost?: number;
+
+  // NEW: Unlocked pillars (dust-gated progression)
+  // If provided, only these pillars can be accessed during the session
+  // If undefined, all pillars are available (legacy/endless mode)
+  unlockedPillars?: PillarId[];
 }
 
 // Main game state

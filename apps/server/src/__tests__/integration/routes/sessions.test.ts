@@ -62,6 +62,24 @@ describe('Sessions Routes Integration', () => {
       // GuildMember lookup (for guild bonuses - returns null if not in guild)
       mockPrisma.guildMember.findUnique.mockResolvedValue(null);
 
+      // Energy system - user has energy to play
+      mockPrisma.userEnergy.findUnique.mockResolvedValue({
+        id: 'energy-1',
+        userId: 'user-123',
+        currentEnergy: 50,
+        maxEnergy: 50,
+        lastRegenAt: new Date(),
+        updatedAt: new Date(),
+      });
+      mockPrisma.userEnergy.update.mockResolvedValue({
+        id: 'energy-1',
+        userId: 'user-123',
+        currentEnergy: 49,
+        maxEnergy: 50,
+        lastRegenAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       // Game session creation (inside transaction)
       const mockSession = createMockGameSession();
       mockPrisma.gameSession.create.mockResolvedValue(mockSession);

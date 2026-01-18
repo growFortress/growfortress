@@ -19,6 +19,9 @@ import { getGameConfig } from './gameConfig.js';
 import { getActiveMultipliers } from './events.js';
 import { updateQuestsFromRun } from './dailyQuests.js';
 import { getUserGuildBonuses } from './guild.js';
+import { consumeEnergy } from './energy.js';
+import { ENERGY_ERROR_CODES } from '@arcade/protocol';
+import { getUnlockedPillarsForUser } from './pillarUnlocks.js';
 
 /** Simulation tick rate - 30Hz provides smooth gameplay while being computationally manageable */
 const TICK_HZ = 30;
@@ -30,7 +33,7 @@ const MAX_SECONDS_PER_WAVE = 60;
 export class GameSessionError extends Error {
   constructor(
     message: string,
-    public readonly code: 'SESSION_NOT_FOUND' | 'USER_NOT_FOUND' | 'SESSION_FORBIDDEN' | 'INVALID_LOADOUT' | 'PROGRESSION_NOT_FOUND'
+    public readonly code: 'SESSION_NOT_FOUND' | 'USER_NOT_FOUND' | 'SESSION_FORBIDDEN' | 'INVALID_LOADOUT' | 'PROGRESSION_NOT_FOUND' | 'INSUFFICIENT_ENERGY'
   ) {
     super(message);
     this.name = 'GameSessionError';
@@ -193,6 +196,15 @@ export async function startGameSession(
     return null;
   }
 
+  // Check and consume energy before starting session
+  const hasEnergy = await consumeEnergy(userId);
+  if (!hasEnergy) {
+    throw new GameSessionError(
+      'Insufficient energy to start a wave',
+      ENERGY_ERROR_CODES.INSUFFICIENT_ENERGY
+    );
+  }
+
   // Get user's current wave progress (optimized: select only needed fields)
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -265,6 +277,9 @@ export async function startGameSession(
   const guildBonuses = await getUserGuildBonuses(userId);
   const guildStatBoost = guildBonuses?.statBoost;
 
+  // Fetch unlocked pillars for dust-gated progression
+  const unlockedPillars = await getUnlockedPillarsForUser(userId);
+
   const { simConfig } = buildSimConfigSnapshot({
     commanderLevel,
     progressionBonuses: bonuses,
@@ -283,6 +298,7 @@ export async function startGameSession(
         waveIntervalTicks: remoteConfig.waveIntervalTicks ?? 90,
     },
     guildStatBoost,
+    unlockedPillars,
   });
 
   // Atomic session creation - check for existing, end it, and create new in one transaction

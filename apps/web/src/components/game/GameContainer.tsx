@@ -48,7 +48,9 @@ import {
   showBossRushEndScreen,
 } from '../../state/index.js';
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
+import { ApiError } from '../../api/base.js';
 import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState } from '../../state/index.js';
+import { fetchEnergy, hasEnergy } from '../../state/energy.signals.js';
 
 interface GameContainerProps {
   onLoadProfile: () => Promise<void>;
@@ -124,14 +126,25 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     const startingHeroes = unlockedHeroIds.value;
     const startingTurrets = unlockedTurretIds.value;
 
-    const sessionInfo = await startSession({
-      fortressClass,
-      startingHeroes,
-      startingTurrets,
-    });
+    try {
+      const sessionInfo = await startSession({
+        fortressClass,
+        startingHeroes,
+        startingTurrets,
+      });
 
-    if (!sessionInfo) {
-      showErrorToast(t('gameContainer.startFailed'));
+      if (!sessionInfo) {
+        showErrorToast(t('gameContainer.startFailed'));
+      }
+    } catch (error) {
+      // Handle specific error codes
+      if (error instanceof ApiError && error.code === 'INSUFFICIENT_ENERGY') {
+        showErrorToast('Brak energii! Poczekaj na regenerację lub doładuj za dust.', 'warning');
+        // Refresh energy state to show current status
+        fetchEnergy();
+      } else {
+        showErrorToast(t('gameContainer.startFailed'));
+      }
     }
   };
 
@@ -280,7 +293,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
           onStartClick={handleStartClick}
           onEndSessionClick={handleEndSessionClick}
           onBossRushEndClick={handleBossRushEnd}
-          startDisabled={sessionStarting || sessionRecoveryVisible}
+          startDisabled={sessionStarting || sessionRecoveryVisible || !hasEnergy.value}
         />
         <UpgradeModal onUpgrade={handleUpgrade} />
         <TurretPlacementModal onPlace={handleTurretPlace} />

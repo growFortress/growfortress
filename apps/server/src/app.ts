@@ -41,6 +41,9 @@ import hubPreviewRoutes from "./routes/hubPreview.js";
 import guildPreviewRoutes from "./routes/guildPreview.js";
 import shopRoutes from "./routes/shop.js";
 import slotsRoutes from "./routes/slots.js";
+import energyRoutes from "./routes/energy.js";
+import pillarUnlocksRoutes from "./routes/pillarUnlocks.js";
+import battlepassRoutes from "./routes/battlepass.js";
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -168,6 +171,9 @@ export async function buildApp() {
   await fastify.register(guildPreviewRoutes);
   await fastify.register(shopRoutes);
   await fastify.register(slotsRoutes);
+  await fastify.register(energyRoutes);
+  await fastify.register(pillarUnlocksRoutes);
+  await fastify.register(battlepassRoutes);
 
   // Admin routes (separate auth system)
   await fastify.register(adminRoutes, { prefix: "/admin" });

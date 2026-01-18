@@ -27,11 +27,8 @@ export function calculateRewards(
   // Gold = earned during run
   const gold = summary.goldEarned;
 
-  // Dust = earned during run + bonus for completion (premium currency - reduced)
-  let dust = summary.dustEarned;
-  if (summary.won) {
-    dust += 5; // Win bonus (premium currency - reduced from 10)
-  }
+  // Dust = earned during run only (no win bonus - dust now from daily quests only)
+  const dust = summary.dustEarned;
 
   // XP calculation (post-run bonuses according to unified system)
   let xp = 0;

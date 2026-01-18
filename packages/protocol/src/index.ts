@@ -829,6 +829,38 @@ export {
   type DailyQuestErrorCode,
 } from './daily-quests.js';
 
+// Energy System (Premium economy - limits free play)
+export {
+  ENERGY_CONFIG,
+  EnergyStatusSchema,
+  RefillEnergyResponseSchema,
+  ENERGY_ERROR_CODES,
+  type EnergyStatus,
+  type RefillEnergyResponse,
+  type EnergyErrorCode,
+} from './energy.js';
+
+// Pillar Unlock System (Dust-gated world progression)
+export {
+  PillarUnlockIdSchema,
+  PillarUnlockInfoSchema,
+  GetPillarUnlocksResponseSchema,
+  UnlockPillarRequestSchema,
+  UnlockPillarResponseSchema,
+  PILLAR_UNLOCK_REQUIREMENTS,
+  TOTAL_PILLAR_UNLOCK_DUST,
+  PILLAR_UNLOCK_ERROR_CODES,
+  getPillarUnlockRequirement,
+  canUnlockPillar,
+  type PillarUnlockId,
+  type PillarUnlockRequirement,
+  type PillarUnlockInfo,
+  type GetPillarUnlocksResponse,
+  type UnlockPillarRequest,
+  type UnlockPillarResponse,
+  type PillarUnlockErrorCode,
+} from './pillar-unlocks.js';
+
 // Mastery System (Class Skill Trees)
 export {
   // Node schemas

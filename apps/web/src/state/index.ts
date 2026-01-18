@@ -82,6 +82,10 @@ export {
   queueUnlockNotifications,
   dismissUnlockNotification,
   clearUnlockNotifications,
+  // Pillar unlock modal
+  pillarUnlockModalVisible,
+  showPillarUnlockModal,
+  closePillarUnlockModal,
   resetUIState,
   type ToastData,
   type SyncStatus,
@@ -738,6 +742,100 @@ export {
   type LegalTab,
 } from './legal.signals.js';
 
+// Energy signals
+export {
+  // State
+  energyState,
+  energyLoading,
+  energyError,
+  refilling,
+  // Computed
+  currentEnergy,
+  maxEnergy,
+  energyPercent,
+  hasEnergy,
+  isEnergyFull,
+  canRefill,
+  nextRegenIn,
+  timeToFullRegen,
+  refillCost,
+  // Actions
+  fetchEnergy,
+  refillEnergyAction,
+  consumeEnergyLocal,
+  resetEnergyState,
+} from './energy.signals.js';
+
+// Pillar Unlocks signals
+export {
+  // State
+  pillarUnlocksState,
+  pillarUnlocksLoading,
+  pillarUnlocksError,
+  unlockingPillar,
+  // Computed
+  unlockedPillarSet,
+  unlockedPillars,
+  allPillars,
+  availableToUnlock,
+  lockedPillars,
+  unlockedCount,
+  totalPillars,
+  unlockProgress,
+  currentFortressLevel,
+  // Helpers
+  isPillarUnlocked,
+  getPillarInfo,
+  canUnlockPillar,
+  getUnlockRequirement,
+  // Actions
+  fetchPillarUnlocks,
+  unlockPillarAction,
+  resetPillarUnlocksState,
+} from './pillarUnlocks.signals.js';
+
+// Battle Pass signals
+export {
+  // State
+  battlepassData,
+  battlepassLoading,
+  battlepassError,
+  battlepassModalVisible,
+  claimingTier,
+  claimingAll as claimingAllBP,
+  purchasingTiers,
+  upgradingPremium,
+  // Computed
+  currentTier,
+  currentPoints,
+  isPremium,
+  tierProgress,
+  timeRemainingFormatted,
+  unclaimedFreeRewards,
+  unclaimedPremiumRewards,
+  totalUnclaimedCount,
+  hasUnclaimedRewards as hasUnclaimedBPRewards,
+  maxTier,
+  tierPurchaseCost,
+  isMaxTier,
+  seasonName,
+  seasonDescription,
+  // Actions
+  fetchBattlePass,
+  claimReward as claimBPReward,
+  claimAllRewards as claimAllBPRewards,
+  purchaseTier,
+  startPremiumUpgrade,
+  showBattlePassModal,
+  hideBattlePassModal,
+  resetBattlePassState,
+  isFreeTierClaimed,
+  isPremiumTierClaimed,
+  isTierClaimable,
+} from './battlepass.signals.js';
+
 // Re-export types
 export type { LeaderboardEntry, GameEndState } from './ui.signals.js';
 export type { HubPreviewResponse, GuildPreviewResponse } from '@arcade/protocol';
+export type { EnergyStatus } from '@arcade/protocol';
+export type { GetPillarUnlocksResponse, PillarUnlockInfo, PillarUnlockId } from '@arcade/protocol';

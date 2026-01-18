@@ -200,7 +200,8 @@ export class Game {
       return sessionInfo;
     } catch (error) {
       console.error('Failed to start session:', error);
-      return null;
+      // Re-throw to allow caller to handle specific error codes (e.g., INSUFFICIENT_ENERGY)
+      throw error;
     }
   }
 
