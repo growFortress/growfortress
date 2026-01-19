@@ -4,6 +4,7 @@ import type {
   PvpOpponent,
   PvpResult,
   PvpChallengeStatus,
+  PvpRewards,
 } from '@arcade/protocol';
 import type { ArenaBuildConfig } from '@arcade/sim-core';
 
@@ -99,6 +100,9 @@ export const pvpBattleData = signal<PvpBattleData | null>(null);
 /** Current battle result */
 export const pvpBattleResult = signal<PvpResult | null>(null);
 
+/** Current battle rewards */
+export const pvpBattleRewards = signal<PvpRewards | null>(null);
+
 /** Battle is in progress (showing animation) */
 export const pvpBattleInProgress = signal(false);
 
@@ -157,6 +161,7 @@ export function resetPvpState(): void {
   pvpSelectedChallenge.value = null;
   pvpBattleData.value = null;
   pvpBattleResult.value = null;
+  pvpBattleRewards.value = null;
   pvpBattleInProgress.value = false;
   pvpAcceptingChallenge.value = false;
 
@@ -264,9 +269,10 @@ export function setActivePvpTab(tab: 'opponents' | 'challenges' | 'history'): vo
 }
 
 /** Show battle result */
-export function showBattleResult(challenge: PvpChallenge, result: PvpResult): void {
+export function showBattleResult(challenge: PvpChallenge, result: PvpResult, rewards?: PvpRewards): void {
   pvpSelectedChallenge.value = challenge;
   pvpBattleResult.value = result;
+  pvpBattleRewards.value = rewards ?? null;
   showPvpResultModal.value = true;
 }
 
@@ -274,6 +280,7 @@ export function showBattleResult(challenge: PvpChallenge, result: PvpResult): vo
 export function hideBattleResult(): void {
   showPvpResultModal.value = false;
   pvpBattleResult.value = null;
+  pvpBattleRewards.value = null;
   pvpSelectedChallenge.value = null;
 }
 

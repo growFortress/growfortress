@@ -9,6 +9,7 @@ import {
   formatPower,
   showErrorToast,
   openHubPreview,
+  showBattleResult,
 } from '../../state/index.js';
 import { createChallenge, PvpApiError } from '../../api/pvp.js';
 import type { PvpOpponent } from '@arcade/protocol';
@@ -28,6 +29,25 @@ export function OpponentsList({ onRefresh }: OpponentsListProps) {
     try {
       const response = await createChallenge(opponent.userId);
       addSentChallenge(response.challenge);
+
+      // Show battle result immediately (auto-accept mode)
+      if (response.result && response.rewards) {
+        showBattleResult(
+          response.challenge,
+          {
+            id: response.challenge.id,
+            challengeId: response.challenge.id,
+            winnerId: response.result.winnerId,
+            winReason: response.result.winReason as 'fortress_destroyed' | 'timeout' | 'draw',
+            challengerStats: response.result.challengerStats,
+            challengedStats: response.result.challengedStats,
+            duration: response.result.duration,
+            resolvedAt: new Date().toISOString(),
+          },
+          response.rewards
+        );
+      }
+
       // Refresh to update cooldown status
       await onRefresh();
     } catch (error) {

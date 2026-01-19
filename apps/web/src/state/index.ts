@@ -350,6 +350,7 @@ export {
   pvpSelectedChallenge,
   pvpBattleData,
   pvpBattleResult,
+  pvpBattleRewards,
   pvpBattleInProgress,
   pvpAcceptingChallenge,
   // UI

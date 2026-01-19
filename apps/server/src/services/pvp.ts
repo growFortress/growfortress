@@ -9,6 +9,7 @@ import {
   isClassUnlockedAtLevel,
   calculateArenaPower,
   createDefaultStatUpgrades,
+  getArtifactsByRarity,
   type ArenaBuildConfig,
   type FortressClass,
   type StatUpgrades,
@@ -61,6 +62,14 @@ const HONOR_MIN_GAIN = 5;
 const HONOR_MAX_GAIN = 100;
 const HONOR_MIN_LOSS = 5;
 const HONOR_MAX_LOSS = 50;
+
+// PVP Rewards Configuration
+const PVP_DUST_MIN = 1;           // Minimum dust reward
+const PVP_DUST_MAX = 3;           // Maximum dust reward
+const PVP_GOLD_WIN = 50;          // Gold for winning
+const PVP_GOLD_LOSS = 15;         // Gold for losing
+const PVP_GOLD_DRAW = 25;         // Gold for draw
+const PVP_ARTIFACT_CHANCE = 0.10; // 10% chance for artifact drop (winner only)
 
 /**
  * Calculate honor change for a PvP battle based on power difference.
@@ -138,7 +147,9 @@ async function getUserArenaPower(userId: string): Promise<number> {
   // heroUpgrades might be an object or array depending on schema version
   const rawHeroUpgrades = powerUpgrades?.heroUpgrades;
   const heroUpgradesData: Array<{ heroId: string; statUpgrades: StatUpgrades }> =
-    Array.isArray(rawHeroUpgrades) ? rawHeroUpgrades : [];
+    Array.isArray(rawHeroUpgrades)
+      ? (rawHeroUpgrades as unknown as Array<{ heroId: string; statUpgrades: StatUpgrades }>)
+      : [];
 
   // Build hero configs with their upgrades and equipped artifacts
   const artifactMap = new Map(
@@ -445,6 +456,7 @@ export async function createChallenge(
   // Auto-accept: include battle result
   winnerId?: string;
   result?: {
+    winnerId: string | null;
     winReason: string;
     challengerStats: {
       finalHp: number;
@@ -457,6 +469,13 @@ export async function createChallenge(
       heroesAlive: number;
     };
     duration: number;
+  };
+  // Rewards for challenger
+  rewards?: {
+    dust: number;
+    gold: number;
+    honorChange: number;
+    artifactId?: string;
   };
 }> {
   // Validate not challenging self
@@ -535,6 +554,43 @@ export async function createChallenge(
     }
   }
 
+  // Calculate rewards: random dust (1-3), gold based on outcome, chance for artifact
+  const challengerDustReward = randomInt(PVP_DUST_MIN, PVP_DUST_MAX + 1);
+  const challengedDustReward = randomInt(PVP_DUST_MIN, PVP_DUST_MAX + 1);
+
+  let challengerGoldReward = PVP_GOLD_DRAW;
+  let challengedGoldReward = PVP_GOLD_DRAW;
+
+  if (winnerId === challengerId) {
+    challengerGoldReward = PVP_GOLD_WIN;
+    challengedGoldReward = PVP_GOLD_LOSS;
+  } else if (winnerId === challengedId) {
+    challengerGoldReward = PVP_GOLD_LOSS;
+    challengedGoldReward = PVP_GOLD_WIN;
+  }
+
+  // Artifact drop chance (winner only, from common/rare pool)
+  let challengerArtifactId: string | undefined;
+  let challengedArtifactId: string | undefined;
+
+  if (winnerId && Math.random() < PVP_ARTIFACT_CHANCE) {
+    // Get common and rare artifacts for the pool
+    const commonArtifacts = getArtifactsByRarity("common");
+    const rareArtifacts = getArtifactsByRarity("rare");
+    const artifactPool = [...commonArtifacts, ...rareArtifacts];
+
+    if (artifactPool.length > 0) {
+      const randomArtifact =
+        artifactPool[randomInt(0, artifactPool.length)];
+
+      if (winnerId === challengerId) {
+        challengerArtifactId = randomArtifact.id;
+      } else {
+        challengedArtifactId = randomArtifact.id;
+      }
+    }
+  }
+
   const now = new Date();
   const expiresAt = new Date(
     Date.now() + PVP_CONSTANTS.CHALLENGE_EXPIRY_HOURS * 60 * 60 * 1000,
@@ -556,7 +612,7 @@ export async function createChallenge(
         winnerId,
       },
     }),
-    // Update challenger stats
+    // Update challenger stats and give dust reward
     prisma.user.update({
       where: { id: challengerId },
       data: {
@@ -580,7 +636,45 @@ export async function createChallenge(
         honor: { increment: challengedHonorChange },
       },
     }),
+    // Give dust and gold reward to challenger
+    prisma.inventory.update({
+      where: { userId: challengerId },
+      data: {
+        dust: { increment: challengerDustReward },
+        gold: { increment: challengerGoldReward },
+      },
+    }),
+    // Give dust and gold reward to challenged
+    prisma.inventory.update({
+      where: { userId: challengedId },
+      data: {
+        dust: { increment: challengedDustReward },
+        gold: { increment: challengedGoldReward },
+      },
+    }),
   ]);
+
+  // Grant artifacts if dropped (outside transaction to avoid duplicate check issues)
+  if (challengerArtifactId) {
+    try {
+      await prisma.playerArtifact.create({
+        data: { userId: challengerId, artifactId: challengerArtifactId },
+      });
+    } catch {
+      // Player already owns this artifact, skip
+      challengerArtifactId = undefined;
+    }
+  }
+  if (challengedArtifactId) {
+    try {
+      await prisma.playerArtifact.create({
+        data: { userId: challengedId, artifactId: challengedArtifactId },
+      });
+    } catch {
+      // Player already owns this artifact, skip
+      challengedArtifactId = undefined;
+    }
+  }
 
   // Create result record (separate to get challenge ID)
   await prisma.pvpResult.create({
@@ -628,6 +722,7 @@ export async function createChallenge(
     expiresAt: challenge.expiresAt.toISOString(),
     winnerId: winnerId ?? undefined,
     result: {
+      winnerId: winnerId ?? null,
       winReason: battleResult.winReason,
       challengerStats: {
         finalHp: battleResult.leftStats.finalHp,
@@ -640,6 +735,13 @@ export async function createChallenge(
         heroesAlive: challengedHeroesAlive,
       },
       duration: battleResult.duration,
+    },
+    // Rewards for challenger
+    rewards: {
+      dust: challengerDustReward,
+      gold: challengerGoldReward,
+      honorChange: challengerHonorChange,
+      artifactId: challengerArtifactId,
     },
   };
 }

@@ -3,10 +3,12 @@ import {
   showPvpResultModal,
   pvpSelectedChallenge,
   pvpBattleResult,
+  pvpBattleRewards,
   hideBattleResult,
   openReplayViewer,
   formatPower,
 } from '../../state/index.js';
+import { getArtifactById } from '@arcade/sim-core';
 import styles from './PvpBattleResult.module.css';
 
 export function PvpBattleResult() {
@@ -16,6 +18,7 @@ export function PvpBattleResult() {
 
   const challenge = pvpSelectedChallenge.value;
   const result = pvpBattleResult.value;
+  const rewards = pvpBattleRewards.value;
 
   const isWinner = result.winnerId === challenge.challengerId;
   const isDraw = !result.winnerId;
@@ -111,6 +114,45 @@ export function PvpBattleResult() {
             {durationMinutes}:{durationRemainingSeconds.toString().padStart(2, '0')}
           </span>
         </div>
+
+        {/* Rewards Section */}
+        {rewards && (
+          <div class={styles.rewardsSection}>
+            <div class={styles.rewardsTitle}>Nagrody</div>
+            <div class={styles.rewardsList}>
+              <div class={styles.rewardItem}>
+                <span class={styles.rewardIcon}>✨</span>
+                <span class={styles.rewardLabel}>Dust:</span>
+                <span class={styles.rewardValue}>+{rewards.dust}</span>
+              </div>
+              <div class={styles.rewardItem}>
+                <span class={styles.rewardIcon}>🪙</span>
+                <span class={styles.rewardLabel}>Złoto:</span>
+                <span class={styles.rewardValue}>+{rewards.gold}</span>
+              </div>
+              <div class={styles.rewardItem}>
+                <span class={styles.rewardIcon}>⚔️</span>
+                <span class={styles.rewardLabel}>Honor:</span>
+                <span class={`${styles.rewardValue} ${
+                  rewards.honorChange > 0 ? styles.honorGain :
+                  rewards.honorChange < 0 ? styles.honorLoss : ''
+                }`}>
+                  {rewards.honorChange > 0 ? '+' : ''}{rewards.honorChange}
+                </span>
+              </div>
+              {rewards.artifactId && (() => {
+                const artifact = getArtifactById(rewards.artifactId);
+                return artifact ? (
+                  <div class={`${styles.rewardItem} ${styles.rewardArtifact}`}>
+                    <span class={styles.rewardIcon}>🎁</span>
+                    <span class={styles.rewardLabel}>Artefakt:</span>
+                    <span class={styles.rewardValue}>{artifact.polishName}</span>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div class={styles.actions}>

@@ -170,11 +170,16 @@ function createArenaSide(
   const maxHeroSlots = getMaxHeroSlots(build.commanderLevel);
   const heroes = initializeHeroes(build.heroIds.slice(0, maxHeroSlots), heroSpawnX);
 
-  // Flip hero facing direction for right side
+  // Flip hero positions and facing direction for right side
   if (side === 'right') {
     for (const hero of heroes) {
       // Flip velocity direction (heroes should move towards enemy)
       hero.vx = FP.mul(hero.vx, FP.fromInt(-1));
+      // Fix X position: initializeHeroes adds formation.xOffset, but for right side
+      // we need to subtract it to place heroes in front of their fortress (towards enemy)
+      // Calculate the offset that was added and subtract twice to flip it
+      const currentOffset = FP.sub(hero.x, heroSpawnX);
+      hero.x = FP.sub(heroSpawnX, currentOffset);
     }
   }
 

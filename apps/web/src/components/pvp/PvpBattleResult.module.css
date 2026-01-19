@@ -156,6 +156,70 @@
   font-family: var(--font-mono);
 }
 
+/* Rewards Section */
+.rewardsSection {
+  padding: 1rem 1.5rem;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.rewardsTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.rewardsList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 2rem;
+}
+
+.rewardItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rewardIcon {
+  font-size: 1.2rem;
+}
+
+.rewardLabel {
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+}
+
+.rewardValue {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.honorGain {
+  color: var(--color-success);
+}
+
+.honorLoss {
+  color: var(--color-danger);
+}
+
+.rewardArtifact {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(139, 92, 246, 0.1));
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.rewardArtifact .rewardValue {
+  color: var(--color-purple, #a855f7);
+}
+
 /* Actions */
 .actions {
   display: flex;

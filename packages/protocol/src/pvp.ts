@@ -28,6 +28,31 @@ export const PvpWinReasonSchema = z.enum([
 export type PvpWinReason = z.infer<typeof PvpWinReasonSchema>;
 
 // ============================================================================
+// BATTLE STATS (defined early for use in responses)
+// ============================================================================
+
+export const PvpBattleStatsSchema = z.object({
+  finalHp: z.number().int().min(0),
+  damageDealt: z.number().int().min(0),
+  heroesAlive: z.number().int().min(0),
+});
+
+export type PvpBattleStats = z.infer<typeof PvpBattleStatsSchema>;
+
+// ============================================================================
+// PVP REWARDS
+// ============================================================================
+
+export const PvpRewardsSchema = z.object({
+  dust: z.number().int().min(0),
+  gold: z.number().int().min(0),
+  honorChange: z.number().int(),
+  artifactId: z.string().optional(), // Random artifact drop (rare chance)
+});
+
+export type PvpRewards = z.infer<typeof PvpRewardsSchema>;
+
+// ============================================================================
 // CHALLENGE CREATION
 // ============================================================================
 
@@ -57,6 +82,16 @@ export type PvpChallenge = z.infer<typeof PvpChallengeSchema>;
 
 export const PvpCreateChallengeResponseSchema = z.object({
   challenge: PvpChallengeSchema,
+  // Auto-accept: battle runs immediately, include result
+  result: z.object({
+    winnerId: z.string().nullable(),
+    winReason: z.string(),
+    challengerStats: PvpBattleStatsSchema,
+    challengedStats: PvpBattleStatsSchema,
+    duration: z.number().int().min(0),
+  }).optional(),
+  // Rewards for the challenger
+  rewards: PvpRewardsSchema.optional(),
 });
 
 export type PvpCreateChallengeResponse = z.infer<typeof PvpCreateChallengeResponseSchema>;
@@ -80,18 +115,6 @@ export const PvpChallengesResponseSchema = z.object({
 });
 
 export type PvpChallengesResponse = z.infer<typeof PvpChallengesResponseSchema>;
-
-// ============================================================================
-// BATTLE STATS (defined early for use in accept response)
-// ============================================================================
-
-export const PvpBattleStatsSchema = z.object({
-  finalHp: z.number().int().min(0),
-  damageDealt: z.number().int().min(0),
-  heroesAlive: z.number().int().min(0),
-});
-
-export type PvpBattleStats = z.infer<typeof PvpBattleStatsSchema>;
 
 // ============================================================================
 // CHALLENGE ACTIONS
