@@ -19,6 +19,11 @@ import { Xorshift32 } from '../rng.js';
 import { getTurretById, calculateTurretStats, TURRET_SLOTS } from '../data/turrets.js';
 import { createTurretProjectile, applyEffectToEnemy } from './projectile.js';
 import { TURRET_ATTACK_INTERVAL_BASE, HIT_FLASH_TICKS } from './constants.js';
+import { getTurretSynergyBonus } from './synergy.js';
+
+// Overcharge constants
+const OVERCHARGE_DURATION_TICKS = 150;  // 5 seconds at 30Hz
+const OVERCHARGE_COOLDOWN_TICKS = 1800; // 60 seconds at 30Hz
 
 /**
  * Select target enemy based on turret targeting mode
@@ -49,6 +54,10 @@ function selectTarget(
         const distB = FP.distSq(b.x, b.y, turretX, turretY);
         return distA < distB ? a : b;
       });
+
+    case 'fastest':
+      // Enemy with highest base speed
+      return enemies.reduce((a, b) => a.baseSpeed > b.baseSpeed ? a : b);
 
     default:
       return enemies.reduce((a, b) => a.x < b.x ? a : b);
@@ -92,7 +101,19 @@ export function updateTurrets(
     // NOTE: turret stats use 16384 as 1.0 scale
     // Apply guild stat boost to attack speed
     const guildBoost = 1 + (config.guildStatBoost ?? 0);
-    const attackSpeed = (stats.attackSpeed / 16384) * guildBoost;
+    let attackSpeed = (stats.attackSpeed / 16384) * guildBoost;
+
+    // Apply turret adjacency synergy attack speed bonus
+    const adjacencyBonus = getTurretSynergyBonus(state, turret.slotIndex);
+    if (adjacencyBonus && adjacencyBonus.attackSpeedBonus > 0) {
+      attackSpeed = attackSpeed * (1 + adjacencyBonus.attackSpeedBonus);
+    }
+
+    // Apply overcharge attack speed bonus (1.5x)
+    if (turret.overchargeActive && turret.overchargeExpiresTick && state.tick < turret.overchargeExpiresTick) {
+      attackSpeed = attackSpeed * 1.5;
+    }
+
     const attackInterval = Math.floor(TURRET_ATTACK_INTERVAL_BASE / attackSpeed);
 
     if (state.tick - turret.lastAttackTick >= attackInterval) {
@@ -113,6 +134,12 @@ export function updateTurrets(
         turretDamage = turretDamage * (1 + state.modifiers.damageBonus);
       }
 
+      // Apply turret adjacency synergy bonus
+      const synergyBonus = getTurretSynergyBonus(state, turret.slotIndex);
+      if (synergyBonus && synergyBonus.damageBonus > 0) {
+        turretDamage = turretDamage * (1 + synergyBonus.damageBonus);
+      }
+
       // Apply damage boost from ability (if active)
       if (turret.damageBoostMultiplier && turret.damageBoostExpiresTick && state.tick < turret.damageBoostExpiresTick) {
         turretDamage = turretDamage * (turret.damageBoostMultiplier / 16384);
@@ -120,6 +147,15 @@ export function updateTurrets(
         // Clear expired boost
         turret.damageBoostMultiplier = undefined;
         turret.damageBoostExpiresTick = undefined;
+      }
+
+      // Apply overcharge bonus (2x damage, 1.5x attack speed handled via attackInterval)
+      if (turret.overchargeActive && turret.overchargeExpiresTick && state.tick < turret.overchargeExpiresTick) {
+        turretDamage = turretDamage * 2.0;
+      } else if (turret.overchargeExpiresTick && state.tick >= turret.overchargeExpiresTick) {
+        // Clear expired overcharge
+        turret.overchargeActive = false;
+        turret.overchargeExpiresTick = undefined;
       }
 
       createTurretProjectile(turret, target, state, turretX, turretY, turret.currentClass, turretDamage);
@@ -208,4 +244,43 @@ function applyTurretAbility(
       break;
     }
   }
+}
+
+/**
+ * Activate overcharge on a turret (2x damage, 1.5x attack speed for 5 seconds)
+ * Returns true if activation was successful, false if on cooldown
+ */
+export function activateTurretOvercharge(
+  state: GameState,
+  slotIndex: number
+): boolean {
+  const turret = state.turrets.find(t => t.slotIndex === slotIndex);
+  if (!turret) return false;
+
+  // Check if on cooldown
+  if (turret.overchargeCooldownTick && state.tick < turret.overchargeCooldownTick) {
+    return false;
+  }
+
+  // Activate overcharge
+  turret.overchargeActive = true;
+  turret.overchargeExpiresTick = state.tick + OVERCHARGE_DURATION_TICKS;
+  turret.overchargeCooldownTick = state.tick + OVERCHARGE_DURATION_TICKS + OVERCHARGE_COOLDOWN_TICKS;
+
+  return true;
+}
+
+/**
+ * Set turret targeting mode
+ */
+export function setTurretTargetingMode(
+  state: GameState,
+  slotIndex: number,
+  mode: TurretTargetingMode
+): boolean {
+  const turret = state.turrets.find(t => t.slotIndex === slotIndex);
+  if (!turret) return false;
+
+  turret.targetingMode = mode;
+  return true;
 }

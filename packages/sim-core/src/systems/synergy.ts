@@ -171,3 +171,89 @@ export function calculatePillarModifiers(state: GameState): Partial<ModifierSet>
     damageBonus: (damageMultiplier / 16384) - 1,
   };
 }
+
+// ============================================================================
+// TURRET ADJACENCY SYNERGY SYSTEM
+// ============================================================================
+
+/**
+ * Slot adjacency map - defines which slots are adjacent to each other
+ * Based on layout:
+ * [SLOT 0] [SLOT 1] [SLOT 2]
+ *     |________|________|
+ *          FORTRESS
+ *     |________|________|
+ * [SLOT 3] [SLOT 4] [SLOT 5]
+ */
+const TURRET_ADJACENCY: Record<number, number[]> = {
+  0: [1, 3],      // Top-left: adjacent to top-center and bottom-left
+  1: [0, 2, 4],   // Top-center: adjacent to top-left, top-right, bottom-center
+  2: [1, 5],      // Top-right: adjacent to top-center and bottom-right
+  3: [0, 4],      // Bottom-left: adjacent to top-left and bottom-center
+  4: [1, 3, 5],   // Bottom-center: adjacent to top-center, bottom-left, bottom-right
+  5: [2, 4],      // Bottom-right: adjacent to top-right and bottom-center
+};
+
+/**
+ * Synergy bonuses for adjacent same-type turrets
+ */
+const TURRET_ADJACENCY_BONUS = {
+  damageBonus: 0.15,       // +15% damage per adjacent same-type
+  attackSpeedBonus: 0.10,  // +10% attack speed per adjacent same-type
+};
+
+export interface TurretSynergyBonus {
+  slotIndex: number;
+  adjacentSameType: number;
+  damageBonus: number;
+  attackSpeedBonus: number;
+}
+
+/**
+ * Calculate turret adjacency synergy bonuses
+ * Returns bonuses per turret based on adjacent same-type turrets
+ */
+export function calculateTurretAdjacencyBonuses(
+  state: GameState
+): TurretSynergyBonus[] {
+  const bonuses: TurretSynergyBonus[] = [];
+
+  // Create map of slot -> turret type
+  const slotToType = new Map<number, string>();
+  for (const turret of state.turrets) {
+    slotToType.set(turret.slotIndex, turret.definitionId);
+  }
+
+  // Calculate bonuses for each turret
+  for (const turret of state.turrets) {
+    const adjacentSlots = TURRET_ADJACENCY[turret.slotIndex] || [];
+    let adjacentSameType = 0;
+
+    for (const adjSlot of adjacentSlots) {
+      const adjType = slotToType.get(adjSlot);
+      if (adjType === turret.definitionId) {
+        adjacentSameType++;
+      }
+    }
+
+    bonuses.push({
+      slotIndex: turret.slotIndex,
+      adjacentSameType,
+      damageBonus: adjacentSameType * TURRET_ADJACENCY_BONUS.damageBonus,
+      attackSpeedBonus: adjacentSameType * TURRET_ADJACENCY_BONUS.attackSpeedBonus,
+    });
+  }
+
+  return bonuses;
+}
+
+/**
+ * Get synergy bonus for a specific turret slot
+ */
+export function getTurretSynergyBonus(
+  state: GameState,
+  slotIndex: number
+): TurretSynergyBonus | undefined {
+  const bonuses = calculateTurretAdjacencyBonuses(state);
+  return bonuses.find(b => b.slotIndex === slotIndex);
+}

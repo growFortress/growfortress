@@ -170,8 +170,7 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
     <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
       {!compact && (
         <div class={styles.header}>
-          <span class={styles.classIcon}>{classIcon}</span>
-          <span class={styles.title}>Umiejętności Twierdzy</span>
+          <span class={styles.title}>Twierdza {classIcon}</span>
         </div>
       )}
       <div class={styles.skillList}>

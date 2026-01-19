@@ -2,64 +2,60 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
 }
 
 .header {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .classIcon {
-  font-size: 14px;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+  font-size: 12px;
+  filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
 }
 
 .title {
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 600;
-  color: var(--color-text);
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .skillList {
   display: flex;
-  gap: 4px;
   flex-wrap: wrap;
+  gap: 4px;
 }
 
 .skillSlot {
   position: relative;
-  min-width: 32px;
-  height: 32px;
-  padding: 2px 6px;
-  background: var(--color-bg);
-  border: var(--border-neutral);
-  border-radius: var(--radius-sm);
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 150, 0.3);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   overflow: hidden;
   cursor: default;
-  transition: var(--transition-interactive-normal);
+  transition: all 0.15s ease;
 }
 
 .skillSlot:hover {
-  border-color: var(--color-primary-50);
-  transform: scale(var(--hover-scale));
+  border-color: rgba(0, 255, 150, 0.5);
+  background: rgba(0, 255, 150, 0.1);
 }
 
 .skillSlot.ready {
-  border-color: var(--color-primary);
-  box-shadow: var(--glow-primary);
+  border-color: rgba(0, 255, 150, 0.8);
+  box-shadow: 0 0 8px rgba(0, 255, 150, 0.4);
+  background: rgba(0, 255, 150, 0.15);
 }
 
 .cooldownFill {
@@ -67,26 +63,19 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--color-primary-30);
+  background: rgba(0, 255, 150, 0.25);
   transition: height 0.1s linear;
 }
 
 .skillIcon {
   position: relative;
   z-index: 1;
-  font-size: 14px;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+  font-size: 18px;
+  filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
 }
 
 .skillName {
-  position: relative;
-  z-index: 1;
-  font-family: var(--font-body);
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--color-text);
-  text-shadow: var(--text-shadow);
-  white-space: nowrap;
+  display: none;
 }
 
 .cooldownText {
@@ -94,29 +83,21 @@
   bottom: 1px;
   right: 2px;
   font-family: var(--font-body);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
-  color: var(--color-text);
-  text-shadow: var(--text-shadow);
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   z-index: 2;
 }
 
 /* Compact mode */
-.compact {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-
 .compact .skillSlot {
-  min-width: 24px;
-  height: 24px;
-  padding: 2px;
+  width: 28px;
+  height: 28px;
 }
 
 .compact .skillIcon {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .compact .cooldownText {
@@ -127,15 +108,16 @@
 .skillSlot.ready::after {
   content: '';
   position: absolute;
-  inset: -2px;
-  border: var(--border-width) solid var(--color-primary);
-  border-radius: calc(var(--radius-sm) + 2px);
-  animation: readyPulse 1.5s var(--ease-standard) infinite;
+  inset: -1px;
+  border: 1px solid rgba(0, 255, 150, 0.6);
+  border-radius: 7px;
+  animation: readyPulse 1.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes readyPulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
 }
 
 /* Targetable skill (can be clicked to select) */
@@ -145,14 +127,14 @@
 
 .skillSlot.targetable:hover {
   border-color: var(--color-accent);
-  box-shadow: var(--glow-accent);
+  box-shadow: 0 0 8px rgba(255, 200, 0, 0.4);
 }
 
 /* Selected skill (waiting for map click) */
 .skillSlot.selected {
   border-color: var(--color-accent);
-  box-shadow: 0 0 12px var(--color-accent), inset 0 0 8px rgba(255, 200, 0, 0.3);
-  animation: selectedPulse 0.8s var(--ease-standard) infinite;
+  box-shadow: 0 0 10px rgba(255, 200, 0, 0.5), inset 0 0 6px rgba(255, 200, 0, 0.2);
+  animation: selectedPulse 0.8s ease-in-out infinite;
 }
 
 .skillSlot.selected::after {
@@ -163,7 +145,7 @@
 
 @keyframes selectedPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.05); }
 }
 
 /* Target indicator */
@@ -171,7 +153,7 @@
   position: absolute;
   top: -2px;
   right: -2px;
-  font-size: 10px;
+  font-size: 8px;
   z-index: 3;
   filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.8));
 }
@@ -179,17 +161,17 @@
 /* Selected indicator */
 .selectedIndicator {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  font-size: 12px;
+  top: -3px;
+  right: -3px;
+  font-size: 10px;
   z-index: 3;
   color: var(--color-accent);
   font-weight: bold;
   text-shadow: 0 0 4px var(--color-accent);
-  animation: checkPulse 0.5s var(--ease-standard) infinite;
+  animation: checkPulse 0.5s ease-in-out infinite;
 }
 
 @keyframes checkPulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.2); }
+  50% { opacity: 0.8; transform: scale(1.1); }
 }

@@ -237,7 +237,11 @@ export type TurretTargetingMode =
   | 'closest_to_fortress'  // Enemy with lowest X (closest to fortress)
   | 'weakest'              // Enemy with lowest HP
   | 'strongest'            // Enemy with highest HP
-  | 'nearest_to_turret';   // Enemy closest to turret by distance
+  | 'nearest_to_turret'    // Enemy closest to turret by distance
+  | 'fastest';             // Enemy with highest speed
+
+// Turret upgrade paths (specialization branches)
+export type TurretUpgradePath = 'A' | 'B' | 'C';
 
 export interface TurretDefinition {
   id: string;
@@ -276,6 +280,12 @@ export interface ActiveTurret {
   // Active ability buffs
   damageBoostMultiplier?: number;  // FP format multiplier (e.g. 32768 = 2.0x)
   damageBoostExpiresTick?: number; // Tick when boost expires
+  // Upgrade path (specialization)
+  upgradePath?: TurretUpgradePath;
+  // Overcharge system
+  overchargeActive?: boolean;
+  overchargeExpiresTick?: number;
+  overchargeCooldownTick?: number;
 }
 
 export interface TurretSlot {
@@ -408,70 +418,6 @@ export interface HeroSpecificRequirement {
 }
 
 // ============================================================================
-// DUO-ATTACK SYSTEM
-// ============================================================================
-
-/** Effect types for duo-attacks */
-export type DuoAttackEffectType = 'damage' | 'buff' | 'debuff' | 'summon' | 'terrain';
-
-/** Single effect within a duo-attack */
-export interface DuoAttackEffect {
-  type: DuoAttackEffectType;
-  /** Direct damage amount */
-  damage?: number;
-  /** Effect radius (FP format) */
-  radius?: number;
-  /** Effect duration in ticks */
-  duration?: number;
-  /** Stat to buff (for buff type) */
-  buffStat?: keyof ModifierSet;
-  /** Buff amount (for buff type) */
-  buffAmount?: number;
-  /** Status effect to apply (for debuff type) */
-  statusEffect?: SkillEffect;
-}
-
-/** Definition of a duo-attack (two heroes combining powers) */
-export interface DuoAttackDefinition {
-  id: string;
-  name: string;
-  description: string;
-  /** Hero pair required (order doesn't matter) */
-  heroes: [string, string];
-  /** Maximum distance between heroes to trigger (FP format) */
-  activationRange: number;
-  /** Cooldown between uses in ticks */
-  cooldownTicks: number;
-  /** Effects applied when triggered */
-  effects: DuoAttackEffect[];
-  /** Visual effect identifier for rendering */
-  visualEffect: string;
-  /** Audio effect identifier */
-  audioEffect: string;
-}
-
-/** Trigger event for VFX system */
-export interface DuoAttackTrigger {
-  duoAttackId: string;
-  hero1Id: string;
-  hero2Id: string;
-  /** Center position X (FP format) */
-  x: number;
-  /** Center position Y (FP format) */
-  y: number;
-  /** Tick when triggered */
-  tick: number;
-  /** Total damage dealt (for VFX scaling) */
-  damage?: number;
-}
-
-/** Active cooldown tracking for duo-attacks */
-export interface ActiveDuoAttackCooldown {
-  duoAttackId: string;
-  expirationTick: number;
-}
-
-// ============================================================================
 // ARTIFACT VISUAL SYSTEM (Procedural)
 // ============================================================================
 
@@ -580,6 +526,81 @@ export interface FortressProgression {
 }
 
 // ============================================================================
+// WALL/BARRIER SYSTEM
+// ============================================================================
+
+export type WallType = 'basic' | 'reinforced' | 'gate';
+
+export interface Wall {
+  id: number;
+  type: WallType;
+  /** Position X (fixed-point) */
+  x: FP;
+  /** Position Y (fixed-point) */
+  y: FP;
+  /** Wall width in game units (fixed-point) */
+  width: FP;
+  /** Wall height in game units (fixed-point) */
+  height: FP;
+  /** Current HP */
+  currentHp: number;
+  /** Maximum HP */
+  maxHp: number;
+  /** If true, this is a gate that allows friendlies through */
+  isGate: boolean;
+  /** Slow effect applied to enemies passing through (0-1) */
+  slowPercent: number;
+  /** Tick when wall was placed */
+  placedTick: number;
+  /** Tick when wall was last damaged */
+  lastDamagedTick: number;
+}
+
+// ============================================================================
+// MILITIA/GUARDS SYSTEM
+// ============================================================================
+
+export type MilitiaType = 'infantry' | 'archer' | 'shield_bearer';
+export type MilitiaState = 'moving' | 'attacking' | 'blocking' | 'dead';
+
+export interface Militia {
+  id: number;
+  type: MilitiaType;
+  /** Position X (fixed-point) */
+  x: FP;
+  /** Position Y (fixed-point) */
+  y: FP;
+  /** Velocity X (fixed-point) */
+  vx: FP;
+  /** Velocity Y (fixed-point) */
+  vy: FP;
+  /** Collision radius (fixed-point) */
+  radius: FP;
+  /** Mass for physics (fixed-point) */
+  mass: FP;
+  /** Current HP */
+  currentHp: number;
+  /** Maximum HP */
+  maxHp: number;
+  /** Damage per attack */
+  damage: number;
+  /** Attack range (fixed-point) */
+  attackRange: FP;
+  /** Ticks between attacks */
+  attackInterval: number;
+  /** Last tick when militia attacked */
+  lastAttackTick: number;
+  /** Tick when militia was spawned */
+  spawnTick: number;
+  /** Tick when militia expires */
+  expirationTick: number;
+  /** Current state */
+  state: MilitiaState;
+  /** Current target enemy ID (if any) */
+  targetEnemyId: number | null;
+}
+
+// ============================================================================
 // ENEMY TYPES (existing + extended)
 // ============================================================================
 
@@ -590,7 +611,9 @@ export type EnemyType = 'runner' | 'bruiser' | 'leech' |
                         'sentinel' | 'mutant_hunter' |         // Mutants
                         'kree_soldier' | 'skrull' | 'cosmic_beast' |  // Cosmos
                         'demon' | 'sorcerer' | 'dimensional_being' |  // Magic
-                        'einherjar' | 'titan' | 'god';                 // Gods
+                        'einherjar' | 'titan' | 'god' |                // Gods
+                        // Special ability enemies
+                        'catapult' | 'sapper' | 'healer' | 'shielder' | 'teleporter';
 
 // Status effect types that can be applied to enemies
 export type StatusEffectType = 'slow' | 'freeze' | 'burn' | 'poison' | 'stun';
@@ -905,6 +928,14 @@ export interface GameState {
   // NEW: Turrets system
   turrets: ActiveTurret[];
   turretSlots: TurretSlot[];
+
+  // NEW: Walls/Barriers system
+  walls: Wall[];
+  nextWallId: number;
+
+  // NEW: Militia/Guards system
+  militia: Militia[];
+  nextMilitiaId: number;
 
   // NEW: Projectiles in flight
   projectiles: ActiveProjectile[];

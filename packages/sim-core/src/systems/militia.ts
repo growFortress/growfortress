@@ -1,0 +1,279 @@
+/**
+ * Militia System
+ *
+ * Handles militia unit AI, movement, combat, and lifecycle.
+ */
+
+import { FP } from '../fixed.js';
+import type { GameState, SimConfig, Militia, MilitiaType, Enemy } from '../types.js';
+import { getMilitiaDefinition } from '../data/militia.js';
+import { HIT_FLASH_TICKS } from './constants.js';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const MILITIA_SEPARATION_FORCE = 0.02; // Force to separate overlapping militia
+const MILITIA_SEPARATION_RADIUS = FP.fromFloat(1.5); // Radius for separation check
+
+// ============================================================================
+// MILITIA SPAWNING
+// ============================================================================
+
+/**
+ * Spawn a new militia unit at the specified position
+ */
+export function spawnMilitia(
+  state: GameState,
+  type: MilitiaType,
+  x: number,
+  y: number
+): Militia {
+  const def = getMilitiaDefinition(type);
+
+  const militia: Militia = {
+    id: state.nextMilitiaId++,
+    type,
+    x: x as any,
+    y: y as any,
+    vx: 0 as any,
+    vy: 0 as any,
+    radius: FP.fromFloat(def.radius) as any,
+    mass: FP.fromFloat(1.0) as any,
+    currentHp: def.baseHp,
+    maxHp: def.baseHp,
+    damage: def.baseDamage,
+    attackRange: FP.fromFloat(def.attackRange) as any,
+    attackInterval: def.attackInterval,
+    lastAttackTick: 0,
+    spawnTick: state.tick,
+    expirationTick: state.tick + def.duration,
+    state: 'moving',
+    targetEnemyId: null,
+  };
+
+  state.militia.push(militia);
+  return militia;
+}
+
+/**
+ * Spawn multiple militia units in a formation
+ */
+export function spawnMilitiaSquad(
+  state: GameState,
+  type: MilitiaType,
+  centerX: number,
+  centerY: number,
+  count: number
+): Militia[] {
+  const spawned: Militia[] = [];
+  const spacing = FP.fromFloat(1.5);
+
+  for (let i = 0; i < count; i++) {
+    // Spread out in a line
+    const offsetX = FP.mul(FP.fromFloat(i - (count - 1) / 2), spacing);
+    const x = FP.add(centerX, offsetX);
+    const militia = spawnMilitia(state, type, x, centerY);
+    spawned.push(militia);
+  }
+
+  return spawned;
+}
+
+// ============================================================================
+// MILITIA AI
+// ============================================================================
+
+/**
+ * Find the nearest enemy to a militia unit
+ */
+function findNearestEnemy(
+  militia: Militia,
+  enemies: Enemy[]
+): Enemy | null {
+  if (enemies.length === 0) return null;
+
+  let nearestEnemy: Enemy | null = null;
+  let nearestDistSq = Infinity;
+
+  for (const enemy of enemies) {
+    const distSq = FP.distSq(militia.x, militia.y, enemy.x, enemy.y);
+    if (distSq < nearestDistSq) {
+      nearestDistSq = distSq;
+      nearestEnemy = enemy;
+    }
+  }
+
+  return nearestEnemy;
+}
+
+/**
+ * Move militia towards target position
+ */
+function moveTowards(
+  militia: Militia,
+  targetX: number,
+  targetY: number,
+  speed: number
+): void {
+  const dx = FP.sub(targetX, militia.x);
+  const dy = FP.sub(targetY, militia.y);
+  const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+
+  if (distSq < FP.fromFloat(0.01)) return; // Already at target
+
+  const dist = Math.sqrt(FP.toFloat(distSq));
+  const speedFp = FP.fromFloat(speed);
+
+  militia.vx = FP.mul(FP.div(dx, FP.fromFloat(dist)), speedFp) as any;
+  militia.vy = FP.mul(FP.div(dy, FP.fromFloat(dist)), speedFp) as any;
+}
+
+/**
+ * Apply separation force between overlapping militia
+ */
+function applySeparation(
+  militia: Militia,
+  allMilitia: Militia[]
+): void {
+  for (const other of allMilitia) {
+    if (other.id === militia.id) continue;
+
+    const dx = FP.sub(militia.x, other.x);
+    const dy = FP.sub(militia.y, other.y);
+    const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+    const sepRadiusSq = FP.mul(MILITIA_SEPARATION_RADIUS, MILITIA_SEPARATION_RADIUS);
+
+    if (distSq < sepRadiusSq && distSq > 0) {
+      const dist = Math.sqrt(FP.toFloat(distSq));
+      const pushX = FP.mul(FP.div(dx, FP.fromFloat(dist)), FP.fromFloat(MILITIA_SEPARATION_FORCE));
+      const pushY = FP.mul(FP.div(dy, FP.fromFloat(dist)), FP.fromFloat(MILITIA_SEPARATION_FORCE));
+
+      militia.vx = FP.add(militia.vx, pushX) as any;
+      militia.vy = FP.add(militia.vy, pushY) as any;
+    }
+  }
+}
+
+// ============================================================================
+// MILITIA UPDATE SYSTEM
+// ============================================================================
+
+/**
+ * Update all militia units
+ */
+export function updateMilitia(
+  state: GameState,
+  _config: SimConfig
+): void {
+  // Skip if no militia
+  if (state.militia.length === 0) return;
+
+  const militiaToRemove: number[] = [];
+
+  for (const militia of state.militia) {
+    // Check expiration
+    if (state.tick >= militia.expirationTick || militia.currentHp <= 0) {
+      militia.state = 'dead';
+      militiaToRemove.push(militia.id);
+      continue;
+    }
+
+    // Find target
+    const target = findNearestEnemy(militia, state.enemies);
+    militia.targetEnemyId = target?.id ?? null;
+
+    const def = getMilitiaDefinition(militia.type);
+
+    if (target) {
+      const dist = Math.sqrt(FP.toFloat(FP.distSq(militia.x, militia.y, target.x, target.y)));
+      const attackRange = FP.toFloat(militia.attackRange);
+
+      if (dist <= attackRange) {
+        // In attack range - attack
+        militia.state = 'attacking';
+        militia.vx = 0 as any;
+        militia.vy = 0 as any;
+
+        if (state.tick - militia.lastAttackTick >= militia.attackInterval) {
+          militia.lastAttackTick = state.tick;
+          target.hp -= militia.damage;
+          target.hitFlashTicks = HIT_FLASH_TICKS;
+        }
+      } else {
+        // Move towards target
+        militia.state = 'moving';
+        moveTowards(militia, target.x, target.y, def.baseSpeed);
+      }
+    } else {
+      // No targets - hold position or patrol
+      militia.state = 'blocking';
+      militia.vx = 0 as any;
+      militia.vy = 0 as any;
+    }
+
+    // Apply separation force
+    applySeparation(militia, state.militia);
+
+    // Apply friction
+    const friction = FP.fromFloat(0.9);
+    militia.vx = FP.mul(militia.vx, friction) as any;
+    militia.vy = FP.mul(militia.vy, friction) as any;
+
+    // Integrate position
+    militia.x = FP.add(militia.x, militia.vx) as any;
+    militia.y = FP.add(militia.y, militia.vy) as any;
+  }
+
+  // Remove dead militia
+  state.militia = state.militia.filter(m => !militiaToRemove.includes(m.id));
+}
+
+// ============================================================================
+// MILITIA DAMAGE
+// ============================================================================
+
+/**
+ * Apply damage to a militia unit (from enemy attacks)
+ */
+export function applyDamageToMilitia(
+  militia: Militia,
+  damage: number
+): void {
+  militia.currentHp -= damage;
+
+  if (militia.currentHp <= 0) {
+    militia.state = 'dead';
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get militia unit by ID
+ */
+export function getMilitiaById(
+  state: GameState,
+  id: number
+): Militia | undefined {
+  return state.militia.find(m => m.id === id);
+}
+
+/**
+ * Get all militia of a specific type
+ */
+export function getMilitiaByType(
+  state: GameState,
+  type: MilitiaType
+): Militia[] {
+  return state.militia.filter(m => m.type === type);
+}
+
+/**
+ * Count active militia
+ */
+export function countActiveMilitia(state: GameState): number {
+  return state.militia.filter(m => m.state !== 'dead').length;
+}

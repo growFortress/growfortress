@@ -53,7 +53,7 @@ export function HeroSkillBar({ compact = false }: HeroSkillBarProps) {
     <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
       {!compact && (
         <div class={styles.header}>
-          <span class={styles.title}>Skills</span>
+          <span class={styles.title}>Bohaterowie</span>
         </div>
       )}
       <div class={styles.heroSkills}>

@@ -4,9 +4,10 @@
   left: 0;
   width: calc(100% - 420px);
   padding: 16px 24px;
+  padding-left: 140px; /* Space for Wave component */
   box-sizing: border-box;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   z-index: var(--z-header);
   pointer-events: none;
@@ -20,32 +21,6 @@
   display: flex;
   align-items: center;
   gap: 24px;
-}
-
-.title {
-  margin: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.logoGrow {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.logoFortress {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--color-primary);
-  text-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
 }
 
 /* Game Bars (HP/MP) */
@@ -107,34 +82,48 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  background: var(--color-bg-panel);
-  border: var(--border-neutral);
-  padding: 8px 24px;
-  box-shadow: var(--shadow-md);
-  border-radius: var(--radius-sm);
+}
+
+.navGroupWrapper {
+  position: relative;
+}
+
+.groupLabel {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+  position: absolute;
+  top: -7px;
+  left: 12px;
+  background: rgba(0, 15, 30, 0.95);
+  padding: 0 6px;
+  z-index: 1;
+}
+
+/* Shared group styling */
+.resourceGroup,
+.levelSection,
+.buttonGroup {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 14px;
+  background: rgba(0, 20, 40, 0.85);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  border-radius: 10px;
+  box-sizing: border-box;
 }
 
 /* Resource Group */
 .resourceGroup {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .resource {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  transition: var(--transition-interactive-normal);
-}
-
-.resource:hover {
-  border-color: var(--color-text-40);
-  background: rgba(0, 0, 0, 0.4);
 }
 
 .resourceIcon {
@@ -144,7 +133,7 @@
 
 .resourceValue {
   font-weight: 700;
-  font-size: 16px;
+  font-size: 15px;
   font-family: var(--font-display);
   min-width: 24px;
 }
@@ -160,10 +149,10 @@
 }
 
 .resourceLabel {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-text-40);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 /* Player name */
@@ -226,17 +215,11 @@
 
 /* Level with XP progress */
 .levelSection {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
 }
 
 .levelLabel {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-40);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -249,12 +232,12 @@
   font-size: 18px;
   font-family: var(--font-display);
   text-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
-  min-width: 20px;
+  min-width: 18px;
 }
 
 .xpTrack {
-  width: 100px;
-  height: 12px;
+  width: 90px;
+  height: 10px;
   background: var(--color-bg);
   border: var(--border-neutral);
   border-radius: var(--radius-sm);
@@ -270,42 +253,73 @@
 }
 
 .xpText {
-  font-size: 11px;
-  color: var(--color-text-40);
+  font-size: 10px;
+  color: var(--color-text-50);
   font-family: var(--font-body);
-  min-width: 50px;
+  min-width: 45px;
 }
 
 /* Button Group */
 .buttonGroup {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 4px;
+  gap: 4px;
 }
 
 /* Header Buttons (shared style) */
 .headerBtn {
   position: relative;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--color-border);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text-60);
-  padding: 8px 12px;
-  font-size: 16px;
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  font-size: 18px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
 }
 
 .headerBtn:hover {
-  background: var(--color-bg-elevated);
+  background: rgba(0, 212, 255, 0.15);
   border-color: var(--color-primary);
   color: var(--color-primary);
   box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Unified badge style */
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  background: var(--color-danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.dotBadge {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  background: var(--color-skill);
+  border-radius: 50%;
+  border: 2px solid rgba(0, 20, 40, 0.85);
+  animation: pulse 2s infinite;
 }
 
 /* Worlds Exploration Button */
@@ -600,33 +614,29 @@
   .header {
     width: calc(100% - 320px);
     padding: 12px 16px;
-  }
-
-  .leftSection {
-    gap: 16px;
-  }
-
-  .logoGrow {
-    font-size: 16px;
-  }
-
-  .logoFortress {
-    font-size: 22px;
-  }
-
-  .barTrack {
-    width: 150px;
-    height: 16px;
+    padding-left: 140px;
   }
 
   .statusBar {
     gap: 16px;
-    padding: 6px 16px;
+  }
+
+  .resourceGroup,
+  .levelSection,
+  .buttonGroup {
+    min-height: 42px;
+    padding: 6px 10px;
+  }
+
+  .headerBtn {
+    width: 32px;
+    height: 28px;
+    font-size: 16px;
   }
 
   .xpTrack {
-    width: 80px;
-    height: 10px;
+    width: 70px;
+    height: 8px;
   }
 }
 
@@ -634,118 +644,45 @@
 @media (max-width: 768px) {
   .header {
     width: 100%;
-    padding: 10px 12px;
+    padding: 10px;
+    padding-left: 10px;
     flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .leftSection {
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .title {
-    display: none; /* Hide logo on small screens to save space */
-  }
-
-  .gameBars {
-    gap: 4px;
-  }
-
-  .barContainer {
-    gap: 4px;
-  }
-
-  .barLabel {
-    font-size: 12px;
-    width: 24px;
-  }
-
-  .barTrack {
-    width: 100px;
-    height: 14px;
-  }
-
-  .barValue {
-    font-size: 10px;
-    min-width: 40px;
   }
 
   .statusBar {
-    gap: 8px;
-    padding: 4px 8px;
+    gap: 10px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
-  .resourceGroup {
-    gap: 6px;
-  }
-
-  .resource {
-    padding: 4px 8px;
-    gap: 4px;
-  }
-
-  .resourceIcon {
-    font-size: 12px;
-  }
-
-  .resourceValue {
-    font-size: 14px;
-    min-width: 20px;
-  }
-
-  .resourceLabel {
-    display: none; /* Hide labels on mobile */
-  }
-
-  .levelSection {
-    padding: 4px 8px;
-    gap: 4px;
-  }
-
-  .levelLabel {
+  .groupLabel {
     display: none;
   }
 
-  .levelValue {
+  .resourceGroup,
+  .levelSection,
+  .buttonGroup {
+    min-height: 38px;
+    padding: 5px 8px;
+  }
+
+  .resourceLabel {
+    display: none;
+  }
+
+  .headerBtn {
+    width: 30px;
+    height: 26px;
     font-size: 14px;
+  }
+
+  .levelValue {
+    font-size: 16px;
   }
 
   .xpTrack {
     width: 60px;
     height: 8px;
-  }
-
-  .xpText {
-    font-size: 9px;
-    min-width: 40px;
-  }
-
-  .buttonGroup {
-    gap: 4px;
-    margin-left: 0;
-  }
-
-  .headerBtn,
-  .worldsBtn,
-  .dailyQuestsBtn,
-  .masteryBtn,
-  .leaderboardBtn,
-  .guildBtn,
-  .messagesBtn,
-  .settingsBtn {
-    padding: 6px 8px;
-    font-size: 14px;
-  }
-
-  .guildTag {
-    display: none;
-  }
-
-  .playerName {
-    display: none; /* Hide player name on mobile */
   }
 }
 
@@ -755,25 +692,24 @@
     padding: 8px;
   }
 
-  .barTrack {
-    width: 80px;
-    height: 12px;
+  .statusBar {
+    gap: 6px;
   }
 
-  .statusBar {
-    gap: 4px;
+  .resourceGroup,
+  .levelSection,
+  .buttonGroup {
+    min-height: 34px;
     padding: 4px 6px;
   }
 
-  .resource {
-    padding: 3px 6px;
-  }
-
-  .resourceValue {
+  .headerBtn {
+    width: 26px;
+    height: 24px;
     font-size: 12px;
   }
 
-  .levelSection {
-    display: none; /* Hide level on very small screens */
+  .navGroupWrapper:has(.levelSection) {
+    display: none;
   }
 }

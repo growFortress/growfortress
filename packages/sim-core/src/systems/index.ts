@@ -15,7 +15,11 @@ export { resetTeamCoordinator, updateHeroes } from './hero.js';
 // TURRET SYSTEM
 // ============================================================================
 
-export { updateTurrets } from './turret.js';
+export {
+  updateTurrets,
+  activateTurretOvercharge,
+  setTurretTargetingMode,
+} from './turret.js';
 
 // ============================================================================
 // PROJECTILE SYSTEM
@@ -52,10 +56,33 @@ export {
 export { updateFortressSkills, activateTargetedSkill } from './fortress-skills.js';
 
 // ============================================================================
+// FORTRESS AURA SYSTEM
+// ============================================================================
+
+export {
+  updateFortressAuras,
+  getHeroAuraEffects,
+  getTurretAuraEffects,
+  getHeroAuraDamageBonus,
+  getTurretAuraDamageBonus,
+  getAuraAttackSpeedBonus,
+  getAllAuraEffects,
+  invalidateAuraCache,
+  type EntityAuraEffects,
+  type AuraEffect,
+} from './fortress-auras.js';
+
+// ============================================================================
 // SYNERGY SYSTEM
 // ============================================================================
 
-export { calculateSynergyBonuses, calculatePillarModifiers } from './synergy.js';
+export {
+  calculateSynergyBonuses,
+  calculatePillarModifiers,
+  calculateTurretAdjacencyBonuses,
+  getTurretSynergyBonus,
+  type TurretSynergyBonus,
+} from './synergy.js';
 
 // ============================================================================
 // DAMAGE SYSTEM
@@ -118,25 +145,45 @@ export {
 export { findClosestEnemy } from './helpers.js';
 
 // ============================================================================
-// DUO-ATTACK SYSTEM
+// WALL SYSTEM
 // ============================================================================
 
 export {
-  updateDuoAttacks,
-  popDuoAttackTriggers,
-  resetDuoAttackCooldowns,
-  getDuoAttackCooldownRemaining,
-  getAvailableDuoAttacksForState,
-} from './duo-attacks.js';
+  placeWall,
+  removeWall,
+  updateWalls,
+  checkEnemyWallCollision,
+  getCollidingWall,
+  getWallsInArea,
+  isValidWallPosition,
+} from './walls.js';
+
+// ============================================================================
+// MILITIA SYSTEM
+// ============================================================================
 
 export {
-  DUO_ATTACK_DEFINITIONS,
-  getDuoAttackById,
-  getDuoAttacksForHero,
-  getDuoAttackForPair,
-  canPerformDuoAttack,
-  getAvailableDuoAttacks,
-} from '../data/duo-attacks.js';
+  spawnMilitia,
+  spawnMilitiaSquad,
+  updateMilitia,
+  applyDamageToMilitia,
+  getMilitiaById,
+  getMilitiaByType,
+  countActiveMilitia,
+} from './militia.js';
+
+// ============================================================================
+// ENEMY ABILITIES SYSTEM
+// ============================================================================
+
+export {
+  updateEnemyAbilities,
+  isEnemyShielded,
+  getShieldDamageReduction,
+  getSapperDamageMultiplier,
+  isSpecialEnemy,
+  SPECIAL_ENEMY_TYPES,
+} from './enemy-abilities.js';
 
 // ============================================================================
 // CONSTANTS (for external use if needed)

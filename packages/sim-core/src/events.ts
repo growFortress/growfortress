@@ -1,7 +1,12 @@
 import type { GameEvent } from '@arcade/protocol';
-import { GameState, SimConfig, ActiveRelic } from './types.js';
+import { GameState, SimConfig, ActiveRelic, WallType, MilitiaType, TurretTargetingMode } from './types.js';
 import { getRelicById } from './data/relics.js';
 import { computeModifiers } from './modifiers.js';
+import { placeWall, removeWall, isValidWallPosition } from './systems/walls.js';
+import { spawnMilitia, spawnMilitiaSquad } from './systems/militia.js';
+import { activateTurretOvercharge, setTurretTargetingMode } from './systems/turret.js';
+import { getWallDefinition } from './data/walls.js';
+import { FP } from './fixed.js';
 
 /**
  * Event validation result
@@ -39,6 +44,21 @@ export function validateEvent(
 
     case 'ACTIVATE_SKILL':
       return validateActivateSkill(event, state);
+
+    case 'PLACE_WALL':
+      return validatePlaceWall(event, state, _config);
+
+    case 'REMOVE_WALL':
+      return validateRemoveWall(event, state);
+
+    case 'SET_TURRET_TARGETING':
+      return validateSetTurretTargeting(event, state);
+
+    case 'ACTIVATE_OVERCHARGE':
+      return validateActivateOvercharge(event, state);
+
+    case 'SPAWN_MILITIA':
+      return validateSpawnMilitia(event, state);
 
     default:
       return { valid: false, reason: 'Unknown event type' };
@@ -217,6 +237,21 @@ export function applyEvent(
       // Skill execution happens in simulation.processEvents() after this event is applied
       return true;
 
+    case 'PLACE_WALL':
+      return applyPlaceWall(event, state);
+
+    case 'REMOVE_WALL':
+      return applyRemoveWall(event, state);
+
+    case 'SET_TURRET_TARGETING':
+      return applySetTurretTargeting(event, state);
+
+    case 'ACTIVATE_OVERCHARGE':
+      return applyActivateOvercharge(event, state);
+
+    case 'SPAWN_MILITIA':
+      return applySpawnMilitia(event, state);
+
     default:
       return false;
   }
@@ -330,5 +365,171 @@ function applyHeroCommand(
 
     default:
       return false;
+  }
+}
+
+// ============================================================================
+// WALL EVENT HANDLERS
+// ============================================================================
+
+function validatePlaceWall(
+  event: { type: 'PLACE_WALL'; tick: number; wallType: string; x: number; y: number },
+  state: GameState,
+  config: SimConfig
+): EventValidation {
+  if (state.ended) {
+    return { valid: false, reason: 'Game has ended' };
+  }
+
+  const wallDef = getWallDefinition(event.wallType as WallType);
+  if (!wallDef) {
+    return { valid: false, reason: 'Invalid wall type' };
+  }
+
+  // Check gold
+  if (state.gold < wallDef.goldCost) {
+    return { valid: false, reason: 'Not enough gold' };
+  }
+
+  // Check position is valid
+  if (!isValidWallPosition(state, config, FP.toFloat(event.x), FP.toFloat(event.y), wallDef.width, wallDef.height)) {
+    return { valid: false, reason: 'Invalid wall position' };
+  }
+
+  return { valid: true };
+}
+
+function validateRemoveWall(
+  event: { type: 'REMOVE_WALL'; tick: number; wallId: number },
+  state: GameState
+): EventValidation {
+  if (state.ended) {
+    return { valid: false, reason: 'Game has ended' };
+  }
+
+  const wall = state.walls.find(w => w.id === event.wallId);
+  if (!wall) {
+    return { valid: false, reason: 'Wall not found' };
+  }
+
+  return { valid: true };
+}
+
+function applyPlaceWall(
+  event: { type: 'PLACE_WALL'; tick: number; wallType: string; x: number; y: number },
+  state: GameState
+): boolean {
+  const wall = placeWall(state, event.wallType as WallType, event.x, event.y);
+  return wall !== null;
+}
+
+function applyRemoveWall(
+  event: { type: 'REMOVE_WALL'; tick: number; wallId: number },
+  state: GameState
+): boolean {
+  return removeWall(state, event.wallId);
+}
+
+// ============================================================================
+// TURRET EVENT HANDLERS
+// ============================================================================
+
+function validateSetTurretTargeting(
+  event: { type: 'SET_TURRET_TARGETING'; tick: number; slotIndex: number; targetingMode: string },
+  state: GameState
+): EventValidation {
+  if (state.ended) {
+    return { valid: false, reason: 'Game has ended' };
+  }
+
+  const turret = state.turrets.find(t => t.slotIndex === event.slotIndex);
+  if (!turret) {
+    return { valid: false, reason: 'Turret not found in slot' };
+  }
+
+  const validModes = ['closest_to_fortress', 'weakest', 'strongest', 'nearest_to_turret', 'fastest'];
+  if (!validModes.includes(event.targetingMode)) {
+    return { valid: false, reason: 'Invalid targeting mode' };
+  }
+
+  return { valid: true };
+}
+
+function validateActivateOvercharge(
+  event: { type: 'ACTIVATE_OVERCHARGE'; tick: number; slotIndex: number },
+  state: GameState
+): EventValidation {
+  if (state.ended) {
+    return { valid: false, reason: 'Game has ended' };
+  }
+
+  const turret = state.turrets.find(t => t.slotIndex === event.slotIndex);
+  if (!turret) {
+    return { valid: false, reason: 'Turret not found in slot' };
+  }
+
+  // Check if overcharge is on cooldown
+  if (turret.overchargeCooldownTick && turret.overchargeCooldownTick > 0) {
+    return { valid: false, reason: 'Overcharge is on cooldown' };
+  }
+
+  // Check if already overcharged
+  if (turret.overchargeActive) {
+    return { valid: false, reason: 'Overcharge already active' };
+  }
+
+  return { valid: true };
+}
+
+function applySetTurretTargeting(
+  event: { type: 'SET_TURRET_TARGETING'; tick: number; slotIndex: number; targetingMode: string },
+  state: GameState
+): boolean {
+  return setTurretTargetingMode(state, event.slotIndex, event.targetingMode as TurretTargetingMode);
+}
+
+function applyActivateOvercharge(
+  event: { type: 'ACTIVATE_OVERCHARGE'; tick: number; slotIndex: number },
+  state: GameState
+): boolean {
+  return activateTurretOvercharge(state, event.slotIndex);
+}
+
+// ============================================================================
+// MILITIA EVENT HANDLERS
+// ============================================================================
+
+function validateSpawnMilitia(
+  event: { type: 'SPAWN_MILITIA'; tick: number; militiaType: string; x: number; y: number; count?: number },
+  state: GameState
+): EventValidation {
+  if (state.ended) {
+    return { valid: false, reason: 'Game has ended' };
+  }
+
+  const validTypes = ['infantry', 'archer', 'shield_bearer'];
+  if (!validTypes.includes(event.militiaType)) {
+    return { valid: false, reason: 'Invalid militia type' };
+  }
+
+  // Could add resource cost check here in the future
+  return { valid: true };
+}
+
+function applySpawnMilitia(
+  event: { type: 'SPAWN_MILITIA'; tick: number; militiaType: string; x: number; y: number; count?: number },
+  state: GameState
+): boolean {
+  const count = event.count ?? 1;
+  const type = event.militiaType as MilitiaType;
+  const x = FP.toFloat(event.x);
+  const y = FP.toFloat(event.y);
+
+  if (count === 1) {
+    const militia = spawnMilitia(state, type, x, y);
+    return militia !== null;
+  } else {
+    const squad = spawnMilitiaSquad(state, type, x, y, count);
+    return squad.length > 0;
   }
 }

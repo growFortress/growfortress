@@ -321,6 +321,12 @@ export function createPillarChallengeGameState(
     killStreak: 0,
     lastKillTick: -1000,
     highestKillStreak: 0,
+    // Wall system
+    walls: [],
+    nextWallId: 1,
+    // Militia system
+    militia: [],
+    nextMilitiaId: 1,
   };
 }
 

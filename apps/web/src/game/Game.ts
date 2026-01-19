@@ -628,6 +628,103 @@ export class Game {
     );
   }
 
+  /** Place a wall at the specified location */
+  placeWall(wallType: 'basic' | 'reinforced' | 'gate', x: number, y: number): void {
+    if (!this.simulation || this.phase !== 'playing') return;
+
+    const state = this.simulation.state;
+
+    const event: GameEvent = {
+      type: 'PLACE_WALL',
+      tick: state.tick,
+      wallType,
+      x,
+      y,
+    };
+
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
+  /** Remove a wall by ID */
+  removeWall(wallId: number): void {
+    if (!this.simulation || this.phase !== 'playing') return;
+
+    const state = this.simulation.state;
+
+    const event: GameEvent = {
+      type: 'REMOVE_WALL',
+      tick: state.tick,
+      wallId,
+    };
+
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
+  /** Set turret targeting mode */
+  setTurretTargeting(slotIndex: number, targetingMode: 'closest_to_fortress' | 'weakest' | 'strongest' | 'nearest_to_turret' | 'fastest'): void {
+    if (!this.simulation || this.phase !== 'playing') return;
+
+    const state = this.simulation.state;
+
+    // Verify turret exists in slot
+    const turret = state.turrets.find(t => t.slotIndex === slotIndex);
+    if (!turret) return;
+
+    const event: GameEvent = {
+      type: 'SET_TURRET_TARGETING',
+      tick: state.tick,
+      slotIndex,
+      targetingMode,
+    };
+
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
+  /** Activate turret overcharge ability */
+  activateOvercharge(slotIndex: number): void {
+    if (!this.simulation || this.phase !== 'playing') return;
+
+    const state = this.simulation.state;
+
+    // Verify turret exists and is not on cooldown
+    const turret = state.turrets.find(t => t.slotIndex === slotIndex);
+    if (!turret) return;
+    if ((turret.overchargeCooldownTick || 0) > 0) return;
+
+    const event: GameEvent = {
+      type: 'ACTIVATE_OVERCHARGE',
+      tick: state.tick,
+      slotIndex,
+    };
+
+    audioManager.playSfx('skill_activate');
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
+  /** Spawn militia units at location */
+  spawnMilitia(militiaType: 'infantry' | 'archer' | 'shield_bearer', x: number, y: number, count?: number): void {
+    if (!this.simulation || this.phase !== 'playing') return;
+
+    const state = this.simulation.state;
+
+    const event: GameEvent = {
+      type: 'SPAWN_MILITIA',
+      tick: state.tick,
+      militiaType,
+      x,
+      y,
+      count,
+    };
+
+    audioManager.playSfx('skill_activate');
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
   private async onGameEnd(): Promise<void> {
     // Clear saved session - game is over
     clearActiveSession().catch(err => console.error('Failed to clear session:', err));

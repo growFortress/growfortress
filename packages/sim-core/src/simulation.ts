@@ -45,8 +45,11 @@ import {
   updateEnemyStatusEffects,
   applyDamageToHero,
   applyDamageToTurret,
-  updateDuoAttacks,
-  resetDuoAttackCooldowns,
+  // New systems
+  updateWalls,
+  updateMilitia,
+  updateEnemyAbilities,
+  updateFortressAuras,
 } from './systems.js';
 import { TURRET_SLOTS } from './data/turrets.js';
 import { getPillarForWave } from './data/pillars.js';
@@ -229,9 +232,6 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     skillCooldowns[skillId] = 0;
   }
 
-  // Reset duo-attack cooldowns for new session
-  resetDuoAttackCooldowns();
-
   return {
     tick: 0,
     wave: config.startingWave,
@@ -326,6 +326,14 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     killStreak: 0,
     lastKillTick: -1000, // Start with no recent kill
     highestKillStreak: 0,
+
+    // Wall system
+    walls: [],
+    nextWallId: 1,
+
+    // Militia system
+    militia: [],
+    nextMilitiaId: 1,
   };
 }
 
@@ -428,9 +436,6 @@ export class Simulation {
     // NEW: Update heroes system
     updateHeroes(this.state, this.config, this.rng);
 
-    // NEW: Update duo-attacks (check for hero pair synergies)
-    updateDuoAttacks(this.state);
-
     // NEW: Update turrets system
     updateTurrets(this.state, this.config, this.rng);
 
@@ -439,6 +444,18 @@ export class Simulation {
 
     // NEW: Update fortress class skills
     updateFortressSkills(this.state, this.config, this.rng);
+
+    // NEW: Update wall system (enemy-wall collisions, wall damage)
+    updateWalls(this.state, this.config);
+
+    // NEW: Update militia system (movement, combat, expiration)
+    updateMilitia(this.state, this.config);
+
+    // NEW: Update enemy special abilities (catapult, healer, shielder, etc.)
+    updateEnemyAbilities(this.state, this.config, this.rng);
+
+    // NEW: Update fortress auras (buff nearby heroes/turrets)
+    updateFortressAuras(this.state, this.config);
 
     // Check win/lose conditions
     this.checkEndConditions();

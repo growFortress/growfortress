@@ -209,6 +209,56 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     dustReward: 25,
     description: 'Divine being of immense power',
   },
+
+  // ============================================================================
+  // SPECIAL ABILITY ENEMIES
+  // ============================================================================
+
+  catapult: {
+    type: 'catapult',
+    baseHp: 80,
+    baseSpeed: 0.8,
+    baseDamage: 40,
+    goldReward: 15,
+    dustReward: 3,
+    description: 'Ranged siege unit - attacks fortress/turrets from distance',
+  },
+  sapper: {
+    type: 'sapper',
+    baseHp: 45,
+    baseSpeed: 2.5,
+    baseDamage: 8,
+    goldReward: 10,
+    dustReward: 2,
+    description: 'Targets walls - plants bombs that deal massive damage',
+  },
+  healer: {
+    type: 'healer',
+    baseHp: 35,
+    baseSpeed: 1.5,
+    baseDamage: 5,
+    goldReward: 12,
+    dustReward: 2,
+    description: 'Heals nearby enemies over time',
+  },
+  shielder: {
+    type: 'shielder',
+    baseHp: 60,
+    baseSpeed: 1.2,
+    baseDamage: 10,
+    goldReward: 14,
+    dustReward: 3,
+    description: 'Creates damage-absorbing shield for nearby enemies',
+  },
+  teleporter: {
+    type: 'teleporter',
+    baseHp: 30,
+    baseSpeed: 2.0,
+    baseDamage: 12,
+    goldReward: 8,
+    dustReward: 2,
+    description: 'Randomly teleports between lanes',
+  },
 };
 
 // ============================================================================

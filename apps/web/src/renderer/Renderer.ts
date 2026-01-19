@@ -110,6 +110,12 @@ const ENEMY_COLORS: Record<Enemy['type'], string> = {
   einherjar: '#ffcc00',
   titan: '#996600',
   god: '#ffff00',
+  // Special enemies
+  catapult: '#8b4513',
+  sapper: '#ff8c00',
+  healer: '#00ff7f',
+  shielder: '#4169e1',
+  teleporter: '#9400d3',
 } as const;
 
 const ENEMY_SIZES: Record<Enemy['type'], number> = {
@@ -140,6 +146,12 @@ const ENEMY_SIZES: Record<Enemy['type'], number> = {
   einherjar: 26,
   titan: 55,
   god: 60,
+  // Special enemies
+  catapult: 35,
+  sapper: 20,
+  healer: 18,
+  shielder: 28,
+  teleporter: 16,
 } as const;
 
 const SIZES = {

@@ -6,6 +6,8 @@ import './GameContainer.css';
 import { Hud } from './Hud.js';
 import { Controls } from './Controls.js';
 import { HubOverlay } from './HubOverlay.js';
+import { GameSidePanel } from './GameSidePanel.js';
+import { GameBottomPanel } from './GameBottomPanel.js';
 // Critical modals - loaded eagerly (needed immediately on game start)
 import { ChoiceModal } from '../modals/ChoiceModal.js';
 import { EndScreen } from '../modals/EndScreen.js';
@@ -73,7 +75,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     }
   }, []);
 
-  const { startSession, resumeSession, endSession, chooseRelic, reset, startBossRush, endBossRush } = useGameLoop(canvasRef, canvasReady);
+  const { startSession, resumeSession, endSession, chooseRelic, reset, startBossRush, endBossRush, setGameSpeed } = useGameLoop(canvasRef, canvasReady);
 
   // Auto-start session when recovery modal is confirmed
   useEffect(() => {
@@ -280,24 +282,36 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     reset();
   };
 
+  // Check if game is in playing state for side panel
+  const isPlaying = gamePhase.value !== 'idle';
+
   return (
-    <div id="game-container">
-      <canvas ref={canvasCallbackRef} id="game-canvas" />
+    <div id="game-container" class={isPlaying ? 'playing' : ''}>
+      {/* Game area - contains canvas and hub overlay */}
+      <div id="game-area">
+        <canvas ref={canvasCallbackRef} id="game-canvas" />
 
-      {/* Hub overlay for clicking heroes/turrets before session */}
-      <HubOverlay />
+        {/* Hub overlay for clicking heroes/turrets before session */}
+        <HubOverlay />
 
-      <div id="ui-overlay">
-        <Hud />
-        <Controls
-          onStartClick={handleStartClick}
-          onEndSessionClick={handleEndSessionClick}
-          onBossRushEndClick={handleBossRushEnd}
-          startDisabled={sessionStarting || sessionRecoveryVisible || !hasEnergy.value}
-        />
-        <UpgradeModal onUpgrade={handleUpgrade} />
-        <TurretPlacementModal onPlace={handleTurretPlace} />
+        <div id="ui-overlay">
+          <Hud />
+          <Controls
+            onStartClick={handleStartClick}
+            onEndSessionClick={handleEndSessionClick}
+            onBossRushEndClick={handleBossRushEnd}
+            startDisabled={sessionStarting || sessionRecoveryVisible || !hasEnergy.value}
+          />
+          <UpgradeModal onUpgrade={handleUpgrade} />
+          <TurretPlacementModal onPlace={handleTurretPlace} />
+        </div>
       </div>
+
+      {/* Side panel - only during gameplay */}
+      <GameSidePanel onSpeedChange={setGameSpeed} onMenuClick={handleEndSessionClick} />
+
+      {/* Bottom panel - actions (walls, militia) during gameplay */}
+      <GameBottomPanel />
 
       {/* Modals outside ui-overlay to allow full pointer interactions */}
       <ClassSelectionModal onSelect={handleClassSelect} />

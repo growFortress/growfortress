@@ -1,8 +1,45 @@
+/* Game Panel Width - CSS custom property for consistent sizing */
+:root {
+  --game-panel-width: 280px;
+  --game-bottom-panel-height: 80px;
+}
+
+@media (max-width: 1400px) {
+  :root {
+    --game-panel-width: 240px;
+    --game-bottom-panel-height: 70px;
+  }
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --game-panel-width: 200px;
+    --game-bottom-panel-height: 60px;
+  }
+}
+
 #game-container {
   position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: row;
+}
+
+/* Game area - contains canvas and overlays */
+#game-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  transition: padding-bottom 0.3s ease;
+}
+
+/* When playing, make room for bottom panel */
+#game-container.playing #game-area {
+  padding-bottom: var(--game-bottom-panel-height);
 }
 
 #game-canvas {

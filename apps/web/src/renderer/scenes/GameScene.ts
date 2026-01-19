@@ -13,6 +13,8 @@ import { EnemySystem } from "../systems/EnemySystem.js";
 import { ProjectileSystem } from "../systems/ProjectileSystem.js";
 import { HeroSystem } from "../systems/HeroSystem.js";
 import { TurretSystem } from "../systems/TurretSystem.js";
+import { WallSystem } from "../systems/WallSystem.js";
+import { MilitiaSystem } from "../systems/MilitiaSystem.js";
 import { lightingSystem, LightingSystem } from "../effects/LightingSystem.js";
 import {
   parallaxBackground,
@@ -85,6 +87,8 @@ export class GameScene {
   private projectileSystem: ProjectileSystem;
   private heroSystem: HeroSystem;
   private turretSystem: TurretSystem;
+  private wallSystem: WallSystem;
+  private militiaSystem: MilitiaSystem;
   public lighting: LightingSystem;
   public parallax: ParallaxBackground;
 
@@ -123,9 +127,17 @@ export class GameScene {
     this.turretSystem = new TurretSystem();
     this.container.addChild(this.turretSystem.container);
 
+    // Wall System (defensive barriers, below enemies)
+    this.wallSystem = new WallSystem();
+    this.container.addChild(this.wallSystem.container);
+
     // Enemy System (Retained Mode)
     this.enemySystem = new EnemySystem();
     this.container.addChild(this.enemySystem.container);
+
+    // Militia System (friendly units, same level as enemies)
+    this.militiaSystem = new MilitiaSystem();
+    this.container.addChild(this.militiaSystem.container);
 
     // Hero System (heroes on battlefield)
     this.heroSystem = new HeroSystem();
@@ -322,8 +334,14 @@ export class GameScene {
       // Update Turret System (platforms and turrets)
       this.turretSystem.update(state, this.width, this.height);
 
+      // Update Wall System (defensive barriers)
+      this.wallSystem.update(state, this.width, this.height, this.vfx);
+
       // Update Enemy System (Handles rendering + VFX triggers)
       this.enemySystem.update(state, this.width, this.height, this.vfx);
+
+      // Update Militia System (friendly units)
+      this.militiaSystem.update(state, this.width, this.height, this.vfx);
 
       // Update Hero System (heroes on battlefield + skill VFX triggers)
       this.heroSystem.update(state, this.width, this.height, this.vfx);
@@ -375,11 +393,16 @@ export class GameScene {
     const emptyState = {
       enemies: [],
       projectiles: [],
+      walls: [],
+      militia: [],
       kills: 0,
+      tick: 0,
     } as unknown as GameState;
 
     this.enemySystem.update(emptyState, this.width, this.height);
     this.projectileSystem.update(emptyState, this.width, this.height);
+    this.wallSystem.update(emptyState, this.width, this.height);
+    this.militiaSystem.update(emptyState, this.width, this.height);
   }
 
   // Called by external controller when an enemy dies

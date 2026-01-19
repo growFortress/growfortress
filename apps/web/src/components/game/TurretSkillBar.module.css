@@ -1,135 +1,208 @@
-.skillBar {
+.container {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
 }
 
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--color-text);
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
-.turretSkills {
+.turretList {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
-.turretGroup {
+/* Turret Card - compact inline */
+.turretCard {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 150, 0, 0.2);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.turretCard:hover {
+  border-color: rgba(255, 150, 0, 0.4);
+  background: rgba(255, 150, 0, 0.05);
+}
+
+.overchargeActiveCard {
+  border-color: rgba(255, 150, 0, 0.8) !important;
+  background: rgba(255, 100, 0, 0.15) !important;
+  box-shadow: 0 0 8px rgba(255, 100, 0, 0.4);
+  animation: activeGlow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes activeGlow {
+  from { box-shadow: 0 0 6px rgba(255, 100, 0, 0.3); }
+  to { box-shadow: 0 0 12px rgba(255, 150, 0, 0.5); }
+}
+
+/* Turret Icon */
+.turretIcon {
+  font-size: 16px;
+  filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.5));
+}
+
+.turretName {
+  display: none;
+}
+
+.turretHeader {
+  display: none;
+}
+
+/* Overcharge Button */
+.overchargeBtn {
+  position: relative;
+  width: 28px;
+  height: 24px;
+  background: rgba(60, 60, 60, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.overchargeBtn:hover:not(:disabled) {
+  border-color: rgba(255, 150, 0, 0.6);
+  background: rgba(255, 100, 0, 0.2);
+}
+
+.overchargeBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.overchargeBtn.ready {
+  border-color: rgba(255, 180, 0, 0.8);
+  background: rgba(255, 120, 0, 0.3);
+  animation: readyPulse 1.2s ease-in-out infinite;
+}
+
+.overchargeBtn.active {
+  border-color: rgba(255, 200, 0, 1);
+  background: rgba(255, 150, 0, 0.5);
+  animation: activePulse 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes readyPulse {
+  0%, 100% { box-shadow: 0 0 3px rgba(255, 120, 0, 0.3); }
+  50% { box-shadow: 0 0 8px rgba(255, 150, 0, 0.6); }
+}
+
+@keyframes activePulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
+.overchargeIcon {
+  font-size: 12px;
+  z-index: 1;
+}
+
+.overchargeText {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 6px rgba(255, 200, 0, 0.8);
+  z-index: 1;
+}
+
+.cooldownBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 100, 0, 0.2);
+  transition: width 0.1s linear;
+}
+
+.cooldownNum {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  z-index: 1;
+}
+
+/* Target Selector - compact */
+.targetSelect {
+  width: 60px;
+  padding: 2px 4px;
+  font-family: var(--font-body);
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  color: var(--color-text);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.targetSelect:hover {
+  border-color: rgba(0, 200, 255, 0.4);
+}
+
+.targetSelect:focus {
+  border-color: var(--color-primary);
+}
+
+.targetSelect option {
+  background: #1a1a2e;
+  color: var(--color-text);
+}
+
+/* Controls Row */
+.controlsRow {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.turretIcon {
-  font-size: 12px;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+/* Compact mode */
+.compact {
+  flex-direction: row;
+  gap: 4px;
 }
 
-.skillSlot {
-  position: relative;
+.compactCard {
   width: 28px;
   height: 28px;
-  background: var(--color-bg);
-  border: var(--border-neutral);
-  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  cursor: default;
-  transition: var(--transition-interactive-normal);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 150, 0, 0.2);
+  border-radius: 4px;
 }
 
-.skillSlot:hover {
-  border-color: var(--color-primary-50);
-  transform: scale(var(--hover-scale));
-}
-
-.skillSlot.ready {
-  border-color: var(--color-primary);
-  box-shadow: var(--glow-primary);
-}
-
-.cooldownFill {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--color-primary-30);
-  transition: height 0.1s linear;
-}
-
-.abilityIcon {
-  position: relative;
-  z-index: 1;
-  font-size: 14px;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
-}
-
-.cooldownText {
-  position: absolute;
-  bottom: 1px;
-  right: 2px;
-  font-family: var(--font-body);
-  font-size: 8px;
-  font-weight: 700;
-  color: var(--color-text);
-  text-shadow: var(--text-shadow);
-  z-index: 2;
-}
-
-/* Compact mode */
-.compact {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-
-.compact .skillSlot {
-  width: 24px;
-  height: 24px;
-}
-
-.compact .abilityIcon {
-  font-size: 12px;
-}
-
-.compact .cooldownText {
-  font-size: 7px;
-}
-
-.compact .turretIcon {
-  display: none;
-}
-
-/* Ready pulse animation */
-.skillSlot.ready::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: var(--border-width) solid var(--color-primary);
-  border-radius: calc(var(--radius-sm) + 2px);
-  animation: readyPulse 1.5s var(--ease-standard) infinite;
-}
-
-@keyframes readyPulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
+.compactIcon {
+  font-size: 16px;
 }

@@ -11,7 +11,7 @@ interface ControlsProps {
   startDisabled?: boolean;
 }
 
-export function Controls({ onStartClick, onEndSessionClick, onBossRushEndClick, startDisabled }: ControlsProps) {
+export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, onBossRushEndClick, startDisabled }: ControlsProps) {
   const { t } = useTranslation('game');
   const isBossRush = bossRushActive.value;
   const pendingChallenges = pvpPendingChallenges.value;
@@ -121,31 +121,19 @@ export function Controls({ onStartClick, onEndSessionClick, onBossRushEndClick, 
         </div>
       )}
 
-      {['playing', 'choice', 'segment_submit'].includes(gamePhase.value) && !isBossRush && (
-        <div class={styles.endButtonWrapper}>
-          <Button
-            variant="danger"
-            size="md"
-            onClick={onEndSessionClick}
-            aria-label={t('controls.endSession')}
-            class={styles.endButton}
-          >
-            ✕ {t('controls.endLabel')}
-          </Button>
-        </div>
-      )}
+      {/* Menu button is now in GameSidePanel for regular gameplay */}
 
+      {/* Boss Rush menu button - shown because boss rush doesn't use side panel */}
       {isBossRush && (
-        <div class={styles.endButtonWrapper}>
-          <Button
-            variant="danger"
-            size="md"
+        <div class={styles.menuButtonWrapper}>
+          <button
             onClick={onBossRushEndClick}
             aria-label={t('controls.endBossRush')}
-            class={styles.endButton}
+            class={styles.menuButton}
           >
-            ✕ {t('controls.endLabel')}
-          </Button>
+            <span class={styles.menuIcon}>☰</span>
+            <span class={styles.menuLabel}>Menu</span>
+          </button>
         </div>
       )}
     </div>

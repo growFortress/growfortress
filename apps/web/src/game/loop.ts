@@ -3,6 +3,9 @@ import { CONFIG } from '../config.js';
 const TICK_MS = 1000 / CONFIG.TICK_RATE;
 const MAX_DELTA_MS = 100; // Prevent spiral of death
 
+/** Valid game speed multipliers */
+export type GameSpeed = 1 | 2 | 3;
+
 /** Interface for objects that can be stepped in the game loop */
 export interface Steppable {
   step(): void;
@@ -16,6 +19,7 @@ export class GameLoop {
   private lastTime = 0;
   private accumulator = 0;
   private rafId: number | null = null;
+  private speedMultiplier: GameSpeed = 1;
 
   constructor(game: Steppable, render: (alpha: number) => void) {
     this.game = game;
@@ -74,7 +78,8 @@ export class GameLoop {
     this.lastTime = currentTime;
 
     const cappedDelta = Math.min(delta, MAX_DELTA_MS);
-    this.accumulator += cappedDelta;
+    // Apply speed multiplier to delta time
+    this.accumulator += cappedDelta * this.speedMultiplier;
 
     // Fixed timestep for simulation
     while (this.accumulator >= TICK_MS) {
@@ -95,6 +100,16 @@ export class GameLoop {
 
   isPaused(): boolean {
     return this.paused;
+  }
+
+  /** Get current game speed multiplier */
+  getSpeed(): GameSpeed {
+    return this.speedMultiplier;
+  }
+
+  /** Set game speed multiplier (1x, 2x, 3x) */
+  setSpeed(speed: GameSpeed): void {
+    this.speedMultiplier = speed;
   }
 
   /** Clean up and release resources */

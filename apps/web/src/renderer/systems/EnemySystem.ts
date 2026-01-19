@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import type { GameState, Enemy, EnemyType, StatusEffectType } from '@arcade/sim-core';
-import { popComboTriggers, popDuoAttackTriggers } from '@arcade/sim-core';
+import { popComboTriggers } from '@arcade/sim-core';
 import { VFXSystem } from './VFXSystem.js';
 import { audioManager } from '../../game/AudioManager.js';
 import { EnemyVisualPool, type EnemyVisualBundle } from '../ObjectPool.js';
@@ -56,6 +56,12 @@ const ENEMY_COLORS: Record<EnemyType, number> = {
   einherjar: 0xffcc00,
   titan: 0x996600,
   god: 0xffff00,
+  // Special enemies
+  catapult: 0x8b4513,    // Brown - siege unit
+  sapper: 0xff8c00,      // Dark orange - explosive
+  healer: 0x00ff7f,      // Spring green - healing
+  shielder: 0x4169e1,    // Royal blue - protective
+  teleporter: 0x9400d3,  // Dark violet - magical
 };
 
 // Pre-computed color lookup using Map for O(1) access (faster than object property access)
@@ -109,6 +115,12 @@ const ENEMY_SIZES: Record<EnemyType, number> = {
   einherjar: 26,
   titan: 55,
   god: 60,
+  // Special enemies
+  catapult: 35,    // Large siege unit
+  sapper: 20,      // Medium sized
+  healer: 18,      // Small support
+  shielder: 28,    // Bulky defender
+  teleporter: 16,  // Small nimble
 };
 
 const SIZES = {
@@ -277,15 +289,6 @@ export class EnemySystem {
         audioManager.playSfx('combo'); // Play combo sound if available
       }
 
-      // Duo-attack effects - trigger VFX for hero duo-attacks
-      const duoTriggers = popDuoAttackTriggers();
-      for (const trigger of duoTriggers) {
-        const screenX = fpXToScreen(trigger.x, viewWidth);
-        const screenY = fpYToScreen(trigger.y, viewHeight);
-        vfx.spawnDuoAttackEffect(screenX, screenY, trigger.duoAttackId, trigger.damage);
-        // Play specific duo-attack sound based on ID
-        audioManager.playSfx(`duo_${trigger.duoAttackId}`);
-      }
     }
 
     this.prevKills = state.kills;

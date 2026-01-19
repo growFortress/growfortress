@@ -26,6 +26,7 @@ export {
 // Game signals
 export {
   gamePhase,
+  gameSpeed,
   gameState,
   fortressHp,
   fortressMaxHp,
@@ -40,6 +41,7 @@ export {
   unifiedLevel,
   unifiedXpProgress,
   type GameStateSnapshot,
+  type GameSpeed,
 } from './game.signals.js';
 
 // Auth signals
@@ -833,6 +835,15 @@ export {
   isPremiumTierClaimed,
   isTierClaimable,
 } from './battlepass.signals.js';
+
+// Game actions (for UI components to call game methods)
+export {
+  setTurretTargeting,
+  activateOvercharge,
+  placeWall,
+  removeWall,
+  spawnMilitia,
+} from './gameActions.signals.js';
 
 // Re-export types
 export type { LeaderboardEntry, GameEndState } from './ui.signals.js';

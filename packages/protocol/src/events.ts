@@ -52,6 +52,52 @@ export const ActivateSkillEventSchema = BaseEventSchema.extend({
 
 export type ActivateSkillEvent = z.infer<typeof ActivateSkillEventSchema>;
 
+// Place wall at target location
+export const PlaceWallEventSchema = BaseEventSchema.extend({
+  type: z.literal('PLACE_WALL'),
+  wallType: z.enum(['basic', 'reinforced', 'gate']),
+  x: z.number(), // FP x coordinate
+  y: z.number(), // FP y coordinate
+});
+
+export type PlaceWallEvent = z.infer<typeof PlaceWallEventSchema>;
+
+// Remove wall by ID
+export const RemoveWallEventSchema = BaseEventSchema.extend({
+  type: z.literal('REMOVE_WALL'),
+  wallId: z.number(),
+});
+
+export type RemoveWallEvent = z.infer<typeof RemoveWallEventSchema>;
+
+// Set turret targeting mode
+export const SetTurretTargetingEventSchema = BaseEventSchema.extend({
+  type: z.literal('SET_TURRET_TARGETING'),
+  slotIndex: z.number(),
+  targetingMode: z.enum(['closest_to_fortress', 'weakest', 'strongest', 'nearest_to_turret', 'fastest']),
+});
+
+export type SetTurretTargetingEvent = z.infer<typeof SetTurretTargetingEventSchema>;
+
+// Activate turret overcharge ability
+export const ActivateOverchargeEventSchema = BaseEventSchema.extend({
+  type: z.literal('ACTIVATE_OVERCHARGE'),
+  slotIndex: z.number(),
+});
+
+export type ActivateOverchargeEvent = z.infer<typeof ActivateOverchargeEventSchema>;
+
+// Spawn militia unit(s)
+export const SpawnMilitiaEventSchema = BaseEventSchema.extend({
+  type: z.literal('SPAWN_MILITIA'),
+  militiaType: z.enum(['infantry', 'archer', 'shield_bearer']),
+  x: z.number(), // FP x coordinate
+  y: z.number(), // FP y coordinate
+  count: z.number().int().min(1).max(5).optional(), // Number of units to spawn (default 1)
+});
+
+export type SpawnMilitiaEvent = z.infer<typeof SpawnMilitiaEventSchema>;
+
 // Union of all game events
 export const GameEventSchema = z.discriminatedUnion('type', [
   ChooseRelicEventSchema,
@@ -59,6 +105,11 @@ export const GameEventSchema = z.discriminatedUnion('type', [
   ActivateSnapEventSchema,
   HeroCommandEventSchema,
   ActivateSkillEventSchema,
+  PlaceWallEventSchema,
+  RemoveWallEventSchema,
+  SetTurretTargetingEventSchema,
+  ActivateOverchargeEventSchema,
+  SpawnMilitiaEventSchema,
 ]);
 
 export type GameEvent = z.infer<typeof GameEventSchema>;

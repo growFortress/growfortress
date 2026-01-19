@@ -15,6 +15,7 @@ import {
   battlepassData,
   battlepassModalVisible,
   battlepassLoading,
+  battlepassError,
   hideBattlePassModal,
   claimReward,
   claimAllRewards,
@@ -121,6 +122,7 @@ export function BattlePassModal() {
   const isVisible = battlepassModalVisible.value;
   const data = battlepassData.value;
   const loading = battlepassLoading.value;
+  const error = battlepassError.value;
   const tier = currentTier.value;
   const points = currentPoints.value;
   const premium = isPremium.value;
@@ -169,8 +171,16 @@ export function BattlePassModal() {
       class={styles.modal}
       ariaLabel="Battle Pass"
     >
-      {loading || !data ? (
+      {loading ? (
         <div class={styles.loading}>Loading Battle Pass...</div>
+      ) : error || !data ? (
+        <div class={styles.noSeason}>
+          <span class={styles.noSeasonIcon}>🎖️</span>
+          <span class={styles.noSeasonTitle}>Brak aktywnego sezonu</span>
+          <span class={styles.noSeasonDesc}>
+            Aktualnie nie ma żadnego aktywnego sezonu Battle Pass. Sprawdź ponownie później!
+          </span>
+        </div>
       ) : (
         <>
           {/* Header Section */}

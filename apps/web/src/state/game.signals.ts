@@ -1,5 +1,7 @@
 import { signal, computed } from '@preact/signals';
 import type { GamePhase } from '../game/Game.js';
+import type { GameSpeed } from '../game/loop.js';
+export type { GameSpeed };
 import type { PillarId } from '@arcade/sim-core';
 import { WAVE_SCORE_MULTIPLIER, KILL_SCORE_MULTIPLIER } from '../constants.js';
 import { baseGold, baseDust } from './profile.signals.js';
@@ -76,6 +78,9 @@ export interface GameStateSnapshot {
 
 // Game phase
 export const gamePhase = signal<GamePhase>('idle');
+
+// Game speed multiplier (1x, 2x, 3x)
+export const gameSpeed = signal<GameSpeed>(1);
 
 // Game state snapshot (updated each tick during gameplay)
 export const gameState = signal<GameStateSnapshot | null>(null);

@@ -1,7 +1,7 @@
 import { useRef, useLayoutEffect, useCallback } from 'preact/hooks';
 import type { FortressClass } from '@arcade/sim-core';
 import { Game, type SessionStartOptions } from '../game/Game.js';
-import { GameLoop } from '../game/loop.js';
+import { GameLoop, type GameSpeed } from '../game/loop.js';
 import { GameApp, type HubState } from '../renderer/GameApp.js';
 
 // Force full page reload for game loop changes to avoid WebGL context issues
@@ -40,9 +40,20 @@ import {
   baseTotalXp,
   baseXpToNextLevel,
   currentWave,
+  gameSpeed,
   type GameEndState,
 } from '../state/index.js';
+import {
+  setTurretTargetingFn,
+  activateOverchargeFn,
+  placeWallFn,
+  removeWallFn,
+  spawnMilitiaFn,
+  resetGameActions,
+} from '../state/gameActions.signals.js';
 import { consumeEnergyLocal } from '../state/energy.signals.js';
+import { selectedWallType, clearWallSelection } from '../components/game/WallPlacementPanel.js';
+import { selectedMilitiaType, clearMilitiaSelection } from '../components/game/MilitiaSpawnPanel.js';
 import { FP } from '@arcade/sim-core';
 
 interface StartSessionOptions {
@@ -61,6 +72,13 @@ interface UseGameLoopReturn {
   reset: () => void;
   startBossRush: (options?: StartSessionOptions) => Promise<BossRushStartResponse | null>;
   endBossRush: () => Promise<void>;
+  setGameSpeed: (speed: GameSpeed) => void;
+  // New game system methods
+  placeWall: (wallType: 'basic' | 'reinforced' | 'gate', x: number, y: number) => void;
+  removeWall: (wallId: number) => void;
+  setTurretTargeting: (slotIndex: number, mode: 'closest_to_fortress' | 'weakest' | 'strongest' | 'nearest_to_turret' | 'fastest') => void;
+  activateOvercharge: (slotIndex: number) => void;
+  spawnMilitia: (militiaType: 'infantry' | 'archer' | 'shield_bearer', x: number, y: number, count?: number) => void;
 }
 
 export function useGameLoop(
@@ -159,6 +177,13 @@ export function useGameLoop(
     });
     gameRef.current = game;
 
+    // Set up game action callbacks for UI components
+    setTurretTargetingFn.value = (slotIndex, mode) => game.setTurretTargeting(slotIndex, mode);
+    activateOverchargeFn.value = (slotIndex) => game.activateOvercharge(slotIndex);
+    placeWallFn.value = (wallType, x, y) => game.placeWall(wallType, x, y);
+    removeWallFn.value = (wallId) => game.removeWall(wallId);
+    spawnMilitiaFn.value = (militiaType, x, y, count) => game.spawnMilitia(militiaType, x, y, count);
+
     const loop = new GameLoop(game, (alpha) => {
       renderer.render(game.getState(), alpha);
     });
@@ -256,7 +281,25 @@ export function useGameLoop(
             return;
           }
 
-          // Priority 2: Handle hero tactical command
+          // Priority 2: Handle wall placement
+          if (selectedWallType.value) {
+            if (game) {
+              game.placeWall(selectedWallType.value, fpX, fpY);
+            }
+            clearWallSelection();
+            return;
+          }
+
+          // Priority 3: Handle militia spawning
+          if (selectedMilitiaType.value) {
+            if (game) {
+              game.spawnMilitia(selectedMilitiaType.value, fpX, fpY);
+            }
+            clearMilitiaSelection();
+            return;
+          }
+
+          // Priority 4: Handle hero tactical command
           if (commandSelectedHeroId.value) {
             // Set the target position
             setCommandTarget(fpX, fpY);
@@ -288,6 +331,7 @@ export function useGameLoop(
       stopHubLoop();
       loop.destroy();
       renderer.destroy();
+      resetGameActions();
     };
   }, [canvasReady]);
 
@@ -385,6 +429,45 @@ export function useGameLoop(
     game.resetBossRush();
   }, []);
 
+  const setGameSpeed = useCallback((speed: GameSpeed): void => {
+    const loop = loopRef.current;
+    if (!loop) return;
+
+    loop.setSpeed(speed);
+    gameSpeed.value = speed;
+  }, []);
+
+  // New game system methods
+  const placeWall = useCallback((wallType: 'basic' | 'reinforced' | 'gate', x: number, y: number): void => {
+    const game = gameRef.current;
+    if (!game) return;
+    game.placeWall(wallType, x, y);
+  }, []);
+
+  const removeWall = useCallback((wallId: number): void => {
+    const game = gameRef.current;
+    if (!game) return;
+    game.removeWall(wallId);
+  }, []);
+
+  const setTurretTargeting = useCallback((slotIndex: number, mode: 'closest_to_fortress' | 'weakest' | 'strongest' | 'nearest_to_turret' | 'fastest'): void => {
+    const game = gameRef.current;
+    if (!game) return;
+    game.setTurretTargeting(slotIndex, mode);
+  }, []);
+
+  const activateOvercharge = useCallback((slotIndex: number): void => {
+    const game = gameRef.current;
+    if (!game) return;
+    game.activateOvercharge(slotIndex);
+  }, []);
+
+  const spawnMilitia = useCallback((militiaType: 'infantry' | 'archer' | 'shield_bearer', x: number, y: number, count?: number): void => {
+    const game = gameRef.current;
+    if (!game) return;
+    game.spawnMilitia(militiaType, x, y, count);
+  }, []);
+
   return {
     game: gameRef.current,
     startSession,
@@ -395,5 +478,12 @@ export function useGameLoop(
     reset,
     startBossRush,
     endBossRush,
+    setGameSpeed,
+    // New game system methods
+    placeWall,
+    removeWall,
+    setTurretTargeting,
+    activateOvercharge,
+    spawnMilitia,
   };
 }

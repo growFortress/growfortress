@@ -94,6 +94,13 @@ export type {
   ArtifactShapeType,
   ArtifactAnimationType,
   ArtifactParticleType,
+  // Walls
+  Wall,
+  WallType,
+  // Militia
+  Militia,
+  MilitiaType,
+  MilitiaState,
 } from './types.js';
 
 // Data
@@ -665,30 +672,6 @@ export {
   type ComboTrigger,
   type ComboDefinition,
 } from './systems/combos.js';
-
-// Duo-Attack System
-export {
-  popDuoAttackTriggers,
-  resetDuoAttackCooldowns,
-  getDuoAttackCooldownRemaining,
-  getAvailableDuoAttacksForState,
-} from './systems/duo-attacks.js';
-
-export {
-  DUO_ATTACK_DEFINITIONS,
-  getDuoAttackById,
-  getDuoAttacksForHero,
-  getDuoAttackForPair,
-  canPerformDuoAttack,
-  getAvailableDuoAttacks,
-} from './data/duo-attacks.js';
-
-export type {
-  DuoAttackDefinition,
-  DuoAttackEffect,
-  DuoAttackEffectType,
-  DuoAttackTrigger,
-} from './types.js';
 
 // Colonies (Offline Income System)
 export {

@@ -1,27 +1,10 @@
-import type { ActiveTurret } from '@arcade/sim-core';
+import type { ActiveTurret, TurretTargetingMode } from '@arcade/sim-core';
 import { getTurretById } from '@arcade/sim-core';
 import { activeTurrets, gamePhase } from '../../state/index.js';
+import { setTurretTargeting, activateOvercharge } from '../../state/gameActions.signals.js';
 import styles from './TurretSkillBar.module.css';
 
-// Ability icons by effect type
-const ABILITY_ICONS: Record<string, string> = {
-  damage_boost: '⚡',
-  aoe_attack: '💥',
-  guaranteed_crit: '🎯',
-  chain_all: '⛓️',
-  freeze_all: '❄️',
-  zone_damage: '🔥',
-  buff_allies: '✨',
-  poison_all: '☠️',
-  default: '💠',
-};
-
-// Get icon for ability based on effect type
-function getAbilityIcon(effectType: string): string {
-  return ABILITY_ICONS[effectType] || ABILITY_ICONS.default;
-}
-
-// Turret icons for compact display
+// Turret icons
 const TURRET_ICONS: Record<string, string> = {
   arrow: '🏹',
   cannon: '💣',
@@ -31,6 +14,15 @@ const TURRET_ICONS: Record<string, string> = {
   flame: '🔥',
   support: '✨',
   poison: '☠️',
+};
+
+// Targeting mode short labels
+const TARGETING_SHORT: Record<TurretTargetingMode, string> = {
+  closest_to_fortress: 'Bliż.',
+  weakest: 'Słab.',
+  strongest: 'Siln.',
+  nearest_to_turret: 'Blisk.',
+  fastest: 'Szyb.',
 };
 
 interface TurretSkillBarProps {
@@ -47,61 +39,99 @@ export function TurretSkillBar({ compact = false }: TurretSkillBarProps) {
   }
 
   return (
-    <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
+    <div class={`${styles.container} ${compact ? styles.compact : ''}`}>
       {!compact && (
         <div class={styles.header}>
-          <span class={styles.title}>Turret Abilities</span>
+          <span class={styles.title}>Wieżyczki</span>
         </div>
       )}
-      <div class={styles.turretSkills}>
+      <div class={styles.turretList}>
         {turrets.map((turret) => (
-          <TurretSkillSlot key={turret.slotIndex} turret={turret} compact={compact} />
+          <TurretCard key={turret.slotIndex} turret={turret} compact={compact} />
         ))}
       </div>
     </div>
   );
 }
 
-interface TurretSkillSlotProps {
+interface TurretCardProps {
   turret: ActiveTurret;
   compact?: boolean;
 }
 
-function TurretSkillSlot({ turret, compact }: TurretSkillSlotProps) {
+function TurretCard({ turret, compact }: TurretCardProps) {
   const turretDef = getTurretById(turret.definitionId as 'arrow' | 'cannon' | 'sniper' | 'tesla' | 'frost' | 'flame' | 'support' | 'poison');
   if (!turretDef) return null;
 
-  const ability = turretDef.ability;
-  const cooldown = turret.specialCooldown || 0;
-  const maxCooldown = ability.cooldown || 900;
-  const cooldownPercent = cooldown / maxCooldown;
-  const isReady = cooldown === 0;
-  const icon = getAbilityIcon(ability.effect.type);
   const turretIcon = TURRET_ICONS[turret.definitionId] || '🗼';
 
-  return (
-    <div class={styles.turretGroup}>
-      {!compact && (
-        <span class={styles.turretIcon}>{turretIcon}</span>
-      )}
-      <div
-        class={`${styles.skillSlot} ${isReady ? styles.ready : ''}`}
-        title={`${ability.name}: ${ability.description}`}
-      >
-        {/* Cooldown fill */}
-        <div
-          class={styles.cooldownFill}
-          style={{ height: `${(1 - cooldownPercent) * 100}%` }}
-        />
-        {/* Ability icon */}
-        <span class={styles.abilityIcon}>{icon}</span>
-        {/* Cooldown text */}
-        {!isReady && (
-          <span class={styles.cooldownText}>
-            {Math.ceil(cooldown / 30)}s
-          </span>
-        )}
+  // Overcharge state
+  const overchargeCooldown = turret.overchargeCooldownTick || 0;
+  const overchargeMaxCooldown = 1800; // 60 seconds at 30Hz
+  const overchargePercent = overchargeCooldown / overchargeMaxCooldown;
+  const overchargeReady = overchargeCooldown === 0;
+  const overchargeActive = turret.overchargeActive || false;
+
+  // Current targeting mode
+  const targetingMode = turret.targetingMode || 'closest_to_fortress';
+
+  const handleTargetingChange = (e: Event) => {
+    const select = e.target as HTMLSelectElement;
+    const newMode = select.value as TurretTargetingMode;
+    setTurretTargeting(turret.slotIndex, newMode);
+  };
+
+  const handleOverchargeClick = () => {
+    if (overchargeReady && !overchargeActive) {
+      activateOvercharge(turret.slotIndex);
+    }
+  };
+
+  if (compact) {
+    return (
+      <div class={styles.compactCard}>
+        <span class={styles.compactIcon}>{turretIcon}</span>
       </div>
+    );
+  }
+
+  return (
+    <div class={`${styles.turretCard} ${overchargeActive ? styles.overchargeActiveCard : ''}`}>
+      {/* Turret icon */}
+      <span class={styles.turretIcon}>{turretIcon}</span>
+
+      {/* Overcharge button */}
+      <button
+        class={`${styles.overchargeBtn} ${overchargeActive ? styles.active : ''} ${overchargeReady && !overchargeActive ? styles.ready : ''}`}
+        onClick={handleOverchargeClick}
+        disabled={!overchargeReady || overchargeActive}
+        title={overchargeActive ? 'AKTYWNY!' : overchargeReady ? 'Overcharge: 2x DMG przez 5s' : `${Math.ceil(overchargeCooldown / 30)}s`}
+      >
+        {overchargeActive ? (
+          <span class={styles.overchargeText}>2x</span>
+        ) : overchargeReady ? (
+          <span class={styles.overchargeIcon}>⚡</span>
+        ) : (
+          <>
+            <div class={styles.cooldownBar} style={{ width: `${(1 - overchargePercent) * 100}%` }} />
+            <span class={styles.cooldownNum}>{Math.ceil(overchargeCooldown / 30)}</span>
+          </>
+        )}
+      </button>
+
+      {/* Targeting selector */}
+      <select
+        class={styles.targetSelect}
+        value={targetingMode}
+        onChange={handleTargetingChange}
+        title="Cel wieżyczki"
+      >
+        {(Object.keys(TARGETING_SHORT) as TurretTargetingMode[]).map((mode) => (
+          <option key={mode} value={mode}>
+            {TARGETING_SHORT[mode]}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
