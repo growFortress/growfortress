@@ -275,7 +275,10 @@
     "heroUnlocked": "Odblokowano bohatera",
     "rareMaterials": "{{count}}x Rzadkie Materiały",
     "randomUnit": "Losowa jednostka",
-    "randomArtifact": "Losowy artefakt"
+    "randomArtifact": "Losowy artefakt",
+    "starterPackDesc": "Idealny start Twojej przygody!",
+    "maybeLater": "Może później",
+    "save": "Oszczędź"
   },
   "guild": {
     "title": "Gildia",

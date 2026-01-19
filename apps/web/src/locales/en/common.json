@@ -275,7 +275,10 @@
     "heroUnlocked": "Hero unlocked",
     "rareMaterials": "{{count}}x Rare Materials",
     "randomUnit": "Random unit",
-    "randomArtifact": "Random artifact"
+    "randomArtifact": "Random artifact",
+    "starterPackDesc": "The perfect start to your adventure!",
+    "maybeLater": "Maybe later",
+    "save": "Save"
   },
   "guild": {
     "title": "Guild",

@@ -1,101 +1,244 @@
 /**
- * Shop Modal Styles - Redesigned
+ * Shop View Styles - WoT-Inspired Layout
+ *
+ * Features:
+ * - Fullscreen layout with vertical sidebar navigation (WoT-style)
+ * - Left sidebar with icon categories
+ * - Main content area with product grid
+ * - Game-consistent theme colors
  */
 
-.loading {
+/* ============================================
+   FULLSCREEN CONTAINER
+   ============================================ */
+.shopContainer {
+  position: fixed;
+  inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  font-size: 1.1rem;
-  color: var(--color-text-60);
+  flex-direction: column;
+  background: var(--color-bg);
+  z-index: var(--z-modal);
+  overflow: hidden;
 }
 
 /* ============================================
-   BALANCE HEADER
+   SHOP HEADER (Top bar)
    ============================================ */
-.balanceHeader {
+.shopHeader {
   display: flex;
-  gap: var(--spacing-xl);
-  justify-content: center;
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-  background: var(--glass-bg);
-  border-radius: var(--radius-lg);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  background: linear-gradient(180deg, var(--color-bg-panel) 0%, var(--color-bg) 100%);
+  border-bottom: 2px solid var(--color-neutral-dark);
+  flex-shrink: 0;
+  height: 60px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--color-bg-elevated);
   border: 2px solid var(--color-neutral);
+  border-radius: var(--radius-md);
+  color: var(--color-text-60);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: var(--color-primary-10);
+  border-color: var(--color-primary-50);
+  color: var(--color-primary);
+}
+
+.shopTitle {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Balance in header */
+.headerBalance {
+  display: flex;
+  gap: var(--spacing-lg);
 }
 
 .balance {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-neutral-dark);
+  border-radius: var(--radius-sm);
 }
 
 .balanceIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Resource emojis */
+.resourceEmoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.productEmoji {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.rewardEmoji {
   font-size: 1.5rem;
-  filter: drop-shadow(0 0 6px var(--color-primary-50));
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .balanceValue {
-  font-size: 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-text);
 }
 
 .balanceLabel {
-  font-size: 14px;
+  font-size: 11px;
   color: var(--color-text-60);
+  text-transform: uppercase;
 }
 
 /* ============================================
-   CATEGORY TABS
+   MAIN LAYOUT (Sidebar + Content)
    ============================================ */
-.categoryTabs {
+.shopMain {
+  flex: 1;
   display: flex;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
-  background: var(--color-bg-panel);
-  border-radius: var(--radius-lg);
-  border: 2px solid var(--color-neutral-dark);
-  overflow-x: auto;
+  overflow: hidden;
 }
 
-.categoryTab {
+/* ============================================
+   VERTICAL SIDEBAR (WoT-Style)
+   ============================================ */
+.sidebar {
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-panel);
+  border-right: 2px solid var(--color-neutral-dark);
+  padding: var(--spacing-md) 0;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.sidebarTab {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-md) var(--spacing-lg);
-  min-width: 100px;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--spacing-md) var(--spacing-sm);
   background: transparent;
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
+  border: none;
+  border-left: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  color: var(--color-text-40);
+  position: relative;
+}
+
+.sidebarTab:hover {
+  background: var(--color-bg-elevated);
   color: var(--color-text-60);
 }
 
-.categoryTab:hover {
-  background: var(--color-bg-elevated);
-  border-color: var(--color-neutral);
-}
-
-.categoryTab.active {
-  background: var(--color-primary-20);
-  border-color: var(--color-primary);
+.sidebarTab.active {
+  background: var(--color-primary-10);
+  border-left-color: var(--color-primary);
   color: var(--color-primary);
 }
 
-.categoryIcon {
-  font-size: 1.5rem;
+.sidebarTab.active::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid var(--color-bg);
 }
 
-.categoryLabel {
-  font-size: 12px;
+.sidebarIcon {
+  transition: transform 0.15s ease;
+}
+
+.sidebarTab:hover .sidebarIcon {
+  transform: scale(1.1);
+}
+
+.sidebarLabel {
+  font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ============================================
+   SHOP CONTENT AREA
+   ============================================ */
+.shopContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* Category Header */
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid var(--color-neutral-dark);
+  flex-shrink: 0;
+}
+
+.categoryTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.categoryCount {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-40);
 }
 
 /* ============================================
@@ -103,7 +246,7 @@
    ============================================ */
 .error {
   padding: var(--spacing-md) var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  margin: var(--spacing-lg) var(--spacing-xl);
   background: var(--color-accent-10);
   color: var(--color-accent);
   border: 1px solid var(--color-accent-30);
@@ -116,62 +259,140 @@
    ============================================ */
 .productsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--spacing-lg);
-  max-height: 420px;
+  flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xl);
+  align-content: start;
 }
 
 /* ============================================
-   PRODUCT CARD (Base)
+   PRODUCT CARD BASE
    ============================================ */
-.product {
+.productCard {
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-lg);
   background: var(--color-bg-elevated);
-  border: 2px solid var(--color-neutral);
-  border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
+  border: 2px solid var(--color-neutral-dark);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+  text-align: center;
 }
 
-.product:hover {
-  border-color: var(--color-primary-50);
-  box-shadow: 0 0 16px var(--color-primary-20);
+.productCard:hover {
+  border-color: var(--color-neutral);
+  background: var(--color-bg-panel);
 }
 
 /* ============================================
-   FEATURED PRODUCT (Starter Pack)
+   TIER SYSTEM
    ============================================ */
-.featuredProduct {
-  position: relative;
+
+/* Standard Tier (Dust packages) */
+.tierStandard {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-neutral-dark);
+}
+
+.tierStandard:hover {
+  border-color: var(--color-neutral);
+}
+
+/* Premium Tier (Heroes) */
+.tierPremium {
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-primary-10) 100%);
+  border-color: var(--color-primary-30);
+}
+
+.tierPremium:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-20);
+}
+
+/* Epic Tier (Bundles, Best Value) */
+.tierEpic {
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-skill-10) 100%);
+  border-color: var(--color-skill-50);
+}
+
+.tierEpic:hover {
+  border-color: var(--color-skill);
+  box-shadow: 0 0 20px var(--color-skill-20);
+}
+
+/* Legendary Tier (Featured) - Clean, subtle design */
+.tierLegendary {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-neutral);
+}
+
+.tierLegendary:hover {
+  border-color: var(--color-primary-50);
+}
+
+/* Featured cards - full width, clean horizontal layout */
+.featuredCard {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  gap: var(--spacing-xl);
+  text-align: left;
+  max-width: 800px;
+  justify-self: center;
+  width: 100%;
+  align-items: center;
+}
+
+/* ============================================
+   PRODUCT ILLUSTRATION
+   ============================================ */
+.productIllustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(ellipse at center, var(--color-primary-15) 0%, transparent 70%);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tierLegendary .productIllustration,
+.featuredCard .productIllustration {
+  width: 72px;
+  height: 72px;
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-md);
+}
+
+.tierEpic .productIllustration {
+  background: radial-gradient(ellipse at center, var(--color-skill-20) 0%, transparent 70%);
+}
+
+.dustProduct .productIllustration {
+  background: radial-gradient(ellipse at center, var(--color-dust-20) 0%, transparent 70%);
+}
+
+/* ============================================
+   FEATURED CARD CONTENT
+   ============================================ */
+.featuredContent {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
-  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-primary-10) 100%);
-  border: 3px solid var(--color-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 0 24px var(--color-primary-20), inset 0 0 40px var(--color-primary-10);
-  grid-column: 1 / -1;
+  gap: var(--spacing-sm);
 }
 
-.featuredProduct .productTitle {
-  font-size: 1.75rem;
-  color: var(--color-text);
-  text-shadow: 0 0 12px var(--color-primary-30);
-}
-
-.featuredProduct .productPrice {
-  font-size: 1.75rem;
-  color: var(--color-primary);
-}
-
-.featuredProduct .buyButton {
-  max-width: 300px;
+.featuredActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-top: auto;
 }
 
 /* ============================================
@@ -179,184 +400,187 @@
    ============================================ */
 .productBadge {
   position: absolute;
-  top: -10px;
-  right: var(--spacing-md);
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: linear-gradient(135deg, var(--color-skill), #d97706);
-  color: white;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  padding: 4px var(--spacing-sm);
+  background: var(--color-skill);
+  color: var(--color-bg);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-radius: var(--radius-sm);
-  box-shadow: 0 2px 8px var(--color-skill-30);
+}
+
+.featuredCard .productBadge {
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+}
+
+/* Badge Variants - Subtle, minimal */
+.badgeBestValue {
+  background: var(--color-skill);
+}
+
+.badgePremium {
+  background: var(--color-primary);
+}
+
+.badgeSeason {
+  background: #6366f1;
+}
+
+.badgeSavings {
+  background: var(--color-positive);
 }
 
 /* ============================================
    PRODUCT TITLE
    ============================================ */
 .productTitle {
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
   font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.tierLegendary .productTitle,
+.featuredCard .productTitle {
+  font-size: 1.25rem;
   color: var(--color-text);
 }
 
 /* ============================================
-   PRODUCT CONTENTS (for featured)
+   CONTENT BAR (Horizontal items list)
    ============================================ */
-.productContents {
+.contentBar {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: var(--color-bg-panel);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-neutral-dark);
+  justify-content: center;
+  padding: var(--spacing-sm) 0;
 }
 
-.productContents > div {
+.featuredCard .contentBar {
+  justify-content: flex-start;
+}
+
+.contentItem {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: 14px;
+  gap: 4px;
+  padding: 4px var(--spacing-sm);
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
   color: var(--color-text-80);
+}
+
+.contentValue {
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 /* ============================================
    PRODUCT PRICE
    ============================================ */
 .productPrice {
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-text);
+  margin: var(--spacing-sm) 0;
+}
+
+.tierLegendary .productPrice,
+.featuredCard .productPrice {
+  font-size: 1.5rem;
+  color: var(--color-text);
+  margin: 0;
 }
 
 /* ============================================
-   BONUS TAG
+   SAVINGS TEXT
    ============================================ */
-.bonusTag {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-primary-20);
-  color: var(--color-primary);
+.savingsText {
   font-size: 12px;
   font-weight: 600;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-primary-30);
-}
-
-/* ============================================
-   FIRST PURCHASE BONUS
-   ============================================ */
-.hasFirstBonus {
-  border: 2px solid var(--color-skill);
-  background: linear-gradient(135deg, var(--color-skill-15), var(--color-bg-elevated));
-  box-shadow: 0 0 16px var(--color-skill-30);
-}
-
-.firstPurchaseBanner {
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  right: -1px;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: linear-gradient(90deg, var(--color-skill), #d97706);
-  color: var(--color-bg);
-  font-size: 10px;
-  font-weight: 700;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.bonusPlus {
-  color: var(--color-primary);
-  font-weight: 700;
-}
-
-.doubleBonusTag {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-70));
-  color: var(--color-bg);
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  border-radius: var(--radius-sm);
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 5px var(--color-primary-50);
-  }
-  50% {
-    box-shadow: 0 0 15px var(--color-primary-70);
-  }
-}
-
-/* ============================================
-   PRICE PER UNIT
-   ============================================ */
-.pricePerUnit {
-  font-size: 11px;
-  color: var(--color-text-40);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-bg-panel);
-  border-radius: var(--radius-sm);
-  display: inline-block;
-}
-
-/* ============================================
-   PRODUCT DURATION
-   ============================================ */
-.productDuration {
-  font-size: 14px;
-  color: var(--color-text-60);
-}
-
-/* ============================================
-   WEEKLY LIMIT
-   ============================================ */
-.weeklyLimit {
-  font-size: 10px;
-  color: var(--color-skill);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ============================================
-   DUST COST
-   ============================================ */
-.productDustCost {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.dustIcon {
-  font-size: 1rem;
-  filter: drop-shadow(0 0 4px var(--color-primary-50));
-}
-
-/* ============================================
-   PRODUCT DESCRIPTION
-   ============================================ */
-.productDescription {
-  font-size: 12px;
-  color: var(--color-text-60);
-  line-height: 1.4;
+  color: var(--color-positive);
 }
 
 /* ============================================
    BUY BUTTON
    ============================================ */
 .buyButton {
-  margin-top: auto;
   width: 100%;
+  max-width: 200px;
+  margin-top: auto;
+}
+
+.featuredCard .buyButton {
+  width: auto;
+  min-width: 160px;
+}
+
+/* ============================================
+   HERO PRODUCT
+   ============================================ */
+.heroProduct {
+  padding: var(--spacing-lg);
+}
+
+.heroProduct.owned {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.heroAvatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--color-bg-panel);
+  border: 3px solid var(--hero-class-color, var(--color-primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--hero-class-color, var(--color-primary)) 40%, transparent);
+}
+
+.heroClassBadges {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: var(--spacing-sm) 0;
+}
+
+.classBadge {
+  padding: 3px var(--spacing-sm);
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.roleBadge {
+  padding: 3px var(--spacing-sm);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-60);
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  border: 1px solid var(--color-neutral-dark);
+}
+
+.heroDescription {
+  font-size: 12px;
+  color: var(--color-text-50);
+  line-height: 1.4;
+  margin: 0;
 }
 
 /* ============================================
@@ -366,24 +590,23 @@
   grid-column: 1 / -1;
   padding: var(--spacing-xl);
   text-align: center;
-  color: var(--color-text-60);
+  color: var(--color-text-40);
   background: var(--color-bg-elevated);
-  border-radius: var(--radius-lg);
-  border: 2px dashed var(--color-neutral);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-neutral-dark);
 }
 
 /* ============================================
    STATUS OVERLAY
    ============================================ */
 .statusOverlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 18, 0.9);
-  border-radius: var(--radius-lg);
-  z-index: 100;
+  background: rgba(10, 10, 18, 0.95);
+  z-index: 1000;
   backdrop-filter: blur(8px);
 }
 
@@ -391,14 +614,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-xl);
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
+  background: var(--color-bg-panel);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
   text-align: center;
 }
 
 .statusContent p {
   font-size: 1.125rem;
   color: var(--color-text);
+  margin: 0;
 }
 
 /* ============================================
@@ -407,7 +634,7 @@
 .spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid var(--color-neutral);
+  border: 3px solid var(--color-neutral);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -429,10 +656,8 @@
   align-items: center;
   justify-content: center;
   background: var(--color-primary-20);
-  border: 3px solid var(--color-primary);
+  border: 2px solid var(--color-primary);
   color: var(--color-primary);
-  font-size: 1.75rem;
-  font-weight: 700;
   border-radius: 50%;
 }
 
@@ -443,15 +668,13 @@
   align-items: center;
   justify-content: center;
   background: var(--color-accent-20);
-  border: 3px solid var(--color-accent);
+  border: 2px solid var(--color-accent);
   color: var(--color-accent);
-  font-size: 1.75rem;
-  font-weight: 700;
   border-radius: 50%;
 }
 
 /* ============================================
-   PURCHASE REWARDS (Success Modal)
+   PURCHASE REWARDS
    ============================================ */
 .purchaseRewards {
   display: flex;
@@ -459,15 +682,15 @@
   gap: var(--spacing-md);
   padding: var(--spacing-lg);
   background: var(--color-bg-elevated);
-  border: 2px solid var(--color-primary-30);
-  border-radius: var(--radius-lg);
-  min-width: 250px;
+  border: 1px solid var(--color-primary-30);
+  border-radius: var(--radius-md);
+  min-width: 260px;
 }
 
 .purchaseRewards h4 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-60);
+  color: var(--color-text-50);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
@@ -480,142 +703,313 @@
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-primary-10);
-  border-radius: var(--radius-md);
-  font-size: 1.125rem;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-text);
 }
 
 .rewardIcon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 0 6px var(--color-primary-50));
+  flex-shrink: 0;
 }
 
 /* ============================================
-   HERO PRODUCT CARD
+   INTERSTITIAL OFFER OVERLAY
    ============================================ */
-.heroProduct {
+.interstitialOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 18, 0.98);
+  z-index: 1100;
+  backdrop-filter: blur(16px);
+}
+
+.interstitialContent {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
-  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-primary-10) 100%);
-  border: 2px solid var(--color-primary-50);
-  border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
-}
-
-.heroProduct:hover:not(.owned) {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 20px var(--color-primary-30);
-  transform: translateY(-2px);
-}
-
-.heroProduct.owned {
-  opacity: 0.6;
-  border-color: var(--color-neutral);
-  background: var(--color-bg-elevated);
-}
-
-.heroAvatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
   background: var(--color-bg-panel);
-  border: 3px solid var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  max-width: 420px;
+  text-align: center;
+}
+
+.interstitialClose {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 16px var(--color-primary-30);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-neutral);
+  border-radius: 50%;
+  color: var(--color-text-50);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.heroIcon {
-  font-size: 2.5rem;
+.interstitialClose:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
 }
 
-.heroClass {
+.interstitialIllustration {
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
 }
 
-.classBadge {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 10px;
-  font-weight: 700;
-  color: white;
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.roleBadge {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--color-text-60);
-  background: var(--color-bg-panel);
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid var(--color-neutral);
-}
-
-.heroDescription {
-  font-size: 12px;
-  color: var(--color-text-60);
-  text-align: center;
-  line-height: 1.4;
-}
-
-.heroProduct .productTitle {
-  text-align: center;
-}
-
-.heroProduct .productPrice {
+.interstitialTitle {
+  font-family: var(--font-display);
   font-size: 1.5rem;
-  color: var(--color-primary);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
 }
 
-.heroProduct .buyButton {
+.interstitialSubtitle {
+  font-size: 14px;
+  color: var(--color-text-50);
+  margin: 0;
+}
+
+.interstitialPrice {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.interstitialBuyButton {
   width: 100%;
-  max-width: 200px;
+  max-width: 280px;
+  font-size: 1.125rem;
+  padding: var(--spacing-md) var(--spacing-xl);
+}
+
+.interstitialSkip {
+  background: none;
+  border: none;
+  color: var(--color-text-40);
+  font-size: 13px;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  transition: color 0.15s ease;
+}
+
+.interstitialSkip:hover {
+  color: var(--color-text-60);
 }
 
 /* ============================================
-   RESPONSIVE
+   LOADING STATE
    ============================================ */
-@media (max-width: 600px) {
-  .balanceHeader {
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  color: var(--color-text-50);
+}
+
+/* ============================================
+   RESPONSIVE - Tablet
+   ============================================ */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 64px;
+  }
+
+  .sidebarLabel {
+    font-size: 8px;
+  }
+
+  .productsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+
+  .featuredCard {
     flex-direction: column;
-    gap: var(--spacing-md);
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .featuredContent {
     align-items: center;
   }
 
-  .categoryTabs {
-    justify-content: flex-start;
+  .featuredCard .contentBar {
+    justify-content: center;
   }
 
-  .categoryTab {
-    min-width: 80px;
+  .featuredActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .featuredCard .buyButton {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - Mobile
+   ============================================ */
+@media (max-width: 768px) {
+  .shopHeader {
     padding: var(--spacing-sm) var(--spacing-md);
+    height: auto;
+    gap: var(--spacing-sm);
+  }
+
+  .headerLeft {
+    gap: var(--spacing-md);
+  }
+
+  .shopTitle {
+    font-size: 1.125rem;
+    letter-spacing: 1px;
+  }
+
+  .headerBalance {
+    gap: var(--spacing-sm);
+  }
+
+  .balance {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .balanceValue {
+    font-size: 1rem;
+  }
+
+  .balanceLabel {
+    display: none;
+  }
+
+  /* Convert sidebar to bottom tab bar on mobile */
+  .shopMain {
+    flex-direction: column-reverse;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    border-right: none;
+    border-top: 2px solid var(--color-neutral-dark);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    gap: 0;
+    justify-content: space-around;
+  }
+
+  .sidebarTab {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: var(--spacing-sm);
+    flex: 1;
+  }
+
+  .sidebarTab.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-primary);
+  }
+
+  .sidebarTab.active::after {
+    display: none;
+  }
+
+  .sidebarLabel {
+    font-size: 8px;
+  }
+
+  .categoryHeader {
+    padding: var(--spacing-md);
+  }
+
+  .categoryTitle {
+    font-size: 1rem;
   }
 
   .productsGrid {
     grid-template-columns: 1fr;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
   }
 
-  .featuredProduct {
+  .productCard {
+    padding: var(--spacing-md);
+  }
+
+  .productIllustration {
+    width: 64px;
+    height: 64px;
+  }
+
+  .productTitle {
+    font-size: 1rem;
+  }
+
+  .productPrice {
+    font-size: 1.25rem;
+  }
+
+  .heroAvatar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .interstitialContent {
     padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+    max-width: calc(100% - var(--spacing-lg));
   }
 
-  .featuredProduct .productTitle {
+  .interstitialTitle {
+    font-size: 1.25rem;
+  }
+
+  .interstitialPrice {
     font-size: 1.5rem;
   }
 
-  .featuredProduct .buyButton {
-    max-width: 100%;
+  .interstitialIllustration {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .productCard,
+  .sidebarTab,
+  .backButton,
+  .interstitialClose {
+    transition: none;
+  }
+
+  .sidebarTab:hover .sidebarIcon {
+    transform: none;
+  }
+
+  .spinner {
+    animation: none;
   }
 }
