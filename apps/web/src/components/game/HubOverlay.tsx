@@ -11,6 +11,7 @@ import {
   turretPlacementSlotIndex,
   baseLevel,
 } from "../../state/index.js";
+import { colonySceneVisible } from "../../state/idle.signals.js";
 import { getMaxTurretSlots } from "@arcade/sim-core";
 import { audioManager } from "../../game/AudioManager.js";
 import { useCoordinates } from "../../hooks/useCoordinates.js";
@@ -79,10 +80,12 @@ export function HubOverlay() {
   }, []);
 
   // Only show in idle phase with hub initialized and canvas ready
+  // Hide when colony scene is visible
   if (
     gamePhase.value !== "idle" ||
     !hubInitialized.value ||
-    canvasSize.width === 0
+    canvasSize.width === 0 ||
+    colonySceneVisible.value
   ) {
     return null;
   }

@@ -1,5 +1,5 @@
 import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModalVisible, hasPendingRewards, bossRushActive } from '../../state/index.js';
-import { showColonyScene } from '../../state/idle.signals.js';
+import { showColonyScene, colonySceneVisible } from '../../state/idle.signals.js';
 import { Button } from '../shared/Button.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
@@ -19,7 +19,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
   return (
     <div class={styles.controls} role="toolbar" aria-label={t('controls.gameControls')}>
 
-      {gamePhase.value === 'idle' && (
+      {gamePhase.value === 'idle' && !colonySceneVisible.value && (
         <div class={styles.navContainer}>
           {/* Left group: Management */}
           <div class={styles.navGroupWrapper}>

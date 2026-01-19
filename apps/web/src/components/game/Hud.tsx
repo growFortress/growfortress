@@ -9,6 +9,7 @@ import {
   fortressMaxHp,
   fortressHpPercent,
 } from "../../state/index.js";
+import { colonySceneVisible } from "../../state/idle.signals.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
 import { WaveProgress } from "./WaveProgress.js";
 import { FortressInfoPanel } from "./FortressInfoPanel.js";
@@ -38,8 +39,8 @@ export function Hud() {
     return styles.hpCritical;
   };
 
-  // Hide HUD during class selection
-  if (classSelectionVisible.value) {
+  // Hide HUD during class selection or colony scene
+  if (classSelectionVisible.value || colonySceneVisible.value) {
     return null;
   }
 
