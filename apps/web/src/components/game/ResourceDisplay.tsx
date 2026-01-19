@@ -14,7 +14,7 @@ export function ResourceDisplay({ className = '', compact = false }: ResourceDis
         <span class={styles.value}>{displayGold.value}</span>
       </div>
       <div class={styles.resource} title="Dust">
-        <span class={styles.icon}>✨</span>
+        <span class={styles.icon}>🌫️</span>
         <span class={styles.value}>{displayDust.value}</span>
       </div>
     </div>

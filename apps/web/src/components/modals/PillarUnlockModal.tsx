@@ -74,7 +74,7 @@ export function PillarUnlockModal({ visible, onClose }: PillarUnlockModalProps) 
         </div>
         <div class={styles.dustDisplay}>
           <span class={styles.dustLabel}>Dust:</span>
-          <span class={styles.dustValue}>✨ {dust}</span>
+          <span class={styles.dustValue}>🌫️ {dust}</span>
         </div>
       </div>
 
@@ -161,7 +161,7 @@ function PillarCard({ pillar, fortressLevel, currentDust, isUnlocking, onUnlock 
             {pillar.dustCost > 0 && (
               <div class={`${styles.requirement} ${dustMet ? styles.met : styles.notMet}`}>
                 <span class={styles.requirementIcon}>{dustMet ? '✓' : '✗'}</span>
-                <span>✨ {pillar.dustCost}</span>
+                <span>🌫️ {pillar.dustCost}</span>
               </div>
             )}
 
@@ -175,7 +175,7 @@ function PillarCard({ pillar, fortressLevel, currentDust, isUnlocking, onUnlock 
               >
                 {isUnlocking ? 'Odblokowuję...' : (
                   <span class={styles.unlockCost}>
-                    <span class={styles.dustIcon}>✨</span>
+                    <span class={styles.dustIcon}>🌫️</span>
                     {pillar.dustCost}
                   </span>
                 )}

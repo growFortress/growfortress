@@ -63,14 +63,36 @@ const CLASS_COLORS: Record<
 };
 
 // Turret type visual configs (simplified: 4 turrets)
+// Supports both legacy IDs (arrow, cannon, tesla, frost) and new IDs (railgun, artillery, arc, cryo)
 const TURRET_CONFIGS: Record<
   string,
   { shape: "cannon" | "tower" | "dome" | "tesla"; barrelCount: number }
 > = {
+  // Legacy IDs
   arrow: { shape: "tower", barrelCount: 1 },
   cannon: { shape: "cannon", barrelCount: 1 },
   tesla: { shape: "tesla", barrelCount: 0 },
   frost: { shape: "dome", barrelCount: 1 },
+  // New IDs
+  railgun: { shape: "tower", barrelCount: 1 },
+  artillery: { shape: "cannon", barrelCount: 1 },
+  arc: { shape: "tesla", barrelCount: 0 },
+  cryo: { shape: "dome", barrelCount: 1 },
+};
+
+// Turret-specific colors (override class colors for unique appearance per turret type)
+const TURRET_TYPE_COLORS: Record<
+  string,
+  { primary: number; secondary: number; glow: number; barrel: number }
+> = {
+  // Railgun: Slate gray with cyan energy
+  railgun: { primary: 0x4a5568, secondary: 0x718096, glow: 0x00bfff, barrel: 0x2d3748 },
+  // Cryo: Turquoise with ice blue glow
+  cryo: { primary: 0x00ced1, secondary: 0x87ceeb, glow: 0xadd8e6, barrel: 0x1a5f5f },
+  // Artillery: Brown/bronze with orange fire
+  artillery: { primary: 0x8b4513, secondary: 0xa0522d, glow: 0xff6600, barrel: 0x5c3317 },
+  // Arc: Indigo/purple with cyan electricity
+  arc: { primary: 0x4b0082, secondary: 0x9932cc, glow: 0x00ffff, barrel: 0x2f0052 },
 };
 
 const SIZES = {
@@ -417,7 +439,9 @@ export class TurretSystem {
     }
     visual.lastEnemyCount = currentEnemyCount;
 
-    const colors = CLASS_COLORS[turret.currentClass];
+    // Use turret-specific colors if available, otherwise fall back to class colors
+    const turretTypeColors = TURRET_TYPE_COLORS[turret.definitionId];
+    const colors = turretTypeColors || CLASS_COLORS[turret.currentClass];
     const config = TURRET_CONFIGS[turret.definitionId] || {
       shape: "tower",
       barrelCount: 1,
@@ -1507,8 +1531,9 @@ export class TurretSystem {
     // Convert game units to screen pixels
     const rangeInPixels = (rangeInUnits / FIELD_WIDTH) * viewWidth;
 
-    // Get class color for the range circle
-    const colors = CLASS_COLORS[turret.currentClass];
+    // Get turret-specific or class color for the range circle
+    const turretTypeColors = TURRET_TYPE_COLORS[turret.definitionId];
+    const colors = turretTypeColors || CLASS_COLORS[turret.currentClass];
 
     // Draw gradient-like range circles (multiple rings fading out)
     const rings = 4;

@@ -238,7 +238,7 @@ export function MasteryTreeModal() {
           <div class={styles.pointsDisplay}>
             <span class={styles.pointsLabel}>Dostepne MP</span>
             <span class={styles.pointsValue}>{availablePoints}</span>
-            <span class={styles.pointsIcon}>✨</span>
+            <span class={styles.pointsIcon}>🌫️</span>
           </div>
         </div>
       </div>

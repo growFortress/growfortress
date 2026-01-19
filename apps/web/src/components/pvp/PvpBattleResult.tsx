@@ -121,7 +121,7 @@ export function PvpBattleResult() {
             <div class={styles.rewardsTitle}>Nagrody</div>
             <div class={styles.rewardsList}>
               <div class={styles.rewardItem}>
-                <span class={styles.rewardIcon}>✨</span>
+                <span class={styles.rewardIcon}>🌫️</span>
                 <span class={styles.rewardLabel}>Dust:</span>
                 <span class={styles.rewardValue}>+{rewards.dust}</span>
               </div>

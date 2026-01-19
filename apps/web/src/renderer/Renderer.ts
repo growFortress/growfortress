@@ -1,5 +1,5 @@
 import type { GameState, Enemy, ActiveHero, ActiveTurret, TurretSlot, ActiveProjectile } from '@arcade/sim-core';
-import { FP } from '@arcade/sim-core';
+import { FP, getTurretById } from '@arcade/sim-core';
 
 const COLORS = {
   background: '#16213e',
@@ -70,6 +70,14 @@ const CLASS_SECONDARY_COLORS: Record<string, string> = {
   tech: '#ff00aa',
   void: '#9400d3',
   plasma: '#00ffff',
+};
+
+/** Turret type specific colors */
+const TURRET_TYPE_COLORS: Record<string, { primary: string; secondary: string; glow: string }> = {
+  railgun: { primary: '#4A5568', secondary: '#718096', glow: '#00BFFF' },
+  cryo: { primary: '#00CED1', secondary: '#87CEEB', glow: '#ADD8E6' },
+  artillery: { primary: '#8B4513', secondary: '#A0522D', glow: '#FF6600' },
+  arc: { primary: '#4B0082', secondary: '#9932CC', glow: '#00FFFF' },
 };
 
 /** Returns HP bar color based on percentage (green → yellow → red) */
@@ -956,35 +964,423 @@ export class Renderer {
       ctx.textAlign = 'center';
       ctx.fillText(`#${slot.index + 1}`, x, y + 4);
     } else {
-      // Draw turret
-      const classColor = TURRET_CLASS_COLORS[turret.currentClass] || COLORS.turretBase;
+      // Draw turret based on type
+      const turretDef = getTurretById(turret.definitionId);
+      const turretType = turretDef?.id || 'railgun';
 
-      // Base
-      ctx.beginPath();
-      ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
-      ctx.fillStyle = COLORS.turretBase;
-      ctx.fill();
-      ctx.strokeStyle = classColor;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // Barrel (pointing right towards enemies)
-      ctx.fillStyle = classColor;
-      ctx.fillRect(
-        x,
-        y - SIZES.turret.barrelWidth / 2,
-        SIZES.turret.barrelLength,
-        SIZES.turret.barrelWidth
-      );
-
-      // Tier indicator
-      ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 10px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`T${turret.tier}`, x, y + 4);
+      switch (turretType) {
+        case 'railgun':
+          this.drawRailgunTurret(x, y, turret.tier);
+          break;
+        case 'cryo':
+          this.drawCryoTurret(x, y, turret.tier);
+          break;
+        case 'artillery':
+          this.drawArtilleryTurret(x, y, turret.tier);
+          break;
+        case 'arc':
+          this.drawArcTurret(x, y, turret.tier);
+          break;
+        default:
+          this.drawRailgunTurret(x, y, turret.tier);
+      }
     }
 
     ctx.restore();
+  }
+
+  /** Draw Railgun turret - sleek sci-fi design with long electromagnetic barrel */
+  private drawRailgunTurret(x: number, y: number, tier: number): void {
+    const ctx = this.ctx;
+    const colors = TURRET_TYPE_COLORS.railgun;
+    const baseRadius = 16;
+
+    // Platform base (darker)
+    ctx.fillStyle = '#2a2a2a';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 8, baseRadius + 4, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main body - angular sci-fi shape
+    ctx.fillStyle = colors.primary;
+    ctx.beginPath();
+    ctx.moveTo(x - baseRadius, y + 4);
+    ctx.lineTo(x - baseRadius + 4, y - 10);
+    ctx.lineTo(x + baseRadius - 4, y - 10);
+    ctx.lineTo(x + baseRadius, y + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Body highlight
+    ctx.fillStyle = colors.secondary;
+    ctx.beginPath();
+    ctx.moveTo(x - baseRadius + 2, y + 2);
+    ctx.lineTo(x - baseRadius + 6, y - 8);
+    ctx.lineTo(x, y - 8);
+    ctx.lineTo(x - 2, y + 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Long railgun barrel
+    const barrelLength = 28 + tier * 3;
+    const barrelWidth = 6;
+
+    // Barrel rails (two parallel rails)
+    ctx.fillStyle = colors.secondary;
+    ctx.fillRect(x + 4, y - barrelWidth - 1, barrelLength, 3);
+    ctx.fillRect(x + 4, y + barrelWidth - 2, barrelLength, 3);
+
+    // Center barrel
+    ctx.fillStyle = colors.primary;
+    ctx.fillRect(x + 4, y - barrelWidth / 2, barrelLength - 4, barrelWidth);
+
+    // Energy glow between rails
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 8 + tier * 2;
+    ctx.fillStyle = colors.glow;
+    ctx.fillRect(x + 8, y - 1, barrelLength - 10, 2);
+    ctx.restore();
+
+    // Barrel tip glow
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = colors.glow;
+    ctx.beginPath();
+    ctx.arc(x + barrelLength + 2, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Tech details - capacitors on sides
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x - 12, y - 6, 6, 8);
+    ctx.fillRect(x + 6, y - 6, 6, 8);
+
+    // Capacitor glow indicators
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = colors.glow;
+    ctx.fillRect(x - 11, y - 4, 4, 2);
+    ctx.fillRect(x + 7, y - 4, 4, 2);
+    ctx.restore();
+
+    // Tier indicator
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`T${tier}`, x, y + 14);
+  }
+
+  /** Draw Cryo turret - ice crystal tower with freezing effect */
+  private drawCryoTurret(x: number, y: number, tier: number): void {
+    const ctx = this.ctx;
+    const colors = TURRET_TYPE_COLORS.cryo;
+
+    // Ice platform
+    ctx.fillStyle = '#1a3a4a';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 10, 18, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Frost effect on platform
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = colors.glow;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 10, 16, 5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Main cryo chamber - cylindrical shape
+    const gradient = ctx.createLinearGradient(x - 12, y, x + 12, y);
+    gradient.addColorStop(0, colors.secondary);
+    gradient.addColorStop(0.5, colors.primary);
+    gradient.addColorStop(1, colors.secondary);
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y + 8);
+    ctx.lineTo(x - 10, y - 12);
+    ctx.lineTo(x + 10, y - 12);
+    ctx.lineTo(x + 12, y + 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ice crystal emitter on top
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 15;
+
+    // Central crystal
+    ctx.fillStyle = colors.glow;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 22 - tier * 2);
+    ctx.lineTo(x - 5, y - 12);
+    ctx.lineTo(x + 5, y - 12);
+    ctx.closePath();
+    ctx.fill();
+
+    // Side crystals
+    ctx.fillStyle = colors.secondary;
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y - 16 - tier);
+    ctx.lineTo(x - 12, y - 8);
+    ctx.lineTo(x - 4, y - 8);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y - 16 - tier);
+    ctx.lineTo(x + 4, y - 8);
+    ctx.lineTo(x + 12, y - 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Cryo barrel/emitter pointing right
+    ctx.fillStyle = colors.primary;
+    ctx.fillRect(x + 8, y - 4, 16, 8);
+
+    // Emitter nozzle
+    ctx.fillStyle = colors.secondary;
+    ctx.beginPath();
+    ctx.moveTo(x + 24, y - 6);
+    ctx.lineTo(x + 30, y - 8);
+    ctx.lineTo(x + 30, y + 8);
+    ctx.lineTo(x + 24, y + 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Frost particles effect
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = 'rgba(173, 216, 230, 0.6)';
+    for (let i = 0; i < tier + 2; i++) {
+      const px = x + 28 + i * 4;
+      const py = y + (Math.sin(i * 1.5) * 4);
+      ctx.beginPath();
+      ctx.arc(px, py, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Tier indicator
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`T${tier}`, x, y + 18);
+  }
+
+  /** Draw Artillery turret - heavy cannon with thick barrel */
+  private drawArtilleryTurret(x: number, y: number, tier: number): void {
+    const ctx = this.ctx;
+    const colors = TURRET_TYPE_COLORS.artillery;
+
+    // Heavy base platform
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 10, 20, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Armored base ring
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 10, 18, 6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Main turret body - hexagonal armored shape
+    ctx.fillStyle = colors.primary;
+    ctx.beginPath();
+    ctx.moveTo(x - 14, y + 6);
+    ctx.lineTo(x - 16, y - 4);
+    ctx.lineTo(x - 10, y - 12);
+    ctx.lineTo(x + 10, y - 12);
+    ctx.lineTo(x + 16, y - 4);
+    ctx.lineTo(x + 14, y + 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Armor plating highlight
+    ctx.fillStyle = colors.secondary;
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y + 4);
+    ctx.lineTo(x - 14, y - 2);
+    ctx.lineTo(x - 8, y - 10);
+    ctx.lineTo(x, y - 10);
+    ctx.lineTo(x - 2, y + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Heavy cannon barrel
+    const barrelLength = 22 + tier * 2;
+    const barrelWidth = 12;
+
+    // Barrel base (thicker part)
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(x + 6, y - barrelWidth / 2 - 2, 10, barrelWidth + 4);
+
+    // Main barrel
+    ctx.fillStyle = colors.primary;
+    ctx.fillRect(x + 8, y - barrelWidth / 2, barrelLength, barrelWidth);
+
+    // Barrel rifling lines
+    ctx.strokeStyle = colors.secondary;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+      const lineX = x + 14 + i * 6;
+      ctx.beginPath();
+      ctx.moveTo(lineX, y - barrelWidth / 2 + 1);
+      ctx.lineTo(lineX, y + barrelWidth / 2 - 1);
+      ctx.stroke();
+    }
+
+    // Muzzle brake
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x + barrelLength + 4, y - barrelWidth / 2 - 2, 6, barrelWidth + 4);
+
+    // Muzzle vents
+    ctx.fillStyle = colors.glow;
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 6;
+    ctx.fillRect(x + barrelLength + 5, y - 6, 4, 2);
+    ctx.fillRect(x + barrelLength + 5, y + 4, 4, 2);
+    ctx.restore();
+
+    // Ammo indicators on side
+    ctx.fillStyle = '#ffa500';
+    for (let i = 0; i < tier; i++) {
+      ctx.beginPath();
+      ctx.arc(x - 10 + i * 6, y - 6, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Tier indicator
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`T${tier}`, x, y + 18);
+  }
+
+  /** Draw Arc turret - tesla coil style with electrical arcs */
+  private drawArcTurret(x: number, y: number, tier: number): void {
+    const ctx = this.ctx;
+    const colors = TURRET_TYPE_COLORS.arc;
+
+    // Base platform with energy ring
+    ctx.fillStyle = '#1a1a2a';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 10, 18, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Energy ring glow
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = colors.glow;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 10, 16, 5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Tesla coil column
+    ctx.fillStyle = colors.primary;
+    ctx.fillRect(x - 6, y - 16, 12, 24);
+
+    // Column highlight
+    ctx.fillStyle = colors.secondary;
+    ctx.fillRect(x - 6, y - 16, 4, 24);
+
+    // Coil rings (number based on tier)
+    const ringCount = tier + 1;
+    const ringSpacing = 20 / (ringCount + 1);
+
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 12;
+
+    for (let i = 1; i <= ringCount; i++) {
+      const ringY = y + 6 - ringSpacing * i;
+
+      // Ring body
+      ctx.fillStyle = colors.glow;
+      ctx.beginPath();
+      ctx.ellipse(x, ringY, 10, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Top electrode sphere
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 20;
+
+    // Outer sphere
+    ctx.fillStyle = colors.primary;
+    ctx.beginPath();
+    ctx.arc(x, y - 20, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner energy core
+    ctx.fillStyle = colors.glow;
+    ctx.beginPath();
+    ctx.arc(x, y - 20, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bright center
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x, y - 20, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Arc emitter pointing right
+    ctx.fillStyle = colors.primary;
+    ctx.fillRect(x + 8, y - 3, 14, 6);
+
+    // Emitter tip with glow
+    ctx.save();
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = colors.glow;
+    ctx.beginPath();
+    ctx.arc(x + 24, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Electric arc effect (decorative)
+    ctx.save();
+    ctx.strokeStyle = colors.glow;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 8;
+
+    // Arc from top sphere
+    ctx.beginPath();
+    ctx.moveTo(x + 6, y - 16);
+    ctx.quadraticCurveTo(x + 14, y - 12, x + 20, y - 4);
+    ctx.stroke();
+
+    if (tier >= 2) {
+      ctx.beginPath();
+      ctx.moveTo(x - 6, y - 16);
+      ctx.quadraticCurveTo(x - 10, y - 8, x - 8, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Tier indicator
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`T${tier}`, x, y + 18);
   }
 
   /** Draw a projectile */

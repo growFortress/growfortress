@@ -187,7 +187,7 @@ export function DailyQuestsModal() {
               <div class={styles.questRight}>
                 <div class={styles.rewardsList}>
                   <div class={`${styles.rewardItem} ${styles.dustReward}`}>
-                    <span class={styles.rewardIcon}>✨</span>
+                    <span class={styles.rewardIcon}>🌫️</span>
                     <span>{quest.dustReward}</span>
                   </div>
                   {quest.bonusType && (

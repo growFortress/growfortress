@@ -496,6 +496,15 @@
   color: var(--color-text-60);
   line-height: 1.5;
   font-style: italic;
+  /* Limit to 2 lines with ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Break long words without spaces */
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .charCount {

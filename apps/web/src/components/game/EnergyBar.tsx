@@ -81,7 +81,7 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
             title={`Refill energy for ${refillCost.value} dust`}
           >
             <span class={styles.refillCost}>
-              <span class={styles.dustIcon}>✨</span>
+              <span class={styles.dustIcon}>🌫️</span>
               {refillCost.value}
             </span>
           </button>

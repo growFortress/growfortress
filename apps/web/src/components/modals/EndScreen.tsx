@@ -77,7 +77,7 @@ export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
               <span>+{stats.goldEarned}</span>
             </div>
             <div class={`${styles.rewardItem} ${styles.dust}`}>
-              <span class={styles.rewardIcon}>✨</span>
+              <span class={styles.rewardIcon}>🌫️</span>
               <span>+{stats.dustEarned}</span>
             </div>
             <div class={`${styles.rewardItem} ${styles.xp}`}>

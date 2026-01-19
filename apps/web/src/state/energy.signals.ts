@@ -21,6 +21,20 @@ export const energyLoading = signal(false);
 export const energyError = signal<string | null>(null);
 export const refilling = signal(false);
 
+// Timer signal that updates every second to force re-computation of time-based values
+export const currentTimeTick = signal(Date.now());
+
+// Start the timer interval (runs globally)
+let timerStarted = false;
+function startRegenTimer() {
+  if (timerStarted) return;
+  timerStarted = true;
+  setInterval(() => {
+    currentTimeTick.value = Date.now();
+  }, 1000);
+}
+startRegenTimer();
+
 // ============================================================================
 // COMPUTED VALUES
 // ============================================================================
@@ -72,13 +86,15 @@ export const canRefill = computed(() => {
 
 /**
  * Time until next energy point regenerates (formatted)
+ * Uses currentTimeTick to update every second
  */
 export const nextRegenIn = computed(() => {
   const state = energyState.value;
   if (!state || !state.nextRegenAt) return '';
 
   const nextRegen = new Date(state.nextRegenAt).getTime();
-  const now = Date.now();
+  // Use currentTimeTick signal to force re-computation every second
+  const now = currentTimeTick.value;
   const diffMs = nextRegen - now;
 
   if (diffMs <= 0) return 'Now';

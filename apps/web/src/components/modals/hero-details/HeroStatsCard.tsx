@@ -43,7 +43,7 @@ export function HeroStatsCard({ currentHp, maxHp, damage, attackSpeed, level, xp
 
         {/* XP */}
         <div class={cardStyles.statBox}>
-          <span class={cardStyles.statIcon}>✨</span>
+          <span class={cardStyles.statIcon}>🌫️</span>
           <span class={cardStyles.statLabel}>XP</span>
           <span class={cardStyles.statValue}>{xp}</span>
         </div>

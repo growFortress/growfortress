@@ -258,7 +258,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
                   <div class={styles.structureCost}>
                     <span>Koszt: </span>
                     <span class={styles.goldCost}>{structure.upgradeCost.gold.toLocaleString()} 💰</span>
-                    <span class={styles.dustCost}>{structure.upgradeCost.dust.toLocaleString()} ✨</span>
+                    <span class={styles.dustCost}>{structure.upgradeCost.dust.toLocaleString()} 🌫️</span>
                   </div>
                 )}
                 {isGuildLeader.value && (

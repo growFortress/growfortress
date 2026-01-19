@@ -66,7 +66,7 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
             <span class={styles.resourceLabel}>{t("common:resources.gold")}</span>
           </div>
           <div class={styles.resourceItem}>
-            <span class={styles.resourceIcon} aria-hidden="true">✨</span>
+            <span class={styles.resourceIcon} aria-hidden="true">🌫️</span>
             <span class={styles.resourceValue}>{displayDust.value}</span>
             <span class={styles.resourceLabel}>{t("common:resources.dust")}</span>
           </div>

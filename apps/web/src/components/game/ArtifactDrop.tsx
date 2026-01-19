@@ -78,7 +78,7 @@ export function ArtifactDrop() {
               <span class={styles.name}>{artifact.polishName}</span>
               {drop.isDuplicate ? (
                 <span class={styles.dustReward}>
-                  +{drop.dustValue} ✨ Dust
+                  +{drop.dustValue} 🌫️ Dust
                 </span>
               ) : (
                 <span class={styles.newLabel}>NOWY ARTEFAKT!</span>

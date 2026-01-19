@@ -42,7 +42,7 @@ import styles from './ShopModal.module.css';
 const CATEGORIES: { id: ShopCategory; labelKey: string; icon: string }[] = [
   { id: 'featured', labelKey: 'shop.categories.featured', icon: '🌟' },
   { id: 'heroes', labelKey: 'shop.categories.heroes', icon: '⚔️' },
-  { id: 'dust', labelKey: 'shop.categories.dust', icon: '✨' },
+  { id: 'dust', labelKey: 'shop.categories.dust', icon: '🌫️' },
   { id: 'bundles', labelKey: 'shop.categories.bundles', icon: '📦' },
 ];
 
@@ -115,7 +115,7 @@ export function ShopModal() {
                 <h4>{t('shop.youReceived')}</h4>
                 {lastPurchase.value.dustGranted && lastPurchase.value.dustGranted > 0 && (
                   <div class={styles.rewardItem}>
-                    <span class={styles.rewardIcon}>✨</span>
+                    <span class={styles.rewardIcon}>🌫️</span>
                     <span>+{lastPurchase.value.dustGranted} {t('shop.dust')}</span>
                   </div>
                 )}
@@ -174,7 +174,7 @@ export function ShopModal() {
       {/* User balance header */}
       <div class={styles.balanceHeader}>
         <div class={styles.balance}>
-          <span class={styles.balanceIcon}>✨</span>
+          <span class={styles.balanceIcon}>🌫️</span>
           <span class={styles.balanceValue}>{dust}</span>
           <span class={styles.balanceLabel}>{t('shop.dust')}</span>
         </div>
@@ -212,7 +212,7 @@ export function ShopModal() {
                 <div class={styles.productBadge}>{t('shop.bestValue')}</div>
                 <h3 class={styles.productTitle}>{t('shop.starterPack')}</h3>
                 <div class={styles.productContents}>
-                  <div>✨ 600 {t('shop.dust')}</div>
+                  <div>🌫️ 600 {t('shop.dust')}</div>
                   <div>🪙 3,000 {t('shop.gold')}</div>
                   <div>📦 {t('shop.starterPackMaterials')}</div>
                   <div>🏆 {t('shop.founderBadge')}</div>
@@ -327,7 +327,7 @@ export function ShopModal() {
                 {isBestValue && (
                   <div class={styles.productBadge}>{t('shop.bestValue')}</div>
                 )}
-                <h3 class={styles.productTitle}>✨ {pkg.dustAmount} {t('shop.dust')}</h3>
+                <h3 class={styles.productTitle}>🌫️ {pkg.dustAmount} {t('shop.dust')}</h3>
                 <div class={styles.pricePerUnit}>{pricePerHundred} PLN / 100 {t('shop.dust').toLowerCase()}</div>
                 <div class={styles.productPrice}>{pkg.pricePLN} PLN</div>
                 <Button
@@ -352,7 +352,7 @@ export function ShopModal() {
               )}
               <h3 class={styles.productTitle}>{bundle.name}</h3>
               <div class={styles.productContents}>
-                <div>✨ {bundle.dustAmount} {t('shop.dust')}</div>
+                <div>🌫️ {bundle.dustAmount} {t('shop.dust')}</div>
                 <div>🪙 {bundle.goldAmount.toLocaleString()} {t('shop.gold')}</div>
                 {bundle.randomHeroCount > 0 && (
                   <div>⚔️ {bundle.randomHeroCount}x {t('shop.randomUnit')}</div>

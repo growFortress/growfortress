@@ -189,7 +189,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
                   {upgradeCost.gold}
                 </span>
                 <span class={`${styles.costItem} ${dust >= upgradeCost.dust ? '' : styles.insufficient}`}>
-                  <span class={styles.costIcon}>✨</span>
+                  <span class={styles.costIcon}>🌫️</span>
                   {upgradeCost.dust}
                 </span>
               </div>

@@ -67,7 +67,7 @@ export function Header(_props: HeaderProps) {
                   <span class={`${styles.resourceValue} ${styles.gold}`}>{displayGold.value}</span>
                 </div>
                 <div class={styles.resource} aria-label={t('header.resourceDust', { amount: displayDust.value })}>
-                  <span class={styles.resourceIcon} aria-hidden="true">✨</span>
+                  <span class={styles.resourceIcon} aria-hidden="true">🌫️</span>
                   <span class={`${styles.resourceValue} ${styles.dust}`}>{displayDust.value}</span>
                 </div>
                 {/* Energy bar */}
