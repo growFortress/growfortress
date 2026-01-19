@@ -164,6 +164,30 @@
   margin: 0;
 }
 
+.starterKit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: var(--color-bg-panel);
+  border: var(--border-neutral);
+  border-radius: var(--radius-md);
+  margin-top: 8px;
+}
+
+.starterKitLabel {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-60);
+}
+
+.starterKitItems {
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
 .finalTips {
   width: 100%;
   max-width: 720px;

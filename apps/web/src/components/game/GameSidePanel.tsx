@@ -39,7 +39,7 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
   return (
     <aside class={styles.sidePanel} aria-label="Panel gry">
       {/* Speed Controls */}
-      <div class={styles.speedControls}>
+      <div class={styles.speedControls} data-tutorial="speed-controls">
         <span class={styles.speedLabel}>Prędkość</span>
         <div class={styles.speedButtons}>
           {([1, 2, 3] as GameSpeed[]).map((speed) => (

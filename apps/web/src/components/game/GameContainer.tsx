@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect, lazy, Suspense } from 'preact
 import type { FortressClass } from '@arcade/sim-core';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { useTutorialTriggers } from '../../tutorial/useTutorialTriggers.js';
 import './GameContainer.css';
 import { Hud } from './Hud.js';
 import { Controls } from './Controls.js';
@@ -9,6 +10,7 @@ import { HubOverlay } from './HubOverlay.js';
 import { GameSidePanel } from './GameSidePanel.js';
 import { GameBottomPanel } from './GameBottomPanel.js';
 import { ColonySceneOverlay } from './ColonySceneOverlay.js';
+import { TutorialHighlight } from './TutorialHighlight.js';
 // Critical modals - loaded eagerly (needed immediately on game start)
 import { ChoiceModal } from '../modals/ChoiceModal.js';
 import { EndScreen } from '../modals/EndScreen.js';
@@ -95,6 +97,9 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     playColonyClaimAnimation,
     playColonyUpgradeAnimation,
   } = useGameLoop(canvasRef, canvasReady);
+
+  // Tutorial triggers - monitors game state and shows contextual tips
+  useTutorialTriggers();
 
   // Auto-start session when recovery modal is confirmed
   useEffect(() => {
@@ -404,6 +409,9 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
         onUpgradeAnimation={playColonyUpgradeAnimation}
         onClaimAnimation={playColonyClaimAnimation}
       />
+
+      {/* Tutorial highlight overlay (renders via portal) */}
+      <TutorialHighlight />
     </div>
   );
 }

@@ -167,7 +167,7 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
   const classIcon = CLASS_ICONS[fortressClass] || '🏰';
 
   return (
-    <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
+    <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`} data-tutorial="fortress-skills">
       {!compact && (
         <div class={styles.header}>
           <span class={styles.title}>Twierdza {classIcon}</span>
