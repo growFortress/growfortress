@@ -25,6 +25,8 @@ import {
   showBattlePassModal,
   hasUnclaimedBPRewards,
   totalUnclaimedCount,
+  openPvpPanel,
+  pvpPendingChallenges,
 } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Tooltip } from '../shared/Tooltip.js';
@@ -54,64 +56,57 @@ export function Header(_props: HeaderProps) {
       {/* Status bar - only show in Hub mode, hidden during gameplay */}
       {!isPlaying && (
         <nav class={styles.statusBar} role="navigation" aria-label={t('header.playerStatus')}>
-          {/* Resources Group */}
-          <div class={styles.navGroupWrapper}>
-            <span class={styles.groupLabel}>Zasoby</span>
-            <div class={styles.resourceGroup}>
-              <div class={styles.resource} aria-label={t('header.resourceGold', { amount: displayGold.value })}>
-                <span class={styles.resourceIcon} aria-hidden="true">🪙</span>
-                <span class={`${styles.resourceValue} ${styles.gold}`}>{displayGold.value}</span>
-                <span class={styles.resourceLabel}>{t('common:resources.gold')}</span>
+          {/* Left: Resources + Level */}
+          <div class={styles.leftGroup}>
+            {/* Resources Group */}
+            <div class={styles.navGroupWrapper}>
+              <span class={styles.groupLabel}>Zasoby</span>
+              <div class={styles.resourceGroup}>
+                <div class={styles.resource} aria-label={t('header.resourceGold', { amount: displayGold.value })}>
+                  <span class={styles.resourceIcon} aria-hidden="true">🪙</span>
+                  <span class={`${styles.resourceValue} ${styles.gold}`}>{displayGold.value}</span>
+                </div>
+                <div class={styles.resource} aria-label={t('header.resourceDust', { amount: displayDust.value })}>
+                  <span class={styles.resourceIcon} aria-hidden="true">✨</span>
+                  <span class={`${styles.resourceValue} ${styles.dust}`}>{displayDust.value}</span>
+                </div>
+                {/* Energy bar */}
+                <EnergyBar compact />
               </div>
-              <div class={styles.resource} aria-label={t('header.resourceDust', { amount: displayDust.value })}>
-                <span class={styles.resourceIcon} aria-hidden="true">✨</span>
-                <span class={`${styles.resourceValue} ${styles.dust}`}>{displayDust.value}</span>
-                <span class={styles.resourceLabel}>{t('common:resources.dust')}</span>
-              </div>
-              {/* Energy bar */}
-              <EnergyBar compact />
             </div>
-          </div>
 
-          {/* Level Group */}
-          <div class={styles.navGroupWrapper}>
-            <span class={styles.groupLabel}>Poziom</span>
-            <div class={styles.levelSection} aria-label={t('header.levelLabel', { level: baseLevel.value })}>
-              <span class={styles.levelLabel}>{t('common:labels.lv')}</span>
-              <span class={styles.levelValue}>{baseLevel.value}</span>
-              <div
-                class={styles.xpTrack}
-                role="progressbar"
-                aria-label={t('header.xpProgress')}
-                aria-valuenow={xpProgress.value}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
+            {/* Level Group */}
+            <div class={styles.navGroupWrapper}>
+              <span class={styles.groupLabel}>Poziom</span>
+              <div class={styles.levelSection} aria-label={t('header.levelLabel', { level: baseLevel.value })}>
+                <span class={styles.levelLabel}>{t('common:labels.lv')}</span>
+                <span class={styles.levelValue}>{baseLevel.value}</span>
                 <div
-                  class={styles.xpFill}
-                  style={{ width: `${xpProgress.value}%` }}
-                />
+                  class={styles.xpTrack}
+                  role="progressbar"
+                  aria-label={t('header.xpProgress')}
+                  aria-valuenow={xpProgress.value}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    class={styles.xpFill}
+                    style={{ width: `${xpProgress.value}%` }}
+                  />
+                </div>
+                <span class={styles.xpText}>
+                  {baseXp.value}/{baseXp.value + baseXpToNextLevel.value}
+                </span>
               </div>
-              <span class={styles.xpText}>
-                {baseXp.value}/{baseXp.value + baseXpToNextLevel.value}
-              </span>
             </div>
           </div>
 
-          {/* Quick Actions Group */}
-          <div class={styles.navGroupWrapper}>
+          {/* Right: Quick Actions Group */}
+          <div class={styles.rightGroup}>
+            <div class={styles.navGroupWrapper}>
             <span class={styles.groupLabel}>Skróty</span>
             <div class={styles.buttonGroup}>
-              <Tooltip content="Eksploracja Światów" position="bottom">
-                <button
-                  class={styles.headerBtn}
-                  onClick={() => showPillarUnlockModal()}
-                  aria-label="Eksploracja Światów"
-                >
-                  <span aria-hidden="true">🌍</span>
-                </button>
-              </Tooltip>
-
+              {/* Daily Quests - frequent daily actions */}
               <Tooltip content={t('common:navigation.dailyQuests')} position="bottom">
                 <button
                   class={styles.headerBtn}
@@ -127,6 +122,7 @@ export function Header(_props: HeaderProps) {
                 </button>
               </Tooltip>
 
+              {/* Battle Pass - progression */}
               <Tooltip content="Battle Pass" position="bottom">
                 <button
                   class={styles.headerBtn}
@@ -142,6 +138,34 @@ export function Header(_props: HeaderProps) {
                 </button>
               </Tooltip>
 
+              {/* World Exploration - gameplay */}
+              <Tooltip content="Eksploracja Światów" position="bottom">
+                <button
+                  class={styles.headerBtn}
+                  onClick={() => showPillarUnlockModal()}
+                  aria-label="Eksploracja Światów"
+                >
+                  <span aria-hidden="true">🌍</span>
+                </button>
+              </Tooltip>
+
+              {/* PvP Arena - competitive */}
+              <Tooltip content="PvP Arena" position="bottom">
+                <button
+                  class={styles.headerBtn}
+                  onClick={openPvpPanel}
+                  aria-label={pvpPendingChallenges.value > 0 ? `PvP Arena (${pvpPendingChallenges.value} wyzwań)` : 'PvP Arena'}
+                >
+                  <span aria-hidden="true">⚔️</span>
+                  {pvpPendingChallenges.value > 0 && (
+                    <span class={styles.badge} aria-hidden="true">
+                      {pvpPendingChallenges.value}
+                    </span>
+                  )}
+                </button>
+              </Tooltip>
+
+              {/* Leaderboards - rankings */}
               <Tooltip content={t('common:navigation.leaderboards')} position="bottom">
                 <button
                   class={styles.headerBtn}
@@ -155,6 +179,21 @@ export function Header(_props: HeaderProps) {
                 </button>
               </Tooltip>
 
+              {/* Guild - social */}
+              <Tooltip content={isInGuild.value ? (playerGuild.value?.name || t('common:navigation.guild')) : t('common:navigation.guild')} position="bottom">
+                <button
+                  class={styles.headerBtn}
+                  onClick={() => openGuildPanel()}
+                  aria-label={t('header.openGuildPanel')}
+                >
+                  <span aria-hidden="true">🏰</span>
+                  {hasNewInvitations.value && !isInGuild.value && (
+                    <span class={styles.dotBadge} aria-label={t('header.newInvitations')} />
+                  )}
+                </button>
+              </Tooltip>
+
+              {/* Messages - communication */}
               <Tooltip content={t('common:navigation.messages')} position="bottom">
                 <button
                   class={styles.headerBtn}
@@ -170,19 +209,7 @@ export function Header(_props: HeaderProps) {
                 </button>
               </Tooltip>
 
-              <Tooltip content={isInGuild.value ? (playerGuild.value?.name || t('common:navigation.guild')) : t('common:navigation.guild')} position="bottom">
-                <button
-                  class={styles.headerBtn}
-                  onClick={() => openGuildPanel()}
-                  aria-label={t('header.openGuildPanel')}
-                >
-                  <span aria-hidden="true">🏰</span>
-                  {hasNewInvitations.value && !isInGuild.value && (
-                    <span class={styles.dotBadge} aria-label={t('header.newInvitations')} />
-                  )}
-                </button>
-              </Tooltip>
-
+              {/* Shop - purchases */}
               <Tooltip content={t('common:navigation.shop')} position="bottom">
                 <button
                   class={styles.headerBtn}
@@ -193,6 +220,7 @@ export function Header(_props: HeaderProps) {
                 </button>
               </Tooltip>
 
+              {/* Settings - always last */}
               <Tooltip content={t('common:navigation.settings')} position="bottom">
                 <button
                   class={styles.headerBtn}
@@ -202,6 +230,7 @@ export function Header(_props: HeaderProps) {
                   <span aria-hidden="true">⚙️</span>
                 </button>
               </Tooltip>
+            </div>
             </div>
           </div>
         </nav>

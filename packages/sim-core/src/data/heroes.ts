@@ -1378,7 +1378,7 @@ export function getHeroUnlockCost(heroId: string): { gold: number; dust: number 
     return { gold: 25000, dust: 0 }; // Exclusive rare - gold only
   }
   if (heroId === 'omega') {
-    return { gold: 0, dust: 3500 }; // Legendary exclusive - dust only (reduced from 5000)
+    return { gold: 50000, dust: 50 }; // Legendary exclusive - expensive
   }
 
   switch (hero.rarity) {

@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useMemo } from 'preact/hooks';
 import { HEROES, getHeroUnlockCost, isHeroUnlockedAtLevel, getHeroUnlockLevel } from '@arcade/sim-core';
 import type { HeroIdType } from '@arcade/protocol';
 import {
@@ -15,22 +15,13 @@ import { Modal } from '../shared/Modal.js';
 import { HeroAvatar } from '../shared/HeroAvatar.js';
 import styles from './HeroRecruitmentModal.module.css';
 
-// Rarity colors
-const RARITY_COLORS: Record<string, string> = {
-  starter: '#6b7280',
-  common: '#22c55e',
-  rare: '#3b82f6',
-  epic: '#a855f7',
-  legendary: '#fbbf24', // Gold color for legendary
-};
-
-// Rarity labels
-const RARITY_LABELS: Record<string, string> = {
-  starter: 'Starter',
-  common: 'Zwykły',
-  rare: 'Rzadki',
-  epic: 'Epicki',
-  legendary: 'Legendarny',
+// Rarity configuration
+const RARITY_CONFIG: Record<string, { color: string; label: string; order: number }> = {
+  starter: { color: '#6b7280', label: 'Starter', order: 0 },
+  common: { color: '#22c55e', label: 'Zwykły', order: 1 },
+  rare: { color: '#3b82f6', label: 'Rzadki', order: 2 },
+  epic: { color: '#a855f7', label: 'Epicki', order: 3 },
+  legendary: { color: '#fbbf24', label: 'Legendarny', order: 4 },
 };
 
 // Role labels (Polish)
@@ -53,6 +44,13 @@ const CLASS_CONFIG: Record<string, { icon: string; label: string }> = {
   plasma: { icon: '⚛️', label: 'Plazma' },
 };
 
+type HeroStatus = 'owned' | 'available' | 'locked';
+
+interface CategorizedHero {
+  hero: typeof HEROES[0];
+  status: HeroStatus;
+  requiredLevel: number;
+}
 
 export function HeroRecruitmentModal() {
   const visible = heroRecruitmentModalVisible.value;
@@ -76,9 +74,7 @@ export function HeroRecruitmentModal() {
       const result = await unlockHero({ heroId: heroId as HeroIdType });
 
       if (result.success) {
-        // Update local state
         unlockedHeroIds.value = result.unlockedHeroIds;
-        // Refresh profile from server to get updated inventory
         await updateProfileFromServer();
       } else {
         setError(result.error || 'Nie udało się zrekrutować bohatera');
@@ -91,144 +87,218 @@ export function HeroRecruitmentModal() {
     }
   };
 
-  // Sort heroes by rarity
-  const sortedHeroes = [...HEROES].sort((a, b) => {
-    const rarityOrder = ['starter', 'common', 'rare', 'epic'];
-    return rarityOrder.indexOf(a.rarity) - rarityOrder.indexOf(b.rarity);
-  });
+  // Categorize and sort heroes
+  const { ownedHeroes, availableHeroes, lockedHeroes } = useMemo(() => {
+    const categorized: CategorizedHero[] = HEROES.map(hero => {
+      const isOwned = unlocked.includes(hero.id);
+      const isAvailableByLevel = isHeroUnlockedAtLevel(hero.id, currentFortressLevel);
+      const requiredLevel = getHeroUnlockLevel(hero.id);
 
-  return (
-    <Modal visible={visible} onClose={onClose} title="Rekrutacja Bohaterów" size="xlarge" bodyClass={styles.modalBody}>
-      <div class={styles.container}>
+      let status: HeroStatus;
+      if (isOwned) {
+        status = 'owned';
+      } else if (isAvailableByLevel) {
+        status = 'available';
+      } else {
+        status = 'locked';
+      }
 
-        <div class={styles.resourceBar}>
-          <span class={styles.resource}>
-            <span class={styles.goldIcon}>💰</span>
-            {gold.toLocaleString()}
-          </span>
-          <span class={styles.resource}>
-            <span class={styles.dustIcon}>✨</span>
-            {dust.toLocaleString()}
-          </span>
+      return { hero, status, requiredLevel };
+    });
+
+    // Sort by rarity within each category
+    const sortByRarity = (a: CategorizedHero, b: CategorizedHero) => {
+      const rarityA = RARITY_CONFIG[a.hero.rarity]?.order ?? 99;
+      const rarityB = RARITY_CONFIG[b.hero.rarity]?.order ?? 99;
+      return rarityA - rarityB;
+    };
+
+    const owned = categorized.filter(c => c.status === 'owned').sort(sortByRarity);
+    const available = categorized.filter(c => c.status === 'available').sort(sortByRarity);
+    const locked = categorized.filter(c => c.status === 'locked').sort((a, b) => {
+      // Sort locked heroes by required level first, then by rarity
+      if (a.requiredLevel !== b.requiredLevel) {
+        return a.requiredLevel - b.requiredLevel;
+      }
+      return sortByRarity(a, b);
+    });
+
+    return { ownedHeroes: owned, availableHeroes: available, lockedHeroes: locked };
+  }, [unlocked, currentFortressLevel]);
+
+  const renderHeroCard = ({ hero, status, requiredLevel }: CategorizedHero) => {
+    const isOwned = status === 'owned';
+    const isLocked = status === 'locked';
+    const cost = getHeroUnlockCost(hero.id) || { gold: 0, dust: 0 };
+    const canAfford = gold >= cost.gold && dust >= cost.dust;
+    const isRecruiting = recruiting === hero.id;
+    const isFree = hero.rarity === 'starter';
+    const classConfig = CLASS_CONFIG[hero.class] || { icon: '⬡', label: hero.class };
+    const roleLabel = ROLE_LABELS[hero.role] || hero.role;
+    const rarityConfig = RARITY_CONFIG[hero.rarity] || RARITY_CONFIG.common;
+
+    const progressPercent = isLocked
+      ? Math.min(100, Math.floor((currentFortressLevel / requiredLevel) * 100))
+      : 100;
+
+    return (
+      <div
+        key={hero.id}
+        class={`${styles.heroCard} ${isOwned ? styles.owned : ''} ${isLocked ? styles.locked : ''}`}
+        style={{ '--rarity-color': rarityConfig.color } as JSX.CSSProperties}
+      >
+        <div class={styles.rarityBadge}>
+          {rarityConfig.label}
         </div>
 
-        {error && <div class={styles.errorMessage}>{error}</div>}
+        {isOwned && (
+          <div class={styles.ownedBadge}>✓</div>
+        )}
 
-        <div class={styles.heroGrid}>
-          {sortedHeroes.map((hero) => {
-            const isOwned = unlocked.includes(hero.id);
-            const isAvailableByLevel = isHeroUnlockedAtLevel(hero.id, currentFortressLevel);
-            const requiredLevel = getHeroUnlockLevel(hero.id);
-            const cost = getHeroUnlockCost(hero.id) || { gold: 0, dust: 0 };
-            const canAfford = gold >= cost.gold && dust >= cost.dust;
-            const isRecruiting = recruiting === hero.id;
-            const isFree = hero.rarity === 'starter';
-            const isLocked = !isAvailableByLevel;
-            const classConfig = CLASS_CONFIG[hero.class] || { icon: '⬡', label: hero.class };
-            const roleLabel = ROLE_LABELS[hero.role] || hero.role;
+        <div class={styles.heroAvatar}>
+          <HeroAvatar heroId={hero.id} tier={1} size={90} />
+        </div>
 
-            // Progress calculation for locked heroes
-            const progressPercent = isLocked
-              ? Math.min(100, Math.floor((currentFortressLevel / requiredLevel) * 100))
-              : 100;
+        <div class={styles.heroName}>{hero.name}</div>
 
-            return (
-              <div
-                key={hero.id}
-                class={`${styles.heroCard} ${isOwned ? styles.unlocked : ''} ${isLocked ? styles.locked : ''}`}
-                style={{ '--rarity-color': RARITY_COLORS[hero.rarity] } as JSX.CSSProperties}
-              >
-                <div class={styles.rarityBadge}>
-                  {RARITY_LABELS[hero.rarity]}
+        <div class={styles.heroMeta}>
+          <div class={styles.heroClass}>
+            <span class={styles.classIcon}>{classConfig.icon}</span>
+            {classConfig.label}
+          </div>
+          <div class={styles.heroRole}>{roleLabel}</div>
+        </div>
+
+        <div class={styles.statsRow}>
+          <div class={styles.stat} title="HP">
+            <span class={styles.statIcon} style={{ color: '#ef4444' }}>♥</span>
+            <span class={styles.statValue}>{hero.baseStats.hp}</span>
+          </div>
+          <div class={styles.stat} title="Obrażenia">
+            <span class={styles.statIcon} style={{ color: '#f59e0b' }}>⚔</span>
+            <span class={styles.statValue}>{hero.baseStats.damage}</span>
+          </div>
+        </div>
+
+        <div class={styles.cardFooter}>
+          {isLocked ? (
+            <div class={styles.lockedContent}>
+              <div class={styles.progressContainer}>
+                <div class={styles.progressBar}>
+                  <div
+                    class={styles.progressFill}
+                    style={{ width: `${progressPercent}%` }}
+                  />
                 </div>
-
-                {isOwned && (
-                  <div class={styles.ownedBadge}>✓</div>
-                )}
-
-                <div class={styles.heroAvatar}>
-                  <HeroAvatar heroId={hero.id} tier={1} size={70} />
+                <div class={styles.progressLabel}>
+                  Poz. {currentFortressLevel} / {requiredLevel}
                 </div>
-
-                <div class={styles.heroName}>{hero.name}</div>
-
-                <div class={styles.heroInfo}>
-                  <div class={styles.heroClass}>
-                    <span class={styles.classIcon}>{classConfig.icon}</span>
-                    {classConfig.label}
-                  </div>
-                  <div class={styles.heroRole}>{roleLabel}</div>
-                </div>
-
-                <div class={styles.miniStats}>
-                  <div class={styles.miniStat} title="HP">
-                    <span class={styles.miniStatIcon} style={{ color: '#ef4444' }}>♥</span>
-                    <span>{hero.baseStats.hp}</span>
-                  </div>
-                  <div class={styles.miniStat} title="Obrażenia">
-                    <span class={styles.miniStatIcon} style={{ color: '#f59e0b' }}>⚔</span>
-                    <span>{hero.baseStats.damage}</span>
-                  </div>
-                </div>
-
-                {isLocked ? (
-                  <div class={styles.lockedSection}>
-                    <div class={styles.progressContainer}>
-                      <div class={styles.progressBar}>
-                        <div
-                          class={styles.progressFill}
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
-                      <div class={styles.progressText}>
-                        Poz. {currentFortressLevel} / {requiredLevel}
-                      </div>
-                    </div>
-                    <div class={styles.lockedBadge}>
-                      <span class={styles.lockIcon}>🔒</span>
-                      Poziom {requiredLevel}
-                    </div>
-                  </div>
-                ) : isOwned ? (
-                  <div class={styles.statusSection}>
-                    <div class={styles.unlockedBadge}>
-                      <span>✓</span> Posiadany
-                    </div>
-                  </div>
+              </div>
+              <div class={styles.lockBadge}>
+                <span class={styles.lockIcon}>🔒</span>
+                Poziom {requiredLevel}
+              </div>
+            </div>
+          ) : isOwned ? (
+            <div class={styles.ownedContent}>
+              <div class={styles.ownedLabel}>
+                <span>✓</span> Posiadany
+              </div>
+            </div>
+          ) : (
+            <div class={styles.recruitContent}>
+              <div class={styles.costRow}>
+                {isFree ? (
+                  <span class={styles.freeLabel}>Darmowy</span>
                 ) : (
-                  <div class={styles.statusSection}>
-                    <div class={styles.costSection}>
-                      {isFree ? (
-                        <span class={styles.freeLabel}>Darmowy</span>
-                      ) : (
-                        <>
-                          {cost.gold > 0 && (
-                            <div class={`${styles.cost} ${gold < cost.gold ? styles.insufficient : ''}`}>
-                              <span class={styles.costIcon}>💰</span>
-                              {cost.gold.toLocaleString()}
-                            </div>
-                          )}
-                          {cost.dust > 0 && (
-                            <div class={`${styles.cost} ${dust < cost.dust ? styles.insufficient : ''}`}>
-                              <span class={styles.costIcon}>✨</span>
-                              {cost.dust.toLocaleString()}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    <button
-                      class={`${styles.recruitButton} ${hero.rarity === 'legendary' ? styles.legendaryButton : ''}`}
-                      onClick={() => handleRecruit(hero.id)}
-                      disabled={!canAfford || isRecruiting}
-                    >
-                      <span>{isRecruiting ? 'Rekrutacja...' : isFree ? 'Odblokuj' : 'Rekrutuj'}</span>
-                    </button>
-                  </div>
+                  <>
+                    {cost.gold > 0 && (
+                      <div class={`${styles.costItem} ${gold < cost.gold ? styles.insufficient : ''}`}>
+                        <span class={styles.costIcon}>💰</span>
+                        {cost.gold.toLocaleString()}
+                      </div>
+                    )}
+                    {cost.dust > 0 && (
+                      <div class={`${styles.costItem} ${dust < cost.dust ? styles.insufficient : ''}`}>
+                        <span class={styles.costIcon}>✨</span>
+                        {cost.dust.toLocaleString()}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
-            );
-          })}
+              <button
+                class={`${styles.recruitButton} ${hero.rarity === 'legendary' ? styles.legendaryBtn : ''}`}
+                onClick={() => handleRecruit(hero.id)}
+                disabled={!canAfford || isRecruiting}
+              >
+                {isRecruiting ? 'Rekrutacja...' : isFree ? 'Odblokuj' : 'Rekrutuj'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Modal visible={visible} onClose={onClose} title="Rekrutacja Bohaterów" size="fullscreen" bodyClass={styles.modalBody}>
+      <div class={styles.container}>
+        <div class={styles.resourceBar}>
+          <div class={styles.resource}>
+            <span class={styles.goldIcon}>💰</span>
+            <span class={styles.resourceValue}>{gold.toLocaleString()}</span>
+          </div>
+          <div class={styles.resource}>
+            <span class={styles.dustIcon}>✨</span>
+            <span class={styles.resourceValue}>{dust.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {error && <div class={styles.errorBanner}>{error}</div>}
+
+        <div class={styles.heroSections}>
+          {/* Owned Heroes */}
+          {ownedHeroes.length > 0 && (
+            <div class={styles.section}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>✓</span>
+                <span class={styles.sectionTitle}>Twoi Bohaterowie</span>
+                <span class={styles.sectionCount}>{ownedHeroes.length}</span>
+              </div>
+              <div class={styles.heroGrid}>
+                {ownedHeroes.map(renderHeroCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Available Heroes */}
+          {availableHeroes.length > 0 && (
+            <div class={styles.section}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>🎯</span>
+                <span class={styles.sectionTitle}>Dostępni do Rekrutacji</span>
+                <span class={styles.sectionCount}>{availableHeroes.length}</span>
+              </div>
+              <div class={styles.heroGrid}>
+                {availableHeroes.map(renderHeroCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Locked Heroes */}
+          {lockedHeroes.length > 0 && (
+            <div class={styles.section}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>🔒</span>
+                <span class={styles.sectionTitle}>Zablokowane</span>
+                <span class={styles.sectionCount}>{lockedHeroes.length}</span>
+              </div>
+              <div class={styles.heroGrid}>
+                {lockedHeroes.map(renderHeroCard)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Modal>

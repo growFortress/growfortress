@@ -210,21 +210,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 2px;
   pointer-events: auto;
-  padding: 8px 16px;
+  padding: 10px 18px;
   min-width: 90px;
+  min-height: 56px;
+  box-sizing: border-box;
   background: rgba(0, 20, 40, 0.85);
   border: 1px solid rgba(0, 200, 255, 0.25);
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: var(--elevation-2);
   position: relative;
   overflow: hidden;
+  margin-right: 24px;
 }
 
 .waveLabel {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-text-50);
   text-transform: uppercase;
@@ -233,7 +237,7 @@
 
 .waveNumber {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--color-primary);
   text-shadow: 0 0 15px var(--color-primary-50);
@@ -711,6 +715,11 @@
     padding-right: 24px;
   }
 
+  .waveDisplay {
+    min-height: 42px;
+    margin-right: 20px;
+  }
+
   .centerPanels {
     order: 10;
     width: 100%;
@@ -750,8 +759,10 @@
   }
 
   .waveDisplay {
-    padding: 8px 12px;
-    min-width: 80px;
+    padding: 6px 10px;
+    min-width: 70px;
+    min-height: 42px;
+    margin-right: 16px;
   }
 
   .waveLabel {
@@ -830,8 +841,10 @@
   }
 
   .waveDisplay {
-    padding: 6px 10px;
-    min-width: 70px;
+    padding: 4px 6px;
+    min-width: 60px;
+    min-height: 34px;
+    margin-right: 8px;
   }
 
   .waveNumber {

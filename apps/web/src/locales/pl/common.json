@@ -195,6 +195,8 @@
     "level": "Poziom {{level}}",
     "inUse": "W użyciu",
     "noGold": "Brak złota",
+    "owned": "Posiadana",
+    "purchaseError": "Nie udało się kupić wieżyczki",
     "cancel": "Anuluj"
   },
   "leaderboard": {

@@ -1,4 +1,4 @@
-import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModalVisible, showIdleRewardsModal, hasPendingRewards, bossRushActive, openPvpPanel, pvpPendingChallenges } from '../../state/index.js';
+import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModalVisible, showIdleRewardsModal, hasPendingRewards, bossRushActive } from '../../state/index.js';
 import { Button } from '../shared/Button.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
@@ -14,7 +14,6 @@ interface ControlsProps {
 export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, onBossRushEndClick, startDisabled }: ControlsProps) {
   const { t } = useTranslation('game');
   const isBossRush = bossRushActive.value;
-  const pendingChallenges = pvpPendingChallenges.value;
 
   return (
     <div class={styles.controls} role="toolbar" aria-label={t('controls.gameControls')}>
@@ -89,31 +88,25 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
               <Tooltip content={t('controls.comingSoon')} position="top">
                 <Button
                   variant="skill"
-                  size="md"
+                  size="sm"
                   disabled={true}
                   aria-label={t('controls.bossRushComingSoon')}
                   style={{ opacity: 0.6 }}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '6px', fontSize: '1.2em' }}>👹</span> Boss Rush
-                  <span style={{ marginLeft: '6px', fontSize: '0.7em', background: 'rgba(251, 191, 36, 0.3)', padding: '2px 6px', borderRadius: '4px', color: '#fbbf24' }}>SOON</span>
+                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>👹</span> Boss Rush
+                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>SOON</span>
                 </Button>
               </Tooltip>
-              <Tooltip content={t('controls.fightPlayers')} position="top">
+              <Tooltip content={t('controls.comingSoon')} position="top">
                 <Button
                   variant="skill"
-                  size="md"
-                  onClick={openPvpPanel}
-                  aria-label={t('controls.pvpArena') + (pendingChallenges > 0 ? t('controls.pendingChallenges', { count: pendingChallenges }) : '')}
+                  size="sm"
+                  disabled={true}
+                  aria-label="Pillar Challenge - Coming Soon"
+                  style={{ opacity: 0.6 }}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '6px', fontSize: '1.2em' }}>🏆</span> PvP Arena
-                  {pendingChallenges > 0 && (
-                    <span
-                      aria-hidden="true"
-                      style={{ marginLeft: '6px', background: '#ef4444', borderRadius: '999px', padding: '2px 8px', fontSize: '0.75rem' }}
-                    >
-                      {pendingChallenges}
-                    </span>
-                  )}
+                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>🌀</span> Pillar
+                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>SOON</span>
                 </Button>
               </Tooltip>
             </div>

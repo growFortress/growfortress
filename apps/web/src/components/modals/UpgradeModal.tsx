@@ -44,12 +44,12 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   ]);
 }
 
-// Turret names and info (simplified: 4 turrets)
+// Turret names and info (4 turrets)
 const TURRET_INFO: Record<string, { name: string; icon: string; role: string }> = {
-  arrow: { name: 'Wieża Strzał', icon: '🏹', role: 'Szybkie Obrażenia' },
-  cannon: { name: 'Wieża Armatnia', icon: '💣', role: 'Obszarowe' },
-  tesla: { name: 'Wieża Tesli', icon: '⚡', role: 'Łańcuchowe' },
-  frost: { name: 'Wieża Mrozu', icon: '❄️', role: 'Spowolnienie' },
+  railgun: { name: 'Railgun', icon: '⚡', role: 'Szybkie Obrażenia' },
+  artillery: { name: 'Artyleria', icon: '💣', role: 'Obszarowe' },
+  arc: { name: 'Łuk Plazmowy', icon: '🔷', role: 'Łańcuchowe' },
+  cryo: { name: 'Kryo', icon: '❄️', role: 'Spowolnienie' },
 };
 
 // Class colors (7 classes)

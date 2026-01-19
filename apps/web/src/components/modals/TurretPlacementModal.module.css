@@ -1,26 +1,5 @@
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-overlay);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity var(--duration-slow) var(--ease-standard), visibility var(--duration-slow) var(--ease-standard);
-  z-index: 200;
-}
-
-.modal:global(.visible) {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
+/* Modal styling is handled by shared Modal component */
+/* This just provides additional styling for turret placement content */
 
 .container {
   max-width: 900px;
@@ -252,6 +231,18 @@
 
 .goldIcon {
   font-size: 14px;
+}
+
+.ownedBadge {
+  background: var(--color-success-20);
+  border: var(--border-success);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--color-success);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .closeButton {

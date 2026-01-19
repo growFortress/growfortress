@@ -1,18 +1,24 @@
+/* Hero Recruitment Modal - Improved Layout */
+
 .modalBody {
   padding: 0 !important;
   overflow: hidden !important;
 }
 
 .container {
-  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0 32px 32px;
 }
 
+/* Resource Bar */
 .resourceBar {
   display: flex;
-  gap: 32px;
+  gap: 40px;
   justify-content: center;
   margin-bottom: 20px;
-  padding: 14px 24px;
+  padding: 16px 32px;
   background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-elevated) 100%);
   border-radius: var(--radius-lg);
   border: var(--border-neutral);
@@ -22,68 +28,118 @@
 .resource {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.25rem;
+  gap: 12px;
+}
+
+.goldIcon, .dustIcon {
+  font-size: 1.75rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.resourceValue {
+  font-size: 1.5rem;
   font-weight: bold;
   color: var(--color-text);
   font-family: var(--font-display);
 }
 
-.goldIcon, .dustIcon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.errorMessage {
+/* Error Banner */
+.errorBanner {
   background: var(--color-accent-10);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: 12px 16px;
   margin-bottom: 16px;
   color: var(--color-accent);
   text-align: center;
+  font-weight: 500;
 }
 
-.heroGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  max-width: 900px;
-  margin: 0 auto;
-  max-height: 500px;
+/* Sections Container */
+.heroSections {
+  flex: 1;
   overflow-y: auto;
   padding-right: 8px;
 }
 
 /* Custom scrollbar */
-.heroGrid::-webkit-scrollbar {
+.heroSections::-webkit-scrollbar {
   width: 8px;
 }
 
-.heroGrid::-webkit-scrollbar-track {
+.heroSections::-webkit-scrollbar-track {
   background: var(--color-bg);
   border-radius: var(--radius-full);
 }
 
-.heroGrid::-webkit-scrollbar-thumb {
+.heroSections::-webkit-scrollbar-thumb {
   background: var(--color-neutral);
   border-radius: var(--radius-full);
   border: 2px solid var(--color-bg);
 }
 
-.heroGrid::-webkit-scrollbar-thumb:hover {
+.heroSections::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary-50);
 }
 
+/* Section */
+.section {
+  margin-bottom: 24px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-neutral);
+}
+
+.sectionIcon {
+  font-size: 1.25rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sectionCount {
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  margin-left: auto;
+}
+
+/* Hero Grid - larger cards */
+.heroGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* Hero Card */
 .heroCard {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--rarity-color) 8%, var(--color-bg-elevated)) 0%,
-    var(--color-bg-elevated) 40%
+    color-mix(in srgb, var(--rarity-color) 10%, var(--color-bg-elevated)) 0%,
+    var(--color-bg-elevated) 50%
   );
   border: 2px solid var(--color-neutral);
   border-radius: var(--radius-lg);
-  padding: 20px 16px 16px;
+  padding: 24px 20px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -92,7 +148,7 @@
   overflow: hidden;
   box-shadow: var(--shadow-md);
   transition: var(--transition-interactive-normal);
-  min-height: 220px;
+  min-height: 300px;
 }
 
 .heroCard::before {
@@ -117,7 +173,7 @@
   inset: 0;
   background: radial-gradient(
     ellipse at center top,
-    color-mix(in srgb, var(--rarity-color) 10%, transparent) 0%,
+    color-mix(in srgb, var(--rarity-color) 12%, transparent) 0%,
     transparent 60%
   );
   pointer-events: none;
@@ -135,16 +191,59 @@
   opacity: 1;
 }
 
-/* Already unlocked hero */
-.heroCard.unlocked {
+/* Owned Hero Card */
+.heroCard.owned {
   border-color: var(--color-secondary);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-secondary) 12%, var(--color-bg-elevated)) 0%,
+    color-mix(in srgb, var(--color-secondary) 15%, var(--color-bg-elevated)) 0%,
     var(--color-bg-elevated) 50%
   );
 }
 
+.heroCard.owned::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-secondary) 20%,
+    var(--color-secondary) 80%,
+    transparent 100%
+  );
+}
+
+/* Locked Hero Card */
+.heroCard.locked {
+  opacity: 0.7;
+}
+
+.heroCard.locked .heroAvatar {
+  filter: grayscale(60%) brightness(0.7);
+}
+
+.heroCard.locked:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-neutral-light);
+}
+
+/* Rarity Badge */
+.rarityBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--rarity-color) 0%, color-mix(in srgb, var(--rarity-color) 70%, black) 100%);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--rarity-color) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 50%, white);
+}
+
+/* Owned Badge */
 .ownedBadge {
   position: absolute;
   top: 10px;
@@ -163,31 +262,144 @@
   border: 2px solid var(--color-bg-elevated);
 }
 
-/* Locked state - hero not available at current fortress level */
-.heroCard.locked {
-  opacity: 0.75;
+/* Hero Avatar */
+.heroAvatar {
+  margin: 16px 0 12px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: var(--transition-interactive-normal);
 }
 
-.heroCard.locked .heroAvatar {
-  filter: grayscale(60%) brightness(0.7);
+.heroCard:hover .heroAvatar {
+  transform: scale(1.08);
 }
 
-.heroCard.locked:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-neutral-light);
+/* Hero Name */
+.heroName {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  text-shadow: var(--text-shadow);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
 }
 
-.lockedSection {
+/* Hero Meta (Class + Role) */
+.heroMeta {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.heroClass {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--rarity-color, var(--color-primary));
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+}
+
+.classIcon {
+  font-size: 14px;
+}
+
+.heroRole {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--color-text-80);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-neutral);
+}
+
+/* Stats Row */
+.statsRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  padding: 4px 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.statIcon {
+  font-size: 12px;
+  font-family: serif;
+}
+
+.statValue {
+  font-family: var(--font-display);
+}
+
+/* Card Footer */
+.cardFooter {
   margin-top: auto;
   width: 100%;
 }
 
-.lockedBadge {
+/* Locked Content */
+.lockedContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.progressContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 5px;
+  background: var(--color-bg);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rarity-color) 0%, color-mix(in srgb, var(--rarity-color) 70%, white) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.3s var(--ease-standard);
+}
+
+.progressLabel {
+  font-size: 9px;
+  color: var(--color-text-40);
+  text-align: center;
+}
+
+.lockBadge {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -207,187 +419,85 @@
   opacity: 0.8;
 }
 
-.progressContainer {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.progressBar {
-  width: 100%;
-  height: 4px;
-  background: var(--color-bg);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--rarity-color) 0%, color-mix(in srgb, var(--rarity-color) 70%, white) 100%);
-  border-radius: var(--radius-full);
-  transition: width 0.3s var(--ease-standard);
-}
-
-.progressText {
-  font-size: 9px;
-  color: var(--color-text-40);
-  text-align: center;
-}
-
-.rarityBadge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--rarity-color) 0%, color-mix(in srgb, var(--rarity-color) 70%, black) 100%);
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--rarity-color) 40%, transparent);
-  border: 1px solid color-mix(in srgb, var(--rarity-color) 50%, white);
-}
-
-.heroAvatar {
-  margin: 12px 0 10px 0;
+/* Owned Content */
+.ownedContent {
   display: flex;
   justify-content: center;
-  align-items: center;
-  transition: var(--transition-interactive-normal);
-  position: relative;
-}
-
-.heroCard:hover .heroAvatar {
-  transform: scale(1.05);
-}
-
-.heroName {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: var(--color-text);
-  margin-bottom: 2px;
-  text-shadow: var(--text-shadow);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  line-height: 1.2;
-}
-
-.heroInfo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.heroRole {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  color: var(--color-text-80);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-weight: 600;
-  padding: 3px 8px;
-  background: var(--color-bg);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-neutral);
-}
-
-.heroClass {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  color: var(--rarity-color, var(--color-primary));
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: bold;
-}
-
-.classIcon {
-  font-size: 12px;
-}
-
-.statusSection {
-  margin-top: auto;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
 }
 
-.unlockedBadge {
+.ownedLabel {
   display: flex;
   align-items: center;
   gap: 6px;
   background: linear-gradient(135deg, var(--color-secondary-20) 0%, var(--color-secondary-30) 100%);
   border: 2px solid var(--color-secondary);
   border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  font-size: 11px;
+  padding: 10px 20px;
+  font-size: 12px;
   color: var(--color-secondary);
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
 
-.costSection {
+/* Recruit Content */
+.recruitContent {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.costRow {
+  display: flex;
   gap: 12px;
-  margin-bottom: 10px;
   justify-content: center;
 }
 
-.cost {
+.costItem {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   color: var(--color-text);
-  padding: 4px 8px;
+  padding: 5px 10px;
   background: var(--color-bg);
   border-radius: var(--radius-sm);
 }
 
-.cost.insufficient {
+.costItem.insufficient {
   color: var(--color-accent);
   background: var(--color-accent-10);
 }
 
 .costIcon {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .freeLabel {
   color: var(--color-secondary);
   font-weight: bold;
-  font-size: 12px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   background: var(--color-secondary-20);
   border-radius: var(--radius-sm);
 }
 
+/* Recruit Button */
 .recruitButton {
-  margin-top: auto;
-  padding: 10px 20px;
+  padding: 10px 24px;
   width: 100%;
   background: linear-gradient(135deg, var(--color-primary-20) 0%, var(--color-primary-30) 100%);
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-sm);
   color: var(--color-primary);
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: var(--transition-interactive-fast);
   text-transform: uppercase;
@@ -416,11 +526,6 @@
   opacity: 1;
 }
 
-.recruitButton span {
-  position: relative;
-  z-index: 1;
-}
-
 .recruitButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -433,65 +538,25 @@
   transform: translateY(0);
 }
 
-/* Mini stats */
-.miniStats {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.miniStat {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-60);
-  padding: 3px 8px;
-  background: var(--color-bg);
-  border-radius: 4px;
-}
-
-.miniStatIcon {
-  font-size: 11px;
-  font-family: serif;
-}
-
-/* Legendary button styling */
-.legendaryButton {
+/* Legendary Button */
+.legendaryBtn {
   background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.3) 100%);
   border: 2px solid #fbbf24;
   color: #fbbf24;
 }
 
-.legendaryButton::before {
+.legendaryBtn::before {
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
 }
 
-.legendaryButton:hover:not(:disabled) {
+.legendaryBtn:hover:not(:disabled) {
   box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
 }
 
-/* Exclusive badge for premium heroes */
-.exclusiveBadge {
-  position: absolute;
-  top: 36px;
-  left: 10px;
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: #1a1a2a;
-  font-weight: bold;
-}
-
 /* Responsive */
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .heroGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 }
 
@@ -503,11 +568,15 @@
 
   .heroCard {
     padding: 16px 12px;
-    min-height: 200px;
+    min-height: 250px;
+  }
+
+  .heroAvatar {
+    margin: 12px 0 10px 0;
   }
 
   .heroName {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 
   .rarityBadge {
@@ -516,29 +585,52 @@
   }
 
   .resourceBar {
-    gap: 16px;
-    padding: 10px 16px;
+    gap: 20px;
+    padding: 12px 20px;
   }
 
-  .resource {
-    font-size: 1.1rem;
+  .resourceValue {
+    font-size: 1.25rem;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .heroGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .container {
     padding: 0 16px 16px;
   }
 
-  .miniStats {
+  .heroGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .heroCard {
+    min-height: 230px;
+    padding: 14px 10px 12px;
+  }
+
+  .statsRow {
     display: none;
   }
 
   .heroClass {
     display: none;
+  }
+
+  .sectionHeader {
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+
+  .sectionIcon {
+    font-size: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 0.9rem;
   }
 }

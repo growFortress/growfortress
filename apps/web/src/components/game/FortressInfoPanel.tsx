@@ -430,12 +430,6 @@ export function FortressInfoPanel() {
             const statData = fortressStats[config.stat as keyof typeof fortressStats];
             const isArmor = config.stat === 'armor';
 
-            // Calculate effect progression for display
-            const currentBonus = getStatBonusPercent(config, currentLevel);
-            const nextBonus = currentLevel < config.maxLevel
-              ? getStatBonusPercent(config, currentLevel + 1)
-              : currentBonus;
-
             // Format display value
             const displayValue = isArmor
               ? `${statData.total.toFixed(0)}%`
@@ -467,15 +461,6 @@ export function FortressInfoPanel() {
                 </div>
 
                 <div class={styles.upgradeBonusRow}>
-                  <div class={styles.effectProgression}>
-                    <span class={styles.effectNow}>+{currentBonus.toFixed(1)}%</span>
-                    {!isMaxed && (
-                      <>
-                        <span class={styles.effectArrow}>→</span>
-                        <span class={styles.effectNext}>+{nextBonus.toFixed(1)}%</span>
-                      </>
-                    )}
-                  </div>
                   <span
                     class={styles.statValue}
                     title={tooltipText}

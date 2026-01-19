@@ -343,14 +343,14 @@
   color: var(--color-positive);
 }
 
-/* Affordable indicator - green glow when can afford */
+/* Affordable indicator - blue glow when can afford */
 .affordableBtn {
-  box-shadow: 0 0 12px var(--color-positive-30) !important;
-  border-color: var(--color-positive) !important;
+  box-shadow: 0 0 12px var(--color-primary-30) !important;
+  border-color: var(--color-primary) !important;
 }
 
 .affordableBtn:hover:not(:disabled) {
-  box-shadow: 0 0 18px var(--color-positive-50) !important;
+  box-shadow: 0 0 18px var(--color-primary-50) !important;
 }
 
 /* ==================== PROFILE SECTION ==================== */

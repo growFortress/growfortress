@@ -1,14 +1,20 @@
 import type { JSX } from 'preact';
+import { useState } from 'preact/hooks';
 import type { TurretType, FortressClass, ActiveTurret } from '@arcade/sim-core';
 import { TURRET_DEFINITIONS, getTurretById, isTurretUnlockedAtLevel, getTurretUnlockLevel } from '@arcade/sim-core';
+import { TURRET_UNLOCK_COST } from '@arcade/protocol';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import {
   turretPlacementModalVisible,
   turretPlacementSlotIndex,
   activeTurrets,
+  hubTurrets,
+  unlockedTurretIds,
   baseGold,
   baseLevel,
+  showErrorToast,
 } from '../../state/index.js';
+import { unlockTurret } from '../../api/client.js';
 import { Modal } from '../shared/Modal.js';
 import styles from './TurretPlacementModal.module.css';
 
@@ -47,16 +53,44 @@ interface TurretPlacementModalProps {
 export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
   const { t } = useTranslation('common');
   const slotIndex = turretPlacementSlotIndex.value;
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelect = (turretType: TurretType) => {
-    if (slotIndex === null) return;
+  const handleSelect = async (turretType: TurretType) => {
+    if (slotIndex === null || isLoading) return;
 
+    // Check if already unlocked - if so, just place it without API call
+    const alreadyUnlocked = unlockedTurretIds.value.includes(turretType);
+
+    if (!alreadyUnlocked) {
+      // Call API to unlock turret (deducts gold on server)
+      setIsLoading(true);
+      try {
+        const response = await unlockTurret({ turretType });
+
+        if (!response.success) {
+          showErrorToast(response.error || t('turretPlacement.purchaseError'));
+          setIsLoading(false);
+          return;
+        }
+
+        // Update gold and unlocked turrets from server response
+        baseGold.value = response.inventory.gold;
+        unlockedTurretIds.value = response.unlockedTurretIds;
+      } catch (error) {
+        console.error('Failed to unlock turret:', error);
+        showErrorToast(t('turretPlacement.purchaseError'));
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(false);
+    }
+
+    // Add turret to local state for display
     const turretTier = 1 as const;
     const turretDefinition = getTurretById(turretType);
     const baseHp = turretDefinition?.baseStats.hp ?? 150;
     const maxHp = Math.floor(baseHp * (1 + (turretTier - 1) * 0.25));
 
-    // Add turret to active turrets
     const newTurret: ActiveTurret = {
       definitionId: turretType,
       tier: turretTier,
@@ -70,6 +104,7 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
     };
 
     activeTurrets.value = [...activeTurrets.value, newTurret];
+    hubTurrets.value = [...hubTurrets.value, newTurret];
 
     // Close modal
     turretPlacementModalVisible.value = false;
@@ -94,7 +129,7 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
   return (
     <Modal
       visible={turretPlacementModalVisible.value}
-      class={styles.modal}
+      size="xlarge"
       onClick={handleClose}
     >
       <div class={styles.container}>
@@ -108,15 +143,22 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
             const icon = TURRET_ICONS[turret.id];
             const roleKey = ROLE_KEYS[turret.role];
             const roleDesc = roleKey ? t(roleKey) : turret.role;
-            const baseCost = turret.baseCost.gold;
+            const baseCost = TURRET_UNLOCK_COST.gold;
 
-            // Use fortress level-based unlock system
+            // Check if turret is unlocked by fortress level
             const isUnlockedByLevel = isTurretUnlockedAtLevel(turret.id, currentFortressLevel);
             const requiredLevel = getTurretUnlockLevel(turret.id);
             const isLocked = !isUnlockedByLevel;
+
+            // Check if already purchased/unlocked (owned)
+            const isOwned = unlockedTurretIds.value.includes(turret.id);
+
+            // Check if already placed in a slot
             const isUsed = usedTurretIds.includes(turret.id);
-            const canAfford = currentGold >= baseCost;
-            const isDisabled = isLocked || isUsed || !canAfford;
+
+            // Can afford only matters if not already owned
+            const canAfford = isOwned || currentGold >= baseCost;
+            const isDisabled = isLocked || isUsed || !canAfford || isLoading;
 
             const cardClasses = [
               styles.turretCard,
@@ -154,14 +196,20 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
                     <span class={styles.lockIcon}>🔒</span>
                     {t('turretPlacement.level', { level: requiredLevel })}
                   </div>
+                ) : isOwned ? (
+                  <>
+                    <div class={styles.ownedBadge}>
+                      {t('turretPlacement.owned')}
+                    </div>
+                    {isUsed && <div class={styles.usedLabel}>{t('turretPlacement.inUse')}</div>}
+                  </>
                 ) : (
                   <>
                     <div class={`${styles.costBadge} ${!canAfford ? styles.costInsufficient : ''}`}>
-                      <span class={styles.goldIcon}>&#x1F4B0;</span>
+                      <span class={styles.goldIcon}>💰</span>
                       {baseCost}
                     </div>
-                    {isUsed && <div class={styles.usedLabel}>{t('turretPlacement.inUse')}</div>}
-                    {!isUsed && !canAfford && (
+                    {!canAfford && (
                       <div class={styles.insufficientLabel}>{t('turretPlacement.noGold')}</div>
                     )}
                   </>

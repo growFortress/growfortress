@@ -81,7 +81,20 @@
 .statusBar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 24px;
+}
+
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.rightGroup {
+  display: flex;
+  align-items: center;
 }
 
 .navGroupWrapper {
@@ -107,11 +120,11 @@
 .buttonGroup {
   display: flex;
   align-items: center;
-  min-height: 48px;
-  padding: 8px 14px;
+  min-height: 56px;
+  padding: 10px 18px;
   background: rgba(0, 20, 40, 0.85);
   border: 1px solid rgba(0, 200, 255, 0.25);
-  border-radius: 10px;
+  border-radius: 12px;
   box-sizing: border-box;
 }
 
@@ -127,13 +140,13 @@
 }
 
 .resourceIcon {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
 }
 
 .resourceValue {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 17px;
   font-family: var(--font-display);
   min-width: 24px;
 }
@@ -229,7 +242,7 @@
 .levelValue {
   font-weight: 700;
   color: var(--color-primary);
-  font-size: 18px;
+  font-size: 20px;
   font-family: var(--font-display);
   text-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
   min-width: 18px;
@@ -270,13 +283,13 @@
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text-60);
-  width: 36px;
-  height: 32px;
+  width: 40px;
+  height: 36px;
   padding: 0;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   transition: all 0.15s ease;
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -621,6 +634,10 @@
     gap: 16px;
   }
 
+  .leftGroup {
+    gap: 16px;
+  }
+
   .resourceGroup,
   .levelSection,
   .buttonGroup {
@@ -653,6 +670,10 @@
     gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  .leftGroup {
+    gap: 10px;
   }
 
   .groupLabel {
@@ -693,6 +714,10 @@
   }
 
   .statusBar {
+    gap: 6px;
+  }
+
+  .leftGroup {
     gap: 6px;
   }
 

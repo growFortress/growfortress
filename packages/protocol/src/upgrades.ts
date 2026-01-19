@@ -53,11 +53,11 @@ export type UpgradeTurretResponse = z.infer<typeof UpgradeTurretResponseSchema>;
  * Upgrade costs
  */
 export const HERO_UPGRADE_COSTS = {
-  '1_to_2': { gold: 7500, dust: 500 },   // Tier 2 after ~50 waves
-  '2_to_3': { gold: 20000, dust: 1500 }, // Tier 3 after ~133 waves
+  '1_to_2': { gold: 7500, dust: 20 },   // Tier 2
+  '2_to_3': { gold: 20000, dust: 40 },  // Tier 3
 } as const;
 
 export const TURRET_UPGRADE_COSTS = {
-  '1_to_2': { gold: 7500, dust: 500 },   // Tier 2 after ~50 waves
-  '2_to_3': { gold: 20000, dust: 1500 }, // Tier 3 after ~133 waves
+  '1_to_2': { gold: 7500, dust: 20 },   // Tier 2
+  '2_to_3': { gold: 20000, dust: 40 },  // Tier 3
 } as const;

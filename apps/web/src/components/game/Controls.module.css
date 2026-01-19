@@ -27,12 +27,14 @@
 .navGroup {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(0, 20, 40, 0.8);
-  border: 1px solid rgba(0, 200, 255, 0.2);
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 18px;
+  background: rgba(0, 20, 40, 0.85);
+  border: 1px solid rgba(0, 200, 255, 0.25);
   border-radius: 12px;
   pointer-events: auto;
+  box-sizing: border-box;
 }
 
 .navGroup[data-group="management"] {
@@ -42,7 +44,8 @@
 .navGroup[data-group="modes"] {
   border-color: rgba(255, 180, 0, 0.4);
   background: rgba(30, 30, 60, 0.85);
-  padding: 10px 16px;
+  padding: 8px 12px;
+  gap: 8px;
   box-shadow: 0 0 15px rgba(255, 180, 0, 0.15);
 }
 
@@ -52,8 +55,9 @@
 
 /* Primary CTA - Enhanced START button with pulse animation */
 .mainAction button {
-  padding: 18px 48px;
-  font-size: 18px;
+  min-height: 56px;
+  padding: 12px 56px;
+  font-size: 20px;
   background: linear-gradient(135deg, var(--color-primary-20) 0%, var(--color-primary-10) 100%);
   box-shadow:
     var(--shadow-md),
@@ -177,8 +181,14 @@
   }
 
   .navGroup {
+    min-height: 42px;
     gap: 6px;
     padding: 6px 10px;
+  }
+
+  .mainAction button {
+    min-height: 42px;
+    padding: 6px 40px;
   }
 }
 
@@ -198,13 +208,20 @@
   }
 
   .navGroup {
+    min-height: 38px;
     gap: 4px;
-    padding: 6px 8px;
+    padding: 5px 8px;
     border-radius: 8px;
   }
 
   .navGroup[data-group="modes"] {
-    padding: 8px 12px;
+    padding: 5px 8px;
+  }
+
+  .mainAction button {
+    min-height: 38px;
+    padding: 5px 32px;
+    font-size: 16px;
   }
 
   .groupLabel {
@@ -234,12 +251,19 @@
   }
 
   .navGroup {
+    min-height: 34px;
     gap: 3px;
     padding: 4px 6px;
   }
 
   .navGroup[data-group="modes"] {
-    padding: 6px 10px;
+    padding: 4px 6px;
+  }
+
+  .mainAction button {
+    min-height: 34px;
+    padding: 4px 24px;
+    font-size: 14px;
   }
 
   .endButtonWrapper {

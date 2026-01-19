@@ -69,6 +69,62 @@ function getTypeBadge(type: string, t: (key: string) => string): { label: string
   }
 }
 
+/**
+ * Simple markdown renderer for message content.
+ * Supports: **bold**, *italic*, bullet lists (• or *)
+ */
+function renderMessageContent(content: string) {
+  // Split by lines to handle lists
+  const lines = content.split('\n');
+
+  const processInlineMarkdown = (text: string) => {
+    // Process bold first
+    const boldRegex = /\*\*(.+?)\*\*/g;
+    let lastIndex = 0;
+    let match;
+
+    const tempParts: (string | { type: 'bold'; content: string })[] = [];
+    while ((match = boldRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        tempParts.push(text.slice(lastIndex, match.index));
+      }
+      tempParts.push({ type: 'bold', content: match[1] });
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < text.length) {
+      tempParts.push(text.slice(lastIndex));
+    }
+
+    // Convert to JSX
+    return tempParts.map((part, i) => {
+      if (typeof part === 'string') {
+        return part;
+      }
+      return <strong key={i}>{part.content}</strong>;
+    });
+  };
+
+  return lines.map((line, lineIndex) => {
+    // Check if line is a bullet point
+    const bulletMatch = line.match(/^\s*[•\-\*]\s+(.+)$/);
+    if (bulletMatch) {
+      return (
+        <div key={lineIndex} style={{ paddingLeft: '1rem', display: 'flex', gap: '0.5rem' }}>
+          <span>•</span>
+          <span>{processInlineMarkdown(bulletMatch[1])}</span>
+        </div>
+      );
+    }
+
+    // Regular line
+    return (
+      <div key={lineIndex}>
+        {processInlineMarkdown(line) || '\u00A0'}
+      </div>
+    );
+  });
+}
+
 // ============================================================================
 // THREAD LIST COMPONENT
 // ============================================================================
@@ -240,7 +296,7 @@ function ThreadView({ onBack, t, locale }: ThreadViewProps) {
               {!isSystem && !isSent && (
                 <div class={styles.messageSender}>{msg.senderName}</div>
               )}
-              <div class={styles.messageContent}>{msg.content}</div>
+              <div class={styles.messageContent}>{renderMessageContent(msg.content)}</div>
               <div class={styles.messageTime}>{formatDate(msg.createdAt, t, locale)}</div>
             </div>
           );
