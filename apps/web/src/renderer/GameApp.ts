@@ -1,7 +1,9 @@
 import { Application, Container } from "pixi.js";
 import { CRTFilter } from "pixi-filters";
-import { GameScene, type HubState } from "./scenes/GameScene";
-import { filterManager, FilterManager } from "./effects/FilterManager";
+import { GameScene, type HubState } from "./scenes/GameScene.js";
+import { ColonyScene } from "./scenes/ColonyScene.js";
+import { filterManager, FilterManager } from "./effects/FilterManager.js";
+import type { ColonyStatus } from "@arcade/protocol";
 
 // =============================================================================
 // WebGPU Detection & Renderer Info
@@ -170,16 +172,23 @@ class ScreenShakeManager {
   }
 }
 
+export type ActiveScene = "game" | "colony";
+
 export class GameApp {
   public app: Application;
   public stage: Container;
   public gameScene: GameScene | null = null;
+  public colonyScene: ColonyScene | null = null;
   public filterManager: FilterManager = filterManager;
   public rendererInfo: RendererInfo | null = null;
+  public activeScene: ActiveScene = "game";
   private canvas: HTMLCanvasElement;
   private resizeObserver: ResizeObserver | null = null;
   private screenShake: ScreenShakeManager;
   private gameContainer: Container;
+  private colonyContainer: Container;
+  private currentWidth = 0;
+  private currentHeight = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -187,6 +196,7 @@ export class GameApp {
     this.stage = this.app.stage;
     this.screenShake = new ScreenShakeManager();
     this.gameContainer = new Container();
+    this.colonyContainer = new Container();
   }
 
   async init() {
@@ -249,9 +259,18 @@ export class GameApp {
     this.gameContainer.interactiveChildren = true;
     this.stage.addChild(this.gameContainer);
 
+    // Create colony container (initially hidden)
+    this.colonyContainer.interactiveChildren = true;
+    this.colonyContainer.visible = false;
+    this.stage.addChild(this.colonyContainer);
+
     // Create the main game scene
     this.gameScene = new GameScene(this.app);
     this.gameContainer.addChild(this.gameScene.container);
+
+    // Create the colony scene
+    this.colonyScene = new ColonyScene();
+    this.colonyContainer.addChild(this.colonyScene.container);
 
     // Connect screen shake to VFX system
     this.gameScene.setScreenShakeCallback(
@@ -260,15 +279,19 @@ export class GameApp {
       },
     );
 
-    // Setup resize notification for GameScene
+    // Setup resize notification for scenes
     // Note: resizeTo handles renderer resize automatically,
-    // ResizeObserver just notifies GameScene about the new dimensions
+    // ResizeObserver just notifies scenes about the new dimensions
     const resizeElement =
       resizeTarget instanceof HTMLElement ? resizeTarget : this.canvas;
     const notifyResize = (width: number, height: number) => {
-      if (!this.gameScene) return;
       if (width <= 0 || height <= 0) return;
-      this.gameScene.onResize(Math.round(width), Math.round(height));
+      const w = Math.round(width);
+      const h = Math.round(height);
+      this.currentWidth = w;
+      this.currentHeight = h;
+      this.gameScene?.onResize(w, h);
+      this.colonyScene?.onResize(w, h);
     };
 
     this.resizeObserver = new ResizeObserver((entries) => {
@@ -312,6 +335,11 @@ export class GameApp {
 
         // Update filter effects
         this.filterManager.update(ticker.deltaMS);
+
+        // Update colony scene if visible
+        if (this.activeScene === "colony" && this.colonyScene) {
+          this.colonyScene.update(ticker.deltaMS);
+        }
       });
     } catch (e) {
       console.warn("CRT filter not supported, skipping:", e);
@@ -323,6 +351,11 @@ export class GameApp {
 
         // Update filter effects
         this.filterManager.update(ticker.deltaMS);
+
+        // Update colony scene if visible
+        if (this.activeScene === "colony" && this.colonyScene) {
+          this.colonyScene.update(ticker.deltaMS);
+        }
       });
     }
 
@@ -342,6 +375,7 @@ export class GameApp {
 
   destroy() {
     this.filterManager.destroy();
+    this.colonyScene?.destroy();
     this.resizeObserver?.disconnect();
     this.app.destroy(true, { children: true, texture: true });
   }
@@ -380,6 +414,91 @@ export class GameApp {
   ) {
     if (this.gameScene) {
       this.gameScene.setOnFieldClick(callback);
+    }
+  }
+
+  // ==========================================================================
+  // Colony Scene Management
+  // ==========================================================================
+
+  /**
+   * Show the colony scene (switch from game scene)
+   */
+  public showColonyScene() {
+    if (this.activeScene === "colony") return;
+
+    this.activeScene = "colony";
+    this.gameContainer.visible = false;
+    this.colonyContainer.visible = true;
+
+    // Notify colony scene of current size
+    if (this.colonyScene && this.currentWidth > 0 && this.currentHeight > 0) {
+      this.colonyScene.onResize(this.currentWidth, this.currentHeight);
+    }
+
+    console.log("[GameApp] Switched to colony scene");
+  }
+
+  /**
+   * Hide the colony scene (switch back to game scene)
+   */
+  public hideColonyScene() {
+    if (this.activeScene === "game") return;
+
+    this.activeScene = "game";
+    this.gameContainer.visible = true;
+    this.colonyContainer.visible = false;
+
+    // Deselect buildings when leaving
+    this.colonyScene?.deselectAll();
+
+    console.log("[GameApp] Switched to game scene");
+  }
+
+  /**
+   * Update colony data in the colony scene
+   */
+  public setColonies(colonies: ColonyStatus[]) {
+    if (this.colonyScene) {
+      this.colonyScene.setColonies(colonies);
+    }
+  }
+
+  /**
+   * Set callback for colony building click events
+   */
+  public setOnColonyBuildingClick(
+    callback: ((colonyId: string, colony: ColonyStatus | null) => void) | null,
+  ) {
+    if (this.colonyScene) {
+      this.colonyScene.onBuildingClick = callback;
+    }
+  }
+
+  /**
+   * Set callback for colony scene back button
+   */
+  public setOnColonyBackClick(callback: (() => void) | null) {
+    if (this.colonyScene) {
+      this.colonyScene.onBackClick = callback;
+    }
+  }
+
+  /**
+   * Play claim animation in colony scene
+   */
+  public async playColonyClaimAnimation(): Promise<void> {
+    if (this.colonyScene) {
+      await this.colonyScene.playClaimAnimation();
+    }
+  }
+
+  /**
+   * Play upgrade animation for a colony
+   */
+  public playColonyUpgradeAnimation(colonyId: string) {
+    if (this.colonyScene) {
+      this.colonyScene.playUpgradeAnimation(colonyId);
     }
   }
 }

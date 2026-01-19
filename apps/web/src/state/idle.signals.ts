@@ -176,10 +176,37 @@ export function resetIdleState(): void {
   idleRewardsModalVisible.value = false;
   claimingRewards.value = false;
   upgradingColony.value = null;
+  colonySceneVisible.value = false;
 }
 
 // Colony upgrade state
 export const upgradingColony = signal<string | null>(null);
+
+// ============================================================================
+// COLONY SCENE NAVIGATION
+// ============================================================================
+
+/**
+ * Whether the full-screen colony scene is visible.
+ * This replaces the game view when true.
+ */
+export const colonySceneVisible = signal(false);
+
+/**
+ * Show the full-screen colony scene
+ */
+export function showColonyScene(): void {
+  colonySceneVisible.value = true;
+  // Fetch latest colony data when opening
+  checkIdleRewards();
+}
+
+/**
+ * Hide the colony scene and return to game/hub
+ */
+export function hideColonyScene(): void {
+  colonySceneVisible.value = false;
+}
 
 /**
  * Upgrade a colony building

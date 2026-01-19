@@ -1,4 +1,5 @@
-import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModalVisible, showIdleRewardsModal, hasPendingRewards, bossRushActive } from '../../state/index.js';
+import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModalVisible, hasPendingRewards, bossRushActive } from '../../state/index.js';
+import { showColonyScene } from '../../state/idle.signals.js';
 import { Button } from '../shared/Button.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
@@ -58,10 +59,10 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                 <Button
                   variant={hasPendingRewards.value ? "primary" : "secondary"}
                   size="sm"
-                  onClick={showIdleRewardsModal}
+                  onClick={showColonyScene}
                   aria-label={t('controls.gatheringAria') + (hasPendingRewards.value ? t('controls.pendingRewards') : '')}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '6px' }}>⏰</span> {t('controls.gatheringLabel')}
+                  <span aria-hidden="true" style={{ marginRight: '6px' }}>🏭</span> {t('controls.gatheringLabel')}
                   {hasPendingRewards.value && <span aria-hidden="true" style={{ marginLeft: '4px', color: '#4ade80' }}>●</span>}
                 </Button>
               </Tooltip>

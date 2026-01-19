@@ -79,6 +79,12 @@ interface UseGameLoopReturn {
   setTurretTargeting: (slotIndex: number, mode: 'closest_to_fortress' | 'weakest' | 'strongest' | 'nearest_to_turret' | 'fastest') => void;
   activateOvercharge: (slotIndex: number) => void;
   spawnMilitia: (militiaType: 'infantry' | 'archer' | 'shield_bearer', x: number, y: number, count?: number) => void;
+  // Colony scene methods
+  showColonyScene: () => void;
+  hideColonyScene: () => void;
+  updateColonies: (colonies: import('@arcade/protocol').ColonyStatus[]) => void;
+  playColonyClaimAnimation: () => Promise<void>;
+  playColonyUpgradeAnimation: (colonyId: string) => void;
 }
 
 export function useGameLoop(
@@ -471,6 +477,37 @@ export function useGameLoop(
     game.spawnMilitia(militiaType, x, y, count);
   }, []);
 
+  // Colony scene methods
+  const showColonyScene = useCallback((): void => {
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    renderer.showColonyScene();
+  }, []);
+
+  const hideColonyScene = useCallback((): void => {
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    renderer.hideColonyScene();
+  }, []);
+
+  const updateColonies = useCallback((colonies: import('@arcade/protocol').ColonyStatus[]): void => {
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    renderer.setColonies(colonies);
+  }, []);
+
+  const playColonyClaimAnimation = useCallback(async (): Promise<void> => {
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    await renderer.playColonyClaimAnimation();
+  }, []);
+
+  const playColonyUpgradeAnimation = useCallback((colonyId: string): void => {
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    renderer.playColonyUpgradeAnimation(colonyId);
+  }, []);
+
   return {
     game: gameRef.current,
     startSession,
@@ -488,5 +525,11 @@ export function useGameLoop(
     setTurretTargeting,
     activateOvercharge,
     spawnMilitia,
+    // Colony scene methods
+    showColonyScene,
+    hideColonyScene,
+    updateColonies,
+    playColonyClaimAnimation,
+    playColonyUpgradeAnimation,
   };
 }

@@ -8,6 +8,7 @@ import { Controls } from './Controls.js';
 import { HubOverlay } from './HubOverlay.js';
 import { GameSidePanel } from './GameSidePanel.js';
 import { GameBottomPanel } from './GameBottomPanel.js';
+import { ColonySceneOverlay } from './ColonySceneOverlay.js';
 // Critical modals - loaded eagerly (needed immediately on game start)
 import { ChoiceModal } from '../modals/ChoiceModal.js';
 import { EndScreen } from '../modals/EndScreen.js';
@@ -23,7 +24,7 @@ import { BossRushHUD } from './BossRushHUD.js';
 // Lazy-loaded modals - loaded on demand (20-30% bundle size reduction)
 const HeroDetailsModal = lazy(() => import('../modals/HeroDetailsModal.js').then(m => ({ default: m.HeroDetailsModal })));
 const MaterialsInventory = lazy(() => import('../modals/MaterialsInventory.js').then(m => ({ default: m.MaterialsInventory })));
-const IdleRewardsModal = lazy(() => import('../modals/IdleRewardsModal.js').then(m => ({ default: m.IdleRewardsModal })));
+// IdleRewardsModal removed - replaced by full-screen ColonyScene
 const ArtifactsModal = lazy(() => import('../modals/ArtifactsModal.js').then(m => ({ default: m.ArtifactsModal })));
 const CraftingModal = lazy(() => import('../modals/CraftingModal.js').then(m => ({ default: m.CraftingModal })));
 const HeroRecruitmentModal = lazy(() => import('../modals/HeroRecruitmentModal.js').then(m => ({ default: m.HeroRecruitmentModal })));
@@ -42,13 +43,17 @@ import {
   upgradeTarget,
   upgradePanelVisible,
   materialsModalVisible,
-  idleRewardsModalVisible,
   artifactsModalVisible,
   craftingModalVisible,
   heroRecruitmentModalVisible,
   showBossRushSetup,
   showBossRushEndScreen,
 } from '../../state/index.js';
+import {
+  colonySceneVisible,
+  idleRewardsState,
+  upgradingColony,
+} from '../../state/idle.signals.js';
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
 import { ApiError } from '../../api/base.js';
 import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub } from '../../state/index.js';
@@ -75,7 +80,21 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     }
   }, []);
 
-  const { startSession, resumeSession, endSession, chooseRelic, reset, startBossRush, endBossRush, setGameSpeed } = useGameLoop(canvasRef, canvasReady);
+  const {
+    startSession,
+    resumeSession,
+    endSession,
+    chooseRelic,
+    reset,
+    startBossRush,
+    endBossRush,
+    setGameSpeed,
+    showColonyScene: showColonySceneRenderer,
+    hideColonyScene: hideColonySceneRenderer,
+    updateColonies,
+    playColonyClaimAnimation,
+    playColonyUpgradeAnimation,
+  } = useGameLoop(canvasRef, canvasReady);
 
   // Auto-start session when recovery modal is confirmed
   useEffect(() => {
@@ -113,6 +132,31 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       reset();
     }
   }, [forceResetToHub.value, reset]);
+
+  // Sync colony scene visibility with signal
+  useEffect(() => {
+    if (colonySceneVisible.value) {
+      showColonySceneRenderer();
+    } else {
+      hideColonySceneRenderer();
+    }
+  }, [colonySceneVisible.value, showColonySceneRenderer, hideColonySceneRenderer]);
+
+  // Update colonies in renderer when idle rewards state changes
+  useEffect(() => {
+    const state = idleRewardsState.value;
+    if (state?.colonies) {
+      updateColonies(state.colonies);
+    }
+  }, [idleRewardsState.value, updateColonies]);
+
+  // Play upgrade animation when colony is being upgraded
+  useEffect(() => {
+    const colonyId = upgradingColony.value;
+    if (colonyId) {
+      playColonyUpgradeAnimation(colonyId);
+    }
+  }, [upgradingColony.value, playColonyUpgradeAnimation]);
 
   const handleStartClick = async () => {
     // First, show class selection if not already selected
@@ -343,7 +387,6 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       {/* Lazy-loaded modals - only mounted when visible to prevent memory leaks */}
       {upgradePanelVisible.value && upgradeTarget.value?.type === 'hero' && <Suspense fallback={null}><HeroDetailsModal onUpgrade={handleUpgrade} /></Suspense>}
       {materialsModalVisible.value && <Suspense fallback={null}><MaterialsInventory /></Suspense>}
-      {idleRewardsModalVisible.value && <Suspense fallback={null}><IdleRewardsModal /></Suspense>}
       {artifactsModalVisible.value && <Suspense fallback={null}><ArtifactsModal /></Suspense>}
       {craftingModalVisible.value && <Suspense fallback={null}><CraftingModal /></Suspense>}
       {heroRecruitmentModalVisible.value && <Suspense fallback={null}><HeroRecruitmentModal /></Suspense>}
@@ -353,6 +396,12 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       {/* Boss Rush HUD (eagerly loaded - visible during gameplay) */}
       <BossHealthBar />
       <BossRushHUD />
+
+      {/* Colony Scene Overlay (full-screen colony management) */}
+      <ColonySceneOverlay
+        onUpgradeAnimation={playColonyUpgradeAnimation}
+        onClaimAnimation={playColonyClaimAnimation}
+      />
     </div>
   );
 }

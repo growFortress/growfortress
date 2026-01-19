@@ -1,0 +1,288 @@
+/* ColonySceneOverlay - UI for full-screen colony scene */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+/* Header */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(to bottom, rgba(10, 10, 18, 0.9) 0%, rgba(10, 10, 18, 0) 100%);
+  pointer-events: auto;
+}
+
+.backButton {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  padding: 10px 20px;
+  font-family: monospace;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.timeInfo,
+.productionInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 8px 14px;
+}
+
+.timeIcon {
+  font-size: 16px;
+}
+
+.timeText,
+.productionText {
+  font-family: monospace;
+  font-size: 14px;
+  color: #e0e0e0;
+  font-weight: bold;
+}
+
+.productionText {
+  color: #ffd700;
+}
+
+/* Rewards summary */
+.rewardsSummary {
+  position: absolute;
+  top: 80px;
+  right: 24px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 10px 16px;
+}
+
+.rewardItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--reward-color, rgba(255, 255, 255, 0.1));
+}
+
+.rewardIcon {
+  font-size: 16px;
+}
+
+.rewardAmount {
+  font-family: monospace;
+  font-size: 13px;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.moreRewards {
+  font-family: monospace;
+  font-size: 12px;
+  color: #888;
+}
+
+/* Claim section */
+.claimSection {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.claimButton {
+  background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: #1a1a2e;
+  padding: 16px 48px;
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+}
+
+.claimButton:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 30px rgba(255, 215, 0, 0.5);
+}
+
+.claimButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.waitMessage {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #888;
+  padding: 14px 28px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+/* Building popup */
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(13, 17, 23, 0.95);
+  border: 2px solid rgba(48, 54, 61, 0.8);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 280px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 110;
+  pointer-events: auto;
+}
+
+.popupLocked {
+  border-color: rgba(74, 85, 104, 0.5);
+}
+
+.popupClose {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.popupClose:hover {
+  color: #fff;
+}
+
+.popupName {
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.popupLevel {
+  color: #00ccff;
+  font-size: 14px;
+}
+
+.popupUnlock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.lockIcon {
+  font-size: 18px;
+}
+
+.popupStats {
+  margin-bottom: 16px;
+}
+
+.popupStatRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-family: monospace;
+  font-size: 14px;
+  color: #aaa;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.popupStatRow:last-child {
+  border-bottom: none;
+}
+
+.popupStatValue {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.popupActions {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.upgradeButton {
+  background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  padding: 12px 24px;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.upgradeButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  transform: translateY(-1px);
+}
+
+.upgradeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.maxLevel {
+  display: block;
+  color: #ffd700;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  padding: 12px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
