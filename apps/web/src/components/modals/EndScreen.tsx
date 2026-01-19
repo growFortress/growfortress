@@ -42,9 +42,6 @@ export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
       {/* Result Header */}
       <div class={styles.resultHeader}>
         <span class={styles.resultIcon}>{won ? '🏆' : '💀'}</span>
-        <h2 class={`${styles.resultTitle} ${won ? styles.victory : styles.defeat}`}>
-          {won ? t('endScreen.victory') : t('endScreen.defeat')}
-        </h2>
         {stats && (
           <span class={styles.waveInfo}>
             {t('endScreen.waveReached', { wave: stats.wavesCleared })}

@@ -418,7 +418,7 @@ export class ArenaSimulation {
     _attackerData: ArenaSide,
     _targetSide: ArenaSide
   ): void {
-    // Heroes are immortal - no damage taken
+    // Heroes are immortal in arena - they only attack, fortress HP determines winner
   }
 
   // ============================================================================

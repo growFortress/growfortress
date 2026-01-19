@@ -45,7 +45,7 @@ export function SessionRecoveryModal({ onContinue, onAbandon }: SessionRecoveryM
             Kontynuuj sesję
           </Button>
           <Button variant="danger" onClick={handleAbandon}>
-            Porzuć i zacznij nową
+            Porzuć
           </Button>
         </div>
       </div>

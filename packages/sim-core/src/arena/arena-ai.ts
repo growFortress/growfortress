@@ -50,7 +50,8 @@ function getHeroRange(hero: ActiveHero): number {
   if (!def) return FP.fromInt(3); // Default range
 
   const stats = calculateHeroStats(def, hero.tier, hero.level);
-  return FP.fromFloat(stats.range);
+  // stats.range is already in fixed-point format (FP.fromInt), don't convert again
+  return stats.range;
 }
 
 /**

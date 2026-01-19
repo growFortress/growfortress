@@ -1,7 +1,9 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import type { FortressClass } from '@arcade/sim-core';
+import type { FortressClass, EnemyType } from '@arcade/sim-core';
 import { graphicsSettings } from '../../state/settings.signals.js';
 import { filterManager } from '../effects/FilterManager';
+
+type ParticleShape = 'circle' | 'square' | 'spark' | 'ring' | 'diamond' | 'star' | 'smoke' | 'confetti';
 
 // Class-specific colors for VFX (7 classes)
 const CLASS_VFX_COLORS: Record<FortressClass, { primary: number; secondary: number; glow: number }> = {
@@ -14,7 +16,39 @@ const CLASS_VFX_COLORS: Record<FortressClass, { primary: number; secondary: numb
   plasma: { primary: 0x00ffff, secondary: 0xff00ff, glow: 0xffffff },
 };
 
-type ParticleShape = 'circle' | 'square' | 'spark' | 'ring' | 'diamond' | 'star' | 'smoke' | 'confetti';
+// Enemy category colors for death VFX
+type EnemyCategory = 'streets' | 'science' | 'mutants' | 'cosmos' | 'magic' | 'gods' | 'default';
+
+const ENEMY_DEATH_COLORS: Record<EnemyCategory, { primary: number; secondary: number; particles: ParticleShape }> = {
+  streets: { primary: 0xcc0000, secondary: 0x880000, particles: 'circle' },      // Red blood
+  science: { primary: 0x00aaff, secondary: 0xffff00, particles: 'spark' },       // Blue-yellow sparks
+  mutants: { primary: 0x44ff44, secondary: 0x00aa00, particles: 'smoke' },       // Green toxic
+  cosmos: { primary: 0xffffaa, secondary: 0xffd700, particles: 'star' },         // White-gold shimmer
+  magic: { primary: 0x9933ff, secondary: 0xff33ff, particles: 'diamond' },       // Purple wisps
+  gods: { primary: 0xffd700, secondary: 0xffaa00, particles: 'star' },           // Golden rays
+  default: { primary: 0xff4444, secondary: 0xaa0000, particles: 'circle' },      // Default red
+};
+
+// Map enemy types to categories
+function getEnemyCategory(enemyType?: EnemyType): EnemyCategory {
+  if (!enemyType) return 'default';
+  switch (enemyType) {
+    case 'gangster': case 'thug': case 'mafia_boss':
+      return 'streets';
+    case 'robot': case 'drone': case 'ai_core':
+      return 'science';
+    case 'sentinel': case 'mutant_hunter':
+      return 'mutants';
+    case 'kree_soldier': case 'skrull': case 'cosmic_beast':
+      return 'cosmos';
+    case 'demon': case 'sorcerer': case 'dimensional_being':
+      return 'magic';
+    case 'einherjar': case 'titan': case 'god':
+      return 'gods';
+    default:
+      return 'default';
+  }
+}
 
 export interface FloatingText {
   text: Text;
@@ -103,6 +137,9 @@ class ParticlePool {
   }
 }
 
+// Callback type for lighting system integration
+type LightingCallback = (x: number, y: number, color: number, radius: number) => void;
+
 export class VFXSystem {
   public container: Container;
   private particles: Particle[] = [];
@@ -110,6 +147,7 @@ export class VFXSystem {
   private graphics: Graphics;
   private pool: ParticlePool;
   private screenShakeCallback: ScreenShakeCallback | null = null;
+  private lightingCallback: LightingCallback | null = null;
 
   // Staged effects queue
   private stagedEffects: Array<{
@@ -146,9 +184,19 @@ export class VFXSystem {
     this.screenShakeCallback = callback;
   }
 
+  public setLightingCallback(callback: LightingCallback) {
+    this.lightingCallback = callback;
+  }
+
   private triggerScreenShake(intensity: number, duration: number) {
     if (this.screenShakeCallback) {
       this.screenShakeCallback(intensity, duration);
+    }
+  }
+
+  private triggerLightingFlash(x: number, y: number, color: number, radius: number = 80) {
+    if (this.lightingCallback) {
+      this.lightingCallback(x, y, color, radius);
     }
   }
 
@@ -595,6 +643,128 @@ export class VFXSystem {
     }
   }
 
+  /**
+   * Spawn enemy death VFX based on enemy category.
+   * Different visual effects for each enemy faction.
+   */
+  public spawnEnemyDeathVFX(x: number, y: number, enemyType?: EnemyType) {
+    const category = getEnemyCategory(enemyType);
+    const colors = ENEMY_DEATH_COLORS[category];
+    const particleCount = Math.floor(10 * this.particleMultiplier);
+
+    // Flash at death point
+    this.spawnFlash(x, y, colors.primary, 15);
+
+    // Main particles burst
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.4;
+      const speed = 60 + Math.random() * 100;
+      const p = this.pool.acquire();
+
+      p.x = x + (Math.random() - 0.5) * 10;
+      p.y = y + (Math.random() - 0.5) * 10;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 0.4 + Math.random() * 0.3;
+      p.maxLife = 0.7;
+      p.startSize = 3 + Math.random() * 3;
+      p.endSize = 1;
+      p.size = p.startSize;
+      p.color = Math.random() > 0.5 ? colors.primary : colors.secondary;
+      p.shape = colors.particles;
+      p.gravity = category === 'magic' ? -30 : 20;  // Magic floats up
+      p.drag = 0.96;
+      p.startAlpha = 0.9;
+      p.endAlpha = 0;
+
+      this.particles.push(p);
+    }
+
+    // Category-specific secondary effects
+    switch (category) {
+      case 'science':
+        // Electric sparks
+        for (let i = 0; i < 4; i++) {
+          const sp = this.pool.acquire();
+          sp.x = x;
+          sp.y = y;
+          sp.vx = (Math.random() - 0.5) * 150;
+          sp.vy = (Math.random() - 0.5) * 150;
+          sp.life = 0.15 + Math.random() * 0.1;
+          sp.maxLife = 0.25;
+          sp.size = 2;
+          sp.color = 0xffff00;
+          sp.shape = 'spark';
+          this.particles.push(sp);
+        }
+        break;
+
+      case 'magic':
+        // Soul wisps floating up
+        for (let i = 0; i < 3; i++) {
+          const wp = this.pool.acquire();
+          wp.x = x + (Math.random() - 0.5) * 15;
+          wp.y = y;
+          wp.vx = (Math.random() - 0.5) * 20;
+          wp.vy = -40 - Math.random() * 30;
+          wp.life = 0.8 + Math.random() * 0.4;
+          wp.maxLife = 1.2;
+          wp.startSize = 6;
+          wp.endSize = 2;
+          wp.size = wp.startSize;
+          wp.color = 0xff33ff;
+          wp.shape = 'diamond';
+          wp.gravity = -20;
+          wp.startAlpha = 0.7;
+          wp.endAlpha = 0;
+          this.particles.push(wp);
+        }
+        break;
+
+      case 'cosmos':
+      case 'gods':
+        // Golden shimmer ring
+        const rp = this.pool.acquire();
+        rp.x = x;
+        rp.y = y;
+        rp.vx = 0;
+        rp.vy = 0;
+        rp.life = 0.3;
+        rp.maxLife = 0.3;
+        rp.startSize = 5;
+        rp.endSize = 40;
+        rp.size = rp.startSize;
+        rp.color = 0xffd700;
+        rp.shape = 'ring';
+        rp.startAlpha = 0.6;
+        rp.endAlpha = 0;
+        this.particles.push(rp);
+        break;
+
+      case 'mutants':
+        // Toxic smoke puffs
+        for (let i = 0; i < 3; i++) {
+          const tp = this.pool.acquire();
+          tp.x = x + (Math.random() - 0.5) * 10;
+          tp.y = y;
+          tp.vx = (Math.random() - 0.5) * 30;
+          tp.vy = -20 - Math.random() * 20;
+          tp.life = 0.6 + Math.random() * 0.3;
+          tp.maxLife = 0.9;
+          tp.startSize = 8;
+          tp.endSize = 20;
+          tp.size = tp.startSize;
+          tp.color = 0x44ff44;
+          tp.shape = 'smoke';
+          tp.gravity = -10;
+          tp.startAlpha = 0.5;
+          tp.endAlpha = 0;
+          this.particles.push(tp);
+        }
+        break;
+    }
+  }
+
   public spawnShockwave(x: number, y: number) {
     // Use FilterManager for shockwave effect
     filterManager.applyScreenShockwave(x, y, 600);
@@ -647,8 +817,11 @@ export class VFXSystem {
     const colors = CLASS_VFX_COLORS[fortressClass];
     const particleCount = Math.floor(8 * this.particleMultiplier);
 
-    // Small flash
+    // Small particle flash
     this.spawnFlash(x, y, colors.glow, 12);
+
+    // Lighting system flash for dynamic illumination
+    this.triggerLightingFlash(x, y, colors.glow, 60);
 
     for (let i = 0; i < particleCount; i++) {
       const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3;

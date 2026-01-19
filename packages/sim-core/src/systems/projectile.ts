@@ -63,11 +63,8 @@ export function updateProjectiles(
       // Update target position to track the moving enemy
       projectile.targetX = targetEnemy.x;
       projectile.targetY = targetEnemy.y;
-    } else {
-      // Target enemy is dead or gone - remove projectile
-      toRemove.push(projectile.id);
-      continue;
     }
+    // If target is dead, projectile continues to last known position (targetX/targetY already set)
 
     const dx = FP.sub(projectile.targetX, projectile.x);
     const dy = FP.sub(projectile.targetY, projectile.y);

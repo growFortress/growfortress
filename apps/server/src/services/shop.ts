@@ -18,6 +18,8 @@ import {
   CONVENIENCE_ITEMS,
   SHOP_ERROR_CODES,
   PREMIUM_HEROES,
+  BUNDLES,
+  BATTLE_PASS,
   type DustPackagePLN,
   type GetShopResponse,
   type CreateCheckoutResponse,
@@ -28,6 +30,7 @@ import {
   type BoosterType,
   type ConvenienceItemType,
   type PremiumHeroProduct,
+  type BundleProduct,
 } from '@arcade/protocol';
 import { grantPremiumStatus } from './battlepass.js';
 
@@ -75,24 +78,46 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
   });
   const unlockedHeroIds = new Set(inventory?.unlockedHeroIds ?? []);
 
+  // Check if battle pass is purchased
+  const battlePassPurchased = purchaseLimits.some(
+    (l) => l.productId === BATTLE_PASS.id && l.purchaseCount > 0
+  );
+
+  // Build featured products list
+  const featuredProducts = [];
+  if (!starterPackPurchased) {
+    featuredProducts.push({
+      id: 'starter_pack',
+      type: 'starter_pack' as const,
+      name: 'Starter Pack',
+      description: `${STARTER_PACK.dustAmount} Dust + ${STARTER_PACK.goldAmount} Gold + ${STARTER_PACK.rareMaterialsCount}x Rare Materials + Founder Badge`,
+      pricePLN: STARTER_PACK_PRICE_GROSZE / 100,
+      isLimited: true,
+      maxPurchasesPerUser: 1,
+      badgeText: 'BEST VALUE',
+      sortOrder: 0,
+    });
+  }
+  if (!battlePassPurchased) {
+    featuredProducts.push({
+      id: BATTLE_PASS.id,
+      type: 'battle_pass' as const,
+      name: BATTLE_PASS.name,
+      description: BATTLE_PASS.description,
+      pricePLN: BATTLE_PASS.pricePLN,
+      isLimited: true,
+      maxPurchasesPerUser: 1,
+      badgeText: 'SEZON 1',
+      sortOrder: 1,
+    });
+  }
+
   return {
     categories: [
       {
         id: 'featured',
         name: 'Polecane',
-        products: starterPackPurchased ? [] : [
-          {
-            id: 'starter_pack',
-            type: 'starter_pack',
-            name: 'Starter Pack',
-            description: `${STARTER_PACK.dustAmount} Dust + ${STARTER_PACK.goldAmount} Gold + ${STARTER_PACK.rareMaterialsCount}x Rare Materials + Founder Badge`,
-            pricePLN: STARTER_PACK_PRICE_GROSZE / 100,
-            isLimited: true,
-            maxPurchasesPerUser: 1,
-            badgeText: 'BEST VALUE',
-            sortOrder: 0,
-          },
-        ],
+        products: featuredProducts,
       },
       {
         id: 'heroes',
@@ -126,7 +151,23 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
           dustAmount: pkg.dustAmount,
           bonusDust: firstPurchaseBonusAvailable[pkg.id] ? pkg.bonusDust : 0,
           isLimited: false,
-          badgeText: pkg.id === 'dust_medium' ? 'POPULAR' : undefined,
+          badgeText: pkg.id === 'dust_large' ? 'POPULAR' : undefined,
+          sortOrder: idx,
+        })),
+      },
+      {
+        id: 'bundles',
+        name: 'Zestawy',
+        products: BUNDLES.map((bundle, idx) => ({
+          id: bundle.id,
+          type: 'bundle' as const,
+          name: bundle.name,
+          description: bundle.description,
+          pricePLN: bundle.pricePLN,
+          dustAmount: bundle.dustAmount,
+          goldAmount: bundle.goldAmount,
+          isLimited: false,
+          badgeText: bundle.badgeText,
           sortOrder: idx,
         })),
       },
@@ -219,11 +260,12 @@ export async function createCheckout(
   });
 
   // Create pending purchase record
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await prisma.shopPurchase.create({
     data: {
       userId,
       productId,
-      productType: product.type,
+      productType: product.type as any, // Cast needed until Prisma client is regenerated with BUNDLE type
       productName: product.name,
       pricePLN: product.priceGrosze,
       status: 'PENDING',
@@ -501,10 +543,11 @@ interface ProductInfo {
   name: string;
   description: string;
   priceGrosze: number;
-  type: 'DUST' | 'STARTER_PACK' | 'HERO' | 'COSMETIC' | 'BATTLE_PASS' | 'BOOSTER' | 'CONVENIENCE' | 'GACHA';
+  type: 'DUST' | 'STARTER_PACK' | 'HERO' | 'COSMETIC' | 'BATTLE_PASS' | 'BOOSTER' | 'CONVENIENCE' | 'GACHA' | 'BUNDLE';
   maxPurchases?: number;
   dustPackage?: DustPackagePLN;
   heroProduct?: PremiumHeroProduct;
+  bundleProduct?: BundleProduct;
 }
 
 function findProduct(productId: string): ProductInfo | null {
@@ -513,7 +556,7 @@ function findProduct(productId: string): ProductInfo | null {
   if (dustPkg) {
     return {
       name: `${dustPkg.dustAmount} Dust`,
-      description: `+${dustPkg.bonusDust} bonus przy pierwszym zakupie`,
+      description: `Pakiet premium waluty do sklepu`,
       priceGrosze: dustPkg.priceGrosze,
       type: 'DUST',
       dustPackage: dustPkg,
@@ -524,7 +567,7 @@ function findProduct(productId: string): ProductInfo | null {
   if (productId === 'starter_pack') {
     return {
       name: 'Starter Pack',
-      description: `${STARTER_PACK.dustAmount} Dust + ${STARTER_PACK.goldAmount} Gold + ${STARTER_PACK.rareMaterialsCount}x Rare Materials + Founder Badge`,
+      description: `Pakiet startowy dla nowych graczy - Dust, Gold, materiały i odznaka Foundera`,
       priceGrosze: STARTER_PACK_PRICE_GROSZE,
       type: 'STARTER_PACK',
       maxPurchases: 1,
@@ -536,11 +579,34 @@ function findProduct(productId: string): ProductInfo | null {
   if (heroProduct) {
     return {
       name: heroProduct.name,
-      description: heroProduct.description,
+      description: `Ekskluzywna jednostka premium - ${heroProduct.class}/${heroProduct.role}`,
       priceGrosze: heroProduct.priceGrosze,
       type: 'HERO',
       maxPurchases: 1,
       heroProduct,
+    };
+  }
+
+  // Check bundles
+  const bundle = BUNDLES.find((b) => b.id === productId);
+  if (bundle) {
+    return {
+      name: bundle.name,
+      description: `Zestaw wartościowy: ${bundle.dustAmount} Dust, ${bundle.goldAmount} Gold${bundle.randomHeroCount > 0 ? `, ${bundle.randomHeroCount}x jednostka` : ''}${bundle.randomArtifactCount > 0 ? `, ${bundle.randomArtifactCount}x artefakt` : ''}`,
+      priceGrosze: bundle.priceGrosze,
+      type: 'BUNDLE',
+      bundleProduct: bundle,
+    };
+  }
+
+  // Check battle pass
+  if (productId === BATTLE_PASS.id) {
+    return {
+      name: BATTLE_PASS.name,
+      description: `Premium Battle Pass - ekskluzywne nagrody przez ${BATTLE_PASS.durationDays} dni`,
+      priceGrosze: BATTLE_PASS.priceGrosze,
+      type: 'BATTLE_PASS',
+      maxPurchases: 1,
     };
   }
 
@@ -653,6 +719,86 @@ async function grantProductRewards(
     });
 
     rewards.hero = product.heroProduct.heroId;
+  }
+
+  if (product.type === 'BUNDLE' && product.bundleProduct) {
+    const bundle = product.bundleProduct;
+
+    await prisma.$transaction(async (tx) => {
+      // Grant dust and gold
+      await tx.inventory.update({
+        where: { userId },
+        data: {
+          dust: { increment: bundle.dustAmount },
+          gold: { increment: bundle.goldAmount },
+        },
+      });
+
+      // Grant random heroes if applicable
+      if (bundle.randomHeroCount > 0) {
+        const inventory = await tx.inventory.findUnique({
+          where: { userId },
+          select: { unlockedHeroIds: true },
+        });
+        const ownedHeroes = new Set(inventory?.unlockedHeroIds ?? []);
+
+        // Get all available heroes for random selection (exclude already owned)
+        const availableHeroes = [
+          'sentinel', 'striker', 'guardian', 'healer', 'ranger', 'mage',
+          'berserker', 'paladin', 'assassin', 'summoner', 'engineer', 'monk',
+        ].filter(h => !ownedHeroes.has(h));
+
+        if (availableHeroes.length > 0) {
+          const shuffled = [...availableHeroes].sort(() => Math.random() - 0.5);
+          const heroesToGrant = shuffled.slice(0, Math.min(bundle.randomHeroCount, availableHeroes.length));
+
+          if (heroesToGrant.length > 0) {
+            await tx.inventory.update({
+              where: { userId },
+              data: { unlockedHeroIds: { push: heroesToGrant } },
+            });
+            rewards.hero = heroesToGrant.join(',');
+          }
+        }
+      }
+
+      // Grant random artifacts if applicable
+      if (bundle.randomArtifactCount > 0) {
+        // Sample artifact IDs from different categories
+        const artifactPools = {
+          common: ['plasma_hammer', 'energy_shield', 'nano_scope'],
+          uncommon: ['quantum_blade', 'force_barrier', 'gravity_boots'],
+          rare: ['phase_rifle', 'void_armor', 'chrono_gauntlet'],
+          epic: ['omega_cannon', 'aegis_prime', 'infinity_core'],
+        };
+
+        for (let i = 0; i < bundle.randomArtifactCount; i++) {
+          const rarityRoll = Math.random();
+          const rarity = rarityRoll < 0.1 ? 'epic' : rarityRoll < 0.3 ? 'rare' : rarityRoll < 0.6 ? 'uncommon' : 'common';
+          const pool = artifactPools[rarity as keyof typeof artifactPools];
+          const randomArtifactId = pool[Math.floor(Math.random() * pool.length)];
+
+          // Check if user already has this artifact (unique constraint)
+          const existing = await tx.playerArtifact.findUnique({
+            where: { userId_artifactId: { userId, artifactId: randomArtifactId } },
+          });
+
+          if (!existing) {
+            await tx.playerArtifact.create({
+              data: {
+                artifactId: randomArtifactId,
+                level: 1,
+                userId,
+              },
+            });
+          }
+          // If already owned, just skip (player effectively gets upgrade fodder or nothing)
+        }
+      }
+    });
+
+    rewards.dust = bundle.dustAmount;
+    rewards.gold = bundle.goldAmount;
   }
 
   return rewards;

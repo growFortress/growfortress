@@ -102,6 +102,9 @@ export class GameScene {
   private prevEliteKills = 0;
   private hitstopRemaining = 0; // Frames to skip for hitstop
 
+  // Animation time for running lights
+  private animTime = 0;
+
   // Click callback for tactical commands
   private onFieldClick: ((worldX: number, worldY: number) => void) | null =
     null;
@@ -151,8 +154,18 @@ export class GameScene {
     this.vfx = new VFXSystem();
     this.container.addChild(this.vfx.container);
 
+    // Connect projectile impacts to VFX system
+    this.projectileSystem.setImpactCallback((x, y, fortressClass) => {
+      this.vfx.spawnClassImpact(x, y, fortressClass);
+    });
+
     // Initialize Lighting System (additive blend, on top of VFX)
     this.lighting = lightingSystem;
+
+    // Connect VFX to lighting system for dynamic flashes
+    this.vfx.setLightingCallback((x, y, color, radius) => {
+      this.lighting.spawnFlash(x, y, color, radius);
+    });
     this.container.addChild(this.lighting.container);
 
     // Interactive layer for click detection (on top)
@@ -284,11 +297,19 @@ export class GameScene {
   public update(state: GameState | null, alpha: number, hubState?: HubState) {
     void alpha;
 
+    // Update animation time
+    this.animTime += 16.66 / 1000; // Approximate frame time in seconds
+
     // Clear dynamic graphics (if any usages are added later)
     // Safety check: ensure Graphics object has valid context
     if (this.graphics && !this.graphics.destroyed) {
       try {
         this.graphics.clear();
+        // Draw animated running lights on the deck
+        this.drawRunningLights(this.graphics);
+        // Draw spawn portal at right edge (active during waves with enemies)
+        const hasActiveEnemies = state?.enemies && state.enemies.length > 0;
+        this.drawSpawnPortal(this.graphics, hasActiveEnemies);
       } catch (e) {
         // Silently fail if context is invalid
       }
@@ -727,6 +748,183 @@ export class GameScene {
         color: THEME.deck.line,
         alpha: 0.5,
       });
+    }
+  }
+
+  /**
+   * Draw animated running lights along the deck edges.
+   * Creates a dynamic sci-fi atmosphere with blinking lights.
+   */
+  private drawRunningLights(g: Graphics) {
+    if (this.width === 0 || this.height === 0) return;
+
+    const pathTop = this.height * LAYOUT.groundY;
+    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
+
+    // Light configuration
+    const lightSpacing = 60; // Distance between lights
+    const lightRadius = 3;
+    const lightCount = Math.ceil(this.width / lightSpacing);
+
+    // Draw lights along top edge
+    for (let i = 0; i < lightCount; i++) {
+      const x = i * lightSpacing + 30;
+
+      // Phase offset creates sequential blinking effect (running pattern)
+      const phase = this.animTime * 4 + i * 0.3;
+      const isOn = Math.sin(phase) > 0.3;
+
+      // Alternate between red (warning) and white (navigation)
+      const isRed = i % 4 === 0;
+      const color = isRed ? 0xff3333 : 0xffffff;
+
+      if (isOn) {
+        // Glow
+        g.circle(x, pathTop - 3, lightRadius * 2.5)
+          .fill({ color, alpha: 0.2 });
+
+        // Main light
+        g.circle(x, pathTop - 3, lightRadius)
+          .fill({ color, alpha: 0.9 });
+
+        // Bright center
+        g.circle(x, pathTop - 3, lightRadius * 0.4)
+          .fill({ color: 0xffffff, alpha: 1 });
+      } else {
+        // Dim light when off
+        g.circle(x, pathTop - 3, lightRadius * 0.6)
+          .fill({ color, alpha: 0.15 });
+      }
+    }
+
+    // Draw lights along bottom edge
+    for (let i = 0; i < lightCount; i++) {
+      const x = i * lightSpacing + 30;
+
+      // Opposite phase for bottom edge (creates crossing pattern)
+      const phase = this.animTime * 4 - i * 0.3 + Math.PI;
+      const isOn = Math.sin(phase) > 0.3;
+
+      const isRed = i % 4 === 0;
+      const color = isRed ? 0xff3333 : 0xffffff;
+
+      if (isOn) {
+        // Glow
+        g.circle(x, pathBottom + 3, lightRadius * 2.5)
+          .fill({ color, alpha: 0.2 });
+
+        // Main light
+        g.circle(x, pathBottom + 3, lightRadius)
+          .fill({ color, alpha: 0.9 });
+
+        // Bright center
+        g.circle(x, pathBottom + 3, lightRadius * 0.4)
+          .fill({ color: 0xffffff, alpha: 1 });
+      } else {
+        // Dim light when off
+        g.circle(x, pathBottom + 3, lightRadius * 0.6)
+          .fill({ color, alpha: 0.15 });
+      }
+    }
+
+    // Special blinking lights at corners - faster red warning lights
+    const cornerPhase = Math.sin(this.animTime * 8) > 0;
+    const cornerX = [20, this.width - 20];
+
+    for (const cx of cornerX) {
+      if (cornerPhase) {
+        // Top corner
+        g.circle(cx, pathTop - 8, 5)
+          .fill({ color: 0xff0000, alpha: 0.3 });
+        g.circle(cx, pathTop - 8, 3)
+          .fill({ color: 0xff3333, alpha: 1 });
+
+        // Bottom corner
+        g.circle(cx, pathBottom + 8, 5)
+          .fill({ color: 0xff0000, alpha: 0.3 });
+        g.circle(cx, pathBottom + 8, 3)
+          .fill({ color: 0xff3333, alpha: 1 });
+      } else {
+        // Dim when off
+        g.circle(cx, pathTop - 8, 2)
+          .fill({ color: 0x330000, alpha: 0.5 });
+        g.circle(cx, pathBottom + 8, 2)
+          .fill({ color: 0x330000, alpha: 0.5 });
+      }
+    }
+  }
+
+  /**
+   * Draw spawn portal at the right edge of the battlefield.
+   * Concentric rings that pulse inward, with red glow when enemies are spawning.
+   */
+  private drawSpawnPortal(g: Graphics, isActive: boolean = false) {
+    if (this.width === 0 || this.height === 0) return;
+
+    const pathTop = this.height * LAYOUT.groundY;
+    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
+    const centerY = (pathTop + pathBottom) / 2;
+    // Position portal at the very right edge so only half is visible
+    const portalX = this.width + 20;
+
+    // Portal configuration
+    const ringCount = 5;
+    const maxRadius = 60;
+    const minRadius = 15;
+
+    // Pulsing animation - rings moving inward
+    const pulseSpeed = isActive ? 3 : 1.5;
+    const pulsePhase = (this.animTime * pulseSpeed) % 1;
+
+    // Base colors
+    const baseColor = isActive ? 0xff2222 : 0x882222;
+    const glowColor = isActive ? 0xff4444 : 0x661111;
+
+    // Outer glow (always visible, stronger when active)
+    const glowAlpha = isActive ? 0.15 + Math.sin(this.animTime * 4) * 0.05 : 0.05;
+    g.circle(portalX, centerY, maxRadius * 1.5)
+      .fill({ color: glowColor, alpha: glowAlpha });
+
+    // Draw concentric rings
+    for (let i = 0; i < ringCount; i++) {
+      // Calculate ring position based on animation phase
+      const ringPhase = (pulsePhase + i / ringCount) % 1;
+      const radius = maxRadius - (maxRadius - minRadius) * ringPhase;
+
+      // Ring fades as it moves inward
+      const ringAlpha = (1 - ringPhase) * (isActive ? 0.7 : 0.3);
+
+      // Ring gets thinner as it moves inward
+      const ringWidth = 2 + (1 - ringPhase) * 3;
+
+      // Draw ring
+      g.circle(portalX, centerY, radius)
+        .stroke({ width: ringWidth, color: baseColor, alpha: ringAlpha });
+    }
+
+    // Inner core (always pulsing)
+    const coreAlpha = isActive ? 0.6 + Math.sin(this.animTime * 6) * 0.2 : 0.2;
+    g.circle(portalX, centerY, minRadius * 0.8)
+      .fill({ color: isActive ? 0xff4444 : 0x441111, alpha: coreAlpha });
+
+    // Bright center
+    const centerAlpha = isActive ? 0.9 : 0.3;
+    g.circle(portalX, centerY, minRadius * 0.3)
+      .fill({ color: isActive ? 0xffaaaa : 0x442222, alpha: centerAlpha });
+
+    // Energy tendrils when active
+    if (isActive) {
+      const tendrilCount = 4;
+      for (let i = 0; i < tendrilCount; i++) {
+        const angle = this.animTime * 2 + (i / tendrilCount) * Math.PI * 2;
+        const tendrilLen = maxRadius * (0.8 + Math.sin(this.animTime * 3 + i) * 0.2);
+        const tx = portalX + Math.cos(angle) * tendrilLen;
+        const ty = centerY + Math.sin(angle) * tendrilLen;
+
+        g.moveTo(portalX, centerY);
+        g.lineTo(tx, ty);
+        g.stroke({ width: 2, color: 0xff6666, alpha: 0.4 });
+      }
     }
   }
 

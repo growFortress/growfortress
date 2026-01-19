@@ -12,6 +12,8 @@ import {
   DUST_PACKAGES_PLN,
   STARTER_PACK_PRICE_PLN,
   PREMIUM_HEROES,
+  BUNDLES,
+  BATTLE_PASS,
   type ShopCategory,
 } from '@arcade/protocol';
 import {
@@ -41,6 +43,7 @@ const CATEGORIES: { id: ShopCategory; labelKey: string; icon: string }[] = [
   { id: 'featured', labelKey: 'shop.categories.featured', icon: '🌟' },
   { id: 'heroes', labelKey: 'shop.categories.heroes', icon: '⚔️' },
   { id: 'dust', labelKey: 'shop.categories.dust', icon: '✨' },
+  { id: 'bundles', labelKey: 'shop.categories.bundles', icon: '📦' },
 ];
 
 export function ShopModal() {
@@ -201,33 +204,51 @@ export function ShopModal() {
 
       {/* Products grid */}
       <div class={styles.productsGrid}>
-        {/* Featured: Starter Pack */}
-        {category === 'featured' && starterPackAvailable.value && (
-          <div class={styles.featuredProduct}>
-            <div class={styles.productBadge}>{t('shop.bestValue')}</div>
-            <h3 class={styles.productTitle}>{t('shop.starterPack')}</h3>
-            <div class={styles.productContents}>
-              <div>✨ 600 {t('shop.dust')}</div>
-              <div>🪙 3,000 {t('shop.gold')}</div>
-              <div>📦 {t('shop.starterPackMaterials')}</div>
-              <div>🏆 {t('shop.founderBadge')}</div>
-            </div>
-            <div class={styles.productPrice}>{STARTER_PACK_PRICE_PLN} PLN</div>
-            <Button
-              onClick={() => handleBuyDust('starter_pack')}
-              disabled={processing}
-              variant="primary"
-              class={styles.buyButton}
-            >
-              {processing ? t('shop.processingBtn') : t('shop.buyNow')}
-            </Button>
-          </div>
-        )}
+        {/* Featured: Starter Pack + Battle Pass */}
+        {category === 'featured' && (
+          <>
+            {starterPackAvailable.value && (
+              <div class={styles.featuredProduct}>
+                <div class={styles.productBadge}>{t('shop.bestValue')}</div>
+                <h3 class={styles.productTitle}>{t('shop.starterPack')}</h3>
+                <div class={styles.productContents}>
+                  <div>✨ 600 {t('shop.dust')}</div>
+                  <div>🪙 3,000 {t('shop.gold')}</div>
+                  <div>📦 {t('shop.starterPackMaterials')}</div>
+                  <div>🏆 {t('shop.founderBadge')}</div>
+                </div>
+                <div class={styles.productPrice}>{STARTER_PACK_PRICE_PLN} PLN</div>
+                <Button
+                  onClick={() => handleBuyDust('starter_pack')}
+                  disabled={processing}
+                  variant="primary"
+                  class={styles.buyButton}
+                >
+                  {processing ? t('shop.processingBtn') : t('shop.buyNow')}
+                </Button>
+              </div>
+            )}
 
-        {category === 'featured' && !starterPackAvailable.value && (
-          <div class={styles.emptyMessage}>
-            {t('shop.starterPackPurchased')}
-          </div>
+            {/* Battle Pass */}
+            <div class={styles.featuredProduct}>
+              <div class={styles.productBadge}>SEZON 1</div>
+              <h3 class={styles.productTitle}>{BATTLE_PASS.name}</h3>
+              <div class={styles.productContents}>
+                <div>🎖️ Premium ścieżka nagród</div>
+                <div>🏆 Ekskluzywne przedmioty</div>
+                <div>⏱️ {BATTLE_PASS.durationDays} dni</div>
+              </div>
+              <div class={styles.productPrice}>{BATTLE_PASS.pricePLN} PLN</div>
+              <Button
+                onClick={() => handleBuyDust(BATTLE_PASS.id)}
+                disabled={processing}
+                variant="primary"
+                class={styles.buyButton}
+              >
+                {processing ? t('shop.processingBtn') : t('shop.buyNow')}
+              </Button>
+            </div>
+          </>
         )}
 
         {/* Premium Heroes */}
@@ -321,6 +342,36 @@ export function ShopModal() {
               </div>
             );
           })}
+
+        {/* Value Bundles */}
+        {category === 'bundles' &&
+          BUNDLES.map((bundle) => (
+            <div key={bundle.id} class={styles.featuredProduct}>
+              {bundle.badgeText && (
+                <div class={styles.productBadge}>{bundle.badgeText}</div>
+              )}
+              <h3 class={styles.productTitle}>{bundle.name}</h3>
+              <div class={styles.productContents}>
+                <div>✨ {bundle.dustAmount} {t('shop.dust')}</div>
+                <div>🪙 {bundle.goldAmount.toLocaleString()} {t('shop.gold')}</div>
+                {bundle.randomHeroCount > 0 && (
+                  <div>⚔️ {bundle.randomHeroCount}x {t('shop.randomUnit')}</div>
+                )}
+                {bundle.randomArtifactCount > 0 && (
+                  <div>🎁 {bundle.randomArtifactCount}x {t('shop.randomArtifact')}</div>
+                )}
+              </div>
+              <div class={styles.productPrice}>{bundle.pricePLN} PLN</div>
+              <Button
+                onClick={() => handleBuyDust(bundle.id)}
+                disabled={processing}
+                variant="primary"
+                class={styles.buyButton}
+              >
+                {processing ? t('shop.processingBtn') : t('shop.buyNow')}
+              </Button>
+            </div>
+          ))}
 
       </div>
     </Modal>

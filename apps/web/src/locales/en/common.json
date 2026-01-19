@@ -253,9 +253,10 @@
     "purchaseFailed": "Payment failed",
     "close": "Close",
     "categories": {
-      "featured": "Starter Pack",
+      "featured": "Featured",
       "heroes": "Units",
-      "dust": "Dust"
+      "dust": "Dust",
+      "bundles": "Bundles"
     },
     "dust": "Dust",
     "gold": "Gold",
@@ -272,7 +273,9 @@
     "youReceived": "You received:",
     "awesome": "Awesome!",
     "heroUnlocked": "Hero unlocked",
-    "rareMaterials": "{{count}}x Rare Materials"
+    "rareMaterials": "{{count}}x Rare Materials",
+    "randomUnit": "Random unit",
+    "randomArtifact": "Random artifact"
   },
   "guild": {
     "title": "Guild",

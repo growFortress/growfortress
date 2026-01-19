@@ -1,143 +1,271 @@
 .panel {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: stretch;
+  gap: 0;
+  background: rgba(10, 18, 30, 0.95);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 16px;
+  padding: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .header {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  flex-shrink: 0;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(0, 200, 255, 0.15) 0%, rgba(0, 100, 200, 0.1) 100%);
+  border-radius: 12px 0 0 12px;
+  border-right: 1px solid rgba(0, 200, 255, 0.2);
 }
 
 .icon {
-  font-size: 20px;
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.5));
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text);
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(0, 220, 255, 1);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
 }
 
 .militiaList {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  padding: 4px;
 }
 
 .militiaButton {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 10px 14px;
-  min-width: 70px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  gap: 8px;
+  padding: 14px 20px 12px;
+  min-width: 100px;
+  background: linear-gradient(180deg, rgba(25, 35, 55, 0.8) 0%, rgba(15, 22, 35, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
   position: relative;
 }
 
 .militiaButton:hover:not(:disabled) {
-  border-color: rgba(100, 180, 255, 0.5);
-  background: rgba(100, 180, 255, 0.15);
+  background: linear-gradient(180deg, rgba(0, 150, 200, 0.25) 0%, rgba(0, 80, 120, 0.3) 100%);
+  border-color: rgba(0, 200, 255, 0.5);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 200, 255, 0.15);
+}
+
+.militiaButton:hover:not(:disabled) .militiaIcon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 12px currentColor);
 }
 
 .militiaButton.selected {
-  border-color: rgba(139, 195, 74, 0.8);
-  background: rgba(139, 195, 74, 0.2);
-  box-shadow: 0 0 10px rgba(139, 195, 74, 0.3);
+  background: linear-gradient(180deg, rgba(100, 200, 80, 0.2) 0%, rgba(60, 140, 50, 0.25) 100%);
+  border-color: rgba(140, 200, 80, 0.6);
+  box-shadow: 0 0 20px rgba(140, 200, 80, 0.2), inset 0 0 20px rgba(140, 200, 80, 0.05);
 }
 
 .militiaButton.disabled {
-  opacity: 0.5;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 .militiaIcon {
-  font-size: 26px;
-  flex-shrink: 0;
+  font-size: 36px;
+  line-height: 1;
+  transition: all 0.2s ease;
 }
 
 .militiaInfo {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
+  gap: 6px;
+  width: 100%;
 }
 
 .militiaName {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--color-text);
-  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.3px;
+}
+
+.militiaStats {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.statHp {
+  color: rgba(255, 100, 100, 0.8);
+}
+
+.statDmg {
+  color: rgba(255, 200, 100, 0.8);
 }
 
 .militiaCost {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: rgba(255, 215, 0, 0.9);
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 12px;
+  margin-top: 2px;
+  background: rgba(255, 200, 50, 0.1);
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 210, 80, 1);
 }
 
 .goldIcon {
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .selectedBadge {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7cda4c, #5cb832);
+  border: 2px solid rgba(10, 18, 30, 1);
+  border-radius: 50%;
   font-size: 12px;
-  color: rgba(139, 195, 74, 1);
-  flex-shrink: 0;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(100, 200, 50, 0.4);
 }
 
 .hint {
-  padding: 4px 8px;
-  background: rgba(139, 195, 74, 0.15);
-  border: 1px solid rgba(139, 195, 74, 0.3);
-  border-radius: 6px;
-  font-family: var(--font-body);
-  font-size: 9px;
-  color: rgba(139, 195, 74, 1);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-left: 4px;
+  background: linear-gradient(135deg, rgba(100, 200, 80, 0.15) 0%, rgba(80, 160, 60, 0.1) 100%);
+  border: 1px solid rgba(140, 200, 80, 0.3);
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(160, 220, 100, 1);
   white-space: nowrap;
-  animation: hintPulse 1.5s ease-in-out infinite;
+  animation: hintGlow 2s ease-in-out infinite;
 }
 
-@keyframes hintPulse {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; }
+.hintIcon {
+  font-size: 16px;
+  animation: pointBounce 1s ease-in-out infinite;
+}
+
+@keyframes hintGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(140, 200, 80, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(140, 200, 80, 0.25);
+  }
+}
+
+@keyframes pointBounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
+  .panel {
+    padding: 3px;
+  }
+
+  .header {
+    padding: 10px 14px;
+  }
+
+  .icon {
+    font-size: 22px;
+  }
+
+  .title {
+    font-size: 9px;
+  }
+
   .militiaButton {
-    min-width: 50px;
-    padding: 4px 8px;
+    min-width: 80px;
+    padding: 10px 14px 8px;
   }
 
   .militiaIcon {
-    font-size: 18px;
+    font-size: 28px;
   }
 
   .militiaName {
-    font-size: 8px;
+    font-size: 10px;
+  }
+
+  .militiaStats {
+    display: none;
+  }
+
+  .militiaCost {
+    font-size: 12px;
+    padding: 4px 8px;
   }
 
   .hint {
     display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    padding: 8px 10px;
+  }
+
+  .title {
+    display: none;
+  }
+
+  .militiaButton {
+    min-width: 60px;
+    padding: 8px 10px 6px;
+  }
+
+  .militiaIcon {
+    font-size: 24px;
+  }
+
+  .militiaName {
+    font-size: 9px;
   }
 }

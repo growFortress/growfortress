@@ -18,30 +18,14 @@ interface Cloud {
   alpha: number;
 }
 
-interface DustParticle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  alpha: number;
-  life: number;
-  maxLife: number;
-}
-
 const COLORS = {
-  sky: {
-    top: 0x050510,
-    bottom: 0x0a0a18,
-  },
   stars: 0xffffff,
   clouds: 0x15152a,
-  dust: 0x404060,
 };
 
 /**
  * ParallaxBackground - Animated multi-layer background system.
- * Includes twinkling stars, drifting clouds, and floating dust particles.
+ * Includes twinkling stars and drifting clouds.
  */
 export class ParallaxBackground {
   public container: Container;
@@ -49,12 +33,10 @@ export class ParallaxBackground {
   // Layers (back to front)
   private starsLayer: Graphics;
   private cloudsLayer: Graphics;
-  private dustLayer: Graphics;
 
   // Animated elements
   private stars: Star[] = [];
   private clouds: Cloud[] = [];
-  private dustParticles: DustParticle[] = [];
 
   // Dimensions
   private width: number = 0;
@@ -67,7 +49,6 @@ export class ParallaxBackground {
   private enabled: boolean = true;
   private starCount: number = 100;
   private cloudCount: number = 8;
-  private maxDustParticles: number = 30;
 
   constructor() {
     this.container = new Container();
@@ -75,11 +56,9 @@ export class ParallaxBackground {
     // Create layers (order matters for depth)
     this.starsLayer = new Graphics();
     this.cloudsLayer = new Graphics();
-    this.dustLayer = new Graphics();
 
     this.container.addChild(this.starsLayer);
     this.container.addChild(this.cloudsLayer);
-    this.container.addChild(this.dustLayer);
   }
 
   /**
@@ -98,17 +77,14 @@ export class ParallaxBackground {
       case 'low':
         this.starCount = 50;
         this.cloudCount = 4;
-        this.maxDustParticles = 10;
         break;
       case 'medium':
         this.starCount = 80;
         this.cloudCount = 6;
-        this.maxDustParticles = 20;
         break;
       case 'high':
         this.starCount = 120;
         this.cloudCount = 10;
-        this.maxDustParticles = 40;
         break;
     }
 
@@ -128,17 +104,14 @@ export class ParallaxBackground {
     // Recreate Graphics objects to ensure valid context after resize
     this.starsLayer.destroy();
     this.cloudsLayer.destroy();
-    this.dustLayer.destroy();
 
     this.starsLayer = new Graphics();
     this.cloudsLayer = new Graphics();
-    this.dustLayer = new Graphics();
 
     // Re-add to container in correct order
     this.container.removeChildren();
     this.container.addChild(this.starsLayer);
     this.container.addChild(this.cloudsLayer);
-    this.container.addChild(this.dustLayer);
 
     // Generate stars
     this.stars = [];
@@ -151,9 +124,6 @@ export class ParallaxBackground {
     for (let i = 0; i < this.cloudCount; i++) {
       this.clouds.push(this.createCloud(i));
     }
-
-    // Initialize dust particles (will be spawned dynamically)
-    this.dustParticles = [];
 
     // Draw initial state
     this.draw();
@@ -199,23 +169,6 @@ export class ParallaxBackground {
   }
 
   /**
-   * Spawn a dust particle
-   */
-  private spawnDustParticle(): DustParticle {
-    const side = Math.random() > 0.5;
-    return {
-      x: side ? -10 : this.width + 10,
-      y: this.height * 0.3 + Math.random() * this.height * 0.4,
-      vx: (side ? 1 : -1) * (10 + Math.random() * 20),
-      vy: -5 + Math.random() * 10,
-      size: 1 + Math.random() * 2,
-      alpha: 0.1 + Math.random() * 0.2,
-      life: 5 + Math.random() * 5,
-      maxLife: 10,
-    };
-  }
-
-  /**
    * Update parallax animation
    */
   public update(deltaMS: number) {
@@ -239,28 +192,6 @@ export class ParallaxBackground {
       }
     }
 
-    // Spawn new dust particles occasionally
-    if (this.dustParticles.length < this.maxDustParticles && Math.random() < dt * 0.5) {
-      this.dustParticles.push(this.spawnDustParticle());
-    }
-
-    // Update dust particles
-    for (let i = this.dustParticles.length - 1; i >= 0; i--) {
-      const dust = this.dustParticles[i];
-      dust.x += dust.vx * dt;
-      dust.y += dust.vy * dt;
-      dust.life -= dt;
-
-      // Fade out
-      const lifeRatio = dust.life / dust.maxLife;
-      dust.alpha = Math.min(0.3, lifeRatio * 0.3);
-
-      // Remove dead particles
-      if (dust.life <= 0 || dust.x < -20 || dust.x > this.width + 20) {
-        this.dustParticles.splice(i, 1);
-      }
-    }
-
     // Redraw
     this.draw();
   }
@@ -271,7 +202,6 @@ export class ParallaxBackground {
   private draw() {
     this.drawStars();
     this.drawClouds();
-    this.drawDust();
   }
 
   /**
@@ -362,37 +292,12 @@ export class ParallaxBackground {
   }
 
   /**
-   * Draw floating dust particles
-   */
-  private drawDust() {
-    // Safety check: ensure Graphics object has valid context
-    if (!this.dustLayer || this.dustLayer.destroyed) {
-      return;
-    }
-
-    try {
-      this.dustLayer.clear();
-
-      for (const dust of this.dustParticles) {
-        this.dustLayer.circle(dust.x, dust.y, dust.size).fill({
-          color: COLORS.dust,
-          alpha: dust.alpha,
-        });
-      }
-    } catch (e) {
-      // Silently fail if context is invalid
-      console.warn('Failed to draw dust:', e);
-    }
-  }
-
-  /**
    * Get current element counts (for debugging)
    */
-  public getStats(): { stars: number; clouds: number; dust: number } {
+  public getStats(): { stars: number; clouds: number } {
     return {
       stars: this.stars.length,
       clouds: this.clouds.length,
-      dust: this.dustParticles.length,
     };
   }
 
@@ -402,10 +307,8 @@ export class ParallaxBackground {
   public destroy() {
     this.stars = [];
     this.clouds = [];
-    this.dustParticles = [];
     this.starsLayer.destroy();
     this.cloudsLayer.destroy();
-    this.dustLayer.destroy();
     this.container.destroy({ children: true });
   }
 }

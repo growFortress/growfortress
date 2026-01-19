@@ -27,9 +27,6 @@ export function Hud() {
   const hasClass = selectedFortressClass.value !== null;
   const showHubUI = isIdle && hubInitialized.value;
 
-  // Game state for enemy count
-  const state = gameState.value;
-  const enemyCount = state?.enemyCount ?? 0;
   const hpPercent = fortressHpPercent.value;
   const hpValue = fortressHp.value;
   const hpMax = fortressMaxHp.value;
@@ -59,10 +56,6 @@ export function Hud() {
             </div>
             <div class={styles.waveProgressBar}>
               <WaveProgress />
-            </div>
-            <div class={styles.enemyCounter}>
-              <span class={styles.enemyIcon}>👾</span>
-              <span class={styles.enemyCount}>{enemyCount}</span>
             </div>
           </div>
 

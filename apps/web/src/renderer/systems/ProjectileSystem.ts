@@ -83,13 +83,15 @@ interface ProjectileVisual {
   rotationAngle: number;
   energyIntensity: number;
   birthTime: number;
+  // Store class for impact VFX
+  fortressClass: FortressClass;
 }
 
 // Callback type for spawning VFX particles
 type VFXCallback = (x: number, y: number, fortressClass: FortressClass) => void;
 
-// Callback type for impact sparks
-type ImpactCallback = (x: number, y: number, color: number, count: number) => void;
+// Callback type for impact VFX
+type ImpactCallback = (x: number, y: number, fortressClass: FortressClass) => void;
 
 export class ProjectileSystem {
   public container: Container;
@@ -148,6 +150,7 @@ export class ProjectileSystem {
           rotationAngle: 0,
           energyIntensity: 1,
           birthTime: this.time,
+          fortressClass: projectile.class,
         };
         this.visuals.set(projectile.id, visual);
       }
@@ -196,14 +199,13 @@ export class ProjectileSystem {
       this.drawProjectile(g, projectile, screenX, screenY, visual.trail, visual);
     }
 
-    // Detect projectile impacts and spawn sparks
+    // Detect projectile impacts and spawn class-specific VFX
     for (const [id, visual] of this.visuals) {
       if (!currentIds.has(id) && this.previousProjectileIds.has(id)) {
         // Projectile was removed - it hit something!
         if (visual.trail.length > 0 && this.impactCallback) {
           const impactPos = visual.trail[0];
-          const colors = CLASS_COLORS.natural; // Will get correct color from visual
-          this.impactCallback(impactPos.x, impactPos.y, colors.glow, 8);
+          this.impactCallback(impactPos.x, impactPos.y, visual.fortressClass);
         }
       }
     }

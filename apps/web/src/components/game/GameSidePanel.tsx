@@ -8,6 +8,7 @@ import {
 } from "../../state/index.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
 import { EnergyBar } from "./EnergyBar.js";
+import { LevelBar } from "./LevelBar.js";
 import { PillarDisplay } from "./PillarDisplay.js";
 import { HeroSkillBar } from "./HeroSkillBar.js";
 import { TurretSkillBar } from "./TurretSkillBar.js";
@@ -69,6 +70,7 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
             <span class={styles.resourceValue}>{displayDust.value}</span>
             <span class={styles.resourceLabel}>{t("common:resources.dust")}</span>
           </div>
+          <LevelBar compact />
           <EnergyBar compact />
         </div>
       </section>

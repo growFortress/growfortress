@@ -119,6 +119,7 @@ export function createContainerPool(maxSize = 100): ObjectPool<Container> {
  * Enemy visual pool - manages a complete enemy visual structure.
  * Each enemy visual consists of:
  * - Container (root)
+ * - Graphics (shadow) - ground shadow for depth
  * - Graphics (body)
  * - Graphics (details)
  * - Graphics (hpBar)
@@ -127,6 +128,7 @@ export function createContainerPool(maxSize = 100): ObjectPool<Container> {
  */
 export interface EnemyVisualBundle {
   container: Container;
+  shadow: Graphics;
   body: Graphics;
   details: Graphics;
   hpBar: Graphics;
@@ -171,6 +173,11 @@ export class EnemyVisualPool {
     // Create new bundle
     const container = new Container();
 
+    // Shadow layer (rendered first, below everything)
+    const shadow = new Graphics();
+    shadow.label = 'shadow';
+    container.addChild(shadow);
+
     let eliteGlow: Graphics | null = null;
     if (isElite) {
       eliteGlow = new Graphics();
@@ -194,7 +201,7 @@ export class EnemyVisualPool {
     statusEffects.label = 'statusEffects';
     container.addChild(statusEffects);
 
-    return { container, body, details, hpBar, statusEffects, eliteGlow };
+    return { container, shadow, body, details, hpBar, statusEffects, eliteGlow };
   }
 
   release(bundle: EnemyVisualBundle): void {
@@ -207,6 +214,7 @@ export class EnemyVisualPool {
     }
 
     // Clear all graphics
+    bundle.shadow.clear();
     bundle.body.clear();
     bundle.details.clear();
     bundle.hpBar.clear();

@@ -253,9 +253,10 @@
     "purchaseFailed": "Płatność nieudana",
     "close": "Zamknij",
     "categories": {
-      "featured": "Starter Pack",
+      "featured": "Polecane",
       "heroes": "Jednostki",
-      "dust": "Dust"
+      "dust": "Dust",
+      "bundles": "Zestawy"
     },
     "dust": "Dust",
     "gold": "Złoto",
@@ -272,7 +273,9 @@
     "youReceived": "Otrzymujesz:",
     "awesome": "Super!",
     "heroUnlocked": "Odblokowano bohatera",
-    "rareMaterials": "{{count}}x Rzadkie Materiały"
+    "rareMaterials": "{{count}}x Rzadkie Materiały",
+    "randomUnit": "Losowa jednostka",
+    "randomArtifact": "Losowy artefakt"
   },
   "guild": {
     "title": "Gildia",

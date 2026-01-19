@@ -26,6 +26,7 @@ export {
 // Game signals
 export {
   gamePhase,
+  forceResetToHub,
   gameSpeed,
   gameState,
   fortressHp,

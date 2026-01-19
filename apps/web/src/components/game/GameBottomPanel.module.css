@@ -1,76 +1,54 @@
 /**
  * GameBottomPanel - Bottom panel during gameplay
- * Horizontal layout for actions (walls, militia)
+ * Minimal wrapper - child panels handle their own styling
  */
 
 .bottomPanel {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  width: calc(100vw - var(--game-panel-width, 280px));
-  height: 100px;
-  background: linear-gradient(180deg, rgba(0, 15, 30, 0.98) 0%, rgba(0, 10, 20, 0.99) 100%);
-  border-top: 1px solid rgba(0, 200, 255, 0.25);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 30px;
-  gap: 40px;
+  pointer-events: none;
   animation: panelSlideUp 0.4s var(--ease-spring) forwards;
 }
 
 @keyframes panelSlideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateX(-50%) translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
 }
 
 .panelContent {
   display: flex;
   align-items: center;
-  gap: 24px;
-  max-width: 100%;
-}
-
-.divider {
-  width: 1px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.15);
+  pointer-events: auto;
 }
 
 /* Responsive */
 @media (max-width: 1400px) {
   .bottomPanel {
-    right: 240px;
-    height: 70px;
-    padding: 0 16px;
-  }
-
-  .panelContent {
-    gap: 16px;
+    bottom: 12px;
   }
 }
 
 @media (max-width: 1200px) {
   .bottomPanel {
-    right: 200px;
-    height: 60px;
-    padding: 0 12px;
+    bottom: 10px;
   }
+}
 
-  .panelContent {
-    gap: 12px;
-  }
-
-  .divider {
-    height: 40px;
+@media (max-width: 900px) {
+  .bottomPanel {
+    bottom: 8px;
   }
 }
 

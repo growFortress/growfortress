@@ -246,6 +246,11 @@ export class HeroSystem {
       }
     });
 
+    // Shadow layer (rendered below body for depth)
+    const shadow = new Graphics();
+    shadow.label = 'shadow';
+    container.addChild(shadow);
+
     // Body graphics
     const body = new Graphics();
     body.label = 'body';
@@ -487,6 +492,7 @@ export class HeroSystem {
   }
 
   private updateHeroVisual(visual: HeroVisual, hero: ActiveHero, time: number): { x: number; y: number } {
+    const shadow = visual.container.getChildByLabel('shadow') as Graphics;
     const body = visual.container.getChildByLabel('body') as Graphics;
     const hpBar = visual.container.getChildByLabel('hpBar') as Graphics;
     const stateIndicator = visual.container.getChildByLabel('state') as Graphics;
@@ -504,6 +510,27 @@ export class HeroSystem {
     // Apply animated scale and alpha
     visual.container.scale.set(anim.scale || 1);
     visual.container.alpha = anim.alpha || 1;
+
+    // Draw shadow (ground indicator for depth)
+    if (shadow && !anim.isDying) {
+      shadow.clear();
+      // Elliptical shadow below the hero
+      const shadowOffsetY = size * 0.9;
+      const shadowWidth = size * 0.8;
+      const shadowHeight = size * 0.25;
+      // Subtle breathing animation for shadow
+      const shadowPulse = 1 + Math.sin(time * 2) * 0.05;
+      shadow.ellipse(0, shadowOffsetY, shadowWidth * shadowPulse, shadowHeight)
+        .fill({ color: 0x000000, alpha: 0.35 });
+    } else if (shadow && anim.isDying) {
+      // Fade shadow during death
+      shadow.clear();
+      const shadowOffsetY = size * 0.9;
+      const shadowWidth = size * 0.8 * (1 - anim.deathProgress);
+      const shadowHeight = size * 0.25 * (1 - anim.deathProgress);
+      shadow.ellipse(0, shadowOffsetY, shadowWidth, shadowHeight)
+        .fill({ color: 0x000000, alpha: 0.35 * (1 - anim.deathProgress) });
+    }
 
     // Body needs redraw if dirty, in combat (animated), spawning, or dying
     // Combat state has continuous animation (glow, shake, tier 3 particles)
@@ -709,12 +736,21 @@ export class HeroSystem {
     }
     g.poly(points).fill({ color: colors.primary }).stroke({ width: 4, color: colors.secondary });
 
+    // Inner depth layers (gradient simulation)
+    const midPoints: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 - Math.PI / 2;
+      midPoints.push(Math.cos(angle) * size * 0.8, Math.sin(angle) * size * 0.8);
+    }
+    g.poly(midPoints).fill({ color: colors.secondary, alpha: 0.2 });
+
     // Inner hexagon highlight
     const innerPoints: number[] = [];
     for (let i = 0; i < 6; i++) {
       const angle = (i * Math.PI) / 3 - Math.PI / 2;
       innerPoints.push(Math.cos(angle) * size * 0.6, Math.sin(angle) * size * 0.6);
     }
+    g.poly(innerPoints).fill({ color: colors.secondary, alpha: 0.15 });
     g.poly(innerPoints).stroke({ width: 2, color: colors.accent, alpha: 0.5 });
   }
 
@@ -727,6 +763,12 @@ export class HeroSystem {
     const stretch = 1.2;
     const points = [0, -size * stretch, size, 0, 0, size * stretch, -size, 0];
     g.poly(points).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Inner depth layers
+    const midPoints = [0, -size * stretch * 0.8, size * 0.8, 0, 0, size * stretch * 0.8, -size * 0.8, 0];
+    g.poly(midPoints).fill({ color: colors.secondary, alpha: 0.2 });
+    const innerDepth = [0, -size * stretch * 0.6, size * 0.6, 0, 0, size * stretch * 0.6, -size * 0.6, 0];
+    g.poly(innerDepth).fill({ color: colors.secondary, alpha: 0.15 });
 
     // Inner crystal facets
     const facetAlpha = 0.4 + Math.sin(time * 4) * 0.1;
@@ -751,6 +793,15 @@ export class HeroSystem {
     }
     g.poly(points).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
 
+    // Inner depth layers
+    const innerPoints: number[] = [];
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4 + time * 0.5;
+      const r = (i % 2 === 0 ? size : size * 0.85) * 0.75;
+      innerPoints.push(Math.cos(angle) * r, Math.sin(angle) * r);
+    }
+    g.poly(innerPoints).fill({ color: colors.secondary, alpha: 0.2 });
+
     // Rotating inner gear
     const gearAngle = time * -1;
     for (let i = 0; i < 4; i++) {
@@ -769,6 +820,10 @@ export class HeroSystem {
   ): void {
     // Circle base
     g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Inner depth layers (gradient simulation)
+    g.circle(0, 0, size * 0.8).fill({ color: colors.secondary, alpha: 0.2 });
+    g.circle(0, 0, size * 0.6).fill({ color: colors.secondary, alpha: 0.15 });
 
     // Lightning bolt inner design
     const boltAlpha = 0.7 + Math.sin(time * 10) * 0.2;
@@ -796,6 +851,11 @@ export class HeroSystem {
   ): void {
     // Circle base with icy gradient feel
     g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Inner depth layers (icy gradient)
+    g.circle(0, 0, size * 0.8).fill({ color: colors.secondary, alpha: 0.2 });
+    g.circle(0, 0, size * 0.6).fill({ color: colors.secondary, alpha: 0.15 });
+    g.circle(0, 0, size * 0.4).fill({ color: 0xffffff, alpha: 0.1 });
 
     // Snowflake/crystal arms
     const armCount = 6;
@@ -832,6 +892,11 @@ export class HeroSystem {
   ): void {
     // Circle base with fire gradient
     g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+
+    // Inner depth layers (fiery gradient)
+    g.circle(0, 0, size * 0.8).fill({ color: colors.secondary, alpha: 0.25 });
+    g.circle(0, 0, size * 0.6).fill({ color: colors.accent, alpha: 0.2 });
+    g.circle(0, 0, size * 0.4).fill({ color: 0xffff00, alpha: 0.15 });
 
     // Animated flame tongues
     const flameCount = 5;

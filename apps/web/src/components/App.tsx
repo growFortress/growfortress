@@ -64,6 +64,7 @@ import {
   cleanupMessagesWebSocket,
   dismissUnlockNotification,
   fetchDailyQuests,
+  forceResetToHub,
   initMessagesWebSocket,
   initializeHubFromLoadout,
   isAuthenticated as isAuthSignal,
@@ -394,6 +395,7 @@ function AppContent() {
     await clearActiveSession();
     setSavedSession(null);
     pendingSessionSnapshot.value = null;
+    forceResetToHub.value = true; // Signal GameContainer to reset to hub
   };
 
   const handleSessionResumed = () => {

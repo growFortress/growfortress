@@ -92,11 +92,19 @@ export function MilitiaSpawnPanel() {
               class={`${styles.militiaButton} ${isSelected ? styles.selected : ''} ${!canAfford ? styles.disabled : ''}`}
               onClick={() => handleMilitiaClick(type)}
               disabled={!canAfford}
-              title={`${militia.name}: ${militia.description}\nHP: ${militia.hp} | DMG: ${militia.damage} | Czas: ${militia.duration}`}
+              title={militia.description}
             >
               <span class={styles.militiaIcon}>{militia.icon}</span>
               <div class={styles.militiaInfo}>
                 <span class={styles.militiaName}>{militia.name}</span>
+                <div class={styles.militiaStats}>
+                  <span class={`${styles.stat} ${styles.statHp}`}>
+                    ♥ {militia.hp}
+                  </span>
+                  <span class={`${styles.stat} ${styles.statDmg}`}>
+                    ⚔ {militia.damage}
+                  </span>
+                </div>
                 <span class={styles.militiaCost}>
                   <span class={styles.goldIcon}>🪙</span>
                   {militia.cost}
@@ -110,7 +118,8 @@ export function MilitiaSpawnPanel() {
 
       {selected && (
         <div class={styles.hint}>
-          Kliknij na mapę aby przywołać jednostkę
+          <span class={styles.hintIcon}>👆</span>
+          Kliknij na mapę
         </div>
       )}
     </div>

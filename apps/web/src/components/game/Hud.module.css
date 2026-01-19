@@ -53,9 +53,7 @@
 .wavePanel {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-right: 16px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 16px;
 }
 
 .waveInfo {
@@ -66,31 +64,7 @@
 }
 
 .waveProgressBar {
-  width: 80px;
-}
-
-.enemyCounter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 8px;
-}
-
-.enemyIcon {
-  font-size: 16px;
-}
-
-.enemyCount {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: #ef4444;
-  font-variant-numeric: tabular-nums;
-  min-width: 20px;
-  text-align: center;
+  width: 140px;
 }
 
 /* HP Panel - to the right of wave */
@@ -98,8 +72,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-left: 16px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hpBarWrapper {

@@ -957,6 +957,10 @@ export {
   STARTER_PACK_PRICE_GROSZE,
   BOOSTER_DEFINITIONS,
   CONVENIENCE_ITEMS,
+  // Bundles
+  BUNDLES,
+  // Battle Pass (shop product)
+  BATTLE_PASS,
   // Checkout flow
   CreateCheckoutRequestSchema,
   CreateCheckoutResponseSchema,
@@ -998,6 +1002,8 @@ export {
   type GetActiveBoostersResponse,
   type ShopErrorCode,
   type PremiumHeroProduct,
+  type BundleProduct,
+  type BattlePassProduct,
 } from './shop.js';
 
 // Gacha System

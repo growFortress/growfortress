@@ -1516,6 +1516,7 @@ enum ProductType {
   BOOSTER
   CONVENIENCE
   GACHA
+  BUNDLE
 }
 
 model ShopPurchase {

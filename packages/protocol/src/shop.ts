@@ -13,6 +13,7 @@ export const ProductTypeSchema = z.enum([
   'booster',        // XP/Gold/Material boosts
   'convenience',    // Skip tokens, instant claims
   'gacha',          // Hero/Artifact summons
+  'bundle',         // Value bundles (zestawy)
 ]);
 export type ProductType = z.infer<typeof ProductTypeSchema>;
 
@@ -91,12 +92,14 @@ export interface DustPackagePLN {
   stripePriceId?: string;   // Stripe Price ID
 }
 
-// SIMPLIFIED: Only 2 dust packages for MVP
+// 4 dust packages: 5 PLN to 100 PLN range
 export const DUST_PACKAGES_PLN: DustPackagePLN[] = [
-  { id: 'dust_small', dustAmount: 100, bonusDust: 0, pricePLN: 4.99, priceGrosze: 499 },
+  { id: 'dust_mini', dustAmount: 100, bonusDust: 0, pricePLN: 4.99, priceGrosze: 499 },
+  { id: 'dust_small', dustAmount: 450, bonusDust: 0, pricePLN: 19.99, priceGrosze: 1999 },
   { id: 'dust_large', dustAmount: 1200, bonusDust: 0, pricePLN: 49.99, priceGrosze: 4999 },
+  { id: 'dust_mega', dustAmount: 2800, bonusDust: 0, pricePLN: 99.99, priceGrosze: 9999 },
 ];
-// small = 4.99 PLN/100 dust, large = 4.17 PLN/100 dust (17% lepiej)
+// mini = 4.99/100, small = 4.44/100 (~11% off), large = 4.17/100 (~16% off), mega = 3.57/100 (~28% off)
 
 export const DustPackagePLNSchema = z.object({
   id: z.string(),
@@ -129,6 +132,88 @@ export const STARTER_PACK: StarterPackContent = {
 
 export const STARTER_PACK_PRICE_PLN = 19.99;
 export const STARTER_PACK_PRICE_GROSZE = 1999;
+
+// ============================================================================
+// VALUE BUNDLES (zestawy)
+// ============================================================================
+
+export interface BundleProduct {
+  id: string;
+  name: string;
+  description: string;
+  pricePLN: number;
+  priceGrosze: number;
+  // Contents
+  dustAmount: number;
+  goldAmount: number;
+  randomHeroCount: number;      // Number of random heroes to unlock
+  randomArtifactCount: number;  // Number of random artifacts to grant
+  // Display
+  badgeText?: string;
+}
+
+// Zestawy wartościowe - lepszy value niż kupowanie osobno
+export const BUNDLES: BundleProduct[] = [
+  {
+    id: 'bundle_bronze',
+    name: 'Zestaw Brązowy',
+    description: '250 Dust, 2000 Gold, 3 losowe artefakty',
+    pricePLN: 29.99,
+    priceGrosze: 2999,
+    dustAmount: 250,
+    goldAmount: 2000,
+    randomHeroCount: 0,
+    randomArtifactCount: 3,
+  },
+  {
+    id: 'bundle_silver',
+    name: 'Zestaw Srebrny',
+    description: '700 Dust, 5000 Gold, 1 losowa jednostka, 5 losowych artefaktów',
+    pricePLN: 69.99,
+    priceGrosze: 6999,
+    dustAmount: 700,
+    goldAmount: 5000,
+    randomHeroCount: 1,
+    randomArtifactCount: 5,
+    badgeText: 'POPULAR',
+  },
+  {
+    id: 'bundle_gold',
+    name: 'Zestaw Złoty',
+    description: '1500 Dust, 12000 Gold, 2 losowe jednostki, 8 losowych artefaktów',
+    pricePLN: 119.99,
+    priceGrosze: 11999,
+    dustAmount: 1500,
+    goldAmount: 12000,
+    randomHeroCount: 2,
+    randomArtifactCount: 8,
+    badgeText: 'BEST VALUE',
+  },
+];
+
+// ============================================================================
+// BATTLE PASS
+// ============================================================================
+
+export interface BattlePassProduct {
+  id: string;
+  name: string;
+  description: string;
+  pricePLN: number;
+  priceGrosze: number;
+  seasonNumber: number;
+  durationDays: number;
+}
+
+export const BATTLE_PASS: BattlePassProduct = {
+  id: 'battle_pass_premium',
+  name: 'Battle Pass Premium',
+  description: 'Odblokuj ścieżkę premium z ekskluzywnymi nagrodami przez cały sezon!',
+  pricePLN: 39.99,
+  priceGrosze: 3999,
+  seasonNumber: 1,
+  durationDays: 30,
+};
 
 // ============================================================================
 // BOOSTERS (simplified for MVP - can expand later)
@@ -252,9 +337,10 @@ export type GetPurchasesResponse = z.infer<typeof GetPurchasesResponseSchema>;
 // ============================================================================
 
 export const ShopCategorySchema = z.enum([
-  'featured',       // Starter pack, limited offers
+  'featured',       // Starter pack, limited offers, battle pass
   'heroes',         // Premium hero purchases
   'dust',           // Dust packages
+  'bundles',        // Value bundles (zestawy)
   'boosters',       // XP/Gold boosts
   'convenience',    // Skip tokens
   'cosmetics',      // Skins, themes

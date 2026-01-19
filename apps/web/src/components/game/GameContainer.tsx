@@ -51,7 +51,7 @@ import {
 } from '../../state/index.js';
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
 import { ApiError } from '../../api/base.js';
-import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState } from '../../state/index.js';
+import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub } from '../../state/index.js';
 import { fetchEnergy, hasEnergy } from '../../state/energy.signals.js';
 
 interface GameContainerProps {
@@ -105,6 +105,14 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     onSessionResumeFailed,
     onSessionResumed,
   ]);
+
+  // Handle force reset to hub (from session abandon)
+  useEffect(() => {
+    if (forceResetToHub.value) {
+      forceResetToHub.value = false;
+      reset();
+    }
+  }, [forceResetToHub.value, reset]);
 
   const handleStartClick = async () => {
     // First, show class selection if not already selected

@@ -140,6 +140,7 @@ export class EnemySystem {
   // Track state to minimize redrawing
   private lastHp: Map<number, number> = new Map();
   private visualHp: Map<number, number> = new Map(); // For smooth separation
+  private trailingHp: Map<number, number> = new Map(); // For damage trail effect (lags behind visualHp)
   private prevKills = 0;
   private prevKillStreak = 0;
   private lastStreakMilestone = 0; // Track which milestone was last shown
@@ -149,6 +150,12 @@ export class EnemySystem {
 
   // Track status effects for dirty flag optimization
   private lastEffectKeys: Map<number, string> = new Map(); // Serialized effect types
+
+  // Hit reaction squash animation state
+  private hitSquashProgress: Map<number, number> = new Map(); // 0 = no squash, 1 = max squash, decays over time
+
+  // Track enemy types for death VFX (needed because enemy is removed before we can access its type)
+  private enemyTypes: Map<number, EnemyType> = new Map();
 
   constructor() {
     this.container = new Container();
@@ -170,6 +177,7 @@ export class EnemySystem {
         this.container.addChild(bundle.container);
         this.visuals.set(enemy.id, bundle);
         this.lastHp.set(enemy.id, -1); // Force HP bar update
+        this.enemyTypes.set(enemy.id, enemy.type); // Track type for death VFX
       }
 
       const visual = bundle.container;
@@ -179,19 +187,9 @@ export class EnemySystem {
       const y = calculateEnemyLaneY(enemy.id, viewHeight);
       visual.position.set(x, y);
 
-      // Handle Hit Reaction (Squash)
-      // ... logic skipped for brevity, keeping existing update logic ...
-      
-      // Animation
-      const breatheSpeed = 5;
-      const breatheAmount = 0.05;
-      const phase = time * breatheSpeed + enemy.id;
-      const stretch = Math.sin(phase) * breatheAmount;
-      visual.scale.set(1 - stretch, 1 + stretch);
-
       // --- VISUAL POLISH ---
       const previousHp = this.lastHp.get(enemy.id) ?? enemy.hp;
-      
+
       // 1. Floating Damage Numbers (with scaling based on damage)
       if (previousHp > enemy.hp && vfx) {
         const damage = previousHp - enemy.hp;
@@ -199,26 +197,66 @@ export class EnemySystem {
         if (damage >= 1) {
              vfx.spawnDamageNumber(visual.x, visual.y - 20, damage);
              audioManager.playSfx('hit');
+             // Trigger squash animation on hit
+             this.hitSquashProgress.set(enemy.id, 1.0);
         }
       }
 
-      // 2. Smooth HP Bar
+      // Handle Hit Reaction (Squash Animation)
+      let squashProgress = this.hitSquashProgress.get(enemy.id) ?? 0;
+      if (squashProgress > 0) {
+        // Decay squash over time (fast elastic recovery)
+        squashProgress = Math.max(0, squashProgress - 0.15);
+        this.hitSquashProgress.set(enemy.id, squashProgress);
+      }
+
+      // Animation: Combine breathing + squash
+      const breatheSpeed = 5;
+      const breatheAmount = 0.05;
+      const phase = time * breatheSpeed + enemy.id;
+      const stretch = Math.sin(phase) * breatheAmount;
+
+      // Squash effect: horizontal stretch, vertical compress
+      const squashIntensity = 0.15; // Max 15% squash
+      const squashX = squashProgress * squashIntensity;
+      const squashY = squashProgress * squashIntensity;
+
+      // Apply combined animation (breathe + squash)
+      visual.scale.set(
+        (1 - stretch) * (1 + squashX),  // Wider when hit
+        (1 + stretch) * (1 - squashY)   // Shorter when hit
+      );
+
+      // 2. Smooth HP Bar with damage trail
       let currentVisualHp = this.visualHp.get(enemy.id) ?? enemy.hp;
+      let currentTrailingHp = this.trailingHp.get(enemy.id) ?? enemy.hp;
+
+      // Visual HP lerps quickly to actual HP
       if (currentVisualHp !== enemy.hp) {
-          // Lerp towards target
-          // Using a fixed lerp factor normalized by dt would be better, but simple lerp works for 60fps
           currentVisualHp = currentVisualHp + (enemy.hp - currentVisualHp) * 0.2;
-          
-          // Snap if close enough
           if (Math.abs(currentVisualHp - enemy.hp) < 0.1) {
               currentVisualHp = enemy.hp;
           }
-          
           this.visualHp.set(enemy.id, currentVisualHp);
-          this.updateHpBar(visual, enemy, currentVisualHp);
-      } else if (previousHp !== enemy.hp) {
-          // Force update if logic changed but visual caught up (edge case)
-          this.updateHpBar(visual, enemy, enemy.hp);
+      }
+
+      // Trailing HP lerps slowly (shows damage trail)
+      if (currentTrailingHp > currentVisualHp) {
+          currentTrailingHp = currentTrailingHp + (currentVisualHp - currentTrailingHp) * 0.05;
+          if (Math.abs(currentTrailingHp - currentVisualHp) < 0.5) {
+              currentTrailingHp = currentVisualHp;
+          }
+          this.trailingHp.set(enemy.id, currentTrailingHp);
+      } else if (currentTrailingHp < currentVisualHp) {
+          // Trailing should never be less than visual (healing edge case)
+          currentTrailingHp = currentVisualHp;
+          this.trailingHp.set(enemy.id, currentTrailingHp);
+      }
+
+      // Update HP bar if anything changed
+      const needsUpdate = currentVisualHp !== enemy.hp || currentTrailingHp > currentVisualHp || previousHp !== enemy.hp;
+      if (needsUpdate) {
+          this.updateHpBar(visual, enemy, currentVisualHp, currentTrailingHp);
       }
 
       this.lastHp.set(enemy.id, enemy.hp);
@@ -245,14 +283,19 @@ export class EnemySystem {
       if (!currentIds.has(id)) {
         lastDeathPosition = { x: bundle.container.x, y: bundle.container.y };
         if (killsIncreased && vfx) {
-          vfx.spawnExplosion(bundle.container.x, bundle.container.y, 0xffaa00);
+          // Get enemy type for category-specific death VFX
+          const enemyType = this.enemyTypes.get(id);
+          vfx.spawnEnemyDeathVFX(bundle.container.x, bundle.container.y, enemyType);
         }
         this.container.removeChild(bundle.container);
         this.visualPool.release(bundle); // Return to pool for reuse
         this.visuals.delete(id);
         this.lastHp.delete(id);
         this.visualHp.delete(id);
+        this.trailingHp.delete(id);
         this.lastEffectKeys.delete(id);
+        this.hitSquashProgress.delete(id);
+        this.enemyTypes.delete(id);
       }
     }
 
@@ -304,6 +347,13 @@ export class EnemySystem {
 
     const color = getEnemyColor(enemy.type);
 
+    // -1. Shadow Layer (ground indicator for depth)
+    const shadowOffsetY = size * 0.7;
+    const shadowWidth = size * 0.7;
+    const shadowHeight = size * 0.2;
+    bundle.shadow.ellipse(0, shadowOffsetY, shadowWidth, shadowHeight)
+      .fill({ color: 0x000000, alpha: 0.3 });
+
     // 0. Elite Glow Layer (handled by pool based on isElite flag)
     if (bundle.eliteGlow) {
       // Multi-layer glow for elite enemies
@@ -323,7 +373,7 @@ export class EnemySystem {
     return bundle;
   }
 
-  private updateHpBar(container: Container, enemy: Enemy, displayedHp: number) {
+  private updateHpBar(container: Container, enemy: Enemy, displayedHp: number, trailingHp?: number) {
       const hpBar = container.getChildByLabel('hpBar') as Graphics;
       if (!hpBar) return;
 
@@ -335,26 +385,35 @@ export class EnemySystem {
       // Use optimized lookup
       let size = getEnemySize(enemy.type);
       if (enemy.isElite) size *= SIZES.eliteMultiplier;
-      
+
       const width = size * 2.2;
       const height = SIZES.hpBar.enemyHeight;
       const x = -width / 2;
       const y = 0;
-      
+
       const hpPercent = Math.max(0, displayedHp / enemy.maxHp);
+      const trailingPercent = trailingHp !== undefined ? Math.max(0, trailingHp / enemy.maxHp) : hpPercent;
       const radius = SIZES.hpBar.borderRadius;
-      
+
       // Background
       hpBar.roundRect(x, y, width, height, radius)
            .fill({ color: THEME.hpBar.background, alpha: 0.7 })
            .stroke({ width: 1, color: THEME.hpBar.border, alpha: 0.9 });
 
-      // Fill
+      // Damage trail (red/orange faded bar showing recent damage)
+      if (trailingPercent > hpPercent) {
+          const trailStart = (width - 2) * hpPercent;
+          const trailWidth = Math.max(0, (width - 2) * (trailingPercent - hpPercent));
+          hpBar.roundRect(x + 1 + trailStart, y + 1, trailWidth, height - 2, Math.max(0, radius - 1))
+               .fill({ color: 0xff4444, alpha: 0.6 }); // Red damage trail
+      }
+
+      // Fill (current HP)
       if (hpPercent > 0) {
           let fillColor = THEME.hpBar.high;
           if (hpPercent <= 0.3) fillColor = THEME.hpBar.low;
           else if (hpPercent <= 0.6) fillColor = THEME.hpBar.mid;
-          
+
           if (enemy.isElite) fillColor = THEME.elite;
 
           const fillWidth = Math.max(0, (width - 2) * hpPercent);
@@ -421,7 +480,6 @@ export class EnemySystem {
       const pulseAmount = 0.3;
       const pulse = Math.sin(time * pulseSpeed + i) * pulseAmount + 1;
 
-      // Draw effect indicator (small circle with glow)
       const effectColor = effectTheme.color;
       const size = effectSize * pulse;
 
@@ -429,9 +487,8 @@ export class EnemySystem {
       statusEffects.circle(x, 0, size * 1.5)
         .fill({ color: effectColor, alpha: 0.3 });
 
-      // Inner circle
-      statusEffects.circle(x, 0, size)
-        .fill({ color: effectColor, alpha: 0.9 });
+      // Draw procedural icon based on effect type
+      this.drawStatusIcon(statusEffects, effect.type, x, 0, size, effectColor, time);
 
       // Border for visibility
       statusEffects.circle(x, 0, size)
@@ -450,8 +507,11 @@ export class EnemySystem {
     switch (type) {
       // === BASE ENEMIES ===
       case 'runner':
-        // Fast-moving circle with motion trail hint
+        // Fast-moving circle with layered depth
         g.circle(0, 0, size).fill(color);
+        // Inner depth layers (gradient simulation)
+        g.circle(0, 0, size * 0.75).fill({ color: lightColor, alpha: 0.25 });
+        g.circle(0, 0, size * 0.5).fill({ color: lightColor, alpha: 0.2 });
         // Inner highlight for depth
         g.arc(0, 0, size * 0.7, -Math.PI * 0.8, -Math.PI * 0.2).stroke({ width: 2, color: lightColor, alpha: 0.5 });
         // Speed lines
@@ -461,8 +521,11 @@ export class EnemySystem {
         break;
 
       case 'bruiser':
-        // Tanky square with armor plates
+        // Tanky square with armor plates and layered depth
         g.roundRect(-size, -size, size * 2, size * 2, size * 0.25).fill(color);
+        // Inner depth layers
+        g.roundRect(-size * 0.8, -size * 0.8, size * 1.6, size * 1.6, size * 0.2).fill({ color: lightColor, alpha: 0.2 });
+        g.roundRect(-size * 0.6, -size * 0.6, size * 1.2, size * 1.2, size * 0.15).fill({ color: lightColor, alpha: 0.15 });
         // Armor plate lines
         g.roundRect(-size * 0.85, -size * 0.85, size * 1.7, size * 1.7, size * 0.15).stroke({ width: 2, color: darkColor });
         // Highlight
@@ -470,11 +533,14 @@ export class EnemySystem {
         break;
 
       case 'leech':
-        // Diamond with pulsing inner core
+        // Diamond with pulsing inner core and depth
         g.poly([0, -size, size, 0, 0, size, -size, 0]).fill(color);
+        // Inner depth layers
+        g.poly([0, -size * 0.75, size * 0.75, 0, 0, size * 0.75, -size * 0.75, 0]).fill({ color: lightColor, alpha: 0.2 });
         g.poly([0, -size * 0.6, size * 0.6, 0, 0, size * 0.6, -size * 0.6, 0]).stroke({ width: 2, color: lightColor, alpha: 0.5 });
         // Inner glow (life-stealing energy)
-        g.circle(0, 0, size * 0.25).fill({ color: 0xff00ff, alpha: 0.6 });
+        g.circle(0, 0, size * 0.3).fill({ color: 0xff00ff, alpha: 0.4 });
+        g.circle(0, 0, size * 0.2).fill({ color: 0xff00ff, alpha: 0.7 });
         break;
 
       // === STREET ENEMIES ===
@@ -710,6 +776,114 @@ export class EnemySystem {
       starPoints.push(Math.cos(angle) * radius, Math.sin(angle) * radius);
     }
     g.poly(starPoints).fill(color);
+  }
+
+  /**
+   * Draw procedural icon for a status effect type
+   */
+  private drawStatusIcon(
+    g: Graphics,
+    type: StatusEffectType,
+    x: number,
+    y: number,
+    size: number,
+    color: number,
+    time: number
+  ): void {
+    switch (type) {
+      case 'slow':
+        // Snowflake shape (6-pointed star with branches)
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3;
+          const endX = x + Math.cos(angle) * size * 0.9;
+          const endY = y + Math.sin(angle) * size * 0.9;
+          // Main arm
+          g.moveTo(x, y).lineTo(endX, endY).stroke({ width: 2, color, alpha: 0.9 });
+          // Small branches
+          const midX = x + Math.cos(angle) * size * 0.5;
+          const midY = y + Math.sin(angle) * size * 0.5;
+          const branchAngle1 = angle + Math.PI / 4;
+          const branchAngle2 = angle - Math.PI / 4;
+          g.moveTo(midX, midY)
+            .lineTo(midX + Math.cos(branchAngle1) * size * 0.3, midY + Math.sin(branchAngle1) * size * 0.3)
+            .stroke({ width: 1, color, alpha: 0.7 });
+          g.moveTo(midX, midY)
+            .lineTo(midX + Math.cos(branchAngle2) * size * 0.3, midY + Math.sin(branchAngle2) * size * 0.3)
+            .stroke({ width: 1, color, alpha: 0.7 });
+        }
+        // Center dot
+        g.circle(x, y, size * 0.2).fill({ color, alpha: 0.9 });
+        break;
+
+      case 'freeze':
+        // Hexagonal crystal
+        const hexPoints: number[] = [];
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3 - Math.PI / 2;
+          hexPoints.push(x + Math.cos(angle) * size * 0.9, y + Math.sin(angle) * size * 0.9);
+        }
+        g.poly(hexPoints).fill({ color, alpha: 0.8 });
+        // Inner crystal shine
+        const innerHex: number[] = [];
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3 - Math.PI / 2;
+          innerHex.push(x + Math.cos(angle) * size * 0.5, y + Math.sin(angle) * size * 0.5);
+        }
+        g.poly(innerHex).fill({ color: 0xffffff, alpha: 0.4 });
+        break;
+
+      case 'burn':
+        // Flame shape (teardrop pointing up)
+        const flicker = Math.sin(time * 10) * 0.1;
+        // Outer flame
+        g.moveTo(x, y - size * (0.9 + flicker))
+          .quadraticCurveTo(x + size * 0.6, y, x, y + size * 0.5)
+          .quadraticCurveTo(x - size * 0.6, y, x, y - size * (0.9 + flicker))
+          .fill({ color, alpha: 0.9 });
+        // Inner flame (brighter)
+        g.moveTo(x, y - size * (0.5 + flicker * 0.5))
+          .quadraticCurveTo(x + size * 0.3, y + size * 0.1, x, y + size * 0.3)
+          .quadraticCurveTo(x - size * 0.3, y + size * 0.1, x, y - size * (0.5 + flicker * 0.5))
+          .fill({ color: 0xffff00, alpha: 0.8 });
+        break;
+
+      case 'poison':
+        // Skull shape (simplified)
+        // Head (circle)
+        g.circle(x, y - size * 0.1, size * 0.7).fill({ color, alpha: 0.9 });
+        // Eye sockets (dark circles)
+        g.circle(x - size * 0.25, y - size * 0.2, size * 0.2).fill({ color: 0x000000, alpha: 0.9 });
+        g.circle(x + size * 0.25, y - size * 0.2, size * 0.2).fill({ color: 0x000000, alpha: 0.9 });
+        // Nose (triangle)
+        g.poly([x, y, x - size * 0.1, y + size * 0.2, x + size * 0.1, y + size * 0.2])
+          .fill({ color: 0x000000, alpha: 0.7 });
+        // Teeth hint
+        g.moveTo(x - size * 0.3, y + size * 0.35)
+          .lineTo(x + size * 0.3, y + size * 0.35)
+          .stroke({ width: 2, color: 0x000000, alpha: 0.7 });
+        break;
+
+      case 'stun':
+        // Lightning bolt
+        const boltPoints = [
+          x - size * 0.1, y - size * 0.9,  // Top
+          x + size * 0.4, y - size * 0.1,  // Right upper
+          x + size * 0.05, y - size * 0.1, // Middle indent
+          x + size * 0.2, y + size * 0.9,  // Bottom
+          x - size * 0.3, y + size * 0.1,  // Left lower
+          x - size * 0.05, y + size * 0.1, // Middle indent
+        ];
+        g.poly(boltPoints).fill({ color, alpha: 0.9 });
+        // Bright center line
+        g.moveTo(x, y - size * 0.7)
+          .lineTo(x, y + size * 0.5)
+          .stroke({ width: 2, color: 0xffffff, alpha: 0.5 });
+        break;
+
+      default:
+        // Fallback to circle
+        g.circle(x, y, size).fill({ color, alpha: 0.9 });
+    }
   }
 
   /**
