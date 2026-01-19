@@ -135,11 +135,10 @@ async function getUserArenaPower(userId: string): Promise<number> {
       } | null
     )?.statUpgrades ?? createDefaultStatUpgrades();
 
-  const heroUpgradesData =
-    (powerUpgrades?.heroUpgrades as unknown as Array<{
-      heroId: string;
-      statUpgrades: StatUpgrades;
-    }>) ?? [];
+  // heroUpgrades might be an object or array depending on schema version
+  const rawHeroUpgrades = powerUpgrades?.heroUpgrades;
+  const heroUpgradesData: Array<{ heroId: string; statUpgrades: StatUpgrades }> =
+    Array.isArray(rawHeroUpgrades) ? rawHeroUpgrades : [];
 
   // Build hero configs with their upgrades and equipped artifacts
   const artifactMap = new Map(
@@ -306,13 +305,16 @@ async function canChallengeUser(
 // PUBLIC API
 // ============================================================================
 
+// Minimum power range for matchmaking (ensures new players can find opponents)
+const MIN_POWER_RANGE = 1000;
+const ARENA_OPPONENTS_COUNT = 6;
+
 /**
- * Get list of opponents within power range
+ * Get list of random opponents for PVP arena
+ * Always returns up to 6 random opponents within power range (minimum 0-1000)
  */
 export async function getOpponents(
   userId: string,
-  limit: number = 20,
-  offset: number = 0,
 ): Promise<{
   opponents: Array<{
     userId: string;
@@ -330,62 +332,83 @@ export async function getOpponents(
   const myPower = await getUserArenaPower(userId);
 
   // Use cached total power for opponent matching (indexed, performant)
-  // Arena power is shown to user but matching uses total power as approximation
   const userPower = await prisma.powerUpgrades.findUnique({
     where: { userId },
     select: { cachedTotalPower: true },
   });
 
-  // Use cachedTotalPower if available and > 0, otherwise use calculated myPower
+  // Calculate power range with minimum floor of 0-1000
   const matchingPower = userPower?.cachedTotalPower || myPower;
-  const minPower = Math.floor(
+  const percentMin = Math.floor(
     matchingPower * (1 - PVP_CONSTANTS.POWER_RANGE_PERCENT),
   );
-  const maxPower = Math.ceil(
+  const percentMax = Math.ceil(
     matchingPower * (1 + PVP_CONSTANTS.POWER_RANGE_PERCENT),
   );
 
-  // Find opponents within power range
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where: {
-        id: { not: userId },
-        banned: false,
-        powerUpgrades: {
-          cachedTotalPower: {
-            gte: minPower,
-            lte: maxPower,
+  // Ensure minimum range of 0-1000 for new/low power players
+  const minPower = Math.min(percentMin, 0);
+  const maxPower = Math.max(percentMax, MIN_POWER_RANGE);
+
+  // Find all eligible opponents (including those without powerUpgrades record)
+  const totalEligible = await prisma.user.count({
+    where: {
+      id: { not: userId },
+      banned: false,
+      OR: [
+        // Players with powerUpgrades in range
+        {
+          powerUpgrades: {
+            cachedTotalPower: {
+              gte: minPower,
+              lte: maxPower,
+            },
           },
         },
-      },
-      include: {
-        powerUpgrades: {
-          select: { cachedTotalPower: true },
+        // Players without powerUpgrades record (new players, power = 0)
+        {
+          powerUpgrades: null,
         },
-      },
-      orderBy: {
-        powerUpgrades: { cachedTotalPower: "desc" },
-      },
-      skip: offset,
-      take: limit,
-    }),
-    prisma.user.count({
-      where: {
-        id: { not: userId },
-        banned: false,
-        powerUpgrades: {
-          cachedTotalPower: {
-            gte: minPower,
-            lte: maxPower,
+      ],
+    },
+  });
+
+  // Get random opponents using skip with random offset
+  // Fetch more than needed to allow for randomization
+  const fetchLimit = Math.min(totalEligible, 50);
+  const users = await prisma.user.findMany({
+    where: {
+      id: { not: userId },
+      banned: false,
+      OR: [
+        {
+          powerUpgrades: {
+            cachedTotalPower: {
+              gte: minPower,
+              lte: maxPower,
+            },
           },
         },
+        {
+          powerUpgrades: null,
+        },
+      ],
+    },
+    include: {
+      powerUpgrades: {
+        select: { cachedTotalPower: true },
       },
-    }),
-  ]);
+    },
+    take: fetchLimit,
+  });
+
+  // Shuffle and take 6 random opponents
+  const shuffled = users.sort(() => Math.random() - 0.5);
+  const selectedUsers = shuffled.slice(0, ARENA_OPPONENTS_COUNT);
 
   // Check cooldowns for each opponent
   const opponents = await Promise.all(
-    users.map(async (user) => {
+    selectedUsers.map(async (user) => {
       const cooldownInfo = await canChallengeUser(userId, user.id);
       return {
         userId: user.id,
@@ -399,11 +422,11 @@ export async function getOpponents(
     }),
   );
 
-  return { opponents, total, myPower };
+  return { opponents, total: totalEligible, myPower };
 }
 
 /**
- * Create a new challenge
+ * Create a new challenge and immediately run the battle (auto-accept)
  */
 export async function createChallenge(
   challengerId: string,
@@ -419,33 +442,29 @@ export async function createChallenge(
   status: PvpChallengeStatus;
   createdAt: string;
   expiresAt: string;
+  // Auto-accept: include battle result
+  winnerId?: string;
+  result?: {
+    winReason: string;
+    challengerStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    challengedStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    duration: number;
+  };
 }> {
   // Validate not challenging self
   if (challengerId === challengedId) {
     throw new PvpError("Cannot challenge yourself", "CANNOT_CHALLENGE_SELF");
   }
 
-  // Get both users
-  const [challenger, challenged] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: challengerId },
-      include: { powerUpgrades: true },
-    }),
-    prisma.user.findUnique({
-      where: { id: challengedId },
-      include: { powerUpgrades: true },
-    }),
-  ]);
-
-  if (!challenger) {
-    throw new PvpError("Challenger not found", "USER_NOT_FOUND");
-  }
-
-  if (!challenged) {
-    throw new PvpError("Opponent not found", "OPPONENT_NOT_FOUND");
-  }
-
-  // Check cooldown
+  // Check cooldown first
   const cooldownInfo = await canChallengeUser(challengerId, challengedId);
   if (!cooldownInfo.canChallenge) {
     throw new PvpError(
@@ -454,42 +473,174 @@ export async function createChallenge(
     );
   }
 
-  // Check power range
-  const challengerPower = challenger.powerUpgrades?.cachedTotalPower ?? 0;
-  const challengedPower = challenged.powerUpgrades?.cachedTotalPower ?? 0;
-  const minPower = challengerPower * (1 - PVP_CONSTANTS.POWER_RANGE_PERCENT);
-  const maxPower = challengerPower * (1 + PVP_CONSTANTS.POWER_RANGE_PERCENT);
+  // Get both players' builds for battle
+  const [challengerBuild, challengedBuild] = await Promise.all([
+    getUserBuildData(challengerId),
+    getUserBuildData(challengedId),
+  ]);
 
-  if (challengedPower < minPower || challengedPower > maxPower) {
-    throw new PvpError("Opponent power out of range", "POWER_OUT_OF_RANGE");
+  if (!challengerBuild) {
+    throw new PvpError("Challenger not found", "USER_NOT_FOUND");
   }
 
-  // Create challenge
+  if (!challengedBuild) {
+    throw new PvpError("Opponent not found", "OPPONENT_NOT_FOUND");
+  }
+
+  // Generate cryptographically secure battle seed
+  const seed = randomInt(2147483647);
+
+  // Convert to arena build configs
+  const challengerConfig = toBuildConfig(challengerBuild);
+  const challengedConfig = toBuildConfig(challengedBuild);
+
+  // Run the battle simulation immediately
+  const battleResult = runArenaBattle(seed, challengerConfig, challengedConfig);
+
+  // Determine winner ID
+  let winnerId: string | null = null;
+  if (battleResult.winner === "left") {
+    winnerId = challengerId;
+  } else if (battleResult.winner === "right") {
+    winnerId = challengedId;
+  }
+
+  // Count alive heroes
+  const challengerHeroesAlive = battleResult.leftStats.heroesAlive ?? 0;
+  const challengedHeroesAlive = battleResult.rightStats.heroesAlive ?? 0;
+
+  // Calculate honor changes based on power difference
+  let challengerHonorChange = 0;
+  let challengedHonorChange = 0;
+
+  if (winnerId) {
+    const winnerPower =
+      winnerId === challengerId
+        ? challengerBuild.power
+        : challengedBuild.power;
+    const loserPower =
+      winnerId === challengerId
+        ? challengedBuild.power
+        : challengerBuild.power;
+
+    const winnerHonorGain = calculateHonorChange(winnerPower, loserPower, true);
+    const loserHonorLoss = calculateHonorChange(loserPower, winnerPower, false);
+
+    if (winnerId === challengerId) {
+      challengerHonorChange = winnerHonorGain;
+      challengedHonorChange = loserHonorLoss;
+    } else {
+      challengerHonorChange = loserHonorLoss;
+      challengedHonorChange = winnerHonorGain;
+    }
+  }
+
+  const now = new Date();
   const expiresAt = new Date(
     Date.now() + PVP_CONSTANTS.CHALLENGE_EXPIRY_HOURS * 60 * 60 * 1000,
   );
 
-  const challenge = await prisma.pvpChallenge.create({
+  // Create challenge and result in transaction (already resolved)
+  const [challenge] = await prisma.$transaction([
+    prisma.pvpChallenge.create({
+      data: {
+        challengerId,
+        challengedId,
+        challengerPower: challengerBuild.power,
+        challengedPower: challengedBuild.power,
+        status: "RESOLVED",
+        seed,
+        acceptedAt: now,
+        resolvedAt: now,
+        expiresAt,
+        winnerId,
+      },
+    }),
+    // Update challenger stats
+    prisma.user.update({
+      where: { id: challengerId },
+      data: {
+        ...(winnerId === challengerId
+          ? { pvpWins: { increment: 1 } }
+          : winnerId
+            ? { pvpLosses: { increment: 1 } }
+            : {}),
+        honor: { increment: challengerHonorChange },
+      },
+    }),
+    // Update challenged stats
+    prisma.user.update({
+      where: { id: challengedId },
+      data: {
+        ...(winnerId === challengedId
+          ? { pvpWins: { increment: 1 } }
+          : winnerId
+            ? { pvpLosses: { increment: 1 } }
+            : {}),
+        honor: { increment: challengedHonorChange },
+      },
+    }),
+  ]);
+
+  // Create result record (separate to get challenge ID)
+  await prisma.pvpResult.create({
     data: {
-      challengerId,
-      challengedId,
-      challengerPower,
-      challengedPower,
-      expiresAt,
+      challengeId: challenge.id,
+      winnerId,
+      winReason: battleResult.winReason,
+      challengerFinalHp: battleResult.leftStats.finalHp,
+      challengerDamageDealt: battleResult.leftStats.damageDealt,
+      challengerHeroesAlive,
+      challengedFinalHp: battleResult.rightStats.finalHp,
+      challengedDamageDealt: battleResult.rightStats.damageDealt,
+      challengedHeroesAlive,
+      duration: battleResult.duration,
+      challengerBuild: challengerConfig as unknown as Parameters<
+        typeof prisma.pvpResult.create
+      >[0]["data"]["challengerBuild"],
+      challengedBuild: challengedConfig as unknown as Parameters<
+        typeof prisma.pvpResult.create
+      >[0]["data"]["challengedBuild"],
+      replayEvents: battleResult.replayEvents as unknown as Parameters<
+        typeof prisma.pvpResult.create
+      >[0]["data"]["replayEvents"],
     },
   });
+
+  // Record weekly honor gains (fire and forget)
+  if (challengerHonorChange > 0) {
+    recordWeeklyHonorGain(challengerId, challengerHonorChange).catch(() => {});
+  }
+  if (challengedHonorChange > 0) {
+    recordWeeklyHonorGain(challengedId, challengedHonorChange).catch(() => {});
+  }
 
   return {
     id: challenge.id,
     challengerId,
-    challengerName: challenger.displayName,
-    challengerPower,
+    challengerName: challengerBuild.displayName,
+    challengerPower: challengerBuild.power,
     challengedId,
-    challengedName: challenged.displayName,
-    challengedPower,
-    status: challenge.status,
+    challengedName: challengedBuild.displayName,
+    challengedPower: challengedBuild.power,
+    status: "RESOLVED",
     createdAt: challenge.createdAt.toISOString(),
     expiresAt: challenge.expiresAt.toISOString(),
+    winnerId: winnerId ?? undefined,
+    result: {
+      winReason: battleResult.winReason,
+      challengerStats: {
+        finalHp: battleResult.leftStats.finalHp,
+        damageDealt: battleResult.leftStats.damageDealt,
+        heroesAlive: challengerHeroesAlive,
+      },
+      challengedStats: {
+        finalHp: battleResult.rightStats.finalHp,
+        damageDealt: battleResult.rightStats.damageDealt,
+        heroesAlive: challengedHeroesAlive,
+      },
+      duration: battleResult.duration,
+    },
   };
 }
 

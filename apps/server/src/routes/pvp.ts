@@ -2,7 +2,6 @@ import { FastifyPluginAsync } from 'fastify';
 import {
   PvpCreateChallengeRequestSchema,
   PvpChallengesQuerySchema,
-  PvpOpponentsQuerySchema,
 } from '@arcade/protocol';
 import {
   getOpponents,
@@ -22,20 +21,13 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
   // OPPONENTS
   // ============================================================================
 
-  // Get list of opponents within power range
+  // Get list of random opponents for PVP arena (always 6 random players)
   fastify.get('/v1/pvp/opponents', async (request, reply) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
 
-    let query;
-    try {
-      query = PvpOpponentsQuerySchema.parse(request.query);
-    } catch (error) {
-      return reply.status(400).send({ error: 'Invalid query parameters' });
-    }
-
-    const result = await getOpponents(request.userId, query.limit, query.offset);
+    const result = await getOpponents(request.userId);
     return reply.send(result);
   });
 

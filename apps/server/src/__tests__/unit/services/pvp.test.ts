@@ -168,12 +168,11 @@ describe('PvP Service', () => {
       mockPrisma.user.count.mockResolvedValue(2);
       mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
 
-      const result = await getOpponents('user-123', 20, 0);
+      const result = await getOpponents('user-123');
 
       expect(result.myPower).toBe(1000); // From mocked calculateArenaPower
       expect(result.total).toBe(2);
-      expect(result.opponents).toHaveLength(2);
-      expect(result.opponents[0].userId).toBe('user-456');
+      expect(result.opponents.length).toBeLessThanOrEqual(6); // Max 6 random opponents
       expect(result.opponents[0].canChallenge).toBe(true);
     });
 
@@ -184,7 +183,7 @@ describe('PvP Service', () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
 
-      await getOpponents('user-123', 20, 0);
+      await getOpponents('user-123');
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -202,7 +201,7 @@ describe('PvP Service', () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
 
-      await getOpponents('user-123', 20, 0);
+      await getOpponents('user-123');
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -237,27 +236,32 @@ describe('PvP Service', () => {
       ];
       mockPrisma.pvpChallenge.findMany.mockResolvedValue(recentChallenges);
 
-      const result = await getOpponents('user-123', 20, 0);
+      const result = await getOpponents('user-123');
 
       expect(result.opponents[0].canChallenge).toBe(false);
       expect(result.opponents[0].challengeCooldownEndsAt).toBeDefined();
     });
 
-    it('respects pagination (limit, offset)', async () => {
+    it('returns max 6 random opponents', async () => {
       mockPrisma.powerUpgrades.findUnique.mockResolvedValue({
         cachedTotalPower: 1000,
       });
-      mockPrisma.user.findMany.mockResolvedValue([]);
-      mockPrisma.user.count.mockResolvedValue(0);
+      // Mock 10 users but expect only 6 to be returned
+      const manyUsers = Array.from({ length: 10 }, (_, i) => ({
+        id: `user-${i}`,
+        displayName: `Opponent${i}`,
+        pvpWins: 5,
+        pvpLosses: 3,
+        powerUpgrades: { cachedTotalPower: 900 + i * 10 },
+      }));
+      mockPrisma.user.findMany.mockResolvedValue(manyUsers);
+      mockPrisma.user.count.mockResolvedValue(10);
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
 
-      await getOpponents('user-123', 10, 5);
+      const result = await getOpponents('user-123');
 
-      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 5,
-          take: 10,
-        })
-      );
+      expect(result.opponents.length).toBeLessThanOrEqual(6);
+      expect(result.total).toBe(10);
     });
 
     it('returns empty array when no matching opponents', async () => {
@@ -267,7 +271,7 @@ describe('PvP Service', () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
 
-      const result = await getOpponents('user-123', 20, 0);
+      const result = await getOpponents('user-123');
 
       expect(result.opponents).toEqual([]);
       expect(result.total).toBe(0);
@@ -283,7 +287,7 @@ describe('PvP Service', () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
 
-      const result = await getOpponents('user-123', 20, 0);
+      const result = await getOpponents('user-123');
 
       expect(result.myPower).toBe(0);
     });
@@ -370,30 +374,14 @@ describe('PvP Service', () => {
       });
     });
 
-    it('throws POWER_OUT_OF_RANGE when opponent outside ±20%', async () => {
+    it('allows challenge regardless of power difference (from rankings/profile)', async () => {
       const challenger = createMockUser({ id: 'user-123' });
       const challenged = createMockUser({ id: 'user-456' });
 
+      // 100% higher power - should still work (no power range check)
       mockPrisma.user.findUnique.mockImplementation(({ where }) => {
         if (where.id === 'user-123') return { ...challenger, powerUpgrades: { cachedTotalPower: 1000 } };
-        if (where.id === 'user-456') return { ...challenged, powerUpgrades: { cachedTotalPower: 2000 } }; // 100% higher
-        return null;
-      });
-
-      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
-
-      await expect(createChallenge('user-123', 'user-456')).rejects.toMatchObject({
-        code: 'POWER_OUT_OF_RANGE',
-      });
-    });
-
-    it('allows challenge at exactly +20% power boundary', async () => {
-      const challenger = createMockUser({ id: 'user-123' });
-      const challenged = createMockUser({ id: 'user-456' });
-
-      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
-        if (where.id === 'user-123') return { ...challenger, powerUpgrades: { cachedTotalPower: 1000 } };
-        if (where.id === 'user-456') return { ...challenged, powerUpgrades: { cachedTotalPower: 1200 } }; // exactly +20%
+        if (where.id === 'user-456') return { ...challenged, powerUpgrades: { cachedTotalPower: 2000 } };
         return null;
       });
 
@@ -401,22 +389,22 @@ describe('PvP Service', () => {
       mockPrisma.pvpChallenge.create.mockResolvedValue(
         createMockPvpChallenge({
           challengerPower: 1000,
-          challengedPower: 1200,
+          challengedPower: 2000,
         })
       );
 
       const result = await createChallenge('user-123', 'user-456');
 
-      expect(result.challengedPower).toBe(1200);
+      expect(result.challengedPower).toBe(2000);
     });
 
-    it('allows challenge at exactly -20% power boundary', async () => {
+    it('allows challenge with lower power opponent', async () => {
       const challenger = createMockUser({ id: 'user-123' });
       const challenged = createMockUser({ id: 'user-456' });
 
       mockPrisma.user.findUnique.mockImplementation(({ where }) => {
         if (where.id === 'user-123') return { ...challenger, powerUpgrades: { cachedTotalPower: 1000 } };
-        if (where.id === 'user-456') return { ...challenged, powerUpgrades: { cachedTotalPower: 800 } }; // exactly -20%
+        if (where.id === 'user-456') return { ...challenged, powerUpgrades: { cachedTotalPower: 100 } };
         return null;
       });
 
