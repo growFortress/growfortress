@@ -421,9 +421,9 @@ export function FortressInfoPanel() {
           {FORTRESS_STAT_UPGRADES.map((config) => {
             const currentLevel = state.fortressUpgrades[config.stat as keyof PowerStatUpgrades] || 0;
             const cost = getUpgradeCost(config, currentLevel);
-            const canAfford = gold >= cost && currentLevel < config.maxLevel;
-            const isMaxed = currentLevel >= config.maxLevel;
-            const progressPercent = (currentLevel / config.maxLevel) * 100;
+            const hasMaxLevel = config.maxLevel !== Infinity;
+            const canAfford = gold >= cost && (!hasMaxLevel || currentLevel < config.maxLevel);
+            const isMaxed = hasMaxLevel && currentLevel >= config.maxLevel;
             const isLoading = loadingStat === config.stat;
 
             // Get actual stat values
@@ -448,16 +448,9 @@ export function FortressInfoPanel() {
                 <div class={styles.upgradeCardHeader}>
                   <span class={styles.upgradeIcon}>{STAT_ICONS[config.stat] || '📊'}</span>
                   <span class={styles.upgradeName}>{upgradeName}</span>
-                  <span class={styles.upgradeLevel}>{currentLevel}/{config.maxLevel}</span>
-                </div>
-
-                <div class={styles.upgradeProgressWrapper}>
-                  <div class={styles.upgradeProgressBar}>
-                    <div
-                      class={styles.upgradeProgressFill}
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
+                  <span class={styles.upgradeLevel}>
+                    {hasMaxLevel ? `${currentLevel}/${config.maxLevel}` : `Lv ${currentLevel}`}
+                  </span>
                 </div>
 
                 <div class={styles.upgradeBonusRow}>

@@ -38,27 +38,27 @@ export const FORTRESS_STAT_UPGRADES: StatUpgradeConfig[] = [
     name: 'Wzmocnione Mury',
     description: '+5% HP twierdzy za level',
     bonusPerLevel: 0.05,
-    maxLevel: 20,
-    baseCost: 60,       // Reduced from 100
-    costPerLevel: 45,   // Reduced from 75
+    maxLevel: Infinity,
+    baseCost: 60,
+    costPerLevel: 45,
   },
   {
     stat: 'damage',
     name: 'Arsenał',
     description: '+4% obrażeń twierdzy za level',
     bonusPerLevel: 0.04,
-    maxLevel: 20,
-    baseCost: 90,       // Reduced from 150
-    costPerLevel: 60,   // Reduced from 100
+    maxLevel: Infinity,
+    baseCost: 90,
+    costPerLevel: 60,
   },
   {
     stat: 'armor',
     name: 'Pancerz',
     description: '+3% redukcji obrażeń za level',
     bonusPerLevel: 0.03,
-    maxLevel: 20,
-    baseCost: 120,      // Reduced from 200
-    costPerLevel: 75,   // Reduced from 125
+    maxLevel: Infinity,
+    baseCost: 120,
+    costPerLevel: 75,
   },
 ];
 
