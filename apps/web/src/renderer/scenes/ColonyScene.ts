@@ -30,44 +30,43 @@ const THEME = {
   },
 };
 
-// Colony visual configurations
+// Colony visual configurations - positioned around planet edge
 const COLONY_CONFIG: Record<string, {
   name: string;
   icon: string;
   colors: { primary: number; secondary: number; glow: number; accent: number };
-  gridPos: { x: number; y: number };
+  angle: number; // Position angle on planet edge (degrees, 0 = right, 90 = bottom)
 }> = {
   farm: {
     name: 'Farma',
     icon: '🌾',
     colors: { primary: 0x228b22, secondary: 0x32cd32, glow: 0x44ff44, accent: 0x90ee90 },
-    gridPos: { x: 1, y: 2 },
+    angle: 225, // bottom-left
   },
   mine: {
     name: 'Kopalnia',
     icon: '⛏️',
     colors: { primary: 0x4a5568, secondary: 0x718096, glow: 0x63b3ed, accent: 0xa0aec0 },
-    gridPos: { x: 0, y: 1 },
+    angle: 135, // top-left
   },
   market: {
     name: 'Targ',
     icon: '🏪',
     colors: { primary: 0xed8936, secondary: 0xf6ad55, glow: 0xfbd38d, accent: 0xfeebc8 },
-    gridPos: { x: 2, y: 1 },
+    angle: 315, // bottom-right
   },
   factory: {
     name: 'Fabryka',
     icon: '🏭',
     colors: { primary: 0x3182ce, secondary: 0x63b3ed, glow: 0xbee3f8, accent: 0x90cdf4 },
-    gridPos: { x: 1, y: 0 },
+    angle: 45, // top-right
   },
 };
 
-// Isometric tile dimensions
-const ISO = {
-  tileWidth: 140,
-  tileHeight: 70,
-  buildingHeight: 100,
+// Planet and building dimensions
+const PLANET = {
+  radius: 140, // Larger planet
+  buildingSize: 36, // Icon size
 };
 
 // Gold particle for production flow
@@ -132,8 +131,8 @@ export class ColonyScene {
   private stars: { x: number; y: number; size: number; speed: number; alpha: number }[] = [];
   private starsGraphics: Graphics;
 
-  // Station floor graphics
-  private floorGraphics: Graphics;
+  // Planet graphics
+  private planetGraphics: Graphics;
 
   constructor() {
     this.container = new Container();
@@ -155,9 +154,9 @@ export class ColonyScene {
     this.starsGraphics = new Graphics();
     this.backgroundLayer.addChild(this.starsGraphics);
 
-    // Station floor
-    this.floorGraphics = new Graphics();
-    this.stationLayer.addChild(this.floorGraphics);
+    // Planet
+    this.planetGraphics = new Graphics();
+    this.stationLayer.addChild(this.planetGraphics);
 
     // Particle graphics
     this.particleGraphics = new Graphics();
@@ -165,29 +164,51 @@ export class ColonyScene {
 
     // Generate stars
     this.generateStars();
+
+    // Create buildings immediately (they will be locked by default)
+    this.initBuildings();
+  }
+
+  /**
+   * Initialize buildings (creates all building visuals)
+   */
+  private initBuildings() {
+    console.log('[ColonyScene] Initializing buildings...');
+    for (const [id, config] of Object.entries(COLONY_CONFIG)) {
+      if (!this.buildings.has(id)) {
+        this.createBuilding(id, config);
+      }
+    }
+    console.log('[ColonyScene] Buildings initialized:', this.buildings.size);
   }
 
   /**
    * Initialize/resize the scene
    */
   public onResize(width: number, height: number) {
+    console.log('[ColonyScene] onResize:', width, 'x', height);
     this.width = width;
     this.height = height;
     this.centerX = width / 2;
-    this.centerY = height / 2 + 30;
+    this.centerY = height / 2 + 20;
 
-    // Collection point at center of station
+    // Collection point at center of planet
     this.collectionPoint = {
       x: this.centerX,
-      y: this.centerY + 20,
+      y: this.centerY,
     };
 
     // Redraw static elements
     this.drawBackground();
-    this.drawStationFloor();
+    this.drawPlanet();
 
-    // Reposition buildings
+    // Reposition buildings around planet
     this.repositionBuildings();
+
+    // Draw buildings (they may have been created before resize)
+    for (const [, visual] of this.buildings) {
+      this.drawBuilding(visual);
+    }
   }
 
   /**
@@ -248,107 +269,86 @@ export class ColonyScene {
   }
 
   /**
-   * Draw the station floor (isometric platform)
+   * Draw the planet - simple clean sphere
    */
-  private drawStationFloor() {
-    const g = this.floorGraphics;
+  private drawPlanet() {
+    const g = this.planetGraphics;
     g.clear();
 
-    const tileW = ISO.tileWidth;
-    const tileH = ISO.tileHeight;
+    const r = PLANET.radius;
+    const cx = this.centerX;
+    const cy = this.centerY;
 
-    // Draw a 5x5 isometric floor grid
-    const gridSize = 5;
-    const halfGrid = Math.floor(gridSize / 2);
+    // Outer glow
+    g.circle(cx, cy, r + 15)
+      .fill({ color: 0x3a6090, alpha: 0.1 });
+    g.circle(cx, cy, r + 8)
+      .fill({ color: 0x4a80b0, alpha: 0.15 });
 
-    for (let gy = -halfGrid; gy <= halfGrid; gy++) {
-      for (let gx = -halfGrid; gx <= halfGrid; gx++) {
-        const { x, y } = this.gridToScreen(gx, gy);
+    // Planet base - blue-green color
+    g.circle(cx, cy, r)
+      .fill({ color: 0x2a4a6a });
 
-        // Distance from center for lighting
-        const dist = Math.sqrt(gx * gx + gy * gy);
-        const brightness = Math.max(0.4, 1 - dist * 0.15);
+    // 3D shading - darker on bottom right
+    g.circle(cx + r * 0.2, cy + r * 0.2, r * 0.9)
+      .fill({ color: 0x1a3050, alpha: 0.4 });
 
-        // Tile color based on position
-        const isAccent = (gx + gy) % 2 === 0;
-        const baseColor = isAccent ? THEME.station.floor : THEME.station.floorLight;
+    // Highlight on top left
+    g.circle(cx - r * 0.3, cy - r * 0.3, r * 0.6)
+      .fill({ color: 0x4a7090, alpha: 0.3 });
+    g.circle(cx - r * 0.35, cy - r * 0.35, r * 0.3)
+      .fill({ color: 0x6090b0, alpha: 0.25 });
 
-        // Draw isometric tile
-        g.moveTo(x, y - tileH / 2)  // top
-          .lineTo(x + tileW / 2, y)  // right
-          .lineTo(x, y + tileH / 2)  // bottom
-          .lineTo(x - tileW / 2, y)  // left
-          .closePath()
-          .fill({ color: baseColor, alpha: brightness });
+    // Surface features - continents
+    g.circle(cx - r * 0.2, cy - r * 0.1, r * 0.35)
+      .fill({ color: 0x3a6050, alpha: 0.5 });
+    g.circle(cx + r * 0.3, cy + r * 0.2, r * 0.25)
+      .fill({ color: 0x3a5a48, alpha: 0.4 });
+    g.circle(cx - r * 0.1, cy + r * 0.35, r * 0.2)
+      .fill({ color: 0x406050, alpha: 0.35 });
 
-        // Tile border
-        g.moveTo(x, y - tileH / 2)
-          .lineTo(x + tileW / 2, y)
-          .lineTo(x, y + tileH / 2)
-          .lineTo(x - tileW / 2, y)
-          .closePath()
-          .stroke({ width: 1, color: THEME.station.floorAccent, alpha: 0.3 });
-      }
-    }
+    // Clouds/atmosphere wisps
+    g.circle(cx + r * 0.1, cy - r * 0.4, r * 0.15)
+      .fill({ color: 0xffffff, alpha: 0.1 });
+    g.circle(cx - r * 0.3, cy + r * 0.1, r * 0.12)
+      .fill({ color: 0xffffff, alpha: 0.08 });
 
-    // Station edge glow
-    const platformWidth = tileW * gridSize * 0.7;
-    const platformHeight = tileH * gridSize * 0.7;
+    // Bright highlight (sun reflection)
+    g.circle(cx - r * 0.5, cy - r * 0.45, r * 0.12)
+      .fill({ color: 0xffffff, alpha: 0.3 });
+    g.circle(cx - r * 0.55, cy - r * 0.5, r * 0.06)
+      .fill({ color: 0xffffff, alpha: 0.5 });
 
-    g.ellipse(this.centerX, this.centerY, platformWidth, platformHeight)
-      .stroke({ width: 2, color: THEME.station.glow, alpha: 0.2 });
-    g.ellipse(this.centerX, this.centerY, platformWidth + 10, platformHeight + 5)
-      .stroke({ width: 1, color: THEME.station.glow, alpha: 0.1 });
-
-    // Central reactor/collection point
-    this.drawReactor(g, this.centerX, this.centerY + 10);
+    // Atmosphere edge glow
+    g.circle(cx, cy, r)
+      .stroke({ width: 2, color: 0x80c0ff, alpha: 0.3 });
   }
 
   /**
-   * Draw central reactor (collection point)
+   * Get position ON the planet surface for a given angle (buildings sit on edge)
    */
-  private drawReactor(g: Graphics, x: number, y: number) {
-    const pulse = 0.7 + Math.sin(this.time * 2) * 0.3;
+  private getPositionOnPlanet(angleDeg: number): { x: number; y: number; scale: number } {
+    const angleRad = angleDeg * Math.PI / 180;
+    const r = PLANET.radius;
 
-    // Base platform
-    g.ellipse(x, y, 40, 20)
-      .fill({ color: THEME.station.wall })
-      .stroke({ width: 2, color: THEME.station.glow, alpha: 0.5 });
+    // Position buildings at 85% of radius (slightly inside edge, visually on surface)
+    const surfaceOffset = r * 0.82;
+    const x = this.centerX + Math.cos(angleRad) * surfaceOffset;
+    const y = this.centerY + Math.sin(angleRad) * surfaceOffset;
 
-    // Core glow
-    g.ellipse(x, y - 5, 25 * pulse, 12 * pulse)
-      .fill({ color: THEME.station.glow, alpha: 0.2 * pulse });
-
-    // Core
-    g.ellipse(x, y - 5, 15, 8)
-      .fill({ color: THEME.station.glow, alpha: 0.6 })
-      .stroke({ width: 1, color: 0xffffff, alpha: 0.3 });
-
-    // Central bright point
-    g.circle(x, y - 5, 5)
-      .fill({ color: 0xffffff, alpha: 0.8 });
-  }
-
-  /**
-   * Convert grid coordinates to screen position
-   */
-  private gridToScreen(gx: number, gy: number): { x: number; y: number } {
-    const isoX = (gx - gy) * (ISO.tileWidth / 2);
-    const isoY = (gx + gy) * (ISO.tileHeight / 2);
-
-    return {
-      x: this.centerX + isoX,
-      y: this.centerY + isoY - 40,
-    };
+    return { x, y, scale: 1 };
   }
 
   /**
    * Set colonies to display
    */
   public setColonies(colonies: ColonyStatus[]) {
+    console.log('[ColonyScene] setColonies called with:', colonies.length, 'colonies');
+
     // Create buildings for all colony types
     for (const [id, config] of Object.entries(COLONY_CONFIG)) {
       if (!this.buildings.has(id)) {
+        console.log('[ColonyScene] Creating building:', id);
         this.createBuilding(id, config);
       }
     }
@@ -357,12 +357,17 @@ export class ColonyScene {
     for (const colony of colonies) {
       const visual = this.buildings.get(colony.id);
       if (visual) {
+        console.log('[ColonyScene] Updating building:', colony.id, 'unlocked:', colony.unlocked);
         visual.colony = colony;
         this.updateBuildingVisual(visual);
       }
     }
 
+    // Reposition after creating
+    this.repositionBuildings();
     this.sortBuildingsByDepth();
+
+    console.log('[ColonyScene] Buildings created:', this.buildings.size);
   }
 
   /**
@@ -427,186 +432,75 @@ export class ColonyScene {
   }
 
   /**
-   * Reposition all buildings after resize
+   * Reposition all buildings around the planet
    */
   private repositionBuildings() {
     for (const [, visual] of this.buildings) {
-      const pos = this.gridToScreen(visual.config.gridPos.x - 1, visual.config.gridPos.y - 1);
+      const pos = this.getPositionOnPlanet(visual.config.angle);
       visual.container.x = pos.x;
       visual.container.y = pos.y;
+      visual.container.scale.set(pos.scale);
     }
+    this.sortBuildingsByDepth();
   }
 
   /**
-   * Draw a building
+   * Draw a building with distinctive shape and platform base
    */
   private drawBuilding(visual: BuildingVisual) {
     const { baseGraphics: base, buildingGraphics: building, glowGraphics: glow, detailGraphics: detail, config, colony } = visual;
     const colors = config.colors;
     const unlocked = colony?.unlocked ?? false;
     const level = colony?.level ?? 0;
+    const colonyId = colony?.id ?? '';
 
     base.clear();
     building.clear();
     glow.clear();
     detail.clear();
 
-    // Dimensions - scale with level
-    const baseW = ISO.tileWidth * 0.8;
-    const baseH = ISO.tileHeight * 0.8;
-    const w = baseW * (unlocked ? 1 + level * 0.03 : 0.85);
-    const h = baseH * (unlocked ? 1 + level * 0.03 : 0.85);
-    const buildH = ISO.buildingHeight * (unlocked ? 0.9 + level * 0.08 : 0.5);
+    const baseSize = PLANET.buildingSize;
+    const size = baseSize + (unlocked ? level * 2 : 0);
 
-    // Colors (dimmed if locked)
-    const primaryColor = unlocked ? colors.primary : 0x1a1a1a;
-    const secondaryColor = unlocked ? colors.secondary : 0x252525;
-    const glowColor = unlocked ? colors.glow : 0x333333;
-    const accentColor = unlocked ? colors.accent : 0x2a2a2a;
+    // Colors based on state
+    const primaryColor = unlocked ? colors.primary : 0x2a2a35;
+    const secondaryColor = unlocked ? colors.secondary : 0x3a3a45;
+    const glowColor = unlocked ? colors.glow : 0x444455;
 
-    // === GROUND GLOW EFFECT ===
-    if (unlocked) {
-      // Ambient ground glow
-      const pulse = 0.3 + Math.sin(visual.pulsePhase + this.time * 1.5) * 0.15;
-      glow.ellipse(0, h * 0.4, w * 0.8, h * 0.5)
-        .fill({ color: glowColor, alpha: pulse * 0.3 });
-
-      // Production indicator glow
-      if (colony && colony.goldPerHour > 0) {
-        const prodPulse = 0.5 + Math.sin(this.time * 3) * 0.3;
-        glow.ellipse(0, h * 0.3, w * 0.5, h * 0.35)
-          .fill({ color: 0xffd700, alpha: prodPulse * 0.15 });
-      }
-    }
-
-    // Hover/select glow
+    // === GLOW EFFECT ===
     if (visual.hovered || visual.selected) {
       const intensity = visual.selected ? 0.5 : 0.3;
-      glow.ellipse(0, h * 0.35, w * 0.9, h * 0.6)
+      glow.circle(0, -size * 0.3, size * 1.2)
         .fill({ color: glowColor, alpha: intensity });
+    } else if (unlocked) {
+      const pulse = 0.15 + Math.sin(visual.pulsePhase + this.time * 1.5) * 0.08;
+      glow.circle(0, -size * 0.3, size)
+        .fill({ color: glowColor, alpha: pulse });
     }
 
-    // === ELEVATED PLATFORM ===
-    const platformH = 12;
+    // === PLATFORM BASE ===
+    // Circular platform the building sits on
+    base.ellipse(0, size * 0.1, size * 0.7, size * 0.25)
+      .fill({ color: 0x1a1a25 })
+      .stroke({ width: 2, color: unlocked ? colors.glow : 0x444455, alpha: 0.5 });
 
-    // Platform sides
-    base.moveTo(-w / 2, h / 2)
-      .lineTo(-w / 2, h / 2 + platformH)
-      .lineTo(0, h + platformH)
-      .lineTo(0, h)
-      .closePath()
-      .fill({ color: 0x0d1117 });
-
-    base.moveTo(w / 2, h / 2)
-      .lineTo(w / 2, h / 2 + platformH)
-      .lineTo(0, h + platformH)
-      .lineTo(0, h)
-      .closePath()
-      .fill({ color: 0x15202a });
-
-    // Platform top
-    base.moveTo(0, 0)
-      .lineTo(w / 2, h / 2)
-      .lineTo(0, h)
-      .lineTo(-w / 2, h / 2)
-      .closePath()
-      .fill({ color: THEME.station.floor })
-      .stroke({ width: 2, color: unlocked ? glowColor : 0x333333, alpha: 0.4 });
-
-    // Platform edge lights
-    if (unlocked) {
-      const edgePulse = 0.5 + Math.sin(this.time * 2 + visual.pulsePhase) * 0.3;
-      base.circle(-w / 4, h / 4, 3).fill({ color: glowColor, alpha: edgePulse });
-      base.circle(w / 4, h / 4, 3).fill({ color: glowColor, alpha: edgePulse });
-      base.circle(0, h * 0.6, 3).fill({ color: glowColor, alpha: edgePulse });
-    }
-
-    // === BUILDING STRUCTURE ===
-    const wallAlpha = unlocked ? 0.95 : 0.6;
-
-    // Left wall with gradient effect
-    building.moveTo(-w / 2, h / 2)
-      .lineTo(-w / 2, h / 2 - buildH)
-      .lineTo(0, -buildH)
-      .lineTo(0, 0)
-      .closePath()
-      .fill({ color: primaryColor, alpha: wallAlpha * 0.75 });
-
-    // Right wall (brighter)
-    building.moveTo(w / 2, h / 2)
-      .lineTo(w / 2, h / 2 - buildH)
-      .lineTo(0, -buildH)
-      .lineTo(0, 0)
-      .closePath()
-      .fill({ color: primaryColor, alpha: wallAlpha });
-
-    // === WALL DETAILS (panels, windows) ===
-    if (unlocked) {
-      const panelCount = Math.min(level + 1, 4);
-      const panelHeight = buildH * 0.15;
-      const panelGap = buildH / (panelCount + 2);
-
-      // Holographic panels on walls
-      for (let i = 0; i < panelCount; i++) {
-        const py = -panelGap * (i + 1);
-        const panelPulse = 0.4 + Math.sin(this.time * 2 + i * 0.5) * 0.2;
-
-        // Left wall panels
-        building.moveTo(-w * 0.45, h * 0.4 + py)
-          .lineTo(-w * 0.15, h * 0.15 + py)
-          .lineTo(-w * 0.15, h * 0.15 + py - panelHeight * 0.5)
-          .lineTo(-w * 0.45, h * 0.4 + py - panelHeight * 0.5)
-          .closePath()
-          .fill({ color: glowColor, alpha: panelPulse * 0.4 })
-          .stroke({ width: 1, color: accentColor, alpha: 0.6 });
-
-        // Right wall panels
-        building.moveTo(w * 0.45, h * 0.4 + py)
-          .lineTo(w * 0.15, h * 0.15 + py)
-          .lineTo(w * 0.15, h * 0.15 + py - panelHeight * 0.5)
-          .lineTo(w * 0.45, h * 0.4 + py - panelHeight * 0.5)
-          .closePath()
-          .fill({ color: glowColor, alpha: panelPulse * 0.5 })
-          .stroke({ width: 1, color: accentColor, alpha: 0.6 });
-      }
-
-      // Edge lighting strips
-      building.moveTo(-w / 2, h / 2)
-        .lineTo(-w / 2, h / 2 - buildH)
-        .stroke({ width: 2, color: glowColor, alpha: 0.5 });
-      building.moveTo(w / 2, h / 2)
-        .lineTo(w / 2, h / 2 - buildH)
-        .stroke({ width: 2, color: glowColor, alpha: 0.6 });
-      building.moveTo(0, 0)
-        .lineTo(0, -buildH)
-        .stroke({ width: 2, color: accentColor, alpha: 0.4 });
-    }
-
-    // === ROOF ===
-    building.moveTo(0, -buildH)
-      .lineTo(w / 2, h / 2 - buildH)
-      .lineTo(0, h - buildH)
-      .lineTo(-w / 2, h / 2 - buildH)
-      .closePath()
-      .fill({ color: secondaryColor })
-      .stroke({ width: 2, color: unlocked ? glowColor : 0x333333, alpha: unlocked ? 0.7 : 0.3 });
-
-    // Roof details
-    if (unlocked) {
-      // Central roof light
-      const roofPulse = 0.6 + Math.sin(this.time * 2.5) * 0.3;
-      building.ellipse(0, h * 0.3 - buildH, w * 0.2, h * 0.15)
-        .fill({ color: glowColor, alpha: roofPulse * 0.6 });
-      building.ellipse(0, h * 0.3 - buildH, w * 0.1, h * 0.08)
-        .fill({ color: 0xffffff, alpha: roofPulse * 0.4 });
-    }
-
-    // Type-specific structures on top
-    if (unlocked) {
-      this.drawBuildingStructure(detail, config.name.toLowerCase(), colors, w, h, buildH, level);
+    // === BUILDING SHAPE (unique per type) ===
+    if (colonyId === 'farm') {
+      this.drawFarmBuilding(building, size, primaryColor, secondaryColor, glowColor, unlocked, level);
+    } else if (colonyId === 'mine') {
+      this.drawMineBuilding(building, size, primaryColor, secondaryColor, glowColor, unlocked, level);
+    } else if (colonyId === 'market') {
+      this.drawMarketBuilding(building, size, primaryColor, secondaryColor, glowColor, unlocked, level);
+    } else if (colonyId === 'factory') {
+      this.drawFactoryBuilding(building, size, primaryColor, secondaryColor, glowColor, unlocked, level);
     } else {
-      // Lock hologram
-      this.drawLockHologram(detail, 0, -buildH * 0.6);
+      // Default hexagon
+      this.drawDefaultBuilding(building, size, primaryColor, glowColor, unlocked);
+    }
+
+    // === LOCK OVERLAY for locked buildings ===
+    if (!unlocked) {
+      this.drawSmallLock(detail, 0, -size * 0.3);
     }
 
     // Update labels
@@ -614,231 +508,208 @@ export class ColonyScene {
   }
 
   /**
-   * Draw building-specific structure (top element)
+   * Farm - Bio-dome with glass panels
    */
-  private drawBuildingStructure(
-    g: Graphics,
-    type: string,
-    colors: { primary: number; secondary: number; glow: number; accent: number },
-    w: number,
-    _h: number,
-    buildH: number,
-    level: number
-  ) {
-    const time = this.time;
+  private drawFarmBuilding(g: Graphics, size: number, primary: number, secondary: number, glow: number, unlocked: boolean, level: number) {
+    const h = size * 0.8;
+    const w = size * 0.6;
 
-    switch (type) {
-      case 'farma': {
-        // Bio-dome greenhouse
-        const domeH = 35 + level * 8;
-        const domeW = w * 0.5;
+    // Dome shape
+    g.moveTo(-w, 0)
+      .bezierCurveTo(-w, -h * 0.7, w, -h * 0.7, w, 0)
+      .closePath()
+      .fill({ color: primary });
 
-        // Dome structure
-        g.ellipse(0, -buildH - domeH * 0.3, domeW, domeH * 0.4)
-          .fill({ color: colors.glow, alpha: 0.15 })
-          .stroke({ width: 2, color: colors.accent, alpha: 0.6 });
+    // Glass segments
+    if (unlocked) {
+      const pulse = 0.5 + Math.sin(this.time * 2) * 0.2;
+      g.moveTo(-w * 0.5, -h * 0.1)
+        .bezierCurveTo(-w * 0.5, -h * 0.5, 0, -h * 0.6, 0, -h * 0.1)
+        .closePath()
+        .fill({ color: glow, alpha: pulse * 0.4 });
+      g.moveTo(0, -h * 0.1)
+        .bezierCurveTo(0, -h * 0.6, w * 0.5, -h * 0.5, w * 0.5, -h * 0.1)
+        .closePath()
+        .fill({ color: glow, alpha: pulse * 0.3 });
+    }
 
-        // Dome ribs
-        for (let i = 0; i < 5; i++) {
-          const ribX = (i - 2) * domeW * 0.2;
-          g.moveTo(ribX * 0.3, -buildH)
-            .bezierCurveTo(ribX, -buildH - domeH * 0.5, ribX, -buildH - domeH * 0.5, ribX * 0.3, -buildH - domeH * 0.6)
-            .stroke({ width: 1, color: colors.accent, alpha: 0.4 });
-        }
+    // Border
+    g.moveTo(-w, 0)
+      .bezierCurveTo(-w, -h * 0.7, w, -h * 0.7, w, 0)
+      .stroke({ width: 2, color: glow, alpha: 0.6 });
 
-        // Growing plants (animated)
-        const plantPhase = time * 0.5;
-        for (let i = 0; i < 3 + level; i++) {
-          const px = (Math.sin(i * 2.1) * w * 0.25);
-          const py = -buildH - 5 - Math.abs(Math.sin(plantPhase + i)) * 15;
-          const plantSize = 4 + Math.sin(plantPhase + i * 0.7) * 2;
-
-          g.circle(px, py, plantSize)
-            .fill({ color: 0x44ff44, alpha: 0.7 });
-          g.circle(px, py, plantSize * 0.5)
-            .fill({ color: 0x88ff88, alpha: 0.5 });
-        }
-
-        // Nutrient flow lights
-        const flowPulse = 0.5 + Math.sin(time * 4) * 0.3;
-        g.circle(-w * 0.3, -buildH + 10, 4).fill({ color: 0x00ff88, alpha: flowPulse });
-        g.circle(w * 0.3, -buildH + 10, 4).fill({ color: 0x00ff88, alpha: flowPulse });
-        break;
-      }
-
-      case 'kopalnia': {
-        // Mining tower with elevator
-        const towerH = 50 + level * 12;
-        const towerW = 18;
-
-        // Tower structure
-        g.rect(-towerW / 2, -buildH - towerH, towerW, towerH)
-          .fill({ color: 0x2d3748 })
-          .stroke({ width: 2, color: colors.glow, alpha: 0.4 });
-
-        // Tower supports
-        g.moveTo(-towerW / 2 - 5, -buildH)
-          .lineTo(-towerW / 2, -buildH - towerH)
-          .stroke({ width: 2, color: 0x4a5568 });
-        g.moveTo(towerW / 2 + 5, -buildH)
-          .lineTo(towerW / 2, -buildH - towerH)
-          .stroke({ width: 2, color: 0x4a5568 });
-
-        // Wheel at top
-        const wheelAngle = time * 3;
-        g.circle(0, -buildH - towerH - 8, 12)
-          .stroke({ width: 3, color: colors.secondary });
-        for (let i = 0; i < 4; i++) {
-          const a = wheelAngle + i * Math.PI / 2;
-          g.moveTo(Math.cos(a) * 5, -buildH - towerH - 8 + Math.sin(a) * 5)
-            .lineTo(Math.cos(a) * 10, -buildH - towerH - 8 + Math.sin(a) * 10)
-            .stroke({ width: 2, color: colors.accent });
-        }
-
-        // Elevator (moving)
-        const elevatorY = -buildH - 15 - (Math.sin(time * 0.8) * 0.5 + 0.5) * (towerH - 30);
-        g.rect(-6, elevatorY, 12, 15)
-          .fill({ color: 0x4a5568 })
-          .stroke({ width: 1, color: colors.glow, alpha: 0.6 });
-
-        // Cable
-        g.moveTo(0, -buildH - towerH - 8)
-          .lineTo(0, elevatorY)
-          .stroke({ width: 2, color: 0x718096 });
-
-        // Ore glow at base
-        const orePulse = 0.4 + Math.sin(time * 2) * 0.2;
-        g.ellipse(0, -buildH + 5, 20, 8)
-          .fill({ color: colors.glow, alpha: orePulse });
-        break;
-      }
-
-      case 'targ': {
-        // Communication array / trading hub
-        const dishSize = 25 + level * 5;
-
-        // Dish support
-        g.rect(-4, -buildH - 30, 8, 35)
-          .fill({ color: 0x4a5568 })
-          .stroke({ width: 1, color: colors.accent, alpha: 0.5 });
-
-        // Satellite dish (tilted)
-        g.ellipse(0, -buildH - 35, dishSize, dishSize * 0.4)
-          .stroke({ width: 3, color: colors.secondary })
-          .fill({ color: colors.primary, alpha: 0.3 });
-
-        // Dish receiver
-        g.moveTo(0, -buildH - 35)
-          .lineTo(0, -buildH - 55)
-          .stroke({ width: 2, color: colors.accent });
-        g.circle(0, -buildH - 58, 5)
-          .fill({ color: colors.glow, alpha: 0.8 });
-
-        // Signal waves (animated)
-        for (let i = 0; i < 3; i++) {
-          const waveProgress = (time * 0.8 + i * 0.3) % 1;
-          const waveSize = 10 + waveProgress * 40;
-          const waveAlpha = (1 - waveProgress) * 0.4;
-          g.ellipse(0, -buildH - 58, waveSize, waveSize * 0.3)
-            .stroke({ width: 2, color: colors.glow, alpha: waveAlpha });
-        }
-
-        // Trading indicators (blinking lights)
-        const blink1 = Math.sin(time * 5) > 0 ? 0.8 : 0.2;
-        const blink2 = Math.sin(time * 5 + 1) > 0 ? 0.8 : 0.2;
-        g.circle(-15, -buildH + 5, 4).fill({ color: 0x00ff00, alpha: blink1 });
-        g.circle(15, -buildH + 5, 4).fill({ color: 0xff8800, alpha: blink2 });
-        break;
-      }
-
-      case 'fabryka': {
-        // Industrial complex with smokestacks
-        const chimneyH = 55 + level * 10;
-
-        // Main chimney
-        g.rect(w * 0.15, -buildH - chimneyH, 16, chimneyH)
-          .fill({ color: 0x2d3748 })
-          .stroke({ width: 2, color: colors.glow, alpha: 0.3 });
-
-        // Secondary chimney
-        g.rect(-w * 0.25, -buildH - chimneyH * 0.7, 12, chimneyH * 0.7)
-          .fill({ color: 0x374151 })
-          .stroke({ width: 1, color: colors.accent, alpha: 0.3 });
-
-        // Smoke particles (animated)
-        const smokeCount = 3 + level;
-        for (let i = 0; i < smokeCount; i++) {
-          const smokePhase = (time + i * 0.4) % 2;
-          const smokeY = -buildH - chimneyH - smokePhase * 40;
-          const smokeX = w * 0.15 + 8 + Math.sin(time * 2 + i) * 8;
-          const smokeSize = 6 + smokePhase * 8;
-          const smokeAlpha = Math.max(0, 0.4 - smokePhase * 0.2);
-
-          g.circle(smokeX, smokeY, smokeSize)
-            .fill({ color: 0x6b7280, alpha: smokeAlpha });
-        }
-
-        // Gears (animated)
-        const gearAngle = time * 2;
-        const gearX = -w * 0.1;
-        const gearY = -buildH + 20;
-        const gearSize = 12;
-
-        g.circle(gearX, gearY, gearSize)
-          .fill({ color: 0x374151 })
-          .stroke({ width: 2, color: colors.secondary });
-
-        for (let i = 0; i < 8; i++) {
-          const a = gearAngle + (i / 8) * Math.PI * 2;
-          g.moveTo(gearX + Math.cos(a) * gearSize * 0.5, gearY + Math.sin(a) * gearSize * 0.5)
-            .lineTo(gearX + Math.cos(a) * gearSize * 1.2, gearY + Math.sin(a) * gearSize * 1.2)
-            .stroke({ width: 3, color: colors.secondary });
-        }
-
-        // Energy conduits
-        const conduitPulse = 0.4 + Math.sin(time * 4) * 0.3;
-        g.moveTo(-w * 0.4, -buildH + 15)
-          .lineTo(-w * 0.1, -buildH + 15)
-          .stroke({ width: 3, color: colors.glow, alpha: conduitPulse });
-        break;
-      }
+    // Level indicators
+    for (let i = 0; i < Math.min(level, 5); i++) {
+      g.circle(-w * 0.4 + i * w * 0.2, -h * 0.15, 3)
+        .fill({ color: glow, alpha: 0.8 });
     }
   }
 
   /**
-   * Draw holographic lock
+   * Mine - Tower with drilling equipment
    */
-  private drawLockHologram(g: Graphics, x: number, y: number) {
-    const pulse = 0.5 + Math.sin(this.time * 2) * 0.2;
+  private drawMineBuilding(g: Graphics, size: number, primary: number, secondary: number, glow: number, unlocked: boolean, level: number) {
+    const h = size;
+    const w = size * 0.4;
 
-    // Hologram base glow
-    g.ellipse(x, y + 15, 25, 10)
-      .fill({ color: 0xff4444, alpha: pulse * 0.2 });
+    // Main tower
+    g.rect(-w, -h, w * 2, h)
+      .fill({ color: primary });
 
-    // Lock body (holographic)
-    g.roundRect(x - 15, y - 5, 30, 25, 4)
-      .fill({ color: 0xff4444, alpha: pulse * 0.3 })
-      .stroke({ width: 2, color: 0xff6666, alpha: pulse * 0.6 });
+    // Tower top (pyramid)
+    g.moveTo(-w * 1.2, -h)
+      .lineTo(0, -h * 1.4)
+      .lineTo(w * 1.2, -h)
+      .closePath()
+      .fill({ color: secondary });
+
+    // Drill frame
+    g.moveTo(-w * 0.8, 0)
+      .lineTo(0, -h * 0.3)
+      .lineTo(w * 0.8, 0)
+      .stroke({ width: 3, color: glow, alpha: 0.5 });
+
+    if (unlocked) {
+      // Animated window lights
+      const pulse = 0.5 + Math.sin(this.time * 3) * 0.3;
+      for (let i = 0; i < Math.min(level + 1, 4); i++) {
+        g.rect(-w * 0.5, -h * 0.9 + i * h * 0.2, w, h * 0.12)
+          .fill({ color: glow, alpha: pulse });
+      }
+    }
+
+    // Border
+    g.rect(-w, -h, w * 2, h)
+      .stroke({ width: 2, color: glow, alpha: 0.6 });
+  }
+
+  /**
+   * Market - Open platform with canopy
+   */
+  private drawMarketBuilding(g: Graphics, size: number, primary: number, secondary: number, glow: number, unlocked: boolean, level: number) {
+    const h = size * 0.7;
+    const w = size * 0.8;
+
+    // Platform base
+    g.rect(-w, -h * 0.3, w * 2, h * 0.3)
+      .fill({ color: primary });
+
+    // Canopy roof
+    g.moveTo(-w * 1.1, -h * 0.3)
+      .lineTo(-w * 0.8, -h)
+      .lineTo(w * 0.8, -h)
+      .lineTo(w * 1.1, -h * 0.3)
+      .closePath()
+      .fill({ color: secondary });
+
+    // Support poles
+    g.rect(-w * 0.7, -h, 4, h * 0.7)
+      .fill({ color: glow, alpha: 0.5 });
+    g.rect(w * 0.7 - 4, -h, 4, h * 0.7)
+      .fill({ color: glow, alpha: 0.5 });
+
+    if (unlocked) {
+      // Stall lights
+      const pulse = 0.6 + Math.sin(this.time * 2.5) * 0.2;
+      for (let i = 0; i < Math.min(level + 1, 3); i++) {
+        const x = -w * 0.5 + i * w * 0.5;
+        g.circle(x, -h * 0.5, 5)
+          .fill({ color: glow, alpha: pulse });
+      }
+    }
+
+    // Border
+    g.moveTo(-w * 1.1, -h * 0.3)
+      .lineTo(-w * 0.8, -h)
+      .lineTo(w * 0.8, -h)
+      .lineTo(w * 1.1, -h * 0.3)
+      .stroke({ width: 2, color: glow, alpha: 0.6 });
+  }
+
+  /**
+   * Factory - Industrial complex with chimneys
+   */
+  private drawFactoryBuilding(g: Graphics, size: number, primary: number, secondary: number, glow: number, unlocked: boolean, level: number) {
+    const h = size * 0.8;
+    const w = size * 0.7;
+
+    // Main building
+    g.rect(-w, -h * 0.6, w * 2, h * 0.6)
+      .fill({ color: primary });
+
+    // Saw-tooth roof
+    const segments = 3;
+    for (let i = 0; i < segments; i++) {
+      const x = -w + (i * w * 2) / segments;
+      const segW = (w * 2) / segments;
+      g.moveTo(x, -h * 0.6)
+        .lineTo(x + segW * 0.3, -h)
+        .lineTo(x + segW, -h * 0.6)
+        .closePath()
+        .fill({ color: secondary });
+    }
+
+    // Chimney
+    g.rect(w * 0.5, -h * 1.2, w * 0.25, h * 0.5)
+      .fill({ color: 0x3a3a45 });
+
+    if (unlocked) {
+      // Smoke animation
+      const smokePhase = this.time * 2;
+      for (let i = 0; i < 3; i++) {
+        const y = -h * 1.3 - i * 8 - (smokePhase % 20);
+        const alpha = 0.3 - i * 0.1;
+        if (alpha > 0) {
+          g.circle(w * 0.625, y, 4 + i * 2)
+            .fill({ color: 0x888888, alpha });
+        }
+      }
+
+      // Window lights
+      const pulse = 0.5 + Math.sin(this.time * 2) * 0.2;
+      for (let i = 0; i < Math.min(level + 1, 4); i++) {
+        g.rect(-w * 0.7 + i * w * 0.4, -h * 0.4, w * 0.25, h * 0.2)
+          .fill({ color: glow, alpha: pulse });
+      }
+    }
+
+    // Border
+    g.rect(-w, -h * 0.6, w * 2, h * 0.6)
+      .stroke({ width: 2, color: glow, alpha: 0.6 });
+  }
+
+  /**
+   * Default building (fallback)
+   */
+  private drawDefaultBuilding(g: Graphics, size: number, primary: number, glow: number, unlocked: boolean) {
+    // Simple rounded rect
+    g.roundRect(-size * 0.5, -size * 0.7, size, size * 0.7, 4)
+      .fill({ color: primary })
+      .stroke({ width: 2, color: glow, alpha: 0.6 });
+
+    if (unlocked) {
+      g.circle(0, -size * 0.35, size * 0.2)
+        .fill({ color: glow, alpha: 0.5 });
+    }
+  }
+
+  /**
+   * Draw small lock icon for locked buildings
+   */
+  private drawSmallLock(g: Graphics, x: number, y: number) {
+    const pulse = 0.6 + Math.sin(this.time * 2) * 0.2;
+
+    // Lock body
+    g.roundRect(x - 8, y - 2, 16, 14, 2)
+      .fill({ color: 0x4a5568, alpha: pulse * 0.8 })
+      .stroke({ width: 1, color: 0x6b7280, alpha: pulse });
 
     // Shackle
-    g.moveTo(x - 8, y - 5)
-      .lineTo(x - 8, y - 18)
-      .bezierCurveTo(x - 8, y - 30, x + 8, y - 30, x + 8, y - 18)
-      .lineTo(x + 8, y - 5)
-      .stroke({ width: 4, color: 0xff6666, alpha: pulse * 0.6 });
-
-    // Keyhole
-    g.circle(x, y + 5, 5)
-      .fill({ color: 0x330000, alpha: 0.6 });
-    g.rect(x - 2, y + 5, 4, 10)
-      .fill({ color: 0x330000, alpha: 0.6 });
-
-    // Scan lines effect
-    const scanY = (this.time * 50) % 40 - 10;
-    if (scanY > -5 && scanY < 25) {
-      g.rect(x - 15, y + scanY - 1, 30, 2)
-        .fill({ color: 0xff0000, alpha: 0.3 });
-    }
+    g.moveTo(x - 5, y - 2)
+      .lineTo(x - 5, y - 10)
+      .bezierCurveTo(x - 5, y - 16, x + 5, y - 16, x + 5, y - 10)
+      .lineTo(x + 5, y - 2)
+      .stroke({ width: 2, color: 0x6b7280, alpha: pulse });
   }
 
   /**
@@ -849,7 +720,8 @@ export class ColonyScene {
     labelContainer.removeChildren();
 
     const level = colony?.level ?? 0;
-    const labelY = ISO.buildingHeight * (0.6 + level * 0.04);
+    const baseSize = PLANET.buildingSize + (colony?.unlocked ? level * 2 : 0);
+    const labelY = baseSize * 0.4; // Below the building
 
     const nameStyle = new TextStyle({
       fontFamily: 'monospace',
@@ -926,7 +798,7 @@ export class ColonyScene {
         style: infoStyle,
       });
       unlockText.anchor.set(0.5, 0);
-      unlockText.y = ISO.buildingHeight * 0.5 + 14;
+      unlockText.y = PLANET.buildingSize * 0.5 + 14;
       labelContainer.addChild(unlockText);
     }
   }
@@ -939,17 +811,15 @@ export class ColonyScene {
   }
 
   /**
-   * Sort buildings by depth (Y position)
+   * Sort buildings by depth (based on angle - lower Y should render first)
    */
   private sortBuildingsByDepth() {
     const children = [...this.buildingsLayer.children] as Container[];
-    children.sort((a, b) => {
-      const visualA = [...this.buildings.values()].find(v => v.container === a);
-      const visualB = [...this.buildings.values()].find(v => v.container === b);
-      if (!visualA || !visualB) return 0;
-      return (visualA.config.gridPos.x + visualA.config.gridPos.y) -
-             (visualB.config.gridPos.x + visualB.config.gridPos.y);
-    });
+    children.sort((a, b) => a.y - b.y);
+    // Re-add in sorted order
+    for (const child of children) {
+      this.buildingsLayer.addChild(child);
+    }
   }
 
   /**
@@ -964,7 +834,7 @@ export class ColonyScene {
 
       if (Math.random() < spawnChance) {
         const startX = visual.container.x;
-        const startY = visual.container.y - ISO.buildingHeight * 0.6;
+        const startY = visual.container.y - PLANET.buildingSize * 0.6;
 
         // Control point for arc
         const midX = (startX + this.collectionPoint.x) / 2;
@@ -1117,7 +987,7 @@ export class ColonyScene {
     animate();
 
     // Particle burst
-    const pos = { x: container.x, y: container.y - ISO.buildingHeight * 0.5 };
+    const pos = { x: container.x, y: container.y - PLANET.buildingSize * 0.5 };
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2;
       const dist = 40 + Math.random() * 30;
@@ -1157,7 +1027,7 @@ export class ColonyScene {
     this.drawStars();
 
     // Update reactor glow
-    this.drawStationFloor();
+    this.drawPlanet();
 
     // Update buildings
     for (const [, visual] of this.buildings) {

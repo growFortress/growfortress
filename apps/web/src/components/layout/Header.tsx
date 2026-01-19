@@ -28,6 +28,7 @@ import {
   openPvpPanel,
   pvpPendingChallenges,
 } from '../../state/index.js';
+import { colonySceneVisible } from '../../state/idle.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { EnergyBar } from '../game/EnergyBar.js';
@@ -41,8 +42,8 @@ export function Header(_props: HeaderProps) {
   const { t } = useTranslation(['game', 'common']);
   const isPlaying = gamePhase.value !== 'idle';
 
-  // Hide header during class selection for cleaner modal view
-  if (classSelectionVisible.value) {
+  // Hide header during class selection or colony scene for cleaner view
+  if (classSelectionVisible.value || colonySceneVisible.value) {
     return null;
   }
 

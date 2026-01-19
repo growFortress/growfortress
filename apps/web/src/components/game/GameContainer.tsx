@@ -142,13 +142,15 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     }
   }, [colonySceneVisible.value, showColonySceneRenderer, hideColonySceneRenderer]);
 
-  // Update colonies in renderer when idle rewards state changes
+  // Update colonies in renderer when idle rewards state changes or scene becomes visible
   useEffect(() => {
     const state = idleRewardsState.value;
-    if (state?.colonies) {
+    const isVisible = colonySceneVisible.value;
+    if (state?.colonies && isVisible) {
+      console.log('[GameContainer] Updating colonies in scene:', state.colonies.length);
       updateColonies(state.colonies);
     }
-  }, [idleRewardsState.value, updateColonies]);
+  }, [idleRewardsState.value, colonySceneVisible.value, updateColonies]);
 
   // Play upgrade animation when colony is being upgraded
   useEffect(() => {

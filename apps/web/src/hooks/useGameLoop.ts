@@ -109,6 +109,13 @@ export function useGameLoop(
     const renderer = new GameApp(canvas);
     rendererRef.current = renderer;
 
+    // Set up colony building click callback to dispatch custom event
+    renderer.setOnColonyBuildingClick((colonyId, _colony) => {
+      window.dispatchEvent(
+        new CustomEvent('colony-building-click', { detail: { colonyId } })
+      );
+    });
+
     const game = new Game({
       onStateChange: () => {
         syncGameState(game);
@@ -491,8 +498,12 @@ export function useGameLoop(
   }, []);
 
   const updateColonies = useCallback((colonies: import('@arcade/protocol').ColonyStatus[]): void => {
+    console.log('[useGameLoop] updateColonies called with:', colonies.length, 'colonies');
     const renderer = rendererRef.current;
-    if (!renderer) return;
+    if (!renderer) {
+      console.log('[useGameLoop] No renderer available!');
+      return;
+    }
     renderer.setColonies(colonies);
   }, []);
 

@@ -1,8 +1,10 @@
 /**
- * ColonySceneOverlay - UI overlay for the full-screen colony scene
+ * ColonySceneOverlay - Minimal UI overlay for colony scene
  *
- * Provides navigation, stats, building popups, and actions
- * for the space station colony management screen.
+ * Clean, focused design with:
+ * - Minimal header (resources + back)
+ * - Combined rewards + CTA at bottom
+ * - Vignette for focus
  */
 
 import type { JSX } from 'preact';
@@ -18,11 +20,10 @@ import {
   totalColonyGoldPerHour,
   upgradeColony,
   upgradingColony,
-  formatIdleTime,
   colonySceneVisible,
   hideColonyScene,
 } from '../../state/idle.signals.js';
-import { baseGold } from '../../state/profile.signals.js';
+import { baseGold, baseDust } from '../../state/profile.signals.js';
 import styles from './ColonySceneOverlay.module.css';
 
 // Colony names (Polish)
@@ -31,15 +32,6 @@ const COLONY_NAMES: Record<string, string> = {
   mine: 'Kopalnia',
   market: 'Targ',
   factory: 'Fabryka',
-};
-
-// Rarity colors
-const RARITY_COLORS: Record<string, string> = {
-  common: '#808080',
-  uncommon: '#00ff00',
-  rare: '#0088ff',
-  epic: '#9932cc',
-  legendary: '#ffd700',
 };
 
 // Material icons
@@ -56,11 +48,7 @@ const MATERIAL_ICONS: Record<string, string> = {
 };
 
 interface ColonySceneOverlayProps {
-  /** Callback when a building is clicked in the scene */
-  onBuildingClick?: (colonyId: string, colony: ColonyStatus | null) => void;
-  /** Callback when upgrade animation should play */
   onUpgradeAnimation?: (colonyId: string) => void;
-  /** Callback when claim animation should play */
   onClaimAnimation?: () => Promise<void>;
 }
 
@@ -75,69 +63,50 @@ export function ColonySceneOverlay({
   const pendingGold = totalPendingGold.value;
   const goldPerHour = totalColonyGoldPerHour.value;
   const currentUpgrading = upgradingColony.value;
+  const playerGold = baseGold.value;
+  const playerDust = baseDust.value;
 
-  // Selected building for popup
   const [selectedColonyId, setSelectedColonyId] = useState<string | null>(null);
 
-  // Listen for building clicks from the scene
-  // This will be connected via GameContainer
+  // Listen for building clicks
   useEffect(() => {
     const handleBuildingClick = (e: CustomEvent<{ colonyId: string }>) => {
       setSelectedColonyId(e.detail.colonyId);
     };
-
     window.addEventListener('colony-building-click' as any, handleBuildingClick);
     return () => {
       window.removeEventListener('colony-building-click' as any, handleBuildingClick);
     };
   }, []);
 
-  // Reset selection when hiding
+  // Reset on hide
   useEffect(() => {
-    if (!isVisible) {
-      setSelectedColonyId(null);
-    }
+    if (!isVisible) setSelectedColonyId(null);
   }, [isVisible]);
 
-  const handleBack = useCallback(() => {
-    hideColonyScene();
-  }, []);
+  const handleBack = useCallback(() => hideColonyScene(), []);
 
   const handleClaim = useCallback(async () => {
-    if (onClaimAnimation) {
-      await onClaimAnimation();
-    }
+    if (onClaimAnimation) await onClaimAnimation();
     await claimIdleRewards();
   }, [onClaimAnimation]);
 
   const handleUpgrade = useCallback(async () => {
     if (selectedColonyId) {
       const success = await upgradeColony(selectedColonyId);
-      if (success && onUpgradeAnimation) {
-        onUpgradeAnimation(selectedColonyId);
-      }
+      if (success && onUpgradeAnimation) onUpgradeAnimation(selectedColonyId);
     }
   }, [selectedColonyId, onUpgradeAnimation]);
 
-  const handleClosePopup = useCallback(() => {
-    setSelectedColonyId(null);
-  }, []);
+  const handleClosePopup = useCallback(() => setSelectedColonyId(null), []);
 
-  const handleBackgroundClick = useCallback((e: MouseEvent) => {
-    // Only close if clicking the background, not the popup
-    if ((e.target as HTMLElement).classList.contains(styles.overlay)) {
-      setSelectedColonyId(null);
-    }
-  }, []);
-
-  // Don't render if not visible
   if (!isVisible) return null;
 
   const selectedColony = selectedColonyId && state?.colonies
     ? state.colonies.find((c) => c.id === selectedColonyId)
     : null;
 
-  // Get materials with definitions
+  // Get pending materials
   const materialsWithDefs = state?.pendingMaterials
     ? Object.entries(state.pendingMaterials)
         .map(([id, amount]) => ({
@@ -148,116 +117,130 @@ export function ColonySceneOverlay({
         .filter((m) => m.def !== undefined)
     : [];
 
+  const pendingDust = state?.pendingDust ?? 0;
+  const hasRewards = pendingGold > 0 || pendingDust > 0 || materialsWithDefs.length > 0;
+
   return (
-    <div class={styles.overlay} onClick={handleBackgroundClick}>
-      {/* Header with back button and stats */}
+    <div class={styles.overlay}>
+      {/* Vignette effect */}
+      <div class={styles.vignette} />
+
+      {/* Minimal header - only resources + back */}
       <header class={styles.header}>
-        <button class={styles.backButton} onClick={handleBack} aria-label="Wróć">
-          ← Wróć
+        <button class={styles.backButton} onClick={handleBack}>
+          <span class={styles.backIcon}>←</span>
+          <span class={styles.backText}>Wróć</span>
         </button>
 
-        <div class={styles.stats}>
-          {state && (
-            <div class={styles.timeInfo}>
-              <span class={styles.timeIcon}>⏰</span>
-              <span class={styles.timeText}>{formatIdleTime(state.cappedHours)}</span>
-            </div>
-          )}
-          {goldPerHour > 0 && (
-            <div class={styles.productionInfo}>
-              <span class={styles.productionText}>{goldPerHour} 🪙/h</span>
-            </div>
-          )}
+        <div class={styles.resources}>
+          <div class={styles.resource}>
+            <span class={styles.resourceIcon}>🪙</span>
+            <span class={styles.resourceValue}>{playerGold.toLocaleString()}</span>
+          </div>
+          <div class={styles.resource}>
+            <span class={styles.resourceIcon}>💎</span>
+            <span class={styles.resourceValue}>{playerDust}</span>
+          </div>
         </div>
       </header>
 
-      {/* Pending rewards summary */}
-      {(pendingGold > 0 || materialsWithDefs.length > 0 || (state?.pendingDust ?? 0) > 0) && (
-        <div class={styles.rewardsSummary}>
-          {pendingGold > 0 && (
-            <div class={styles.rewardItem}>
-              <span class={styles.rewardIcon}>🪙</span>
-              <span class={styles.rewardAmount}>+{pendingGold}</span>
-            </div>
-          )}
-          {(state?.pendingDust ?? 0) > 0 && (
-            <div class={styles.rewardItem}>
-              <span class={styles.rewardIcon}>💨</span>
-              <span class={styles.rewardAmount}>+{state?.pendingDust}</span>
-            </div>
-          )}
-          {materialsWithDefs.slice(0, 3).map(({ id, amount, def }) => {
-            const color = RARITY_COLORS[def!.rarity] || '#808080';
-            const icon = MATERIAL_ICONS[id] || '📦';
-            return (
-              <div
-                key={id}
-                class={styles.rewardItem}
-                style={{ '--reward-color': color } as JSX.CSSProperties}
-                title={def!.polishName}
-              >
-                <span class={styles.rewardIcon}>{icon}</span>
-                <span class={styles.rewardAmount}>×{amount}</span>
-              </div>
-            );
-          })}
-          {materialsWithDefs.length > 3 && (
-            <span class={styles.moreRewards}>+{materialsWithDefs.length - 3}</span>
-          )}
+      {/* Production rate - subtle indicator */}
+      {goldPerHour > 0 && (
+        <div class={styles.productionBadge}>
+          <span>{goldPerHour} 🪙/h</span>
         </div>
       )}
 
-      {/* Claim button */}
-      <div class={styles.claimSection}>
+      {/* Bottom: Rewards + CTA combined */}
+      <div class={styles.bottomSection}>
+        {/* Rewards preview */}
+        {hasRewards && (
+          <div class={styles.rewardsPreview}>
+            <span class={styles.rewardsLabel}>Nagrody do odebrania</span>
+            <div class={styles.rewardsList}>
+              {pendingGold > 0 && (
+                <span class={styles.rewardChip}>
+                  <span class={styles.rewardChipIcon}>🪙</span>
+                  +{pendingGold}
+                </span>
+              )}
+              {pendingDust > 0 && (
+                <span class={styles.rewardChip}>
+                  <span class={styles.rewardChipIcon}>💎</span>
+                  +{pendingDust}
+                </span>
+              )}
+              {materialsWithDefs.slice(0, 3).map(({ id, amount }) => (
+                <span key={id} class={styles.rewardChip}>
+                  <span class={styles.rewardChipIcon}>{MATERIAL_ICONS[id] || '📦'}</span>
+                  ×{amount}
+                </span>
+              ))}
+              {materialsWithDefs.length > 3 && (
+                <span class={styles.rewardChipMore}>+{materialsWithDefs.length - 3}</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* CTA Button */}
         {state && !state.canClaim && state.minutesUntilNextClaim > 0 ? (
           <div class={styles.waitMessage}>
-            Poczekaj jeszcze {state.minutesUntilNextClaim} min
+            Następny odbiór za {state.minutesUntilNextClaim} min
           </div>
         ) : (
           <button
-            class={styles.claimButton}
+            class={`${styles.claimButton} ${canClaim ? styles.claimButtonActive : ''}`}
             onClick={handleClaim}
             disabled={!canClaim || claiming}
           >
-            {claiming ? 'Odbieranie...' : 'Odbierz nagrody'}
+            {claiming ? 'Odbieranie...' : canClaim ? 'Odbierz nagrody' : 'Brak nagród'}
           </button>
         )}
       </div>
 
-      {/* Building popup */}
+      {/* Building popup with backdrop */}
       {selectedColony && (
-        <BuildingPopup
-          colony={selectedColony}
-          isUpgrading={currentUpgrading === selectedColony.id}
-          onClose={handleClosePopup}
-          onUpgrade={handleUpgrade}
-        />
+        <>
+          <div class={styles.popupBackdrop} onClick={handleClosePopup} />
+          <BuildingPopup
+            colony={selectedColony}
+            isUpgrading={currentUpgrading === selectedColony.id}
+            playerGold={playerGold}
+            onClose={handleClosePopup}
+            onUpgrade={handleUpgrade}
+          />
+        </>
       )}
     </div>
   );
 }
 
-// Building popup component
+// Building popup - clean design
 interface BuildingPopupProps {
   colony: ColonyStatus;
   isUpgrading: boolean;
+  playerGold: number;
   onClose: () => void;
   onUpgrade: () => void;
 }
 
-function BuildingPopup({ colony, isUpgrading, onClose, onUpgrade }: BuildingPopupProps): JSX.Element {
-  const playerGold = baseGold.value;
+function BuildingPopup({ colony, isUpgrading, playerGold, onClose, onUpgrade }: BuildingPopupProps): JSX.Element {
   const canAfford = playerGold >= colony.upgradeCost;
   const isMaxLevel = colony.level >= colony.maxLevel;
+  const name = COLONY_NAMES[colony.id] || colony.name;
 
+  // Locked building - gray, not red
   if (!colony.unlocked) {
     return (
       <div class={`${styles.popup} ${styles.popupLocked}`}>
-        <button class={styles.popupClose} onClick={onClose} aria-label="Zamknij">×</button>
-        <div class={styles.popupName}>{COLONY_NAMES[colony.id] || colony.name}</div>
-        <div class={styles.popupUnlock}>
-          <span class={styles.lockIcon}>🔒</span>
-          Odblokuj na poziomie {colony.unlockLevel}
+        <button class={styles.popupClose} onClick={onClose}>×</button>
+        <div class={styles.popupHeader}>
+          <span class={styles.popupLockIcon}>🔒</span>
+          <span class={styles.popupName}>{name}</span>
+        </div>
+        <div class={styles.popupLockInfo}>
+          Dostępne od poziomu {colony.unlockLevel}
         </div>
       </div>
     );
@@ -265,32 +248,44 @@ function BuildingPopup({ colony, isUpgrading, onClose, onUpgrade }: BuildingPopu
 
   return (
     <div class={styles.popup}>
-      <button class={styles.popupClose} onClick={onClose} aria-label="Zamknij">×</button>
-      <div class={styles.popupName}>
-        {COLONY_NAMES[colony.id] || colony.name} <span class={styles.popupLevel}>Lv.{colony.level}</span>
+      <button class={styles.popupClose} onClick={onClose}>×</button>
+      <div class={styles.popupHeader}>
+        <span class={styles.popupName}>{name}</span>
+        <span class={styles.popupLevel}>Poziom {colony.level}</span>
       </div>
+
       <div class={styles.popupStats}>
-        <div class={styles.popupStatRow}>
-          <span>Produkcja:</span>
+        <div class={styles.popupStat}>
+          <span class={styles.popupStatLabel}>Produkcja</span>
           <span class={styles.popupStatValue}>{colony.goldPerHour} 🪙/h</span>
         </div>
         {colony.pendingGold > 0 && (
-          <div class={styles.popupStatRow}>
-            <span>Zebrano:</span>
-            <span class={styles.popupStatValue}>+{colony.pendingGold} 🪙</span>
+          <div class={styles.popupStat}>
+            <span class={styles.popupStatLabel}>Zebrano</span>
+            <span class={styles.popupStatValueGold}>+{colony.pendingGold} 🪙</span>
           </div>
         )}
       </div>
+
       <div class={styles.popupActions}>
         {isMaxLevel ? (
-          <span class={styles.maxLevel}>MAX LEVEL</span>
+          <div class={styles.maxLevelBadge}>Maksymalny poziom</div>
         ) : (
           <button
             class={styles.upgradeButton}
             onClick={onUpgrade}
             disabled={!canAfford || isUpgrading || !colony.canUpgrade}
           >
-            {isUpgrading ? 'Ulepszanie...' : `Ulepsz za ${colony.upgradeCost} 🪙`}
+            {isUpgrading ? (
+              'Ulepszanie...'
+            ) : (
+              <>
+                Ulepsz
+                <span class={styles.upgradeCost}>
+                  {colony.upgradeCost} 🪙
+                </span>
+              </>
+            )}
           </button>
         )}
       </div>
