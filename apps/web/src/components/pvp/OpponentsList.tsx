@@ -10,6 +10,7 @@ import {
   showErrorToast,
   openHubPreview,
   showBattleResult,
+  userPower,
 } from '../../state/index.js';
 import { createChallenge, PvpApiError } from '../../api/pvp.js';
 import type { PvpOpponent } from '@arcade/protocol';
@@ -21,6 +22,7 @@ interface OpponentsListProps {
 
 export function OpponentsList({ onRefresh }: OpponentsListProps) {
   const [challengingId, setChallengingId] = useState<string | null>(null);
+  const myPower = userPower.value;
 
   const handleChallenge = async (opponent: PvpOpponent) => {
     if (challengingId) return;
@@ -97,50 +99,92 @@ export function OpponentsList({ onRefresh }: OpponentsListProps) {
   }
 
   return (
-    <div class={styles.list}>
-      {pvpOpponents.value.map((opponent) => (
-        <div key={opponent.userId} class={styles.listItem}>
-          <div
-            class={styles.listItemInfo}
-            onClick={() => openHubPreview(opponent.userId)}
-            style={{ cursor: 'pointer' }}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openHubPreview(opponent.userId); }}
-          >
-            <div class={styles.listItemName}>{opponent.displayName}</div>
-            <div class={styles.listItemMeta}>
-              <span class={styles.listItemPower}>
-                ⚡ {formatPower(opponent.power)}
-              </span>
-              <span class={styles.listItemRecord}>
-                <span class={styles.listItemWins}>{opponent.pvpWins}W</span>
-                {' / '}
-                <span class={styles.listItemLosses}>{opponent.pvpLosses}L</span>
-              </span>
+    <div class={styles.opponentList}>
+      {pvpOpponents.value.map((opponent) => {
+        const powerDiff = opponent.power - myPower;
+        const powerPercent = myPower > 0 ? Math.round((opponent.power / myPower) * 100) : 100;
+        const isStronger = powerDiff > 0;
+        const isWeaker = powerDiff < 0;
+        const winRate = opponent.pvpWins + opponent.pvpLosses > 0
+          ? Math.round((opponent.pvpWins / (opponent.pvpWins + opponent.pvpLosses)) * 100)
+          : 0;
+
+        return (
+          <div key={opponent.userId} class={styles.opponentCard}>
+            {/* Power comparison indicator */}
+            <div class={`${styles.powerIndicator} ${
+              isStronger ? styles.powerIndicatorStrong :
+              isWeaker ? styles.powerIndicatorWeak : ''
+            }`}>
+              {isStronger ? '↑' : isWeaker ? '↓' : '='}
+            </div>
+
+            <div class={styles.opponentMain}>
+              {/* Avatar placeholder */}
+              <div class={styles.opponentAvatar}>
+                {opponent.displayName.charAt(0).toUpperCase()}
+              </div>
+
+              {/* Info section */}
+              <div
+                class={styles.opponentInfo}
+                onClick={() => openHubPreview(opponent.userId)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openHubPreview(opponent.userId); }}
+              >
+                <div class={styles.opponentName}>{opponent.displayName}</div>
+                <div class={styles.opponentStats}>
+                  <span class={`${styles.opponentPower} ${
+                    isStronger ? styles.opponentPowerHigh :
+                    isWeaker ? styles.opponentPowerLow : ''
+                  }`}>
+                    ⚡ {formatPower(opponent.power)}
+                    <span class={styles.powerCompare}>
+                      ({powerPercent}%)
+                    </span>
+                  </span>
+                  <span class={styles.opponentRecord}>
+                    <span class={styles.recordWins}>{opponent.pvpWins}W</span>
+                    <span class={styles.recordSep}>/</span>
+                    <span class={styles.recordLosses}>{opponent.pvpLosses}L</span>
+                    {winRate > 0 && (
+                      <span class={styles.recordRate}>({winRate}%)</span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action area */}
+            <div class={styles.opponentAction}>
+              {opponent.canChallenge ? (
+                <button
+                  class={styles.challengeBtn}
+                  onClick={() => handleChallenge(opponent)}
+                  disabled={challengingId === opponent.userId}
+                >
+                  {challengingId === opponent.userId ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <>
+                      <span class={styles.challengeBtnIcon}>⚔️</span>
+                      <span class={styles.challengeBtnText}>Walcz</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div class={styles.cooldownBadge}>
+                  <span class={styles.cooldownIcon}>⏱️</span>
+                  <span class={styles.cooldownTime}>
+                    {formatCooldown(opponent.challengeCooldownEndsAt)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-          <div class={styles.listItemActions}>
-            {opponent.canChallenge ? (
-              <Button
-                variant="skill"
-                onClick={() => handleChallenge(opponent)}
-                disabled={challengingId === opponent.userId}
-              >
-                {challengingId === opponent.userId ? (
-                  <Spinner size="sm" />
-                ) : (
-                  '⚔️ Wyzwij'
-                )}
-              </Button>
-            ) : (
-              <span class={styles.cooldownText}>
-                Cooldown: {formatCooldown(opponent.challengeCooldownEndsAt)}
-              </span>
-            )}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -152,7 +196,7 @@ function formatCooldown(isoDate?: string): string {
   const now = Date.now();
   const diff = endTime - now;
 
-  if (diff <= 0) return 'Wkrótce';
+  if (diff <= 0) return 'Gotowe';
 
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));

@@ -66,6 +66,10 @@ export function PvpPanel() {
   }
 
   const pendingCount = pvpPendingChallenges.value;
+  const wins = pvpWins.value;
+  const losses = pvpLosses.value;
+  const totalBattles = wins + losses;
+  const isLoading = pvpOpponentsLoading.value || pvpChallengesLoading.value;
 
   return (
     <div class={styles.overlay} onClick={(e) => {
@@ -74,40 +78,68 @@ export function PvpPanel() {
       <div class={styles.panel}>
         {/* Header */}
         <div class={styles.header}>
-          <div class={styles.headerLeft}>
-            <span class={styles.icon}>⚔️</span>
-            <h2 class={styles.title}>PVP Arena</h2>
+          <div class={styles.headerContent}>
+            <div class={styles.headerIcon}>⚔️</div>
+            <div class={styles.headerText}>
+              <h2 class={styles.title}>PVP Arena</h2>
+              <span class={styles.subtitle}>Walcz z innymi graczami</span>
+            </div>
           </div>
-          <button class={styles.closeBtn} onClick={closePvpPanel}>×</button>
+          <button class={styles.closeBtn} onClick={closePvpPanel} aria-label="Zamknij">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
 
-        {/* Stats Bar */}
-        <div class={styles.statsBar}>
-          <div class={styles.statItem}>
-            <span class={styles.statLabel}>Wygrane</span>
-            <span class={`${styles.statValue} ${styles.statValueWins}`}>
-              {pvpWins.value}
-            </span>
+        {/* Stats Cards */}
+        <div class={styles.statsGrid}>
+          <div class={`${styles.statCard} ${styles.statCardWins}`}>
+            <div class={styles.statIcon}>🏆</div>
+            <div class={styles.statContent}>
+              <span class={styles.statValue}>{wins}</span>
+              <span class={styles.statLabel}>Wygrane</span>
+            </div>
           </div>
-          <div class={styles.statItem}>
-            <span class={styles.statLabel}>Przegrane</span>
-            <span class={`${styles.statValue} ${styles.statValueLosses}`}>
-              {pvpLosses.value}
-            </span>
+          <div class={`${styles.statCard} ${styles.statCardLosses}`}>
+            <div class={styles.statIcon}>💀</div>
+            <div class={styles.statContent}>
+              <span class={styles.statValue}>{losses}</span>
+              <span class={styles.statLabel}>Przegrane</span>
+            </div>
           </div>
-          <div class={styles.statItem}>
-            <span class={styles.statLabel}>Win Rate</span>
-            <span class={styles.statValue}>
-              {pvpWinRate.value}%
-            </span>
+          <div class={`${styles.statCard} ${styles.statCardRate}`}>
+            <div class={styles.statIcon}>📊</div>
+            <div class={styles.statContent}>
+              <span class={styles.statValue}>{pvpWinRate.value}%</span>
+              <span class={styles.statLabel}>Win Rate</span>
+            </div>
           </div>
-          <div class={styles.statItem}>
-            <span class={styles.statLabel}>Moc</span>
-            <span class={`${styles.statValue} ${styles.statValuePower}`}>
-              {formatPower(userPower.value)}
-            </span>
+          <div class={`${styles.statCard} ${styles.statCardPower}`}>
+            <div class={styles.statIcon}>⚡</div>
+            <div class={styles.statContent}>
+              <span class={styles.statValue}>{formatPower(userPower.value)}</span>
+              <span class={styles.statLabel}>Twoja Moc</span>
+            </div>
           </div>
         </div>
+
+        {/* Battle Progress Bar */}
+        {totalBattles > 0 && (
+          <div class={styles.progressSection}>
+            <div class={styles.progressBar}>
+              <div
+                class={styles.progressFillWins}
+                style={{ width: `${(wins / totalBattles) * 100}%` }}
+              />
+            </div>
+            <div class={styles.progressLabels}>
+              <span class={styles.progressWins}>{wins}W</span>
+              <span class={styles.progressTotal}>{totalBattles} walk</span>
+              <span class={styles.progressLosses}>{losses}L</span>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div class={styles.tabs}>
@@ -115,13 +147,15 @@ export function PvpPanel() {
             class={`${styles.tab} ${pvpActiveTab.value === 'opponents' ? styles.tabActive : ''}`}
             onClick={() => setActivePvpTab('opponents')}
           >
-            Przeciwnicy
+            <span class={styles.tabIcon}>👥</span>
+            <span class={styles.tabText}>Przeciwnicy</span>
           </button>
           <button
             class={`${styles.tab} ${pvpActiveTab.value === 'challenges' ? styles.tabActive : ''}`}
             onClick={() => setActivePvpTab('challenges')}
           >
-            Wyzwania
+            <span class={styles.tabIcon}>📨</span>
+            <span class={styles.tabText}>Wyzwania</span>
             {pendingCount > 0 && (
               <span class={styles.tabBadge}>{pendingCount}</span>
             )}
@@ -130,14 +164,19 @@ export function PvpPanel() {
             class={`${styles.tab} ${pvpActiveTab.value === 'history' ? styles.tabActive : ''}`}
             onClick={() => setActivePvpTab('history')}
           >
-            Historia
+            <span class={styles.tabIcon}>📜</span>
+            <span class={styles.tabText}>Historia</span>
           </button>
           <button
-            class={`${styles.refreshBtn} ${pvpOpponentsLoading.value || pvpChallengesLoading.value ? styles.refreshBtnSpinning : ''}`}
+            class={`${styles.refreshBtn} ${isLoading ? styles.refreshBtnSpinning : ''}`}
             onClick={refreshData}
             title="Odśwież"
+            disabled={isLoading}
           >
-            🔄
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M23 4v6h-6M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
           </button>
         </div>
 

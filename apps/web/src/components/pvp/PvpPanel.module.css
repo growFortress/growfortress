@@ -9,6 +9,12 @@
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .panel {
@@ -16,155 +22,557 @@
   border: var(--border-primary);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  max-width: 600px;
+  max-width: 640px;
   width: 95%;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+  animation: slideUp 0.25s var(--ease-spring);
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==================== HEADER ==================== */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: 2px solid var(--color-neutral);
 }
 
-.headerLeft {
+.headerContent {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
+}
+
+.headerIcon {
+  font-size: 2rem;
+  text-shadow: var(--text-shadow);
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
 }
 
 .title {
   font-family: var(--font-display);
   font-size: 1.5rem;
-  color: var(--color-text);
+  color: var(--color-primary);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
+  text-shadow: var(--text-shadow), 0 0 20px var(--color-primary-50);
 }
 
-.icon {
-  font-size: 1.5rem;
+.subtitle {
+  font-size: 0.7rem;
+  color: var(--color-text-40);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .closeBtn {
-  background: transparent;
-  border: none;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
   color: var(--color-text-60);
-  font-size: 1.5rem;
   cursor: pointer;
-  padding: 0.25rem;
-  line-height: 1;
-  transition: color 0.2s;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
 }
 
 .closeBtn:hover {
-  color: var(--color-text);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-sm), var(--glow-accent);
+  transform: scale(var(--hover-scale));
 }
 
-/* Stats Bar */
-.statsBar {
-  display: flex;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
+/* ==================== STATS GRID ==================== */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.625rem;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
-.statItem {
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.5rem;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
+}
+
+.statCard:hover {
+  transform: scale(var(--hover-scale));
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+  border-color: var(--color-primary);
+}
+
+.statIcon {
+  font-size: 1.125rem;
+  text-shadow: var(--text-shadow);
+}
+
+.statContent {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 80px;
+  min-width: 0;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+  text-shadow: var(--text-shadow);
 }
 
 .statLabel {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   color: var(--color-text-40);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.statValue {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.statValueWins {
+.statCardWins .statValue {
   color: var(--color-success);
 }
 
-.statValueLosses {
+.statCardLosses .statValue {
   color: var(--color-danger);
 }
 
-.statValuePower {
+.statCardRate .statValue {
+  color: var(--color-text);
+}
+
+.statCardPower .statValue {
   color: var(--color-gold);
 }
 
-/* Tabs */
+/* ==================== PROGRESS SECTION ==================== */
+.progressSection {
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+}
+
+.progressBar {
+  height: 8px;
+  background: var(--color-accent-30);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-neutral);
+}
+
+.progressFillWins {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: var(--radius-sm);
+  transition: width 0.5s var(--ease-spring);
+  box-shadow: 0 0 8px var(--color-success);
+}
+
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.375rem;
+  font-size: 0.7rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.progressWins {
+  color: var(--color-success);
+  text-shadow: 0 0 8px var(--color-success-50);
+}
+
+.progressTotal {
+  color: var(--color-text-40);
+}
+
+.progressLosses {
+  color: var(--color-danger);
+  text-shadow: 0 0 8px var(--color-accent-50);
+}
+
+/* ==================== TABS ==================== */
 .tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.375rem;
   margin-bottom: 1rem;
-  background: var(--color-bg-surface);
-  border-radius: var(--radius-md);
-  padding: 0.25rem;
 }
 
 .tab {
   flex: 1;
-  padding: 0.625rem 1rem;
-  background: transparent;
-  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.625rem 0.5rem;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
   border-radius: var(--radius-sm);
   color: var(--color-text-60);
-  font-size: 0.875rem;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
   position: relative;
 }
 
-.tab:hover {
+.tab:hover:not(.tabActive) {
   color: var(--color-text);
-  background: var(--color-bg-hover);
+  border-color: var(--color-secondary);
+  transform: scale(var(--hover-scale));
 }
 
 .tabActive {
-  background: var(--color-primary);
-  color: var(--color-text);
+  background: var(--color-primary-20);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.tabIcon {
+  font-size: 1rem;
+}
+
+.tabText {
+  letter-spacing: 0.05em;
 }
 
 .tabBadge {
   position: absolute;
-  top: 0.25rem;
-  right: 0.5rem;
+  top: -0.25rem;
+  right: -0.25rem;
   background: var(--color-danger);
   color: white;
-  font-size: 0.65rem;
-  padding: 0.1rem 0.35rem;
-  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-full);
   min-width: 1rem;
   text-align: center;
+  border: 2px solid var(--color-bg-panel);
+  box-shadow: 0 0 8px var(--color-accent-50);
+  animation: pulse 2s infinite;
 }
 
-/* Content */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ==================== REFRESH BUTTON ==================== */
+.refreshBtn {
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  color: var(--color-text-60);
+  cursor: pointer;
+  padding: 0.625rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: scale(var(--hover-scale));
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refreshBtnSpinning svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== CONTENT ==================== */
 .content {
   flex: 1;
   overflow-y: auto;
-  min-height: 300px;
+  min-height: 280px;
+  padding-right: 0.25rem;
 }
 
-/* List styles */
+/* ==================== OPPONENT LIST ==================== */
+.opponentList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.opponentCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.opponentCard:hover {
+  border-color: var(--color-primary);
+  transform: translateX(3px);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+/* Power indicator strip */
+.powerIndicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-neutral);
+}
+
+.powerIndicatorStrong {
+  background: var(--color-danger);
+  box-shadow: 0 0 8px var(--color-accent-50);
+}
+
+.powerIndicatorWeak {
+  background: var(--color-success);
+  box-shadow: 0 0 8px var(--color-success-50);
+}
+
+.opponentMain {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.5rem;
+}
+
+.opponentAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-panel);
+  border: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm), 0 0 10px var(--color-primary-30);
+  text-shadow: var(--text-shadow);
+}
+
+.opponentInfo {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.opponentInfo:hover .opponentName {
+  color: var(--color-primary);
+  text-shadow: var(--text-shadow), 0 0 10px var(--color-primary-50);
+}
+
+.opponentName {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  transition: var(--transition-interactive-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: var(--text-shadow);
+}
+
+.opponentStats {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.opponentPower {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-gold);
+  font-weight: 600;
+  text-shadow: 0 0 8px var(--color-gold-30);
+}
+
+.opponentPowerHigh {
+  color: var(--color-danger);
+  text-shadow: 0 0 8px var(--color-accent-30);
+}
+
+.opponentPowerLow {
+  color: var(--color-success);
+  text-shadow: 0 0 8px var(--color-success-30);
+}
+
+.powerCompare {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.opponentRecord {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  color: var(--color-text-60);
+}
+
+.recordWins {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.recordSep {
+  color: var(--color-text-40);
+}
+
+.recordLosses {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.recordRate {
+  font-size: 0.65rem;
+  color: var(--color-text-40);
+  margin-left: 0.25rem;
+}
+
+.opponentAction {
+  flex-shrink: 0;
+}
+
+/* Challenge button - Game style */
+.challengeBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-elevated);
+  border: 3px solid var(--color-skill);
+  border-radius: var(--radius-sm);
+  color: var(--color-skill);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
+}
+
+.challengeBtn:hover:not(:disabled) {
+  background: var(--color-skill-15);
+  transform: scale(var(--hover-scale));
+  box-shadow: var(--shadow-sm), 0 0 15px var(--color-skill-30);
+}
+
+.challengeBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.challengeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+  border-style: dashed;
+}
+
+.challengeBtnIcon {
+  font-size: 1rem;
+}
+
+.challengeBtnText {
+  letter-spacing: 0.08em;
+}
+
+/* Cooldown badge */
+.cooldownBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-bg-elevated);
+  border: 2px dashed var(--color-neutral);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+}
+
+.cooldownIcon {
+  font-size: 0.85rem;
+}
+
+.cooldownTime {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==================== LIST STYLES (Legacy) ==================== */
 .list {
   display: flex;
   flex-direction: column;
@@ -176,14 +584,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.875rem 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  transition: border-color 0.2s;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
 }
 
 .listItem:hover {
-  border-color: var(--color-border);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
 }
 
 .listItemInfo {
@@ -193,9 +603,12 @@
 }
 
 .listItemName {
-  font-size: 1rem;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--color-text);
+  text-transform: uppercase;
+  text-shadow: var(--text-shadow);
 }
 
 .listItemMeta {
@@ -207,6 +620,7 @@
 
 .listItemPower {
   color: var(--color-gold);
+  text-shadow: 0 0 8px var(--color-gold-30);
 }
 
 .listItemRecord {
@@ -227,7 +641,7 @@
   gap: 0.5rem;
 }
 
-/* Empty state */
+/* ==================== EMPTY STATE ==================== */
 .emptyState {
   display: flex;
   flex-direction: column;
@@ -241,13 +655,16 @@
 .emptyIcon {
   font-size: 3rem;
   margin-bottom: 1rem;
+  opacity: 0.6;
+  text-shadow: var(--text-shadow);
 }
 
 .emptyText {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
-/* Loading */
+/* ==================== LOADING ==================== */
 .loading {
   display: flex;
   align-items: center;
@@ -255,7 +672,7 @@
   padding: 3rem;
 }
 
-/* Error */
+/* ==================== ERROR ==================== */
 .error {
   display: flex;
   align-items: center;
@@ -263,32 +680,27 @@
   padding: 2rem;
   color: var(--color-danger);
   text-align: center;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--color-accent-30);
 }
 
-/* Challenge status */
-.statusPending {
-  color: var(--color-warning);
-}
-
-.statusResolved {
-  color: var(--color-success);
-}
-
-.statusDeclined,
-.statusExpired,
-.statusCancelled {
-  color: var(--color-text-40);
-}
-
-/* Challenge card */
+/* ==================== CHALLENGE CARD ==================== */
 .challengeCard {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive-fast);
+}
+
+.challengeCard:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
 }
 
 .challengeHeader {
@@ -301,86 +713,133 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.95rem;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: var(--text-shadow);
 }
 
 .challengeVs {
   color: var(--color-text-40);
-  font-size: 0.8rem;
+  font-size: 0.7rem;
+  font-weight: 400;
 }
 
 .challengeStatus {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 700;
+  border: 2px solid currentColor;
 }
 
 .challengeTime {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--color-text-40);
 }
 
 .challengeActions {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
-/* Result badge */
+/* ==================== RESULT BADGES ==================== */
 .resultBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 2px solid currentColor;
 }
 
 .resultWin {
-  background: rgba(34, 197, 94, 0.2);
+  background: var(--color-success-20);
   color: var(--color-success);
+  box-shadow: 0 0 8px var(--color-success-30);
 }
 
 .resultLoss {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--color-accent-20);
   color: var(--color-danger);
+  box-shadow: 0 0 8px var(--color-accent-30);
 }
 
 .resultDraw {
-  background: rgba(156, 163, 175, 0.2);
+  background: rgba(156, 163, 175, 0.15);
   color: var(--color-text-60);
 }
 
-/* Cooldown */
-.cooldownText {
-  font-size: 0.75rem;
+/* ==================== STATUS COLORS ==================== */
+.statusPending {
+  color: var(--color-warning);
+  background: var(--color-skill-15);
+}
+
+.statusResolved {
+  color: var(--color-success);
+  background: var(--color-success-20);
+}
+
+.statusDeclined,
+.statusExpired,
+.statusCancelled {
   color: var(--color-text-40);
+  background: rgba(156, 163, 175, 0.1);
 }
 
-/* Refresh button */
-.refreshBtn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-60);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s;
+/* ==================== COOLDOWN TEXT ==================== */
+.cooldownText {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
 }
 
-.refreshBtn:hover {
-  color: var(--color-text);
-  background: var(--color-bg-hover);
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 520px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tabText {
+    display: none;
+  }
+
+  .tabIcon {
+    font-size: 1.1rem;
+  }
+
+  .tab {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .opponentCard {
+    flex-wrap: wrap;
+  }
+
+  .opponentAction {
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-left: calc(42px + 0.75rem + 0.5rem);
+  }
+
+  .challengeBtn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
-.refreshBtnSpinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* ==================== RADIUS XL fallback ==================== */
+.panel {
+  border-radius: var(--radius-lg);
 }
