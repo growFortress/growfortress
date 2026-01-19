@@ -39,8 +39,8 @@ export const FORTRESS_STAT_UPGRADES: StatUpgradeConfig[] = [
     description: '+5% HP twierdzy za level',
     bonusPerLevel: 0.05,
     maxLevel: 20,
-    baseCost: 100,
-    costPerLevel: 75,
+    baseCost: 60,       // Reduced from 100
+    costPerLevel: 45,   // Reduced from 75
   },
   {
     stat: 'damage',
@@ -48,8 +48,8 @@ export const FORTRESS_STAT_UPGRADES: StatUpgradeConfig[] = [
     description: '+4% obrażeń twierdzy za level',
     bonusPerLevel: 0.04,
     maxLevel: 20,
-    baseCost: 150,
-    costPerLevel: 100,
+    baseCost: 90,       // Reduced from 150
+    costPerLevel: 60,   // Reduced from 100
   },
   {
     stat: 'armor',
@@ -57,8 +57,8 @@ export const FORTRESS_STAT_UPGRADES: StatUpgradeConfig[] = [
     description: '+3% redukcji obrażeń za level',
     bonusPerLevel: 0.03,
     maxLevel: 20,
-    baseCost: 200,
-    costPerLevel: 125,
+    baseCost: 120,      // Reduced from 200
+    costPerLevel: 75,   // Reduced from 125
   },
 ];
 

@@ -40,6 +40,6 @@ export async function updateConfig(key: string, value: any, description?: string
 // Default values if not in DB
 export const DEFAULT_REMOTE_CONFIG = {
   fortressBaseHp: 200,
-  fortressBaseDamage: 10,
+  fortressBaseDamage: 25,  // Increased from 10
   waveIntervalTicks: 90,
 };

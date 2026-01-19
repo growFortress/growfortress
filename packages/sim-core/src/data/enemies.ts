@@ -20,7 +20,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   runner: {
     type: 'runner',
     baseHp: 23,
-    baseSpeed: 2.8,
+    baseSpeed: 2.2,  // Reduced from 2.8
     baseDamage: 6,
     goldReward: 2,
     dustReward: 1,
@@ -29,7 +29,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   bruiser: {
     type: 'bruiser',
     baseHp: 115,
-    baseSpeed: 1.0,
+    baseSpeed: 0.8,  // Reduced from 1.0
     baseDamage: 17,
     goldReward: 7,
     dustReward: 2,
@@ -38,7 +38,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   leech: {
     type: 'leech',
     baseHp: 46,
-    baseSpeed: 2.0,
+    baseSpeed: 1.6,  // Reduced from 2.0
     baseDamage: 4,
     goldReward: 5,
     dustReward: 1,
@@ -49,7 +49,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   gangster: {
     type: 'gangster',
     baseHp: 29,
-    baseSpeed: 2.2,
+    baseSpeed: 1.8,  // Reduced from 2.2
     baseDamage: 9,
     goldReward: 4,
     dustReward: 1,
@@ -58,7 +58,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   thug: {
     type: 'thug',
     baseHp: 69,
-    baseSpeed: 1.5,
+    baseSpeed: 1.2,  // Reduced from 1.5
     baseDamage: 14,
     goldReward: 6,
     dustReward: 1,
@@ -67,7 +67,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   mafia_boss: {
     type: 'mafia_boss',
     baseHp: 345,
-    baseSpeed: 0.8,
+    baseSpeed: 0.65,  // Reduced from 0.8
     baseDamage: 29,
     goldReward: 25,
     dustReward: 5,
@@ -78,7 +78,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   robot: {
     type: 'robot',
     baseHp: 52,
-    baseSpeed: 1.8,
+    baseSpeed: 1.4,  // Reduced from 1.8
     baseDamage: 12,
     goldReward: 5,
     dustReward: 1,
@@ -87,7 +87,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   drone: {
     type: 'drone',
     baseHp: 17,
-    baseSpeed: 3.0,
+    baseSpeed: 2.4,  // Reduced from 3.0
     baseDamage: 6,
     goldReward: 3,
     dustReward: 1,
@@ -96,7 +96,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   ai_core: {
     type: 'ai_core',
     baseHp: 575,
-    baseSpeed: 0.5,
+    baseSpeed: 0.4,  // Reduced from 0.5
     baseDamage: 35,
     goldReward: 40,
     dustReward: 8,
@@ -107,7 +107,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   sentinel: {
     type: 'sentinel',
     baseHp: 230,
-    baseSpeed: 1.2,
+    baseSpeed: 1.0,  // Reduced from 1.2
     baseDamage: 23,
     goldReward: 12,
     dustReward: 3,
@@ -116,7 +116,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   mutant_hunter: {
     type: 'mutant_hunter',
     baseHp: 92,
-    baseSpeed: 2.0,
+    baseSpeed: 1.6,  // Reduced from 2.0
     baseDamage: 17,
     goldReward: 7,
     dustReward: 2,
@@ -127,7 +127,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   kree_soldier: {
     type: 'kree_soldier',
     baseHp: 80,
-    baseSpeed: 1.8,
+    baseSpeed: 1.4,  // Reduced from 1.8
     baseDamage: 14,
     goldReward: 7,
     dustReward: 2,
@@ -136,7 +136,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   skrull: {
     type: 'skrull',
     baseHp: 58,
-    baseSpeed: 2.0,
+    baseSpeed: 1.6,  // Reduced from 2.0
     baseDamage: 12,
     goldReward: 6,
     dustReward: 1,
@@ -145,7 +145,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   cosmic_beast: {
     type: 'cosmic_beast',
     baseHp: 460,
-    baseSpeed: 1.0,
+    baseSpeed: 0.8,  // Reduced from 1.0
     baseDamage: 40,
     goldReward: 30,
     dustReward: 6,
@@ -156,7 +156,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   demon: {
     type: 'demon',
     baseHp: 104,
-    baseSpeed: 1.5,
+    baseSpeed: 1.2,  // Reduced from 1.5
     baseDamage: 21,
     goldReward: 9,
     dustReward: 2,
@@ -165,7 +165,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   sorcerer: {
     type: 'sorcerer',
     baseHp: 46,
-    baseSpeed: 1.2,
+    baseSpeed: 1.0,  // Reduced from 1.2
     baseDamage: 29,
     goldReward: 10,
     dustReward: 3,
@@ -174,7 +174,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   dimensional_being: {
     type: 'dimensional_being',
     baseHp: 690,
-    baseSpeed: 0.6,
+    baseSpeed: 0.5,  // Reduced from 0.6
     baseDamage: 46,
     goldReward: 50,
     dustReward: 10,
@@ -185,7 +185,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   einherjar: {
     type: 'einherjar',
     baseHp: 138,
-    baseSpeed: 1.5,
+    baseSpeed: 1.2,  // Reduced from 1.5
     baseDamage: 25,
     goldReward: 12,
     dustReward: 3,
@@ -194,7 +194,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   titan: {
     type: 'titan',
     baseHp: 920,
-    baseSpeed: 0.4,
+    baseSpeed: 0.35,  // Reduced from 0.4
     baseDamage: 58,
     goldReward: 60,
     dustReward: 13,
@@ -203,7 +203,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   god: {
     type: 'god',
     baseHp: 1150,
-    baseSpeed: 1.0,
+    baseSpeed: 0.8,  // Reduced from 1.0
     baseDamage: 69,
     goldReward: 100,
     dustReward: 25,
@@ -217,7 +217,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   catapult: {
     type: 'catapult',
     baseHp: 80,
-    baseSpeed: 0.8,
+    baseSpeed: 0.65,  // Reduced from 0.8
     baseDamage: 40,
     goldReward: 15,
     dustReward: 3,
@@ -226,7 +226,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   sapper: {
     type: 'sapper',
     baseHp: 45,
-    baseSpeed: 2.5,
+    baseSpeed: 2.0,  // Reduced from 2.5
     baseDamage: 8,
     goldReward: 10,
     dustReward: 2,
@@ -235,7 +235,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   healer: {
     type: 'healer',
     baseHp: 35,
-    baseSpeed: 1.5,
+    baseSpeed: 1.2,  // Reduced from 1.5
     baseDamage: 5,
     goldReward: 12,
     dustReward: 2,
@@ -244,7 +244,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   shielder: {
     type: 'shielder',
     baseHp: 60,
-    baseSpeed: 1.2,
+    baseSpeed: 1.0,  // Reduced from 1.2
     baseDamage: 10,
     goldReward: 14,
     dustReward: 3,
@@ -253,7 +253,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   teleporter: {
     type: 'teleporter',
     baseHp: 30,
-    baseSpeed: 2.0,
+    baseSpeed: 1.6,  // Reduced from 2.0
     baseDamage: 12,
     goldReward: 8,
     dustReward: 2,
@@ -573,16 +573,16 @@ export function getWaveComposition(
   const effectiveWave = ((wave - 1) % 100) + 1;
 
   // Enemy count scales with actual wave (more enemies in higher cycles)
-  // Doubled enemy count for more intense waves
-  const baseEnemies = 10 + wave * 6;
+  // Slightly reduced for better balance
+  const baseEnemies = 8 + wave * 5;
 
   // Elite chance continues scaling, caps at 50% (increased from 30% for endless)
   const eliteChance = Math.min(0.05 + wave * 0.005, 0.5);
 
-  // Spawn interval gets faster with cycles (minimum 5 ticks)
-  // Reduced by 40% to compensate for doubled enemy count
-  const baseInterval = Math.max((tickHz - effectiveWave * 2) * 0.6, tickHz / 3);
-  const spawnInterval = Math.max(baseInterval - cycle * 3, 4);
+  // Spawn interval - enemies spawn one by one from portal
+  // Base: ~1 second between spawns, speeds up slightly with waves
+  const baseInterval = Math.max(tickHz - effectiveWave, tickHz / 2);
+  const spawnInterval = Math.max(baseInterval - cycle * 2, 12); // Min 0.4s at 30Hz
 
   const enemies: Array<{ type: EnemyType; count: number }> = [];
 

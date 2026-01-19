@@ -269,18 +269,26 @@ export class HeroSystem {
     stateIndicator.position.y = SIZES.heroBase + 10;
     container.addChild(stateIndicator);
 
-    // Name tag (small)
+    // Name tag with improved styling
     const nameTag = new Text({
       text: this.getHeroDisplayName(hero.definitionId),
       style: {
-        fontSize: 10,
+        fontSize: 11,
         fill: 0xffffff,
-        fontFamily: 'Arial',
+        fontFamily: 'Arial, sans-serif',
+        fontWeight: 'bold',
+        dropShadow: {
+          color: 0x000000,
+          blur: 2,
+          distance: 1,
+          alpha: 0.8,
+        },
+        letterSpacing: 0.5,
       },
     });
     nameTag.label = 'name';
     nameTag.anchor.set(0.5, 1);
-    nameTag.position.y = SIZES.nameTagOffset;
+    nameTag.position.y = SIZES.nameTagOffset - 5;
     container.addChild(nameTag);
 
     // Tier badge

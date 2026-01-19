@@ -290,10 +290,13 @@ export function useGameLoop(
             return;
           }
 
-          // Priority 3: Handle militia spawning
+          // Priority 3: Handle militia spawning (always from fortress position)
           if (selectedMilitiaType.value) {
             if (game) {
-              game.spawnMilitia(selectedMilitiaType.value, fpX, fpY);
+              // Spawn militia at fortress position (X=2, Y=7 center of path)
+              const fortressSpawnX = FP.fromInt(3); // Slightly in front of fortress
+              const fortressSpawnY = FP.fromFloat(7.5); // Center of path
+              game.spawnMilitia(selectedMilitiaType.value, fortressSpawnX, fortressSpawnY);
             }
             clearMilitiaSelection();
             return;

@@ -616,9 +616,14 @@ export class Simulation {
       fieldMaxY: this.config.fieldHeight,
     };
 
-    // Assign random lane
-    const lane = getRandomLane(() => this.rng.nextFloat());
-    const laneY = getLaneY(lane, physicsConfig);
+    // Assign random target lane - but spawn at center (portal position)
+    const targetLane = getRandomLane(() => this.rng.nextFloat());
+    const spawnLane = 1; // Center lane - portal position
+    const spawnY = getLaneY(spawnLane, physicsConfig);
+
+    // Add random Y offset so enemies spread out when exiting portal
+    const yOffset = FP.fromFloat((this.rng.nextFloat() - 0.5) * 8);
+    const initialY = FP.add(spawnY, yOffset);
 
     const enemy: Enemy = {
       id: this.state.nextEnemyId++,
@@ -626,9 +631,9 @@ export class Simulation {
       hp: stats.hp,
       maxHp: stats.hp,
 
-      // Position
+      // Position - start at portal (center), will move to target lane
       x: this.config.enemySpawnX,
-      y: laneY,
+      y: initialY,
 
       // Physics
       vx: FP.mul(stats.speed, FP.fromInt(-1)), // Moving left
@@ -643,10 +648,10 @@ export class Simulation {
       hitFlashTicks: 0,
       lastAttackTick: 0,
 
-      // Lane info
-      lane,
-      targetLane: lane, // Start targeting current lane
-      canSwitchLane: this.rng.nextFloat() < 0.15, // 15% of enemies can switch lanes
+      // Lane info - start at center, move towards target
+      lane: spawnLane,
+      targetLane: targetLane, // Will move towards this lane
+      canSwitchLane: this.rng.nextFloat() < 0.15, // 15% of enemies can switch lanes later
       laneSwitchCooldown: 0,
 
       // Status effects
@@ -967,7 +972,7 @@ export class Simulation {
         // Apply friction for smooth movement
         applyFriction(enemy, ENEMY_PHYSICS.friction);
 
-        // Lane switching logic for enemies that can switch
+        // Lane switching logic for enemies that can switch lanes randomly
         if (enemy.canSwitchLane) {
           // Cooldown decrement
           if (enemy.laneSwitchCooldown > 0) {
@@ -985,28 +990,28 @@ export class Simulation {
               enemy.laneSwitchCooldown = 90; // 3 seconds before can switch again
             }
           }
+        }
 
-          // Move towards target lane
-          if (enemy.lane !== enemy.targetLane) {
-            const physicsConfig = {
-              ...DEFAULT_PHYSICS_CONFIG,
-              fieldMinY: FP.fromInt(0),
-              fieldMaxY: this.config.fieldHeight,
-            };
-            const targetY = getLaneY(enemy.targetLane, physicsConfig);
-            const diff = FP.sub(targetY, enemy.y);
-            const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(0.5)); // Switch at half speed
+        // Move towards target lane (ALL enemies - for spawning from portal)
+        if (enemy.lane !== enemy.targetLane) {
+          const physicsConfig = {
+            ...DEFAULT_PHYSICS_CONFIG,
+            fieldMinY: FP.fromInt(0),
+            fieldMaxY: this.config.fieldHeight,
+          };
+          const targetY = getLaneY(enemy.targetLane, physicsConfig);
+          const diff = FP.sub(targetY, enemy.y);
+          const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(0.6)); // Move at 60% speed
 
-            if (Math.abs(FP.toFloat(diff)) < 2) {
-              // Close enough - snap to lane
-              enemy.y = targetY;
-              enemy.lane = enemy.targetLane;
-              enemy.vy = 0;
-            } else if (diff > 0) {
-              enemy.vy = switchSpeed;
-            } else {
-              enemy.vy = FP.mul(switchSpeed, FP.fromInt(-1));
-            }
+          if (Math.abs(FP.toFloat(diff)) < 2) {
+            // Close enough - snap to lane
+            enemy.y = targetY;
+            enemy.lane = enemy.targetLane;
+            enemy.vy = 0;
+          } else if (diff > 0) {
+            enemy.vy = switchSpeed;
+          } else {
+            enemy.vy = FP.mul(switchSpeed, FP.fromInt(-1));
           }
         }
 

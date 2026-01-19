@@ -78,6 +78,17 @@ const THEME = {
 
 // LAYOUT imported from CoordinateSystem.js
 
+// --- CLASS COLORS for Tesla Tower (7 fortress classes) ---
+const CLASS_COLORS: Record<FortressClass, { primary: number; secondary: number; glow: number; core: number }> = {
+  natural: { primary: 0x228b22, secondary: 0x32cd32, glow: 0x44ff44, core: 0x88ff88 },
+  ice: { primary: 0x00bfff, secondary: 0x87ceeb, glow: 0xadd8e6, core: 0xffffff },
+  fire: { primary: 0xff4500, secondary: 0xff6600, glow: 0xffaa00, core: 0xffff88 },
+  lightning: { primary: 0x9932cc, secondary: 0xda70d6, glow: 0xffffff, core: 0xffffff },
+  tech: { primary: 0x00f0ff, secondary: 0x00ffff, glow: 0xffffff, core: 0xaaffff },
+  void: { primary: 0x4b0082, secondary: 0x8b008b, glow: 0x9400d3, core: 0xda70d6 },
+  plasma: { primary: 0x00ffff, secondary: 0xff00ff, glow: 0xffffff, core: 0xffaaff },
+};
+
 export class GameScene {
   public container: Container;
   private staticGraphics: Graphics; // Cached static background
@@ -104,6 +115,10 @@ export class GameScene {
 
   // Animation time for running lights
   private animTime = 0;
+
+  // Track fortress class for Tesla Tower rendering
+  private currentFortressClass: FortressClass = 'natural';
+  private currentFortressTier = 1;
 
   // Click callback for tactical commands
   private onFieldClick: ((worldX: number, worldY: number) => void) | null =
@@ -291,7 +306,7 @@ export class GameScene {
     // Helicarrier scene layers (back to front)
     this.drawSky(g); // 1. Nocne niebo z gwiazdami
     this.drawHelicarrierDeck(g); // 2. Metalowy pokład platformy
-    this.drawCommandBridge(g); // 3. Mostek dowodzenia
+    this.drawTeslaTower(g, this.currentFortressClass, this.currentFortressTier); // 3. Wieża Tesli
   }
 
   public update(state: GameState | null, alpha: number, hubState?: HubState) {
@@ -305,8 +320,6 @@ export class GameScene {
     if (this.graphics && !this.graphics.destroyed) {
       try {
         this.graphics.clear();
-        // Draw animated running lights on the deck
-        this.drawRunningLights(this.graphics);
         // Draw spawn portal at right edge (active during waves with enemies)
         const hasActiveEnemies = state?.enemies && state.enemies.length > 0;
         this.drawSpawnPortal(this.graphics, hasActiveEnemies);
@@ -343,6 +356,14 @@ export class GameScene {
         this.hitstopRemaining = 3; // ~50ms at 60fps (3 frames)
       }
       this.prevEliteKills = state.eliteKills;
+
+      // Track fortress class and tier changes - redraw Tesla Tower when changed
+      const newTier = state.commanderLevel < 10 ? 1 : state.commanderLevel < 25 ? 2 : 3;
+      if (state.fortressClass !== this.currentFortressClass || newTier !== this.currentFortressTier) {
+        this.currentFortressClass = state.fortressClass;
+        this.currentFortressTier = newTier;
+        this.redrawStaticLayer();
+      }
 
       // Skip visual updates during hitstop for dramatic pause effect
       if (this.hitstopRemaining > 0) {
@@ -649,214 +670,192 @@ export class GameScene {
   }
 
   /**
-   * Rysuje mostek dowodzenia Helicarriera (zamiast twierdzy)
+   * Rysuje Wieżę Tesli - główna struktura twierdzy
+   * Adaptuje kolory do klasy twierdzy, różnice wizualne zależą od tieru
    */
-  private drawCommandBridge(g: Graphics) {
-    const x =
-      fpXToScreen(FP.fromInt(LAYOUT.fortressPositionX), this.width) + 50;
+  private drawTeslaTower(g: Graphics, fortressClass: FortressClass, tier: number) {
+    const colors = CLASS_COLORS[fortressClass] || CLASS_COLORS.natural;
+    const x = fpXToScreen(FP.fromInt(LAYOUT.fortressPositionX), this.width) + 50;
     const pathTop = this.height * LAYOUT.groundY;
     const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
     const pathCenterY = (pathTop + pathBottom) / 2;
 
-    // Mostek osadzony na pokładzie
-    const bridgeWidth = 80;
-    const bridgeHeight = 140;
-    const baseY = pathCenterY + 40; // Podstawa mostka
+    const towerWidth = 70;
+    const towerHeight = 160;
+    const baseY = pathCenterY + 50;
 
-    // === PODSTAWA MOSTKA ===
-    // Metalowa platforma
-    g.rect(x - bridgeWidth / 2 - 10, baseY - 10, bridgeWidth + 20, 20).fill({
-      color: THEME.deck.edge,
-    });
+    // === 1. PLATFORMA / FUNDAMENT ===
+    const platformWidth = towerWidth + 40;
+    const platformHeight = 12;
+    // Ciemna metalowa platforma
+    g.roundRect(x - platformWidth / 2, baseY - platformHeight / 2, platformWidth, platformHeight, 3)
+      .fill({ color: THEME.deck.plate })
+      .stroke({ width: 2, color: THEME.deck.edge });
+    // Linie na platformie
+    g.rect(x - platformWidth / 2 + 10, baseY - 1, platformWidth - 20, 2)
+      .fill({ color: THEME.deck.line, alpha: 0.5 });
 
-    // === GŁÓWNA STRUKTURA ===
-    // Dolna część - szersza
-    const lowerHeight = bridgeHeight * 0.4;
-    g.moveTo(x - bridgeWidth / 2, baseY - 10)
-      .lineTo(x + bridgeWidth / 2, baseY - 10)
-      .lineTo(x + bridgeWidth / 2 - 10, baseY - 10 - lowerHeight)
-      .lineTo(x - bridgeWidth / 2 + 10, baseY - 10 - lowerHeight)
+    // === 2. PODSTAWA (trapezoid rozszerzający się w dół) ===
+    const baseHeight = towerHeight * 0.25;
+    const baseTopWidth = towerWidth * 0.5;
+    const baseBottomWidth = towerWidth * 0.8;
+    const baseTop = baseY - platformHeight / 2;
+
+    g.moveTo(x - baseBottomWidth / 2, baseTop)
+      .lineTo(x + baseBottomWidth / 2, baseTop)
+      .lineTo(x + baseTopWidth / 2, baseTop - baseHeight)
+      .lineTo(x - baseTopWidth / 2, baseTop - baseHeight)
       .closePath()
       .fill({ color: THEME.bridge.body })
       .stroke({ width: 2, color: THEME.deck.edge });
 
-    // Górna część - kabina z oknami (zwężająca się)
-    const upperWidth = bridgeWidth - 20;
-    const upperHeight = bridgeHeight * 0.35;
-    const upperY = baseY - 10 - lowerHeight;
+    // Detale na podstawie - poziome paski
+    for (let ly = baseTop - 8; ly > baseTop - baseHeight + 5; ly -= 12) {
+      const progress = (baseTop - ly) / baseHeight;
+      const lineWidth = baseBottomWidth - (baseBottomWidth - baseTopWidth) * progress - 10;
+      g.rect(x - lineWidth / 2, ly, lineWidth, 2).fill({ color: THEME.deck.line, alpha: 0.4 });
+    }
 
-    g.moveTo(x - upperWidth / 2, upperY)
-      .lineTo(x + upperWidth / 2, upperY)
-      .lineTo(x + upperWidth / 2 - 15, upperY - upperHeight)
-      .lineTo(x - upperWidth / 2 + 15, upperY - upperHeight)
-      .closePath()
+    // === 3. KOLUMNA Z PIERŚCIENIAMI CEWEK ===
+    const columnBottom = baseTop - baseHeight;
+    const columnTop = columnBottom - towerHeight * 0.45;
+    const columnWidth = towerWidth * 0.15;
+
+    // Główna kolumna (wieża)
+    g.rect(x - columnWidth / 2, columnTop, columnWidth, columnBottom - columnTop)
       .fill({ color: THEME.bridge.body })
-      .stroke({ width: 2, color: THEME.deck.edge });
+      .stroke({ width: 1, color: THEME.deck.edge });
 
-    // === OKNA KABINY ===
-    const windowY = upperY - upperHeight * 0.3;
-    const windowWidth = 12;
-    const windowHeight = upperHeight * 0.5;
-    const windowSpacing = 18;
+    // Pierścienie cewek (ilość zależy od tieru: 2, 3, 4)
+    const ringCount = tier + 1;
+    const ringSpacing = (columnBottom - columnTop) / (ringCount + 1);
+    const ringWidth = towerWidth * 0.35;
+    const ringHeight = 8;
 
-    // Trzy okna
-    for (let i = -1; i <= 1; i++) {
-      const wx = x + i * windowSpacing;
-      g.roundRect(wx - windowWidth / 2, windowY, windowWidth, windowHeight, 2)
-        .fill({ color: THEME.bridge.window, alpha: 0.8 })
-        .stroke({ width: 1, color: 0xffffff, alpha: 0.3 });
+    for (let i = 1; i <= ringCount; i++) {
+      const ringY = columnBottom - i * ringSpacing;
+      // Zewnętrzny pierścień (ciemniejszy)
+      g.ellipse(x, ringY, ringWidth / 2, ringHeight / 2)
+        .fill({ color: colors.primary, alpha: 0.6 })
+        .stroke({ width: 2, color: colors.secondary });
+      // Wewnętrzny glow
+      g.ellipse(x, ringY, ringWidth / 2 - 4, ringHeight / 2 - 2)
+        .fill({ color: colors.glow, alpha: 0.3 });
     }
 
-    // === DACH / KOPUŁA ===
-    const roofY = upperY - upperHeight;
-    const roofWidth = upperWidth - 30;
+    // === 4. ELEKTRODA GÓRNA (łącznik do toroidu) ===
+    const electrodeBottom = columnTop;
+    const electrodeTop = electrodeBottom - 20;
+    const electrodeWidth = columnWidth * 0.6;
 
-    g.moveTo(x - roofWidth / 2, roofY)
-      .lineTo(x + roofWidth / 2, roofY)
-      .lineTo(x, roofY - 25)
+    g.rect(x - electrodeWidth / 2, electrodeTop, electrodeWidth, electrodeBottom - electrodeTop)
+      .fill({ color: THEME.bridge.antenna })
+      .stroke({ width: 1, color: THEME.deck.edge });
+
+    // === 5. TOROID / KULA ENERGETYCZNA ===
+    const toroidY = electrodeTop - 25;
+    const toroidRadiusX = towerWidth * 0.35;
+    const toroidRadiusY = 18;
+
+    // Zewnętrzny glow (efekt świecenia)
+    g.ellipse(x, toroidY, toroidRadiusX + 8, toroidRadiusY + 6)
+      .fill({ color: colors.glow, alpha: 0.15 });
+    g.ellipse(x, toroidY, toroidRadiusX + 4, toroidRadiusY + 3)
+      .fill({ color: colors.glow, alpha: 0.25 });
+
+    // Główny toroid
+    g.ellipse(x, toroidY, toroidRadiusX, toroidRadiusY)
+      .fill({ color: colors.primary })
+      .stroke({ width: 2, color: colors.secondary });
+
+    // Wewnętrzne szczegóły toroidu
+    g.ellipse(x, toroidY, toroidRadiusX - 6, toroidRadiusY - 4)
+      .stroke({ width: 1, color: colors.glow, alpha: 0.5 });
+
+    // === 6. RDZEŃ ENERGETYCZNY (pulsujący punkt w środku) ===
+    const coreRadius = 8;
+    // Glow rdzenia
+    g.circle(x, toroidY, coreRadius + 4).fill({ color: colors.core, alpha: 0.4 });
+    g.circle(x, toroidY, coreRadius + 2).fill({ color: colors.core, alpha: 0.6 });
+    // Rdzeń
+    g.circle(x, toroidY, coreRadius).fill({ color: colors.core });
+
+    // === 7. SZCZYT / ELEKTRODA GÓRNA ===
+    const spikeHeight = 15 + tier * 3;
+    g.moveTo(x, toroidY - toroidRadiusY - spikeHeight)
+      .lineTo(x - 4, toroidY - toroidRadiusY + 2)
+      .lineTo(x + 4, toroidY - toroidRadiusY + 2)
       .closePath()
-      .fill({ color: THEME.deck.edge });
+      .fill({ color: colors.secondary })
+      .stroke({ width: 1, color: colors.glow });
 
-    // === ANTENA ===
-    const antennaBaseY = roofY - 25;
-    g.moveTo(x, antennaBaseY)
-      .lineTo(x, antennaBaseY - 35)
-      .stroke({ width: 3, color: THEME.bridge.antenna });
+    // Świecący punkt na szczycie
+    g.circle(x, toroidY - toroidRadiusY - spikeHeight, 3)
+      .fill({ color: colors.core });
+    g.circle(x, toroidY - toroidRadiusY - spikeHeight, 5)
+      .fill({ color: colors.glow, alpha: 0.4 });
 
-    // Światło na antenie (migające - symulowane przez stałą jasność)
-    g.circle(x, antennaBaseY - 35, 4).fill({ color: THEME.bridge.light });
+    // === 8. EFEKTY ZALEŻNE OD TIERU ===
+    if (tier >= 2) {
+      // Tier 2+: Dodatkowe panele boczne
+      const panelWidth = 8;
+      const panelHeight = baseHeight * 0.6;
+      const panelY = baseTop - baseHeight + 10;
 
-    // Mniejsze światło
-    g.circle(x, antennaBaseY - 35, 6).fill({
-      color: THEME.bridge.light,
-      alpha: 0.3,
-    });
+      // Lewy panel
+      g.rect(x - baseTopWidth / 2 - panelWidth - 2, panelY, panelWidth, panelHeight)
+        .fill({ color: THEME.bridge.body })
+        .stroke({ width: 1, color: colors.primary, alpha: 0.6 });
+      // Światełka na panelu
+      for (let ly = panelY + 5; ly < panelY + panelHeight - 5; ly += 12) {
+        g.circle(x - baseTopWidth / 2 - panelWidth / 2 - 2, ly, 2)
+          .fill({ color: colors.glow, alpha: 0.7 });
+      }
 
-    // === ŚWIATŁA STATUSU ===
-    // Po bokach mostka
-    g.circle(x - bridgeWidth / 2 + 5, baseY - 30, 3).fill({ color: 0x00ff00 }); // Zielone - status OK
-
-    g.circle(x + bridgeWidth / 2 - 5, baseY - 30, 3).fill({
-      color: THEME.bridge.accent,
-    }); // Złote
-
-    // === DETALE - paski na strukturze ===
-    // Poziome linie na dolnej części
-    for (let ly = baseY - 25; ly > baseY - 10 - lowerHeight + 10; ly -= 15) {
-      const lineWidth = bridgeWidth - 20 - (baseY - 10 - ly) * 0.15;
-      g.rect(x - lineWidth / 2, ly, lineWidth, 2).fill({
-        color: THEME.deck.line,
-        alpha: 0.5,
-      });
-    }
-  }
-
-  /**
-   * Draw animated running lights along the deck edges.
-   * Creates a dynamic sci-fi atmosphere with blinking lights.
-   */
-  private drawRunningLights(g: Graphics) {
-    if (this.width === 0 || this.height === 0) return;
-
-    const pathTop = this.height * LAYOUT.groundY;
-    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
-
-    // Light configuration
-    const lightSpacing = 60; // Distance between lights
-    const lightRadius = 3;
-    const lightCount = Math.ceil(this.width / lightSpacing);
-
-    // Draw lights along top edge
-    for (let i = 0; i < lightCount; i++) {
-      const x = i * lightSpacing + 30;
-
-      // Phase offset creates sequential blinking effect (running pattern)
-      const phase = this.animTime * 4 + i * 0.3;
-      const isOn = Math.sin(phase) > 0.3;
-
-      // Alternate between red (warning) and white (navigation)
-      const isRed = i % 4 === 0;
-      const color = isRed ? 0xff3333 : 0xffffff;
-
-      if (isOn) {
-        // Glow
-        g.circle(x, pathTop - 3, lightRadius * 2.5)
-          .fill({ color, alpha: 0.2 });
-
-        // Main light
-        g.circle(x, pathTop - 3, lightRadius)
-          .fill({ color, alpha: 0.9 });
-
-        // Bright center
-        g.circle(x, pathTop - 3, lightRadius * 0.4)
-          .fill({ color: 0xffffff, alpha: 1 });
-      } else {
-        // Dim light when off
-        g.circle(x, pathTop - 3, lightRadius * 0.6)
-          .fill({ color, alpha: 0.15 });
+      // Prawy panel
+      g.rect(x + baseTopWidth / 2 + 2, panelY, panelWidth, panelHeight)
+        .fill({ color: THEME.bridge.body })
+        .stroke({ width: 1, color: colors.primary, alpha: 0.6 });
+      for (let ly = panelY + 5; ly < panelY + panelHeight - 5; ly += 12) {
+        g.circle(x + baseTopWidth / 2 + panelWidth / 2 + 2, ly, 2)
+          .fill({ color: colors.glow, alpha: 0.7 });
       }
     }
 
-    // Draw lights along bottom edge
-    for (let i = 0; i < lightCount; i++) {
-      const x = i * lightSpacing + 30;
+    if (tier >= 3) {
+      // Tier 3: Łuki energetyczne z toroidu
+      const arcCount = 4;
+      const arcRadius = toroidRadiusX + 15;
 
-      // Opposite phase for bottom edge (creates crossing pattern)
-      const phase = this.animTime * 4 - i * 0.3 + Math.PI;
-      const isOn = Math.sin(phase) > 0.3;
+      for (let i = 0; i < arcCount; i++) {
+        const angle = (i / arcCount) * Math.PI * 2 + this.animTime * 0.5;
+        const arcX = x + Math.cos(angle) * arcRadius;
+        const arcY = toroidY + Math.sin(angle) * (toroidRadiusY + 10);
 
-      const isRed = i % 4 === 0;
-      const color = isRed ? 0xff3333 : 0xffffff;
+        // Linia energii
+        g.moveTo(x + Math.cos(angle) * toroidRadiusX * 0.8, toroidY + Math.sin(angle) * toroidRadiusY * 0.8)
+          .lineTo(arcX, arcY)
+          .stroke({ width: 2, color: colors.glow, alpha: 0.6 });
 
-      if (isOn) {
-        // Glow
-        g.circle(x, pathBottom + 3, lightRadius * 2.5)
-          .fill({ color, alpha: 0.2 });
-
-        // Main light
-        g.circle(x, pathBottom + 3, lightRadius)
-          .fill({ color, alpha: 0.9 });
-
-        // Bright center
-        g.circle(x, pathBottom + 3, lightRadius * 0.4)
-          .fill({ color: 0xffffff, alpha: 1 });
-      } else {
-        // Dim light when off
-        g.circle(x, pathBottom + 3, lightRadius * 0.6)
-          .fill({ color, alpha: 0.15 });
+        // Punkt końcowy
+        g.circle(arcX, arcY, 3).fill({ color: colors.core, alpha: 0.8 });
       }
+
+      // Dodatkowy pierścień glow wokół toroidu
+      g.ellipse(x, toroidY, toroidRadiusX + 12, toroidRadiusY + 8)
+        .stroke({ width: 2, color: colors.glow, alpha: 0.3 });
     }
 
-    // Special blinking lights at corners - faster red warning lights
-    const cornerPhase = Math.sin(this.animTime * 8) > 0;
-    const cornerX = [20, this.width - 20];
-
-    for (const cx of cornerX) {
-      if (cornerPhase) {
-        // Top corner
-        g.circle(cx, pathTop - 8, 5)
-          .fill({ color: 0xff0000, alpha: 0.3 });
-        g.circle(cx, pathTop - 8, 3)
-          .fill({ color: 0xff3333, alpha: 1 });
-
-        // Bottom corner
-        g.circle(cx, pathBottom + 8, 5)
-          .fill({ color: 0xff0000, alpha: 0.3 });
-        g.circle(cx, pathBottom + 8, 3)
-          .fill({ color: 0xff3333, alpha: 1 });
-      } else {
-        // Dim when off
-        g.circle(cx, pathTop - 8, 2)
-          .fill({ color: 0x330000, alpha: 0.5 });
-        g.circle(cx, pathBottom + 8, 2)
-          .fill({ color: 0x330000, alpha: 0.5 });
-      }
-    }
+    // === 9. ŚWIATŁA STATUSU (na podstawie) ===
+    g.circle(x - baseBottomWidth / 2 + 8, baseTop - 8, 3)
+      .fill({ color: 0x00ff00 }); // Zielone - status OK
+    g.circle(x + baseBottomWidth / 2 - 8, baseTop - 8, 3)
+      .fill({ color: colors.glow }); // Kolor klasy
   }
 
   /**
    * Draw spawn portal at the right edge of the battlefield.
-   * Concentric rings that pulse inward, with red glow when enemies are spawning.
+   * Sci-fi dimensional rift style - dark tear in space with subtle glow.
    */
   private drawSpawnPortal(g: Graphics, isActive: boolean = false) {
     if (this.width === 0 || this.height === 0) return;
@@ -864,67 +863,48 @@ export class GameScene {
     const pathTop = this.height * LAYOUT.groundY;
     const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
     const centerY = (pathTop + pathBottom) / 2;
-    // Position portal at the very right edge so only half is visible
-    const portalX = this.width + 20;
+    const portalX = this.width + 5;
 
-    // Portal configuration
-    const ringCount = 5;
-    const maxRadius = 60;
-    const minRadius = 15;
+    // Portal dimensions - vertical rift
+    const riftHeight = 80;
+    const riftWidth = 25;
 
-    // Pulsing animation - rings moving inward
-    const pulseSpeed = isActive ? 3 : 1.5;
-    const pulsePhase = (this.animTime * pulseSpeed) % 1;
+    // Subtle pulsing (very slow)
+    const pulse = isActive
+      ? 0.8 + Math.sin(this.animTime * 1.5) * 0.2
+      : 0.4 + Math.sin(this.animTime * 0.8) * 0.1;
 
-    // Base colors
-    const baseColor = isActive ? 0xff2222 : 0x882222;
-    const glowColor = isActive ? 0xff4444 : 0x661111;
+    // Outer glow - soft purple/void color
+    const glowColor = isActive ? 0x6622aa : 0x331155;
+    g.ellipse(portalX, centerY, riftWidth * 2, riftHeight * 0.8)
+      .fill({ color: glowColor, alpha: pulse * 0.15 });
 
-    // Outer glow (always visible, stronger when active)
-    const glowAlpha = isActive ? 0.15 + Math.sin(this.animTime * 4) * 0.05 : 0.05;
-    g.circle(portalX, centerY, maxRadius * 1.5)
-      .fill({ color: glowColor, alpha: glowAlpha });
+    // Main rift shape - dark vertical ellipse
+    g.ellipse(portalX, centerY, riftWidth, riftHeight * 0.6)
+      .fill({ color: 0x110022, alpha: 0.9 });
 
-    // Draw concentric rings
-    for (let i = 0; i < ringCount; i++) {
-      // Calculate ring position based on animation phase
-      const ringPhase = (pulsePhase + i / ringCount) % 1;
-      const radius = maxRadius - (maxRadius - minRadius) * ringPhase;
+    // Inner darker core
+    g.ellipse(portalX, centerY, riftWidth * 0.6, riftHeight * 0.45)
+      .fill({ color: 0x000000, alpha: 0.95 });
 
-      // Ring fades as it moves inward
-      const ringAlpha = (1 - ringPhase) * (isActive ? 0.7 : 0.3);
+    // Edge glow - thin bright line
+    const edgeColor = isActive ? 0x8844cc : 0x442266;
+    g.ellipse(portalX, centerY, riftWidth, riftHeight * 0.6)
+      .stroke({ width: 2, color: edgeColor, alpha: pulse * 0.6 });
 
-      // Ring gets thinner as it moves inward
-      const ringWidth = 2 + (1 - ringPhase) * 3;
+    // Inner edge highlight
+    g.ellipse(portalX, centerY, riftWidth * 0.7, riftHeight * 0.5)
+      .stroke({ width: 1, color: 0xaa66ff, alpha: pulse * 0.3 });
 
-      // Draw ring
-      g.circle(portalX, centerY, radius)
-        .stroke({ width: ringWidth, color: baseColor, alpha: ringAlpha });
-    }
-
-    // Inner core (always pulsing)
-    const coreAlpha = isActive ? 0.6 + Math.sin(this.animTime * 6) * 0.2 : 0.2;
-    g.circle(portalX, centerY, minRadius * 0.8)
-      .fill({ color: isActive ? 0xff4444 : 0x441111, alpha: coreAlpha });
-
-    // Bright center
-    const centerAlpha = isActive ? 0.9 : 0.3;
-    g.circle(portalX, centerY, minRadius * 0.3)
-      .fill({ color: isActive ? 0xffaaaa : 0x442222, alpha: centerAlpha });
-
-    // Energy tendrils when active
+    // When active - add subtle energy wisps (not spinning)
     if (isActive) {
-      const tendrilCount = 4;
-      for (let i = 0; i < tendrilCount; i++) {
-        const angle = this.animTime * 2 + (i / tendrilCount) * Math.PI * 2;
-        const tendrilLen = maxRadius * (0.8 + Math.sin(this.animTime * 3 + i) * 0.2);
-        const tx = portalX + Math.cos(angle) * tendrilLen;
-        const ty = centerY + Math.sin(angle) * tendrilLen;
+      // Just a brighter inner glow
+      g.ellipse(portalX, centerY, riftWidth * 0.4, riftHeight * 0.35)
+        .fill({ color: 0x220044, alpha: 0.5 });
 
-        g.moveTo(portalX, centerY);
-        g.lineTo(tx, ty);
-        g.stroke({ width: 2, color: 0xff6666, alpha: 0.4 });
-      }
+      // Small bright core
+      g.ellipse(portalX, centerY, riftWidth * 0.15, riftHeight * 0.1)
+        .fill({ color: 0x6633aa, alpha: pulse * 0.4 });
     }
   }
 

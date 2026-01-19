@@ -9,7 +9,7 @@ const MILITIA_TYPES = {
     icon: '🤖',
     hp: 50,
     damage: 15,
-    cost: 30,
+    cost: 10,  // Reduced from 30
     duration: '10s',
     description: 'Dron szturmowy. Blokuje natarcie wroga.',
   },
@@ -18,7 +18,7 @@ const MILITIA_TYPES = {
     icon: '🎯',
     hp: 30,
     damage: 20,
-    cost: 40,
+    cost: 15,  // Reduced from 40
     duration: '10s',
     description: 'Dron laserowy. Atakuje z dystansu.',
   },
@@ -27,7 +27,7 @@ const MILITIA_TYPES = {
     icon: '🦾',
     hp: 100,
     damage: 5,
-    cost: 60,
+    cost: 20,  // Reduced from 60
     duration: '15s',
     description: 'Opancerzony mech. Wysoka wytrzymałość.',
   },

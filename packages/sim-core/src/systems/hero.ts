@@ -22,6 +22,9 @@ import {
   calculateEffectiveSpeed,
   cleanupExpiredModifiers,
   steerTowards,
+  detectCircleCollision,
+  resolveCollision,
+  applySeparationForce,
   HERO_PHYSICS,
   DEFAULT_PHYSICS_CONFIG,
   type PhysicsConfig,
@@ -157,7 +160,6 @@ export function updateHeroes(
   }
 
   // Phase 2: Integrate physics (apply velocity to position)
-  // Note: No ally collisions - heroes pass through each other
   for (const hero of state.heroes) {
     if (hero.state === 'idle') continue;
 
@@ -179,6 +181,30 @@ export function updateHeroes(
 
     // Clamp to field boundaries
     clampHeroToField(hero, physicsConfig, config);
+  }
+
+  // Phase 2b: Hero-to-hero collision resolution
+  const activeHeroes = state.heroes.filter(h => h.state !== 'idle');
+  if (activeHeroes.length > 1) {
+    // Apply separation force to prevent stacking
+    applySeparationForce(activeHeroes, HERO_PHYSICS.separationForce, HERO_PHYSICS.separationForce);
+
+    // Resolve direct collisions
+    for (let i = 0; i < activeHeroes.length; i++) {
+      for (let j = i + 1; j < activeHeroes.length; j++) {
+        const a = activeHeroes[i];
+        const b = activeHeroes[j];
+        const collision = detectCircleCollision(a, b);
+        if (collision) {
+          resolveCollision(a, b, collision);
+        }
+      }
+    }
+
+    // Re-clamp to field after collision resolution
+    for (const hero of activeHeroes) {
+      clampHeroToField(hero, physicsConfig, config);
+    }
   }
 
   // Phase 3: State machine updates

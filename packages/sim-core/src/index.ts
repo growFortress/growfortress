@@ -119,6 +119,10 @@ export {
   getRelicById,
   getAllRelicIds,
   getAvailableRelics,
+  RELIC_RARITY_CONFIG,
+  type ExtendedRelicDef,
+  type RelicCategory,
+  type RelicRarity,
 } from './data/relics.js';
 
 export {

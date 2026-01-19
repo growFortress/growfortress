@@ -57,6 +57,19 @@ const TURRET_CLASS_COLORS: Record<string, string> = {
   poison: '#9acd32',
   magic: '#8a2be2',
   tech: '#00f0ff',
+  void: '#4b0082',
+  plasma: '#ff00aa',
+};
+
+// Secondary/glow colors for Tesla Tower
+const CLASS_SECONDARY_COLORS: Record<string, string> = {
+  natural: '#8fbc8f',
+  ice: '#e0ffff',
+  fire: '#ff8c00',
+  lightning: '#ffff00',
+  tech: '#ff00aa',
+  void: '#9400d3',
+  plasma: '#00ffff',
 };
 
 /** Returns HP bar color based on percentage (green → yellow → red) */
@@ -468,28 +481,19 @@ export class Renderer {
     const fortressHp = state?.fortressHp ?? 100;
     const fortressMaxHp = state?.fortressMaxHp ?? 100;
     const fortressLevel = state?.commanderLevel ?? 1;
-    const fortressClass = state?.fortressClass;
+    const fortressClass = state?.fortressClass ?? 'natural';
 
     // Determine visual tier (1-9: Tier 1, 10-24: Tier 2, 25+: Tier 3)
     const tier = fortressLevel >= 25 ? 3 : fortressLevel >= 10 ? 2 : 1;
 
-    // Get class color for Tier 3
-    const classColor = fortressClass ? (TURRET_CLASS_COLORS[fortressClass] || COLORS.fortress) : COLORS.fortress;
+    // Get class colors
+    const primaryColor = TURRET_CLASS_COLORS[fortressClass] || COLORS.fortress;
+    const secondaryColor = CLASS_SECONDARY_COLORS[fortressClass] || '#ffffff';
 
     ctx.save();
 
-    // Draw fortress based on tier
-    switch (tier) {
-      case 1:
-        this.drawFortressTier1(ctx, x, y, width, height);
-        break;
-      case 2:
-        this.drawFortressTier2(ctx, x, y, width, height);
-        break;
-      case 3:
-        this.drawFortressTier3(ctx, x, y, width, height, classColor);
-        break;
-    }
+    // Draw Tesla Tower fortress
+    this.drawTeslaTower(ctx, x, y, width, height, primaryColor, secondaryColor, tier);
 
     ctx.restore();
 
@@ -505,126 +509,270 @@ export class Renderer {
     ctx.fillText(`${fortressHp}/${fortressMaxHp}`, x, barY - 5);
   }
 
-  /** Draw Tier 1 Fortress: Basic Outpost */
-  private drawFortressTier1(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void {
-    // Simple rectangular fortress
-    ctx.fillStyle = COLORS.fortress;
-    ctx.fillRect(x - width / 2, y - height / 2, width, height);
-
-    // Add a simple border
-    ctx.strokeStyle = '#00a8cc';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x - width / 2, y - height / 2, width, height);
-  }
-
-  /** Draw Tier 2 Fortress: Stone Keep with battlements */
-  private drawFortressTier2(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void {
-    // Main body - darker, stronger look
-    ctx.fillStyle = '#0099bb';
-    ctx.fillRect(x - width / 2, y - height / 2, width, height);
-
-    // Stone texture (simple lines)
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) {
-      const lineY = y - height / 2 + (height / 4) * i;
-      ctx.beginPath();
-      ctx.moveTo(x - width / 2, lineY);
-      ctx.lineTo(x + width / 2, lineY);
-      ctx.stroke();
-    }
-
-    // Battlements on top
-    const battlement = {
-      width: 12,
-      height: 15,
-      gap: 5,
-    };
-    const topY = y - height / 2;
-    ctx.fillStyle = '#007799';
-
-    let battX = x - width / 2;
-    while (battX < x + width / 2) {
-      ctx.fillRect(battX, topY - battlement.height, battlement.width, battlement.height);
-      battX += battlement.width + battlement.gap;
-    }
-
-    // Corner towers
-    const towerWidth = 20;
-    const towerHeight = 30;
-    ctx.fillStyle = '#005577';
-    // Left tower
-    ctx.fillRect(x - width / 2 - 5, y - height / 2 - 10, towerWidth, towerHeight);
-    // Right tower
-    ctx.fillRect(x + width / 2 - towerWidth + 5, y - height / 2 - 10, towerWidth, towerHeight);
-
-    // Border
-    ctx.strokeStyle = '#003344';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(x - width / 2, y - height / 2, width, height);
-  }
-
-  /** Draw Tier 3 Fortress: Class Citadel with elemental theming */
-  private drawFortressTier3(
+  /** Draw Tesla Tower style fortress */
+  private drawTeslaTower(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     width: number,
     height: number,
-    classColor: string
+    primaryColor: string,
+    secondaryColor: string,
+    tier: number
   ): void {
-    // Glow effect
-    ctx.shadowColor = classColor;
-    ctx.shadowBlur = 25;
+    const darkerPrimary = this.darkenColor(primaryColor, 0.6);
+    const metalColor = '#2a3a4a';
+    const metalHighlight = '#4a5a6a';
 
-    // Main body with class color
-    ctx.fillStyle = classColor;
-    ctx.fillRect(x - width / 2, y - height / 2, width, height);
+    // Glow intensity based on tier
+    const glowIntensity = 10 + tier * 8;
 
-    // Reset shadow for details
-    ctx.shadowBlur = 0;
+    // ============================================
+    // 1. PLATFORM / FOUNDATION
+    // ============================================
+    const platformY = y + height * 0.4;
+    const platformWidth = width * 0.9;
+    const platformHeight = height * 0.08;
+
+    // Platform shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(x - platformWidth / 2 + 3, platformY + 3, platformWidth, platformHeight);
+
+    // Platform body
+    ctx.fillStyle = metalColor;
+    ctx.fillRect(x - platformWidth / 2, platformY, platformWidth, platformHeight);
+
+    // Platform highlight
+    ctx.fillStyle = metalHighlight;
+    ctx.fillRect(x - platformWidth / 2, platformY, platformWidth, platformHeight * 0.3);
+
+    // Platform border
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - platformWidth / 2, platformY, platformWidth, platformHeight);
+
+    // ============================================
+    // 2. BASE (Trapezoid)
+    // ============================================
+    const baseTopY = platformY;
+    const baseBottomWidth = width * 0.5;
+    const baseTopWidth = width * 0.25;
+    const baseHeight = height * 0.25;
+    const baseTopY2 = baseTopY - baseHeight;
+
+    // Base shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.moveTo(x - baseBottomWidth / 2 + 3, baseTopY + 3);
+    ctx.lineTo(x + baseBottomWidth / 2 + 3, baseTopY + 3);
+    ctx.lineTo(x + baseTopWidth / 2 + 3, baseTopY2 + 3);
+    ctx.lineTo(x - baseTopWidth / 2 + 3, baseTopY2 + 3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Base body
+    ctx.fillStyle = metalColor;
+    ctx.beginPath();
+    ctx.moveTo(x - baseBottomWidth / 2, baseTopY);
+    ctx.lineTo(x + baseBottomWidth / 2, baseTopY);
+    ctx.lineTo(x + baseTopWidth / 2, baseTopY2);
+    ctx.lineTo(x - baseTopWidth / 2, baseTopY2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Base highlight (left edge)
+    ctx.fillStyle = metalHighlight;
+    ctx.beginPath();
+    ctx.moveTo(x - baseBottomWidth / 2, baseTopY);
+    ctx.lineTo(x - baseBottomWidth / 2 + 8, baseTopY);
+    ctx.lineTo(x - baseTopWidth / 2 + 5, baseTopY2);
+    ctx.lineTo(x - baseTopWidth / 2, baseTopY2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Base border
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - baseBottomWidth / 2, baseTopY);
+    ctx.lineTo(x + baseBottomWidth / 2, baseTopY);
+    ctx.lineTo(x + baseTopWidth / 2, baseTopY2);
+    ctx.lineTo(x - baseTopWidth / 2, baseTopY2);
+    ctx.closePath();
+    ctx.stroke();
+
+    // ============================================
+    // 3. COLUMN WITH COIL RINGS
+    // ============================================
+    const columnWidth = width * 0.12;
+    const columnTop = y - height * 0.35;
+    const columnBottom = baseTopY2;
+    const columnHeight = columnBottom - columnTop;
+
+    // Column body
+    ctx.fillStyle = metalColor;
+    ctx.fillRect(x - columnWidth / 2, columnTop, columnWidth, columnHeight);
+
+    // Column highlight
+    ctx.fillStyle = metalHighlight;
+    ctx.fillRect(x - columnWidth / 2, columnTop, columnWidth * 0.3, columnHeight);
+
+    // Column border
+    ctx.strokeStyle = darkerPrimary;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - columnWidth / 2, columnTop, columnWidth, columnHeight);
+
+    // Coil rings (number based on tier)
+    const ringCount = tier + 1; // 2, 3, or 4 rings
+    const ringSpacing = columnHeight / (ringCount + 1);
+    const ringWidth = columnWidth * 2.2;
+    const ringHeight = 6;
+
+    for (let i = 1; i <= ringCount; i++) {
+      const ringY = columnTop + ringSpacing * i;
+
+      // Ring glow
+      ctx.save();
+      ctx.shadowColor = primaryColor;
+      ctx.shadowBlur = glowIntensity;
+
+      // Ring body
+      ctx.fillStyle = primaryColor;
+      ctx.beginPath();
+      ctx.ellipse(x, ringY, ringWidth / 2, ringHeight / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ring highlight
+      ctx.fillStyle = secondaryColor;
+      ctx.beginPath();
+      ctx.ellipse(x, ringY - 1, ringWidth / 2 - 2, ringHeight / 2 - 1, 0, 0, Math.PI);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ============================================
+    // 4. TOROID / ENERGY SPHERE
+    // ============================================
+    const toroidY = columnTop - height * 0.08;
+    const toroidWidth = width * 0.45;
+    const toroidHeight = height * 0.18;
+
+    // Outer glow
+    ctx.save();
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = glowIntensity * 1.5;
+
+    // Toroid outer ring
+    ctx.fillStyle = darkerPrimary;
+    ctx.beginPath();
+    ctx.ellipse(x, toroidY, toroidWidth / 2, toroidHeight / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Toroid inner (hole)
+    ctx.fillStyle = metalColor;
+    ctx.beginPath();
+    ctx.ellipse(x, toroidY, toroidWidth / 4, toroidHeight / 4, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // Energy core in center
-    const coreRadius = 15;
-    ctx.save();
-    ctx.shadowColor = classColor;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = glowIntensity * 2;
+    ctx.fillStyle = secondaryColor;
     ctx.beginPath();
-    ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+    ctx.arc(x, toroidY, toroidWidth * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core white center
     ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x, toroidY, toroidWidth * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // Toroid highlight arc
+    ctx.strokeStyle = secondaryColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, toroidY - 2, toroidWidth / 2 - 3, toroidHeight / 2 - 2, 0, Math.PI * 1.2, Math.PI * 1.8);
+    ctx.stroke();
+
+    // ============================================
+    // 5. TOP ELECTRODE
+    // ============================================
+    const electrodeHeight = height * 0.08;
+    const electrodeWidth = width * 0.04;
+    const electrodeTop = toroidY - toroidHeight / 2 - electrodeHeight;
+
+    // Electrode body
+    ctx.fillStyle = metalHighlight;
+    ctx.fillRect(x - electrodeWidth / 2, electrodeTop, electrodeWidth, electrodeHeight);
+
+    // Electrode tip (glowing)
+    ctx.save();
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = glowIntensity;
+    ctx.fillStyle = primaryColor;
+    ctx.beginPath();
+    ctx.arc(x, electrodeTop, electrodeWidth, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // Class-themed spires
-    const spireWidth = 15;
-    const spireHeight = 40;
-    const darkerColor = this.darkenColor(classColor, 0.7);
-    ctx.fillStyle = darkerColor;
+    // ============================================
+    // 6. TIER 3 EXTRA: Energy arcs
+    // ============================================
+    if (tier >= 3) {
+      ctx.save();
+      ctx.strokeStyle = secondaryColor;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = secondaryColor;
+      ctx.shadowBlur = 15;
 
-    // Left spire
-    ctx.beginPath();
-    ctx.moveTo(x - width / 2 - 5, y - height / 2);
-    ctx.lineTo(x - width / 2 - 5 - spireWidth / 2, y - height / 2);
-    ctx.lineTo(x - width / 2 - 5 - spireWidth / 4, y - height / 2 - spireHeight);
-    ctx.lineTo(x - width / 2 - 5 + spireWidth / 4, y - height / 2 - spireHeight);
-    ctx.lineTo(x - width / 2 - 5 + spireWidth / 2, y - height / 2);
-    ctx.closePath();
-    ctx.fill();
+      // Left arc
+      ctx.beginPath();
+      ctx.moveTo(x - toroidWidth / 2, toroidY);
+      ctx.quadraticCurveTo(x - toroidWidth * 0.7, toroidY - 15, x - toroidWidth * 0.4, toroidY - 25);
+      ctx.stroke();
 
-    // Right spire
-    ctx.beginPath();
-    ctx.moveTo(x + width / 2 + 5, y - height / 2);
-    ctx.lineTo(x + width / 2 + 5 - spireWidth / 2, y - height / 2);
-    ctx.lineTo(x + width / 2 + 5 - spireWidth / 4, y - height / 2 - spireHeight);
-    ctx.lineTo(x + width / 2 + 5 + spireWidth / 4, y - height / 2 - spireHeight);
-    ctx.lineTo(x + width / 2 + 5 + spireWidth / 2, y - height / 2);
-    ctx.closePath();
-    ctx.fill();
+      // Right arc
+      ctx.beginPath();
+      ctx.moveTo(x + toroidWidth / 2, toroidY);
+      ctx.quadraticCurveTo(x + toroidWidth * 0.7, toroidY - 15, x + toroidWidth * 0.4, toroidY - 25);
+      ctx.stroke();
 
-    // Ornate border
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x - width / 2 + 2, y - height / 2 + 2, width - 4, height - 4);
+      ctx.restore();
+    }
+
+    // ============================================
+    // 7. TIER 2+ EXTRA: Side panels
+    // ============================================
+    if (tier >= 2) {
+      const panelWidth = width * 0.12;
+      const panelHeight = height * 0.15;
+      const panelY = baseTopY2 + (baseHeight - panelHeight) / 2;
+
+      // Left panel
+      ctx.fillStyle = darkerPrimary;
+      ctx.fillRect(x - baseBottomWidth / 2 - panelWidth - 5, panelY, panelWidth, panelHeight);
+      ctx.strokeStyle = primaryColor;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x - baseBottomWidth / 2 - panelWidth - 5, panelY, panelWidth, panelHeight);
+
+      // Right panel
+      ctx.fillRect(x + baseBottomWidth / 2 + 5, panelY, panelWidth, panelHeight);
+      ctx.strokeRect(x + baseBottomWidth / 2 + 5, panelY, panelWidth, panelHeight);
+
+      // Panel lights
+      ctx.save();
+      ctx.shadowColor = primaryColor;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = primaryColor;
+      ctx.beginPath();
+      ctx.arc(x - baseBottomWidth / 2 - panelWidth / 2 - 5, panelY + panelHeight / 2, 3, 0, Math.PI * 2);
+      ctx.arc(x + baseBottomWidth / 2 + panelWidth / 2 + 5, panelY + panelHeight / 2, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
   }
 
   /** Helper to darken a color */

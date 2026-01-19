@@ -695,11 +695,19 @@ export class PillarChallengeSimulation {
     const scaledDmg = Math.floor((baseStats.damage * dmgMult) / FP.ONE);
     const scaledSpd = FP.mul(baseStats.speed, spdMult);
 
+    // Spawn at center (portal), move to target lane
+    const targetLane = entry.lane ?? 1;
+    const spawnLane = 1; // Center - portal position
+    const spawnY = getLaneY(spawnLane, DEFAULT_PHYSICS_CONFIG);
+    // Add random Y offset so enemies spread out when exiting portal
+    const yOffset = FP.fromFloat((Math.random() - 0.5) * 8);
+    const initialY = FP.add(spawnY, yOffset);
+
     const enemy: Enemy = {
       id: this.state.nextEnemyId++,
       type: entry.type,
       x: this.config.enemySpawnX,
-      y: getLaneY(entry.lane ?? 0, DEFAULT_PHYSICS_CONFIG),
+      y: initialY,
       vx: 0,
       vy: 0,
       hp: scaledHp,
@@ -712,8 +720,8 @@ export class PillarChallengeSimulation {
       lastAttackTick: 0,
       isElite: entry.isElite,
       hitFlashTicks: 0,
-      lane: entry.lane ?? 0,
-      targetLane: entry.lane ?? 0,
+      lane: spawnLane,
+      targetLane: targetLane,
       canSwitchLane: false, // No lane switching in Pillar Challenge
       laneSwitchCooldown: 0,
       activeEffects: [],
@@ -736,6 +744,25 @@ export class PillarChallengeSimulation {
     for (const enemy of this.state.enemies) {
       // Aktualizuj status effects
       this.updateEnemyStatusEffects(enemy);
+
+      // Move towards target lane (for spawning from portal)
+      if (enemy.lane !== enemy.targetLane) {
+        const targetY = getLaneY(enemy.targetLane, DEFAULT_PHYSICS_CONFIG);
+        const diff = FP.sub(targetY, enemy.y);
+        const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(0.6));
+
+        if (Math.abs(FP.toFloat(diff)) < 2) {
+          enemy.y = targetY;
+          enemy.lane = enemy.targetLane;
+          enemy.vy = 0;
+        } else if (diff > 0) {
+          enemy.vy = switchSpeed;
+          enemy.y = FP.add(enemy.y, enemy.vy);
+        } else {
+          enemy.vy = FP.mul(switchSpeed, FP.fromInt(-1));
+          enemy.y = FP.add(enemy.y, enemy.vy);
+        }
+      }
 
       // Ruch wroga
       const targetX = this.config.enemyAttackRange;

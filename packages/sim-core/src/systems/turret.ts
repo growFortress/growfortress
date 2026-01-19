@@ -25,6 +25,10 @@ import { getTurretSynergyBonus } from './synergy.js';
 const OVERCHARGE_DURATION_TICKS = 150;  // 5 seconds at 30Hz
 const OVERCHARGE_COOLDOWN_TICKS = 1800; // 60 seconds at 30Hz
 
+// Attack speed limits to prevent chaotic behavior
+const MIN_ATTACK_INTERVAL = 5;    // Minimum 5 ticks between attacks (~6 attacks/sec max)
+const MAX_ATTACK_SPEED = 6.0;     // Cap attack speed multiplier
+
 /**
  * Select target enemy based on turret targeting mode
  */
@@ -95,7 +99,11 @@ export function updateTurrets(
       return distSq <= rangeSq;
     });
 
-    if (enemiesInRange.length === 0) continue;
+    if (enemiesInRange.length === 0) {
+      // Clear target when no enemies in range
+      turret.currentTargetId = undefined;
+      continue;
+    }
 
     // Calculate attack interval
     // NOTE: turret stats use 16384 as 1.0 scale
@@ -114,18 +122,34 @@ export function updateTurrets(
       attackSpeed = attackSpeed * 1.5;
     }
 
-    const attackInterval = Math.floor(TURRET_ATTACK_INTERVAL_BASE / attackSpeed);
+    // Cap attack speed to prevent chaotic rapid-fire behavior
+    attackSpeed = Math.min(attackSpeed, MAX_ATTACK_SPEED);
+
+    // Calculate attack interval with minimum to prevent every-tick firing
+    const attackInterval = Math.max(MIN_ATTACK_INTERVAL, Math.floor(TURRET_ATTACK_INTERVAL_BASE / attackSpeed));
 
     if (state.tick - turret.lastAttackTick >= attackInterval) {
       turret.lastAttackTick = state.tick;
 
-      // Target enemy based on turret's targeting mode
-      const target = selectTarget(
-        enemiesInRange,
-        turret.targetingMode || 'closest_to_fortress',
-        turretX,
-        turretY
-      );
+      // Target persistence: prefer current target if still valid (alive and in range)
+      let target: Enemy | undefined;
+
+      if (turret.currentTargetId !== undefined) {
+        // Check if current target is still valid
+        target = enemiesInRange.find(e => e.id === turret.currentTargetId && e.hp > 0);
+      }
+
+      // If no valid current target, select a new one
+      if (!target) {
+        target = selectTarget(
+          enemiesInRange,
+          turret.targetingMode || 'closest_to_fortress',
+          turretX,
+          turretY
+        );
+        // Remember this target for persistence
+        turret.currentTargetId = target.id;
+      }
 
       // Create projectile (damage also uses 16384 scale)
       // Apply global damage bonus (includes guild stat boost)

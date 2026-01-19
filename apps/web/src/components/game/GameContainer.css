@@ -266,52 +266,251 @@
 
 .choice-options {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
   justify-content: center;
-  max-width: 1000px;
+  max-width: 1100px;
 }
 
 .choice-option {
-  background: var(--color-bg-panel);
-  border: 2px solid var(--color-bg-panel-border);
-  border-radius: var(--radius-sm);
-  padding: 2rem;
-  width: 280px;
+  background: linear-gradient(145deg, rgba(30, 32, 45, 0.95), rgba(20, 22, 30, 0.98));
+  border: 3px solid var(--color-bg-panel-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  padding-top: 2.5rem;
+  width: 300px;
+  min-height: 200px;
   cursor: pointer;
-  transition: transform var(--duration-normal) var(--ease-standard),
-    box-shadow var(--duration-normal) var(--ease-standard),
-    border-color var(--duration-normal) var(--ease-standard),
-    background-color var(--duration-normal) var(--ease-standard);
+  transition: transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
   position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.choice-option:hover {
-  border-color: var(--color-accent-primary);
-  box-shadow: var(--effect-glow-primary);
-  transform: translateY(-4px) scale(var(--hover-scale));
+/* Rarity-based border colors */
+.choice-option.rarity-common {
+  border-color: #606060;
 }
 
+.choice-option.rarity-rare {
+  border-color: #0088ff;
+  background: linear-gradient(145deg, rgba(0, 50, 100, 0.3), rgba(20, 22, 30, 0.98));
+}
+
+.choice-option.rarity-epic {
+  border-color: #9900cc;
+  background: linear-gradient(145deg, rgba(60, 0, 80, 0.3), rgba(20, 22, 30, 0.98));
+}
+
+.choice-option.rarity-legendary {
+  border-color: #ffaa00;
+  background: linear-gradient(145deg, rgba(80, 50, 0, 0.3), rgba(20, 22, 30, 0.98));
+}
+
+/* Hover effects per rarity */
+.choice-option.rarity-common:hover {
+  border-color: #909090;
+  box-shadow: 0 0 20px rgba(128, 128, 128, 0.4);
+  transform: translateY(-6px) scale(1.02);
+}
+
+.choice-option.rarity-rare:hover {
+  border-color: #00aaff;
+  box-shadow: 0 0 25px rgba(0, 136, 255, 0.5), 0 0 50px rgba(0, 136, 255, 0.2);
+  transform: translateY(-6px) scale(1.02);
+}
+
+.choice-option.rarity-epic:hover {
+  border-color: #cc00ff;
+  box-shadow: 0 0 25px rgba(153, 0, 204, 0.6), 0 0 50px rgba(153, 0, 204, 0.3);
+  transform: translateY(-6px) scale(1.02);
+}
+
+.choice-option.rarity-legendary:hover {
+  border-color: #ffcc00;
+  box-shadow: 0 0 30px rgba(255, 170, 0, 0.6), 0 0 60px rgba(255, 170, 0, 0.3);
+  transform: translateY(-8px) scale(1.03);
+}
+
+/* Build-defining and cursed overrides */
 .choice-option.build-defining {
-  border-color: var(--color-accent-secondary);
+  border-width: 3px;
 }
 
-.choice-option.build-defining:hover {
-  box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
+.choice-option.cursed {
+  background: linear-gradient(145deg, rgba(80, 20, 20, 0.4), rgba(30, 10, 10, 0.98));
 }
 
-.choice-option h3 {
+.choice-option.cursed:hover {
+  box-shadow: 0 0 25px rgba(200, 50, 50, 0.5), 0 0 50px rgba(200, 50, 50, 0.2);
+}
+
+/* Rarity badge */
+.relic-rarity-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom-right-radius: 8px;
+}
+
+.relic-rarity-badge.rarity-common {
+  background: linear-gradient(135deg, #606060, #404040);
+  color: #ccc;
+}
+
+.relic-rarity-badge.rarity-rare {
+  background: linear-gradient(135deg, #0088ff, #0055aa);
+  color: #fff;
+  text-shadow: 0 0 5px rgba(0, 136, 255, 0.8);
+}
+
+.relic-rarity-badge.rarity-epic {
+  background: linear-gradient(135deg, #9900cc, #660088);
+  color: #fff;
+  text-shadow: 0 0 5px rgba(153, 0, 204, 0.8);
+}
+
+.relic-rarity-badge.rarity-legendary {
+  background: linear-gradient(135deg, #ffaa00, #cc8800);
+  color: #fff;
+  text-shadow: 0 0 5px rgba(255, 170, 0, 0.8);
+  animation: legendary-pulse 2s ease-in-out infinite;
+}
+
+@keyframes legendary-pulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 170, 0, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(255, 170, 0, 0.8); }
+}
+
+/* Category indicator */
+.relic-category {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.category-icon {
+  font-size: 1rem;
+}
+
+.category-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Relic name */
+.choice-option .relic-name {
   font-family: var(--font-display);
-  font-size: 1.5rem;
-  margin: 0 0 1rem 0;
+  font-size: 1.4rem;
+  margin: 0.5rem 0 0.75rem 0;
   color: var(--color-text-main);
   text-transform: uppercase;
   letter-spacing: 1px;
+  line-height: 1.2;
 }
 
-.choice-option p {
-  font-size: 1rem;
+.choice-option.rarity-legendary .relic-name {
+  color: #ffcc00;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+.choice-option.rarity-epic .relic-name {
+  color: #cc88ff;
+}
+
+.choice-option.rarity-rare .relic-name {
+  color: #88ccff;
+}
+
+/* Relic description */
+.choice-option .relic-description {
+  font-size: 0.95rem;
   color: var(--color-text-muted);
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+/* Curse warning */
+.relic-curse-warning {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(200, 50, 50, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ff6666;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.curse-icon {
+  font-size: 1rem;
+}
+
+.curse-text {
+  text-shadow: 0 0 5px rgba(255, 50, 50, 0.3);
+}
+
+/* Glow overlay for enhanced visual effect */
+.relic-glow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.choice-option.rarity-legendary .relic-glow-overlay {
+  background: radial-gradient(ellipse at center, rgba(255, 170, 0, 0.15) 0%, transparent 70%);
+}
+
+.choice-option.rarity-epic .relic-glow-overlay {
+  background: radial-gradient(ellipse at center, rgba(153, 0, 204, 0.1) 0%, transparent 70%);
+}
+
+.choice-option:hover .relic-glow-overlay {
+  opacity: 1;
+}
+
+/* Shine effect on hover */
+.choice-option::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.choice-option:hover::before {
+  transform: rotate(45deg) translate(50%, 50%);
 }

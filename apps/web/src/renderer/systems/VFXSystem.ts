@@ -644,125 +644,53 @@ export class VFXSystem {
   }
 
   /**
-   * Spawn enemy death VFX based on enemy category.
-   * Different visual effects for each enemy faction.
+   * Spawn enemy death VFX - clean sci-fi disintegration style.
+   * Simple expanding ring + small flash, no chaotic particles.
    */
   public spawnEnemyDeathVFX(x: number, y: number, enemyType?: EnemyType) {
     const category = getEnemyCategory(enemyType);
     const colors = ENEMY_DEATH_COLORS[category];
-    const particleCount = Math.floor(10 * this.particleMultiplier);
 
-    // Flash at death point
-    this.spawnFlash(x, y, colors.primary, 15);
+    // Simple flash at death point (smaller)
+    this.spawnFlash(x, y, colors.primary, 10);
 
-    // Main particles burst
-    for (let i = 0; i < particleCount; i++) {
-      const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.4;
-      const speed = 60 + Math.random() * 100;
-      const p = this.pool.acquire();
+    // Single expanding ring - clean disintegration effect
+    const ring = this.pool.acquire();
+    ring.x = x;
+    ring.y = y;
+    ring.vx = 0;
+    ring.vy = 0;
+    ring.life = 0.25;
+    ring.maxLife = 0.25;
+    ring.startSize = 5;
+    ring.endSize = 25;
+    ring.size = ring.startSize;
+    ring.color = colors.primary;
+    ring.shape = 'ring';
+    ring.startAlpha = 0.6;
+    ring.endAlpha = 0;
+    this.particles.push(ring);
 
-      p.x = x + (Math.random() - 0.5) * 10;
-      p.y = y + (Math.random() - 0.5) * 10;
-      p.vx = Math.cos(angle) * speed;
-      p.vy = Math.sin(angle) * speed;
-      p.life = 0.4 + Math.random() * 0.3;
-      p.maxLife = 0.7;
-      p.startSize = 3 + Math.random() * 3;
-      p.endSize = 1;
-      p.size = p.startSize;
-      p.color = Math.random() > 0.5 ? colors.primary : colors.secondary;
-      p.shape = colors.particles;
-      p.gravity = category === 'magic' ? -30 : 20;  // Magic floats up
-      p.drag = 0.96;
-      p.startAlpha = 0.9;
-      p.endAlpha = 0;
+    // Optional: tiny core flash (white)
+    const core = this.pool.acquire();
+    core.x = x;
+    core.y = y;
+    core.vx = 0;
+    core.vy = 0;
+    core.life = 0.1;
+    core.maxLife = 0.1;
+    core.startSize = 8;
+    core.endSize = 0;
+    core.size = core.startSize;
+    core.color = 0xffffff;
+    core.shape = 'circle';
+    core.startAlpha = 0.8;
+    core.endAlpha = 0;
+    this.particles.push(core);
 
-      this.particles.push(p);
-    }
-
-    // Category-specific secondary effects
-    switch (category) {
-      case 'science':
-        // Electric sparks
-        for (let i = 0; i < 4; i++) {
-          const sp = this.pool.acquire();
-          sp.x = x;
-          sp.y = y;
-          sp.vx = (Math.random() - 0.5) * 150;
-          sp.vy = (Math.random() - 0.5) * 150;
-          sp.life = 0.15 + Math.random() * 0.1;
-          sp.maxLife = 0.25;
-          sp.size = 2;
-          sp.color = 0xffff00;
-          sp.shape = 'spark';
-          this.particles.push(sp);
-        }
-        break;
-
-      case 'magic':
-        // Soul wisps floating up
-        for (let i = 0; i < 3; i++) {
-          const wp = this.pool.acquire();
-          wp.x = x + (Math.random() - 0.5) * 15;
-          wp.y = y;
-          wp.vx = (Math.random() - 0.5) * 20;
-          wp.vy = -40 - Math.random() * 30;
-          wp.life = 0.8 + Math.random() * 0.4;
-          wp.maxLife = 1.2;
-          wp.startSize = 6;
-          wp.endSize = 2;
-          wp.size = wp.startSize;
-          wp.color = 0xff33ff;
-          wp.shape = 'diamond';
-          wp.gravity = -20;
-          wp.startAlpha = 0.7;
-          wp.endAlpha = 0;
-          this.particles.push(wp);
-        }
-        break;
-
-      case 'cosmos':
-      case 'gods':
-        // Golden shimmer ring
-        const rp = this.pool.acquire();
-        rp.x = x;
-        rp.y = y;
-        rp.vx = 0;
-        rp.vy = 0;
-        rp.life = 0.3;
-        rp.maxLife = 0.3;
-        rp.startSize = 5;
-        rp.endSize = 40;
-        rp.size = rp.startSize;
-        rp.color = 0xffd700;
-        rp.shape = 'ring';
-        rp.startAlpha = 0.6;
-        rp.endAlpha = 0;
-        this.particles.push(rp);
-        break;
-
-      case 'mutants':
-        // Toxic smoke puffs
-        for (let i = 0; i < 3; i++) {
-          const tp = this.pool.acquire();
-          tp.x = x + (Math.random() - 0.5) * 10;
-          tp.y = y;
-          tp.vx = (Math.random() - 0.5) * 30;
-          tp.vy = -20 - Math.random() * 20;
-          tp.life = 0.6 + Math.random() * 0.3;
-          tp.maxLife = 0.9;
-          tp.startSize = 8;
-          tp.endSize = 20;
-          tp.size = tp.startSize;
-          tp.color = 0x44ff44;
-          tp.shape = 'smoke';
-          tp.gravity = -10;
-          tp.startAlpha = 0.5;
-          tp.endAlpha = 0;
-          this.particles.push(tp);
-        }
-        break;
-    }
+    // For elite enemies only - add a second outer ring
+    // (detected by checking if the position is used for elite tracking - simplified here)
+    // No extra effects for regular enemies to keep it clean
   }
 
   public spawnShockwave(x: number, y: number) {
@@ -982,16 +910,17 @@ export class VFXSystem {
     if (!graphicsSettings.value.damageNumbers) return;
 
     const style = new TextStyle({
-      fontFamily: 'monospace',
-      fontSize: 20,
+      fontFamily: 'Arial Black, Impact, sans-serif',
+      fontSize: 22,
       fontWeight: 'bold',
       fill: color,
-      stroke: { width: 3, color: '#000000' }, // PixiJS v8 style
+      stroke: { width: 4, color: '#000000' },
       dropShadow: {
         color: '#000000',
-        blur: 2,
+        blur: 4,
         angle: Math.PI / 4,
-        distance: 2,
+        distance: 3,
+        alpha: 0.85,
       },
     });
 
@@ -999,14 +928,14 @@ export class VFXSystem {
     pixiText.x = x;
     pixiText.y = y;
     pixiText.anchor.set(0.5);
-    pixiText.scale.set(0.5); // Start small
+    pixiText.scale.set(0.6); // Slightly bigger start
 
     this.container.addChild(pixiText);
     this.floatingTexts.push({
       text: pixiText,
-      life: 0.8,
-      maxLife: 0.8,
-      vy: -50, // Float up speed
+      life: 1.0,  // Longer visibility
+      maxLife: 1.0,
+      vy: -40, // Slower float for readability
     });
   }
 
@@ -1028,31 +957,32 @@ export class VFXSystem {
     const { isCrit = false, color } = options;
 
     // Scale font size with damage (logarithmic scaling for balance)
-    // Base: 16, scales up to ~32 for 1000+ damage
-    const baseSize = 16;
-    const scaledSize = baseSize + Math.pow(damage, 0.25) * 2;
-    const fontSize = Math.min(scaledSize, 40); // Cap at 40
+    // Base: 18, scales up to ~36 for 1000+ damage
+    const baseSize = 18;
+    const scaledSize = baseSize + Math.pow(damage, 0.25) * 2.5;
+    const fontSize = Math.min(scaledSize, 42); // Cap at 42
 
     // Crit gets yellow color and "!" suffix, otherwise use provided or default orange
     const textColor = isCrit ? 0xffff00 : (color ?? 0xffaa00);
     const displayText = isCrit ? `${Math.round(damage)}!` : Math.round(damage).toString();
 
     const style = new TextStyle({
-      fontFamily: 'monospace',
+      fontFamily: 'Arial, sans-serif',
       fontSize: fontSize,
       fontWeight: 'bold',
       fill: textColor,
-      stroke: { width: isCrit ? 4 : 3, color: '#000000' },
+      stroke: { width: isCrit ? 5 : 4, color: '#000000' },
       dropShadow: {
         color: '#000000',
-        blur: isCrit ? 4 : 2,
+        blur: isCrit ? 5 : 3,
         angle: Math.PI / 4,
-        distance: isCrit ? 3 : 2,
+        distance: isCrit ? 4 : 2,
+        alpha: 0.85,
       },
     });
 
     const pixiText = new Text({ text: displayText, style });
-    pixiText.x = x + (Math.random() - 0.5) * 10; // Slight random offset
+    pixiText.x = x + (Math.random() - 0.5) * 8; // Slight random offset
     pixiText.y = y;
     pixiText.anchor.set(0.5);
 
@@ -1132,24 +1062,26 @@ export class VFXSystem {
 
     // Always show floating text for any streak milestone
     const style = new TextStyle({
-      fontFamily: 'monospace',
-      fontSize: 24 + (streak * 0.5), // Bigger text for bigger streaks
+      fontFamily: 'Arial Black, Impact, sans-serif',
+      fontSize: 28 + (streak * 0.8), // Bigger text for bigger streaks
       fontWeight: 'bold',
       fill: matchedConfig.color,
-      stroke: { width: 4, color: '#000000' },
+      stroke: { width: 5, color: '#000000' },
       dropShadow: {
         color: '#000000',
-        blur: 4,
+        blur: 6,
         angle: Math.PI / 4,
-        distance: 3,
+        distance: 4,
+        alpha: 0.9,
       },
+      letterSpacing: 1,
     });
 
     const pixiText = new Text({ text: matchedConfig.name, style });
     pixiText.x = x;
-    pixiText.y = y - 30; // Above the kill
+    pixiText.y = y - 40; // Higher above the kill for better visibility
     pixiText.anchor.set(0.5);
-    pixiText.scale.set(0.3); // Start small for pop-in effect
+    pixiText.scale.set(0.5); // Start slightly bigger for better readability
 
     this.container.addChild(pixiText);
     this.floatingTexts.push({
@@ -1171,29 +1103,8 @@ export class VFXSystem {
       this.triggerScreenShake(3 + Math.floor(streak / 5), 200);
     }
 
-    // Add confetti for 20+ kills
-    if (streak >= 20) {
-      this.spawnConfetti(x, y);
-    }
-
-    // Spawn burst particles around the text
-    const particleCount = Math.floor((5 + streak * 0.5) * this.particleMultiplier);
-    for (let i = 0; i < particleCount; i++) {
-      const p = this.pool.acquire();
-      const angle = (i / particleCount) * Math.PI * 2;
-      p.x = x;
-      p.y = y - 30;
-      p.vx = Math.cos(angle) * (80 + streak * 2);
-      p.vy = Math.sin(angle) * (80 + streak * 2);
-      p.life = 0.6;
-      p.maxLife = 0.6;
-      p.size = 4 + Math.random() * 3;
-      p.color = matchedConfig.color;
-      p.shape = 'star';
-      p.startAlpha = 1;
-      p.endAlpha = 0;
-      this.particles.push(p);
-    }
+    // Confetti and burst particles removed for cleaner visuals
+    // The text effect alone is more readable and less chaotic
   }
 
   // --- COMBO EFFECTS ---
@@ -1207,11 +1118,11 @@ export class VFXSystem {
     comboId: string,
     bonusDamage?: number
   ) {
-    // Combo visual config
-    const COMBO_CONFIG: Record<string, { name: string; color: number; particleColor: number }> = {
-      steam_burst: { name: 'STEAM BURST!', color: 0xff8844, particleColor: 0xffccaa },
-      electrocute: { name: 'ELECTROCUTE!', color: 0x44aaff, particleColor: 0x88ccff },
-      shatter: { name: 'SHATTER!', color: 0xcc88ff, particleColor: 0xddaaff },
+    // Combo visual config - simplified colors
+    const COMBO_CONFIG: Record<string, { name: string; color: number }> = {
+      steam_burst: { name: 'STEAM BURST!', color: 0xff8844 },
+      electrocute: { name: 'ELECTROCUTE!', color: 0x44aaff },
+      shatter: { name: 'SHATTER!', color: 0xcc88ff },
     };
 
     const config = COMBO_CONFIG[comboId];
@@ -1223,192 +1134,29 @@ export class VFXSystem {
     // If bonus damage, show it too
     if (bonusDamage && bonusDamage > 0) {
       setTimeout(() => {
-        this.spawnDamageNumber(x, y, bonusDamage, { isCrit: true }); // isCrit=true for emphasis
+        this.spawnDamageNumber(x, y, bonusDamage, { isCrit: true });
       }, 100);
     }
 
-    // Screen flash for combo
-    filterManager.applyScreenFlash('white', 100, 0.15);
+    // Subtle screen flash for combo
+    filterManager.applyScreenFlash('white', 80, 0.1);
 
-    // Spawn burst particles
-    const particleCount = Math.floor(20 * this.particleMultiplier);
-    for (let i = 0; i < particleCount; i++) {
-      const p = this.pool.acquire();
-      const angle = (i / particleCount) * Math.PI * 2;
-      const speed = 100 + Math.random() * 50;
-      p.x = x;
-      p.y = y;
-      p.vx = Math.cos(angle) * speed;
-      p.vy = Math.sin(angle) * speed;
-      p.life = 0.5;
-      p.maxLife = 0.5;
-      p.size = 4 + Math.random() * 3;
-      p.color = config.particleColor;
-      p.shape = 'circle';
-      p.startAlpha = 1;
-      p.endAlpha = 0;
-      this.particles.push(p);
-    }
-
-    // Add ring shockwave
-    this.spawnShockwave(x, y);
-  }
-
-  // --- DUO-ATTACK EFFECTS ---
-  public spawnDuoAttackEffect(
-    x: number,
-    y: number,
-    duoAttackId: string,
-    damage?: number
-  ) {
-    // Duo-attack visual config
-    const DUO_ATTACK_CONFIG: Record<string, {
-      name: string;
-      primaryColor: number;
-      secondaryColor: number;
-      particleShape: ParticleShape;
-      intensity: number;
-    }> = {
-      thunder_guard: {
-        name: 'THUNDER GUARD!',
-        primaryColor: 0x9932cc,
-        secondaryColor: 0xffd700,
-        particleShape: 'spark',
-        intensity: 1.2,
-      },
-      void_storm: {
-        name: 'VOID STORM!',
-        primaryColor: 0x4b0082,
-        secondaryColor: 0x00bfff,
-        particleShape: 'diamond',
-        intensity: 1.5,
-      },
-      frozen_inferno: {
-        name: 'FROZEN INFERNO!',
-        primaryColor: 0x00bfff,
-        secondaryColor: 0xff4500,
-        particleShape: 'star',
-        intensity: 1.3,
-      },
-      phase_strike: {
-        name: 'PHASE STRIKE!',
-        primaryColor: 0x8b008b,
-        secondaryColor: 0x00ffff,
-        particleShape: 'spark',
-        intensity: 1.4,
-      },
-      cryo_artillery: {
-        name: 'CRYO ARTILLERY!',
-        primaryColor: 0x00f0ff,
-        secondaryColor: 0x87ceeb,
-        particleShape: 'diamond',
-        intensity: 1.3,
-      },
-      reality_tear: {
-        name: 'REALITY TEAR!',
-        primaryColor: 0x9400d3,
-        secondaryColor: 0xff00ff,
-        particleShape: 'ring',
-        intensity: 1.6,
-      },
-    };
-
-    const config = DUO_ATTACK_CONFIG[duoAttackId];
-    if (!config) {
-      // Fallback for unknown duo-attacks
-      this.spawnExplosion(x, y, 0xffffff);
-      return;
-    }
-
-    // Large floating text
-    this.spawnFloatingText(x, y - 30, config.name, config.primaryColor);
-
-    // If damage, show it after a delay
-    if (damage && damage > 0) {
-      setTimeout(() => {
-        this.spawnDamageNumber(x, y + 10, damage, { isCrit: true });
-      }, 150);
-    }
-
-    // Screen flash with mixed colors
-    filterManager.applyScreenFlash('white', 150, 0.25 * config.intensity);
-
-    // Screen shake for powerful duo-attacks
-    this.triggerScreenShake(4 * config.intensity, 200);
-
-    // Dual-color shockwave rings
-    this.spawnShockwaveRing(x, y, config.primaryColor, config.intensity);
-    setTimeout(() => {
-      this.spawnShockwaveRing(x, y, config.secondaryColor, config.intensity * 0.8);
-    }, 50);
-
-    // Main particle burst - dual colored
-    const particleCount = Math.floor(35 * this.particleMultiplier * config.intensity);
-    for (let i = 0; i < particleCount; i++) {
-      const p = this.pool.acquire();
-      const angle = (i / particleCount) * Math.PI * 2;
-      const speed = 120 + Math.random() * 80;
-      p.x = x;
-      p.y = y;
-      p.vx = Math.cos(angle) * speed;
-      p.vy = Math.sin(angle) * speed;
-      p.life = 0.6 + Math.random() * 0.3;
-      p.maxLife = p.life;
-      p.size = 5 + Math.random() * 4;
-      // Alternate colors
-      p.color = i % 2 === 0 ? config.primaryColor : config.secondaryColor;
-      p.shape = config.particleShape;
-      p.startAlpha = 1;
-      p.endAlpha = 0;
-      p.drag = 0.95;
-      this.particles.push(p);
-    }
-
-    // Central glow pulse
-    const glow = this.pool.acquire();
-    glow.x = x;
-    glow.y = y;
-    glow.vx = 0;
-    glow.vy = 0;
-    glow.life = 0.4;
-    glow.maxLife = 0.4;
-    glow.startSize = 20;
-    glow.endSize = 80 * config.intensity;
-    glow.size = glow.startSize;
-    glow.color = 0xffffff;
-    glow.shape = 'circle';
-    glow.startAlpha = 0.8;
-    glow.endAlpha = 0;
-    this.particles.push(glow);
-
-    // Orbiting sparks for extra flair
-    const sparkCount = Math.floor(8 * this.particleMultiplier);
-    for (let i = 0; i < sparkCount; i++) {
-      const startAngle = (i / sparkCount) * Math.PI * 2;
-      const orbitalSpeed = 8 + Math.random() * 4;
-      const orbitalRadius = 30 + Math.random() * 20;
-
-      const spark = this.pool.acquire();
-      spark.x = x + Math.cos(startAngle) * orbitalRadius;
-      spark.y = y + Math.sin(startAngle) * orbitalRadius;
-      spark.vx = Math.cos(startAngle + Math.PI / 2) * orbitalSpeed * 20;
-      spark.vy = Math.sin(startAngle + Math.PI / 2) * orbitalSpeed * 20;
-      spark.life = 0.5;
-      spark.maxLife = 0.5;
-      spark.size = 3;
-      spark.color = config.secondaryColor;
-      spark.shape = 'spark';
-      spark.rotation = startAngle;
-      spark.rotationSpeed = orbitalSpeed;
-      spark.startAlpha = 1;
-      spark.endAlpha = 0;
-      this.particles.push(spark);
-    }
-
-    // Apply shockwave filter for large effects
-    if (config.intensity >= 1.3) {
-      filterManager.applyScreenShockwave(x, y, 700);
-    }
+    // Simple expanding ring instead of particle burst
+    const ring = this.pool.acquire();
+    ring.x = x;
+    ring.y = y;
+    ring.vx = 0;
+    ring.vy = 0;
+    ring.life = 0.3;
+    ring.maxLife = 0.3;
+    ring.startSize = 10;
+    ring.endSize = 40;
+    ring.size = ring.startSize;
+    ring.color = config.color;
+    ring.shape = 'ring';
+    ring.startAlpha = 0.7;
+    ring.endAlpha = 0;
+    this.particles.push(ring);
   }
 
   // --- HEAL/BUFF EFFECTS ---

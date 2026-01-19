@@ -48,13 +48,13 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     description: 'Dron szturmowy blokujący natarcie wroga',
     role: 'melee',
     baseHp: 50,
-    baseDamage: 15,
-    baseSpeed: 0.05, // Units per tick (1.5 units/sec at 30Hz)
+    baseDamage: 20,      // Increased from 15
+    baseSpeed: 0.08,     // Increased from 0.05 (~2.4 units/sec at 30Hz)
     attackRange: 1.5,
-    attackInterval: 45, // 1.5 seconds
-    duration: 300, // 10 seconds
+    attackInterval: 45,  // 1.5 seconds
+    duration: 300,       // 10 seconds
     radius: 0.5,
-    color: 0x00ccff, // Cyan
+    color: 0x00ccff,     // Cyan
     secondaryColor: 0x0088cc,
   },
   archer: {
@@ -63,13 +63,13 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     description: 'Dron dalekiego zasięgu z laserem',
     role: 'ranged',
     baseHp: 30,
-    baseDamage: 20,
-    baseSpeed: 0.04, // Slightly slower
+    baseDamage: 28,      // Increased from 20
+    baseSpeed: 0.07,     // Increased from 0.04
     attackRange: 8,
-    attackInterval: 60, // 2 seconds
-    duration: 300, // 10 seconds
+    attackInterval: 60,  // 2 seconds
+    duration: 300,       // 10 seconds
     radius: 0.4,
-    color: 0xff6600, // Orange
+    color: 0xff6600,     // Orange
     secondaryColor: 0xffcc00,
   },
   shield_bearer: {
@@ -78,13 +78,13 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     description: 'Opancerzony mech z tarczą energetyczną',
     role: 'tank',
     baseHp: 100,
-    baseDamage: 5,
-    baseSpeed: 0.03, // Slowest
+    baseDamage: 10,      // Increased from 5
+    baseSpeed: 0.05,     // Increased from 0.03
     attackRange: 1.5,
-    attackInterval: 90, // 3 seconds
-    duration: 450, // 15 seconds
+    attackInterval: 90,  // 3 seconds
+    duration: 450,       // 15 seconds
     radius: 0.6,
-    color: 0x8800ff, // Purple
+    color: 0x8800ff,     // Purple
     secondaryColor: 0xcc88ff,
   },
 };

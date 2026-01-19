@@ -121,7 +121,7 @@ export function buildSimConfigSnapshot(
     startingTurrets,
     equippedArtifacts: params.equippedArtifacts,
     fortressBaseHp: params.remoteConfig?.fortressBaseHp ?? 200,
-    fortressBaseDamage: params.remoteConfig?.fortressBaseDamage ?? 10,
+    fortressBaseDamage: params.remoteConfig?.fortressBaseDamage ?? 25,  // Increased from 10
     waveIntervalTicks: params.remoteConfig?.waveIntervalTicks ?? 90,
     guildStatBoost: params.guildStatBoost,
     unlockedPillars: params.unlockedPillars,

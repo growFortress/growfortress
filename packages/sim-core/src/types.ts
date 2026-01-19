@@ -286,6 +286,8 @@ export interface ActiveTurret {
   overchargeActive?: boolean;
   overchargeExpiresTick?: number;
   overchargeCooldownTick?: number;
+  // Target persistence - prevents rapid target switching
+  currentTargetId?: number;
 }
 
 export interface TurretSlot {
