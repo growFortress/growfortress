@@ -191,7 +191,7 @@ export function getDefaultPillarChallengeConfig(
     fieldWidth: FP.fromInt(40),
     fieldHeight: FP.fromInt(15),
     fortressX: FP.fromInt(2),
-    enemySpawnX: FP.fromInt(38),
+    enemySpawnX: FP.fromInt(44), // Spawn off-screen so enemies emerge from portal
     enemyAttackRange: FP.fromInt(4),
     enemyAttackInterval: 30,
     availableRelics: [], // Brak relików
@@ -724,6 +724,12 @@ export class PillarChallengeSimulation {
       targetLane: targetLane,
       canSwitchLane: false, // No lane switching in Pillar Challenge
       laneSwitchCooldown: 0,
+      // Pathfinding variation for unique movement
+      laneChangeSpeed: 0.3 + Math.random() * 0.6,
+      pathDrift: (Math.random() - 0.5) * 0.6,
+      laneChangeDelay: Math.floor(Math.random() * 30),
+      // Spawn animation
+      spawnTick: this.state.tick,
       activeEffects: [],
     };
 
@@ -746,22 +752,41 @@ export class PillarChallengeSimulation {
       this.updateEnemyStatusEffects(enemy);
 
       // Move towards target lane (for spawning from portal)
+      // Each enemy has unique pathfinding: different speeds, delays, and drift
       if (enemy.lane !== enemy.targetLane) {
-        const targetY = getLaneY(enemy.targetLane, DEFAULT_PHYSICS_CONFIG);
-        const diff = FP.sub(targetY, enemy.y);
-        const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(0.6));
-
-        if (Math.abs(FP.toFloat(diff)) < 2) {
-          enemy.y = targetY;
-          enemy.lane = enemy.targetLane;
-          enemy.vy = 0;
-        } else if (diff > 0) {
-          enemy.vy = switchSpeed;
+        // Wait for lane change delay (each enemy starts lane change at different time)
+        if (enemy.laneChangeDelay > 0) {
+          enemy.laneChangeDelay--;
+          // Add small drift while waiting - enemies spread out from portal
+          const driftVy = FP.mul(enemy.speed, FP.fromFloat(enemy.pathDrift * 0.5));
+          enemy.vy = driftVy;
           enemy.y = FP.add(enemy.y, enemy.vy);
         } else {
-          enemy.vy = FP.mul(switchSpeed, FP.fromInt(-1));
-          enemy.y = FP.add(enemy.y, enemy.vy);
+          const targetY = getLaneY(enemy.targetLane, DEFAULT_PHYSICS_CONFIG);
+          const diff = FP.sub(targetY, enemy.y);
+          // Each enemy has unique lane change speed (0.3-0.9)
+          const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(enemy.laneChangeSpeed));
+
+          if (Math.abs(FP.toFloat(diff)) < 2) {
+            enemy.y = targetY;
+            enemy.lane = enemy.targetLane;
+            enemy.vy = 0;
+          } else {
+            // Add drift to make paths more organic
+            const driftAmount = FP.mul(enemy.speed, FP.fromFloat(enemy.pathDrift * 0.3));
+            if (diff > 0) {
+              enemy.vy = FP.add(switchSpeed, driftAmount);
+            } else {
+              enemy.vy = FP.add(FP.mul(switchSpeed, FP.fromInt(-1)), driftAmount);
+            }
+            enemy.y = FP.add(enemy.y, enemy.vy);
+          }
         }
+      } else {
+        // Already in target lane - add small random drift for organic movement
+        const driftVy = FP.mul(enemy.speed, FP.fromFloat(enemy.pathDrift * 0.15));
+        enemy.vy = driftVy;
+        enemy.y = FP.add(enemy.y, enemy.vy);
       }
 
       // Ruch wroga

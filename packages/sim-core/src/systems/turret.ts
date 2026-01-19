@@ -94,7 +94,11 @@ export function updateTurrets(
     // NOTE: turret stats use 16384 as 1.0 scale, not FP's 65536
     const rangeFp = stats.range << 2; // 16384 -> 65536 scale
     const rangeSq = FP.mul(rangeFp, rangeFp);
+    const fieldWidth = config.fieldWidth;
     const enemiesInRange = state.enemies.filter(e => {
+      // Don't target dead enemies or those still spawning
+      if (e.hp <= 0) return false;
+      if (e.x > fieldWidth) return false;
       const distSq = FP.distSq(e.x, e.y, turretX, turretY);
       return distSq <= rangeSq;
     });

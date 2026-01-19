@@ -394,6 +394,9 @@ export class GameScene {
       // Disable interactive layer in hub mode so heroes can be clicked
       this.interactiveLayer.eventMode = "none";
 
+      // Clear any lingering filters from previous game session
+      filterManager.setLowHpWarning(0);
+
       if (hubState) {
         // Render hub state when in idle phase (before session starts)
         this.updateHub(hubState);

@@ -657,6 +657,14 @@ export interface Enemy {
   canSwitchLane: boolean;  // Whether this enemy can switch lanes
   laneSwitchCooldown: number;  // Ticks until next lane switch allowed
 
+  // Pathfinding variation - each enemy has unique movement style
+  laneChangeSpeed: number;   // Speed multiplier for lane changes (0.3-0.9)
+  pathDrift: number;         // Small random Y drift factor (-0.3 to 0.3)
+  laneChangeDelay: number;   // Ticks before starting lane change (0-30)
+
+  // Spawn animation
+  spawnTick: number;         // Tick when enemy was spawned (for emerge animation)
+
   // Active status effects
   activeEffects: StatusEffect[];
 

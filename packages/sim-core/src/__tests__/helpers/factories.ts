@@ -127,6 +127,12 @@ export function createEnemy(overrides: Partial<Enemy> = {}): Enemy {
     targetLane: 1, // Same as current lane
     canSwitchLane: false, // No lane switching by default in tests
     laneSwitchCooldown: 0,
+    // Pathfinding variation
+    laneChangeSpeed: 0.6,
+    pathDrift: 0,
+    laneChangeDelay: 0,
+    // Spawn animation
+    spawnTick: 0,
     activeEffects: [],
     ...overrides,
   };

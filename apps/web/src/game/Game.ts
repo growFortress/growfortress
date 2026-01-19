@@ -936,6 +936,14 @@ export class Game {
       canSwitchLane: false, // Bosses don't switch lanes
       laneSwitchCooldown: 0,
 
+      // Pathfinding variation - bosses move steadily
+      laneChangeSpeed: 0.6,
+      pathDrift: 0,
+      laneChangeDelay: 0,
+
+      // Spawn animation
+      spawnTick: state.tick,
+
       // Status effects
       activeEffects: [],
     };

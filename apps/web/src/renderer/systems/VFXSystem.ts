@@ -3375,4 +3375,80 @@ export class VFXSystem {
       this.particles.push(execP);
     }
   }
+
+  /**
+   * Portal enemy spawn effect - void particles emerging from the rift
+   * Called when enemies spawn from the dimensional portal
+   */
+  public spawnPortalEmit(portalX: number, portalY: number, targetX: number, targetY: number) {
+    const colors = {
+      primary: 0x8844cc,   // Void purple
+      secondary: 0x6622aa, // Darker purple
+      glow: 0xaa66ff,      // Bright purple
+      dark: 0x220044,      // Deep void
+    };
+
+    // Void flash at portal
+    this.spawnFlash(portalX, portalY, colors.glow, 15);
+
+    // Main void particles shooting towards enemy position
+    const angle = Math.atan2(targetY - portalY, targetX - portalX);
+
+    for (let i = 0; i < 8; i++) {
+      const p = this.pool.acquire();
+      p.x = portalX + (Math.random() - 0.5) * 20;
+      p.y = portalY + (Math.random() - 0.5) * 40;
+
+      // Spread particles in direction of enemy with some variance
+      const spread = (Math.random() - 0.5) * 0.5;
+      const speed = 150 + Math.random() * 100;
+      p.vx = Math.cos(angle + spread) * speed;
+      p.vy = Math.sin(angle + spread) * speed;
+
+      p.life = 0.4 + Math.random() * 0.2;
+      p.maxLife = p.life;
+      p.size = 4 + Math.random() * 4;
+      p.color = i % 3 === 0 ? colors.glow : (i % 3 === 1 ? colors.primary : colors.secondary);
+      p.shape = 'circle';
+      p.drag = 0.95;
+      p.startAlpha = 0.9;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+
+    // Void wisps trailing behind
+    for (let i = 0; i < 5; i++) {
+      const wispP = this.pool.acquire();
+      wispP.x = portalX + (Math.random() - 0.5) * 15;
+      wispP.y = portalY + (Math.random() - 0.5) * 60;
+      wispP.vx = -50 - Math.random() * 30; // Drift back into portal
+      wispP.vy = (Math.random() - 0.5) * 40;
+      wispP.life = 0.6;
+      wispP.maxLife = 0.6;
+      wispP.size = 6 + Math.random() * 6;
+      wispP.color = colors.dark;
+      wispP.shape = 'circle';
+      wispP.drag = 0.92;
+      wispP.startAlpha = 0.6;
+      wispP.endAlpha = 0;
+      this.particles.push(wispP);
+    }
+
+    // Energy sparks at portal edge
+    for (let i = 0; i < 4; i++) {
+      const sparkP = this.pool.acquire();
+      const sparkAngle = Math.random() * Math.PI * 2;
+      sparkP.x = portalX + Math.cos(sparkAngle) * 10;
+      sparkP.y = portalY + Math.sin(sparkAngle) * 30;
+      sparkP.vx = Math.cos(sparkAngle) * 60;
+      sparkP.vy = Math.sin(sparkAngle) * 60;
+      sparkP.life = 0.25;
+      sparkP.maxLife = 0.25;
+      sparkP.size = 3;
+      sparkP.color = colors.glow;
+      sparkP.shape = 'spark';
+      sparkP.drag = 0.85;
+      this.particles.push(sparkP);
+    }
+  }
 }

@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import type { GameState, ActiveProjectile, FortressClass, ProjectileType } from '@arcade/sim-core';
 import { FP } from '@arcade/sim-core';
-import { fpXToScreen, fpYToScreen, calculateEnemyLaneY } from '../CoordinateSystem.js';
+import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
 
 // --- CLASS COLORS (7 classes) ---
 const CLASS_COLORS: Record<FortressClass, { primary: number; secondary: number; glow: number; core: number }> = {
@@ -168,9 +168,9 @@ export class ProjectileSystem {
       // Calculate screen X position from simulation
       const screenX = fpXToScreen(projectile.x, viewWidth);
 
-      // Calculate screen Y by interpolating between start and target lane
+      // Calculate screen Y by interpolating between start and actual target position
       const startScreenY = this.getSourceScreenY(projectile, viewHeight);
-      const targetScreenY = calculateEnemyLaneY(projectile.targetEnemyId, viewHeight);
+      const targetScreenY = fpYToScreen(projectile.targetY, viewHeight);
 
       // Calculate progress (0 = at start, 1 = at target)
       const startX = FP.toFloat(projectile.startX);

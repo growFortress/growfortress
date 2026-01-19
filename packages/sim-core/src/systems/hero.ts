@@ -332,7 +332,11 @@ function performHeroAttack(
   // Check if enemies in range (2D distance)
   const attackRange = getHeroAttackRange(heroDef.role);
   const attackRangeSq = FP.mul(attackRange, attackRange);
+  const fieldWidth = config.fieldWidth;
   const enemiesInRange = state.enemies.filter(e => {
+    // Don't target dead enemies or those still spawning
+    if (e.hp <= 0) return false;
+    if (e.x > fieldWidth) return false;
     const distSq = FP.distSq(hero.x, hero.y, e.x, e.y);
     return distSq <= attackRangeSq;
   });
@@ -524,15 +528,22 @@ function updateHeroCombat(
   // Check if enemies in range (2D distance)
   const attackRange = getHeroAttackRange(heroDef.role);
   const attackRangeSq = FP.mul(attackRange, attackRange);
+  const fieldWidth = config.fieldWidth;
   const enemiesInRange = state.enemies.filter(e => {
+    // Don't target dead enemies or those still spawning
+    if (e.hp <= 0) return false;
+    if (e.x > fieldWidth) return false;
     const distSq = FP.distSq(hero.x, hero.y, e.x, e.y);
     return distSq <= attackRangeSq;
   });
 
+  // Also filter targetable enemies for other checks
+  const targetableEnemies = state.enemies.filter(e => e.hp > 0 && e.x <= fieldWidth);
+
   if (enemiesInRange.length === 0) {
     // No enemies in range
-    if (state.enemies.length === 0) {
-      // No enemies at all, go idle
+    if (targetableEnemies.length === 0) {
+      // No targetable enemies at all, go idle
       hero.state = 'idle';
       hero.vx = 0;
       hero.vy = 0;

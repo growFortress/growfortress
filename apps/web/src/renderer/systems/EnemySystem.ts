@@ -4,7 +4,7 @@ import { popComboTriggers } from '@arcade/sim-core';
 import { VFXSystem } from './VFXSystem.js';
 import { audioManager } from '../../game/AudioManager.js';
 import { EnemyVisualPool, type EnemyVisualBundle } from '../ObjectPool.js';
-import { fpXToScreen, fpYToScreen, calculateEnemyLaneY } from '../CoordinateSystem.js';
+import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
 
 // --- CONSTANTS ---
 const THEME = {
@@ -178,14 +178,43 @@ export class EnemySystem {
         this.visuals.set(enemy.id, bundle);
         this.lastHp.set(enemy.id, -1); // Force HP bar update
         this.enemyTypes.set(enemy.id, enemy.type); // Track type for death VFX
+
+        // Spawn portal VFX when new enemy emerges
+        if (vfx) {
+          // Portal is at right edge of screen, center of path
+          const portalX = viewWidth + 5;
+          const pathTop = viewHeight * 0.35;
+          const pathBottom = viewHeight * 0.65;
+          const portalY = (pathTop + pathBottom) / 2;
+
+          // Enemy's target position
+          const enemyX = fpXToScreen(enemy.x, viewWidth);
+          const enemyY = fpYToScreen(enemy.y, viewHeight);
+
+          vfx.spawnPortalEmit(portalX, portalY, enemyX, enemyY);
+        }
       }
 
       const visual = bundle.container;
 
-      // Update Position
+      // Update Position - use actual enemy.y from simulation for pathfinding
       const x = fpXToScreen(enemy.x, viewWidth);
-      const y = calculateEnemyLaneY(enemy.id, viewHeight);
+      const y = fpYToScreen(enemy.y, viewHeight);
       visual.position.set(x, y);
+
+      // --- SPAWN ANIMATION ---
+      // Enemies emerge from portal with scale + fade animation
+      const SPAWN_DURATION = 20; // ~0.66 seconds at 30Hz
+      const ticksSinceSpawn = state.tick - enemy.spawnTick;
+      const spawnProgress = Math.min(1, ticksSinceSpawn / SPAWN_DURATION);
+
+      // Ease out cubic for smooth deceleration
+      const easeOut = 1 - Math.pow(1 - spawnProgress, 3);
+
+      // Scale from 0.3 to 1.0, alpha from 0.2 to 1.0
+      const spawnScale = 0.3 + 0.7 * easeOut;
+      const spawnAlpha = 0.2 + 0.8 * easeOut;
+      visual.alpha = spawnAlpha;
 
       // --- VISUAL POLISH ---
       const previousHp = this.lastHp.get(enemy.id) ?? enemy.hp;
@@ -221,10 +250,10 @@ export class EnemySystem {
       const squashX = squashProgress * squashIntensity;
       const squashY = squashProgress * squashIntensity;
 
-      // Apply combined animation (breathe + squash)
+      // Apply combined animation (spawn + breathe + squash)
       visual.scale.set(
-        (1 - stretch) * (1 + squashX),  // Wider when hit
-        (1 + stretch) * (1 - squashY)   // Shorter when hit
+        spawnScale * (1 - stretch) * (1 + squashX),  // Wider when hit
+        spawnScale * (1 + stretch) * (1 - squashY)   // Shorter when hit
       );
 
       // 2. Smooth HP Bar with damage trail

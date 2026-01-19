@@ -143,7 +143,7 @@ export function getDefaultConfig(availableRelics: string[] = RELICS.map(r => r.i
     fieldWidth: FP.fromInt(40),
     fieldHeight: FP.fromInt(15),
     fortressX: FP.fromInt(2),
-    enemySpawnX: FP.fromInt(38),
+    enemySpawnX: FP.fromInt(44), // Spawn off-screen (past portal) so enemies emerge from it
     enemyAttackRange: FP.fromInt(4),  // Enemies stop 4 units from fortress
     enemyAttackInterval: 30,          // 1 second between enemy attacks at 30Hz
     availableRelics,
@@ -654,6 +654,14 @@ export class Simulation {
       canSwitchLane: this.rng.nextFloat() < 0.15, // 15% of enemies can switch lanes later
       laneSwitchCooldown: 0,
 
+      // Pathfinding variation - unique movement style for each enemy
+      laneChangeSpeed: 0.3 + this.rng.nextFloat() * 0.6, // 0.3-0.9 speed multiplier
+      pathDrift: (this.rng.nextFloat() - 0.5) * 0.6,     // -0.3 to 0.3 drift
+      laneChangeDelay: Math.floor(this.rng.nextFloat() * 30), // 0-30 ticks delay
+
+      // Spawn animation - track when spawned for emerge effect
+      spawnTick: this.state.tick,
+
       // Status effects
       activeEffects: [],
     };
@@ -993,26 +1001,44 @@ export class Simulation {
         }
 
         // Move towards target lane (ALL enemies - for spawning from portal)
+        // Each enemy has unique pathfinding: different speeds, delays, and drift
         if (enemy.lane !== enemy.targetLane) {
-          const physicsConfig = {
-            ...DEFAULT_PHYSICS_CONFIG,
-            fieldMinY: FP.fromInt(0),
-            fieldMaxY: this.config.fieldHeight,
-          };
-          const targetY = getLaneY(enemy.targetLane, physicsConfig);
-          const diff = FP.sub(targetY, enemy.y);
-          const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(0.6)); // Move at 60% speed
-
-          if (Math.abs(FP.toFloat(diff)) < 2) {
-            // Close enough - snap to lane
-            enemy.y = targetY;
-            enemy.lane = enemy.targetLane;
-            enemy.vy = 0;
-          } else if (diff > 0) {
-            enemy.vy = switchSpeed;
+          // Wait for lane change delay (each enemy starts lane change at different time)
+          if (enemy.laneChangeDelay > 0) {
+            enemy.laneChangeDelay--;
+            // Add small drift while waiting - enemies spread out from portal
+            const driftVy = FP.mul(enemy.speed, FP.fromFloat(enemy.pathDrift * 0.5));
+            enemy.vy = driftVy;
           } else {
-            enemy.vy = FP.mul(switchSpeed, FP.fromInt(-1));
+            const physicsConfig = {
+              ...DEFAULT_PHYSICS_CONFIG,
+              fieldMinY: FP.fromInt(0),
+              fieldMaxY: this.config.fieldHeight,
+            };
+            const targetY = getLaneY(enemy.targetLane, physicsConfig);
+            const diff = FP.sub(targetY, enemy.y);
+            // Each enemy has unique lane change speed (0.3-0.9)
+            const switchSpeed = FP.mul(enemy.speed, FP.fromFloat(enemy.laneChangeSpeed));
+
+            if (Math.abs(FP.toFloat(diff)) < 2) {
+              // Close enough - snap to lane
+              enemy.y = targetY;
+              enemy.lane = enemy.targetLane;
+              enemy.vy = 0;
+            } else {
+              // Add drift to make paths more organic (enemies don't go straight)
+              const driftAmount = FP.mul(enemy.speed, FP.fromFloat(enemy.pathDrift * 0.3));
+              if (diff > 0) {
+                enemy.vy = FP.add(switchSpeed, driftAmount);
+              } else {
+                enemy.vy = FP.add(FP.mul(switchSpeed, FP.fromInt(-1)), driftAmount);
+              }
+            }
           }
+        } else {
+          // Already in target lane - add small random drift for more organic movement
+          const driftVy = FP.mul(enemy.speed, FP.fromFloat(enemy.pathDrift * 0.15));
+          enemy.vy = driftVy;
         }
 
         // Ensure minimum velocity towards fortress
@@ -1391,16 +1417,30 @@ export class Simulation {
   }
 
   /**
+   * Check if enemy is valid target (alive and within playable field)
+   */
+  private isEnemyTargetable(enemy: Enemy): boolean {
+    // Don't target dead enemies
+    if (enemy.hp <= 0) return false;
+    // Enemies spawn off-screen (X > fieldWidth) and move into the field
+    // Don't target them until they enter the playable area
+    const fieldWidth = FP.toFloat(this.config.fieldWidth);
+    return FP.toFloat(enemy.x) <= fieldWidth;
+  }
+
+  /**
    * Find the best enemy to target (priority targeting)
    */
   private findClosestEnemy(): Enemy | null {
-    if (this.state.enemies.length === 0) return null;
+    // Filter to only targetable enemies (within playable field)
+    const targetableEnemies = this.state.enemies.filter(e => this.isEnemyTargetable(e));
+    if (targetableEnemies.length === 0) return null;
 
     // Priority targeting: consider position, HP, and danger level
-    let bestTarget = this.state.enemies[0];
+    let bestTarget = targetableEnemies[0];
     let bestScore = this.calculateTargetScore(bestTarget);
 
-    for (const enemy of this.state.enemies) {
+    for (const enemy of targetableEnemies) {
       const score = this.calculateTargetScore(enemy);
       if (score > bestScore) {
         bestTarget = enemy;

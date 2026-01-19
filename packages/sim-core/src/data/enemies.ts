@@ -573,16 +573,17 @@ export function getWaveComposition(
   const effectiveWave = ((wave - 1) % 100) + 1;
 
   // Enemy count scales with actual wave (more enemies in higher cycles)
-  // Slightly reduced for better balance
-  const baseEnemies = 8 + wave * 5;
+  // Reduced significantly for better visual clarity
+  const baseEnemies = 5 + wave * 2;
 
   // Elite chance continues scaling, caps at 50% (increased from 30% for endless)
   const eliteChance = Math.min(0.05 + wave * 0.005, 0.5);
 
   // Spawn interval - enemies spawn one by one from portal
-  // Base: ~1 second between spawns, speeds up slightly with waves
-  const baseInterval = Math.max(tickHz - effectiveWave, tickHz / 2);
-  const spawnInterval = Math.max(baseInterval - cycle * 2, 12); // Min 0.4s at 30Hz
+  // Base: ~2.5 seconds between spawns, speeds up slightly with waves
+  // Slower spawning creates better visual flow as enemies emerge from portal
+  const baseInterval = Math.max(tickHz * 2.5 - effectiveWave * 0.5, tickHz * 1.2);
+  const spawnInterval = Math.max(baseInterval - cycle * 3, 36); // Min ~1.2s at 30Hz
 
   const enemies: Array<{ type: EnemyType; count: number }> = [];
 
