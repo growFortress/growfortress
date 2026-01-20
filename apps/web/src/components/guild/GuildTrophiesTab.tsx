@@ -78,7 +78,7 @@ export function GuildTrophiesTab({ onRefresh: _onRefresh }: GuildTrophiesTabProp
     return <div class={styles.emptyState}>Brak danych trofow</div>;
   }
 
-  const { earned, inProgress, totalStatBonus, coinMultiplier, streak } = trophiesData;
+  const { earned, inProgress } = trophiesData;
 
   // Filter by category if selected
   const filteredEarned = selectedCategory
@@ -90,46 +90,6 @@ export function GuildTrophiesTab({ onRefresh: _onRefresh }: GuildTrophiesTabProp
 
   return (
     <div class={styles.tabContent}>
-      {/* Battle Stats Overview */}
-      <section class={styles.infoSection}>
-        <div class={styles.sectionHeader}>
-          <span class={styles.sectionTitle}>Statystyki Bitew</span>
-          <span class={styles.sectionBadge} style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)' }}>
-            Arena 5v5
-          </span>
-        </div>
-        <div class={styles.battleStatsGrid}>
-          <div class={styles.battleStatCard}>
-            <span class={styles.battleStatIcon}>🔥</span>
-            <div class={styles.battleStatInfo}>
-              <span class={styles.battleStatValue}>{streak.currentWinStreak}</span>
-              <span class={styles.battleStatLabel}>Aktualna seria</span>
-            </div>
-          </div>
-          <div class={styles.battleStatCard}>
-            <span class={styles.battleStatIcon}>⭐</span>
-            <div class={styles.battleStatInfo}>
-              <span class={styles.battleStatValue}>{streak.bestWinStreak}</span>
-              <span class={styles.battleStatLabel}>Najlepsza seria</span>
-            </div>
-          </div>
-          <div class={styles.battleStatCard}>
-            <span class={styles.battleStatIcon}>💪</span>
-            <div class={styles.battleStatInfo}>
-              <span class={styles.battleStatValue}>+{totalStatBonus}</span>
-              <span class={styles.battleStatLabel}>Bonus statystyk</span>
-            </div>
-          </div>
-          <div class={styles.battleStatCard}>
-            <span class={styles.battleStatIcon}>🪙</span>
-            <div class={styles.battleStatInfo}>
-              <span class={styles.battleStatValue}>x{coinMultiplier.toFixed(2)}</span>
-              <span class={styles.battleStatLabel}>Mnoznik coinow</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Category Filter */}
       <section class={styles.infoSection}>
         <div class={styles.categoryFilter}>
@@ -273,13 +233,13 @@ function TrophyCard({ trophy, earned }: TrophyCardProps) {
       </div>
       <div class={styles.trophyCardBonus}>
         {trophy.bonus.type === 'stat_boost' && (
-          <span class={styles.trophyBonusStat}>+{trophy.bonus.value} statystyk</span>
+          <span class={styles.trophyBonusStat}>+{trophy.bonus.value}% mocy w Arena</span>
         )}
         {trophy.bonus.type === 'coin_multiplier' && (
-          <span class={styles.trophyBonusCoin}>x{trophy.bonus.value} coinow</span>
+          <span class={styles.trophyBonusCoin}>x{trophy.bonus.value} Guild Coins</span>
         )}
         {trophy.bonus.type === 'badge' && (
-          <span class={styles.trophyBonusBadge}>Odznaka</span>
+          <span class={styles.trophyBonusBadge}>🏅 Odznaka</span>
         )}
       </div>
       {earned && trophy.earnedAt && (

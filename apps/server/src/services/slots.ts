@@ -53,6 +53,14 @@ export async function purchaseHeroSlot(userId: string): Promise<PurchaseHeroSlot
     };
   }
 
+  // Check if slot is free (shouldn't be purchased)
+  if (nextSlot.isFree) {
+    return {
+      success: false,
+      error: 'Ten slot jest już odblokowany za darmo',
+    };
+  }
+
   // Check level requirement
   if (currentLevel < nextSlot.levelRequired) {
     return {
@@ -129,6 +137,14 @@ export async function purchaseTurretSlot(userId: string): Promise<PurchaseTurret
     return {
       success: false,
       error: 'Brak dostępnych slotów do kupienia',
+    };
+  }
+
+  // Check if slot is free (shouldn't be purchased)
+  if (nextSlot.isFree) {
+    return {
+      success: false,
+      error: 'Ten slot jest już odblokowany za darmo',
     };
   }
 

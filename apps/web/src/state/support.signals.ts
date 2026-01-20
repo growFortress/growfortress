@@ -8,8 +8,6 @@ import { signal, computed } from '@preact/signals';
 import type {
   SupportTicket,
   TicketCategory,
-  TicketStatus,
-  TicketResponse,
 } from '../api/supportTickets.js';
 import {
   getTickets,
@@ -270,7 +268,7 @@ export async function closeSelectedTicket(): Promise<boolean> {
   if (!selectedTicketId.value) return false;
 
   try {
-    const ticket = await apiCloseTicket(selectedTicketId.value);
+    await apiCloseTicket(selectedTicketId.value);
 
     // Update selected ticket
     if (selectedTicket.value) {

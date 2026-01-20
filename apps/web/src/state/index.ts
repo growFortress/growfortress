@@ -776,7 +776,6 @@ export {
   pillarUnlocksState,
   pillarUnlocksLoading,
   pillarUnlocksError,
-  unlockingPillar,
   // Computed
   unlockedPillarSet,
   unlockedPillars,
@@ -790,11 +789,9 @@ export {
   // Helpers
   isPillarUnlocked,
   getPillarInfo,
-  canUnlockPillar,
   getUnlockRequirement,
   // Actions
   fetchPillarUnlocks,
-  unlockPillarAction,
   resetPillarUnlocksState,
 } from './pillarUnlocks.signals.js';
 

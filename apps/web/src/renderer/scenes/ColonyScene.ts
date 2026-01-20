@@ -510,7 +510,7 @@ export class ColonyScene {
   /**
    * Farm - Bio-dome with glass panels
    */
-  private drawFarmBuilding(g: Graphics, size: number, primary: number, secondary: number, glow: number, unlocked: boolean, level: number) {
+  private drawFarmBuilding(g: Graphics, size: number, primary: number, _secondary: number, glow: number, unlocked: boolean, level: number) {
     const h = size * 0.8;
     const w = size * 0.6;
 

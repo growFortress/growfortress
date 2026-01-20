@@ -9,7 +9,6 @@ import {
   closeGuildPanel,
   guildPanelTab,
   playerGuild,
-  guildBonuses,
   guildBattles,
   receivedInvitations,
   guildLoading,
@@ -18,7 +17,6 @@ import {
   guildError,
   isInGuild,
   isGuildOfficer,
-  memberCount,
   invitationCount,
   pendingApplicationsCount,
   setGuildData,
@@ -152,7 +150,6 @@ export function GuildPanel() {
 
   const activeTab = guildPanelTab.value;
   const guild = playerGuild.value;
-  const bonuses = guildBonuses.value;
   const pendingInvitations = invitationCount.value;
 
   // Navigation items
@@ -228,47 +225,6 @@ export function GuildPanel() {
                   </button>
                 ))}
             </nav>
-
-            {/* Stats Card */}
-            <div class={styles.statsCard}>
-              <div class={styles.statsCardTitle}>STATYSTYKI</div>
-              <div class={styles.statRow}>
-                <span class={styles.statLabel}>Honor</span>
-                <span class={`${styles.statValue} ${styles.statHonor}`}>
-                  {guild.honor.toLocaleString()}
-                </span>
-              </div>
-              <div class={styles.statRow}>
-                <span class={styles.statLabel}>Członkowie</span>
-                <span class={styles.statValue}>
-                  {memberCount.value}/{guild.maxMembers || 10}
-                </span>
-              </div>
-              {bonuses && (
-                <>
-                  <div class={styles.statsCardDivider} />
-                  <div class={styles.statsCardTitle}>BONUSY</div>
-                  <div class={styles.statRow}>
-                    <span class={styles.statLabel}>Gold</span>
-                    <span class={`${styles.statValue} ${styles.statBonus}`}>
-                      +{Math.round(bonuses.goldBoost * 100)}%
-                    </span>
-                  </div>
-                  <div class={styles.statRow}>
-                    <span class={styles.statLabel}>Statystyki</span>
-                    <span class={`${styles.statValue} ${styles.statBonus}`}>
-                      +{Math.round(bonuses.statBoost * 100)}%
-                    </span>
-                  </div>
-                  <div class={styles.statRow}>
-                    <span class={styles.statLabel}>XP</span>
-                    <span class={`${styles.statValue} ${styles.statBonus}`}>
-                      +{Math.round(bonuses.xpBoost * 100)}%
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
           </aside>
         )}
 

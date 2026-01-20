@@ -49,7 +49,7 @@ export function Hud() {
       {/* ===== GAMEPLAY HUD - TOP BAR ===== */}
       {isPlaying && (
         <div class={styles.gameTopBar}>
-          {/* Left: Wave + Enemy Counter */}
+          {/* Wave Panel - Left */}
           <div class={styles.wavePanel}>
             <div class={styles.waveInfo}>
               <span class={styles.waveLabel}>{t("hud.wave")}</span>
@@ -60,17 +60,15 @@ export function Hud() {
             </div>
           </div>
 
-          {/* HP Bar */}
+          {/* HP Panel - Right */}
           <div class={styles.hpPanel}>
-            <div class={styles.hpBarWrapper}>
-              <div class={styles.hpBarTrack}>
-                <div
-                  class={`${styles.hpBarFill} ${getHpClass()}`}
-                  style={{ width: `${hpPercent}%` }}
-                />
-              </div>
-              <span class={styles.hpText}>{hpValue}/{hpMax}</span>
+            <div class={styles.hpBarTrack}>
+              <div
+                class={`${styles.hpBarFill} ${getHpClass()}`}
+                style={{ width: `${hpPercent}%` }}
+              />
             </div>
+            <span class={styles.hpText}>{hpValue}/{hpMax}</span>
           </div>
         </div>
       )}

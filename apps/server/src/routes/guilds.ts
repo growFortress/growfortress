@@ -96,6 +96,8 @@ import {
   getGuildBossDamageBreakdown,
   getTopDamageDealers,
 } from '../services/guildBoss.js';
+import { getGuildMedalCollection, getActiveWaveBonus } from '../services/guildMedals.js';
+import { getGuildTrophies } from '../services/guildBattleTrophies.js';
 import { getCurrentWeekKey } from '../lib/queue.js';
 import {
   requireGuildMembership,
@@ -1391,6 +1393,97 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         heroTier: d.heroTier,
       })),
     });
+  });
+
+  // ============================================================================
+  // GUILD MEDALS (Tower Race rewards)
+  // ============================================================================
+
+  // Get guild's medal collection
+  fastify.get('/v1/guilds/:guildId/medals', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const { guildId } = request.params as { guildId: string };
+
+    // Verify membership
+    const membershipCheck = await requireGuildMembership(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
+    const collection = await getGuildMedalCollection(guildId);
+
+    return reply.send({
+      medals: collection.medals.map(m => ({
+        id: m.id,
+        weekKey: m.weekKey,
+        medalType: m.medalType,
+        rank: m.rank,
+        totalWaves: m.totalWaves,
+        coinsAwarded: m.coinsAwarded,
+        awardedAt: m.awardedAt.toISOString(),
+      })),
+      stats: collection.stats,
+      activeBonus: {
+        wavesBonus: collection.activeBonus.wavesBonus,
+        sourceMedalType: collection.activeBonus.sourceMedalType,
+        sourceWeekKey: collection.activeBonus.sourceWeekKey,
+        expiresAt: collection.activeBonus.expiresAt?.toISOString() || null,
+        isActive: collection.activeBonus.isActive,
+      },
+    });
+  });
+
+  // Get guild's active medal bonus only
+  fastify.get('/v1/guilds/:guildId/medals/bonus', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const { guildId } = request.params as { guildId: string };
+
+    // Verify membership
+    const membershipCheck = await requireGuildMembership(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
+    const activeBonus = await getActiveWaveBonus(guildId);
+
+    return reply.send({
+      activeBonus: {
+        wavesBonus: activeBonus.wavesBonus,
+        sourceMedalType: activeBonus.sourceMedalType,
+        sourceWeekKey: activeBonus.sourceWeekKey,
+        expiresAt: activeBonus.expiresAt?.toISOString() || null,
+        isActive: activeBonus.isActive,
+      },
+    });
+  });
+
+  // ============================================================================
+  // GUILD TROPHIES (Arena 5v5 rewards)
+  // ============================================================================
+
+  // Get guild's trophies
+  fastify.get('/v1/guilds/:guildId/trophies', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const { guildId } = request.params as { guildId: string };
+
+    // Verify membership
+    const membershipCheck = await requireGuildMembership(request.userId, guildId);
+    if (!membershipCheck.valid) {
+      return reply.status(403).send({ error: membershipCheck.error });
+    }
+
+    const trophies = await getGuildTrophies(guildId);
+
+    return reply.send(trophies);
   });
 };
 

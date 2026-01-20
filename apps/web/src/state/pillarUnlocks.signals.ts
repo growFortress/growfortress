@@ -1,15 +1,13 @@
 /**
  * Pillar Unlocks State Management
  *
- * Manages dust-gated world progression including:
+ * Manages level-gated world progression including:
  * - Unlocked pillars tracking
- * - Unlock requirements
- * - Purchase with dust
+ * - Unlock requirements (fortress level)
  */
 
 import { signal, computed } from '@preact/signals';
-import { getPillarUnlocks, unlockPillar as apiUnlockPillar } from '../api/pillarUnlocks.js';
-import { baseDust } from './profile.signals.js';
+import { getPillarUnlocks } from '../api/pillarUnlocks.js';
 import {
   PILLAR_UNLOCK_REQUIREMENTS,
   type GetPillarUnlocksResponse,
@@ -24,7 +22,6 @@ import {
 export const pillarUnlocksState = signal<GetPillarUnlocksResponse | null>(null);
 export const pillarUnlocksLoading = signal(false);
 export const pillarUnlocksError = signal<string | null>(null);
-export const unlockingPillar = signal<PillarUnlockId | null>(null);
 
 // ============================================================================
 // COMPUTED VALUES
@@ -114,14 +111,6 @@ export function getPillarInfo(pillarId: PillarUnlockId): PillarUnlockInfo | unde
 }
 
 /**
- * Check if player can unlock a specific pillar
- */
-export function canUnlockPillar(pillarId: PillarUnlockId): boolean {
-  const info = getPillarInfo(pillarId);
-  return info?.canUnlock ?? false;
-}
-
-/**
  * Get unlock requirement for a pillar
  */
 export function getUnlockRequirement(pillarId: PillarUnlockId) {
@@ -151,55 +140,10 @@ export async function fetchPillarUnlocks(): Promise<void> {
 }
 
 /**
- * Unlock a pillar using dust
- */
-export async function unlockPillarAction(pillarId: PillarUnlockId): Promise<boolean> {
-  if (unlockingPillar.value) return false;
-  if (!canUnlockPillar(pillarId)) return false;
-
-  unlockingPillar.value = pillarId;
-  pillarUnlocksError.value = null;
-
-  try {
-    const response = await apiUnlockPillar(pillarId);
-
-    if (!response.success) {
-      pillarUnlocksError.value = response.error || 'Failed to unlock pillar';
-      return false;
-    }
-
-    // Update dust in profile
-    if (response.newDust !== undefined) {
-      baseDust.value = response.newDust;
-    }
-
-    // Update local state with new unlocked pillars
-    if (response.unlockedPillars && pillarUnlocksState.value) {
-      pillarUnlocksState.value = {
-        ...pillarUnlocksState.value,
-        unlockedPillars: response.unlockedPillars,
-        currentDust: response.newDust ?? pillarUnlocksState.value.currentDust,
-      };
-    }
-
-    // Refresh full state from server
-    await fetchPillarUnlocks();
-
-    return true;
-  } catch (error) {
-    pillarUnlocksError.value = error instanceof Error ? error.message : 'Failed to unlock pillar';
-    return false;
-  } finally {
-    unlockingPillar.value = null;
-  }
-}
-
-/**
  * Reset pillar unlocks state (on logout)
  */
 export function resetPillarUnlocksState(): void {
   pillarUnlocksState.value = null;
   pillarUnlocksLoading.value = false;
   pillarUnlocksError.value = null;
-  unlockingPillar.value = null;
 }

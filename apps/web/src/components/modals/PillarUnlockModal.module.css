@@ -107,58 +107,6 @@
   font-size: 14px;
 }
 
-/* Unlock button */
-.unlockButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  background: var(--color-primary-10);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.unlockButton:hover:not(:disabled) {
-  background: var(--color-primary-20);
-  box-shadow: 0 0 15px var(--color-primary-30);
-  transform: scale(1.02);
-}
-
-.unlockButton:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.unlockButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  border-style: dashed;
-}
-
-.unlockButton.loading {
-  cursor: wait;
-  pointer-events: none;
-}
-
-.unlockCost {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.dustIcon {
-  font-size: 14px;
-}
-
 /* Unlocked badge */
 .unlockedBadge {
   display: inline-flex;
@@ -210,8 +158,8 @@
   width: 200px;
 }
 
-/* Current dust display */
-.dustDisplay {
+/* Current level display */
+.levelDisplay {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -220,16 +168,16 @@
   border-radius: var(--radius-sm);
 }
 
-.dustLabel {
+.levelLabel {
   font-size: 12px;
   color: var(--color-text-60);
 }
 
-.dustValue {
+.levelValue {
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 700;
-  color: #b580ff;
+  color: var(--color-primary);
 }
 
 /* Empty state if no pillars */

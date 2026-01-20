@@ -28,7 +28,6 @@ import {
   closeSupportPage,
   setSupportSection,
   setLegalTab,
-  loadTickets,
   loadMoreTickets,
   selectTicket,
   clearSelectedTicket,
@@ -105,6 +104,7 @@ export function SupportPage(): JSX.Element | null {
       const timer = setTimeout(() => clearSupportSuccess(), 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [success]);
 
   const handleBack = useCallback(() => {

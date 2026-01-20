@@ -1,5 +1,4 @@
 import { useState } from 'preact/hooks';
-import { Button } from '../shared/Button.js';
 import { Spinner } from '../shared/Spinner.js';
 import {
   pvpOpponents,

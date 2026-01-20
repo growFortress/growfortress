@@ -24,14 +24,26 @@ export const refilling = signal(false);
 // Timer signal that updates every second to force re-computation of time-based values
 export const currentTimeTick = signal(Date.now());
 
+// Track if we need to refresh energy (when timer hits zero)
+let pendingRefresh = false;
+
 // Start the timer interval (runs globally)
 let timerStarted = false;
 function startRegenTimer() {
   if (timerStarted) return;
   timerStarted = true;
+
+  // Update every second
   setInterval(() => {
     currentTimeTick.value = Date.now();
   }, 1000);
+
+  // Also update immediately when tab becomes visible (handles browser throttling)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      currentTimeTick.value = Date.now();
+    }
+  });
 }
 startRegenTimer();
 
@@ -97,7 +109,19 @@ export const nextRegenIn = computed(() => {
   const now = currentTimeTick.value;
   const diffMs = nextRegen - now;
 
-  if (diffMs <= 0) return 'Now';
+  // Auto-refresh when timer hits zero
+  if (diffMs <= 0) {
+    if (!pendingRefresh) {
+      pendingRefresh = true;
+      // Delay slightly to avoid rapid re-fetches
+      setTimeout(() => {
+        fetchEnergy().finally(() => {
+          pendingRefresh = false;
+        });
+      }, 500);
+    }
+    return 'Now';
+  }
 
   const minutes = Math.floor(diffMs / (1000 * 60));
   const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
