@@ -6,7 +6,11 @@ import type {
   FortressClass,
   Enemy,
 } from "@arcade/sim-core";
-import { getTurretById, calculateTurretStats } from "@arcade/sim-core";
+import {
+  getTurretById,
+  calculateTurretStats,
+  TURRET_SLOT_UNLOCKS,
+} from "@arcade/sim-core";
 import {
   fpXToScreen,
   turretYToScreen,
@@ -211,7 +215,7 @@ export class TurretSystem {
       visual.position.set(screenX, screenY);
 
       // Update locked/unlocked visual
-      const lockOverlay = visual.getChildByLabel("lock") as Graphics;
+      const lockOverlay = visual.getChildByLabel("lock") as Container;
       if (lockOverlay) {
         lockOverlay.visible = !slot.isUnlocked;
       }
@@ -263,19 +267,59 @@ export class TurretSystem {
     slotNum.position.y = size + 10;
     container.addChild(slotNum);
 
-    // Lock overlay - MUST be positioned at 0,0 (center of slot)
-    const lockOverlay = new Graphics();
+    // Lock overlay container - MUST be positioned at 0,0 (center of slot)
+    const lockOverlay = new Container();
     lockOverlay.label = "lock";
-    lockOverlay.position.set(0, 0); // Explicitly set to center
+    lockOverlay.position.set(0, 0);
 
-    // Draw hexagonal background (use fresh points array)
-    lockOverlay.poly(getHexPoints()).fill({ color: 0x000000, alpha: 0.7 });
+    // Hexagonal dark overlay background
+    const lockBg = new Graphics();
+    lockBg.poly(getHexPoints()).fill({ color: 0x000000, alpha: 0.75 });
+    lockOverlay.addChild(lockBg);
 
-    // Draw lock icon on top
-    lockOverlay
-      .rect(-8, -8, 16, 16)
-      .fill({ color: 0x666666 })
-      .stroke({ width: 2, color: 0x888888 });
+    // Draw proper padlock icon
+    const lockIcon = new Graphics();
+    const lockColor = 0x888888;
+    const lockHighlight = 0xaaaaaa;
+
+    // Padlock body (rounded rectangle)
+    lockIcon
+      .roundRect(-8, -2, 16, 12, 2)
+      .fill({ color: lockColor })
+      .stroke({ width: 1, color: lockHighlight });
+
+    // Padlock shackle (U-shape arc)
+    lockIcon
+      .moveTo(-5, -2)
+      .lineTo(-5, -6)
+      .arcTo(-5, -10, 0, -10, 4)
+      .arcTo(5, -10, 5, -6, 4)
+      .lineTo(5, -2)
+      .stroke({ width: 2.5, color: lockColor });
+
+    // Keyhole
+    lockIcon.circle(0, 4, 2).fill({ color: 0x333333 });
+    lockIcon.rect(-1, 4, 2, 4).fill({ color: 0x333333 });
+
+    lockOverlay.addChild(lockIcon);
+
+    // Get unlock level for this slot
+    const slotConfig = TURRET_SLOT_UNLOCKS[slot.index - 1];
+    const unlockLevel = slotConfig?.levelRequired ?? 50;
+
+    // Level text below lock icon
+    const levelText = new Text({
+      text: `Poz. ${unlockLevel}`,
+      style: {
+        fontSize: 9,
+        fill: 0x888888,
+        fontFamily: "Arial",
+        fontWeight: "bold",
+      },
+    });
+    levelText.anchor.set(0.5);
+    levelText.position.set(0, 18);
+    lockOverlay.addChild(levelText);
 
     lockOverlay.visible = !slot.isUnlocked;
     container.addChild(lockOverlay);

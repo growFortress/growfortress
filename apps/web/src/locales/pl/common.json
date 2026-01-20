@@ -278,7 +278,17 @@
     "randomArtifact": "Losowy artefakt",
     "starterPackDesc": "Idealny start Twojej przygody!",
     "maybeLater": "Może później",
-    "save": "Oszczędź"
+    "save": "Oszczędź",
+    "contents": "Zawartość",
+    "dustDescription": "Premium waluta do zakupów w sklepie. Wymień na ulepszenia, boostery i ekskluzywne przedmioty.",
+    "bundleDescription": "Zestaw wartościowych przedmiotów w promocyjnej cenie. Idealny wybór dla oszczędnych graczy!",
+    "battlePassDesc": "Odblokuj ekskluzywne nagrody i premium zawartość przez cały sezon.",
+    "randomHero": "Losowa jednostka",
+    "randomArtifact": "Losowy artefakt",
+    "rareMaterialsShort": "Rzadkie materiały",
+    "premiumRewards": "Ekskluzywne nagrody",
+    "days": "dni",
+    "permanentUnlock": "Stałe odblokowanie"
   },
   "guild": {
     "title": "Gildia",

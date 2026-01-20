@@ -17,16 +17,6 @@ import { audioManager } from "../../game/AudioManager.js";
 import { useCoordinates } from "../../hooks/useCoordinates.js";
 import styles from "./HubOverlay.module.css";
 
-// Turret slot unlock levels (slot index 1-6 -> required fortress level)
-const SLOT_UNLOCK_LEVELS: Record<number, number> = {
-  1: 1,
-  2: 5,
-  3: 15,
-  4: 25,
-  5: 35,
-  6: 40,
-};
-
 /**
  * HubOverlay provides clickable areas for heroes, turrets, and fortress
  * when the game is in idle phase (before starting a session).
@@ -123,26 +113,10 @@ export function HubOverlay() {
 
         // Check if slot is unlocked based on fortress level
         const isUnlocked = slot.index <= maxUnlockedSlots;
-        const unlockLevel = SLOT_UNLOCK_LEVELS[slot.index] ?? 50;
 
-        // Locked slot
+        // Locked slots are rendered by Pixi (TurretSystem) - skip HTML overlay
         if (!isUnlocked) {
-          return (
-            <div
-              key={slot.index}
-              class={`${styles.turretArea} ${styles.locked}`}
-              style={
-                {
-                  left: `${toScreenX(slot.x)}px`,
-                  top: `${toScreenY(slot.y)}px`,
-                } as JSX.CSSProperties
-              }
-              title={`Odblokuj na poziomie ${unlockLevel}`}
-            >
-              <span class={styles.lockIcon}>🔒</span>
-              <span class={styles.unlockLabel}>Poz. {unlockLevel}</span>
-            </div>
-          );
+          return null;
         }
 
         // Empty unlocked slot

@@ -278,7 +278,17 @@
     "randomArtifact": "Random artifact",
     "starterPackDesc": "The perfect start to your adventure!",
     "maybeLater": "Maybe later",
-    "save": "Save"
+    "save": "Save",
+    "contents": "Contents",
+    "dustDescription": "Premium currency for shop purchases. Exchange for upgrades, boosters and exclusive items.",
+    "bundleDescription": "A bundle of valuable items at a discounted price. Perfect choice for savvy players!",
+    "battlePassDesc": "Unlock exclusive rewards and premium content throughout the season.",
+    "randomHero": "Random hero",
+    "randomArtifact": "Random artifact",
+    "rareMaterialsShort": "Rare materials",
+    "premiumRewards": "Exclusive rewards",
+    "days": "days",
+    "permanentUnlock": "Permanent unlock"
   },
   "guild": {
     "title": "Guild",
