@@ -118,7 +118,28 @@
     "relics": "Relikty",
     "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
     "waveN": "Fala {{n}}",
-    "clickToClose": "Kliknij aby zamknąć"
+    "clickToClose": "Kliknij aby zamknąć",
+    "fortressAutoAttack": {
+      "title": "Twoja Twierdza",
+      "description": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak bronią Cię przed wrogami!"
+    },
+    "bombSkill": {
+      "title": "Umiejętności Twierdzy",
+      "description": "Kliknij umiejętność aby zadać obrażenia wszystkim wrogom. Umiejętności ładują się z czasem."
+    },
+    "relicSelection": {
+      "title": "Wybierz Relikt",
+      "description": "Po każdej fali wybierz relikt, który wzmocni Twoją obronę na całą sesję!"
+    },
+    "speedControls": {
+      "title": "Kontrola Prędkości",
+      "description": "Przyspiesz grę przyciskami 2x lub 3x gdy poczujesz się pewniej."
+    },
+    "buildSynergy": {
+      "title": "Synergia Twojego Buildu",
+      "description": "Vanguard tankuje, Railgun eliminuje cele, Twierdza Natury regeneruje HP. Szukaj reliktów wzmacniających Natural!"
+    },
+    "dismiss": "Rozumiem"
   },
   "unlock": {
     "level": "Poziom {{level}}",
@@ -158,6 +179,9 @@
     "hpValueText": "{{current}} z {{max}} punktów życia, forteca {{level}}",
     "resourceGold": "Złoto: {{amount}}",
     "resourceDust": "Pył: {{amount}}",
+    "resourcesLabel": "Zasoby",
+    "levelGroupLabel": "Poziom",
+    "shortcutsLabel": "Skróty",
     "levelLabel": "Poziom {{level}}",
     "xpProgress": "Postęp doświadczenia",
     "dailyQuestsWithRewards": "Dzienne Zadania ({{count}} nagród)",

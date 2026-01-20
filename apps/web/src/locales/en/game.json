@@ -118,7 +118,28 @@
     "relics": "Relics",
     "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
     "waveN": "Wave {{n}}",
-    "clickToClose": "Click to close"
+    "clickToClose": "Click to close",
+    "fortressAutoAttack": {
+      "title": "Your Fortress",
+      "description": "Fortress and turrets attack automatically. Watch them defend you from enemies!"
+    },
+    "bombSkill": {
+      "title": "Fortress Skills",
+      "description": "Click a skill to damage all enemies. Skills recharge over time."
+    },
+    "relicSelection": {
+      "title": "Choose a Relic",
+      "description": "After each wave, pick a relic to boost your defense for the entire run!"
+    },
+    "speedControls": {
+      "title": "Speed Controls",
+      "description": "Speed up the game with 2x or 3x buttons when you feel confident."
+    },
+    "buildSynergy": {
+      "title": "Your Build Synergy",
+      "description": "Vanguard tanks, Railgun kills, Natural Fortress heals. Look for Natural-boosting relics!"
+    },
+    "dismiss": "Got it"
   },
   "unlock": {
     "level": "Level {{level}}",
@@ -158,6 +179,9 @@
     "hpValueText": "{{current}} of {{max}} health points, fortress {{level}}",
     "resourceGold": "Gold: {{amount}}",
     "resourceDust": "Dust: {{amount}}",
+    "resourcesLabel": "Resources",
+    "levelGroupLabel": "Level",
+    "shortcutsLabel": "Shortcuts",
     "levelLabel": "Level {{level}}",
     "xpProgress": "Experience progress",
     "dailyQuestsWithRewards": "Daily Quests ({{count}} rewards)",

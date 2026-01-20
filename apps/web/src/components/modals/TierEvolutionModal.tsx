@@ -17,6 +17,7 @@ import {
 } from '../../state/fortress.signals.js';
 import { baseGold } from '../../state/profile.signals.js';
 import { purchaseHeroSlot, purchaseTurretSlot } from '../../api/slots.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './TierEvolutionModal.module.css';
 
 interface TierEvolutionModalProps {
@@ -85,8 +86,11 @@ function getAllUpcomingUnlocks(
 }
 
 export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolutionModalProps) {
+  const { t } = useTranslation('common');
   const currentTier = getFortressTier(fortressLevel);
-  const currentTierName = getFortressTierName(currentTier);
+  const currentTierName = t(`fortressPanel.tierNames.${currentTier}`, {
+    defaultValue: getFortressTierName(currentTier),
+  });
   const isMaxLevel = fortressLevel >= MAX_FORTRESS_LEVEL;
 
   // Slot purchase state

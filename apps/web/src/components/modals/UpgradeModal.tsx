@@ -27,6 +27,7 @@ import { useState } from 'preact/hooks';
 import { StatUpgradeRow } from '../shared/StatUpgradeRow.js';
 import { Modal } from '../shared/Modal.js';
 import { getAccessToken } from '../../api/auth.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './UpgradeModal.module.css';
 
 // Timeout for async operations (10 seconds)
@@ -35,32 +36,52 @@ const ASYNC_TIMEOUT_MS = 10000;
 /**
  * Wraps a promise with a timeout
  */
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Przekroczono limit czasu operacji')), timeoutMs)
+      setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
     ),
   ]);
 }
 
 // Turret names and info (4 turrets)
-const TURRET_INFO: Record<string, { name: string; icon: string; role: string; description: string }> = {
-  railgun: { name: 'Railgun', icon: '🎯', role: 'Szybkie Obrażenia', description: 'Szybkostrzelna wieża z wysokim DPS' },
-  artillery: { name: 'Artyleria', icon: '💣', role: 'Obrażenia Obszarowe', description: 'Potężne wybuchy na dużym obszarze' },
-  arc: { name: 'Łuk Plazmowy', icon: '🔷', role: 'Obrażenia Łańcuchowe', description: 'Błyskawice przeskakują między wrogami' },
-  cryo: { name: 'Kryo', icon: '❄️', role: 'Spowolnienie', description: 'Zamraża i spowalnia przeciwników' },
+const TURRET_INFO: Record<string, { icon: string; nameKey: string; roleKey: string; descriptionKey: string }> = {
+  railgun: {
+    icon: '🎯',
+    nameKey: 'upgradeModal.turrets.railgun.name',
+    roleKey: 'upgradeModal.turrets.railgun.role',
+    descriptionKey: 'upgradeModal.turrets.railgun.description',
+  },
+  artillery: {
+    icon: '💣',
+    nameKey: 'upgradeModal.turrets.artillery.name',
+    roleKey: 'upgradeModal.turrets.artillery.role',
+    descriptionKey: 'upgradeModal.turrets.artillery.description',
+  },
+  arc: {
+    icon: '🔷',
+    nameKey: 'upgradeModal.turrets.arc.name',
+    roleKey: 'upgradeModal.turrets.arc.role',
+    descriptionKey: 'upgradeModal.turrets.arc.description',
+  },
+  cryo: {
+    icon: '❄️',
+    nameKey: 'upgradeModal.turrets.cryo.name',
+    roleKey: 'upgradeModal.turrets.cryo.role',
+    descriptionKey: 'upgradeModal.turrets.cryo.description',
+  },
 };
 
 // Class colors and labels (7 classes)
-const CLASS_CONFIG: Record<FortressClass, { color: string; glow: string; label: string }> = {
-  natural: { color: '#228b22', glow: 'rgba(34, 139, 34, 0.3)', label: 'Natura' },
-  ice: { color: '#00bfff', glow: 'rgba(0, 191, 255, 0.3)', label: 'Lód' },
-  fire: { color: '#ff4500', glow: 'rgba(255, 69, 0, 0.3)', label: 'Ogień' },
-  lightning: { color: '#9932cc', glow: 'rgba(153, 50, 204, 0.3)', label: 'Błyskawica' },
-  tech: { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.3)', label: 'Tech' },
-  void: { color: '#4b0082', glow: 'rgba(75, 0, 130, 0.3)', label: 'Próżnia' },
-  plasma: { color: '#00ffff', glow: 'rgba(0, 255, 255, 0.3)', label: 'Plazma' },
+const CLASS_CONFIG: Record<FortressClass, { color: string; glow: string; element: FortressClass }> = {
+  natural: { color: '#228b22', glow: 'rgba(34, 139, 34, 0.3)', element: 'natural' },
+  ice: { color: '#00bfff', glow: 'rgba(0, 191, 255, 0.3)', element: 'ice' },
+  fire: { color: '#ff4500', glow: 'rgba(255, 69, 0, 0.3)', element: 'fire' },
+  lightning: { color: '#9932cc', glow: 'rgba(153, 50, 204, 0.3)', element: 'lightning' },
+  tech: { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.3)', element: 'tech' },
+  void: { color: '#4b0082', glow: 'rgba(75, 0, 130, 0.3)', element: 'void' },
+  plasma: { color: '#00ffff', glow: 'rgba(0, 255, 255, 0.3)', element: 'plasma' },
 };
 
 // API functions
@@ -90,6 +111,7 @@ interface UpgradeModalProps {
 }
 
 export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
+  const { t } = useTranslation(['modals', 'common']);
   const target = upgradeTarget.value;
   const visible = upgradePanelVisible.value;
 
@@ -124,7 +146,8 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
       try {
         const result = await withTimeout(
           upgradeTurretStat(turret.definitionId, stat),
-          ASYNC_TIMEOUT_MS
+          ASYNC_TIMEOUT_MS,
+          t('upgradeModal.errors.timeout')
         );
         if (result.success && result.newLevel !== undefined) {
           updateTurretStatLevel(turret.definitionId, stat as keyof PowerStatUpgrades, result.newLevel);
@@ -135,7 +158,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
           showErrorToast(result.error);
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Nie udało się ulepszyć statystyki';
+        const message = error instanceof Error ? error.message : t('upgradeModal.errors.failed');
         showErrorToast(message);
       } finally {
         setLoadingStat(null);
@@ -143,11 +166,14 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
     };
 
     const info = TURRET_INFO[turret.definitionId] || {
-      name: turret.definitionId,
+      nameKey: 'upgradeModal.turrets.unknown.name',
       icon: '🗼',
-      role: 'Nieznana',
-      description: 'Brak opisu',
+      roleKey: 'upgradeModal.turrets.unknown.role',
+      descriptionKey: 'upgradeModal.turrets.unknown.description',
     };
+    const turretName = t(info.nameKey);
+    const turretRole = t(info.roleKey);
+    const turretDescription = t(info.descriptionKey);
 
     const classConfig = CLASS_CONFIG[turret.currentClass] || CLASS_CONFIG.natural;
     const canUpgrade = turret.tier < 3;
@@ -165,7 +191,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
         <div class={styles.upgradePanel} style={cssVars}>
           {/* Header */}
           <div class={styles.modalHeader}>
-            <h3 class={styles.modalTitle}>Szczegóły Wieżyczki</h3>
+            <h3 class={styles.modalTitle}>{t('upgradeModal.title')}</h3>
             <button class={styles.closeButton} onClick={handleClose}>×</button>
           </div>
 
@@ -177,34 +203,35 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
               </div>
 
               <div class={styles.turretInfo}>
-                <h2 class={styles.turretName}>{info.name}</h2>
+                <h2 class={styles.turretName}>{turretName}</h2>
                 <div class={styles.turretMeta}>
-                  <span class={styles.turretClass}>{classConfig.label}</span>
-                  <span class={styles.turretRole}>{info.role}</span>
+                  <span class={styles.turretClass}>{t(`common:elements.${classConfig.element}`)}</span>
+                  <span class={styles.turretRole}>{turretRole}</span>
                 </div>
+                <p class={styles.turretDescription}>{turretDescription}</p>
                 {turretDef?.baseStats && (
                   <div class={styles.baseStats}>
                     <div class={styles.baseStat}>
                       <span class={styles.baseStatIcon}>⚔️</span>
                       <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.damage / 16384)}</span>
-                      <span>DMG</span>
+                      <span>{t('upgradeModal.stats.damageShort')}</span>
                     </div>
                     <div class={styles.baseStat}>
                       <span class={styles.baseStatIcon}>⚡</span>
                       <span class={styles.baseStatValue}>{(turretDef.baseStats.attackSpeed / 16384).toFixed(1)}</span>
-                      <span>ATK/s</span>
+                      <span>{t('upgradeModal.stats.attackSpeedShort')}</span>
                     </div>
                     <div class={styles.baseStat}>
                       <span class={styles.baseStatIcon}>🎯</span>
                       <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.range / 16384)}</span>
-                      <span>Zasięg</span>
+                      <span>{t('upgradeModal.stats.range')}</span>
                     </div>
                   </div>
                 )}
               </div>
 
               <div class={styles.tierBadge}>
-                <span class={styles.tierLabel}>Poziom</span>
+                <span class={styles.tierLabel}>{t('upgradeModal.tierLabel')}</span>
                 <span class={styles.tierValue}>{turret.tier}</span>
                 <span class={styles.tierMax}>/ 3</span>
               </div>
@@ -216,19 +243,19 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
               {canUpgrade ? (
                 <div class={styles.upgradeSection}>
                   <div class={styles.upgradeSectionHeader}>
-                    <h4 class={styles.sectionTitle}>Awans Poziomu</h4>
-                    <span class={styles.nextTierBadge}>→ Poz. {turret.tier + 1}</span>
+                    <h4 class={styles.sectionTitle}>{t('upgradeModal.levelUpTitle')}</h4>
+                    <span class={styles.nextTierBadge}>{t('upgradeModal.nextTier', { level: turret.tier + 1 })}</span>
                   </div>
 
                   <div class={styles.upgradePreview}>
                     <div class={styles.upgradeBonus}>
                       <span class={styles.upgradeBonusIcon}>⚔️</span>
-                      <span class={styles.upgradeBonusText}>Obrażenia</span>
+                      <span class={styles.upgradeBonusText}>{t('upgradeModal.bonuses.damage')}</span>
                       <span class={styles.upgradeBonusValue}>+25%</span>
                     </div>
                     <div class={styles.upgradeBonus}>
                       <span class={styles.upgradeBonusIcon}>⚡</span>
-                      <span class={styles.upgradeBonusText}>Szybkość Ataku</span>
+                      <span class={styles.upgradeBonusText}>{t('upgradeModal.bonuses.attackSpeed')}</span>
                       <span class={styles.upgradeBonusValue}>+15%</span>
                     </div>
                   </div>
@@ -249,21 +276,21 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
                     disabled={!canAfford}
                     onClick={() => onUpgrade({ type: 'turret', id: turret.slotIndex })}
                   >
-                    {canAfford ? 'Awansuj' : 'Brak Zasobów'}
+                    {canAfford ? t('upgradeModal.upgrade') : t('upgradeModal.notEnoughResources')}
                   </button>
                 </div>
               ) : (
                 <div class={styles.maxTier}>
                   <span class={styles.maxTierIcon}>👑</span>
-                  <span class={styles.maxTierText}>Maksymalny Poziom</span>
+                  <span class={styles.maxTierText}>{t('upgradeModal.maxLevel')}</span>
                 </div>
               )}
 
               {/* Right: Permanent Stat Bonuses */}
               <div class={styles.section}>
                 <div class={styles.sectionHeader}>
-                  <h4 class={styles.sectionTitle}>Wzmocnienia</h4>
-                  <span class={styles.sectionSubtitle}>permanentne bonusy dla {info.name}</span>
+                  <h4 class={styles.sectionTitle}>{t('upgradeModal.upgradesTitle')}</h4>
+                  <span class={styles.sectionSubtitle}>{t('upgradeModal.permanentBonusesFor', { name: turretName })}</span>
                 </div>
                 <div class={styles.statList}>
                   {TURRET_STAT_UPGRADES.map(config => (

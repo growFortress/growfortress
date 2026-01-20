@@ -61,7 +61,7 @@ export function Header(_props: HeaderProps) {
           <div class={styles.leftGroup}>
             {/* Resources Group */}
             <div class={styles.navGroupWrapper}>
-              <span class={styles.groupLabel}>Zasoby</span>
+              <span class={styles.groupLabel}>{t('header.resourcesLabel')}</span>
               <div class={styles.resourceGroup}>
                 <div class={styles.resource} aria-label={t('header.resourceGold', { amount: displayGold.value })}>
                   <span class={styles.resourceIcon} aria-hidden="true">🪙</span>
@@ -78,7 +78,7 @@ export function Header(_props: HeaderProps) {
 
             {/* Level Group */}
             <div class={styles.navGroupWrapper}>
-              <span class={styles.groupLabel}>Poziom</span>
+              <span class={styles.groupLabel}>{t('header.levelGroupLabel')}</span>
               <div class={styles.levelSection} aria-label={t('header.levelLabel', { level: baseLevel.value })}>
                 <span class={styles.levelLabel}>{t('common:labels.lv')}</span>
                 <span class={styles.levelValue}>{baseLevel.value}</span>
@@ -105,7 +105,7 @@ export function Header(_props: HeaderProps) {
           {/* Right: Quick Actions Group */}
           <div class={styles.rightGroup}>
             <div class={styles.navGroupWrapper}>
-            <span class={styles.groupLabel}>Skróty</span>
+            <span class={styles.groupLabel}>{t('header.shortcutsLabel')}</span>
             <div class={styles.buttonGroup}>
               {/* Daily Quests - frequent daily actions */}
               <Tooltip content={t('common:navigation.dailyQuests')} position="bottom">

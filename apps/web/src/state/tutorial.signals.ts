@@ -5,7 +5,8 @@ export type TutorialStepId =
   | "fortress_auto_attack"
   | "bomb_skill"
   | "relic_selection"
-  | "speed_controls";
+  | "speed_controls"
+  | "build_synergy";
 
 // Tutorial tip configuration
 export interface TutorialTip {

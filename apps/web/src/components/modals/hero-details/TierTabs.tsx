@@ -1,5 +1,6 @@
 import type { JSX } from 'preact';
 import type { HeroTier } from '@arcade/sim-core';
+import { useTranslation } from '../../../i18n/useTranslation.js';
 import styles from './TierTabs.module.css';
 
 // Tier colors
@@ -17,6 +18,7 @@ interface TierTabsProps {
 }
 
 export function TierTabs({ tiers, currentTier, selectedTier, onTierSelect }: TierTabsProps) {
+  const { t } = useTranslation('common');
   return (
     <div class={styles.tabsContainer}>
       {tiers.map((tier) => {
@@ -40,7 +42,7 @@ export function TierTabs({ tiers, currentTier, selectedTier, onTierSelect }: Tie
           >
             <span class={styles.tierBadge}>T{tier.tier}</span>
             <span class={styles.tierName}>{tier.name}</span>
-            {isCurrent && <span class={styles.currentBadge}>AKTUALNY</span>}
+            {isCurrent && <span class={styles.currentBadge}>{t('heroDetails.currentBadge')}</span>}
             {isLocked && <span class={styles.lockIcon}>🔒</span>}
           </button>
         );

@@ -5,6 +5,7 @@ import {
   activeTutorialTip,
   dismissCurrentTip,
 } from "../../state/tutorial.signals.js";
+import { useTranslation } from "../../i18n/useTranslation.js";
 import styles from "./TutorialHighlight.module.css";
 
 function getTooltipPosition(
@@ -54,6 +55,7 @@ function getTooltipPosition(
 }
 
 export function TutorialHighlight() {
+  const { t } = useTranslation("game");
   const tip = activeTutorialTip.value;
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const dismissTimerRef = useRef<number | null>(null);
@@ -152,7 +154,7 @@ export function TutorialHighlight() {
         <h3 class={styles.title}>{tip.title}</h3>
         <p class={styles.description}>{tip.description}</p>
         <button class={styles.dismissBtn} onClick={handleDismiss}>
-          Rozumiem
+          {t("tutorial.dismiss")}
         </button>
       </div>
     </div>

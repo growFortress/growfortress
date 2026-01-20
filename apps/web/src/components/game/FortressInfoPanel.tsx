@@ -95,6 +95,9 @@ export function FortressInfoPanel() {
   const fortressClass = selectedFortressClass.value;
   const fortressLevel = baseLevel.value;
   const currentTier = getFortressTier(fortressLevel);
+  const fortressTierName = t(`fortressPanel.tierNames.${currentTier}`, {
+    defaultValue: getFortressTierName(currentTier),
+  });
   const state = powerState.value;
   const gold = displayGold.value;
 
@@ -385,7 +388,7 @@ export function FortressInfoPanel() {
                 aria-label={t('fortressPanel.tierClick', { tier: currentTier })}
                 aria-expanded={evolutionModalOpen}
               >
-                <span class={styles.tierLabel}>{getFortressTierName(currentTier)}</span>
+                <span class={styles.tierLabel}>{fortressTierName}</span>
                 <span class={styles.tierArrow}>→</span>
               </button>
             </div>

@@ -1,4 +1,5 @@
 import type { HeroSkillDefinition } from '@arcade/sim-core';
+import { useTranslation } from '../../../i18n/useTranslation.js';
 import cardStyles from './cards.module.css';
 
 interface SkillCardProps {
@@ -17,54 +18,60 @@ function getSkillIcon(skill: HeroSkillDefinition): string {
   return '⚡';
 }
 
-function getSkillTypeLabel(skill: HeroSkillDefinition): string {
-  if (skill.isPassive) return 'Pasywna';
-  if (skill.isUltimate) return 'ULTIMATE';
-  return '';
-}
-
 function formatCooldown(cooldownTicks: number): string {
   // Assuming 30 ticks per second
   return `${(cooldownTicks / 30).toFixed(1)}s`;
 }
 
-function formatEffectValue(effect: { type: string; amount?: number; percent?: number; duration?: number }): string {
+function formatEffectValue(
+  effect: { type: string; amount?: number; percent?: number; duration?: number },
+  t: (key: string, options?: Record<string, number | string>) => string
+): string {
   switch (effect.type) {
     case 'damage':
-      return `${effect.amount} DMG`;
+      return t('heroDetails.skillEffects.damage', { amount: effect.amount ?? 0 });
     case 'stun':
-      return `${((effect.duration || 0) / 30).toFixed(1)}s Stun`;
+      return t('heroDetails.skillEffects.stun', {
+        seconds: Number(((effect.duration || 0) / 30).toFixed(1)),
+      });
     case 'slow':
-      return `${effect.percent}% Slow`;
+      return t('heroDetails.skillEffects.slow', { percent: effect.percent ?? 0 });
     case 'heal':
-      return `${effect.amount} Heal`;
+      return t('heroDetails.skillEffects.heal', { amount: effect.amount ?? 0 });
     case 'shield':
-      return `${effect.amount} Shield`;
+      return t('heroDetails.skillEffects.shield', { amount: effect.amount ?? 0 });
     case 'burn':
-      return `Burn`;
+      return t('heroDetails.skillEffects.burn');
     case 'freeze':
-      return `Freeze`;
+      return t('heroDetails.skillEffects.freeze');
     case 'poison':
-      return `Poison`;
+      return t('heroDetails.skillEffects.poison');
     case 'buff':
-      return `Buff`;
+      return t('heroDetails.skillEffects.buff');
     case 'summon':
-      return `Summon`;
+      return t('heroDetails.skillEffects.summon');
     default:
       return effect.type;
   }
 }
 
 export function SkillCard({ skill }: SkillCardProps) {
+  const { t } = useTranslation(['common', 'data']);
   const skillType = getSkillType(skill);
   const skillIcon = getSkillIcon(skill);
-  const skillTypeLabel = getSkillTypeLabel(skill);
+  const skillTypeLabel = skill.isPassive
+    ? t('heroDetails.skillTypes.passive')
+    : skill.isUltimate
+      ? t('heroDetails.skillTypes.ultimate')
+      : '';
+  const skillName = t(`data:skills.${skill.id}.name`, { defaultValue: skill.name });
+  const skillDescription = t(`data:skills.${skill.id}.description`, { defaultValue: skill.description });
 
   return (
     <div class={`${cardStyles.skillCard} ${cardStyles[skillType]}`}>
       <div class={cardStyles.skillHeader}>
         <span class={cardStyles.skillIcon}>{skillIcon}</span>
-        <span class={cardStyles.skillName}>{skill.name}</span>
+        <span class={cardStyles.skillName}>{skillName}</span>
         {skillTypeLabel && (
           <span class={cardStyles.skillType}>{skillTypeLabel}</span>
         )}
@@ -73,13 +80,13 @@ export function SkillCard({ skill }: SkillCardProps) {
         )}
       </div>
 
-      <div class={cardStyles.skillDesc}>{skill.description}</div>
+      <div class={cardStyles.skillDesc}>{skillDescription}</div>
 
       {skill.effects.length > 0 && (
         <div class={cardStyles.skillEffects}>
           {skill.effects.map((effect, index) => (
             <span key={index} class={cardStyles.effectBadge}>
-              {formatEffectValue(effect)}
+              {formatEffectValue(effect, t)}
             </span>
           ))}
         </div>

@@ -43,6 +43,8 @@ import { ProgressBar } from '../shared/ProgressBar.js';
 import { useEffect } from 'preact/hooks';
 import styles from './BattlePassModal.module.css';
 
+const BATTLE_PASS_DISABLED = true;
+
 function getRewardIcon(type: string): string {
   const icons: Record<string, string> = {
     dust: '\u2728',
@@ -138,7 +140,7 @@ export function BattlePassModal() {
 
   // Fetch data when modal opens
   useEffect(() => {
-    if (isVisible && !data) {
+    if (isVisible && !data && !BATTLE_PASS_DISABLED) {
       fetchBattlePass();
     }
   }, [isVisible, data]);
@@ -162,6 +164,26 @@ export function BattlePassModal() {
   const canBuyTier = dust >= BATTLE_PASS_CONFIG.tierPurchaseDustCost && !maxTierReached;
 
   if (!isVisible) return null;
+
+  if (BATTLE_PASS_DISABLED) {
+    return (
+      <Modal
+        visible={isVisible}
+        title="Battle Pass"
+        onClose={hideBattlePassModal}
+        class={styles.modal}
+        ariaLabel="Battle Pass"
+      >
+        <div class={styles.noSeason}>
+          <span class={styles.noSeasonIcon}>🎖️</span>
+          <span class={styles.noSeasonTitle}>Coming soon</span>
+          <span class={styles.noSeasonDesc}>
+            Battle Pass jest tymczasowo wylaczony. Wroc pozniej po wiecej informacji.
+          </span>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

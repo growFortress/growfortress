@@ -22,6 +22,7 @@ import {
 import { useState } from 'preact/hooks';
 import { Modal } from '../shared/Modal.js';
 import { getAccessToken } from '../../api/auth.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './ArtifactsModal.module.css';
 
 // Timeout for async operations (10 seconds)
@@ -85,7 +86,12 @@ async function upgradeItem(itemId: string): Promise<{
 }
 
 export function ArtifactsModal() {
+  const { t, language } = useTranslation(['common', 'data']);
   const isVisible = artifactsModalVisible.value;
+  const getArtifactName = (artifactId: string, name: string, polishName: string) =>
+    t(`data:artifacts.${artifactId}.name`, {
+      defaultValue: language === 'pl' ? polishName : name,
+    });
   const tab = activeTab.value;
   const artifacts = artifactsWithDefs.value;
   const items = itemsWithDefs.value;
@@ -165,8 +171,16 @@ export function ArtifactsModal() {
                     <span class={styles.artifactIcon}>
                       {SLOT_ICONS[artifact.definition.slot] || '📦'}
                     </span>
-                    <span class={styles.artifactName}>{artifact.definition.polishName}</span>
-                    <span class={styles.artifactSlot}>{artifact.definition.slot}</span>
+                    <span class={styles.artifactName}>
+                      {getArtifactName(
+                        artifact.definition.id,
+                        artifact.definition.name,
+                        artifact.definition.polishName
+                      )}
+                    </span>
+                    <span class={styles.artifactSlot}>
+                      {t(`heroDetails.artifactSlots.${artifact.definition.slot}`)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -191,8 +205,16 @@ export function ArtifactsModal() {
                     <span class={styles.artifactIcon}>
                       {SLOT_ICONS[artifact.definition.slot] || '📦'}
                     </span>
-                    <span class={styles.artifactName}>{artifact.definition.polishName}</span>
-                    <span class={styles.artifactSlot}>{artifact.definition.slot}</span>
+                    <span class={styles.artifactName}>
+                      {getArtifactName(
+                        artifact.definition.id,
+                        artifact.definition.name,
+                        artifact.definition.polishName
+                      )}
+                    </span>
+                    <span class={styles.artifactSlot}>
+                      {t(`heroDetails.artifactSlots.${artifact.definition.slot}`)}
+                    </span>
                   </div>
                 ))}
               </div>

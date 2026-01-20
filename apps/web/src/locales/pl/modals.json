@@ -98,103 +98,63 @@
     "error": "Wystąpił błąd. Spróbuj ponownie.",
     "steps": {
       "welcome": {
-        "title": "Witaj, Dowódco",
-        "subtitle": "Grow Fortress to nieskończona obrona, a każda sesja buduje Twoją legendę.",
+        "title": "1 Run w 60 Sekund",
+        "subtitle": "Grow Fortress to nieskończona obrona. Każda sesja buduje Twoją legendę.",
         "cards": {
           "endless": {
-            "title": "Nieskończona obrona",
-            "description": "Wytrzymaj coraz trudniejsze fale i zmieniające się sektory."
+            "title": "Fale wrogów",
+            "description": "Wytrzymaj coraz trudniejsze fale. Twierdza i wieżyczki atakują automatycznie."
           },
           "squad": {
-            "title": "Zbuduj drużynę",
-            "description": "Połącz klasę twierdzy, bohaterów i wieżyczki w jeden build."
+            "title": "Wybieraj relikty",
+            "description": "Po każdej fali wybierasz 1 z 3 reliktów — buduj unikalne combo."
           },
           "progression": {
-            "title": "Stały progres",
-            "description": "Złoto, dust i odblokowania zostają na stałe."
+            "title": "Zachowaj postęp",
+            "description": "Złoto, dust i ulepszenia zostają między sesjami."
           }
         }
       },
-      "coreLoop": {
-        "title": "Core Loop",
-        "subtitle": "Broń, zgarniaj łupy, wybieraj relikty, idź dalej.",
+      "synergy": {
+        "title": "Dlaczego Ten Build Działa",
+        "subtitle": "Twój startowy zestaw to przemyślana synergia.",
         "cards": {
-          "waves": {
-            "title": "Fale i bossowie",
-            "description": "Każda fala skaluje trudność, bossowie dają kryształy i rzadkie dropy."
-          },
-          "relics": {
-            "title": "Wybór reliktu",
-            "description": "Po każdej fali wybierasz 1 z 3 reliktów."
-          },
-          "sessions": {
-            "title": "Zapisy sesji",
-            "description": "Sesje są segmentowane — możesz wrócić po przerwie."
-          }
-        }
-      },
-      "starterKit": {
-        "title": "Starterowy zestaw",
-        "subtitle": "Automatycznie ustawiamy pierwszą konfigurację.",
-        "cards": {
-          "class": {
+          "fortress": {
             "title": "Twierdza Natury",
-            "description": "Zbalansowana obrona z regeneracją."
+            "description": "Regeneracja HP i bonusy do żywotności całej drużyny.",
+            "benefit": "Efekt: +15% HP dla bohaterów tej samej klasy"
           },
           "hero": {
-            "title": "Unit-0 \"Vanguard\"",
-            "description": "Wytrzymały tank z polem ochronnym."
+            "title": "Vanguard (Natural)",
+            "description": "Tank z tarczą ochronną. Trzyma linię frontu.",
+            "benefit": "Synergia: Bonus DMG +30% przy Twierdzy Natural"
           },
           "turret": {
             "title": "Wieża Railgun",
-            "description": "Szybki DPS single-target na groźne cele."
+            "description": "Szybki single-target DPS. Eliminuje groźne cele.",
+            "benefit": "Rola: Pokrywa słabość tanka w obrażeniach"
           }
         },
-        "hint": "Nowe klasy, bohaterów i wieżyczki odblokujesz wraz z poziomem."
+        "result": "Vanguard tankuje, Railgun zabija, Twierdza leczy — klasyka defense!"
       },
-      "progression": {
-        "title": "Progres i buildy",
-        "subtitle": "Leveluj, by odblokować klasy, tiery i stałe ulepszenia.",
+      "ready": {
+        "title": "Gotowy do Gry",
+        "subtitle": "Kilka wskazówek przed pierwszym runem.",
         "cards": {
-          "classes": {
-            "title": "Klasy twierdzy",
-            "description": "Sześć żywiołów z unikalnymi umiejętnościami."
+          "auto": {
+            "title": "Automatyczny atak",
+            "description": "Bohater i wieżyczki strzelają sami. Ty wybierasz relikty i umiejętności."
           },
-          "tiers": {
-            "title": "Tiery bohaterów i wieżyczek",
-            "description": "Wyższe tiery to nowe skille i większa moc."
+          "relics": {
+            "title": "Relikty = Twój build",
+            "description": "Szukaj reliktów pasujących do klasy twierdzy — wzmacniają synergie."
           },
           "upgrades": {
-            "title": "Ulepszenia mocy",
-            "description": "Inwestuj złoto w stałe bonusy do statystyk."
+            "title": "Po sesji: ulepszaj",
+            "description": "Za zdobyte złoto kupuj permanentne bonusy do statystyk."
           }
-        }
-      },
-      "pvpGuilds": {
-        "title": "PvP i gildie",
-        "subtitle": "Sprawdź swój build przeciw innym dowódcom.",
-        "cards": {
-          "pvp": {
-            "title": "Asynchroniczna arena PvP",
-            "description": "Wyzwania z graczami o podobnej mocy."
-          },
-          "guilds": {
-            "title": "Bitwy gildii",
-            "description": "Wspólne rajdy, skarbiec i tygodniowe wyścigi."
-          },
-          "leaderboards": {
-            "title": "Rankingi",
-            "description": "Walcz o nagrody w tygodniowych leaderboardach."
-          }
-        }
-      }
-    },
-    "finalTips": {
-      "title": "Szybkie wskazówki na start:",
-      "items": {
-        "auto": "Bohaterowie i wieżyczki atakują automatycznie.",
-        "relics": "Relikty po każdej fali kształtują Twój run.",
-        "skills": "Umiejętności klas odblokujesz wraz z poziomem."
+        },
+        "starterKit": "Twój starter kit:"
       }
     }
   },
@@ -216,5 +176,56 @@
   },
   "choice": {
     "title": "Wybierz Relikt"
+  },
+  "upgradeModal": {
+    "title": "Szczegóły Wieżyczki",
+    "tierLabel": "Poziom",
+    "levelUpTitle": "Awans Poziomu",
+    "nextTier": "→ Poz. {{level}}",
+    "upgrade": "Awansuj",
+    "notEnoughResources": "Brak Zasobów",
+    "maxLevel": "Maksymalny Poziom",
+    "upgradesTitle": "Wzmocnienia",
+    "permanentBonusesFor": "permanentne bonusy dla {{name}}",
+    "stats": {
+      "damageShort": "DMG",
+      "attackSpeedShort": "ATK/s",
+      "range": "Zasięg"
+    },
+    "bonuses": {
+      "damage": "Obrażenia",
+      "attackSpeed": "Szybkość Ataku"
+    },
+    "errors": {
+      "timeout": "Przekroczono limit czasu operacji",
+      "failed": "Nie udało się ulepszyć statystyki"
+    },
+    "turrets": {
+      "railgun": {
+        "name": "Railgun",
+        "role": "Szybkie Obrażenia",
+        "description": "Szybkostrzelna wieża z wysokim DPS"
+      },
+      "artillery": {
+        "name": "Artyleria",
+        "role": "Obrażenia Obszarowe",
+        "description": "Potężne wybuchy na dużym obszarze"
+      },
+      "arc": {
+        "name": "Łuk Plazmowy",
+        "role": "Obrażenia Łańcuchowe",
+        "description": "Błyskawice przeskakują między wrogami"
+      },
+      "cryo": {
+        "name": "Kryo",
+        "role": "Spowolnienie",
+        "description": "Zamraża i spowalnia przeciwników"
+      },
+      "unknown": {
+        "name": "Nieznana",
+        "role": "Nieznana",
+        "description": "Brak opisu"
+      }
+    }
   }
 }

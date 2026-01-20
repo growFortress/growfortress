@@ -7,10 +7,12 @@ import enCommon from '../locales/en/common.json';
 import enAuth from '../locales/en/auth.json';
 import enGame from '../locales/en/game.json';
 import enModals from '../locales/en/modals.json';
+import enData from '../locales/en/data.json';
 import plCommon from '../locales/pl/common.json';
 import plAuth from '../locales/pl/auth.json';
 import plGame from '../locales/pl/game.json';
 import plModals from '../locales/pl/modals.json';
+import plData from '../locales/pl/data.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'pl'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
@@ -21,12 +23,14 @@ const resources = {
     auth: enAuth,
     game: enGame,
     modals: enModals,
+    data: enData,
   },
   pl: {
     common: plCommon,
     auth: plAuth,
     game: plGame,
     modals: plModals,
+    data: plData,
   },
 };
 
@@ -37,7 +41,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'game', 'modals'],
+    ns: ['common', 'auth', 'game', 'modals', 'data'],
 
     detection: {
       order: ['localStorage', 'navigator'],

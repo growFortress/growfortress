@@ -148,6 +148,12 @@
   border-radius: var(--radius-sm);
 }
 
+.turretDescription {
+  font-size: 13px;
+  color: var(--color-text-60);
+  margin: 0;
+}
+
 .baseStats {
   display: flex;
   gap: 16px;

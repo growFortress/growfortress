@@ -98,103 +98,63 @@
     "error": "An error occurred. Try again.",
     "steps": {
       "welcome": {
-        "title": "Welcome, Commander",
-        "subtitle": "Grow Fortress is an endless defense where every run builds your legacy.",
+        "title": "1 Run in 60 Seconds",
+        "subtitle": "Grow Fortress is an endless defense. Every run builds your legacy.",
         "cards": {
           "endless": {
-            "title": "Endless Defense",
-            "description": "Hold the line through escalating waves and shifting sectors."
+            "title": "Enemy Waves",
+            "description": "Survive escalating waves. Fortress and turrets attack automatically."
           },
           "squad": {
-            "title": "Build Your Squad",
-            "description": "Combine fortress class, heroes, and turrets into one build."
+            "title": "Choose Relics",
+            "description": "Pick 1 of 3 relics after each wave — build unique combos."
           },
           "progression": {
-            "title": "Persistent Progression",
-            "description": "Gold, dust, and unlocks carry across runs."
+            "title": "Keep Progress",
+            "description": "Gold, dust, and upgrades persist between runs."
           }
         }
       },
-      "coreLoop": {
-        "title": "Core Loop",
-        "subtitle": "Defend, loot, choose relics, repeat.",
+      "synergy": {
+        "title": "Why This Build Works",
+        "subtitle": "Your starter loadout is a designed synergy.",
         "cards": {
-          "waves": {
-            "title": "Waves & Bosses",
-            "description": "Each wave scales; bosses bring crystals and rare drops."
-          },
-          "relics": {
-            "title": "Relic Choices",
-            "description": "Pick 1 of 3 relics after every wave."
-          },
-          "sessions": {
-            "title": "Session Saves",
-            "description": "Runs are segmented so you can return after a break."
-          }
-        }
-      },
-      "starterKit": {
-        "title": "Starter Loadout",
-        "subtitle": "We auto-equip your first build so you can jump in.",
-        "cards": {
-          "class": {
+          "fortress": {
             "title": "Natural Fortress",
-            "description": "Balanced defense with regeneration."
+            "description": "HP regen and vitality bonuses for your team.",
+            "benefit": "Effect: +15% HP for same-class heroes"
           },
           "hero": {
-            "title": "Unit-0 \"Vanguard\"",
-            "description": "Front-line tank with a protective shield."
+            "title": "Vanguard (Natural)",
+            "description": "Tank with protective shield. Holds the front line.",
+            "benefit": "Synergy: +30% DMG bonus with Natural Fortress"
           },
           "turret": {
             "title": "Railgun Tower",
-            "description": "Fast single-target DPS to pick off threats."
+            "description": "Fast single-target DPS. Eliminates threats quickly.",
+            "benefit": "Role: Covers the tank's damage weakness"
           }
         },
-        "hint": "Unlock new classes, heroes, and turrets as you level."
+        "result": "Vanguard tanks, Railgun kills, Fortress heals — classic defense!"
       },
-      "progression": {
-        "title": "Progression & Builds",
-        "subtitle": "Level up to unlock classes, tiers, and permanent upgrades.",
+      "ready": {
+        "title": "Ready to Play",
+        "subtitle": "A few tips before your first run.",
         "cards": {
-          "classes": {
-            "title": "Fortress Classes",
-            "description": "Six elemental classes with unique skills."
+          "auto": {
+            "title": "Auto Attack",
+            "description": "Heroes and turrets fire automatically. You pick relics and skills."
           },
-          "tiers": {
-            "title": "Hero & Turret Tiers",
-            "description": "Upgrade tiers to unlock new abilities."
+          "relics": {
+            "title": "Relics = Your Build",
+            "description": "Look for relics matching your fortress class — they boost synergies."
           },
           "upgrades": {
-            "title": "Power Upgrades",
-            "description": "Invest gold for permanent stat bonuses."
+            "title": "After Run: Upgrade",
+            "description": "Spend earned gold on permanent stat bonuses."
           }
-        }
-      },
-      "pvpGuilds": {
-        "title": "PvP & Guilds",
-        "subtitle": "Test your build against other commanders.",
-        "cards": {
-          "pvp": {
-            "title": "Async PvP Arena",
-            "description": "Challenge players within your power range."
-          },
-          "guilds": {
-            "title": "Guild Battles",
-            "description": "Team up for raids, treasury, and weekly races."
-          },
-          "leaderboards": {
-            "title": "Leaderboards",
-            "description": "Climb weekly rankings for rewards."
-          }
-        }
-      }
-    },
-    "finalTips": {
-      "title": "Quick tips before you drop in:",
-      "items": {
-        "auto": "Heroes and turrets attack automatically.",
-        "relics": "Relics after each wave shape your run.",
-        "skills": "Class skills unlock as you level up."
+        },
+        "starterKit": "Your starter kit:"
       }
     }
   },
@@ -216,5 +176,56 @@
   },
   "choice": {
     "title": "Choose Relic"
+  },
+  "upgradeModal": {
+    "title": "Turret Details",
+    "tierLabel": "Level",
+    "levelUpTitle": "Level Up",
+    "nextTier": "→ Lvl {{level}}",
+    "upgrade": "Upgrade",
+    "notEnoughResources": "Not enough resources",
+    "maxLevel": "Max level",
+    "upgradesTitle": "Upgrades",
+    "permanentBonusesFor": "permanent bonuses for {{name}}",
+    "stats": {
+      "damageShort": "DMG",
+      "attackSpeedShort": "ATK/s",
+      "range": "Range"
+    },
+    "bonuses": {
+      "damage": "Damage",
+      "attackSpeed": "Attack Speed"
+    },
+    "errors": {
+      "timeout": "Operation timed out",
+      "failed": "Failed to upgrade stat"
+    },
+    "turrets": {
+      "railgun": {
+        "name": "Railgun",
+        "role": "Fast Damage",
+        "description": "Rapid-fire turret with high DPS"
+      },
+      "artillery": {
+        "name": "Artillery",
+        "role": "Area Damage",
+        "description": "Powerful blasts over a wide area"
+      },
+      "arc": {
+        "name": "Plasma Arc",
+        "role": "Chain Damage",
+        "description": "Lightning jumps between enemies"
+      },
+      "cryo": {
+        "name": "Cryo",
+        "role": "Slow",
+        "description": "Freezes and slows enemies"
+      },
+      "unknown": {
+        "name": "Unknown",
+        "role": "Unknown",
+        "description": "No description"
+      }
+    }
   }
 }

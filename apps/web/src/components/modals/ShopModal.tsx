@@ -17,7 +17,6 @@ import {
   STARTER_PACK_PRICE_PLN,
   PREMIUM_HEROES,
   BUNDLES,
-  BATTLE_PASS,
   type ShopCategory,
 } from '@arcade/protocol';
 import {
@@ -502,15 +501,6 @@ export function ShopModal() {
           goldAmount: 3000,
         };
 
-        const battlePassDetail: ProductDetail = {
-          type: 'battle_pass',
-          id: BATTLE_PASS.id,
-          name: BATTLE_PASS.name,
-          description: t('shop.battlePassDesc'),
-          pricePLN: BATTLE_PASS.pricePLN,
-          durationDays: BATTLE_PASS.durationDays,
-        };
-
         return (
           <>
             {/* Starter Pack */}
@@ -564,48 +554,6 @@ export function ShopModal() {
               </div>
             )}
 
-            {/* Battle Pass */}
-            <div
-              class={`${styles.productCard} ${styles.clickable} ${styles.tierLegendary} ${styles.featuredCard}`}
-              onClick={() => handleProductClick(battlePassDetail)}
-            >
-              <div class={`${styles.productBadge} ${styles.badgeSeason}`}>SEZON 1</div>
-
-              <div class={styles.productIllustration}>
-                <Icon name="crown" size={36} color="var(--color-skill)" />
-              </div>
-
-              <div class={styles.featuredContent}>
-                <h3 class={styles.productTitle}>{BATTLE_PASS.name}</h3>
-
-                <div class={styles.contentBar}>
-                  <div class={styles.contentItem}>
-                    <Icon name="trophy" size={18} color="var(--color-skill)" />
-                    <span>Premium</span>
-                  </div>
-                  <div class={styles.contentItem}>
-                    <Icon name="star" size={18} color="var(--color-gold)" />
-                    <span>Exclusive</span>
-                  </div>
-                  <div class={styles.contentItem}>
-                    <Icon name="clock" size={18} color="var(--color-text-60)" />
-                    <span>{BATTLE_PASS.durationDays}d</span>
-                  </div>
-                </div>
-
-                <div class={styles.featuredActions}>
-                  <div class={styles.productPrice}>{BATTLE_PASS.pricePLN} PLN</div>
-                  <Button
-                    onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust(BATTLE_PASS.id); }}
-                    disabled={processing}
-                    variant="primary"
-                    class={styles.buyButton}
-                  >
-                    {processing ? t('shop.processingBtn') : t('shop.buyNow')}
-                  </Button>
-                </div>
-              </div>
-            </div>
           </>
         );
       }

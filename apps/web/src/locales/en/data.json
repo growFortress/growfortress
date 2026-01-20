@@ -1,0 +1,287 @@
+{
+  "skills": {
+    "arc_strike": {
+      "name": "Arc Strike",
+      "description": "Fires an electric arc that deals damage"
+    },
+    "storm_passive": {
+      "name": "Storm Protocol",
+      "description": "Attacks chain to 2 additional targets (70% DMG per jump)"
+    },
+    "chain_lightning": {
+      "name": "Chain Lightning",
+      "description": "A stronger attack with a lightning chain"
+    },
+    "storm_lord": {
+      "name": "Lord of Thunder",
+      "description": "Chain: +1 target (3 total), 80% DMG per jump instead of 70%"
+    },
+    "ion_cannon": {
+      "name": "Ion Cannon",
+      "description": "Ultimate energy weapon"
+    },
+    "emp_storm": {
+      "name": "EMP Storm",
+      "description": "ULTIMATE: Massive electromagnetic explosion"
+    },
+    "laser_burst": {
+      "name": "Laser Burst",
+      "description": "Precise laser shot"
+    },
+    "thrusters": {
+      "name": "Thrusters",
+      "description": "+20% movement speed"
+    },
+    "missile_barrage": {
+      "name": "Missile Barrage",
+      "description": "Multiple guided missiles in an area"
+    },
+    "targeting_system": {
+      "name": "Targeting System",
+      "description": "+20% crit chance"
+    },
+    "nano_swarm": {
+      "name": "Nanobot Swarm",
+      "description": "Adaptive nanobot weapons"
+    },
+    "orbital_strike": {
+      "name": "Orbital Strike",
+      "description": "ULTIMATE: A massive energy beam from orbit"
+    },
+    "void_strike": {
+      "name": "Void Strike",
+      "description": "Powerful dimensional energy strike"
+    },
+    "void_absorption": {
+      "name": "Void Absorption",
+      "description": "Damage increases as HP is lost"
+    },
+    "dimensional_rift": {
+      "name": "Dimensional Rift",
+      "description": "Opens a rift that pulls in enemies"
+    },
+    "void_resonance": {
+      "name": "Void Resonance",
+      "description": "+100% damage when HP is below 30%"
+    },
+    "void_burst": {
+      "name": "Void Burst",
+      "description": "Powerful explosion of dimensional energy"
+    },
+    "dimensional_collapse": {
+      "name": "Dimensional Collapse",
+      "description": "ULTIMATE: Creates a black hole that destroys everything"
+    },
+    "barrier_pulse": {
+      "name": "Barrier Pulse",
+      "description": "Fires a force field that bounces off enemies"
+    },
+    "command_aura": {
+      "name": "Command Aura",
+      "description": "+10% damage for allies, taunts enemies within range 4"
+    },
+    "dual_barrier": {
+      "name": "Dual Barrier",
+      "description": "Two force fields fired simultaneously"
+    },
+    "veteran": {
+      "name": "Veteran",
+      "description": "+25% damage reduction, +20% armor for allies, 5% fortress damage absorbed"
+    },
+    "kinetic_hammer": {
+      "name": "Kinetic Hammer",
+      "description": "Wields a high-power kinetic weapon"
+    },
+    "rally_command": {
+      "name": "Rally Command",
+      "description": "ULTIMATE: Significantly buffs all units"
+    },
+    "plasma_bolt": {
+      "name": "Plasma Bolt",
+      "description": "High-temperature plasma projectile"
+    },
+    "probability": {
+      "name": "Probability Manipulation",
+      "description": "+15% luck"
+    },
+    "plasma_wave": {
+      "name": "Plasma Wave",
+      "description": "Area thermal damage"
+    },
+    "thermal_flux": {
+      "name": "Thermal Flux",
+      "description": "Random buffs/debuffs"
+    },
+    "plasma_shield": {
+      "name": "Plasma Shield",
+      "description": "Protective plasma sphere"
+    },
+    "thermal_annihilation": {
+      "name": "Thermal Annihilation",
+      "description": "ULTIMATE: Deals 50% HP to enemies (max 500+10/lv)"
+    },
+    "cryo_shot": {
+      "name": "Cryo Shot",
+      "description": "Cryogenic projectile that slows the target"
+    },
+    "precision": {
+      "name": "Precision",
+      "description": "+15% crit chance"
+    },
+    "multi_shot": {
+      "name": "Multi-Shot",
+      "description": "Fires 3 projectiles at once"
+    },
+    "ice_mastery": {
+      "name": "Ice Mastery",
+      "description": "+25% ice damage, +10% slow duration"
+    },
+    "shatter_shot": {
+      "name": "Shatter Shot",
+      "description": "Deals double damage to frozen targets"
+    },
+    "blizzard_barrage": {
+      "name": "Blizzard Barrage",
+      "description": "ULTIMATE: A rain of icy shots on all enemies"
+    },
+    "plasma_burst": {
+      "name": "Plasma Burst",
+      "description": "Fires a concentrated plasma burst"
+    },
+    "stealth_protocol": {
+      "name": "Stealth Protocol",
+      "description": "+20% crit chance"
+    },
+    "plasma_lance": {
+      "name": "Plasma Lance",
+      "description": "Piercing plasma attack hitting multiple targets"
+    },
+    "phase_shift": {
+      "name": "Phase Shift",
+      "description": "+30% crit chance, +15% attack speed"
+    },
+    "plasma_overload": {
+      "name": "Plasma Overload",
+      "description": "Massive plasma explosion with high crit"
+    },
+    "ghost_protocol": {
+      "name": "Ghost Protocol",
+      "description": "ULTIMATE: Becomes invisible; next attack deals 300% DMG"
+    },
+    "execute_strike": {
+      "name": "Execution",
+      "description": "Deals 80 DMG + 100% bonus vs targets <30% HP"
+    },
+    "lethal_precision": {
+      "name": "Lethal Precision",
+      "description": "+25% crit damage, critical hits heal 10 HP"
+    },
+    "void_slash": {
+      "name": "Void Slash",
+      "description": "Cuts through enemies, damaging all along the path"
+    },
+    "hunter_instinct": {
+      "name": "Hunter Instinct",
+      "description": "+40% crit damage, execute threshold 25%/20%/15% (regular/elite/boss)"
+    },
+    "death_mark": {
+      "name": "Death Mark",
+      "description": "Marks a target - it takes +50% DMG for 5s"
+    },
+    "omega_protocol": {
+      "name": "Omega Protocol",
+      "description": "ULTIMATE: Instantly eliminate targets <25% HP, otherwise 400 DMG"
+    },
+    "flame_strike": {
+      "name": "Flame Strike",
+      "description": "Fiery attack that applies burn"
+    },
+    "burning_heart": {
+      "name": "Burning Heart",
+      "description": "+20% DMG vs burning targets"
+    },
+    "plasma_explosion": {
+      "name": "Plasma Explosion",
+      "description": "Area explosion that burns all enemies"
+    },
+    "fire_mastery": {
+      "name": "Fire Mastery",
+      "description": "+35% fire DMG, +15% crit chance"
+    },
+    "pillar_of_fire": {
+      "name": "Pillar of Fire",
+      "description": "Creates a pillar of fire that deals continuous damage"
+    },
+    "thermal_apocalypse": {
+      "name": "Thermal Apocalypse",
+      "description": "ULTIMATE: 200 DMG + 50% enemy HP (max 500+10/lv) to all"
+    },
+    "ice_barrier": {
+      "name": "Ice Barrier",
+      "description": "Ice shield that slows attackers"
+    },
+    "cryo_armor": {
+      "name": "Cryogenic Armor",
+      "description": "+20% damage reduction, attackers are slowed"
+    },
+    "frost_strike": {
+      "name": "Frost Strike",
+      "description": "Area attack that freezes enemies"
+    },
+    "heart_of_winter": {
+      "name": "Heart of Winter",
+      "description": "+30% max HP, regenerates when not under attack"
+    },
+    "eternal_winter": {
+      "name": "Eternal Winter",
+      "description": "A zone of eternal gloom that freezes enemies"
+    },
+    "absolute_zero": {
+      "name": "Absolute Zero",
+      "description": "ULTIMATE: Freezes all enemies and strengthens defense"
+    }
+  },
+  "weaknesses": {
+    "fire_vulnerability": {
+      "name": "Fire Vulnerability",
+      "description": "+25% damage taken from Fire"
+    },
+    "emp_vulnerability": {
+      "name": "EMP Vulnerability",
+      "description": "Lightning deals +30% DMG"
+    },
+    "cc_vulnerable": {
+      "name": "CC Vulnerable",
+      "description": "Stun/Freeze lasts 50% longer"
+    },
+    "only_human": {
+      "name": "Only Human",
+      "description": "No resistance to cosmic energies"
+    },
+    "fragile_psyche": {
+      "name": "Fragile Psyche",
+      "description": "Stun deals additional damage"
+    },
+    "no_powers": {
+      "name": "No Powers",
+      "description": "-40% HP"
+    },
+    "energy_instability": {
+      "name": "Energy Instability",
+      "description": "Void deals +35% DMG"
+    },
+    "unstable_power": {
+      "name": "Unstable Power",
+      "description": "Takes +20% DMG when HP < 50%"
+    },
+    "thermal_instability": {
+      "name": "Thermal Instability",
+      "description": "Ice deals +30% DMG"
+    },
+    "slow_metabolism": {
+      "name": "Slow Metabolism",
+      "description": "Fire deals +25% DMG"
+    }
+  },
+  "artifacts": {}
+}

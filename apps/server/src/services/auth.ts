@@ -777,7 +777,7 @@ export async function deleteAccount(userId: string): Promise<boolean> {
       // Delete password reset tokens
       prisma.passwordResetToken.deleteMany({ where: { userId } }),
       // Delete messages
-      prisma.message.deleteMany({ where: { userId } }),
+      prisma.message.deleteMany({ where: { senderId: userId } }),
       // Delete support tickets and responses
       prisma.ticketResponse.deleteMany({
         where: { ticket: { userId } },
@@ -785,16 +785,16 @@ export async function deleteAccount(userId: string): Promise<boolean> {
       prisma.supportTicket.deleteMany({ where: { userId } }),
       // Delete PvP challenges
       prisma.pvpChallenge.deleteMany({
-        where: { OR: [{ challengerId: userId }, { defenderId: userId }] },
+        where: { OR: [{ challengerId: userId }, { challengedId: userId }] },
       }),
       // Delete guild membership
       prisma.guildMember.deleteMany({ where: { userId } }),
       // Delete player artifacts
       prisma.playerArtifact.deleteMany({ where: { userId } }),
       // Delete battlepass progress
-      prisma.battlepassProgress.deleteMany({ where: { userId } }),
+      prisma.battlePassProgress.deleteMany({ where: { userId } }),
       // Delete daily quests
-      prisma.dailyQuest.deleteMany({ where: { userId } }),
+      prisma.dailyQuestProgress.deleteMany({ where: { userId } }),
       // Delete mastery progress
       prisma.masteryProgress.deleteMany({ where: { userId } }),
       // Delete power upgrades

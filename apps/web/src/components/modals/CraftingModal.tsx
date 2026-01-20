@@ -16,6 +16,7 @@ import {
 import { baseGold, playerMaterials } from '../../state/index.js';
 import { craftArtifact } from '../../api/client.js';
 import { Modal } from '../shared/Modal.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './CraftingModal.module.css';
 
 // State signals
@@ -86,6 +87,7 @@ const MATERIAL_NAMES: Record<string, string> = {
 };
 
 export function CraftingModal() {
+  const { t, language } = useTranslation(['common', 'data']);
   const isVisible = craftingModalVisible.value;
   const slotFilter = activeSlotFilter.value;
   const gold = baseGold.value;
@@ -203,6 +205,11 @@ export function CraftingModal() {
     return undefined;
   }, [isVisible, handleKeyDown]);
 
+  const getArtifactName = (artifactId: string, name: string, polishName: string) =>
+    t(`data:artifacts.${artifactId}.name`, {
+      defaultValue: language === 'pl' ? polishName : name,
+    });
+
   return (
     <Modal
       visible={isVisible}
@@ -248,8 +255,12 @@ export function CraftingModal() {
                     {SLOT_ICONS[artifact.slot] || '📦'}
                   </span>
                   <div class={styles.recipeListInfo}>
-                    <span class={styles.recipeListName}>{artifact.polishName}</span>
-                    <span class={styles.recipeListSlot}>{artifact.slot}</span>
+                    <span class={styles.recipeListName}>
+                      {getArtifactName(artifact.id, artifact.name, artifact.polishName)}
+                    </span>
+                    <span class={styles.recipeListSlot}>
+                      {t(`heroDetails.artifactSlots.${artifact.slot}`)}
+                    </span>
                   </div>
                   {owned && <span class={styles.ownedBadgeSmall}>Owned</span>}
                 </button>
@@ -305,7 +316,14 @@ function RecipeDetailView({
   showSuccess,
   onCraft,
 }: RecipeDetailViewProps) {
+  const { t, language } = useTranslation(['common', 'data']);
   const cost = calculateArtifactCraftCost(artifact.id);
+  const artifactName = t(`data:artifacts.${artifact.id}.name`, {
+    defaultValue: language === 'pl' ? artifact.polishName : artifact.name,
+  });
+  const artifactDescription = t(`data:artifacts.${artifact.id}.description`, {
+    defaultValue: artifact.description,
+  });
 
   return (
     <>
@@ -315,14 +333,14 @@ function RecipeDetailView({
           {SLOT_ICONS[artifact.slot] || '📦'}
         </span>
         <div class={styles.detailHeaderInfo}>
-          <h3 class={styles.artifactName}>{artifact.polishName}</h3>
+          <h3 class={styles.artifactName}>{artifactName}</h3>
           <div class={styles.artifactMeta}>
             <span class={`${styles.rarityTag} ${styles[artifact.rarity]}`}>
-              {artifact.rarity}
+              {t(`rarity.${artifact.rarity}`)}
             </span>
-            <span class={styles.slotTag}>{artifact.slot}</span>
+            <span class={styles.slotTag}>{t(`heroDetails.artifactSlots.${artifact.slot}`)}</span>
           </div>
-          <p class={styles.artifactDescription}>{artifact.description}</p>
+          <p class={styles.artifactDescription}>{artifactDescription}</p>
         </div>
       </div>
 
@@ -333,7 +351,9 @@ function RecipeDetailView({
           <div class={styles.effectsList}>
             {artifact.effects.map((effect, idx) => (
               <div key={idx} class={styles.effectTag}>
-                {effect.description || `${effect.stat}: +${effect.value}`}
+                {t(`data:artifacts.${artifact.id}.effects.${idx}`, {
+                  defaultValue: effect.description || `${effect.stat}: +${effect.value}`,
+                })}
               </div>
             ))}
           </div>

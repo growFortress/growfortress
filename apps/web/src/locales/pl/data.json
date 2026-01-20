@@ -1,0 +1,287 @@
+{
+  "skills": {
+    "arc_strike": {
+      "name": "Uderzenie Łukowe",
+      "description": "Wystrzeliwuje łuk elektryczny zadający obrażenia"
+    },
+    "storm_passive": {
+      "name": "Protokół Burzowy",
+      "description": "Ataki łańcuchują do 2 dodatkowych celów (70% DMG per skok)"
+    },
+    "chain_lightning": {
+      "name": "Łańcuch Błyskawic",
+      "description": "Potężniejszy atak z łańcuchem elektrycznym"
+    },
+    "storm_lord": {
+      "name": "Władca Piorunów",
+      "description": "Chain: +1 cel (3 total), 80% DMG per skok zamiast 70%"
+    },
+    "ion_cannon": {
+      "name": "Działo Jonowe",
+      "description": "Ultimatywna broń energetyczna"
+    },
+    "emp_storm": {
+      "name": "Burza EMP",
+      "description": "ULTIMATE: Masywna eksplozja elektromagnetyczna"
+    },
+    "laser_burst": {
+      "name": "Impuls Laserowy",
+      "description": "Strzał z lasera precyzyjnego"
+    },
+    "thrusters": {
+      "name": "Silniki Odrzutowe",
+      "description": "+20% movement speed"
+    },
+    "missile_barrage": {
+      "name": "Salwa Rakietowa",
+      "description": "Wiele rakiet kierowanych w obszarze"
+    },
+    "targeting_system": {
+      "name": "System Celowania",
+      "description": "+20% crit chance"
+    },
+    "nano_swarm": {
+      "name": "Rój Nanorobotów",
+      "description": "Adaptacyjne nano-bronie bojowe"
+    },
+    "orbital_strike": {
+      "name": "Uderzenie Orbitalne",
+      "description": "ULTIMATE: Ogromny promień energii z orbity"
+    },
+    "void_strike": {
+      "name": "Uderzenie Próżni",
+      "description": "Potężne uderzenie energią wymiarową"
+    },
+    "void_absorption": {
+      "name": "Absorpcja Próżni",
+      "description": "Obrażenia rosną wraz z utratą HP"
+    },
+    "dimensional_rift": {
+      "name": "Szczelina Wymiarowa",
+      "description": "Otwiera rozdarcie w przestrzeni wciągające wrogów"
+    },
+    "void_resonance": {
+      "name": "Rezonans Próżni",
+      "description": "+100% obrażeń przy HP poniżej 30%"
+    },
+    "void_burst": {
+      "name": "Eksplozja Próżniowa",
+      "description": "Potężna eksplozja energii wymiarowej"
+    },
+    "dimensional_collapse": {
+      "name": "Kolaps Wymiarowy",
+      "description": "ULTIMATE: Tworzy czarną dziurę niszczącą wszystko"
+    },
+    "barrier_pulse": {
+      "name": "Impuls Tarczy",
+      "description": "Wystrzeliwuje pole siłowe odbijające się od wrogów"
+    },
+    "command_aura": {
+      "name": "Aura Dowodzenia",
+      "description": "+10% damage dla sojuszników, taunts wrogów w zasięgu 4"
+    },
+    "dual_barrier": {
+      "name": "Podwójna Bariera",
+      "description": "Dwa pola siłowe wystrzeliwane jednocześnie"
+    },
+    "veteran": {
+      "name": "Weteran",
+      "description": "+25% damage reduction, +20% armor dla sojuszników, 5% DMG twierdzy absorbowane"
+    },
+    "kinetic_hammer": {
+      "name": "Młot Kinetyczny",
+      "description": "Operuje bronią kinetyczną wysokiej mocy"
+    },
+    "rally_command": {
+      "name": "Rozkaz Rajdu",
+      "description": "ULTIMATE: Znacząco wzmacnia wszystkie jednostki"
+    },
+    "plasma_bolt": {
+      "name": "Impuls Plazmowy",
+      "description": "Pocisk plazmowy wysokiej temperatury"
+    },
+    "probability": {
+      "name": "Probability Manipulation",
+      "description": "+15% luck"
+    },
+    "plasma_wave": {
+      "name": "Fala Plazmowa",
+      "description": "Obszarowe obrażenia termiczne"
+    },
+    "thermal_flux": {
+      "name": "Fluktuacja Termiczna",
+      "description": "Random buffs/debuffs"
+    },
+    "plasma_shield": {
+      "name": "Tarcza Plazmowa",
+      "description": "Ochronna sfera plazmowa"
+    },
+    "thermal_annihilation": {
+      "name": "Anihilacja Termiczna",
+      "description": "ULTIMATE: Zadaje 50% HP wrogom (max 500+10/lv)"
+    },
+    "cryo_shot": {
+      "name": "Strzał Kriogeniczny",
+      "description": "Pocisk kriogeniczny spowalniający cel"
+    },
+    "precision": {
+      "name": "Precyzja",
+      "description": "+15% crit chance"
+    },
+    "multi_shot": {
+      "name": "Wielostrzał",
+      "description": "Wystrzeliwuje 3 pociski jednocześnie"
+    },
+    "ice_mastery": {
+      "name": "Mistrzostwo Lodu",
+      "description": "+25% ice damage, +10% slow duration"
+    },
+    "shatter_shot": {
+      "name": "Strzał Kruszący",
+      "description": "Zadaje podwójne obrażenia zamrożonym celom"
+    },
+    "blizzard_barrage": {
+      "name": "Nawałnica Lodowa",
+      "description": "ULTIMATE: Deszcz lodowych strzał na wszystkich wrogów"
+    },
+    "plasma_burst": {
+      "name": "Impuls Plazmowy",
+      "description": "Wystrzeliwuje koncentrowany impuls plazmy"
+    },
+    "stealth_protocol": {
+      "name": "Protokół Kamuflażu",
+      "description": "+20% crit chance"
+    },
+    "plasma_lance": {
+      "name": "Lanca Plazmowa",
+      "description": "Przebijający atak plazmowy trafiający wiele celów"
+    },
+    "phase_shift": {
+      "name": "Przesunięcie Fazowe",
+      "description": "+30% crit chance, +15% attack speed"
+    },
+    "plasma_overload": {
+      "name": "Przeciążenie Plazmowe",
+      "description": "Masywna eksplozja plazmy z wysokim crit"
+    },
+    "ghost_protocol": {
+      "name": "Protokół Widmo",
+      "description": "ULTIMATE: Staje się niewidzialny, następny atak zadaje 300% DMG"
+    },
+    "execute_strike": {
+      "name": "Egzekucja",
+      "description": "Zadaje 80 DMG + 100% bonus vs cele <30% HP"
+    },
+    "lethal_precision": {
+      "name": "Śmiertelna Precyzja",
+      "description": "+25% crit damage, trafienia krytyczne leczą 10 HP"
+    },
+    "void_slash": {
+      "name": "Cięcie Próżni",
+      "description": "Przechodzi przez wrogów zadając obrażenia wszystkim na ścieżce"
+    },
+    "hunter_instinct": {
+      "name": "Instynkt Łowcy",
+      "description": "+40% crit damage, execute threshold 25%/20%/15% (regular/elite/boss)"
+    },
+    "death_mark": {
+      "name": "Znak Śmierci",
+      "description": "Oznacza cel - otrzymuje +50% DMG przez 5s"
+    },
+    "omega_protocol": {
+      "name": "Protokół Omega",
+      "description": "ULTIMATE: Natychmiastowa eliminacja celu <25% HP, inaczej 400 DMG"
+    },
+    "flame_strike": {
+      "name": "Plomien Uderzeniowy",
+      "description": "Ognisty atak zadajacy podpalenie"
+    },
+    "burning_heart": {
+      "name": "Gorace Serce",
+      "description": "+20% DMG vs podpalone cele"
+    },
+    "plasma_explosion": {
+      "name": "Eksplozja Plazmowa",
+      "description": "Obszarowa eksplozja podpalajaca wszystkich wrogow"
+    },
+    "fire_mastery": {
+      "name": "Mistrz Ognia",
+      "description": "+35% fire DMG, +15% szansa na kryt"
+    },
+    "pillar_of_fire": {
+      "name": "Filar Ognia",
+      "description": "Tworzy slup ognia zadajacy ciagle obrazenia"
+    },
+    "thermal_apocalypse": {
+      "name": "Apokalipsa Termiczna",
+      "description": "ULTIMATE: 200 DMG + 50% HP wroga (max 500+10/lv) do wszystkich"
+    },
+    "ice_barrier": {
+      "name": "Lodowa Bariera",
+      "description": "Tarcza lodowa spowalniajaca atakujacych"
+    },
+    "cryo_armor": {
+      "name": "Kriogeniczna Zbroja",
+      "description": "+20% redukcja obrazen, atakujacy sa spowalniani"
+    },
+    "frost_strike": {
+      "name": "Mrozne Uderzenie",
+      "description": "Obszarowy atak zamrazajacy wrogow"
+    },
+    "heart_of_winter": {
+      "name": "Serce Zimy",
+      "description": "+30% max HP, regeneracja gdy niezaatakowany"
+    },
+    "eternal_winter": {
+      "name": "Wieczna Zima",
+      "description": "Strefa wiecznego mroku zamrazajaca wrogow"
+    },
+    "absolute_zero": {
+      "name": "Absolutne Zero",
+      "description": "ULTIMATE: Zamraza wszystkich wrogow i wzmacnia obrone"
+    }
+  },
+  "weaknesses": {
+    "fire_vulnerability": {
+      "name": "Wrażliwość na Ogień",
+      "description": "+25% otrzymywanych obrażeń od Fire"
+    },
+    "emp_vulnerability": {
+      "name": "Wrażliwość na EMP",
+      "description": "Lightning zadaje +30% DMG"
+    },
+    "cc_vulnerable": {
+      "name": "Podatny na Kontrolę",
+      "description": "Stun/Freeze trwa 50% dłużej"
+    },
+    "only_human": {
+      "name": "Tylko Człowiek",
+      "description": "Brak odporności na kosmiczne energie"
+    },
+    "fragile_psyche": {
+      "name": "Krucha Psychika",
+      "description": "Stun zadaje dodatkowe obrażenia"
+    },
+    "no_powers": {
+      "name": "Brak Mocy",
+      "description": "-40% HP"
+    },
+    "energy_instability": {
+      "name": "Niestabilność Energii",
+      "description": "Void zadaje +35% DMG"
+    },
+    "unstable_power": {
+      "name": "Niestabilna Moc",
+      "description": "Otrzymuje +20% DMG gdy HP < 50%"
+    },
+    "thermal_instability": {
+      "name": "Niestabilnosc Termiczna",
+      "description": "Ice zadaje +30% DMG"
+    },
+    "slow_metabolism": {
+      "name": "Wolny Metabolizm",
+      "description": "Fire zadaje +25% DMG"
+    }
+  },
+  "artifacts": {}
+}

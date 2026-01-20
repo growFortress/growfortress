@@ -5,6 +5,7 @@ import { HERO_UPGRADE_COSTS } from '@arcade/protocol';
 import { HeroAvatar } from '../../shared/HeroAvatar.js';
 import { Button } from '../../shared/Button.js';
 import { SkillCard } from './SkillCard.js';
+import { useTranslation } from '../../../i18n/useTranslation.js';
 import styles from './TierPreviewModal.module.css';
 
 // Class colors
@@ -46,6 +47,7 @@ export function TierPreviewModal({
   onClose,
   onUpgrade,
 }: TierPreviewModalProps) {
+  const { t } = useTranslation('common');
   if (!visible) return null;
 
   const classColor = CLASS_COLORS[heroDefinition.class];
@@ -92,11 +94,11 @@ export function TierPreviewModal({
         <div class={styles.header}>
           <button class={styles.backButton} onClick={onClose}>
             <span class={styles.backIcon}>←</span>
-            Wróć
+            {t('heroDetails.back')}
           </button>
           <h2 class={styles.title}>
             <span class={styles.tierBadge} style={{ background: nextTierColor }}>
-              TIER {nextTierNum}
+              {t('heroDetails.tierLabel', { tier: nextTierNum })}
             </span>
             {nextTier.name}
           </h2>
@@ -115,10 +117,10 @@ export function TierPreviewModal({
 
           {/* Stat Multiplier */}
           <div class={styles.section}>
-            <h3 class={styles.sectionTitle}>MNOŻNIK STATYSTYK</h3>
+            <h3 class={styles.sectionTitle}>{t('heroDetails.statMultiplier').toUpperCase()}</h3>
             <div class={styles.multiplierComparison}>
               <div class={styles.multiplierFrom}>
-                <span class={styles.multiplierLabel}>Tier {currentTier}</span>
+                <span class={styles.multiplierLabel}>{t('heroDetails.tierWithNumber', { tier: currentTier })}</span>
                 <span class={styles.multiplierValue}>×{currentTierDef.statMultiplier.toFixed(1)}</span>
               </div>
               <div class={styles.multiplierArrow}>
@@ -126,7 +128,7 @@ export function TierPreviewModal({
                 <span class={styles.arrowHead}>▶</span>
               </div>
               <div class={styles.multiplierTo}>
-                <span class={styles.multiplierLabel}>Tier {nextTierNum}</span>
+                <span class={styles.multiplierLabel}>{t('heroDetails.tierWithNumber', { tier: nextTierNum })}</span>
                 <span class={styles.multiplierValue}>×{nextTier.statMultiplier.toFixed(1)}</span>
               </div>
             </div>
@@ -135,7 +137,7 @@ export function TierPreviewModal({
           {/* New Skills */}
           {newSkills.length > 0 && (
             <div class={styles.section}>
-              <h3 class={styles.sectionTitle}>NOWE UMIEJĘTNOŚCI</h3>
+              <h3 class={styles.sectionTitle}>{t('heroDetails.newSkills').toUpperCase()}</h3>
               <div class={styles.skillsList}>
                 {newSkills.map((skill, index) => (
                   <div
@@ -152,16 +154,16 @@ export function TierPreviewModal({
 
           {/* Visual Changes */}
           <div class={styles.section}>
-            <h3 class={styles.sectionTitle}>EFEKTY WIZUALNE</h3>
+            <h3 class={styles.sectionTitle}>{t('heroDetails.visualChanges').toUpperCase()}</h3>
             <div class={styles.visualChanges}>
               <div class={styles.visualItem}>
-                <span class={styles.visualLabel}>Rozmiar</span>
+                <span class={styles.visualLabel}>{t('heroDetails.visualSize')}</span>
                 <span class={styles.visualValue}>
                   ×{sizeChange.from.toFixed(1)} → ×{sizeChange.to.toFixed(1)}
                 </span>
               </div>
               <div class={styles.visualItem}>
-                <span class={styles.visualLabel}>Intensywność blasku</span>
+                <span class={styles.visualLabel}>{t('heroDetails.visualGlow')}</span>
                 <div class={styles.glowBars}>
                   <div
                     class={styles.glowBar}
@@ -176,7 +178,7 @@ export function TierPreviewModal({
               </div>
               {newParticles.length > 0 && (
                 <div class={styles.visualItem}>
-                  <span class={styles.visualLabel}>Nowe efekty</span>
+                  <span class={styles.visualLabel}>{t('heroDetails.newEffects')}</span>
                   <div class={styles.particleList}>
                     {newParticles.map((particle) => (
                       <span key={particle} class={styles.particleBadge}>
@@ -205,7 +207,7 @@ export function TierPreviewModal({
               onClick={onUpgrade}
               class={styles.upgradeButton}
             >
-              ULEPSZ DO TIER {nextTierNum}
+              {t('heroDetails.upgradeToTier', { tier: nextTierNum })}
             </Button>
           </div>
         </div>
