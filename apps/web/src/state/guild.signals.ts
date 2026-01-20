@@ -21,7 +21,7 @@ import type {
 export const showGuildPanel = signal(false);
 
 /** Current active tab in guild panel */
-export const guildPanelTab = signal<'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications'>('info');
+export const guildPanelTab = signal<'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications' | 'medals' | 'trophies'>('info');
 
 /** Whether guild search modal is visible */
 export const showGuildSearch = signal(false);

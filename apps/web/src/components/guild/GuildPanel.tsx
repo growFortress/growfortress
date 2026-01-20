@@ -42,9 +42,11 @@ import { GuildRosterTab } from './GuildRosterTab.js';
 import { GuildTowerRaceTab } from './GuildTowerRaceTab.js';
 import { GuildBossTab } from './GuildBossTab.js';
 import { GuildApplicationsTab } from './GuildApplicationsTab.js';
+import { GuildMedalsTab } from './GuildMedalsTab.js';
+import { GuildTrophiesTab } from './GuildTrophiesTab.js';
 import styles from './GuildPanel.module.css';
 
-type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications';
+type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications' | 'medals' | 'trophies';
 
 interface NavItem {
   id: TabType;
@@ -159,7 +161,9 @@ export function GuildPanel() {
     { id: 'members', label: t('guild.tabs.members'), icon: '👥' },
     { id: 'treasury', label: t('guild.tabs.treasury'), icon: '💰' },
     { id: 'battles', label: t('guild.tabs.battles'), icon: '⚔️' },
-    { id: 'tower-race', label: t('guild.tabs.race'), icon: '🏆' },
+    { id: 'trophies', label: 'Trofea', icon: '🏆' },
+    { id: 'tower-race', label: t('guild.tabs.race'), icon: '🗼' },
+    { id: 'medals', label: 'Medale', icon: '🥇' },
     { id: 'boss', label: t('guild.tabs.boss'), icon: '👹' },
     { id: 'roster', label: t('guild.tabs.roster'), icon: '📋', officerOnly: true },
     { id: 'applications', label: 'Podania', icon: '📨', officerOnly: true, badge: pendingApplicationsCount.value },
@@ -307,6 +311,8 @@ export function GuildPanel() {
               {activeTab === 'battles' && <GuildBattlesTab onRefresh={refreshData} />}
               {activeTab === 'tower-race' && <GuildTowerRaceTab onRefresh={refreshData} />}
               {activeTab === 'boss' && <GuildBossTab onRefresh={refreshData} />}
+              {activeTab === 'medals' && <GuildMedalsTab onRefresh={refreshData} />}
+              {activeTab === 'trophies' && <GuildTrophiesTab onRefresh={refreshData} />}
               {activeTab === 'roster' && <GuildRosterTab />}
               {activeTab === 'applications' && <GuildApplicationsTab onRefresh={refreshData} />}
             </div>

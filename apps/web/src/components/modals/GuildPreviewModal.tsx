@@ -4,7 +4,7 @@
  */
 import { Modal } from '../shared/Modal.js';
 import type { GuildPreviewMember, GuildStructureLevels } from '@arcade/protocol';
-import { GUILD_TROPHIES } from '@arcade/protocol';
+import { getTrophyById } from '@arcade/protocol';
 import {
   guildPreviewData,
   guildPreviewLoading,
@@ -137,15 +137,15 @@ interface TrophyBadgeProps {
 }
 
 function TrophyBadge({ trophyId }: TrophyBadgeProps) {
-  const trophy = Object.values(GUILD_TROPHIES).find(t => t.id === trophyId);
+  const trophy = getTrophyById(trophyId);
   if (!trophy) return null;
 
   return (
     <div class={styles.trophyBadge} title={trophy.description}>
-      <span class={styles.trophyIcon}>🏆</span>
+      <span class={styles.trophyIcon}>{trophy.icon}</span>
       <div class={styles.trophyInfo}>
         <span class={styles.trophyName}>{trophy.name}</span>
-        <span class={styles.trophyBonus}>{trophy.bonus}</span>
+        <span class={styles.trophyBonus}>{trophy.bonus.description}</span>
       </div>
     </div>
   );

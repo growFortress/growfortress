@@ -2696,3 +2696,443 @@ textarea.guildDescription {
   font-size: 0.85rem;
   color: var(--color-text-40);
 }
+
+/* ============================================================================
+   MEDALS TAB STYLES
+   ============================================================================ */
+
+.activeBonusCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.1));
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: var(--radius-lg);
+}
+
+.activeBonusIcon {
+  font-size: 3rem;
+  filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.5));
+}
+
+.activeBonusInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.activeBonusValue {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #22c55e;
+}
+
+.activeBonusSource {
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+}
+
+.activeBonusExpiry {
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+}
+
+.medalStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.medalStatCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.medalStatCard:hover {
+  border-color: var(--medal-color);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--medal-color) 30%, transparent);
+}
+
+.medalStatIcon {
+  font-size: 1.75rem;
+}
+
+.medalStatValue {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--medal-color);
+}
+
+.medalStatLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.totalMedalsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+  margin-top: var(--spacing-md);
+}
+
+.totalMedalsValue {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.totalMedalsSeparator {
+  color: var(--color-text-20);
+}
+
+.bestRankValue {
+  font-weight: 700;
+  color: #FFD700;
+}
+
+.medalsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.medalCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.medalCard:hover {
+  border-color: var(--medal-color);
+  box-shadow: 0 0 20px var(--medal-glow, var(--medal-color));
+  transform: translateY(-2px);
+}
+
+.medalCardIcon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 8px var(--medal-glow, var(--medal-color)));
+}
+
+.medalCardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.medalCardTitle {
+  font-weight: 600;
+  color: var(--medal-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.medalCardRank {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.medalCardWeek {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+}
+
+.medalCardStats {
+  text-align: right;
+}
+
+.medalCardWaves {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.medalCardCoins {
+  font-size: 0.8rem;
+  color: #FFD700;
+  font-weight: 600;
+}
+
+.medalRewardsTable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.medalRewardsHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.medalRewardsRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  align-items: center;
+}
+
+.medalRewardsIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.coinsValue {
+  color: #FFD700;
+  font-weight: 600;
+}
+
+.bonusValue {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   TROPHIES TAB STYLES
+   ============================================================================ */
+
+.battleStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.battleStatCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.battleStatIcon {
+  font-size: 1.75rem;
+}
+
+.battleStatInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.battleStatValue {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.battleStatLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+}
+
+.categoryFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.categoryBtn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-60);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.categoryBtn:hover {
+  background: var(--glass-bg);
+  color: var(--color-text);
+  border-color: var(--cat-color, var(--color-primary-30));
+}
+
+.categoryBtnActive {
+  background: var(--color-primary-20);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.trophiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.trophyCard {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s var(--ease-spring);
+}
+
+.trophyCardEarned {
+  border-color: var(--trophy-color);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--trophy-color) 20%, transparent);
+}
+
+.trophyCardLocked {
+  opacity: 0.7;
+}
+
+.trophyCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--trophy-color) 30%, transparent);
+}
+
+.trophyCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.trophyCardIcon {
+  font-size: 2rem;
+}
+
+.trophyCardCategory {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.trophyCardBody {
+  flex: 1;
+}
+
+.trophyCardTitle {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.trophyCardProgress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.trophyProgressBar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.trophyProgressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.trophyProgressText {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+  min-width: 50px;
+  text-align: right;
+}
+
+.trophyCardBonus {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--glass-border);
+}
+
+.trophyBonusStat {
+  font-size: 0.8rem;
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.trophyBonusCoin {
+  font-size: 0.8rem;
+  color: #FFD700;
+  font-weight: 600;
+}
+
+.trophyBonusBadge {
+  font-size: 0.8rem;
+  color: #7C3AED;
+  font-weight: 600;
+}
+
+.trophyCardDate {
+  font-size: 0.7rem;
+  color: var(--color-text-40);
+  margin-top: var(--spacing-xs);
+}
+
+.trophyInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.trophyInfoCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.trophyInfoIcon {
+  font-size: 1.5rem;
+}
+
+.trophyInfoContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.trophyInfoTitle {
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.trophyInfoValue {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  font-weight: 600;
+}

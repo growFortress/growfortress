@@ -12,6 +12,7 @@ import {
   getWeekStart,
   getWeekEnd,
 } from '../lib/weekUtils.js';
+import { applyWaveBonusMultiplier, getActiveWaveBonus } from './guildMedals.js';
 
 // ============================================================================
 // TYPES
@@ -46,6 +47,13 @@ export interface TowerRaceStatus {
   guildEntry: GuildTowerRaceEntry | null;
   guildRank: number | null;
   timeRemaining: number; // milliseconds
+  activeBonus: {
+    wavesBonus: number;
+    bonusPercentage: number; // e.g., 10 for +10%
+    sourceMedalType: string | null;
+    expiresAt: Date | null;
+    isActive: boolean;
+  };
 }
 
 // ============================================================================
@@ -97,7 +105,10 @@ export async function getCurrentRace(): Promise<GuildTowerRace> {
  * Get race status for a guild
  */
 export async function getRaceStatus(guildId: string): Promise<TowerRaceStatus> {
-  const race = await getCurrentRace();
+  const [race, bonus] = await Promise.all([
+    getCurrentRace(),
+    getActiveWaveBonus(guildId),
+  ]);
 
   // Get guild's entry
   const guildEntry = await prisma.guildTowerRaceEntry.findUnique({
@@ -129,6 +140,13 @@ export async function getRaceStatus(guildId: string): Promise<TowerRaceStatus> {
     guildEntry,
     guildRank,
     timeRemaining,
+    activeBonus: {
+      wavesBonus: bonus.wavesBonus,
+      bonusPercentage: Math.round(bonus.wavesBonus * 100),
+      sourceMedalType: bonus.sourceMedalType,
+      expiresAt: bonus.expiresAt,
+      isActive: bonus.isActive,
+    },
   };
 }
 
@@ -139,11 +157,12 @@ export async function getRaceStatus(guildId: string): Promise<TowerRaceStatus> {
 /**
  * Add wave contribution from a player
  * Called when player completes waves in endless mode
+ * Applies active medal bonus if guild has one
  */
 export async function addWaveContribution(
   userId: string,
   wavesCleared: number
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; bonusApplied?: number; error?: string }> {
   if (wavesCleared <= 0) {
     return { success: true }; // Nothing to add
   }
@@ -167,6 +186,10 @@ export async function addWaveContribution(
   if (race.status !== 'active' || new Date() > race.endsAt) {
     return { success: true }; // Race ended, silently ignore
   }
+
+  // Apply medal bonus if active
+  const wavesWithBonus = await applyWaveBonusMultiplier(guildId, wavesCleared);
+  const bonusWaves = wavesWithBonus - wavesCleared;
 
   // Upsert entry and update contributions
   await prisma.$transaction(async (tx) => {
@@ -192,21 +215,21 @@ export async function addWaveContribution(
       });
     }
 
-    // Update contributions
+    // Update contributions (track base waves per member, bonus applied to total)
     const contributions = (entry.memberContributions as Record<string, number>) || {};
     contributions[userId] = (contributions[userId] || 0) + wavesCleared;
 
-    // Update entry
+    // Update entry with bonus-adjusted waves
     await tx.guildTowerRaceEntry.update({
       where: { id: entry.id },
       data: {
-        totalWaves: { increment: wavesCleared },
+        totalWaves: { increment: wavesWithBonus },
         memberContributions: contributions,
       },
     });
   });
 
-  return { success: true };
+  return { success: true, bonusApplied: bonusWaves > 0 ? bonusWaves : undefined };
 }
 
 // ============================================================================

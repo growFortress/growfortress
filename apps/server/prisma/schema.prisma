@@ -720,9 +720,10 @@ enum TreasuryTransactionType {
   WITHDRAW_DUST
   BATTLE_COST
   UPGRADE_COST
-  REWARD_DISTRIBUTION
-  SHIELD_PURCHASE // Shield activated
-  STRUCTURE_UPGRADE // Structure upgrade cost
+  REWARD_DISTRIBUTION // Tower Race medal rewards
+  BATTLE_REWARD       // Arena 5v5 battle rewards
+  SHIELD_PURCHASE     // Shield activated
+  STRUCTURE_UPGRADE   // Structure upgrade cost
 }
 
 model Guild {
@@ -853,8 +854,9 @@ model GuildTreasury {
   guildId String @unique
 
   // Current balances
-  gold Int @default(0)
-  dust Int @default(0)
+  gold       Int @default(0)
+  dust       Int @default(0)
+  guildCoins Int @default(0) // Earned from battles and Tower Race medals
 
   // Lifetime totals (for tracking)
   totalGoldDeposited BigInt @default(0)
@@ -875,16 +877,18 @@ model GuildTreasuryLog {
   transactionType TreasuryTransactionType
 
   // Amounts (positive for deposits, negative for withdrawals/costs)
-  goldAmount Int @default(0)
-  dustAmount Int @default(0)
+  goldAmount       Int @default(0)
+  dustAmount       Int @default(0)
+  guildCoinsAmount Int @default(0) // Guild Coins from battles/medals
 
   // Context
   description String? // e.g., "Guild upgrade: Gold Boost Lv.3"
   referenceId String? // e.g., battle ID, upgrade ID
 
   // Balance snapshot after transaction
-  balanceAfterGold Int
-  balanceAfterDust Int
+  balanceAfterGold       Int
+  balanceAfterDust       Int
+  balanceAfterGuildCoins Int @default(0)
 
   createdAt DateTime @default(now())
 
@@ -1066,6 +1070,7 @@ model GuildTowerRace {
 
   // Relations
   entries GuildTowerRaceEntry[]
+  medals  GuildTowerRaceMedal[]
 
   @@index([status])
 }
@@ -1092,6 +1097,107 @@ model GuildTowerRaceEntry {
   @@index([raceId])
   @@index([guildId])
   @@index([totalWaves(sort: Desc)])
+}
+
+// ============================================================================
+// GUILD TOWER RACE MEDALS - Weekly ranking rewards
+// ============================================================================
+
+model GuildTowerRaceMedal {
+  id      String @id @default(cuid())
+  guildId String
+  weekKey String // YYYY-Www format
+  raceId  String
+
+  // Medal details
+  medalType String // 'gold' | 'silver' | 'bronze' | 'top10' | 'top25' | 'top50'
+  rank      Int // Actual rank achieved (1-50)
+  totalWaves Int // Waves cleared that week (historical record)
+
+  // Rewards tracking
+  coinsAwarded Int @default(0) // Guild Coins awarded
+
+  // Timestamp
+  awardedAt DateTime @default(now())
+
+  // Relations
+  race GuildTowerRace @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, weekKey])
+  @@index([guildId])
+  @@index([weekKey])
+  @@index([medalType])
+}
+
+model GuildMedalBonus {
+  id      String @id @default(cuid())
+  guildId String @unique
+
+  // Active bonus (percentage as decimal, e.g., 0.10 = +10%)
+  wavesBonus Float @default(0)
+
+  // Source tracking
+  sourceMedalType String? // Which medal type granted this bonus
+  sourceWeekKey   String? // Which week's medal
+
+  // Timestamps
+  activatedAt DateTime @default(now())
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([guildId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// GUILD BATTLE TROPHIES - Achievement system for Arena 5v5
+// ============================================================================
+
+model GuildBattleTrophy {
+  id      String @id @default(cuid())
+  guildId String
+
+  // Trophy identification
+  trophyId String // e.g., 'FIRST_BLOOD', 'WIN_STREAK_5', 'DOMINATION'
+
+  // Progress tracking (for progressive trophies)
+  progress Int @default(0) // Current progress towards trophy
+  tier     Int @default(1) // Current tier (some trophies have multiple tiers)
+  maxTier  Int @default(1) // Maximum achievable tier
+
+  // Timestamps
+  earnedAt   DateTime @default(now())
+  upgradedAt DateTime? // When tier was last upgraded
+
+  // State
+  isActive Boolean @default(true) // For temporary/expiring trophies
+
+  @@unique([guildId, trophyId])
+  @@index([guildId])
+  @@index([trophyId])
+}
+
+model GuildBattleStreak {
+  id      String @id @default(cuid())
+  guildId String @unique
+
+  // Current streaks
+  currentWinStreak  Int @default(0)
+  currentLossStreak Int @default(0)
+
+  // Best streaks (all time)
+  bestWinStreak  Int @default(0)
+  bestLossStreak Int @default(0)
+
+  // Rivalry tracking (JSON: { [opponentGuildId]: { wins: number, losses: number } })
+  rivalryStats Json @default("{}")
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([guildId])
+  @@index([currentWinStreak(sort: Desc)])
 }
 
 // ============================================================================

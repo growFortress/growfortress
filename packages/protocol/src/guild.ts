@@ -817,59 +817,6 @@ export const GUILD_CONSTANTS = {
   COINS_BOSS_TOP_DAMAGE: 25,
 } as const;
 
-// Trophy definitions
-export const GUILD_TROPHIES = {
-  FIRST_BLOOD: {
-    id: 'FIRST_BLOOD',
-    name: 'First Blood',
-    description: 'Win your first guild battle',
-    requirement: '1 battle win',
-    bonus: '+5 to all member stats',
-  },
-  BATTLE_HARDENED: {
-    id: 'BATTLE_HARDENED',
-    name: 'Battle Hardened',
-    description: 'Win 10 guild battles',
-    requirement: '10 battle wins',
-    bonus: '+10 to all member stats',
-  },
-  WAR_MACHINE: {
-    id: 'WAR_MACHINE',
-    name: 'War Machine',
-    description: 'Win 50 guild battles',
-    requirement: '50 battle wins',
-    bonus: '+20 to all member stats',
-  },
-  WEALTHY: {
-    id: 'WEALTHY',
-    name: 'Wealthy',
-    description: 'Accumulate 1M gold in treasury (lifetime)',
-    requirement: '1,000,000 gold deposited',
-    bonus: '+5% gold from all sources',
-  },
-  UNITED: {
-    id: 'UNITED',
-    name: 'United',
-    description: 'Reach maximum member capacity',
-    requirement: '30 members',
-    bonus: '+5% XP from all sources',
-  },
-  ANCIENT: {
-    id: 'ANCIENT',
-    name: 'Ancient',
-    description: 'Guild exists for 90 days',
-    requirement: '90 days since creation',
-    bonus: '+5% dust from all sources',
-  },
-  CHAMPIONS: {
-    id: 'CHAMPIONS',
-    name: 'Champions',
-    description: 'Reach top 10 in weekly leaderboard',
-    requirement: 'Top 10 weekly ranking',
-    bonus: 'Champion badge display',
-  },
-} as const;
-
 // ============================================================================
 // ERROR CODES
 // ============================================================================

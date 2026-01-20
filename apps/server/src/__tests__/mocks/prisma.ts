@@ -73,6 +73,11 @@ interface MockPrisma {
   guildBoss: MockPrismaOperations;
   guildBossAttempt: MockPrismaOperations;
   guildShield: MockPrismaOperations;
+  // Guild medals and trophies
+  guildTowerRaceMedal: MockPrismaOperations;
+  guildMedalBonus: MockPrismaOperations;
+  guildBattleTrophy: MockPrismaOperations;
+  guildBattleStreak: MockPrismaOperations;
   // PvP system
   pvpChallenge: MockPrismaOperations;
   pvpResult: MockPrismaOperations;
@@ -144,6 +149,11 @@ export const mockPrisma: MockPrisma = {
   guildBoss: createMockOperations(),
   guildBossAttempt: createMockOperations(),
   guildShield: createMockOperations(),
+  // Guild medals and trophies
+  guildTowerRaceMedal: createMockOperations(),
+  guildMedalBonus: createMockOperations(),
+  guildBattleTrophy: createMockOperations(),
+  guildBattleStreak: createMockOperations(),
   // PvP system
   pvpChallenge: createMockOperations(),
   pvpResult: createMockOperations(),

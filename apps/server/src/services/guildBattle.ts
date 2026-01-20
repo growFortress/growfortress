@@ -10,7 +10,7 @@
 
 import { randomInt } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
-import { GUILD_CONSTANTS, GUILD_ERROR_CODES } from '@arcade/protocol';
+import { GUILD_CONSTANTS, GUILD_ERROR_CODES, type BattleReward } from '@arcade/protocol';
 import type { GuildBattle, GuildBattleResult, GuildShield } from '@prisma/client';
 import { hasPermission } from './guild.js';
 import {
@@ -21,6 +21,12 @@ import {
 import { payBattleCost } from './guildTreasury.js';
 import { runGuildArena, type GuildBattleHero } from '@arcade/sim-core';
 import { getCurrentWeekKey } from '../lib/weekUtils.js';
+import {
+  checkAndAwardTrophies,
+  updateBattleStreak,
+  calculateBattleRewards,
+  type BattleOutcome,
+} from './guildBattleTrophies.js';
 
 // ============================================================================
 // TYPES
@@ -47,6 +53,8 @@ export interface InstantAttackResult {
   battle: GuildBattleWithDetails;
   attackerHonorChange: number;
   defenderHonorChange: number;
+  attackerReward: BattleReward;
+  defenderReward: BattleReward;
 }
 
 export interface ShieldStatus {
@@ -545,12 +553,117 @@ export async function instantAttack(
     return { ...battleRecord, result };
   });
 
+  // Process trophies and rewards after successful battle transaction
+  const attackerWon = winnerGuildId === attackerGuildId;
+  const defenderWon = winnerGuildId === defenderGuildId;
+
+  // Calculate heroes lost during battle
+  const attackerHeroesLost = GUILD_CONSTANTS.ARENA_PARTICIPANTS - arenaResult.attackerSurvivors;
+  const defenderHeroesLost = GUILD_CONSTANTS.ARENA_PARTICIPANTS - arenaResult.defenderSurvivors;
+
+  // Prepare outcomes for both guilds
+  const attackerOutcome: BattleOutcome = {
+    guildId: attackerGuildId,
+    opponentGuildId: defenderGuildId,
+    opponentHonor: defenderGuild.honor,
+    guildHonor: attackerGuild.honor,
+    won: attackerWon,
+    survivors: arenaResult.attackerSurvivors,
+    totalHeroes: GUILD_CONSTANTS.ARENA_PARTICIPANTS,
+    heroesLost: attackerHeroesLost,
+  };
+
+  const defenderOutcome: BattleOutcome = {
+    guildId: defenderGuildId,
+    opponentGuildId: attackerGuildId,
+    opponentHonor: attackerGuild.honor,
+    guildHonor: defenderGuild.honor,
+    won: defenderWon,
+    survivors: arenaResult.defenderSurvivors,
+    totalHeroes: GUILD_CONSTANTS.ARENA_PARTICIPANTS,
+    heroesLost: defenderHeroesLost,
+  };
+
+  // Process trophies and streaks for both guilds (in parallel)
+  const [attackerNewTrophies, defenderNewTrophies] = await Promise.all([
+    checkAndAwardTrophies(attackerOutcome),
+    checkAndAwardTrophies(defenderOutcome),
+  ]);
+
+  // Update streaks for both guilds
+  await Promise.all([
+    updateBattleStreak(attackerGuildId, defenderGuildId, attackerWon),
+    updateBattleStreak(defenderGuildId, attackerGuildId, defenderWon),
+  ]);
+
+  // Calculate rewards for both guilds
+  const [attackerReward, defenderReward] = await Promise.all([
+    calculateBattleRewards(
+      attackerGuildId,
+      attackerWon,
+      arenaResult.attackerSurvivors,
+      attackerNewTrophies
+    ),
+    calculateBattleRewards(
+      defenderGuildId,
+      defenderWon,
+      arenaResult.defenderSurvivors,
+      defenderNewTrophies
+    ),
+  ]);
+
+  // Award Guild Coins to treasuries
+  await Promise.all([
+    prisma.$transaction(async (tx) => {
+      const treasury = await tx.guildTreasury.update({
+        where: { guildId: attackerGuildId },
+        data: { guildCoins: { increment: attackerReward.totalCoins } },
+      });
+      await tx.guildTreasuryLog.create({
+        data: {
+          guildId: attackerGuildId,
+          userId: attackerUserId,
+          transactionType: 'BATTLE_REWARD',
+          guildCoinsAmount: attackerReward.totalCoins,
+          description: `Arena 5v5 ${attackerWon ? 'victory' : 'participation'} vs ${defenderGuild.name}`,
+          referenceId: battle.id,
+          balanceAfterGold: treasury.gold,
+          balanceAfterDust: treasury.dust,
+          balanceAfterGuildCoins: treasury.guildCoins,
+        },
+      });
+    }),
+    prisma.$transaction(async (tx) => {
+      const treasury = await tx.guildTreasury.update({
+        where: { guildId: defenderGuildId },
+        data: { guildCoins: { increment: defenderReward.totalCoins } },
+      });
+      // For defender, use a system user or the defender guild leader
+      // For simplicity, we'll use the attacker's userId as the log entry initiator
+      await tx.guildTreasuryLog.create({
+        data: {
+          guildId: defenderGuildId,
+          userId: attackerUserId, // Battle initiated by attacker
+          transactionType: 'BATTLE_REWARD',
+          guildCoinsAmount: defenderReward.totalCoins,
+          description: `Arena 5v5 ${defenderWon ? 'victory' : 'defense'} vs ${attackerGuild.name}`,
+          referenceId: battle.id,
+          balanceAfterGold: treasury.gold,
+          balanceAfterDust: treasury.dust,
+          balanceAfterGuildCoins: treasury.guildCoins,
+        },
+      });
+    }),
+  ]);
+
   return {
     success: true,
     result: {
       battle: battle as GuildBattleWithDetails,
       attackerHonorChange,
       defenderHonorChange,
+      attackerReward,
+      defenderReward,
     },
   };
   } catch (error) {

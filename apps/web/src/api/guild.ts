@@ -653,3 +653,93 @@ export async function getBossTopDamageDealers(
   const qs = params.toString();
   return guildRequest(`/v1/guilds/boss/top-damage${qs ? '?' + qs : ''}`);
 }
+
+// ============================================================================
+// GUILD MEDALS (Tower Race)
+// ============================================================================
+
+export interface GuildMedalData {
+  id: string;
+  weekKey: string;
+  medalType: 'gold' | 'silver' | 'bronze' | 'top10' | 'top25' | 'top50';
+  rank: number;
+  totalWaves: number;
+  coinsAwarded: number;
+  awardedAt: string;
+}
+
+export interface GuildMedalStats {
+  goldCount: number;
+  silverCount: number;
+  bronzeCount: number;
+  top10Count: number;
+  top25Count: number;
+  top50Count: number;
+  totalMedals: number;
+  bestRank: number | null;
+}
+
+export interface GuildMedalBonus {
+  wavesBonus: number;
+  sourceMedalType: string | null;
+  sourceWeekKey: string | null;
+  expiresAt: string | null;
+  isActive: boolean;
+}
+
+export interface GuildMedalCollectionResponse {
+  medals: GuildMedalData[];
+  stats: GuildMedalStats;
+  activeBonus: GuildMedalBonus;
+}
+
+export async function getGuildMedals(guildId: string): Promise<GuildMedalCollectionResponse> {
+  return guildRequest<GuildMedalCollectionResponse>(`/v1/guilds/${encodeURIComponent(guildId)}/medals`);
+}
+
+export async function getGuildActiveBonus(guildId: string): Promise<{ activeBonus: GuildMedalBonus }> {
+  return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/medals/bonus`);
+}
+
+// ============================================================================
+// GUILD TROPHIES (Arena 5v5)
+// ============================================================================
+
+export interface GuildTrophyBonus {
+  type: 'stat_boost' | 'coin_multiplier' | 'badge';
+  value: number;
+  description: string;
+}
+
+export interface GuildTrophyProgress {
+  trophyId: string;
+  name: string;
+  polishName: string;
+  icon: string;
+  color: string;
+  category: 'wins' | 'streak' | 'combat' | 'rivalry';
+  progress: number;
+  target: number;
+  isEarned: boolean;
+  earnedAt: string | null;
+  bonus: GuildTrophyBonus;
+}
+
+export interface GuildBattleStreak {
+  currentWinStreak: number;
+  currentLossStreak: number;
+  bestWinStreak: number;
+  bestLossStreak: number;
+}
+
+export interface GuildTrophiesResponse {
+  earned: GuildTrophyProgress[];
+  inProgress: GuildTrophyProgress[];
+  totalStatBonus: number;
+  coinMultiplier: number;
+  streak: GuildBattleStreak;
+}
+
+export async function getGuildTrophies(guildId: string): Promise<GuildTrophiesResponse> {
+  return guildRequest<GuildTrophiesResponse>(`/v1/guilds/${encodeURIComponent(guildId)}/trophies`);
+}

@@ -466,7 +466,6 @@ export {
   GuildBossAttackResponseSchema,
   // Constants
   GUILD_CONSTANTS,
-  GUILD_TROPHIES,
   GUILD_ERROR_CODES,
   // Types
   type GuildRole,
@@ -939,6 +938,59 @@ export {
   type GuildPreviewBonuses,
   type GuildPreviewResponse,
 } from './guild-preview.js';
+
+// Guild Medals (Tower Race weekly rewards)
+export {
+  // Medal definitions
+  TOWER_RACE_MEDALS,
+  getMedalTypeForRank,
+  getMedalForRank,
+  // Schemas
+  MedalTypeSchema,
+  GuildMedalSchema,
+  GuildMedalBonusSchema,
+  GuildMedalStatsSchema,
+  GuildMedalCollectionResponseSchema,
+  GuildActiveBonusResponseSchema,
+  // Types
+  type MedalType,
+  type MedalDefinition,
+  type GuildMedal,
+  type GuildMedalBonus,
+  type GuildMedalStats,
+  type GuildMedalCollectionResponse,
+  type GuildActiveBonusResponse,
+} from './guild-medals.js';
+
+// Guild Battle Trophies (Arena 5v5 achievements)
+export {
+  // Trophy definitions
+  GUILD_BATTLE_TROPHIES,
+  getWinTrophies,
+  getStreakTrophies,
+  getTrophyById,
+  calculateTotalStatBonus,
+  calculateCoinMultiplier,
+  // Schemas
+  TrophyCategorySchema,
+  GuildBattleTrophySchema,
+  GuildBattleStreakSchema,
+  RivalryStatsSchema,
+  GuildTrophyProgressSchema,
+  GuildTrophiesResponseSchema,
+  BattleRewardSchema,
+  // Types
+  type TrophyCategory,
+  type TrophyBonusType,
+  type TrophyBonus,
+  type TrophyDefinition,
+  type GuildBattleTrophy,
+  type GuildBattleStreakData,
+  type RivalryStats,
+  type GuildTrophyProgress,
+  type GuildTrophiesResponse,
+  type BattleReward,
+} from './guild-trophies.js';
 
 // Shop (Microtransactions)
 export {
