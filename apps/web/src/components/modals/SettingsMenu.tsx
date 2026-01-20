@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 import {
   settingsMenuVisible,
   closeSettingsMenu,
@@ -8,16 +8,20 @@ import {
 import { openSupportPage } from "../../state/support.signals.js";
 import {
   audioSettings,
-  graphicsSettings,
-  // gameSettings,
   updateAudioSettings,
-  updateGraphicsSettings,
-  // updateGameSettings,
 } from "../../state/settings.signals.js";
 import {
   openAdminBroadcastPanel,
   openAdminModerationPanel,
 } from "../admin/index.js";
+import {
+  deleteAccount,
+  getEmail,
+  updateEmail,
+  changePassword,
+  redeemBonusCode,
+  type BonusCodeRewards,
+} from "../../api/client.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
 import { Modal } from "../shared/Modal.js";
 import { LanguageSwitcher } from "../shared/LanguageSwitcher.js";
@@ -27,16 +31,153 @@ interface SettingsMenuProps {
   onLogout: () => Promise<void> | void;
 }
 
-type SettingsTab = "audio" | "graphics" | "game" | "account" | "admin";
+type SettingsTab = "audio" | "game" | "account" | "admin";
 
 export function SettingsMenu({ onLogout }: SettingsMenuProps) {
   const { t } = useTranslation("modals");
   const isVisible = settingsMenuVisible.value;
-  const [activeTab, setActiveTab] = useState<SettingsTab>("audio");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("account");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Email state
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [emailSuccess, setEmailSuccess] = useState(false);
+
+  // Password state
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+
+  // Bonus code state
+  const [bonusCode, setBonusCode] = useState("");
+  const [bonusCodeLoading, setBonusCodeLoading] = useState(false);
+  const [bonusCodeError, setBonusCodeError] = useState("");
+  const [bonusCodeSuccess, setBonusCodeSuccess] = useState<BonusCodeRewards | null>(null);
+
+  // Load current email when modal opens
+  useEffect(() => {
+    if (isVisible) {
+      void loadEmail();
+    } else {
+      // Reset forms when modal closes
+      setShowEmailForm(false);
+      setShowPasswordForm(false);
+      setShowDeleteConfirm(false);
+      setNewEmail("");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setEmailError("");
+      setPasswordError("");
+      setEmailSuccess(false);
+      setBonusCode("");
+      setBonusCodeError("");
+      setBonusCodeSuccess(null);
+    }
+  }, [isVisible]);
+
+  const loadEmail = async () => {
+    const email = await getEmail();
+    setCurrentEmail(email);
+  };
 
   const handleLogout = () => {
     closeSettingsMenu();
     void onLogout();
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    const success = await deleteAccount();
+    setIsDeleting(false);
+
+    if (success) {
+      setShowDeleteConfirm(false);
+      closeSettingsMenu();
+      window.location.reload();
+    }
+  };
+
+  const handleEmailSubmit = async (e: Event) => {
+    e.preventDefault();
+    setEmailError("");
+    setEmailSuccess(false);
+
+    if (!newEmail || !newEmail.includes("@")) {
+      setEmailError(t("settings.account.invalidEmail"));
+      return;
+    }
+
+    setEmailLoading(true);
+    const result = await updateEmail(newEmail);
+    setEmailLoading(false);
+
+    if (result.success) {
+      setCurrentEmail(newEmail.toLowerCase());
+      setShowEmailForm(false);
+      setNewEmail("");
+      setEmailSuccess(true);
+      setTimeout(() => setEmailSuccess(false), 3000);
+    } else {
+      setEmailError(result.error || t("settings.account.emailUpdateFailed"));
+    }
+  };
+
+  const handlePasswordSubmit = async (e: Event) => {
+    e.preventDefault();
+    setPasswordError("");
+
+    if (newPassword.length < 8) {
+      setPasswordError(t("settings.account.passwordTooShort"));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError(t("settings.account.passwordMismatch"));
+      return;
+    }
+
+    setPasswordLoading(true);
+    const result = await changePassword(currentPassword, newPassword);
+    setPasswordLoading(false);
+
+    if (result.success) {
+      // Password changed, user will be logged out
+      closeSettingsMenu();
+      window.location.reload();
+    } else {
+      setPasswordError(result.error || t("settings.account.passwordChangeFailed"));
+    }
+  };
+
+  const handleBonusCodeSubmit = async (e: Event) => {
+    e.preventDefault();
+    setBonusCodeError("");
+    setBonusCodeSuccess(null);
+
+    if (!bonusCode.trim()) {
+      setBonusCodeError(t("settings.account.codeRequired"));
+      return;
+    }
+
+    setBonusCodeLoading(true);
+    const result = await redeemBonusCode(bonusCode);
+    setBonusCodeLoading(false);
+
+    if (result.success && result.rewards) {
+      setBonusCodeSuccess(result.rewards);
+      setBonusCode("");
+    } else {
+      setBonusCodeError(result.error || t("settings.account.codeRedeemFailed"));
+    }
   };
 
   const renderAudioSettings = () => {
@@ -108,54 +249,6 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
     );
   };
 
-  const renderGraphicsSettings = () => {
-    const s = graphicsSettings.value;
-    return (
-      <div class={styles.settingsGroup}>
-        <div class={styles.settingRow}>
-          <label>{t("settings.graphics.particlesQuality")}</label>
-          <select
-            value={s.particles.toString()}
-            onChange={(e) =>
-              updateGraphicsSettings({
-                particles: parseFloat(e.currentTarget.value),
-              })
-            }
-          >
-            <option value="0.5">{t("settings.graphics.qualityLow")}</option>
-            <option value="1.0">{t("settings.graphics.qualityMedium")}</option>
-            <option value="1.5">{t("settings.graphics.qualityHigh")}</option>
-          </select>
-        </div>
-        <div class={styles.settingRow}>
-          <label>{t("settings.graphics.resolutionScale")}</label>
-          <select
-            value={s.resolutionScale.toString()}
-            onChange={(e) =>
-              updateGraphicsSettings({
-                resolutionScale: parseFloat(e.currentTarget.value),
-              })
-            }
-          >
-            <option value="0.5">50%</option>
-            <option value="0.75">75%</option>
-            <option value="1.0">100%</option>
-          </select>
-        </div>
-        <div class={styles.settingRow}>
-          <label>{t("settings.graphics.damageNumbers")}</label>
-          <input
-            type="checkbox"
-            checked={s.damageNumbers}
-            onChange={(e) =>
-              updateGraphicsSettings({ damageNumbers: e.currentTarget.checked })
-            }
-          />
-        </div>
-      </div>
-    );
-  };
-
   return (
     <Modal
       visible={isVisible}
@@ -170,12 +263,6 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
           onClick={() => setActiveTab("audio")}
         >
           {t("settings.tabs.audio")}
-        </button>
-        <button
-          class={`${styles.tabBtn} ${activeTab === "graphics" ? styles.activeTab : ""}`}
-          onClick={() => setActiveTab("graphics")}
-        >
-          {t("settings.tabs.graphics")}
         </button>
         <button
           class={`${styles.tabBtn} ${activeTab === "account" ? styles.activeTab : ""}`}
@@ -195,13 +282,188 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
 
       <div class={styles.content}>
         {activeTab === "audio" && renderAudioSettings()}
-        {activeTab === "graphics" && renderGraphicsSettings()}
         {activeTab === "account" && (
           <div class={styles.settingsGroup}>
             <div class={styles.settingRow}>
               <label>{t("settings.account.language")}</label>
               <LanguageSwitcher />
             </div>
+
+            {/* Email Section */}
+            <div class={styles.accountSection}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>📧</span>
+                <span class={styles.sectionTitle}>{t("settings.account.email")}</span>
+              </div>
+              {!showEmailForm ? (
+                <div class={styles.sectionContent}>
+                  <span class={styles.currentValue}>
+                    {currentEmail || t("settings.account.noEmail")}
+                  </span>
+                  <button
+                    class={styles.editBtn}
+                    onClick={() => {
+                      setShowEmailForm(true);
+                      setNewEmail(currentEmail || "");
+                    }}
+                  >
+                    {currentEmail ? t("settings.account.change") : t("settings.account.add")}
+                  </button>
+                </div>
+              ) : (
+                <form class={styles.inlineForm} onSubmit={handleEmailSubmit}>
+                  <input
+                    type="email"
+                    class={styles.formInput}
+                    value={newEmail}
+                    onInput={(e) => setNewEmail((e.target as HTMLInputElement).value)}
+                    placeholder={t("settings.account.emailPlaceholder")}
+                    disabled={emailLoading}
+                  />
+                  {emailError && <p class={styles.formError}>{emailError}</p>}
+                  <div class={styles.formActions}>
+                    <button
+                      type="button"
+                      class={styles.cancelBtn}
+                      onClick={() => {
+                        setShowEmailForm(false);
+                        setEmailError("");
+                      }}
+                      disabled={emailLoading}
+                    >
+                      {t("buttons.cancel")}
+                    </button>
+                    <button
+                      type="submit"
+                      class={styles.saveBtn}
+                      disabled={emailLoading}
+                    >
+                      {emailLoading ? t("settings.account.saving") : t("settings.account.save")}
+                    </button>
+                  </div>
+                </form>
+              )}
+              {emailSuccess && (
+                <p class={styles.successMessage}>{t("settings.account.emailUpdated")}</p>
+              )}
+            </div>
+
+            {/* Password Section */}
+            <div class={styles.accountSection}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>🔒</span>
+                <span class={styles.sectionTitle}>{t("settings.account.password")}</span>
+              </div>
+              {!showPasswordForm ? (
+                <div class={styles.sectionContent}>
+                  <span class={styles.currentValue}>••••••••</span>
+                  <button
+                    class={styles.editBtn}
+                    onClick={() => setShowPasswordForm(true)}
+                  >
+                    {t("settings.account.change")}
+                  </button>
+                </div>
+              ) : (
+                <form class={styles.inlineForm} onSubmit={handlePasswordSubmit}>
+                  <input
+                    type="password"
+                    class={styles.formInput}
+                    value={currentPassword}
+                    onInput={(e) => setCurrentPassword((e.target as HTMLInputElement).value)}
+                    placeholder={t("settings.account.currentPassword")}
+                    disabled={passwordLoading}
+                  />
+                  <input
+                    type="password"
+                    class={styles.formInput}
+                    value={newPassword}
+                    onInput={(e) => setNewPassword((e.target as HTMLInputElement).value)}
+                    placeholder={t("settings.account.newPassword")}
+                    disabled={passwordLoading}
+                  />
+                  <input
+                    type="password"
+                    class={styles.formInput}
+                    value={confirmPassword}
+                    onInput={(e) => setConfirmPassword((e.target as HTMLInputElement).value)}
+                    placeholder={t("settings.account.confirmPassword")}
+                    disabled={passwordLoading}
+                  />
+                  {passwordError && <p class={styles.formError}>{passwordError}</p>}
+                  <p class={styles.formHint}>{t("settings.account.passwordChangeNote")}</p>
+                  <div class={styles.formActions}>
+                    <button
+                      type="button"
+                      class={styles.cancelBtn}
+                      onClick={() => {
+                        setShowPasswordForm(false);
+                        setCurrentPassword("");
+                        setNewPassword("");
+                        setConfirmPassword("");
+                        setPasswordError("");
+                      }}
+                      disabled={passwordLoading}
+                    >
+                      {t("buttons.cancel")}
+                    </button>
+                    <button
+                      type="submit"
+                      class={styles.saveBtn}
+                      disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
+                    >
+                      {passwordLoading ? t("settings.account.saving") : t("settings.account.save")}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            {/* Bonus Code Section */}
+            <div class={styles.accountSection}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>🎁</span>
+                <span class={styles.sectionTitle}>{t("settings.account.bonusCode")}</span>
+              </div>
+              <form class={styles.bonusCodeForm} onSubmit={handleBonusCodeSubmit}>
+                <div class={styles.bonusCodeInputRow}>
+                  <input
+                    type="text"
+                    class={styles.formInput}
+                    value={bonusCode}
+                    onInput={(e) => setBonusCode((e.target as HTMLInputElement).value.toUpperCase())}
+                    placeholder={t("settings.account.codePlaceholder")}
+                    disabled={bonusCodeLoading}
+                    maxLength={20}
+                  />
+                  <button
+                    type="submit"
+                    class={styles.redeemBtn}
+                    disabled={bonusCodeLoading || !bonusCode.trim()}
+                  >
+                    {bonusCodeLoading ? "..." : t("settings.account.redeem")}
+                  </button>
+                </div>
+                {bonusCodeError && <p class={styles.formError}>{bonusCodeError}</p>}
+                {bonusCodeSuccess && (
+                  <div class={styles.rewardSuccess}>
+                    <p class={styles.rewardTitle}>{t("settings.account.codeRedeemed")}</p>
+                    <div class={styles.rewardList}>
+                      {bonusCodeSuccess.gold > 0 && (
+                        <span class={styles.rewardItem}>💰 +{bonusCodeSuccess.gold}</span>
+                      )}
+                      {bonusCodeSuccess.dust > 0 && (
+                        <span class={styles.rewardItem}>💎 +{bonusCodeSuccess.dust}</span>
+                      )}
+                      {bonusCodeSuccess.energy > 0 && (
+                        <span class={styles.rewardItem}>⚡ +{bonusCodeSuccess.energy}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
+
             <button
               class={styles.menuItem}
               onClick={() => {
@@ -220,6 +482,44 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
                 {t("settings.account.logout")}
               </span>
             </button>
+
+            <div class={styles.dangerZone}>
+              {!showDeleteConfirm ? (
+                <button
+                  class={`${styles.menuItem} ${styles.dangerItem}`}
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <span class={styles.menuIcon}>🗑️</span>
+                  <span class={styles.menuLabel}>
+                    {t("settings.account.deleteAccount")}
+                  </span>
+                </button>
+              ) : (
+                <div class={styles.deleteConfirm}>
+                  <p class={styles.deleteWarning}>
+                    {t("settings.account.deleteWarning")}
+                  </p>
+                  <div class={styles.deleteActions}>
+                    <button
+                      class={styles.cancelBtn}
+                      onClick={() => setShowDeleteConfirm(false)}
+                      disabled={isDeleting}
+                    >
+                      {t("buttons.cancel")}
+                    </button>
+                    <button
+                      class={styles.confirmDeleteBtn}
+                      onClick={handleDeleteAccount}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting
+                        ? t("settings.account.deleting")
+                        : t("settings.account.confirmDelete")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
         {activeTab === "admin" && isAdmin.value && (

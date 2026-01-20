@@ -21,6 +21,10 @@ import {
   logoutAdmin,
   requestPasswordReset,
   resetPassword,
+  deleteAccount,
+  updateEmail,
+  changePassword,
+  getUserEmail,
 } from "../services/auth.js";
 import { withRateLimit } from "../plugins/rateLimit.js";
 import { config, parseDuration } from "../config.js";
@@ -379,6 +383,94 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ description: result.description || "" });
   });
 
+  // Get user email
+  fastify.get("/v1/profile/email", async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const email = await getUserEmail(request.userId);
+    return reply.send({ email });
+  });
+
+  // Update user email
+  fastify.patch(
+    "/v1/profile/email",
+    withRateLimit("profile"),
+    async (request, reply) => {
+      if (!request.userId) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const body = request.body as { email?: string };
+
+      if (!body.email || !body.email.includes("@")) {
+        return reply.status(400).send({ error: "Invalid email address" });
+      }
+
+      const result = await updateEmail(request.userId, body.email);
+
+      if (!result.success) {
+        if (result.error === "EMAIL_TAKEN") {
+          return reply
+            .status(400)
+            .send({ error: "This email is already in use" });
+        }
+        return reply.status(500).send({ error: "Failed to update email" });
+      }
+
+      return reply.send({ email: body.email.toLowerCase() });
+    },
+  );
+
+  // Change password
+  fastify.post(
+    "/v1/auth/change-password",
+    withRateLimit("auth"),
+    async (request, reply) => {
+      if (!request.userId) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const body = request.body as {
+        currentPassword?: string;
+        newPassword?: string;
+      };
+
+      if (!body.currentPassword || !body.newPassword) {
+        return reply
+          .status(400)
+          .send({ error: "Current password and new password are required" });
+      }
+
+      if (body.newPassword.length < 8) {
+        return reply
+          .status(400)
+          .send({ error: "New password must be at least 8 characters" });
+      }
+
+      const result = await changePassword(
+        request.userId,
+        body.currentPassword,
+        body.newPassword,
+      );
+
+      if (!result.success) {
+        if (result.error === "INVALID_PASSWORD") {
+          return reply
+            .status(400)
+            .send({ error: "Current password is incorrect" });
+        }
+        return reply.status(500).send({ error: "Failed to change password" });
+      }
+
+      // Clear refresh cookie since all sessions are revoked
+      clearRefreshCookie(reply, USER_REFRESH_COOKIE, USER_REFRESH_COOKIE_PATH);
+
+      return reply.send({ message: "Password changed successfully" });
+    },
+  );
+
   // Logout (invalidate refresh token by revoking session)
   fastify.post(
     "/v1/auth/logout",
@@ -395,6 +487,67 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       return reply.status(204).send();
+    },
+  );
+
+  // Delete account (permanently remove all user data)
+  fastify.delete(
+    "/v1/auth/account",
+    withRateLimit("auth"),
+    async (request, reply) => {
+      if (!request.userId) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const success = await deleteAccount(request.userId);
+
+      if (!success) {
+        return reply.status(500).send({ error: "Failed to delete account" });
+      }
+
+      clearRefreshCookie(reply, USER_REFRESH_COOKIE, USER_REFRESH_COOKIE_PATH);
+
+      return reply.status(204).send();
+    },
+  );
+
+  // Redeem bonus code
+  fastify.post(
+    "/v1/bonus-code/redeem",
+    withRateLimit("auth"),
+    async (request, reply) => {
+      if (!request.userId) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const body = request.body as { code?: string };
+
+      if (!body.code) {
+        return reply.status(400).send({ error: "Code is required" });
+      }
+
+      const { redeemBonusCode } = await import("../services/bonusCodes.js");
+      const result = await redeemBonusCode(request.userId, body.code);
+
+      if (!result.success) {
+        const errorMessages: Record<string, string> = {
+          INVALID_CODE: "Invalid code",
+          CODE_INACTIVE: "This code is no longer active",
+          CODE_NOT_YET_VALID: "This code is not yet valid",
+          CODE_EXPIRED: "This code has expired",
+          ALREADY_REDEEMED: "You have already redeemed this code",
+          CODE_EXHAUSTED: "This code has reached its redemption limit",
+        };
+
+        return reply
+          .status(400)
+          .send({ error: errorMessages[result.error!] || "Failed to redeem code" });
+      }
+
+      return reply.send({
+        message: "Code redeemed successfully",
+        rewards: result.rewards,
+      });
     },
   );
 

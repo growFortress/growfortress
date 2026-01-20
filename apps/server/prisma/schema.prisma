@@ -1835,3 +1835,51 @@ model UserCosmetic {
   @@unique([userId, cosmeticId])
   @@index([userId])
 }
+
+// ============================================================================
+// BONUS CODES
+// ============================================================================
+
+model BonusCode {
+  id          String    @id @default(cuid())
+  code        String    @unique // The actual code (case-insensitive, stored uppercase)
+  description String?   // Admin description for internal use
+
+  // Rewards (all optional, combine as needed)
+  rewardGold     Int @default(0)
+  rewardDust     Int @default(0)
+  rewardEnergy   Int @default(0)
+  rewardMaterials Json @default("{}") // { [materialId: string]: amount }
+
+  // Limits
+  maxRedemptions Int?      // null = unlimited
+  redemptionCount Int @default(0)
+
+  // Validity
+  validFrom   DateTime  @default(now())
+  validUntil  DateTime? // null = no expiry
+  isActive    Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+
+  redemptions BonusCodeRedemption[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model BonusCodeRedemption {
+  id         String   @id @default(cuid())
+  codeId     String
+  userId     String
+  redeemedAt DateTime @default(now())
+
+  // Snapshot of rewards given (in case code is edited later)
+  rewardsGiven Json // { gold: number, dust: number, energy: number, materials: {...} }
+
+  code BonusCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+
+  @@unique([codeId, userId]) // Each user can redeem each code only once
+  @@index([userId])
+  @@index([codeId])
+}

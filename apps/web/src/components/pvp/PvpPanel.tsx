@@ -68,7 +68,6 @@ export function PvpPanel() {
   const pendingCount = pvpPendingChallenges.value;
   const wins = pvpWins.value;
   const losses = pvpLosses.value;
-  const totalBattles = wins + losses;
   const isLoading = pvpOpponentsLoading.value || pvpChallengesLoading.value;
 
   return (
@@ -123,23 +122,6 @@ export function PvpPanel() {
             </div>
           </div>
         </div>
-
-        {/* Battle Progress Bar */}
-        {totalBattles > 0 && (
-          <div class={styles.progressSection}>
-            <div class={styles.progressBar}>
-              <div
-                class={styles.progressFillWins}
-                style={{ width: `${(wins / totalBattles) * 100}%` }}
-              />
-            </div>
-            <div class={styles.progressLabels}>
-              <span class={styles.progressWins}>{wins}W</span>
-              <span class={styles.progressTotal}>{totalBattles} walk</span>
-              <span class={styles.progressLosses}>{losses}L</span>
-            </div>
-          </div>
-        )}
 
         {/* Tabs */}
         <div class={styles.tabs}>

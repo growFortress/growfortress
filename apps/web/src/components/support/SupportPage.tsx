@@ -1,10 +1,9 @@
 /**
  * SupportPage - Full page support view
  *
- * Contains three sections:
+ * Contains two sections:
  * - Tickets: Create and view support tickets
  * - Legal: Legal documents (Terms, Privacy, Cookies, Payment)
- * - About: Company information
  */
 
 import type { JSX } from 'preact';
@@ -43,7 +42,6 @@ import {
   COOKIE_POLICY,
   PAYMENT_TERMS,
 } from '../../content/legal/index.js';
-import { ABOUT_US } from '../../content/company/aboutUs.js';
 import styles from './SupportPage.module.css';
 
 // Category icons
@@ -188,7 +186,6 @@ export function SupportPage(): JSX.Element | null {
   };
 
   const legalContent = getLegalContent();
-  const aboutContent = ABOUT_US[lang];
 
   return (
     <div class={styles.overlay}>
@@ -219,13 +216,6 @@ export function SupportPage(): JSX.Element | null {
             >
               <span class={styles.navIcon}>📜</span>
               {t('support.sections.legal')}
-            </button>
-            <button
-              class={`${styles.navItem} ${section === 'about' ? styles.navItemActive : ''}`}
-              onClick={() => setSupportSection('about')}
-            >
-              <span class={styles.navIcon}>🏢</span>
-              {t('support.sections.about')}
             </button>
           </nav>
         </aside>
@@ -440,69 +430,6 @@ export function SupportPage(): JSX.Element | null {
                 class={styles.legalContent}
                 dangerouslySetInnerHTML={{ __html: legalContent.content }}
               />
-            </div>
-          )}
-
-          {/* About Section */}
-          {section === 'about' && (
-            <div class={styles.aboutSection}>
-              <div class={styles.aboutCard}>
-                <div class={styles.aboutLogo}>
-                  <div class={styles.aboutLogoIcon}>🏰</div>
-                  <h2 class={styles.aboutGameName}>{aboutContent.gameName}</h2>
-                  <p class={styles.aboutDescription}>{aboutContent.description}</p>
-                </div>
-
-                <div class={styles.aboutDivider} />
-
-                <div class={styles.aboutSectionTitle}>{t('support.about.contact')}</div>
-                <div class={styles.aboutInfoRow}>
-                  <span class={styles.aboutInfoIcon}>📧</span>
-                  <div>
-                    <div class={styles.aboutInfoLabel}>{t('support.about.email')}</div>
-                    <div class={styles.aboutInfoValue}>{aboutContent.email}</div>
-                  </div>
-                </div>
-
-                <div class={styles.aboutDivider} />
-
-                <div class={styles.aboutSectionTitle}>{t('support.about.companyInfo')}</div>
-                <div class={styles.aboutInfoRow}>
-                  <span class={styles.aboutInfoIcon}>🏢</span>
-                  <div>
-                    <div class={styles.aboutInfoValue}>{aboutContent.companyName}</div>
-                  </div>
-                </div>
-                <div class={styles.aboutInfoRow}>
-                  <span class={styles.aboutInfoIcon}>📍</span>
-                  <div>
-                    <div class={styles.aboutInfoLabel}>{t('support.about.address')}</div>
-                    <div class={styles.aboutInfoValue}>
-                      {aboutContent.address.street}<br />
-                      {aboutContent.address.city}<br />
-                      {aboutContent.address.country}
-                    </div>
-                  </div>
-                </div>
-                <div class={styles.aboutInfoRow}>
-                  <span class={styles.aboutInfoIcon}>🔢</span>
-                  <div>
-                    <div class={styles.aboutInfoLabel}>NIP</div>
-                    <div class={styles.aboutInfoValue}>{aboutContent.nip}</div>
-                  </div>
-                </div>
-                <div class={styles.aboutInfoRow}>
-                  <span class={styles.aboutInfoIcon}>📋</span>
-                  <div>
-                    <div class={styles.aboutInfoLabel}>REGON</div>
-                    <div class={styles.aboutInfoValue}>{aboutContent.regon}</div>
-                  </div>
-                </div>
-
-                <p class={styles.aboutCopyright}>
-                  © {new Date().getFullYear()} {aboutContent.companyName}. {t('support.about.copyright')}
-                </p>
-              </div>
             </div>
           )}
         </main>

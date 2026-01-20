@@ -255,6 +255,104 @@ export async function logout(): Promise<void> {
   clearTokens();
 }
 
+// Auth - Delete account
+export async function deleteAccount(): Promise<boolean> {
+  try {
+    await request<void>("/v1/auth/account", {
+      method: "DELETE",
+    });
+
+    // Clear all application state first
+    resetAllState();
+    // Then clear auth tokens
+    clearTokens();
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Profile - Get email
+export async function getEmail(): Promise<string | null> {
+  try {
+    const response = await request<{ email: string | null }>("/v1/profile/email");
+    return response.email;
+  } catch {
+    return null;
+  }
+}
+
+// Profile - Update email
+export async function updateEmail(
+  email: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await request<{ email: string }>("/v1/profile/email", {
+      method: "PATCH",
+      body: JSON.stringify({ email }),
+    });
+    return { success: true };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to update email" };
+  }
+}
+
+// Auth - Change password
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await request<{ message: string }>("/v1/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    // Password change revokes all sessions, so clear tokens
+    resetAllState();
+    clearTokens();
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to change password" };
+  }
+}
+
+// Bonus Code - Redeem
+export interface BonusCodeRewards {
+  gold: number;
+  dust: number;
+  energy: number;
+  materials: Record<string, number>;
+}
+
+export async function redeemBonusCode(
+  code: string,
+): Promise<{ success: boolean; error?: string; rewards?: BonusCodeRewards }> {
+  try {
+    const response = await request<{
+      message: string;
+      rewards: BonusCodeRewards;
+    }>("/v1/bonus-code/redeem", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+    return { success: true, rewards: response.rewards };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to redeem code" };
+  }
+}
+
 // Profile - Update default loadout
 export async function updateDefaultLoadout(
   data: UpdateLoadoutRequest,

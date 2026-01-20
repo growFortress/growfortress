@@ -633,6 +633,83 @@ export async function updateDefaultLoadout(
 }
 
 /**
+ * Update user email
+ */
+export async function updateEmail(
+  userId: string,
+  newEmail: string,
+): Promise<{ success: boolean; error?: string }> {
+  const normalizedEmail = newEmail.toLowerCase();
+
+  // Check if email is already taken
+  const existingUser = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (existingUser && existingUser.id !== userId) {
+    return { success: false, error: "EMAIL_TAKEN" };
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { email: normalizedEmail },
+  });
+
+  return { success: true };
+}
+
+/**
+ * Change user password
+ */
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    return { success: false, error: "USER_NOT_FOUND" };
+  }
+
+  // Verify current password
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) {
+    return { success: false, error: "INVALID_PASSWORD" };
+  }
+
+  // Hash new password
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+  // Update password and revoke all sessions for security
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    }),
+    prisma.session.updateMany({
+      where: { userId, revoked: false },
+      data: { revoked: true },
+    }),
+  ]);
+
+  return { success: true };
+}
+
+/**
+ * Get user email (for displaying in settings)
+ */
+export async function getUserEmail(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+  return user?.email || null;
+}
+
+/**
  * Logout user - revoke refresh token
  */
 export async function logoutUser(refreshTokenStr: string): Promise<boolean> {
@@ -686,6 +763,54 @@ export async function revokeAllUserSessions(userId: string): Promise<number> {
     data: { revoked: true },
   });
   return result.count;
+}
+
+/**
+ * Delete user account and all associated data
+ */
+export async function deleteAccount(userId: string): Promise<boolean> {
+  try {
+    // Delete all user data in a transaction
+    await prisma.$transaction([
+      // Delete sessions
+      prisma.session.deleteMany({ where: { userId } }),
+      // Delete password reset tokens
+      prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      // Delete messages
+      prisma.message.deleteMany({ where: { userId } }),
+      // Delete support tickets and responses
+      prisma.ticketResponse.deleteMany({
+        where: { ticket: { userId } },
+      }),
+      prisma.supportTicket.deleteMany({ where: { userId } }),
+      // Delete PvP challenges
+      prisma.pvpChallenge.deleteMany({
+        where: { OR: [{ challengerId: userId }, { defenderId: userId }] },
+      }),
+      // Delete guild membership
+      prisma.guildMember.deleteMany({ where: { userId } }),
+      // Delete player artifacts
+      prisma.playerArtifact.deleteMany({ where: { userId } }),
+      // Delete battlepass progress
+      prisma.battlepassProgress.deleteMany({ where: { userId } }),
+      // Delete daily quests
+      prisma.dailyQuest.deleteMany({ where: { userId } }),
+      // Delete mastery progress
+      prisma.masteryProgress.deleteMany({ where: { userId } }),
+      // Delete power upgrades
+      prisma.powerUpgrades.deleteMany({ where: { userId } }),
+      // Delete progression
+      prisma.progression.deleteMany({ where: { userId } }),
+      // Delete inventory
+      prisma.inventory.deleteMany({ where: { userId } }),
+      // Finally delete the user
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
+    return true;
+  } catch (error) {
+    console.error(`[Auth] Failed to delete account for user ${userId}:`, error);
+    return false;
+  }
 }
 
 /**

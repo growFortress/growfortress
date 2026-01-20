@@ -225,3 +225,268 @@
   color: var(--color-text-20);
   font-size: 10px;
 }
+
+/* Account Section Styles */
+.accountSection {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-neutral-dark);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.sectionIcon {
+  font-size: 1.25rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.sectionContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.currentValue {
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+}
+
+.editBtn {
+  padding: 0.4rem 0.75rem;
+  background: var(--color-primary-dim);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editBtn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.inlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-bg-dark);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.formInput:disabled {
+  opacity: 0.6;
+}
+
+.formActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.saveBtn {
+  padding: 0.5rem 1rem;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  font-family: var(--font-display);
+  transition: all 0.2s;
+}
+
+.saveBtn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formError {
+  color: var(--color-danger, #ef4444);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.formHint {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.successMessage {
+  color: var(--color-success, #22c55e);
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+}
+
+/* Bonus Code Styles */
+.bonusCodeForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bonusCodeInputRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bonusCodeInputRow .formInput {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: monospace;
+}
+
+.redeemBtn {
+  padding: 0.6rem 1rem;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.redeemBtn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.redeemBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rewardSuccess {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--color-success, #22c55e);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.rewardTitle {
+  color: var(--color-success, #22c55e);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.rewardList {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.rewardItem {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Delete Account Styles */
+.dangerZone {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-neutral-dark);
+}
+
+.dangerItem {
+  color: var(--color-danger, #ef4444);
+}
+
+.dangerItem:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.deleteConfirm {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-danger, #ef4444);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.deleteWarning {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+  line-height: 1.4;
+}
+
+.deleteActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  padding: 0.5rem 1rem;
+  background: var(--color-neutral-dark);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: var(--font-display);
+  transition: all 0.2s;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: var(--color-neutral);
+}
+
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmDeleteBtn {
+  padding: 0.5rem 1rem;
+  background: var(--color-danger, #ef4444);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.confirmDeleteBtn:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.confirmDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
