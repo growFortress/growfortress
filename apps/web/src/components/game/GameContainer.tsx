@@ -200,7 +200,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     } catch (error) {
       // Handle specific error codes
       if (error instanceof ApiError && error.code === 'INSUFFICIENT_ENERGY') {
-        showErrorToast('Brak energii! Poczekaj na regenerację lub doładuj za dust.', 'warning');
+        showErrorToast(t('gameContainer.insufficientEnergy'), 'warning');
         // Refresh energy state to show current status
         fetchEnergy();
       } else {
@@ -268,7 +268,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
         }
       }
     } catch {
-      showErrorToast('Upgrade failed. Please try again.');
+      showErrorToast(t('gameContainer.upgradeFailed'));
     }
   };
 

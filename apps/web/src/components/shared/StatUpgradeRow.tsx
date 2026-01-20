@@ -3,6 +3,7 @@ import {
   getStatBonusPercent,
   type StatUpgradeConfig,
 } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './StatUpgradeRow.module.css';
 
 // Stat icons
@@ -26,19 +27,24 @@ interface StatUpgradeRowProps {
 }
 
 export function StatUpgradeRow({ config, currentLevel, gold, onUpgrade, isLoading }: StatUpgradeRowProps) {
+  const { t } = useTranslation('game');
   const cost = getUpgradeCost(config, currentLevel);
   const canAfford = gold >= cost && currentLevel < config.maxLevel;
   const isMaxed = currentLevel >= config.maxLevel;
   const bonusPercent = getStatBonusPercent(config, currentLevel).toFixed(1);
   const nextBonusPercent = getStatBonusPercent(config, currentLevel + 1).toFixed(1);
 
+  // Use translation keys for stat name and description
+  const statName = t(`common:fortressPanel.statUpgrades.${config.stat}`);
+  const statDesc = t(`common:fortressPanel.statDescriptions.${config.stat}`, { amount: (config.bonusPerLevel * 100).toFixed(1) });
+
   return (
     <div class={styles.statRow}>
       <div class={styles.statInfo}>
         <span class={styles.statIcon}>{STAT_ICONS[config.stat] || '📊'}</span>
         <div class={styles.statDetails}>
-          <span class={styles.statName}>{config.name}</span>
-          <span class={styles.statDesc}>{config.description}</span>
+          <span class={styles.statName}>{statName}</span>
+          <span class={styles.statDesc}>{statDesc}</span>
         </div>
       </div>
 

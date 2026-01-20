@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'preact/hooks';
-import { signal } from '@preact/signals';
+import { signal, type Signal } from '@preact/signals';
 
 /**
  * Global signal for screen reader announcements.
  * Components can import and set this to announce messages.
  */
-export const announcement = signal<{
+export const announcement: Signal<{
   message: string;
   priority: 'polite' | 'assertive';
   id: number;
-} | null>(null);
+} | null> = signal(null);
 
 let announcementId = 0;
 
@@ -24,27 +24,29 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
   announcement.value = { message, priority, id: announcementId };
 }
 
+import i18n from '../../i18n/index.js';
+
 /**
  * Pre-defined game announcements for consistency
  */
 export const GameAnnouncements = {
-  waveComplete: (wave: number) => announce(`Fala ${wave} ukończona!`, 'polite'),
-  waveStart: (wave: number) => announce(`Fala ${wave} rozpoczęta`, 'polite'),
-  bossSpawn: (name: string) => announce(`Boss ${name} pojawił się!`, 'assertive'),
-  bossDefeated: (name: string) => announce(`Boss ${name} pokonany!`, 'assertive'),
-  gameOver: () => announce('Koniec gry. Twoja forteca została zniszczona.', 'assertive'),
-  heroRecruited: (name: string) => announce(`Bohater ${name} dołączył do drużyny`, 'polite'),
-  heroDefeated: (name: string) => announce(`Bohater ${name} został pokonany`, 'polite'),
-  turretPlaced: (name: string) => announce(`Wieżyczka ${name} umieszczona`, 'polite'),
-  turretDestroyed: (name: string) => announce(`Wieżyczka ${name} zniszczona`, 'polite'),
-  levelUp: (level: number) => announce(`Awans na poziom ${level}!`, 'assertive'),
-  choiceAvailable: () => announce('Wybór dostępny. Użyj klawiszy strzałek i Enter aby wybrać.', 'polite'),
-  modalOpened: (title: string) => announce(`${title}. Naciśnij Escape aby zamknąć.`, 'polite'),
-  modalClosed: () => announce('Okno zamknięte', 'polite'),
-  rewardClaimed: () => announce('Nagroda odebrana', 'polite'),
-  errorOccurred: (message: string) => announce(`Błąd: ${message}`, 'assertive'),
-  loading: () => announce('Ładowanie...', 'polite'),
-  loaded: () => announce('Załadowano', 'polite'),
+  waveComplete: (wave: number) => announce(i18n.t('shared.announcements.waveComplete', { wave }), 'polite'),
+  waveStart: (wave: number) => announce(i18n.t('shared.announcements.waveStart', { wave }), 'polite'),
+  bossSpawn: (name: string) => announce(i18n.t('shared.announcements.bossSpawn', { name }), 'assertive'),
+  bossDefeated: (name: string) => announce(i18n.t('shared.announcements.bossDefeated', { name }), 'assertive'),
+  gameOver: () => announce(i18n.t('shared.announcements.gameOver'), 'assertive'),
+  heroRecruited: (name: string) => announce(i18n.t('shared.announcements.heroRecruited', { name }), 'polite'),
+  heroDefeated: (name: string) => announce(i18n.t('shared.announcements.heroDefeated', { name }), 'polite'),
+  turretPlaced: (name: string) => announce(i18n.t('shared.announcements.turretPlaced', { name }), 'polite'),
+  turretDestroyed: (name: string) => announce(i18n.t('shared.announcements.turretDestroyed', { name }), 'polite'),
+  levelUp: (level: number) => announce(i18n.t('shared.announcements.levelUp', { level }), 'assertive'),
+  choiceAvailable: () => announce(i18n.t('shared.announcements.choiceAvailable'), 'polite'),
+  modalOpened: (title: string) => announce(i18n.t('shared.pressEscapeToClose', { title }), 'polite'),
+  modalClosed: () => announce(i18n.t('shared.windowClosed'), 'polite'),
+  rewardClaimed: () => announce(i18n.t('shared.announcements.rewardClaimed'), 'polite'),
+  errorOccurred: (message: string) => announce(i18n.t('shared.announcements.errorOccurred', { message }), 'assertive'),
+  loading: () => announce(i18n.t('shared.loading'), 'polite'),
+  loaded: () => announce(i18n.t('shared.announcements.loaded'), 'polite'),
 };
 
 /**

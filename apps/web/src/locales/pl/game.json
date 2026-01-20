@@ -39,7 +39,9 @@
     "endSessionTitle": "Zakończ sesję",
     "endSessionMessage": "Czy na pewno chcesz zakończyć bieżącą sesję? Twój postęp z obecnego segmentu zostanie zapisany.",
     "endSessionConfirm": "Zakończ",
-    "endSessionCancel": "Kontynuuj grę"
+    "endSessionCancel": "Kontynuuj grę",
+    "insufficientEnergy": "Brak energii! Poczekaj na regenerację lub doładuj za dust.",
+    "upgradeFailed": "Ulepszenie nieudane. Spróbuj ponownie."
   },
   "heroPanel": {
     "slotEmpty": "Slot {{index}}: pusty",
@@ -110,16 +112,6 @@
     "details": "Szczegóły",
     "hide": "Ukryj"
   },
-  "tutorial": {
-    "yourFortress": "Twoja Twierdza",
-    "fortressDescription": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak pociski trafiają wrogów!",
-    "bombAbility": "Umiejętność BOMB",
-    "bombDescription": "Kliknij przycisk BOMB aby zadać obrażenia wszystkim wrogom w zasięgu!",
-    "relics": "Relikty",
-    "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
-    "waveN": "Fala {{n}}",
-    "clickToClose": "Kliknij aby zamknąć"
-  },
   "unlock": {
     "level": "Poziom {{level}}",
     "newUnlock": "Nowe Odblokowanie!",
@@ -158,6 +150,21 @@
     "hpValueText": "{{current}} z {{max}} punktów życia, forteca {{level}}",
     "resourceGold": "Złoto: {{amount}}",
     "resourceDust": "Pył: {{amount}}",
+    "resourcesLabel": "Zasoby",
+    "levelGroupLabel": "Poziom",
+    "shortcutsLabel": "Skróty",
+    "worldExploration": "Eksploracja Światów",
+    "battlePass": "Battle Pass",
+    "battlePassWithRewards": "Battle Pass ({{count}} nagród)",
+    "pvpArena": "Arena PvP",
+    "pvpChallenges": "{{count}} wyzwań",
+    "energy": {
+      "label": "Energia",
+      "full": "PEŁNA",
+      "regen": "+1 za {{time}}",
+      "refillTitle": "Odśwież energię za {{cost}} pyłu",
+      "ariaLabel": "Energia: {{current}} z {{max}}"
+    },
     "levelLabel": "Poziom {{level}}",
     "xpProgress": "Postęp doświadczenia",
     "dailyQuestsWithRewards": "Dzienne Zadania ({{count}} nagród)",
@@ -180,7 +187,25 @@
     "relics": "Relikty",
     "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
     "waveN": "Fala {{n}}",
-    "clickToClose": "Kliknij aby zamknąć"
+    "clickToClose": "Kliknij aby zamknąć",
+    "tips": {
+      "fortress_auto_attack": {
+        "title": "Twoja Twierdza",
+        "description": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak bronią Cię przed wrogami!"
+      },
+      "bomb_skill": {
+        "title": "Umiejętności Twierdzy",
+        "description": "Kliknij umiejętność aby zadać obrażenia wszystkim wrogom. Umiejętności ładują się z czasem."
+      },
+      "relic_selection": {
+        "title": "Wybierz Relikt",
+        "description": "Po każdej fali wybierz relikt, który wzmocni Twoją obronę na całą sesję!"
+      },
+      "speed_controls": {
+        "title": "Kontrola Prędkości",
+        "description": "Przyspiesz grę przyciskami 2x lub 3x gdy poczujesz się pewniej."
+      }
+    }
   },
   "relicsCatalog": {
     "items": {
@@ -303,5 +328,258 @@
     "relics": "Relikty",
     "returnToHub": "Wróć do bazy",
     "playAgain": "Zagraj ponownie"
+  },
+  "turretDetails": {
+    "title": "Szczegóły Wieżyczki",
+    "level": "Poziom",
+    "levelShort": "Poz. {{level}}",
+    "maxLevel": "Maksymalny Poziom",
+    "advanceLevel": "Awans Poziomu",
+    "advanceButton": "Awansuj",
+    "insufficientResources": "Brak Zasobów",
+    "boosts": "Wzmocnienia",
+    "permanentBonuses": "permanentne bonusy dla {{name}}",
+    "damage": "Obrażenia",
+    "attackSpeed": "Szybkość Ataku",
+    "range": "Zasięg",
+    "stats": {
+      "damage": "DMG",
+      "attackSpeed": "ATK/s",
+      "range": "Zasięg"
+    },
+    "turrets": {
+      "railgun": {
+        "name": "Railgun",
+        "role": "Szybkie Obrażenia",
+        "description": "Szybkostrzelna wieża z wysokim DPS"
+      },
+      "artillery": {
+        "name": "Artyleria",
+        "role": "Obrażenia Obszarowe",
+        "description": "Potężne wybuchy na dużym obszarze"
+      },
+      "arc": {
+        "name": "Łuk Plazmowy",
+        "role": "Obrażenia Łańcuchowe",
+        "description": "Błyskawice przeskakują między wrogami"
+      },
+      "cryo": {
+        "name": "Kryo",
+        "role": "Spowolnienie",
+        "description": "Zamraża i spowalnia przeciwników"
+      }
+    }
+  },
+  "heroes": {
+    "storm": {
+      "name": "Unit-7 \"Storm\"",
+      "weaknesses": {
+        "fire_vulnerability": {
+          "name": "Wrażliwość na Ogień",
+          "description": "+25% otrzymywanych obrażeń od Fire"
+        }
+      },
+      "skills": {
+        "arc_strike": {
+          "name": "Uderzenie Łukowe",
+          "description": "Wystrzeliwuje łuk elektryczny zadający obrażenia"
+        },
+        "storm_passive": {
+          "name": "Protokół Burzowy",
+          "description": "Ataki łańcuchują do 2 dodatkowych celów (70% DMG per skok)"
+        },
+        "chain_lightning": {
+          "name": "Łańcuch Błyskawic",
+          "description": "Potężniejszy atak z łańcuchem elektrycznym"
+        },
+        "storm_lord": {
+          "name": "Władca Piorunów",
+          "description": "Chain: +1 cel (3 total), 80% DMG per skok zamiast 70%"
+        },
+        "ion_cannon": {
+          "name": "Działo Jonowe",
+          "description": "Ultimatywna broń energetyczna"
+        },
+        "emp_storm": {
+          "name": "Burza EMP",
+          "description": "ULTIMATE: Masywna eksplozja elektromagnetyczna"
+        }
+      }
+    },
+    "forge": {
+      "name": "Unit-3 \"Forge\"",
+      "weaknesses": {
+        "emp_vulnerability": {
+          "name": "Wrażliwość na EMP",
+          "description": "Lightning zadaje +30% DMG"
+        }
+      },
+      "skills": {
+        "laser_burst": {
+          "name": "Impuls Laserowy",
+          "description": "Strzał z lasera precyzyjnego"
+        },
+        "thrusters": {
+          "name": "Silniki Odrzutowe",
+          "description": "+20% movement speed"
+        },
+        "missile_barrage": {
+          "name": "Salwa Rakietowa",
+          "description": "Wiele rakiet kierowanych w obszarze"
+        },
+        "targeting_system": {
+          "name": "System Celowania",
+          "description": "+20% crit chance"
+        },
+        "nano_swarm": {
+          "name": "Rój Nanorobotów",
+          "description": "Adaptacyjne nano-bronie bojowe"
+        },
+        "orbital_strike": {
+          "name": "Uderzenie Orbitalne",
+          "description": "ULTIMATE: Ogromny promień energii z orbity"
+        }
+      }
+    },
+    "titan": {
+      "name": "Unit-1 \"Titan\"",
+      "weaknesses": {
+        "cc_vulnerable": {
+          "name": "Podatny na Kontrolę",
+          "description": "Stun/Freeze trwa 50% dłużej"
+        }
+      },
+      "skills": {
+        "void_strike": {
+          "name": "Uderzenie Próżni",
+          "description": "Potężne uderzenie energią wymiarową"
+        },
+        "void_absorption": {
+          "name": "Absorpcja Próżni",
+          "description": "Obrażenia rosną wraz z utratą HP"
+        },
+        "dimensional_rift": {
+          "name": "Szczelina Wymiarowa",
+          "description": "Otwiera rozdarcie w przestrzeni wciągające wrogów"
+        },
+        "void_resonance": {
+          "name": "Rezonans Próżni",
+          "description": "+100% obrażeń przy HP poniżej 30%"
+        },
+        "void_burst": {
+          "name": "Eksplozja Próżniowa",
+          "description": "Potężna eksplozja energii wymiarowej"
+        },
+        "dimensional_collapse": {
+          "name": "Kolaps Wymiarowy",
+          "description": "ULTIMATE: Tworzy czarną dziurę niszczącą wszystko"
+        }
+      }
+    },
+    "vanguard": {
+      "name": "Unit-0 \"Vanguard\"",
+      "weaknesses": {
+        "only_human": {
+          "name": "Tylko Człowiek",
+          "description": "Brak odporności na kosmiczne energie"
+        }
+      },
+      "skills": {
+        "barrier_pulse": {
+          "name": "Impuls Tarczy",
+          "description": "Wystrzeliwuje pole siłowe odbijające się od wrogów"
+        },
+        "command_aura": {
+          "name": "Aura Dowodzenia",
+          "description": "+10% damage dla sojuszników, taunts wrogów w zasięgu 4"
+        },
+        "dual_barrier": {
+          "name": "Podwójna Bariera",
+          "description": "Dwa pola siłowe wystrzeliwane jednocześnie"
+        },
+        "veteran": {
+          "name": "Weteran",
+          "description": "+25% damage reduction, +20% armor dla sojuszników, 5% DMG twierdzy absorbowane"
+        },
+        "kinetic_hammer": {
+          "name": "Młot Kinetyczny",
+          "description": "Operuje bronią kinetyczną wysokiej mocy"
+        },
+        "rally_command": {
+          "name": "Rozkaz Rajdu",
+          "description": "ULTIMATE: Znacząco wzmacnia wszystkie jednostki"
+        }
+      }
+    },
+    "rift": {
+      "name": "Unit-9 \"Rift\"",
+      "weaknesses": {
+        "fragile_psyche": {
+          "name": "Krucha Psychika",
+          "description": "Stun zadaje dodatkowe obrażenia"
+        }
+      },
+      "skills": {
+        "plasma_bolt": {
+          "name": "Impuls Plazmowy",
+          "description": "Pocisk plazmowy wysokiej temperatury"
+        },
+        "probability": {
+          "name": "Probability Manipulation",
+          "description": "+15% luck"
+        },
+        "plasma_wave": {
+          "name": "Fala Plazmowa",
+          "description": "Obszarowe obrażenia termiczne"
+        },
+        "thermal_flux": {
+          "name": "Fluktuacja Termiczna",
+          "description": "Random buffs/debuffs"
+        },
+        "plasma_shield": {
+          "name": "Tarcza Plazmowa",
+          "description": "Ochronna sfera plazmowa"
+        },
+        "thermal_annihilation": {
+          "name": "Anihilacja Termiczna",
+          "description": "ULTIMATE: Zadaje 50% HP wrogom"
+        }
+      }
+    },
+    "frost": {
+      "name": "Unit-5 \"Frost\"",
+      "weaknesses": {
+        "no_powers": {
+          "name": "Brak Mocy",
+          "description": "-40% HP"
+        }
+      },
+      "skills": {
+        "cryo_shot": {
+          "name": "Strzał Kriogeniczny",
+          "description": "Pocisk kriogeniczny spowalniający cel"
+        },
+        "precision": {
+          "name": "Precyzja",
+          "description": "+15% crit chance"
+        },
+        "multi_shot": {
+          "name": "Wielostrzał",
+          "description": "Wystrzeliwuje 3 pociski jednocześnie"
+        },
+        "ice_mastery": {
+          "name": "Mistrzostwo Lodu",
+          "description": "+25% ice damage, +10% slow duration"
+        },
+        "shatter_shot": {
+          "name": "Strzał Kruszący",
+          "description": "Zadaje podwójne obrażenia zamrożonym celom"
+        },
+        "blizzard_barrage": {
+          "name": "Nawałnica Lodowa",
+          "description": "ULTIMATE: Deszcz lodowych strzał na wszystkich wrogów"
+        }
+      }
+    }
   }
 }

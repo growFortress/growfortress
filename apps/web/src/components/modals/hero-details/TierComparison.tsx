@@ -1,9 +1,10 @@
 import type { JSX } from 'preact';
+import { useState } from 'preact/hooks';
 import type { HeroDefinition } from '@arcade/sim-core';
 import { calculateHeroStats } from '@arcade/sim-core';
-import { useState } from 'preact/hooks';
 import styles from './TierComparison.module.css';
 import cardStyles from './cards.module.css';
+import { useTranslation } from '../../../i18n/useTranslation.js';
 
 // Tier colors
 const TIER_COLORS = {
@@ -26,6 +27,7 @@ interface StatComparison {
 }
 
 export function TierComparison({ heroDefinition, currentTier, selectedTier, level }: TierComparisonProps) {
+  const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Calculate stats for all 3 tiers at current level
@@ -34,9 +36,9 @@ export function TierComparison({ heroDefinition, currentTier, selectedTier, leve
   const tier3Stats = calculateHeroStats(heroDefinition, 3, level);
 
   const stats: StatComparison[] = [
-    { label: 'HP', values: [tier1Stats.hp, tier2Stats.hp, tier3Stats.hp] },
-    { label: 'DMG', values: [tier1Stats.damage, tier2Stats.damage, tier3Stats.damage] },
-    { label: 'AS', values: [tier1Stats.attackSpeed, tier2Stats.attackSpeed, tier3Stats.attackSpeed], format: (v) => v.toFixed(2) },
+    { label: t('heroDetails.hp'), values: [tier1Stats.hp, tier2Stats.hp, tier3Stats.hp] },
+    { label: t('heroDetails.dmg'), values: [tier1Stats.damage, tier2Stats.damage, tier3Stats.damage] },
+    { label: t('heroDetails.as'), values: [tier1Stats.attackSpeed, tier2Stats.attackSpeed, tier3Stats.attackSpeed], format: (v) => v.toFixed(2) },
   ];
 
   // Find max value for each stat to calculate bar widths
@@ -48,7 +50,7 @@ export function TierComparison({ heroDefinition, currentTier, selectedTier, leve
   if (!isExpanded) {
     return (
       <button class={styles.toggleButton} onClick={() => setIsExpanded(true)}>
-        📊 Pokaż porównanie tierów
+        📊 {t('heroDetails.comparison.show')}
       </button>
     );
   }
@@ -56,7 +58,7 @@ export function TierComparison({ heroDefinition, currentTier, selectedTier, leve
   return (
     <div class={`${cardStyles.card} ${styles.comparisonCard}`}>
       <div class={styles.header}>
-        <div class={cardStyles.cardHeader}>Porównanie tierów (Poz. {level})</div>
+        <div class={cardStyles.cardHeader}>{t('heroDetails.comparison.title', { level })}</div>
         <button class={styles.closeButton} onClick={() => setIsExpanded(false)}>×</button>
       </div>
 
@@ -114,7 +116,7 @@ export function TierComparison({ heroDefinition, currentTier, selectedTier, leve
 
       {/* Multiplier Comparison */}
       <div class={styles.multiplierComparison}>
-        <div class={styles.multiplierLabel}>Mnożnik statystyk</div>
+        <div class={styles.multiplierLabel}>{t('heroDetails.upgrade.statMultiplier')}</div>
         <div class={styles.multipliers}>
           {([1, 2, 3] as const).map((tier) => {
             const multiplier = heroDefinition.tiers[tier - 1].statMultiplier;

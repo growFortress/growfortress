@@ -1,4 +1,4 @@
-import { signal } from '@preact/signals';
+import { signal, type Signal } from '@preact/signals';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import i18n, { type SupportedLanguage, SUPPORTED_LANGUAGES } from './index.js';
 
@@ -7,7 +7,7 @@ const storedLang = typeof localStorage !== 'undefined'
   ? localStorage.getItem('gf-language') as SupportedLanguage | null
   : null;
 
-export const currentLanguage = signal<SupportedLanguage>(
+export const currentLanguage: Signal<SupportedLanguage> = signal<SupportedLanguage>(
   storedLang && SUPPORTED_LANGUAGES.includes(storedLang) ? storedLang : 'en'
 );
 

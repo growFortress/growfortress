@@ -24,6 +24,7 @@ import {
   TURRET_UPGRADE_COSTS,
 } from '@arcade/protocol';
 import { useState } from 'preact/hooks';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { StatUpgradeRow } from '../shared/StatUpgradeRow.js';
 import { Modal } from '../shared/Modal.js';
 import { getAccessToken } from '../../api/auth.js';
@@ -90,6 +91,7 @@ interface UpgradeModalProps {
 }
 
 export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
+  const { t } = useTranslation(['game', 'common']);
   const target = upgradeTarget.value;
   const visible = upgradePanelVisible.value;
 
@@ -135,21 +137,20 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
           showErrorToast(result.error);
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Nie udało się ulepszyć statystyki';
+        const message = error instanceof Error ? error.message : t('common:errors.upgradeStatFailed');
         showErrorToast(message);
       } finally {
         setLoadingStat(null);
       }
     };
 
-    const info = TURRET_INFO[turret.definitionId] || {
-      name: turret.definitionId,
-      icon: '🗼',
-      role: 'Nieznana',
-      description: 'Brak opisu',
-    };
+    const turretKey = turret.definitionId;
+    const name = t(`game:turretDetails.turrets.${turretKey}.name`);
+    const role = t(`game:turretDetails.turrets.${turretKey}.role`);
+    const icon = TURRET_INFO[turretKey]?.icon || '🗼';
 
     const classConfig = CLASS_CONFIG[turret.currentClass] || CLASS_CONFIG.natural;
+    const classLabel = t(`common:elements.${turret.currentClass}`);
     const canUpgrade = turret.tier < 3;
     const upgradeCost = turret.tier === 1 ? TURRET_UPGRADE_COSTS['1_to_2'] : TURRET_UPGRADE_COSTS['2_to_3'];
     const canAfford = gold >= upgradeCost.gold && dust >= upgradeCost.dust;
@@ -165,7 +166,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
         <div class={styles.upgradePanel} style={cssVars}>
           {/* Header */}
           <div class={styles.modalHeader}>
-            <h3 class={styles.modalTitle}>Szczegóły Wieżyczki</h3>
+            <h3 class={styles.modalTitle}>{t('game:turretDetails.title')}</h3>
             <button class={styles.closeButton} onClick={handleClose}>×</button>
           </div>
 
@@ -173,38 +174,38 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
             {/* Hero Section - Big turret display */}
             <div class={styles.heroSection}>
               <div class={styles.turretVisual}>
-                <span class={styles.turretIcon}>{info.icon}</span>
+                <span class={styles.turretIcon}>{icon}</span>
               </div>
 
               <div class={styles.turretInfo}>
-                <h2 class={styles.turretName}>{info.name}</h2>
+                <h2 class={styles.turretName}>{name}</h2>
                 <div class={styles.turretMeta}>
-                  <span class={styles.turretClass}>{classConfig.label}</span>
-                  <span class={styles.turretRole}>{info.role}</span>
+                  <span class={styles.turretClass}>{classLabel}</span>
+                  <span class={styles.turretRole}>{role}</span>
                 </div>
                 {turretDef?.baseStats && (
                   <div class={styles.baseStats}>
                     <div class={styles.baseStat}>
                       <span class={styles.baseStatIcon}>⚔️</span>
                       <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.damage / 16384)}</span>
-                      <span>DMG</span>
+                      <span>{t('game:turretDetails.stats.damage')}</span>
                     </div>
                     <div class={styles.baseStat}>
                       <span class={styles.baseStatIcon}>⚡</span>
                       <span class={styles.baseStatValue}>{(turretDef.baseStats.attackSpeed / 16384).toFixed(1)}</span>
-                      <span>ATK/s</span>
+                      <span>{t('game:turretDetails.stats.attackSpeed')}</span>
                     </div>
                     <div class={styles.baseStat}>
                       <span class={styles.baseStatIcon}>🎯</span>
                       <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.range / 16384)}</span>
-                      <span>Zasięg</span>
+                      <span>{t('game:turretDetails.stats.range')}</span>
                     </div>
                   </div>
                 )}
               </div>
 
               <div class={styles.tierBadge}>
-                <span class={styles.tierLabel}>Poziom</span>
+                <span class={styles.tierLabel}>{t('game:turretDetails.level')}</span>
                 <span class={styles.tierValue}>{turret.tier}</span>
                 <span class={styles.tierMax}>/ 3</span>
               </div>
@@ -216,19 +217,19 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
               {canUpgrade ? (
                 <div class={styles.upgradeSection}>
                   <div class={styles.upgradeSectionHeader}>
-                    <h4 class={styles.sectionTitle}>Awans Poziomu</h4>
-                    <span class={styles.nextTierBadge}>→ Poz. {turret.tier + 1}</span>
+                    <h4 class={styles.sectionTitle}>{t('game:turretDetails.advanceLevel')}</h4>
+                    <span class={styles.nextTierBadge}>→ {t('game:turretDetails.levelShort', { level: turret.tier + 1 })}</span>
                   </div>
 
                   <div class={styles.upgradePreview}>
                     <div class={styles.upgradeBonus}>
                       <span class={styles.upgradeBonusIcon}>⚔️</span>
-                      <span class={styles.upgradeBonusText}>Obrażenia</span>
+                      <span class={styles.upgradeBonusText}>{t('game:turretDetails.damage')}</span>
                       <span class={styles.upgradeBonusValue}>+25%</span>
                     </div>
                     <div class={styles.upgradeBonus}>
                       <span class={styles.upgradeBonusIcon}>⚡</span>
-                      <span class={styles.upgradeBonusText}>Szybkość Ataku</span>
+                      <span class={styles.upgradeBonusText}>{t('game:turretDetails.attackSpeed')}</span>
                       <span class={styles.upgradeBonusValue}>+15%</span>
                     </div>
                   </div>
@@ -249,21 +250,21 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
                     disabled={!canAfford}
                     onClick={() => onUpgrade({ type: 'turret', id: turret.slotIndex })}
                   >
-                    {canAfford ? 'Awansuj' : 'Brak Zasobów'}
+                    {canAfford ? t('game:turretDetails.advanceButton') : t('game:turretDetails.insufficientResources')}
                   </button>
                 </div>
               ) : (
                 <div class={styles.maxTier}>
                   <span class={styles.maxTierIcon}>👑</span>
-                  <span class={styles.maxTierText}>Maksymalny Poziom</span>
+                  <span class={styles.maxTierText}>{t('game:turretDetails.maxLevel')}</span>
                 </div>
               )}
 
               {/* Right: Permanent Stat Bonuses */}
               <div class={styles.section}>
                 <div class={styles.sectionHeader}>
-                  <h4 class={styles.sectionTitle}>Wzmocnienia</h4>
-                  <span class={styles.sectionSubtitle}>permanentne bonusy dla {info.name}</span>
+                  <h4 class={styles.sectionTitle}>{t('game:turretDetails.boosts')}</h4>
+                  <span class={styles.sectionSubtitle}>{t('game:turretDetails.permanentBonuses', { name })}</span>
                 </div>
                 <div class={styles.statList}>
                   {TURRET_STAT_UPGRADES.map(config => (

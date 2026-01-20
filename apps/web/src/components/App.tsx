@@ -112,7 +112,7 @@ type LoadingStage =
   | "ready"; // Gotowe
 
 // Single consistent loading message - no stage changes for seamless UX
-const LOADING_MESSAGE = "Ładowanie...";
+const LOADING_MESSAGE_KEY = "app.loadingMessage";
 
 export function App() {
   return (
@@ -132,7 +132,7 @@ function AppContent() {
 
   // Core Authentication State
   const [internalAuth, setInternalAuth] = useState(checkAuth());
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation(["auth", "common"]);
 
   // Profile Query
   const { data: profile, refetch: refetchProfile } = useQuery({
@@ -417,7 +417,7 @@ function AppContent() {
       );
     } else {
       // Jeden spójny ekran ładowania - identyczny jak HTML loader
-      content = <LoadingScreen message={LOADING_MESSAGE} />;
+      content = <LoadingScreen message={t(LOADING_MESSAGE_KEY)} />;
     }
   } else if (!isAuthSignal.value) {
     content = <AuthScreen onLogin={handleLogin} onRegister={handleRegister} />;
@@ -449,12 +449,12 @@ function AppContent() {
             (e.target as HTMLElement).style.top = "-40px";
           }}
         >
-          Przejdź do głównej zawartości
+          {t("app.mainContentSkipLink")}
         </a>
 
         <div id="app">
           <Header />
-          <main id="main-content" role="main" aria-label="Gra Grow Fortress">
+          <main id="main-content" role="main" aria-label={t("app.gameAriaLabel")}>
             <GameContainer
               onLoadProfile={loadProfile}
               savedSession={savedSession}
@@ -462,13 +462,13 @@ function AppContent() {
               onSessionResumed={handleSessionResumed}
             />
           </main>
-          <aside role="complementary" aria-label="Ranking graczy">
+          <aside role="complementary" aria-label={t("app.leaderboardAriaLabel")}>
             <Leaderboard />
           </aside>
         </div>
 
         {/* Toast notifications */}
-        <div role="region" aria-label="Powiadomienia" aria-live="polite">
+        <div role="region" aria-label={t("app.notificationsAriaLabel")} aria-live="polite">
           <SyncStatus />
           <RewardsToast />
           <ErrorToast />

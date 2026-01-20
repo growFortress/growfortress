@@ -115,12 +115,30 @@
     "pressEscapeToClose": "Naciśnij Escape aby zamknąć.",
     "windowClosed": "Okno zamknięte",
     "close": "Zamknij",
-    "holdToSee": "Przytrzymaj aby zobaczyć"
+    "holdToSee": "Przytrzymaj aby zobaczyć",
+    "announcements": {
+      "waveComplete": "Fala {{wave}} ukończona!",
+      "waveStart": "Fala {{wave}} rozpoczęta",
+      "bossSpawn": "Boss {{name}} pojawił się!",
+      "bossDefeated": "Boss {{name}} pokonany!",
+      "gameOver": "Koniec gry. Twoja forteca została zniszczona.",
+      "heroRecruited": "Bohater {{name}} dołączył do drużyny",
+      "heroDefeated": "Bohater {{name}} został pokonany",
+      "turretPlaced": "Wieżyczka {{name}} umieszczona",
+      "turretDestroyed": "Wieżyczka {{name}} zniszczona",
+      "levelUp": "Awans na poziom {{level}}!",
+      "choiceAvailable": "Wybór dostępny. Użyj klawiszy strzałek i Enter aby wybrać.",
+      "rewardClaimed": "Nagroda odebrana",
+      "errorOccurred": "Błąd: {{message}}",
+      "loaded": "Załadowano"
+    }
   },
   "app": {
     "gameAriaLabel": "Gra Grow Fortress",
     "leaderboardAriaLabel": "Ranking graczy",
-    "notificationsAriaLabel": "Powiadomienia"
+    "notificationsAriaLabel": "Powiadomienia",
+    "mainContentSkipLink": "Przejdź do głównej zawartości",
+    "loadingMessage": "Ładowanie..."
   },
   "fortressPanel": {
     "profile": "Profil",
@@ -163,7 +181,20 @@
     "statUpgrades": {
       "hp": "Wzmocnione Mury",
       "damage": "Arsenał",
-      "armor": "Pancerz"
+      "armor": "Pancerz",
+      "attackSpeed": "Ulepszony Kaliber",
+      "range": "Sensory Optyczne",
+      "critChance": "Precyzyjne Uderzenie",
+      "critMultiplier": "Zabójcza Siła"
+    },
+    "statDescriptions": {
+      "hp": "+{{amount}}% życia fortecy",
+      "damage": "+{{amount}}% obrażeń wieżyczki za level",
+      "armor": "+{{amount}}% redukcji obrażeń",
+      "attackSpeed": "+{{amount}}% szybkości ataku wieżyczki za level",
+      "range": "+{{amount}}% zasięgu ataku",
+      "critChance": "+{{amount}}% szansy na cios krytyczny",
+      "critMultiplier": "+{{amount}}% obrażeń krytycznych"
     }
   },
   "heroDetails": {
@@ -178,7 +209,75 @@
     "operationTimeout": "Przekroczono limit czasu operacji",
     "upgradeStatFailed": "Nie udało się ulepszyć statystyki",
     "equipArtifactFailed": "Nie udało się założyć artefaktu",
-    "unequipArtifactFailed": "Nie udało się zdjąć artefaktu"
+    "unequipArtifactFailed": "Nie udało się zdjąć artefaktu",
+    "weaknessHeader": "SŁABOŚCI",
+    "noWeaknesses": "Brak słabości",
+    "levelLabel": "Poz.",
+    "maxBadge": "MAX",
+    "xpLabel": "XP",
+    "nextLevelLabel": "Do nast. poziomu",
+    "skillsWithTier": "UMIEJĘTNOŚCI (TIER {{tier}})",
+    "upgrade": {
+      "maxTier": "Maksymalny Tier!",
+      "nextTier": "Ulepsz do Tier {{tier}}",
+      "preview": "PODGLĄD",
+      "upgrade": "ULEPSZ",
+      "previewTitle": "Podgląd Tieru",
+      "back": "Wróć",
+      "statMultiplier": "MNOŻNIK STATYSTYK",
+      "newSkills": "NOWE UMIEJĘTNOŚCI",
+      "visualEffects": "EFEKTY WIZUALNE",
+      "size": "Rozmiar",
+      "glowIntensity": "Intensywność blasku",
+      "colorShift": "Zmiana koloru",
+      "newEffects": "Nowe efekty",
+      "upgradeToTier": "ULEPSZ DO TIER {{tier}}",
+      "unlockRequirements": "Wymagania odblokowania",
+      "current": "AKTUALNY",
+      "locked": "Tier zablokowany"
+    },
+    "roles": {
+      "tank": "TANK",
+      "dps": "DPS",
+      "support": "SUPPORT",
+      "crowd_control": "KONTROLA",
+      "assassin": "ZABÓJCA"
+    },
+    "skillTypes": {
+      "passive": "Pasywna",
+      "ultimate": "ULTIMATE"
+    },
+    "effects": {
+      "damage": "DMG",
+      "stun": "Stun",
+      "slow": "Slow",
+      "heal": "Heal",
+      "shield": "Shield",
+      "burn": "Burn",
+      "freeze": "Freeze",
+      "poison": "Poison",
+      "buff": "Buff",
+      "summon": "Summon"
+    },
+    "comparison": {
+      "show": "Pokaż porównanie tierów",
+      "title": "Porównanie Tierów (Poz. {{level}})"
+    },
+    "artifactPicker": {
+      "title": "Wybierz Artefakt",
+      "filterCompatible": "Kompatybilne",
+      "filterAll": "Wszystkie",
+      "emptyCompatible": "Brak kompatybilnych artefaktów",
+      "emptyAll": "Brak dostępnych artefaktów",
+      "emptyHintCompatible": "Spróbuj przełączyć na 'Wszystkie' lub zdobądź więcej artefaktów",
+      "emptyHintAll": "Zdobywaj artefakty poprzez crafting lub gameplay",
+      "previewTitle": "Podgląd efektów",
+      "cancel": "Anuluj",
+      "equipping": "Zakładanie...",
+      "equip": "Załóż",
+      "artifactSpecific": "Artefakt specyficzny dla bohatera",
+      "incompatibleTooltip": "Ten artefakt nie jest kompatybilny z tym bohaterem"
+    }
   },
   "turretPlacement": {
     "title": "Postaw Wieżyczkę",
@@ -282,10 +381,6 @@
     "contents": "Zawartość",
     "dustDescription": "Premium waluta do zakupów w sklepie. Wymień na ulepszenia, boostery i ekskluzywne przedmioty.",
     "bundleDescription": "Zestaw wartościowych przedmiotów w promocyjnej cenie. Idealny wybór dla oszczędnych graczy!",
-    "battlePassDesc": "Odblokuj ekskluzywne nagrody i premium zawartość przez cały sezon.",
-    "randomHero": "Losowa jednostka",
-    "randomArtifact": "Losowy artefakt",
-    "rareMaterialsShort": "Rzadkie materiały",
     "premiumRewards": "Ekskluzywne nagrody",
     "days": "dni",
     "permanentUnlock": "Stałe odblokowanie"

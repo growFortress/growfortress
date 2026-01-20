@@ -39,7 +39,9 @@
     "endSessionTitle": "End Session",
     "endSessionMessage": "Are you sure you want to end the current session? Your progress from the current segment will be saved.",
     "endSessionConfirm": "End",
-    "endSessionCancel": "Continue game"
+    "endSessionCancel": "Continue game",
+    "insufficientEnergy": "Not enough energy! Wait for regeneration or recharge for dust.",
+    "upgradeFailed": "Upgrade failed. Please try again."
   },
   "heroPanel": {
     "slotEmpty": "Slot {{index}}: empty",
@@ -110,16 +112,6 @@
     "details": "Details",
     "hide": "Hide"
   },
-  "tutorial": {
-    "yourFortress": "Your Fortress",
-    "fortressDescription": "Fortress and turrets attack automatically. Watch projectiles hit enemies!",
-    "bombAbility": "BOMB Ability",
-    "bombDescription": "Click BOMB button to damage all enemies in range!",
-    "relics": "Relics",
-    "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
-    "waveN": "Wave {{n}}",
-    "clickToClose": "Click to close"
-  },
   "unlock": {
     "level": "Level {{level}}",
     "newUnlock": "New Unlock!",
@@ -158,6 +150,21 @@
     "hpValueText": "{{current}} of {{max}} health points, fortress {{level}}",
     "resourceGold": "Gold: {{amount}}",
     "resourceDust": "Dust: {{amount}}",
+    "resourcesLabel": "Resources",
+    "levelGroupLabel": "Level",
+    "shortcutsLabel": "Shortcuts",
+    "worldExploration": "World Exploration",
+    "battlePass": "Battle Pass",
+    "battlePassWithRewards": "Battle Pass ({{count}} rewards)",
+    "pvpArena": "PvP Arena",
+    "pvpChallenges": "{{count}} challenges",
+    "energy": {
+      "label": "Energy",
+      "full": "FULL",
+      "regen": "+1 in {{time}}",
+      "refillTitle": "Refill energy for {{cost}} dust",
+      "ariaLabel": "Energy: {{current}} of {{max}}"
+    },
     "levelLabel": "Level {{level}}",
     "xpProgress": "Experience progress",
     "dailyQuestsWithRewards": "Daily Quests ({{count}} rewards)",
@@ -180,7 +187,25 @@
     "relics": "Relics",
     "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
     "waveN": "Wave {{n}}",
-    "clickToClose": "Click to close"
+    "clickToClose": "Click to close",
+    "tips": {
+      "fortress_auto_attack": {
+        "title": "Your Fortress",
+        "description": "Fortress and turrets attack automatically. Watch them defend you against enemies!"
+      },
+      "bomb_skill": {
+        "title": "Fortress Skills",
+        "description": "Click a skill to deal damage to all enemies. Skills charge over time."
+      },
+      "relic_selection": {
+        "title": "Choose Relic",
+        "description": "After each wave, choose a relic that will strengthen your defense for the whole session!"
+      },
+      "speed_controls": {
+        "title": "Speed Controls",
+        "description": "Speed up the game with 2x or 3x buttons when you feel more confident."
+      }
+    }
   },
   "relicsCatalog": {
     "items": {
@@ -303,5 +328,258 @@
     "relics": "Relics",
     "returnToHub": "Return to Hub",
     "playAgain": "Play Again"
+  },
+  "turretDetails": {
+    "title": "Turret Details",
+    "level": "Level",
+    "levelShort": "Lvl {{level}}",
+    "maxLevel": "Max Level",
+    "advanceLevel": "Level Up",
+    "advanceButton": "Advance",
+    "insufficientResources": "Insufficient Resources",
+    "boosts": "Boosts",
+    "permanentBonuses": "permanent bonuses for {{name}}",
+    "damage": "Damage",
+    "attackSpeed": "Attack Speed",
+    "range": "Range",
+    "stats": {
+      "damage": "DMG",
+      "attackSpeed": "ATK/s",
+      "range": "Range"
+    },
+    "turrets": {
+      "railgun": {
+        "name": "Railgun",
+        "role": "Fast Damage",
+        "description": "Fast-firing tower with high DPS"
+      },
+      "artillery": {
+        "name": "Artillery",
+        "role": "Area Damage",
+        "description": "Powerful explosions over a large area"
+      },
+      "arc": {
+        "name": "Plasma Arc",
+        "role": "Chain Damage",
+        "description": "Lightning jumps between enemies"
+      },
+      "cryo": {
+        "name": "Cryo",
+        "role": "Slow",
+        "description": "Freezes and slows enemies"
+      }
+    }
+  },
+  "heroes": {
+    "storm": {
+      "name": "Unit-7 \"Storm\"",
+      "weaknesses": {
+        "fire_vulnerability": {
+          "name": "Fire Vulnerability",
+          "description": "+25% damage taken from Fire"
+        }
+      },
+      "skills": {
+        "arc_strike": {
+          "name": "Arc Strike",
+          "description": "Fires an electric arc dealing damage"
+        },
+        "storm_passive": {
+          "name": "Storm Protocol",
+          "description": "Attacks chain to 2 additional targets (70% DMG per jump)"
+        },
+        "chain_lightning": {
+          "name": "Chain Lightning",
+          "description": "Powerful attack with an electric chain"
+        },
+        "storm_lord": {
+          "name": "Storm Lord",
+          "description": "Chain: +1 target (3 total), 80% DMG per jump instead of 70%"
+        },
+        "ion_cannon": {
+          "name": "Ion Cannon",
+          "description": "Ultimate energy weapon"
+        },
+        "emp_storm": {
+          "name": "EMP Storm",
+          "description": "ULTIMATE: Massive electromagnetic explosion"
+        }
+      }
+    },
+    "forge": {
+      "name": "Unit-3 \"Forge\"",
+      "weaknesses": {
+        "emp_vulnerability": {
+          "name": "EMP Vulnerability",
+          "description": "Lightning deals +30% DMG"
+        }
+      },
+      "skills": {
+        "laser_burst": {
+          "name": "Laser Burst",
+          "description": "Precise laser pulse shot"
+        },
+        "thrusters": {
+          "name": "Thrusters",
+          "description": "+20% movement speed"
+        },
+        "missile_barrage": {
+          "name": "Missile Barrage",
+          "description": "Multiple guided missiles in area"
+        },
+        "targeting_system": {
+          "name": "Targeting System",
+          "description": "+20% crit chance"
+        },
+        "nano_swarm": {
+          "name": "Nano Swarm",
+          "description": "Adaptive nano-weapons"
+        },
+        "orbital_strike": {
+          "name": "Orbital Strike",
+          "description": "ULTIMATE: Massive energy beam from orbit"
+        }
+      }
+    },
+    "titan": {
+      "name": "Unit-1 \"Titan\"",
+      "weaknesses": {
+        "cc_vulnerable": {
+          "name": "Vulnerable to Control",
+          "description": "Stun/Freeze lasts 50% longer"
+        }
+      },
+      "skills": {
+        "void_strike": {
+          "name": "Void Strike",
+          "description": "Powerful dimensional energy strike"
+        },
+        "void_absorption": {
+          "name": "Void Absorption",
+          "description": "Damage increases with HP loss"
+        },
+        "dimensional_rift": {
+          "name": "Dimensional Rift",
+          "description": "Opens a spatial tear pulling in enemies"
+        },
+        "void_resonance": {
+          "name": "Void Resonance",
+          "description": "+100% damage below 30% HP"
+        },
+        "void_burst": {
+          "name": "Void Burst",
+          "description": "Powerful dimensional energy explosion"
+        },
+        "dimensional_collapse": {
+          "name": "Dimensional Collapse",
+          "description": "ULTIMATE: Creates a black hole destroying everything"
+        }
+      }
+    },
+    "vanguard": {
+      "name": "Unit-0 \"Vanguard\"",
+      "weaknesses": {
+        "only_human": {
+          "name": "Only Human",
+          "description": "No resistance to cosmic energies"
+        }
+      },
+      "skills": {
+        "barrier_pulse": {
+          "name": "Shield Pulse",
+          "description": "Fires a force field bouncing off enemies"
+        },
+        "command_aura": {
+          "name": "Command Aura",
+          "description": "+10% damage for allies, taunts enemies in range 4"
+        },
+        "dual_barrier": {
+          "name": "Dual Barrier",
+          "description": "Two force fields fired simultaneously"
+        },
+        "veteran": {
+          "name": "Veteran",
+          "description": "+25% damage reduction, +20% armor for allies, 5% fortress DMG absorbed"
+        },
+        "kinetic_hammer": {
+          "name": "Kinetic Hammer",
+          "description": "Operates high-power kinetic weapon"
+        },
+        "rally_command": {
+          "name": "Rally Command",
+          "description": "ULTIMATE: Significantly buffs all units"
+        }
+      }
+    },
+    "rift": {
+      "name": "Unit-9 \"Rift\"",
+      "weaknesses": {
+        "fragile_psyche": {
+          "name": "Fragile Psyche",
+          "description": "Stun deals extra damage"
+        }
+      },
+      "skills": {
+        "plasma_bolt": {
+          "name": "Plasma Bolt",
+          "description": "High-temperature plasma projectile"
+        },
+        "probability": {
+          "name": "Probability Manipulation",
+          "description": "+15% luck"
+        },
+        "plasma_wave": {
+          "name": "Plasma Wave",
+          "description": "Area thermal damage"
+        },
+        "thermal_flux": {
+          "name": "Thermal Flux",
+          "description": "Random buffs/debuffs"
+        },
+        "plasma_shield": {
+          "name": "Plasma Shield",
+          "description": "Protective plasma sphere"
+        },
+        "thermal_annihilation": {
+          "name": "Thermal Annihilation",
+          "description": "ULTIMATE: Deals 50% HP to enemies"
+        }
+      }
+    },
+    "frost": {
+      "name": "Unit-5 \"Frost\"",
+      "weaknesses": {
+        "no_powers": {
+          "name": "No Powers",
+          "description": "-40% HP"
+        }
+      },
+      "skills": {
+        "cryo_shot": {
+          "name": "Cryo Shot",
+          "description": "Cryogenic projectile slowing the target"
+        },
+        "precision": {
+          "name": "Precision",
+          "description": "+15% crit chance"
+        },
+        "multi_shot": {
+          "name": "Multi-shot",
+          "description": "Fires 3 projectiles simultaneously"
+        },
+        "ice_mastery": {
+          "name": "Ice Mastery",
+          "description": "+25% ice damage, +10% slow duration"
+        },
+        "shatter_shot": {
+          "name": "Shatter Shot",
+          "description": "Deals double damage to frozen targets"
+        },
+        "blizzard_barrage": {
+          "name": "Blizzard Barrage",
+          "description": "ULTIMATE: Rain of ice arrows on all enemies"
+        }
+      }
+    }
   }
 }

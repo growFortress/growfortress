@@ -1,86 +1,79 @@
-import type { HeroSkillDefinition } from '@arcade/sim-core';
+import type { JSX } from 'preact';
+import type { HeroDefinition, HeroSkillDefinition } from '@arcade/sim-core';
 import cardStyles from './cards.module.css';
+import { useTranslation } from '../../../i18n/useTranslation.js';
 
 interface SkillCardProps {
+  heroId: string;
   skill: HeroSkillDefinition;
 }
 
-function getSkillType(skill: HeroSkillDefinition): 'passive' | 'active' | 'ultimate' {
+function getSkillType(skill: HeroSkillDefinition): 'passive' | 'combat' | 'ultimate' {
   if (skill.isPassive) return 'passive';
   if (skill.isUltimate) return 'ultimate';
-  return 'active';
+  return 'combat';
 }
 
 function getSkillIcon(skill: HeroSkillDefinition): string {
-  if (skill.isPassive) return '⭐';
-  if (skill.isUltimate) return '💥';
+  if (skill.isPassive) return '🛡️';
+  if (skill.isUltimate) return '🔥';
   return '⚡';
 }
 
-function getSkillTypeLabel(skill: HeroSkillDefinition): string {
-  if (skill.isPassive) return 'Pasywna';
-  if (skill.isUltimate) return 'ULTIMATE';
-  return '';
-}
-
 function formatCooldown(cooldownTicks: number): string {
-  // Assuming 30 ticks per second
   return `${(cooldownTicks / 30).toFixed(1)}s`;
 }
 
-function formatEffectValue(effect: { type: string; amount?: number; percent?: number; duration?: number }): string {
-  switch (effect.type) {
-    case 'damage':
-      return `${effect.amount} DMG`;
-    case 'stun':
-      return `${((effect.duration || 0) / 30).toFixed(1)}s Stun`;
-    case 'slow':
-      return `${effect.percent}% Slow`;
-    case 'heal':
-      return `${effect.amount} Heal`;
-    case 'shield':
-      return `${effect.amount} Shield`;
-    case 'burn':
-      return `Burn`;
-    case 'freeze':
-      return `Freeze`;
-    case 'poison':
-      return `Poison`;
-    case 'buff':
-      return `Buff`;
-    case 'summon':
-      return `Summon`;
-    default:
-      return effect.type;
-  }
-}
-
-export function SkillCard({ skill }: SkillCardProps) {
+export function SkillCard({ heroId, skill }: SkillCardProps) {
+  const { t } = useTranslation(['common', 'game']);
   const skillType = getSkillType(skill);
   const skillIcon = getSkillIcon(skill);
-  const skillTypeLabel = getSkillTypeLabel(skill);
+
+  const getSkillTypeLabel = () => {
+    if (skill.isPassive) return t('common:heroDetails.skillTypes.passive');
+    if (skill.isUltimate) return t('common:heroDetails.skillTypes.ultimate');
+    return null;
+  };
+
+  const formatEffectValue = (type: string, value: number) => {
+    const label = t(`common:heroDetails.effects.${type.toLowerCase()}`);
+    return (
+      <span class={cardStyles.effectValue}>
+        {label}: <span class={cardStyles.number}>{value}</span>
+      </span>
+    );
+  };
+
+  const typeLabel = getSkillTypeLabel();
 
   return (
     <div class={`${cardStyles.skillCard} ${cardStyles[skillType]}`}>
       <div class={cardStyles.skillHeader}>
         <span class={cardStyles.skillIcon}>{skillIcon}</span>
-        <span class={cardStyles.skillName}>{skill.name}</span>
-        {skillTypeLabel && (
-          <span class={cardStyles.skillType}>{skillTypeLabel}</span>
+        <div class={cardStyles.skillNameGroup}>
+          <span class={cardStyles.skillName}>{t(`game:heroes.${heroId}.skills.${skill.id}.name`)}</span>
+          {typeLabel && (
+            <span class={`${cardStyles.skillType} ${skill.isUltimate ? cardStyles.ultimate : ''}`}>
+              {typeLabel}
+            </span>
+          )}
+        </div>
+        {skill.unlockedAtLevel > 1 && (
+          <span class={cardStyles.unlockLevel}>{t('common:heroDetails.levelLabel')} {skill.unlockedAtLevel}</span>
         )}
         {!skill.isPassive && (
           <span class={cardStyles.skillCooldown}>{formatCooldown(skill.cooldownTicks)}</span>
         )}
       </div>
 
-      <div class={cardStyles.skillDesc}>{skill.description}</div>
+      <p class={cardStyles.skillDescription}>{t(`game:heroes.${heroId}.skills.${skill.id}.description`)}</p>
 
       {skill.effects.length > 0 && (
         <div class={cardStyles.skillEffects}>
-          {skill.effects.map((effect, index) => (
-            <span key={index} class={cardStyles.effectBadge}>
-              {formatEffectValue(effect)}
-            </span>
+          {skill.effects.map((effect, idx) => (
+            <div key={idx} class={cardStyles.effectItem}>
+              {formatEffectValue(effect.type, effect.amount ?? 0)}
+            </div>
           ))}
         </div>
       )}
