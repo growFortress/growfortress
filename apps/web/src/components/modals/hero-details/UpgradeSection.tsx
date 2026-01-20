@@ -33,7 +33,7 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade,
         <h4>Ulepsz do Tier {currentTier + 1}</h4>
         <div class={cardStyles.upgradeCost}>
           <span class={`${cardStyles.costItem} ${canAffordGold ? cardStyles.canAfford : cardStyles.cantAfford}`}>
-            💰 {upgradeCost.gold}
+            🪙 {upgradeCost.gold}
           </span>
           <span class={`${cardStyles.costItem} ${canAffordDust ? cardStyles.canAfford : cardStyles.cantAfford}`}>
             🌫️ {upgradeCost.dust}

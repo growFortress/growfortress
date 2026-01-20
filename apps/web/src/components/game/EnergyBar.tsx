@@ -47,18 +47,19 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
     <div class={containerClasses} title="Energy">
       {/* Icon and count */}
       <div class={styles.iconSection}>
-        <span class={styles.icon}>⚡</span>
+        <span class={styles.icon}>🔋</span>
         <div class={styles.values}>
           <span class={styles.energyCount}>
             {currentEnergy.value}/{maxEnergy.value}
           </span>
-          {!isFull && regenText && (
+          {/* Hide regen time in compact mode */}
+          {!compact && !isFull && regenText && (
             <span class={styles.regenTime}>+1 in {regenText}</span>
           )}
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress bar - smaller in compact mode */}
       <div class={styles.barSection}>
         <ProgressBar
           percent={energyPercent.value}

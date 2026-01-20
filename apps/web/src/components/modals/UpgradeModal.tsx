@@ -46,7 +46,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 
 // Turret names and info (4 turrets)
 const TURRET_INFO: Record<string, { name: string; icon: string; role: string; description: string }> = {
-  railgun: { name: 'Railgun', icon: '⚡', role: 'Szybkie Obrażenia', description: 'Szybkostrzelna wieża z wysokim DPS' },
+  railgun: { name: 'Railgun', icon: '🎯', role: 'Szybkie Obrażenia', description: 'Szybkostrzelna wieża z wysokim DPS' },
   artillery: { name: 'Artyleria', icon: '💣', role: 'Obrażenia Obszarowe', description: 'Potężne wybuchy na dużym obszarze' },
   arc: { name: 'Łuk Plazmowy', icon: '🔷', role: 'Obrażenia Łańcuchowe', description: 'Błyskawice przeskakują między wrogami' },
   cryo: { name: 'Kryo', icon: '❄️', role: 'Spowolnienie', description: 'Zamraża i spowalnia przeciwników' },
@@ -235,7 +235,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
 
                   <div class={styles.upgradeCost}>
                     <span class={`${styles.costItem} ${gold < upgradeCost.gold ? styles.insufficient : ''}`}>
-                      <span class={styles.costIcon}>💰</span>
+                      <span class={styles.costIcon}>🪙</span>
                       {upgradeCost.gold.toLocaleString()}
                     </span>
                     <span class={`${styles.costItem} ${dust < upgradeCost.dust ? styles.insufficient : ''}`}>

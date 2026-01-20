@@ -69,8 +69,8 @@ export function RewardsModal() {
                     <h3 class={styles.rewardTitle}>{reward.title}</h3>
                     <p class={styles.rewardDesc}>{reward.description}</p>
                     <div class={styles.rewardBadge}>
-                      {reward.type === 'GOLD' ? '💰' : 
-                       reward.type === 'DUST' ? '💨' : 
+                      {reward.type === 'GOLD' ? '🪙' :
+                       reward.type === 'DUST' ? '💨' :
                        reward.type === 'SIGILS' ? '🔯' : '🎁'}
                       {reward.value} {reward.type}
                     </div>

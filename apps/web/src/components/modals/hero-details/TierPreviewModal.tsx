@@ -193,7 +193,7 @@ export function TierPreviewModal({
           <div class={styles.upgradeSection}>
             <div class={styles.upgradeCost}>
               <span class={`${styles.costItem} ${canAffordGold ? styles.canAfford : styles.cantAfford}`}>
-                💰 {upgradeCost.gold}
+                🪙 {upgradeCost.gold}
               </span>
               <span class={`${styles.costItem} ${canAffordDust ? styles.canAfford : styles.cantAfford}`}>
                 🌫️ {upgradeCost.dust}

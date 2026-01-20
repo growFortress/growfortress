@@ -289,7 +289,7 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
                 <div class={styles.slotPurchase}>
                   <div class={styles.slotCost}>
                     <span class={styles.slotCostGold}>
-                      💰 {heroSlotInfo.slot.goldCost.toLocaleString()}
+                      🪙 {heroSlotInfo.slot.goldCost.toLocaleString()}
                     </span>
                     <span class={styles.slotCostLevel}>
                       Poz. {heroSlotInfo.slot.levelRequired}
@@ -326,7 +326,7 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
                 <div class={styles.slotPurchase}>
                   <div class={styles.slotCost}>
                     <span class={styles.slotCostGold}>
-                      💰 {turretSlotInfo.slot.goldCost.toLocaleString()}
+                      🪙 {turretSlotInfo.slot.goldCost.toLocaleString()}
                     </span>
                     <span class={styles.slotCostLevel}>
                       Poz. {turretSlotInfo.slot.levelRequired}

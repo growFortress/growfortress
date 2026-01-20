@@ -127,7 +127,7 @@ export function TierContent({ tier, isCurrentTier, isLocked, classColor }: TierC
             </div>
             <div class={cardStyles.reqItem}>
               <span class={cardStyles.reqLabel}>Złoto</span>
-              <span class={cardStyles.reqValue}>💰 {tier.unlockRequirements.gold}</span>
+              <span class={cardStyles.reqValue}>🪙 {tier.unlockRequirements.gold}</span>
             </div>
             <div class={cardStyles.reqItem}>
               <span class={cardStyles.reqLabel}>Pył</span>

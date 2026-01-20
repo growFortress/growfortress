@@ -144,7 +144,7 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
       {/* Rewards */}
       {result?.rewards && (
         <div class={styles.section}>
-          <h3 class={styles.sectionTitle}>💰 REWARDS</h3>
+          <h3 class={styles.sectionTitle}>🪙 REWARDS</h3>
           <div class={styles.rewards}>
             <span class={styles.rewardItem}>+{result.rewards.gold} Gold</span>
             <span class={styles.rewardItem}>+{result.rewards.dust} Dust</span>

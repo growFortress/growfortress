@@ -4,8 +4,13 @@ import { activeTurrets, gamePhase } from '../../state/index.js';
 import { setTurretTargeting, activateOvercharge } from '../../state/gameActions.signals.js';
 import styles from './TurretSkillBar.module.css';
 
-// Turret icons
+// Turret icons (matching actual turret types)
 const TURRET_ICONS: Record<string, string> = {
+  railgun: '🎯',
+  artillery: '💣',
+  arc: '🔷',
+  cryo: '❄️',
+  // Legacy IDs (fallback)
   arrow: '🏹',
   cannon: '💣',
   sniper: '🎯',
@@ -110,7 +115,7 @@ function TurretCard({ turret, compact }: TurretCardProps) {
         {overchargeActive ? (
           <span class={styles.overchargeText}>2x</span>
         ) : overchargeReady ? (
-          <span class={styles.overchargeIcon}>⚡</span>
+          <span class={styles.overchargeIcon}>🔥</span>
         ) : (
           <>
             <div class={styles.cooldownBar} style={{ width: `${(1 - overchargePercent) * 100}%` }} />

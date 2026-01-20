@@ -115,7 +115,7 @@ export function PvpPanel() {
             </div>
           </div>
           <div class={`${styles.statCard} ${styles.statCardPower}`}>
-            <div class={styles.statIcon}>⚡</div>
+            <div class={styles.statIcon}>💪</div>
             <div class={styles.statContent}>
               <span class={styles.statValue}>{formatPower(userPower.value)}</span>
               <span class={styles.statLabel}>Twoja Moc</span>

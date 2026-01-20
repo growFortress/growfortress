@@ -20,6 +20,11 @@ import styles from './TurretPanel.module.css';
 
 // Turret name translation keys
 const TURRET_NAME_KEYS: Record<string, string> = {
+  railgun: 'turretPanel.railgunTower',
+  artillery: 'turretPanel.artilleryTower',
+  arc: 'turretPanel.arcTower',
+  cryo: 'turretPanel.cryoTower',
+  // Legacy
   arrow: 'turretPanel.arrowTower',
   cannon: 'turretPanel.cannonTower',
   tesla: 'turretPanel.teslaTower',
@@ -28,10 +33,15 @@ const TURRET_NAME_KEYS: Record<string, string> = {
 
 // Turret icons
 const TURRET_ICONS: Record<string, string> = {
-  arrow: '\u{1F3F9}', // bow and arrow
-  cannon: '\u{1F4A3}', // bomb
-  tesla: '\u26A1', // lightning
-  frost: '\u2744\uFE0F', // snowflake
+  railgun: '🎯', // target (precision)
+  artillery: '💣', // bomb
+  arc: '🔷', // diamond (arc energy)
+  cryo: '❄️', // snowflake
+  // Legacy
+  arrow: '🏹', // bow and arrow
+  cannon: '💣', // bomb
+  tesla: '⚡', // lightning
+  frost: '❄️', // snowflake
 };
 
 // Class colors (7 classes)

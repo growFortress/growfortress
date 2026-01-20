@@ -10,7 +10,7 @@ export function ResourceDisplay({ className = '', compact = false }: ResourceDis
   return (
     <div class={`${styles.container} ${className} ${compact ? styles.compact : ''}`}>
       <div class={styles.resource} title="Gold">
-        <span class={styles.icon}>💰</span>
+        <span class={styles.icon}>🪙</span>
         <span class={styles.value}>{displayGold.value}</span>
       </div>
       <div class={styles.resource} title="Dust">

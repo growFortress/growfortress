@@ -249,7 +249,7 @@ export function ArtifactsModal() {
                                 disabled={!canAfford || loadingItem === item.itemId}
                                 onClick={() => handleUpgradeItem(item.itemId)}
                               >
-                                {loadingItem === item.itemId ? '...' : `${cost} 💰`}
+                                {loadingItem === item.itemId ? '...' : `${cost} 🪙`}
                               </button>
                             </div>
                           )}

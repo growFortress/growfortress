@@ -239,7 +239,7 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
 
         {/* Cost info */}
         <div class={styles.costInfo}>
-          <span class={styles.costIcon}>💰</span>
+          <span class={styles.costIcon}>🪙</span>
           <span>{t('guild.createFree')}</span>
         </div>
 

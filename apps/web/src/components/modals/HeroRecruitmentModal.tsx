@@ -226,7 +226,7 @@ export function HeroRecruitmentModal() {
                   <>
                     {cost.gold > 0 && (
                       <div class={`${styles.costItem} ${gold < cost.gold ? styles.insufficient : ''}`}>
-                        <span class={styles.costIcon}>💰</span>
+                        <span class={styles.costIcon}>🪙</span>
                         {cost.gold.toLocaleString()}
                       </div>
                     )}
@@ -258,7 +258,7 @@ export function HeroRecruitmentModal() {
       <div class={styles.container}>
         <div class={styles.resourceBar}>
           <div class={styles.resource}>
-            <span class={styles.goldIcon}>💰</span>
+            <span class={styles.goldIcon}>🪙</span>
             <span class={styles.resourceValue}>{gold.toLocaleString()}</span>
           </div>
           <div class={styles.resource}>

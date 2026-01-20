@@ -138,7 +138,7 @@ export function OpponentsList({ onRefresh }: OpponentsListProps) {
                     isStronger ? styles.opponentPowerHigh :
                     isWeaker ? styles.opponentPowerLow : ''
                   }`}>
-                    ⚡ {formatPower(opponent.power)}
+                    💪 {formatPower(opponent.power)}
                     <span class={styles.powerCompare}>
                       ({powerPercent}%)
                     </span>

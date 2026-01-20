@@ -39,7 +39,7 @@ const HERO_INFO: Record<string, { name: string; icon: string; color: string }> =
 
 // Tower info mapping
 const TURRET_INFO: Record<TurretType, { name: string; icon: string; color: string }> = {
-  railgun: { name: 'Wieża Railgun', icon: '⚡', color: '#4a5568' },
+  railgun: { name: 'Wieża Railgun', icon: '🎯', color: '#4a5568' },
   artillery: { name: 'Wieża Artyleryjska', icon: '💣', color: '#696969' },
   arc: { name: 'Wieża Łukowa', icon: '🔷', color: '#9932cc' },
   cryo: { name: 'Wieża Kriogeniczna', icon: '❄️', color: '#00bfff' },

@@ -221,7 +221,7 @@ function ChallengeCard({
 
       <div class={styles.listItemMeta}>
         <span class={styles.listItemPower}>
-          ⚡ {formatPower(challenge.challengerPower)} vs {formatPower(challenge.challengedPower)}
+          💪 {formatPower(challenge.challengerPower)} vs {formatPower(challenge.challengedPower)}
         </span>
         <span class={styles.challengeTime}>
           {formatTimeAgo(challenge.createdAt)}

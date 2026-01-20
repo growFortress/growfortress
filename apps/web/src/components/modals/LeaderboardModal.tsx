@@ -630,7 +630,7 @@ function RewardCard({ reward, onClaim, t }: RewardCardProps) {
       <div class={styles.rewardItems}>
         {reward.goldAmount > 0 && (
           <span class={`${styles.rewardItem} ${styles.gold}`}>
-            💰 {reward.goldAmount.toLocaleString()}
+            🪙 {reward.goldAmount.toLocaleString()}
           </span>
         )}
         {reward.dustAmount > 0 && (

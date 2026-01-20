@@ -3,8 +3,65 @@ import { getHeroById } from '@arcade/sim-core';
 import { activeHeroes, gamePhase } from '../../state/index.js';
 import styles from './HeroSkillBar.module.css';
 
-// Skill icons by type
-const SKILL_ICONS: Record<string, string> = {
+// Unique skill icons by skill ID (hero skills)
+const SKILL_ICONS_BY_ID: Record<string, string> = {
+  // Storm (Lightning)
+  arc_strike: '⚡',
+  storm_passive: '🔗',
+  chain_lightning: '⛓️',
+  storm_lord: '👑',
+  ion_cannon: '🔫',
+  emp_storm: '💫',
+  // Forge (Tech)
+  laser_burst: '💥',
+  thrusters: '🚀',
+  missile_barrage: '🚀',
+  targeting_system: '🎯',
+  nano_swarm: '🤖',
+  orbital_strike: '☄️',
+  // Titan (Void)
+  void_strike: '🌀',
+  void_armor: '🛡️',
+  gravity_well: '🕳️',
+  event_horizon: '⭕',
+  dimension_rift: '🌌',
+  singularity: '💀',
+  // Vanguard (Natural/Tank)
+  shield_bash: '🛡️',
+  fortify: '🏰',
+  rallying_cry: '📢',
+  last_stand: '⚔️',
+  titan_shield: '🔰',
+  immortal_will: '👊',
+  // Rift (Fire/Mage)
+  fire_bolt: '🔥',
+  flame_shield: '🔶',
+  inferno: '🌋',
+  phoenix_form: '🐦',
+  meteor_shower: '☄️',
+  supernova: '💥',
+  // Frost (Ice/Support)
+  ice_shard: '❄️',
+  frost_armor: '🧊',
+  blizzard_aura: '🌨️',
+  absolute_zero: '💠',
+  ice_lance: '🔱',
+  permafrost: '❄️',
+  // Spectre (Plasma)
+  plasma_bolt: '🔮',
+  phase_shift: '👻',
+  overload: '⚡',
+  quantum_field: '🌐',
+  annihilate: '💫',
+  void_walker: '🌀',
+  // Omega
+  omega_blast: '⭐',
+  omega_shield: '🌟',
+  omega_fury: '💢',
+};
+
+// Fallback icons by effect type
+const SKILL_ICONS_BY_EFFECT: Record<string, string> = {
   damage: '⚔️',
   aoe: '💥',
   buff: '✨',
@@ -18,22 +75,22 @@ const SKILL_ICONS: Record<string, string> = {
   poison: '☠️',
   chain: '⛓️',
   pierce: '🎯',
+  freeze: '🧊',
   default: '💠',
 };
 
-// Get appropriate icon for skill based on effects
+// Get appropriate icon for skill - prioritize skill ID, then effect type
 function getSkillIcon(skill: { id: string; effects?: Array<{ type: string }> }): string {
+  // First check for skill-specific icon
+  if (SKILL_ICONS_BY_ID[skill.id]) {
+    return SKILL_ICONS_BY_ID[skill.id];
+  }
+  // Then check effect type
   if (skill.effects && skill.effects.length > 0) {
     const effectType = skill.effects[0].type;
-    return SKILL_ICONS[effectType] || SKILL_ICONS.default;
+    return SKILL_ICONS_BY_EFFECT[effectType] || SKILL_ICONS_BY_EFFECT.default;
   }
-  // Fallback based on skill id patterns
-  if (skill.id.includes('smash') || skill.id.includes('throw')) return SKILL_ICONS.damage;
-  if (skill.id.includes('wave') || skill.id.includes('storm')) return SKILL_ICONS.aoe;
-  if (skill.id.includes('buff') || skill.id.includes('boost')) return SKILL_ICONS.buff;
-  if (skill.id.includes('heal')) return SKILL_ICONS.heal;
-  if (skill.id.includes('shield')) return SKILL_ICONS.shield;
-  return SKILL_ICONS.default;
+  return SKILL_ICONS_BY_EFFECT.default;
 }
 
 interface HeroSkillBarProps {

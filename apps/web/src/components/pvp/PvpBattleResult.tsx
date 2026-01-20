@@ -64,7 +64,7 @@ export function PvpBattleResult() {
           {/* Challenger Side */}
           <div class={`${styles.side} ${isWinner ? styles.sideWinner : ''}`}>
             <div class={styles.sideName}>{challenge.challengerName}</div>
-            <div class={styles.sidePower}>⚡ {formatPower(challenge.challengerPower)}</div>
+            <div class={styles.sidePower}>💪 {formatPower(challenge.challengerPower)}</div>
             <div class={styles.sideStats}>
               <div class={styles.stat}>
                 <span class={styles.statLabel}>HP Fortecy</span>
@@ -89,7 +89,7 @@ export function PvpBattleResult() {
           {/* Challenged Side */}
           <div class={`${styles.side} ${!isWinner && !isDraw ? styles.sideWinner : ''}`}>
             <div class={styles.sideName}>{challenge.challengedName}</div>
-            <div class={styles.sidePower}>⚡ {formatPower(challenge.challengedPower)}</div>
+            <div class={styles.sidePower}>💪 {formatPower(challenge.challengedPower)}</div>
             <div class={styles.sideStats}>
               <div class={styles.stat}>
                 <span class={styles.statLabel}>HP Fortecy</span>

@@ -67,7 +67,7 @@ export function StatUpgradeRow({ config, currentLevel, gold, onUpgrade, isLoadin
               {isLoading ? '...' : (
                 <>
                   <span>{cost}</span>
-                  <span style={{ fontSize: '11px' }}>💰</span>
+                  <span style={{ fontSize: '11px' }}>🪙</span>
                 </>
               )}
             </button>

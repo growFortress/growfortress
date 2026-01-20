@@ -450,13 +450,13 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
                     <p class={styles.rewardTitle}>{t("settings.account.codeRedeemed")}</p>
                     <div class={styles.rewardList}>
                       {bonusCodeSuccess.gold > 0 && (
-                        <span class={styles.rewardItem}>💰 +{bonusCodeSuccess.gold}</span>
+                        <span class={styles.rewardItem}>🪙 +{bonusCodeSuccess.gold}</span>
                       )}
                       {bonusCodeSuccess.dust > 0 && (
                         <span class={styles.rewardItem}>💎 +{bonusCodeSuccess.dust}</span>
                       )}
                       {bonusCodeSuccess.energy > 0 && (
-                        <span class={styles.rewardItem}>⚡ +{bonusCodeSuccess.energy}</span>
+                        <span class={styles.rewardItem}>🔋 +{bonusCodeSuccess.energy}</span>
                       )}
                     </div>
                   </div>

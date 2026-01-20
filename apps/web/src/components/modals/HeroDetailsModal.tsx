@@ -126,7 +126,7 @@ function HeroStatRow({
               onClick={onUpgrade}
             >
               {isLoading ? '...' : `${upgradeCost}`}
-              <span class={styles.goldIcon}>💰</span>
+              <span class={styles.goldIcon}>🪙</span>
             </button>
           )}
         </>

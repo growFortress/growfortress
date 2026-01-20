@@ -2,8 +2,33 @@ import { getClassById, type SkillDefinition, type SkillEffect } from '@arcade/si
 import { gameState, gamePhase, selectedFortressClass, selectedTargetedSkill, selectSkillForTargeting, clearSelectedSkill } from '../../state/index.js';
 import styles from './FortressSkillBar.module.css';
 
-// Skill icons by effect type
-const SKILL_ICONS: Record<string, string> = {
+// Unique skill icons by skill ID (fortress skills)
+const SKILL_ICONS_BY_ID: Record<string, string> = {
+  // Standard (Natural)
+  earthquake: '🌊',
+  vine_snare: '🕸️',
+  // Cryo (Ice)
+  blizzard: '🌨️',
+  ice_spike: '🧊',
+  // Thermal (Fire)
+  meteor_strike: '☄️',
+  flame_wave: '🔥',
+  // Electric (Lightning)
+  thunderstorm: '⛈️',
+  chain_lightning: '⚡',
+  // Quantum (Tech)
+  laser_barrage: '💥',
+  emp_blast: '📡',
+  // Void
+  dimensional_tear: '🌀',
+  void_collapse: '🕳️',
+  // Plasma
+  plasma_nova: '💫',
+  overcharge_field: '⚡',
+};
+
+// Fallback icons by effect type
+const SKILL_ICONS_BY_EFFECT: Record<string, string> = {
   damage: '⚔️',
   aoe: '💥',
   buff: '✨',
@@ -75,14 +100,19 @@ function formatStat(stat: string | undefined): string {
 }
 
 /**
- * Get icon for skill based on primary effect
+ * Get icon for skill - prioritize skill ID, then effect type
  */
 function getSkillIcon(skill: SkillDefinition): string {
+  // First check for skill-specific icon
+  if (SKILL_ICONS_BY_ID[skill.id]) {
+    return SKILL_ICONS_BY_ID[skill.id];
+  }
+  // Then check effect type
   if (skill.effects && skill.effects.length > 0) {
     const effectType = skill.effects[0].type;
-    return SKILL_ICONS[effectType] || SKILL_ICONS.default;
+    return SKILL_ICONS_BY_EFFECT[effectType] || SKILL_ICONS_BY_EFFECT.default;
   }
-  return SKILL_ICONS.default;
+  return SKILL_ICONS_BY_EFFECT.default;
 }
 
 /**

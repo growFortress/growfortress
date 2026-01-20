@@ -36,16 +36,18 @@ export function LevelBar({ className = '', compact = false }: LevelBarProps) {
         </div>
       </div>
 
-      {/* XP Progress bar */}
-      <div class={styles.barSection}>
-        <ProgressBar
-          percent={xpPercent}
-          variant="xp"
-          size={compact ? 'xs' : 'sm'}
-          glow={true}
-          ariaLabel={`${t('common:labels.level')} ${level}, ${Math.round(xpPercent)}% ${t('common:resources.xp')}`}
-        />
-      </div>
+      {/* XP Progress bar - hidden in compact mode */}
+      {!compact && (
+        <div class={styles.barSection}>
+          <ProgressBar
+            percent={xpPercent}
+            variant="xp"
+            size="sm"
+            glow={true}
+            ariaLabel={`${t('common:labels.level')} ${level}, ${Math.round(xpPercent)}% ${t('common:resources.xp')}`}
+          />
+        </div>
+      )}
     </div>
   );
 }

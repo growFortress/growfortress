@@ -105,7 +105,7 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
       {/* Power Display */}
       {power !== undefined && (
         <div class={styles.powerRow}>
-          <span class={styles.powerIcon}>⚡</span>
+          <span class={styles.powerIcon}>💪</span>
           <span class={styles.powerLabel}>POWER</span>
           <span class={styles.powerValue}>{power.toLocaleString()}</span>
         </div>

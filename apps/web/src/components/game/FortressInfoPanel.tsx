@@ -392,7 +392,7 @@ export function FortressInfoPanel() {
             <div class={styles.powerBadge}>
               <span class={styles.powerLabel}>{t('fortressPanel.power')}</span>
               <div class={styles.powerValueWrapper}>
-                <span class={styles.powerIcon}>⚡</span>
+                <span class={styles.powerIcon}>💪</span>
                 <span class={styles.powerValue}>{fortressPower.toLocaleString()}</span>
               </div>
             </div>
@@ -480,7 +480,7 @@ export function FortressInfoPanel() {
                       class={canAfford ? styles.affordableBtn : ''}
                       aria-label={t('fortressPanel.upgradeFor', { name: upgradeName, cost })}
                     >
-                      {cost} 💰
+                      {cost} 🪙
                     </Button>
                   )}
                 </div>

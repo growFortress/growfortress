@@ -40,7 +40,7 @@ const CLASS_COLORS: Record<FortressClass, string> = {
 
 // Turret icons (simplified: 4 turrets)
 const TURRET_ICONS: Record<TurretType, string> = {
-  railgun: '\u26A1', // lightning (railgun energy)
+  railgun: '🎯', // target (precision)
   artillery: '\u{1F4A3}', // bomb
   arc: '\u{1F537}', // diamond (arc energy)
   cryo: '\u2744\uFE0F', // snowflake
@@ -206,7 +206,7 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
                 ) : (
                   <>
                     <div class={`${styles.costBadge} ${!canAfford ? styles.costInsufficient : ''}`}>
-                      <span class={styles.goldIcon}>💰</span>
+                      <span class={styles.goldIcon}>🪙</span>
                       {baseCost}
                     </div>
                     {!canAfford && (
