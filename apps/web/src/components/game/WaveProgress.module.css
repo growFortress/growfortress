@@ -1,3 +1,9 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 20px;
+}
+
 .container {
   width: 100%;
   height: 20px;
@@ -29,4 +35,32 @@
   /* Disable shimmer animation from ProgressBar */
   animation: none;
   width: auto;
+}
+
+.bossIndicator {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(10, 10, 10, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px rgba(255, 90, 90, 0.5);
+}
+
+.bossNow {
+  left: 0%;
+}
+
+.bossNext {
+  left: 100%;
+}
+
+.bossIcon {
+  color: #ff5b5b;
 }

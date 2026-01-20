@@ -7,7 +7,8 @@
  * Uses additive bonus system: base × (1 + sum of bonuses)
  */
 
-import type { GameState, ModifierSet } from '../types.js';
+import type { GameState, ModifierSet, ActiveHero } from '../types.js';
+import { FP } from '../fixed.js';
 import { getHeroById } from '../data/heroes.js';
 import { getPillarForWave, calculatePillarDamageMultiplier } from '../data/pillars.js';
 import { getRelicById, type ExtendedRelicDef } from '../data/relics.js';
@@ -256,4 +257,55 @@ export function getTurretSynergyBonus(
 ): TurretSynergyBonus | undefined {
   const bonuses = calculateTurretAdjacencyBonuses(state);
   return bonuses.find(b => b.slotIndex === slotIndex);
+}
+
+// ============================================================================
+// HERO ADJACENCY SYNERGY SYSTEM
+// ============================================================================
+
+export const STORM_FORGE_SYNERGY_RANGE = FP.fromFloat(4.5);
+export const STORM_FORGE_SYNERGY_RANGE_SQ = FP.mul(
+  STORM_FORGE_SYNERGY_RANGE,
+  STORM_FORGE_SYNERGY_RANGE
+);
+export const STORM_FORGE_ATTACK_SPEED_BONUS = 0.25; // +25% attack speed
+
+function getStormForgeHeroes(state: GameState): { storm: ActiveHero; forge: ActiveHero } | null {
+  let storm: ActiveHero | undefined;
+  let forge: ActiveHero | undefined;
+
+  for (const hero of state.heroes) {
+    if (hero.currentHp <= 0) continue;
+    if (hero.definitionId === 'storm') storm = hero;
+    if (hero.definitionId === 'forge') forge = hero;
+    if (storm && forge) break;
+  }
+
+  if (!storm || !forge) return null;
+  return { storm, forge };
+}
+
+export function getStormForgeSynergyPair(
+  state: GameState
+): { storm: ActiveHero; forge: ActiveHero } | null {
+  const heroes = getStormForgeHeroes(state);
+  if (!heroes) return null;
+
+  const distSq = FP.distSq(
+    heroes.storm.x,
+    heroes.storm.y,
+    heroes.forge.x,
+    heroes.forge.y
+  );
+
+  if (distSq > STORM_FORGE_SYNERGY_RANGE_SQ) return null;
+  return heroes;
+}
+
+export function getStormForgeAttackSpeedBonus(state: GameState, hero: ActiveHero): number {
+  if (hero.definitionId !== 'storm' && hero.definitionId !== 'forge') {
+    return 0;
+  }
+
+  return getStormForgeSynergyPair(state) ? STORM_FORGE_ATTACK_SPEED_BONUS : 0;
 }

@@ -6,6 +6,7 @@ import type {
   ActiveHero,
   ActiveTurret,
   TurretSlot,
+  PillarId,
 } from "@arcade/sim-core";
 import { FP } from "@arcade/sim-core";
 import { EnemySystem } from "../systems/EnemySystem.js";
@@ -22,7 +23,7 @@ import {
 import { fpXToScreen } from "../CoordinateSystem.js";
 
 // Import extracted components
-import { EnvironmentRenderer } from "./environment/EnvironmentRenderer.js";
+import { EnvironmentRenderer, themeManager } from "./environment/index.js";
 import { SceneInputController } from "./input/SceneInputController.js";
 import { SceneEffects } from "./effects/SceneEffects.js";
 
@@ -64,6 +65,9 @@ export class GameScene {
 
   private width = 0;
   private height = 0;
+
+  // Track current pillar for theme changes
+  private currentPillar: PillarId = "streets";
 
   constructor(_app: Application) {
     this.container = new Container();
@@ -107,7 +111,7 @@ export class GameScene {
 
     // Connect projectile impacts to VFX system
     this.projectileSystem.setImpactCallback((x, y, fortressClass) => {
-      this.effects.spawnClassImpact(x, y, fortressClass);
+      this.effects.spawnHitImpact(x, y, fortressClass);
     });
 
     // Lighting System (additive blend, on top of VFX)
@@ -179,6 +183,12 @@ export class GameScene {
       // Enable interactive layer during gameplay for tactical commands
       this.inputController.enableInteraction();
 
+      // Check for pillar/theme change
+      if (state.currentPillar !== this.currentPillar) {
+        this.currentPillar = state.currentPillar;
+        this.updateTheme(state.currentPillar);
+      }
+
       // Wave complete effect
       this.effects.checkWaveComplete(state.wavesCleared);
 
@@ -234,6 +244,19 @@ export class GameScene {
   }
 
   /**
+   * Update environment theme based on pillar.
+   * Updates both EnvironmentRenderer and ParallaxBackground.
+   */
+  private updateTheme(pillarId: PillarId): void {
+    // Update environment renderer theme
+    this.environment.setTheme(pillarId);
+
+    // Update parallax background with theme config
+    const theme = themeManager.getThemeForPillar(pillarId);
+    this.parallax.setTheme(theme.parallax);
+  }
+
+  /**
    * Update hub visuals when in idle phase (before session starts).
    * Renders heroes and turrets on canvas, HTML overlay handles empty slots only.
    */
@@ -283,6 +306,8 @@ export class GameScene {
 
   public spawnExplosion(x: number, y: number, color: number) {
     this.effects.spawnExplosion(x, y, color);
+    // Spawn ground crack at explosion location
+    this.environment.spawnCrack(x, y);
   }
 
   public spawnClassExplosion(
@@ -291,10 +316,16 @@ export class GameScene {
     fortressClass: FortressClass,
   ) {
     this.effects.spawnClassExplosion(x, y, fortressClass);
+    // Spawn ground crack at explosion location
+    this.environment.spawnCrack(x, y);
   }
 
   public spawnClassImpact(x: number, y: number, fortressClass: FortressClass) {
     this.effects.spawnClassImpact(x, y, fortressClass);
+    // Small chance of crack on impact (less frequent than explosions)
+    if (Math.random() < 0.2) {
+      this.environment.spawnCrack(x, y);
+    }
   }
 
   public spawnSkillActivation(
@@ -304,6 +335,17 @@ export class GameScene {
     skillLevel?: number,
   ) {
     this.effects.spawnSkillActivation(x, y, fortressClass, skillLevel);
+
+    // Trigger light flicker for electrical skills
+    if (fortressClass === "lightning") {
+      const intensity = skillLevel ? Math.min(1.0, 0.5 + skillLevel * 0.1) : 0.7;
+      this.environment.triggerLightFlicker(intensity);
+    }
+
+    // Strong skills can cause ground cracks
+    if (skillLevel && skillLevel >= 2) {
+      this.environment.spawnCrack(x, y);
+    }
   }
 
   public spawnHeroDeployment(
@@ -312,6 +354,10 @@ export class GameScene {
     fortressClass: FortressClass,
   ) {
     this.effects.spawnHeroDeployment(x, y, fortressClass);
+    // Lightning heroes cause flicker on deployment
+    if (fortressClass === "lightning") {
+      this.environment.triggerLightFlicker(0.5);
+    }
   }
 
   public spawnTurretFire(
@@ -321,5 +367,9 @@ export class GameScene {
     fortressClass: FortressClass,
   ) {
     this.effects.spawnTurretFire(x, y, angle, fortressClass);
+    // Lightning turrets cause subtle flicker
+    if (fortressClass === "lightning") {
+      this.environment.triggerLightFlicker(0.3);
+    }
   }
 }

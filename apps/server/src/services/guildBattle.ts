@@ -20,7 +20,7 @@ import {
 } from './guildBattleHero.js';
 import { payBattleCost } from './guildTreasury.js';
 import { runGuildArena, type GuildBattleHero } from '@arcade/sim-core';
-import { getCurrentWeekKey } from '../lib/weekUtils.js';
+import { getCurrentWeekKey, getWeekKeyForDate } from '../lib/weekUtils.js';
 import {
   checkAndAwardTrophies,
   updateBattleStreak,
@@ -138,8 +138,12 @@ export async function getShieldStatus(guildId: string): Promise<ShieldStatus> {
 
   const isActive = shield !== null && shield.expiresAt > now;
 
-  // Count shields used this week
-  const weeklyUsed = shield && shield.weekKey === weekKey ? shield.weeklyCount : 0;
+  // Count shields used this week (use activation date when weekKey is unreliable)
+  const activatedWeekKey = shield ? getWeekKeyForDate(shield.activatedAt) : null;
+  const weeklyUsed =
+    shield && (shield.weekKey === weekKey || activatedWeekKey === weekKey)
+      ? shield.weeklyCount
+      : 0;
 
   const canActivate = !isActive && weeklyUsed < GUILD_CONSTANTS.MAX_SHIELDS_PER_WEEK;
 

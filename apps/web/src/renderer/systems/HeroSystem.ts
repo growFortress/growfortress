@@ -1,7 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import type { GameState, ActiveHero, HeroState } from '@arcade/sim-core';
-import { FP } from '@arcade/sim-core';
-import { Tween, TweenManager } from '../animation/Tween.js';
+import { FP, STORM_FORGE_SYNERGY_RANGE_SQ } from '@arcade/sim-core';
+import { Tween, TweenManager, TweenSequence } from '../animation/Tween.js';
 import { easeOutQuad, easeOutElastic, easeOutCubic } from '../animation/easing.js';
 import type { VFXSystem } from './VFXSystem.js';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
@@ -77,6 +77,20 @@ const ANIMATION = {
   combatPulse: 150,
 };
 
+const MOTION = {
+  snapDistance: 0.6,
+  retargetDistance: 3.0,
+  anticipationRatio: 0.12,
+  overshootRatio: 0.15,
+  anticipationMax: 10,
+  overshootMax: 12,
+  anticipationDuration: 50,
+  settleDuration: 90,
+  minDuration: 90,
+  maxDuration: 240,
+  durationPerPixel: 0.6,
+};
+
 /**
  * Animation state for smooth transitions
  */
@@ -104,6 +118,14 @@ interface HeroAnimationState {
   // Offset for effects (shake, etc.)
   offsetX: number;
   offsetY: number;
+
+  // Motion smoothing & squash/stretch
+  visualX: number;
+  visualY: number;
+  motionSpeed: number;
+  motionDirX: number;
+  motionDirY: number;
+  stretch: number;
 }
 
 /**
@@ -128,6 +150,12 @@ interface HeroVisual {
   scaleTween: Tween<number> | null;
   alphaTween: Tween<number> | null;
   hpTween: Tween<number> | null;
+  motionSequence: TweenSequence | null;
+  motionTarget: { x: number; y: number };
+  motionInitialized: boolean;
+  lastVisualX: number;
+  lastVisualY: number;
+  breathingPhase: number;
   // Track skill cooldowns to detect skill usage
   lastSkillCooldowns: Record<string, number>;
   // Dirty flags for optimized rendering
@@ -139,6 +167,7 @@ export class HeroSystem {
   private visuals: Map<string, HeroVisual> = new Map();
   private onHeroClick: ((heroId: string) => void) | null = null;
   private lastUpdateTime: number = 0;
+  private lastSynergyBondTime: number = 0;
 
   constructor() {
     this.container = new Container();
@@ -203,21 +232,28 @@ export class HeroSystem {
         this.detectAndTriggerSkillVFX(visual, hero, screenX, screenY, state, viewWidth, viewHeight, vfx);
       }
 
+      // Update position target (screen space)
+      const screenX = fpXToScreen(hero.x, viewWidth);
+      const screenY = fpYToScreen(hero.y, viewHeight);
+
+      // Motion smoothing with anticipation/overshoot
+      this.updateMotion(visual, screenX, screenY, deltaMs);
+
       // Update tweens
       visual.tweenManager.update(deltaMs);
 
       // Update animation state
       this.updateAnimationState(visual, hero, deltaMs);
 
-      // Update position
-      const screenX = fpXToScreen(hero.x, viewWidth);
-      const screenY = fpYToScreen(hero.y, viewHeight);
-
       // Update visuals (which may apply animation offsets)
       const offset = this.updateHeroVisual(visual, hero, time);
 
       // Apply final position with animation offset
-      visual.container.position.set(screenX + offset.x, screenY + offset.y);
+      visual.container.position.set(visual.animation.visualX + offset.x, visual.animation.visualY + offset.y);
+    }
+
+    if (vfx) {
+      this.updateStormForgeBond(state, viewWidth, viewHeight, now, vfx);
     }
 
     // Remove dead/removed heroes with death animation
@@ -232,6 +268,31 @@ export class HeroSystem {
         }
       }
     }
+  }
+
+  private updateStormForgeBond(
+    state: GameState,
+    viewWidth: number,
+    viewHeight: number,
+    now: number,
+    vfx: VFXSystem
+  ) {
+    const storm = state.heroes.find(hero => hero.definitionId === 'storm' && hero.currentHp > 0);
+    const forge = state.heroes.find(hero => hero.definitionId === 'forge' && hero.currentHp > 0);
+    if (!storm || !forge) return;
+
+    const distSq = FP.distSq(storm.x, storm.y, forge.x, forge.y);
+    if (distSq > STORM_FORGE_SYNERGY_RANGE_SQ) return;
+
+    if (now - this.lastSynergyBondTime < 120) return;
+    this.lastSynergyBondTime = now;
+
+    const startX = fpXToScreen(storm.x, viewWidth);
+    const startY = fpYToScreen(storm.y, viewHeight);
+    const endX = fpXToScreen(forge.x, viewWidth);
+    const endY = fpYToScreen(forge.y, viewHeight);
+
+    vfx.spawnSynergyBond(startX, startY, endX, endY, 1);
   }
 
   private createHeroVisual(hero: ActiveHero): HeroVisual {
@@ -309,6 +370,12 @@ export class HeroSystem {
       scaleTween: null,
       alphaTween: null,
       hpTween: null,
+      motionSequence: null,
+      motionTarget: { x: 0, y: 0 },
+      motionInitialized: false,
+      lastVisualX: 0,
+      lastVisualY: 0,
+      breathingPhase: Math.random() * Math.PI * 2,
       lastSkillCooldowns: { ...hero.skillCooldowns },
       animation: {
         scale: 0, // Start at 0 for spawn animation
@@ -323,6 +390,12 @@ export class HeroSystem {
         combatIntensity: 0,
         offsetX: 0,
         offsetY: 0,
+        visualX: 0,
+        visualY: 0,
+        motionSpeed: 0,
+        motionDirX: 1,
+        motionDirY: 0,
+        stretch: 0,
       },
       // Initialize all as dirty to force initial draw
       dirty: {
@@ -454,6 +527,7 @@ export class HeroSystem {
     deltaMs: number
   ): void {
     const anim = visual.animation;
+    const deltaSec = Math.max(0.001, deltaMs / 1000);
 
     // Update spawn progress
     if (anim.isSpawning) {
@@ -480,6 +554,23 @@ export class HeroSystem {
     if (visual.hpTween && !visual.hpTween.isComplete()) {
       anim.hpPercent = visual.hpTween.getValue();
     }
+
+    // Update movement-driven stretch
+    const dx = anim.visualX - visual.lastVisualX;
+    const dy = anim.visualY - visual.lastVisualY;
+    const dist = Math.hypot(dx, dy);
+    const speed = dist / deltaSec;
+    anim.motionSpeed = speed;
+    if (dist > 0.001) {
+      anim.motionDirX = dx / dist;
+      anim.motionDirY = dy / dist;
+    }
+
+    const stretchTarget = Math.min(0.16, (speed / 520) * 0.16);
+    anim.stretch += (stretchTarget - anim.stretch) * 0.18;
+
+    visual.lastVisualX = anim.visualX;
+    visual.lastVisualY = anim.visualY;
 
     // State-specific continuous animations
     switch (hero.state) {
@@ -516,7 +607,15 @@ export class HeroSystem {
     const size = SIZES.heroBase * SIZES.tierMultiplier[tierKey];
 
     // Apply animated scale and alpha
-    visual.container.scale.set(anim.scale || 1);
+    const baseScale = anim.scale || 1;
+    const breatheStrength = hero.state === 'idle' ? 0.035 : 0.02;
+    const breathe = 1 + Math.sin(time * 2 + visual.breathingPhase) * breatheStrength;
+    const stretch = anim.stretch || 0;
+    const horizontalDominant = Math.abs(anim.motionDirX) >= Math.abs(anim.motionDirY);
+    const stretchX = horizontalDominant ? 1 + stretch : 1 - stretch * 0.6;
+    const stretchY = horizontalDominant ? 1 - stretch * 0.6 : 1 + stretch;
+
+    visual.container.scale.set(baseScale * breathe * stretchX, baseScale * breathe * stretchY);
     visual.container.alpha = anim.alpha || 1;
 
     // Draw shadow (ground indicator for depth)
@@ -581,6 +680,132 @@ export class HeroSystem {
     }
 
     return offset;
+  }
+
+  private updateMotion(
+    visual: HeroVisual,
+    targetX: number,
+    targetY: number,
+    deltaMs: number
+  ): void {
+    const anim = visual.animation;
+
+    if (!visual.motionInitialized) {
+      anim.visualX = targetX;
+      anim.visualY = targetY;
+      visual.motionTarget = { x: targetX, y: targetY };
+      visual.lastVisualX = targetX;
+      visual.lastVisualY = targetY;
+      visual.motionInitialized = true;
+      return;
+    }
+
+    if (visual.motionSequence) {
+      visual.motionSequence.update(deltaMs);
+      if (visual.motionSequence.isComplete()) {
+        visual.motionSequence = null;
+      }
+    }
+
+    const targetShift = Math.hypot(
+      targetX - visual.motionTarget.x,
+      targetY - visual.motionTarget.y
+    );
+
+    if (targetShift > MOTION.retargetDistance) {
+      this.startMotionSequence(visual, targetX, targetY);
+      return;
+    }
+
+    if (!visual.motionSequence) {
+      const dist = Math.hypot(targetX - anim.visualX, targetY - anim.visualY);
+      if (dist > MOTION.snapDistance) {
+        this.startMotionSequence(visual, targetX, targetY);
+      } else {
+        anim.visualX = targetX;
+        anim.visualY = targetY;
+      }
+    }
+  }
+
+  private startMotionSequence(
+    visual: HeroVisual,
+    targetX: number,
+    targetY: number
+  ): void {
+    const anim = visual.animation;
+    const startX = anim.visualX;
+    const startY = anim.visualY;
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+    const dist = Math.hypot(dx, dy);
+
+    visual.motionTarget = { x: targetX, y: targetY };
+
+    if (dist <= MOTION.snapDistance) {
+      anim.visualX = targetX;
+      anim.visualY = targetY;
+      return;
+    }
+
+    const dirX = dx / dist;
+    const dirY = dy / dist;
+    const anticipation = Math.min(MOTION.anticipationMax, dist * MOTION.anticipationRatio);
+    const overshoot = Math.min(MOTION.overshootMax, dist * MOTION.overshootRatio);
+    const moveDuration = Math.min(
+      MOTION.maxDuration,
+      Math.max(MOTION.minDuration, dist * MOTION.durationPerPixel)
+    );
+
+    const applyPosition = (value: { x: number; y: number }) => {
+      anim.visualX = value.x;
+      anim.visualY = value.y;
+    };
+
+    const sequence = new TweenSequence();
+
+    if (dist > 10) {
+      const anticipateX = startX - dirX * anticipation;
+      const anticipateY = startY - dirY * anticipation;
+
+      sequence.add(
+        new Tween(
+          { x: startX, y: startY },
+          { x: anticipateX, y: anticipateY },
+          MOTION.anticipationDuration,
+          { easing: easeOutQuad, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
+        )
+      );
+
+      sequence.add(
+        new Tween(
+          { x: anticipateX, y: anticipateY },
+          { x: targetX + dirX * overshoot, y: targetY + dirY * overshoot },
+          moveDuration,
+          { easing: easeOutCubic, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
+        )
+      );
+
+      sequence.add(
+        new Tween(
+          { x: targetX + dirX * overshoot, y: targetY + dirY * overshoot },
+          { x: targetX, y: targetY },
+          MOTION.settleDuration,
+          { easing: easeOutQuad, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
+        )
+      );
+    } else {
+      sequence.add(
+        new Tween(
+          { x: startX, y: startY },
+          { x: targetX, y: targetY },
+          moveDuration,
+          { easing: easeOutCubic, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
+        )
+      );
+    }
+
+    visual.motionSequence = sequence;
   }
 
   private drawHeroBody(

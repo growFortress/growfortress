@@ -64,6 +64,10 @@ function getTimeRemaining(endsAt: Date): { days: number; hours: number; minutes:
 export async function getActiveSeason() {
   const now = new Date();
 
+  if (typeof prisma.battlePassSeason?.findFirst !== 'function') {
+    return null;
+  }
+
   return prisma.battlePassSeason.findFirst({
     where: {
       isActive: true,

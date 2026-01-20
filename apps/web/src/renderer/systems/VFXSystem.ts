@@ -157,6 +157,7 @@ export class VFXSystem {
     intensity: number;
     elapsed: number;
     stages: number[];
+    kind: 'enhanced' | 'staggered';
   }> = [];
 
   constructor() {
@@ -278,39 +279,76 @@ export class VFXSystem {
 
       const colors = CLASS_VFX_COLORS[effect.fortressClass];
 
-      // Stage 1: Flash (0-50ms)
-      if (!effect.stages.includes(1) && effect.elapsed >= 0) {
-        effect.stages.push(1);
-        this.spawnFlash(effect.x, effect.y, colors.glow, 25 * effect.intensity);
-      }
+      if (effect.kind === 'staggered') {
+        // Stage 1: Explosion (0ms)
+        if (!effect.stages.includes(1) && effect.elapsed >= 0) {
+          effect.stages.push(1);
+          this.spawnExplosionBurst(effect.x, effect.y, colors, effect.intensity);
+        }
 
-      // Stage 2: Shockwave (0-50ms)
-      if (!effect.stages.includes(2) && effect.elapsed >= 0) {
-        effect.stages.push(2);
-        this.spawnShockwaveRing(effect.x, effect.y, colors.secondary, effect.intensity);
-      }
+        // Stage 2: Fire plume (80ms)
+        if (!effect.stages.includes(2) && effect.elapsed >= 80) {
+          effect.stages.push(2);
+          this.spawnFirePlume(effect.x, effect.y, colors, effect.intensity, effect.fortressClass);
+        }
 
-      // Stage 3: Primary debris (0ms)
-      if (!effect.stages.includes(3) && effect.elapsed >= 0) {
-        effect.stages.push(3);
-        this.spawnDebris(effect.x, effect.y, colors, effect.intensity, effect.fortressClass);
-      }
+        // Stage 3: Smoke (160ms)
+        if (!effect.stages.includes(3) && effect.elapsed >= 160) {
+          effect.stages.push(3);
+          this.spawnColoredSmoke(effect.x, effect.y, colors, effect.intensity);
+        }
 
-      // Stage 4: Secondary particles (100ms)
-      if (!effect.stages.includes(4) && effect.elapsed >= 100) {
-        effect.stages.push(4);
-        this.spawnSecondaryBurst(effect.x, effect.y, colors, effect.intensity);
-      }
+        // Stage 4: Splash (260ms)
+        if (!effect.stages.includes(4) && effect.elapsed >= 260) {
+          effect.stages.push(4);
+          this.spawnSplashBurst(effect.x, effect.y, colors, effect.intensity, effect.fortressClass);
+        }
 
-      // Stage 5: Smoke (200ms)
-      if (!effect.stages.includes(5) && effect.elapsed >= 200) {
-        effect.stages.push(5);
-        this.spawnSmoke(effect.x, effect.y, effect.intensity);
-      }
+        // Stage 5: Falling debris (360ms)
+        if (!effect.stages.includes(5) && effect.elapsed >= 360) {
+          effect.stages.push(5);
+          this.spawnFallingDebris(effect.x, effect.y, colors, effect.intensity, effect.fortressClass);
+        }
 
-      // Remove completed effects
-      if (effect.elapsed >= 800) {
-        this.stagedEffects.splice(i, 1);
+        // Remove completed effects
+        if (effect.elapsed >= 950) {
+          this.stagedEffects.splice(i, 1);
+        }
+      } else {
+        // Stage 1: Flash (0-50ms)
+        if (!effect.stages.includes(1) && effect.elapsed >= 0) {
+          effect.stages.push(1);
+          this.spawnFlash(effect.x, effect.y, colors.glow, 25 * effect.intensity);
+        }
+
+        // Stage 2: Shockwave (0-50ms)
+        if (!effect.stages.includes(2) && effect.elapsed >= 0) {
+          effect.stages.push(2);
+          this.spawnShockwaveRing(effect.x, effect.y, colors.secondary, effect.intensity);
+        }
+
+        // Stage 3: Primary debris (0ms)
+        if (!effect.stages.includes(3) && effect.elapsed >= 0) {
+          effect.stages.push(3);
+          this.spawnDebris(effect.x, effect.y, colors, effect.intensity, effect.fortressClass);
+        }
+
+        // Stage 4: Secondary particles (100ms)
+        if (!effect.stages.includes(4) && effect.elapsed >= 100) {
+          effect.stages.push(4);
+          this.spawnSecondaryBurst(effect.x, effect.y, colors, effect.intensity);
+        }
+
+        // Stage 5: Smoke (200ms)
+        if (!effect.stages.includes(5) && effect.elapsed >= 200) {
+          effect.stages.push(5);
+          this.spawnSmoke(effect.x, effect.y, effect.intensity);
+        }
+
+        // Remove completed effects
+        if (effect.elapsed >= 800) {
+          this.stagedEffects.splice(i, 1);
+        }
       }
     }
   }
@@ -619,6 +657,197 @@ export class VFXSystem {
     }
   }
 
+  private blendColor(colorA: number, colorB: number, t: number): number {
+    const ar = (colorA >> 16) & 0xff;
+    const ag = (colorA >> 8) & 0xff;
+    const ab = colorA & 0xff;
+    const br = (colorB >> 16) & 0xff;
+    const bg = (colorB >> 8) & 0xff;
+    const bb = colorB & 0xff;
+    const r = Math.round(ar + (br - ar) * t);
+    const g = Math.round(ag + (bg - ag) * t);
+    const b = Math.round(ab + (bb - ab) * t);
+    return (r << 16) | (g << 8) | b;
+  }
+
+  // --- STAGGERED EXPLOSION STAGES ---
+  private spawnExplosionBurst(
+    x: number,
+    y: number,
+    colors: { primary: number; secondary: number; glow: number },
+    intensity: number
+  ) {
+    const particleCount = Math.floor(10 * intensity * this.particleMultiplier);
+
+    this.spawnFlash(x, y, colors.glow, 28 * intensity);
+    this.spawnShockwaveRing(x, y, colors.secondary, 0.9 * intensity);
+    this.triggerLightingFlash(x, y, colors.glow, 90 * intensity);
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.4;
+      const speed = 120 + Math.random() * 160;
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 0.2 + Math.random() * 0.2;
+      p.maxLife = p.life;
+      p.size = 2.5 + Math.random() * 2.5;
+      p.color = Math.random() > 0.6 ? colors.glow : colors.primary;
+      p.shape = Math.random() > 0.5 ? 'spark' : 'circle';
+      p.drag = 0.9;
+      this.particles.push(p);
+    }
+  }
+
+  private spawnFirePlume(
+    x: number,
+    y: number,
+    colors: { primary: number; secondary: number; glow: number },
+    intensity: number,
+    fortressClass: FortressClass
+  ) {
+    const particleCount = Math.floor(16 * intensity * this.particleMultiplier);
+    const shape = fortressClass === 'lightning' ? 'spark'
+      : fortressClass === 'ice' ? 'diamond'
+      : fortressClass === 'tech' ? 'square'
+      : 'circle';
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = this.pool.acquire();
+      p.x = x + (Math.random() - 0.5) * 12;
+      p.y = y + (Math.random() - 0.5) * 10;
+      p.vx = (Math.random() - 0.5) * 50;
+      p.vy = -90 - Math.random() * 90;
+      p.life = 0.35 + Math.random() * 0.25;
+      p.maxLife = p.life;
+      p.startSize = 4 + Math.random() * 3;
+      p.endSize = 14 + Math.random() * 8;
+      p.size = p.startSize;
+      p.color = Math.random() > 0.6 ? colors.glow : (Math.random() > 0.5 ? colors.primary : colors.secondary);
+      p.startAlpha = 0.75;
+      p.endAlpha = 0;
+      p.gravity = -80;
+      p.drag = 0.9;
+      p.shape = shape;
+      if (shape === 'diamond' || shape === 'square') {
+        p.rotation = Math.random() * Math.PI;
+        p.rotationSpeed = (Math.random() - 0.5) * 6;
+      }
+      this.particles.push(p);
+    }
+  }
+
+  private spawnColoredSmoke(
+    x: number,
+    y: number,
+    colors: { primary: number; secondary: number; glow: number },
+    intensity: number
+  ) {
+    const particleCount = Math.floor(10 * intensity * this.particleMultiplier);
+    const baseSmoke = this.blendColor(colors.primary, 0x222222, 0.7);
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = this.pool.acquire();
+      p.x = x + (Math.random() - 0.5) * 28;
+      p.y = y + (Math.random() - 0.5) * 18;
+      p.vx = (Math.random() - 0.5) * 18;
+      p.vy = -25 - Math.random() * 35;
+      p.life = 0.7 + Math.random() * 0.4;
+      p.maxLife = p.life;
+      p.startSize = 10 + Math.random() * 10;
+      p.endSize = 28 + Math.random() * 18;
+      p.size = p.startSize;
+      p.color = this.blendColor(baseSmoke, 0x111111, Math.random() * 0.25);
+      p.startAlpha = 0.35;
+      p.endAlpha = 0;
+      p.gravity = -10;
+      p.drag = 0.98;
+      p.shape = 'smoke';
+      this.particles.push(p);
+    }
+  }
+
+  private spawnSplashBurst(
+    x: number,
+    y: number,
+    colors: { primary: number; secondary: number; glow: number },
+    intensity: number,
+    fortressClass: FortressClass
+  ) {
+    const particleCount = Math.floor(14 * intensity * this.particleMultiplier);
+    const shape = fortressClass === 'tech' ? 'square'
+      : fortressClass === 'ice' ? 'diamond'
+      : 'circle';
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 90 + Math.random() * 120;
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed * 0.6 - 20;
+      p.life = 0.35 + Math.random() * 0.25;
+      p.maxLife = p.life;
+      p.size = 2.5 + Math.random() * 2.5;
+      p.color = Math.random() > 0.5 ? colors.secondary : colors.primary;
+      p.gravity = 220;
+      p.drag = 0.93;
+      p.shape = shape;
+      if (shape === 'diamond' || shape === 'square') {
+        p.rotation = Math.random() * Math.PI;
+        p.rotationSpeed = (Math.random() - 0.5) * 8;
+      }
+      this.particles.push(p);
+    }
+  }
+
+  private spawnFallingDebris(
+    x: number,
+    y: number,
+    colors: { primary: number; secondary: number; glow: number },
+    intensity: number,
+    fortressClass: FortressClass
+  ) {
+    const particleCount = Math.floor(10 * intensity * this.particleMultiplier);
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = this.pool.acquire();
+      p.x = x + (Math.random() - 0.5) * 26;
+      p.y = y + (Math.random() - 0.5) * 14;
+      p.vx = (Math.random() - 0.5) * 40;
+      p.vy = 40 + Math.random() * 80;
+      p.life = 0.5 + Math.random() * 0.35;
+      p.maxLife = p.life;
+      p.size = 2 + Math.random() * 3;
+      p.color = Math.random() > 0.6 ? colors.secondary : colors.primary;
+      p.gravity = 200;
+      p.drag = 0.96;
+
+      switch (fortressClass) {
+        case 'ice':
+          p.shape = 'diamond';
+          p.rotation = Math.random() * Math.PI;
+          p.rotationSpeed = (Math.random() - 0.5) * 5;
+          break;
+        case 'lightning':
+          p.shape = 'spark';
+          break;
+        case 'tech':
+          p.shape = 'square';
+          p.rotation = Math.random() * Math.PI;
+          p.rotationSpeed = (Math.random() - 0.5) * 4;
+          break;
+        default:
+          p.shape = 'circle';
+      }
+
+      this.particles.push(p);
+    }
+  }
+
   // --- PUBLIC API ---
 
   public spawnExplosion(x: number, y: number, color: number = 0xffaa00) {
@@ -709,6 +938,7 @@ export class VFXSystem {
       x, y, fortressClass, intensity,
       elapsed: 0,
       stages: [],
+      kind: 'staggered',
     });
 
     // Trigger screen shake for large explosions
@@ -784,6 +1014,36 @@ export class VFXSystem {
 
       this.particles.push(p);
     }
+  }
+
+  /**
+   * Spawn hit feedback effect (flash + ring + shake) for impacts
+   */
+  public spawnHitImpact(x: number, y: number, fortressClass: FortressClass) {
+    const colors = CLASS_VFX_COLORS[fortressClass];
+
+    // Base impact particles + flash
+    this.spawnClassImpact(x, y, fortressClass);
+
+    // Short ring for crisp hit feedback
+    const ring = this.pool.acquire();
+    ring.x = x;
+    ring.y = y;
+    ring.vx = 0;
+    ring.vy = 0;
+    ring.life = 0.18;
+    ring.maxLife = 0.18;
+    ring.startSize = 6;
+    ring.endSize = 36;
+    ring.size = ring.startSize;
+    ring.color = colors.glow;
+    ring.shape = 'ring';
+    ring.startAlpha = 0.7;
+    ring.endAlpha = 0;
+    this.particles.push(ring);
+
+    // Subtle screen shake to sell the impact
+    this.triggerScreenShake(0.35, 80);
   }
 
   // --- CHAIN LIGHTNING ---
@@ -1157,6 +1417,54 @@ export class VFXSystem {
     ring.startAlpha = 0.7;
     ring.endAlpha = 0;
     this.particles.push(ring);
+  }
+
+  // --- SYNERGY EFFECTS ---
+  /**
+   * Spawn a visual bond between two units (electric arc).
+   */
+  public spawnSynergyBond(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    intensity: number = 1
+  ) {
+    const lightning = CLASS_VFX_COLORS.lightning;
+    const tech = CLASS_VFX_COLORS.tech;
+
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const length = Math.hypot(dx, dy);
+    if (length < 1) return;
+
+    const segments = Math.max(6, Math.floor(length / 18) + 4);
+    const jitter = 6 * intensity;
+    const perpX = -dy / length;
+    const perpY = dx / length;
+
+    for (let i = 0; i < segments; i++) {
+      const t = segments === 1 ? 0.5 : i / (segments - 1);
+      const offset = (Math.random() - 0.5) * jitter;
+      const x = startX + dx * t + perpX * offset;
+      const y = startY + dy * t + perpY * offset;
+
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = (Math.random() - 0.5) * 40;
+      p.vy = (Math.random() - 0.5) * 40;
+      p.life = 0.12 + Math.random() * 0.08;
+      p.maxLife = p.life;
+      p.size = 2 + Math.random() * 2;
+      p.color = i % 2 === 0 ? lightning.glow : tech.primary;
+      p.shape = 'spark';
+      this.particles.push(p);
+    }
+
+    // Subtle endpoint glows to sell the connection
+    this.spawnFlash(startX, startY, lightning.glow, 8 * intensity);
+    this.spawnFlash(endX, endY, tech.glow, 8 * intensity);
   }
 
   // --- HEAL/BUFF EFFECTS ---

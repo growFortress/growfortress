@@ -123,6 +123,25 @@ export const waveProgress = computed(() => {
   return (state.waveSpawnedEnemies / state.waveTotalEnemies) * 100;
 });
 
+// Computed: waves until next boss (0 = boss wave)
+export const wavesUntilBoss = computed(() => {
+  const wave = gameState.value?.wave;
+  if (!wave || wave <= 0) return null;
+  const effectiveWave = ((wave - 1) % 100) + 1;
+  return (10 - (effectiveWave % 10)) % 10;
+});
+
+// Computed: current wave is a boss wave
+export const isBossWave = computed(() => wavesUntilBoss.value === 0);
+
+// Computed: next boss wave number (null if no wave)
+export const nextBossWave = computed(() => {
+  const wave = gameState.value?.wave;
+  const until = wavesUntilBoss.value;
+  if (!wave || until === null) return null;
+  return wave + (until === 0 ? 10 : until);
+});
+
 // Current pillar signal
 export const currentPillar = signal<PillarId>('streets');
 

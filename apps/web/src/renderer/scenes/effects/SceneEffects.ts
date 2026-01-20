@@ -123,7 +123,7 @@ export class SceneEffects {
   public checkHitstop(eliteKills: number): boolean {
     // Trigger new hitstop on elite kill
     if (eliteKills > this.prevEliteKills) {
-      this.hitstopRemaining = 3; // ~50ms at 60fps (3 frames)
+      this.hitstopRemaining = Math.max(this.hitstopRemaining, 3); // ~50ms at 60fps (3 frames)
     }
     this.prevEliteKills = eliteKills;
 
@@ -157,6 +157,11 @@ export class SceneEffects {
 
   public spawnClassImpact(x: number, y: number, fortressClass: FortressClass): void {
     this.vfx.spawnClassImpact(x, y, fortressClass);
+  }
+
+  public spawnHitImpact(x: number, y: number, fortressClass: FortressClass): void {
+    this.vfx.spawnHitImpact(x, y, fortressClass);
+    this.hitstopRemaining = Math.max(this.hitstopRemaining, 2); // Short hit-stop for tactile hits
   }
 
   public spawnSkillActivation(

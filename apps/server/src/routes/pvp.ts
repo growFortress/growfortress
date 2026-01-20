@@ -27,7 +27,14 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
 
-    const result = await getOpponents(request.userId);
+    const query = request.query as { limit?: string; offset?: string } | undefined;
+    const limit = query?.limit ? Number(query.limit) : undefined;
+    const offset = query?.offset ? Number(query.offset) : undefined;
+
+    const result = await getOpponents(request.userId, {
+      limit: Number.isFinite(limit) ? limit : undefined,
+      offset: Number.isFinite(offset) ? offset : undefined,
+    });
     return reply.send(result);
   });
 
@@ -49,7 +56,9 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
-      const challenge = await createChallenge(request.userId, body.challengedId);
+      const challenge = await createChallenge(request.userId, body.challengedId, {
+        enforcePowerRange: true,
+      });
       return reply.status(201).send({ challenge });
     } catch (error) {
       if (error instanceof PvpError) {

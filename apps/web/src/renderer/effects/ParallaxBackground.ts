@@ -1,4 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
+import type { ParallaxConfig } from '../scenes/environment/ThemeManager.js';
 
 interface Star {
   x: number;
@@ -16,9 +17,11 @@ interface Cloud {
   height: number;
   speed: number;
   alpha: number;
+  baseSpeed: number; // Store original speed for theme changes
 }
 
-const COLORS = {
+// Default colors (used before theme is set)
+const DEFAULT_COLORS = {
   stars: 0xffffff,
   clouds: 0x15152a,
 };
@@ -26,6 +29,7 @@ const COLORS = {
 /**
  * ParallaxBackground - Animated multi-layer background system.
  * Includes twinkling stars and drifting clouds.
+ * Supports theme-based color and density changes.
  */
 export class ParallaxBackground {
   public container: Container;
@@ -50,6 +54,11 @@ export class ParallaxBackground {
   private starCount: number = 100;
   private cloudCount: number = 8;
 
+  // Theme colors
+  private starColor: number = DEFAULT_COLORS.stars;
+  private cloudColor: number = DEFAULT_COLORS.clouds;
+  private cloudSpeedMultiplier: number = 1.0;
+
   constructor() {
     this.container = new Container();
 
@@ -59,6 +68,49 @@ export class ParallaxBackground {
 
     this.container.addChild(this.starsLayer);
     this.container.addChild(this.cloudsLayer);
+  }
+
+  /**
+   * Set theme configuration for parallax colors and density.
+   * Call this when pillar/sector changes.
+   */
+  public setTheme(config: ParallaxConfig): void {
+    const needsRegenerate =
+      config.starCount !== this.starCount ||
+      config.cloudCount !== this.cloudCount;
+
+    this.starColor = config.starColor;
+    this.cloudColor = config.cloudColor;
+    this.starCount = config.starCount;
+    this.cloudCount = config.cloudCount;
+    this.cloudSpeedMultiplier = config.cloudSpeed;
+
+    // Update existing cloud speeds
+    for (const cloud of this.clouds) {
+      cloud.speed = cloud.baseSpeed * this.cloudSpeedMultiplier;
+    }
+
+    // Regenerate if counts changed
+    if (needsRegenerate && this.width > 0 && this.height > 0) {
+      this.regenerateElements();
+    }
+  }
+
+  /**
+   * Regenerate stars and clouds without full reinitialization.
+   */
+  private regenerateElements(): void {
+    // Regenerate stars
+    this.stars = [];
+    for (let i = 0; i < this.starCount; i++) {
+      this.stars.push(this.createStar(i));
+    }
+
+    // Regenerate clouds
+    this.clouds = [];
+    for (let i = 0; i < this.cloudCount; i++) {
+      this.clouds.push(this.createCloud(i));
+    }
   }
 
   /**
@@ -158,12 +210,14 @@ export class ParallaxBackground {
     const seedWidth = ((index * 3217) % 100) / 100;
     const seedSpeed = ((index * 5647) % 100) / 100;
 
+    const baseSpeed = 3 + seedSpeed * 7; // Base pixels per second
     return {
       x: seedX * this.width,
       y: this.height * 0.05 + seedY * this.height * 0.45,
       width: 100 + seedWidth * 200,
       height: 15 + seedWidth * 15,
-      speed: 3 + seedSpeed * 7, // pixels per second
+      baseSpeed,
+      speed: baseSpeed * this.cloudSpeedMultiplier, // Apply theme multiplier
       alpha: 0.08 + seedSpeed * 0.12,
     };
   }
@@ -221,16 +275,16 @@ export class ParallaxBackground {
         const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
         const alpha = star.baseAlpha * twinkle;
 
-        // Main star
+        // Main star (uses theme color)
         this.starsLayer.circle(star.x, star.y, star.size).fill({
-          color: COLORS.stars,
+          color: this.starColor,
           alpha,
         });
 
         // Larger stars get a subtle glow
         if (star.size > 1.5) {
           this.starsLayer.circle(star.x, star.y, star.size * 2).fill({
-            color: COLORS.stars,
+            color: this.starColor,
             alpha: alpha * 0.2,
           });
         }
@@ -254,9 +308,9 @@ export class ParallaxBackground {
       this.cloudsLayer.clear();
 
       for (const cloud of this.clouds) {
-        // Main cloud body
+        // Main cloud body (uses theme color)
         this.cloudsLayer.ellipse(cloud.x, cloud.y, cloud.width, cloud.height).fill({
-          color: COLORS.clouds,
+          color: this.cloudColor,
           alpha: cloud.alpha,
         });
 
@@ -269,7 +323,7 @@ export class ParallaxBackground {
             cloud.height * 0.7
           )
           .fill({
-            color: COLORS.clouds,
+            color: this.cloudColor,
             alpha: cloud.alpha * 0.6,
           });
 
@@ -281,7 +335,7 @@ export class ParallaxBackground {
             cloud.height * 0.6
           )
           .fill({
-            color: COLORS.clouds,
+            color: this.cloudColor,
             alpha: cloud.alpha * 0.5,
           });
       }

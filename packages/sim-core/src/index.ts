@@ -189,6 +189,17 @@ export {
   type VerifyOptions,
 } from './replay.js';
 
+// Synergy systems
+export {
+  calculateSynergyBonuses,
+  calculateTurretAdjacencyBonuses,
+  getTurretSynergyBonus,
+  getStormForgeSynergyPair,
+  STORM_FORGE_SYNERGY_RANGE,
+  STORM_FORGE_SYNERGY_RANGE_SQ,
+  STORM_FORGE_ATTACK_SPEED_BONUS,
+} from './systems/synergy.js';
+
 // Unified Progression System
 export {
   // XP formula

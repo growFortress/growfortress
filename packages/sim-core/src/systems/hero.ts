@@ -50,6 +50,7 @@ import {
   calculateHeroStoneDamageBonus,
   calculateHeroStoneCooldownReduction,
 } from './infinity-stones.js';
+import { getStormForgeAttackSpeedBonus } from './synergy.js';
 import {
   calculateTotalArtifactDamageMultiplier,
   hasArtifactPassive,
@@ -361,7 +362,9 @@ function performHeroAttack(
   const attackSpeedPenalty = calculateWeaknessStatPenalty(heroDef.weaknesses, 'attackSpeedMultiplier');
   // Apply guild stat boost to attack speed
   const guildBoost = 1 + (config.guildStatBoost ?? 0);
-  const effectiveAttackSpeed = stats.attackSpeed * attackSpeedPenalty * guildBoost;
+  const stormForgeBonus = getStormForgeAttackSpeedBonus(state, hero);
+  const effectiveAttackSpeed =
+    stats.attackSpeed * attackSpeedPenalty * guildBoost * (1 + stormForgeBonus);
   const attackInterval = Math.floor(HERO_BASE_ATTACK_INTERVAL / effectiveAttackSpeed);
 
   if (state.tick - hero.lastAttackTick >= attackInterval) {
