@@ -150,7 +150,7 @@ The game features 8 combat units, each with 3 tiers and unique skills per tier.
 | Move Speed | 0.10 |
 
 ### Weakness
-- **Brak Mocy**: -40% max HP
+- **Brak Mocy**: -30% max HP
 
 ### Tiers
 

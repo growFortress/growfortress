@@ -189,6 +189,7 @@ export async function startGameSession(
       tier: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
     }>;
   };
+  startingRelics?: string[];
 } | null> {
   // Get user profile
   const profile = await getUserProfile(userId);
@@ -280,6 +281,11 @@ export async function startGameSession(
   // Fetch unlocked pillars for dust-gated progression
   const unlockedPillars = await getUnlockedPillarsForUser(userId);
 
+  // Grant starter synergy relic on first run for immediate "wow" moment
+  // Condition: user has never completed any waves (highestWave === 0)
+  const isFirstRun = user.highestWave === 0;
+  const startingRelics = isFirstRun ? ['team-spirit'] : undefined;
+
   const { simConfig } = buildSimConfigSnapshot({
     commanderLevel,
     progressionBonuses: bonuses,
@@ -299,6 +305,7 @@ export async function startGameSession(
     },
     guildStatBoost,
     unlockedPillars,
+    startingRelics,
   });
 
   // Atomic session creation - check for existing, end it, and create new in one transaction
@@ -380,6 +387,8 @@ export async function startGameSession(
     waveIntervalTicks: simConfig.waveIntervalTicks,
     // Power upgrades data for permanent stat bonuses
     powerData,
+    // Starting relics for first-run synergy showcase
+    startingRelics: simConfig.startingRelics,
   };
 }
 

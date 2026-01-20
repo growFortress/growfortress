@@ -3,7 +3,33 @@
 // DATA STRUCTURES
 // ===========================================
 
+import type { DamageAttribution, DamageMechanicType, DamageOwnerType } from './types.js';
+
 export type DamageSourceType = 'hero' | 'turret' | 'projectile' | 'fortress' | 'dot' | 'skill';
+
+const ATTR_SEPARATOR = '|';
+
+function normalizeAttributionPart(value: string): string {
+  return value.replaceAll(ATTR_SEPARATOR, '_');
+}
+
+export function encodeDamageAttribution(attribution: DamageAttribution): string {
+  const ownerType = normalizeAttributionPart(attribution.ownerType);
+  const ownerId = normalizeAttributionPart(attribution.ownerId);
+  const mechanicType = normalizeAttributionPart(attribution.mechanicType);
+  const mechanicId = normalizeAttributionPart(attribution.mechanicId);
+  return `${ownerType}${ATTR_SEPARATOR}${ownerId}${ATTR_SEPARATOR}${mechanicType}${ATTR_SEPARATOR}${mechanicId}`;
+}
+
+export function decodeDamageAttribution(key: string): DamageAttribution {
+  const [ownerType, ownerId, mechanicType, mechanicId] = key.split(ATTR_SEPARATOR);
+  return {
+    ownerType: (ownerType || 'system') as DamageOwnerType,
+    ownerId: ownerId || 'unknown',
+    mechanicType: (mechanicType || 'other') as DamageMechanicType,
+    mechanicId: mechanicId || 'unknown',
+  };
+}
 
 export interface DamageReport {
   sourceType: DamageSourceType;
@@ -35,6 +61,7 @@ export interface WaveStats {
   damageBySource: Record<DamageSourceType, number>;
   damageByHero: Record<string, number>;    // Damage by hero definition ID
   damageByTurret: Record<string, number>;  // Damage by turret ID/type
+  damageByAttribution: Record<string, number>;
   damageTakenByHero: Record<string, number>; // Damage taken by hero
   healingBySource: Record<string, number>; // Healing done by source
   
@@ -91,6 +118,7 @@ export class AnalyticsSystem {
       },
       damageByHero: {},
       damageByTurret: {},
+      damageByAttribution: {},
       damageTakenByHero: {},
       healingBySource: {},
       economy: {
@@ -171,6 +199,17 @@ export class AnalyticsSystem {
     }
   }
 
+  public trackAttributedDamage(attribution: DamageAttribution, amount: number, sourceTypeOverride?: DamageSourceType): void {
+    if (!this.currentWaveStats) return;
+
+    const key = encodeDamageAttribution(attribution);
+    this.currentWaveStats.damageByAttribution[key] =
+      (this.currentWaveStats.damageByAttribution[key] || 0) + amount;
+
+    const sourceType = sourceTypeOverride ?? this.mapAttributionToSourceType(attribution);
+    this.trackDamage(sourceType, attribution.ownerId, amount);
+  }
+
   public trackDamageTaken(heroId: string, amount: number): void {
     if (!this.currentWaveStats) return;
     this.currentWaveStats.damageTakenByHero[heroId] = 
@@ -209,6 +248,24 @@ export class AnalyticsSystem {
   private notifyListeners(): void {
     for (const listener of this.listeners) {
       listener();
+    }
+  }
+
+  private mapAttributionToSourceType(attribution: DamageAttribution): DamageSourceType {
+    if (attribution.mechanicType === 'dot') {
+      return 'dot';
+    }
+
+    switch (attribution.ownerType) {
+      case 'hero':
+        return attribution.mechanicType === 'basic' ? 'hero' : 'skill';
+      case 'turret':
+        return 'turret';
+      case 'fortress':
+        return 'fortress';
+      case 'system':
+      default:
+        return 'skill';
     }
   }
 

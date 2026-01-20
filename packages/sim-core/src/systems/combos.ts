@@ -10,8 +10,9 @@
  * - Physical + Tech → Shatter (armor break - next damage +50%)
  */
 
-import type { Enemy, GameState, FortressClass, SkillEffect } from '../types.js';
+import type { Enemy, GameState, FortressClass, SkillEffect, DamageAttribution } from '../types.js';
 import { applyEffectToEnemy } from './projectile.js';
+import { analytics } from '../analytics.js';
 
 // Time window for combo detection (30 ticks = 1 second at 30Hz)
 const COMBO_WINDOW_TICKS = 30;
@@ -162,6 +163,12 @@ function checkForCombo(enemy: Enemy, state: GameState): ComboTrigger | null {
 function applyComboEffect(comboId: string, enemy: Enemy, state: GameState): void {
   const combo = COMBOS.find(c => c.id === comboId);
   if (!combo) return;
+  const attribution: DamageAttribution = {
+    ownerType: 'system',
+    ownerId: 'combo',
+    mechanicType: 'combo',
+    mechanicId: comboId,
+  };
 
   switch (combo.effect) {
     case 'steam_burst':
@@ -170,8 +177,10 @@ function applyComboEffect(comboId: string, enemy: Enemy, state: GameState): void
         const totalRecentDamage = enemy.recentDamageHits.reduce((sum, h) => sum + h.damage, 0);
         const avgDamage = totalRecentDamage / enemy.recentDamageHits.length;
         const bonusDamage = Math.floor(avgDamage * combo.bonusDamagePercent);
+        const damageDealt = Math.min(bonusDamage, enemy.hp);
         enemy.hp -= bonusDamage;
         enemy.hitFlashTicks = 8; // Extra flash for combo
+        analytics.trackAttributedDamage(attribution, damageDealt);
       }
       break;
 
@@ -182,7 +191,7 @@ function applyComboEffect(comboId: string, enemy: Enemy, state: GameState): void
           type: 'stun',
           duration: combo.stunDuration,
         };
-        applyEffectToEnemy(stunEffect, enemy, state);
+        applyEffectToEnemy(stunEffect, enemy, state, attribution);
       }
       break;
 

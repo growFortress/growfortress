@@ -7,6 +7,8 @@
   align-items: center;
   z-index: 2000;
   animation: fadeIn var(--duration-normal) var(--ease-standard);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 
 .modal {

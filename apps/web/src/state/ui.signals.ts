@@ -1,5 +1,5 @@
 import { signal } from '@preact/signals';
-import type { FortressLevelReward } from '@arcade/sim-core';
+import type { FortressLevelReward, WaveStats } from '@arcade/sim-core';
 
 /**
  * Leaderboard entry type.
@@ -23,6 +23,12 @@ export interface GameEndState {
   sessionXpEarned: number;
 }
 
+export interface AnalyticsSnapshot {
+  endedAt: number;
+  tickHz: number;
+  waves: WaveStats[];
+}
+
 // Toast state
 export interface ToastData {
   gold: number;
@@ -44,6 +50,18 @@ export const choiceOptions = signal<string[]>([]);
 export const showEndScreen = signal(false);
 export const endScreenWon = signal(false);
 export const endGameStats = signal<GameEndState | null>(null);
+
+// Statistics dashboard
+export const showStatisticsDashboard = signal(false);
+export const lastSessionAnalytics = signal<AnalyticsSnapshot | null>(null);
+
+export function openStatisticsDashboard(): void {
+  showStatisticsDashboard.value = true;
+}
+
+export function closeStatisticsDashboard(): void {
+  showStatisticsDashboard.value = false;
+}
 
 // Leaderboard
 export const leaderboardEntries = signal<LeaderboardEntry[]>([]);
@@ -70,6 +88,17 @@ export function openSettingsMenu(): void {
 
 export function closeSettingsMenu(): void {
   settingsMenuVisible.value = false;
+}
+
+// Build presets modal
+export const buildPresetsModalVisible = signal(false);
+
+export function openBuildPresetsModal(): void {
+  buildPresetsModalVisible.value = true;
+}
+
+export function closeBuildPresetsModal(): void {
+  buildPresetsModalVisible.value = false;
 }
 
 // Error toast
@@ -189,6 +218,8 @@ export function resetUIState(): void {
   showEndScreen.value = false;
   endScreenWon.value = false;
   endGameStats.value = null;
+  showStatisticsDashboard.value = false;
+  lastSessionAnalytics.value = null;
   leaderboardEntries.value = [];
   leaderboardLoading.value = false;
   leaderboardError.value = false;
@@ -196,6 +227,7 @@ export function resetUIState(): void {
   pendingSessionSnapshot.value = null;
   showEndSessionConfirm.value = false;
   settingsMenuVisible.value = false;
+  buildPresetsModalVisible.value = false;
   errorToasts.value = [];
   unlockNotifications.value = [];
   pillarUnlockModalVisible.value = false;

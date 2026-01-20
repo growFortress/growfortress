@@ -2,7 +2,12 @@
 export { SIM_VERSION } from './version.js';
 
 // Analytics
-export { analytics, type WaveStats } from './analytics.js';
+export {
+  analytics,
+  type WaveStats,
+  encodeDamageAttribution,
+  decodeDamageAttribution,
+} from './analytics.js';
 
 // RNG
 export { Xorshift32 } from './rng.js';
@@ -87,6 +92,9 @@ export type {
   StatusEffectType,
   StatusEffect,
   AnalyticsStats,
+  DamageOwnerType,
+  DamageMechanicType,
+  DamageAttribution,
   // Artifact Visuals
   ArtifactSlotType,
   ArtifactSynergyBonus,

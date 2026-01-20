@@ -555,6 +555,9 @@ describe('Fortress Attack System', () => {
     const enemy = sim.state.enemies[0];
     const initialHp = enemy.hp;
 
+    // Ensure enemy is targetable (inside playable field)
+    enemy.x = FP.sub(config.fieldWidth, FP.fromInt(1));
+
     // Run more ticks to allow fortress to attack
     for (let i = 0; i < 100; i++) {
       sim.step();

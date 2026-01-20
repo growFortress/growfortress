@@ -244,7 +244,7 @@
   "weaknesses": {
     "fire_vulnerability": {
       "name": "Wrażliwość na Ogień",
-      "description": "+25% otrzymywanych obrażeń od Fire"
+      "description": "+30% otrzymywanych obrażeń od Fire"
     },
     "emp_vulnerability": {
       "name": "Wrażliwość na EMP",
@@ -256,7 +256,7 @@
     },
     "only_human": {
       "name": "Tylko Człowiek",
-      "description": "Brak odporności na kosmiczne energie"
+      "description": "Lightning zadaje +30% DMG"
     },
     "fragile_psyche": {
       "name": "Krucha Psychika",
@@ -264,7 +264,7 @@
     },
     "no_powers": {
       "name": "Brak Mocy",
-      "description": "-40% HP"
+      "description": "-30% max HP"
     },
     "energy_instability": {
       "name": "Niestabilność Energii",
@@ -272,7 +272,7 @@
     },
     "unstable_power": {
       "name": "Niestabilna Moc",
-      "description": "Otrzymuje +20% DMG gdy HP < 50%"
+      "description": "Lightning zadaje +35% DMG"
     },
     "thermal_instability": {
       "name": "Niestabilnosc Termiczna",
@@ -280,7 +280,7 @@
     },
     "slow_metabolism": {
       "name": "Wolny Metabolizm",
-      "description": "Fire zadaje +25% DMG"
+      "description": "Fire zadaje +35% DMG"
     }
   },
   "artifacts": {}

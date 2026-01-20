@@ -1,6 +1,6 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AnalyticsSystem } from '../../analytics.js';
+import { AnalyticsSystem, encodeDamageAttribution } from '../../analytics.js';
 
 describe('AnalyticsSystem', () => {
   let analytics: AnalyticsSystem;
@@ -36,6 +36,53 @@ describe('AnalyticsSystem', () => {
     expect(stats?.damageBySource.hero).toBe(10);
     expect(stats?.damageBySource.turret).toBe(20);
     expect(stats?.damageBySource.fortress).toBe(5);
+  });
+
+  it('should track attributed hero skill damage', () => {
+    const attribution = {
+      ownerType: 'hero' as const,
+      ownerId: 'storm',
+      mechanicType: 'skill' as const,
+      mechanicId: 'storm_burst',
+    };
+    analytics.trackAttributedDamage(attribution, 40);
+
+    const stats = analytics.getCurrentWaveStats();
+    const key = encodeDamageAttribution(attribution);
+    expect(stats?.damageByAttribution[key]).toBe(40);
+    expect(stats?.damageBySource.skill).toBe(40);
+    expect(stats?.damageByHero['storm']).toBe(40);
+  });
+
+  it('should track attributed turret ability damage', () => {
+    const attribution = {
+      ownerType: 'turret' as const,
+      ownerId: 'arc_turret',
+      mechanicType: 'ability' as const,
+      mechanicId: 'chain_all',
+    };
+    analytics.trackAttributedDamage(attribution, 25);
+
+    const stats = analytics.getCurrentWaveStats();
+    const key = encodeDamageAttribution(attribution);
+    expect(stats?.damageByAttribution[key]).toBe(25);
+    expect(stats?.damageBySource.turret).toBe(25);
+    expect(stats?.damageByTurret['arc_turret']).toBe(25);
+  });
+
+  it('should map dot attribution to dot source', () => {
+    const attribution = {
+      ownerType: 'hero' as const,
+      ownerId: 'pyro',
+      mechanicType: 'dot' as const,
+      mechanicId: 'burn',
+    };
+    analytics.trackAttributedDamage(attribution, 12);
+
+    const stats = analytics.getCurrentWaveStats();
+    const key = encodeDamageAttribution(attribution);
+    expect(stats?.damageByAttribution[key]).toBe(12);
+    expect(stats?.damageBySource.dot).toBe(12);
   });
 
   it('should track damage by specific hero/turret', () => {

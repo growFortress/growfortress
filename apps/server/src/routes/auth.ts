@@ -7,6 +7,7 @@ import {
   CompleteOnboardingRequestSchema,
   ForgotPasswordRequestSchema,
   ResetPasswordRequestSchema,
+  BuildPresetsUpdateRequestSchema,
 } from "@arcade/protocol";
 import {
   registerUser,
@@ -17,6 +18,7 @@ import {
   getUserProfile,
   completeOnboarding,
   updateDefaultLoadout,
+  updateBuildPresets,
   logoutUser,
   logoutAdmin,
   requestPasswordReset,
@@ -333,6 +335,18 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     const result = await updateDefaultLoadout(request.userId, body);
 
     return reply.send({ defaultLoadout: result });
+  });
+
+  // Update build presets
+  fastify.patch("/v1/profile/build-presets", async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const body = BuildPresetsUpdateRequestSchema.parse(request.body);
+    const result = await updateBuildPresets(request.userId, body);
+
+    return reply.send(result);
   });
 
   // Update profile (display name)

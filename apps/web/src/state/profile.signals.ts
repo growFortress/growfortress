@@ -1,7 +1,7 @@
 import { signal, computed } from '@preact/signals';
 import type { FortressClass } from '@arcade/sim-core';
 import type { TurretType } from '@arcade/sim-core';
-import type { UserRole } from '@arcade/protocol';
+import type { UserRole, BuildPreset } from '@arcade/protocol';
 
 // Base inventory values (from server profile)
 export const baseGold = signal(0);
@@ -44,6 +44,10 @@ export const defaultLoadout = signal<DefaultLoadout>({
   turretType: null,
 });
 
+// Build presets (from server profile)
+export const buildPresets = signal<BuildPreset[]>([]);
+export const activePresetId = signal<string | null>(null);
+
 // Show onboarding modal
 export const showOnboardingModal = signal(false);
 
@@ -85,6 +89,8 @@ export function resetProfileState(): void {
     heroId: null,
     turretType: null,
   };
+  buildPresets.value = [];
+  activePresetId.value = null;
   showOnboardingModal.value = false;
   gameConfig.value = {
     fortressBaseHp: 200,

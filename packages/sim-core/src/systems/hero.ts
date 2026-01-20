@@ -152,6 +152,15 @@ export function updateHeroes(
 
   // Phase 1: Calculate steering forces and update velocities
   for (const hero of state.heroes) {
+    // Dead heroes are inactive
+    if (hero.currentHp <= 0) {
+      hero.currentHp = 0;
+      hero.state = 'idle';
+      hero.vx = 0;
+      hero.vy = 0;
+      continue;
+    }
+
     // Clean up expired movement modifiers
     hero.movementModifiers = cleanupExpiredModifiers(hero.movementModifiers, state.tick);
 
@@ -462,12 +471,12 @@ function performHeroAttack(
     }
 
     // Hunter Instinct (Omega): tiered execute thresholds
-    // Regular: 25%, Elite: 20%, Boss: 15% (nerfed from flat 40%)
+    // Regular: 20%, Elite: 15%, Boss: 10% (kept under execute cap)
     if (hasHeroPassive(hero.definitionId, 'hunter_instinct', heroTier as 1 | 2 | 3, heroLevel)) {
       const targetHpPercent = target.hp / target.maxHp;
       // Determine execute threshold based on enemy type
       const isBoss = ['mafia_boss', 'ai_core', 'cosmic_beast', 'dimensional_being', 'god', 'titan', 'sentinel'].includes(target.type);
-      const executeThreshold = isBoss ? 0.15 : (target.isElite ? 0.20 : 0.25);
+      const executeThreshold = isBoss ? 0.10 : (target.isElite ? 0.15 : 0.20);
 
       if (targetHpPercent <= executeThreshold) {
         // Execute - deal remaining HP as damage
@@ -537,13 +546,11 @@ function updateHeroCombat(
     return distSq <= attackRangeSq;
   });
 
-  // Also filter targetable enemies for other checks
-  const targetableEnemies = state.enemies.filter(e => e.hp > 0 && e.x <= fieldWidth);
-
   if (enemiesInRange.length === 0) {
     // No enemies in range
-    if (targetableEnemies.length === 0) {
-      // No targetable enemies at all, go idle
+    const aliveEnemies = state.enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
+      // No enemies alive at all, go idle
       hero.state = 'idle';
       hero.vx = 0;
       hero.vy = 0;

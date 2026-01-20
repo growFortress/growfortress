@@ -3,9 +3,9 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal-backdrop);
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--color-bg-overlay);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
 
   /* Entrance animation */
   opacity: 0;
@@ -19,7 +19,7 @@
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(var(--glass-blur-sm));
+    backdrop-filter: blur(var(--modal-backdrop-blur));
   }
 }
 

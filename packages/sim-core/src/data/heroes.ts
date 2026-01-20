@@ -32,8 +32,8 @@ const UNIT_STORM: HeroDefinition = {
     {
       id: 'fire_vulnerability',
       name: 'Wrażliwość na Ogień',
-      description: '+25% otrzymywanych obrażeń od Fire',
-      effect: { type: 'damage_vulnerability', damageClass: 'fire', multiplier: 1.25 }
+      description: '+30% otrzymywanych obrażeń od Fire',
+      effect: { type: 'damage_vulnerability', damageClass: 'fire', multiplier: 1.30 }
     }
   ],
   tiers: [
@@ -419,8 +419,8 @@ const UNIT_VANGUARD: HeroDefinition = {
     {
       id: 'only_human',
       name: 'Tylko Człowiek',
-      description: 'Brak odporności na kosmiczne energie',
-      effect: { type: 'damage_vulnerability', damageClass: 'lightning', multiplier: 1.2 }
+      description: 'Lightning zadaje +30% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'lightning', multiplier: 1.30 }
     }
   ],
   tiers: [
@@ -675,8 +675,8 @@ const UNIT_FROST: HeroDefinition = {
     {
       id: 'no_powers',
       name: 'Brak Mocy',
-      description: '-40% HP',
-      effect: { type: 'stat_penalty', stat: 'maxHpBonus', amount: -0.4 }
+      description: '-30% max HP',
+      effect: { type: 'stat_penalty', stat: 'maxHpMultiplier', amount: 0.70 }
     }
   ],
   tiers: [
@@ -924,8 +924,8 @@ const UNIT_OMEGA: HeroDefinition = {
     {
       id: 'unstable_power',
       name: 'Niestabilna Moc',
-      description: 'Otrzymuje +20% DMG gdy HP < 50%',
-      effect: { type: 'conditional', condition: 'low_hp', effect: '+20% damage taken when HP < 50%' }
+      description: 'Lightning zadaje +35% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'lightning', multiplier: 1.35 }
     }
   ],
   tiers: [
@@ -1191,8 +1191,8 @@ const UNIT_GLACIER: HeroDefinition = {
     {
       id: 'slow_metabolism',
       name: 'Wolny Metabolizm',
-      description: 'Fire zadaje +25% DMG',
-      effect: { type: 'damage_vulnerability', damageClass: 'fire', multiplier: 1.25 }
+      description: 'Fire zadaje +35% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'fire', multiplier: 1.35 }
     }
   ],
   tiers: [

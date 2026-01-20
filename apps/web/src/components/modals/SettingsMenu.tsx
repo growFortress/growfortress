@@ -4,11 +4,14 @@ import {
   closeSettingsMenu,
   isAdmin,
   openLegalModal,
+  openBuildPresetsModal,
 } from "../../state/index.js";
 import { openSupportPage } from "../../state/support.signals.js";
 import {
   audioSettings,
   updateAudioSettings,
+  gameSettings,
+  updateGameSettings,
 } from "../../state/settings.signals.js";
 import {
   openAdminBroadcastPanel,
@@ -249,6 +252,85 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
     );
   };
 
+  const renderGameSettings = () => {
+    const settings = gameSettings.value;
+    const priority = settings.relicPriority;
+    const movePriority = (from: number, to: number) => {
+      if (to < 0 || to >= priority.length) return;
+      const next = [...priority];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      updateGameSettings({ relicPriority: next });
+    };
+
+    const getRelicCategoryLabel = (category: string) => {
+      return t(`settings.game.relicCategories.${category}`, { defaultValue: category });
+    };
+
+    return (
+      <div class={styles.settingsGroup}>
+        <div class={styles.settingRow}>
+          <label>{t("settings.game.autoPickRelics")}</label>
+          <input
+            type="checkbox"
+            checked={settings.autoPickRelics}
+            onChange={(e) =>
+              updateGameSettings({ autoPickRelics: e.currentTarget.checked })
+            }
+          />
+        </div>
+
+        <div class={styles.prioritySection}>
+          <div class={styles.priorityHeader}>
+            <span class={styles.priorityTitle}>{t("settings.game.relicPriority")}</span>
+            <span class={styles.priorityHint}>{t("settings.game.relicPriorityHint")}</span>
+          </div>
+          <div class={styles.priorityList}>
+            {priority.map((category, index) => (
+              <div key={category} class={styles.priorityItem}>
+                <span class={styles.priorityLabel}>{getRelicCategoryLabel(category)}</span>
+                <div class={styles.priorityButtons}>
+                  <button
+                    type="button"
+                    class={styles.priorityBtn}
+                    onClick={() => movePriority(index, index - 1)}
+                    disabled={index === 0}
+                    aria-label={t("settings.game.moveUp")}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    class={styles.priorityBtn}
+                    onClick={() => movePriority(index, index + 1)}
+                    disabled={index === priority.length - 1}
+                    aria-label={t("settings.game.moveDown")}
+                  >
+                    ↓
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class={styles.menuItem}
+          onClick={() => {
+            closeSettingsMenu();
+            openBuildPresetsModal();
+          }}
+        >
+          <span class={styles.menuIcon}>🧩</span>
+          <span class={styles.menuLabel}>
+            {t("settings.game.buildPresets")}
+          </span>
+        </button>
+      </div>
+    );
+  };
+
   return (
     <Modal
       visible={isVisible}
@@ -263,6 +345,12 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
           onClick={() => setActiveTab("audio")}
         >
           {t("settings.tabs.audio")}
+        </button>
+        <button
+          class={`${styles.tabBtn} ${activeTab === "game" ? styles.activeTab : ""}`}
+          onClick={() => setActiveTab("game")}
+        >
+          {t("settings.tabs.game")}
         </button>
         <button
           class={`${styles.tabBtn} ${activeTab === "account" ? styles.activeTab : ""}`}
@@ -282,6 +370,7 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
 
       <div class={styles.content}>
         {activeTab === "audio" && renderAudioSettings()}
+        {activeTab === "game" && renderGameSettings()}
         {activeTab === "account" && (
           <div class={styles.settingsGroup}>
             <div class={styles.settingRow}>

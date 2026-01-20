@@ -1,6 +1,7 @@
 import type { JSX } from 'preact';
 import { createPortal } from 'preact/compat';
 import type { HeroDefinition, HeroTier, FortressClass } from '@arcade/sim-core';
+import { calculateHeroStats } from '@arcade/sim-core';
 import { HERO_UPGRADE_COSTS } from '@arcade/protocol';
 import { HeroAvatar } from '../../shared/HeroAvatar.js';
 import { Button } from '../../shared/Button.js';
@@ -31,6 +32,7 @@ interface TierPreviewModalProps {
   heroDefinition: HeroDefinition;
   currentTier: 1 | 2;
   nextTier: HeroTier;
+  heroLevel: number;
   playerGold: number;
   playerDust: number;
   onClose: () => void;
@@ -42,6 +44,7 @@ export function TierPreviewModal({
   heroDefinition,
   currentTier,
   nextTier,
+  heroLevel,
   playerGold,
   playerDust,
   onClose,
@@ -63,6 +66,15 @@ export function TierPreviewModal({
   // Calculate new skills (skills in next tier that aren't in current)
   const currentSkillIds = new Set(currentTierDef.skills.map(s => s.id));
   const newSkills = nextTier.skills.filter(s => !currentSkillIds.has(s.id));
+  
+  // Calculate stat deltas between current and next tier
+  const currentStats = calculateHeroStats(heroDefinition, currentTier, heroLevel);
+  const nextStats = calculateHeroStats(heroDefinition, nextTierNum, heroLevel);
+  const statDeltas = {
+    hp: { from: currentStats.hp, to: nextStats.hp, delta: nextStats.hp - currentStats.hp },
+    damage: { from: currentStats.damage, to: nextStats.damage, delta: nextStats.damage - currentStats.damage },
+    attackSpeed: { from: currentStats.attackSpeed, to: nextStats.attackSpeed, delta: nextStats.attackSpeed - currentStats.attackSpeed },
+  };
 
   // Visual changes comparison
   const sizeChange = {
@@ -106,44 +118,78 @@ export function TierPreviewModal({
 
         {/* Content */}
         <div class={styles.content}>
-          {/* Hero Preview */}
-          <div class={styles.heroPreview}>
+          {/* Hero Strip */}
+          <div class={styles.heroStrip}>
             <div class={styles.avatarContainer}>
               <div class={styles.avatarGlow} />
-              <HeroAvatar heroId={heroDefinition.id} tier={nextTierNum} size={120} />
+              <HeroAvatar heroId={heroDefinition.id} tier={nextTierNum} size={96} />
             </div>
-            <div class={styles.heroName}>{heroDefinition.name}</div>
+            <div class={styles.heroStripInfo}>
+              <div class={styles.heroName}>{heroDefinition.name}</div>
+              <div class={styles.heroStripMeta}>
+                {t('heroDetails.tierWithNumber', { tier: currentTier })} → {t('heroDetails.tierWithNumber', { tier: nextTierNum })}
+              </div>
+            </div>
           </div>
 
-          {/* Stat Multiplier */}
-          <div class={styles.section}>
-            <h3 class={styles.sectionTitle}>{t('heroDetails.statMultiplier').toUpperCase()}</h3>
-            <div class={styles.multiplierComparison}>
-              <div class={styles.multiplierFrom}>
-                <span class={styles.multiplierLabel}>{t('heroDetails.tierWithNumber', { tier: currentTier })}</span>
-                <span class={styles.multiplierValue}>×{currentTierDef.statMultiplier.toFixed(1)}</span>
+          {/* Change Grid */}
+          <div class={styles.changeGrid}>
+            <div class={styles.card}>
+              <div class={styles.cardHeader}>{t('heroDetails.statMultiplier')}</div>
+              <div class={styles.multiplierComparison}>
+                <div class={styles.multiplierFrom}>
+                  <span class={styles.multiplierLabel}>{t('heroDetails.tierWithNumber', { tier: currentTier })}</span>
+                  <span class={styles.multiplierValue}>×{currentTierDef.statMultiplier.toFixed(1)}</span>
+                </div>
+                <div class={styles.multiplierArrow}>
+                  <div class={styles.arrowLine} />
+                  <span class={styles.arrowHead}>▶</span>
+                </div>
+                <div class={styles.multiplierTo}>
+                  <span class={styles.multiplierLabel}>{t('heroDetails.tierWithNumber', { tier: nextTierNum })}</span>
+                  <span class={styles.multiplierValue}>×{nextTier.statMultiplier.toFixed(1)}</span>
+                </div>
               </div>
-              <div class={styles.multiplierArrow}>
-                <div class={styles.arrowLine} />
-                <span class={styles.arrowHead}>▶</span>
-              </div>
-              <div class={styles.multiplierTo}>
-                <span class={styles.multiplierLabel}>{t('heroDetails.tierWithNumber', { tier: nextTierNum })}</span>
-                <span class={styles.multiplierValue}>×{nextTier.statMultiplier.toFixed(1)}</span>
+            </div>
+
+            <div class={styles.card}>
+              <div class={styles.cardHeader}>{t('heroDetails.statChanges')}</div>
+              <div class={styles.statDeltaCompact}>
+                <div class={styles.statDeltaItem}>
+                  <span class={styles.statDeltaIcon}>❤️</span>
+                  <span class={styles.statDeltaValues}>
+                    {Math.round(statDeltas.hp.from)} → <strong>{Math.round(statDeltas.hp.to)}</strong>
+                  </span>
+                  <span class={styles.statDeltaBadge}>+{Math.round(statDeltas.hp.delta)}</span>
+                </div>
+                <div class={styles.statDeltaItem}>
+                  <span class={styles.statDeltaIcon}>⚔️</span>
+                  <span class={styles.statDeltaValues}>
+                    {Math.round(statDeltas.damage.from)} → <strong>{Math.round(statDeltas.damage.to)}</strong>
+                  </span>
+                  <span class={styles.statDeltaBadge}>+{Math.round(statDeltas.damage.delta)}</span>
+                </div>
+                <div class={styles.statDeltaItem}>
+                  <span class={styles.statDeltaIcon}>⚡</span>
+                  <span class={styles.statDeltaValues}>
+                    {statDeltas.attackSpeed.from.toFixed(2)} → <strong>{statDeltas.attackSpeed.to.toFixed(2)}</strong>
+                  </span>
+                  <span class={styles.statDeltaBadge}>+{statDeltas.attackSpeed.delta.toFixed(2)}</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* New Skills */}
           {newSkills.length > 0 && (
-            <div class={styles.section}>
-              <h3 class={styles.sectionTitle}>{t('heroDetails.newSkills').toUpperCase()}</h3>
+            <div class={styles.card}>
+              <div class={styles.cardHeader}>{t('heroDetails.newSkills')}</div>
               <div class={styles.skillsList}>
                 {newSkills.map((skill, index) => (
                   <div
                     key={skill.id}
                     class={styles.skillItem}
-                    style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+                    style={{ animationDelay: `${0.1 + index * 0.05}s` }}
                   >
                     <SkillCard skill={skill} />
                   </div>
@@ -153,8 +199,8 @@ export function TierPreviewModal({
           )}
 
           {/* Visual Changes */}
-          <div class={styles.section}>
-            <h3 class={styles.sectionTitle}>{t('heroDetails.visualChanges').toUpperCase()}</h3>
+          <div class={styles.card}>
+            <div class={styles.cardHeader}>{t('heroDetails.visualChanges')}</div>
             <div class={styles.visualChanges}>
               <div class={styles.visualItem}>
                 <span class={styles.visualLabel}>{t('heroDetails.visualSize')}</span>
@@ -190,26 +236,26 @@ export function TierPreviewModal({
               )}
             </div>
           </div>
+        </div>
 
-          {/* Upgrade Section */}
-          <div class={styles.upgradeSection}>
-            <div class={styles.upgradeCost}>
-              <span class={`${styles.costItem} ${canAffordGold ? styles.canAfford : styles.cantAfford}`}>
-                🪙 {upgradeCost.gold}
-              </span>
-              <span class={`${styles.costItem} ${canAffordDust ? styles.canAfford : styles.cantAfford}`}>
-                🌫️ {upgradeCost.dust}
-              </span>
-            </div>
-            <Button
-              variant="primary"
-              disabled={!canAfford}
-              onClick={onUpgrade}
-              class={styles.upgradeButton}
-            >
-              {t('heroDetails.upgradeToTier', { tier: nextTierNum })}
-            </Button>
+        {/* Upgrade Footer */}
+        <div class={styles.footer}>
+          <div class={styles.upgradeCost}>
+            <span class={`${styles.costItem} ${canAffordGold ? styles.canAfford : styles.cantAfford}`}>
+              🪙 {upgradeCost.gold}
+            </span>
+            <span class={`${styles.costItem} ${canAffordDust ? styles.canAfford : styles.cantAfford}`}>
+              🌫️ {upgradeCost.dust}
+            </span>
           </div>
+          <Button
+            variant="primary"
+            disabled={!canAfford}
+            onClick={onUpgrade}
+            class={styles.upgradeButton}
+          >
+            {t('heroDetails.upgradeToTier', { tier: nextTierNum })}
+          </Button>
         </div>
       </div>
     </div>,

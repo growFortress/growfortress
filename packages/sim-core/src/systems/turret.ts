@@ -14,12 +14,14 @@ import type {
   Enemy,
   ActiveTurret,
   TurretTargetingMode,
+  DamageAttribution,
 } from '../types.js';
 import { Xorshift32 } from '../rng.js';
 import { getTurretById, calculateTurretStats, TURRET_SLOTS } from '../data/turrets.js';
 import { createTurretProjectile, applyEffectToEnemy } from './projectile.js';
 import { TURRET_ATTACK_INTERVAL_BASE, HIT_FLASH_TICKS } from './constants.js';
 import { getTurretSynergyBonus } from './synergy.js';
+import { analytics } from '../analytics.js';
 
 // Overcharge constants
 const OVERCHARGE_DURATION_TICKS = 150;  // 5 seconds at 30Hz
@@ -215,6 +217,12 @@ function applyTurretAbility(
   enemies: Enemy[],
   _rng: Xorshift32
 ): void {
+  const attribution: DamageAttribution = {
+    ownerType: 'turret',
+    ownerId: turret.definitionId,
+    mechanicType: 'ability',
+    mechanicId: ability?.effect?.type || 'unknown_ability',
+  };
   // Get turret base damage for abilities that need it
   const turretDef = getTurretById(turret.definitionId);
   const baseDamage = turretDef ? turretDef.baseStats.damage / 16384 : 15;
@@ -231,23 +239,28 @@ function applyTurretAbility(
       const damageMultiplier = ability.effect.value ? ability.effect.value / 16384 : 2.0;
       const aoeDamage = Math.floor(baseDamage * damageMultiplier);
       for (const enemy of enemies) {
+        const damageDealt = Math.min(aoeDamage, enemy.hp);
         enemy.hp -= aoeDamage;
         enemy.hitFlashTicks = HIT_FLASH_TICKS;
+        analytics.trackAttributedDamage(attribution, damageDealt);
       }
       break;
     }
     case 'chain_all':
       // Hit all enemies with turret's base damage
       for (const enemy of enemies) {
-        enemy.hp -= Math.floor(baseDamage);
+        const rawDamage = Math.floor(baseDamage);
+        const damageDealt = Math.min(rawDamage, enemy.hp);
+        enemy.hp -= rawDamage;
         enemy.hitFlashTicks = HIT_FLASH_TICKS;
+        analytics.trackAttributedDamage(attribution, damageDealt);
       }
       break;
     case 'freeze_all': {
       // Freeze all enemies
       const freezeDuration = ability.effect.duration || 90;
       for (const enemy of enemies) {
-        applyEffectToEnemy({ type: 'freeze', duration: freezeDuration }, enemy, state);
+        applyEffectToEnemy({ type: 'freeze', duration: freezeDuration }, enemy, state, attribution);
       }
       break;
     }
@@ -267,7 +280,7 @@ function applyTurretAbility(
       const poisonDamage = ability.effect.value ? ability.effect.value / 16384 : 5;
       const poisonDuration = ability.effect.duration || 150;
       for (const enemy of enemies) {
-        applyEffectToEnemy({ type: 'poison', damagePerTick: poisonDamage, duration: poisonDuration }, enemy, state);
+        applyEffectToEnemy({ type: 'poison', damagePerTick: poisonDamage, duration: poisonDuration }, enemy, state, attribution);
       }
       break;
     }

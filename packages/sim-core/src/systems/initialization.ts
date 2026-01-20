@@ -17,6 +17,7 @@ import { calculateHeroArtifactHealthBonus } from './artifacts.js';
 import { getFormationPosition } from './helpers.js';
 import { getHeroPowerMultipliers } from './apply-power-upgrades.js';
 import { createDefaultPlayerPowerData, type PlayerPowerData } from '../data/power-upgrades.js';
+import { calculateWeaknessStatPenalty } from './weakness.js';
 
 /**
  * Initialize heroes from config
@@ -69,6 +70,10 @@ export function initializeHeroes(
       const artifactHealthBonus = calculateHeroArtifactHealthBonus(artifactId);
       modifiedHp = Math.floor(modifiedHp * artifactHealthBonus);
     }
+
+    // Apply weakness HP penalty (e.g., Frost: -30% max HP)
+    const hpPenalty = calculateWeaknessStatPenalty(heroDef.weaknesses, 'maxHpMultiplier');
+    modifiedHp = Math.max(1, Math.floor(modifiedHp * hpPenalty));
 
     const hero: ActiveHero = {
       definitionId: heroId,

@@ -174,6 +174,18 @@ export function OnboardingModal() {
                   {t("onboarding.steps.synergy.cards.turret.benefit")}
                 </div>
               </div>
+              <div class={`${styles.card} ${styles.synergyCard}`}>
+                <div class={styles.cardIcon}>🧿</div>
+                <div class={styles.cardTitle}>
+                  {t("onboarding.steps.synergy.cards.relic.title")}
+                </div>
+                <div class={styles.cardDescription}>
+                  {t("onboarding.steps.synergy.cards.relic.description")}
+                </div>
+                <div class={styles.synergyBenefit}>
+                  {t("onboarding.steps.synergy.cards.relic.benefit")}
+                </div>
+              </div>
             </div>
 
             <div class={styles.synergyExplanation}>
@@ -235,7 +247,7 @@ export function OnboardingModal() {
                 {t("onboarding.steps.ready.starterKit")}
               </span>
               <span class={styles.starterKitItems}>
-                🌿 Natural + 🛡️ Vanguard + ⚡ Railgun
+                🌿 Natural + 🛡️ Vanguard + ⚡ Railgun + 🧿 Team Spirit
               </span>
             </div>
           </>

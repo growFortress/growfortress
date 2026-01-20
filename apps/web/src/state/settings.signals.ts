@@ -1,4 +1,5 @@
 import { signal, effect, type Signal } from '@preact/signals';
+import type { RelicCategory } from '@arcade/sim-core';
 
 // Audio Settings
 export interface AudioSettings {
@@ -35,12 +36,24 @@ export interface GameSettings {
   language: string;
   autoSaveInterval: number; // Minutes
   showTutorials: boolean;
+  autoPickRelics: boolean;
+  relicPriority: RelicCategory[];
 }
 
 const DEFAULT_GAME_SETTINGS: GameSettings = {
   language: 'pl',
   autoSaveInterval: 5,
   showTutorials: true,
+  autoPickRelics: false,
+  relicPriority: [
+    'build_defining',
+    'synergy',
+    'class',
+    'standard',
+    'economy',
+    'pillar',
+    'cursed',
+  ],
 };
 
 // Persistence Helper
@@ -68,10 +81,40 @@ function saveSettings(key: string, value: unknown) {
   }
 }
 
+const ALL_RELIC_CATEGORIES: RelicCategory[] = [
+  'build_defining',
+  'synergy',
+  'class',
+  'standard',
+  'economy',
+  'pillar',
+  'cursed',
+];
+
+function normalizeRelicPriority(input: RelicCategory[] | undefined): RelicCategory[] {
+  const unique = new Set(input ?? []);
+  const normalized = ALL_RELIC_CATEGORIES.filter((category) => unique.has(category));
+  for (const category of ALL_RELIC_CATEGORIES) {
+    if (!unique.has(category)) {
+      normalized.push(category);
+    }
+  }
+  return normalized;
+}
+
+function normalizeGameSettings(input: GameSettings): GameSettings {
+  return {
+    ...input,
+    relicPriority: normalizeRelicPriority(input.relicPriority),
+  };
+}
+
 // Signals
 export const audioSettings: Signal<AudioSettings> = signal<AudioSettings>(loadSettings(STORAGE_KEY_AUDIO, DEFAULT_AUDIO_SETTINGS));
 export const graphicsSettings: Signal<GraphicsSettings> = signal<GraphicsSettings>(loadSettings(STORAGE_KEY_GRAPHICS, DEFAULT_GRAPHICS_SETTINGS));
-export const gameSettings: Signal<GameSettings> = signal<GameSettings>(loadSettings(STORAGE_KEY_GAME, DEFAULT_GAME_SETTINGS));
+export const gameSettings: Signal<GameSettings> = signal<GameSettings>(
+  normalizeGameSettings(loadSettings(STORAGE_KEY_GAME, DEFAULT_GAME_SETTINGS))
+);
 
 // Effects to persist changes
 effect(() => {
@@ -96,5 +139,6 @@ export function updateGraphicsSettings(updates: Partial<GraphicsSettings>) {
 }
 
 export function updateGameSettings(updates: Partial<GameSettings>) {
-  gameSettings.value = { ...gameSettings.value, ...updates };
+  const next = { ...gameSettings.value, ...updates };
+  gameSettings.value = normalizeGameSettings(next);
 }

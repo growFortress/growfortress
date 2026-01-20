@@ -214,6 +214,7 @@ export type SimConfigSnapshot = Pick<
   | "equippedArtifacts"
   | "guildStatBoost"
   | "unlockedPillars"
+  | "startingRelics"
 >;
 
 export interface RunTokenPayload {

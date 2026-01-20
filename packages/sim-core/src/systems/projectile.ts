@@ -20,6 +20,9 @@ import type {
   ProjectileType,
   SkillEffect,
   StatusEffectType,
+  DamageAttribution,
+  DamageOwnerType,
+  DamageMechanicType,
 } from '../types.js';
 import { analytics } from '../analytics.js';
 import { calculateHeroStoneLifesteal } from './infinity-stones.js';
@@ -160,15 +163,12 @@ function applyPierceDamage(projectile: ActiveProjectile, enemy: Enemy, state: Ga
     }
   }
 
-  analytics.trackDamage(
-    projectile.sourceType,
-    String(projectile.sourceId),
-    damageDealt
-  );
+  const attribution = getProjectileAttribution(projectile, 'secondary', 'pierce');
+  analytics.trackAttributedDamage(attribution, damageDealt);
 
   // Apply status effects to pierced enemies too
   for (const effect of projectile.effects) {
-    applyEffectToEnemy(effect, enemy, state);
+    applyEffectToEnemy(effect, enemy, state, attribution);
   }
 }
 
@@ -204,11 +204,8 @@ function applyProjectileDamage(projectile: ActiveProjectile, state: GameState): 
       }
     }
 
-    analytics.trackDamage(
-      projectile.sourceType,
-      String(projectile.sourceId),
-      damageDealt
-    );
+    const attribution = getProjectileAttribution(projectile);
+    analytics.trackAttributedDamage(attribution, damageDealt);
 
     // Apply lifesteal for hero projectiles (from infinity stones and artifacts)
     if (projectile.sourceType === 'hero') {
@@ -231,14 +228,20 @@ function applyProjectileDamage(projectile: ActiveProjectile, state: GameState): 
         const rngValue = (rngSeed % 10000) / 10000; // 0.0 - 0.9999
         const onHitEffect = getArtifactOnHitEffect(hero.equippedArtifact, rngValue);
         if (onHitEffect) {
-          applyEffectToEnemy(onHitEffect, enemy, state);
+          const artifactAttribution: DamageAttribution = {
+            ownerType: 'hero',
+            ownerId: hero.definitionId,
+            mechanicType: 'artifact',
+            mechanicId: hero.equippedArtifact || 'unknown_artifact',
+          };
+          applyEffectToEnemy(onHitEffect, enemy, state, artifactAttribution);
         }
       }
     }
 
     // Apply additional effects
     for (const effect of projectile.effects) {
-      applyEffectToEnemy(effect, enemy, state);
+      applyEffectToEnemy(effect, enemy, state, attribution);
     }
 
     // Chain Lightning mechanic for STORM hero
@@ -300,8 +303,16 @@ export function updateEnemyStatusEffects(state: GameState): void {
 
       // Apply DOT for burn/poison (every 30 ticks = 1 second at 30Hz)
       if ((effect.type === 'burn' || effect.type === 'poison') && state.tick % 30 === 0) {
+        const damageDealt = Math.min(effect.strength, enemy.hp);
         enemy.hp -= effect.strength;
         enemy.hitFlashTicks = 3; // Visual feedback for DOT
+        const attribution = effect.source || {
+          ownerType: 'system',
+          ownerId: 'unknown',
+          mechanicType: 'dot',
+          mechanicId: effect.type,
+        };
+        analytics.trackAttributedDamage(attribution, damageDealt, 'dot');
       }
 
       // Remove expired effects
@@ -346,42 +357,65 @@ function recalculateEnemySpeed(enemy: Enemy): void {
 /**
  * Apply skill effect to enemy
  */
-export function applyEffectToEnemy(effect: SkillEffect, enemy: Enemy, state: GameState): void {
+export function applyEffectToEnemy(
+  effect: SkillEffect,
+  enemy: Enemy,
+  state: GameState,
+  sourceAttribution?: DamageAttribution
+): void {
   const effectDuration = effect.duration || DEFAULT_EFFECT_DURATION;
 
   switch (effect.type) {
-    case 'damage':
-      enemy.hp -= effect.amount || 0;
+    case 'damage': {
+      const rawDamage = effect.amount || 0;
+      const damageDealt = Math.min(rawDamage, enemy.hp);
+      enemy.hp -= rawDamage;
+      const attribution = sourceAttribution || {
+        ownerType: 'system',
+        ownerId: 'unknown',
+        mechanicType: 'skill',
+        mechanicId: 'direct_damage',
+      };
+      analytics.trackAttributedDamage(attribution, damageDealt);
       break;
+    }
     case 'slow': {
       // Convert percent to decimal if needed (30 -> 0.3, 0.3 -> 0.3)
       const slowPercent = (effect.percent || 30) > 1 ? (effect.percent || 30) / 100 : (effect.percent || 0.3);
       // Apply slow effect and track it
-      addStatusEffect(enemy, 'slow', effectDuration, slowPercent, state.tick);
+      addStatusEffect(enemy, 'slow', effectDuration, slowPercent, state.tick, sourceAttribution);
       // Recalculate speed from baseSpeed with all active slow effects
       recalculateEnemySpeed(enemy);
       break;
     }
     case 'burn':
       // Track burn DOT effect
-      addStatusEffect(enemy, 'burn', effectDuration, effect.damagePerTick || 5, state.tick);
+      const burnAttribution = buildDotAttribution(sourceAttribution, 'burn');
+      addStatusEffect(enemy, 'burn', effectDuration, effect.damagePerTick || 5, state.tick, burnAttribution);
       // Apply initial tick of damage
-      enemy.hp -= effect.damagePerTick || 5;
+      const burnDamage = effect.damagePerTick || 5;
+      const burnDealt = Math.min(burnDamage, enemy.hp);
+      enemy.hp -= burnDamage;
+      analytics.trackAttributedDamage(burnAttribution, burnDealt, 'dot');
       break;
     case 'poison':
       // Track poison DOT effect
-      addStatusEffect(enemy, 'poison', effectDuration, effect.damagePerTick || 5, state.tick);
+      const poisonAttribution = buildDotAttribution(sourceAttribution, 'poison');
+      addStatusEffect(enemy, 'poison', effectDuration, effect.damagePerTick || 5, state.tick, poisonAttribution);
       // Apply initial tick of damage
-      enemy.hp -= effect.damagePerTick || 5;
+      const poisonDamage = effect.damagePerTick || 5;
+      const poisonDealt = Math.min(poisonDamage, enemy.hp);
+      enemy.hp -= poisonDamage;
+      analytics.trackAttributedDamage(poisonAttribution, poisonDealt, 'dot');
       break;
     case 'freeze':
       // Track freeze effect
-      addStatusEffect(enemy, 'freeze', effectDuration, 1.0, state.tick);
+      addStatusEffect(enemy, 'freeze', effectDuration, 1.0, state.tick, sourceAttribution);
       recalculateEnemySpeed(enemy);
       break;
     case 'stun':
       // Track stun effect
-      addStatusEffect(enemy, 'stun', effectDuration, 1.0, state.tick);
+      addStatusEffect(enemy, 'stun', effectDuration, 1.0, state.tick, sourceAttribution);
       recalculateEnemySpeed(enemy);
       break;
   }
@@ -395,7 +429,8 @@ function addStatusEffect(
   type: StatusEffectType,
   duration: number,
   strength: number,
-  currentTick: number
+  currentTick: number,
+  sourceAttribution?: DamageAttribution
 ): void {
   // Check if effect already exists - refresh it
   const existingIndex = enemy.activeEffects.findIndex(e => e.type === type);
@@ -408,6 +443,7 @@ function addStatusEffect(
       remainingTicks: duration,
       strength: Math.max(existing.strength, strength),
       appliedTick: currentTick,
+      source: sourceAttribution || existing.source,
     };
   } else {
     // Add new effect
@@ -416,8 +452,49 @@ function addStatusEffect(
       remainingTicks: duration,
       strength,
       appliedTick: currentTick,
+      source: sourceAttribution,
     });
   }
+}
+
+function getProjectileAttribution(
+  projectile: ActiveProjectile,
+  mechanicTypeOverride?: DamageMechanicType,
+  mechanicIdOverride?: string
+): DamageAttribution {
+  let mechanicType: DamageMechanicType = projectile.skillId ? 'skill' : 'basic';
+  let mechanicId = projectile.skillId || 'basic_attack';
+
+  if (projectile.isChained) {
+    mechanicType = 'skill';
+    mechanicId = 'storm_chain';
+  }
+
+  if (mechanicTypeOverride) {
+    mechanicType = mechanicTypeOverride;
+  }
+  if (mechanicIdOverride) {
+    mechanicId = mechanicIdOverride;
+  }
+
+  return {
+    ownerType: projectile.sourceType as DamageOwnerType,
+    ownerId: String(projectile.sourceId),
+    mechanicType,
+    mechanicId,
+  };
+}
+
+function buildDotAttribution(
+  sourceAttribution: DamageAttribution | undefined,
+  dotType: 'burn' | 'poison'
+): DamageAttribution {
+  return {
+    ownerType: sourceAttribution?.ownerType || 'system',
+    ownerId: sourceAttribution?.ownerId || 'unknown',
+    mechanicType: 'dot',
+    mechanicId: dotType,
+  };
 }
 
 /**

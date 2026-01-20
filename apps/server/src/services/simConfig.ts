@@ -56,6 +56,7 @@ export interface BuildSimConfigParams {
   };
   guildStatBoost?: number; // Guild stat boost (0-0.20 = 0-20% HP/damage bonus)
   unlockedPillars?: PillarId[]; // Dust-gated pillar unlocks (if undefined, all pillars available)
+  startingRelics?: string[]; // Relics to grant at session start (for first-run synergy showcase)
 }
 
 export function buildSimConfigSnapshot(
@@ -125,6 +126,7 @@ export function buildSimConfigSnapshot(
     waveIntervalTicks: params.remoteConfig?.waveIntervalTicks ?? 90,
     guildStatBoost: params.guildStatBoost,
     unlockedPillars: params.unlockedPillars,
+    startingRelics: params.startingRelics,
   };
 
   return {
@@ -157,5 +159,6 @@ export function applySimConfigSnapshot(
   config.waveIntervalTicks = snapshot.waveIntervalTicks;
   config.guildStatBoost = snapshot.guildStatBoost;
   config.unlockedPillars = snapshot.unlockedPillars ? [...snapshot.unlockedPillars] : undefined;
+  config.startingRelics = snapshot.startingRelics ? [...snapshot.startingRelics] : undefined;
   return config;
 }

@@ -91,6 +91,7 @@
   "navigation": {
     "dailyQuests": "Daily Quests",
     "leaderboards": "Leaderboards",
+    "statistics": "Statistics",
     "messages": "Messages",
     "guild": "Guild",
     "shop": "Shop",
@@ -253,7 +254,19 @@
     "operationTimeout": "Operation timed out",
     "upgradeStatFailed": "Failed to upgrade stat",
     "equipArtifactFailed": "Failed to equip artifact",
-    "unequipArtifactFailed": "Failed to unequip artifact"
+    "unequipArtifactFailed": "Failed to unequip artifact",
+    "compare": "Compare",
+    "compareMode": "Compare heroes side by side",
+    "compareWith": "Compare with",
+    "selectHero": "Select a hero...",
+    "vsLabel": "VS",
+    "synergiesTitle": "SYNERGIES",
+    "bestUse": "Best use",
+    "fortressSynergy": "Fortress synergy",
+    "synergyActive": "Active",
+    "synergyInactive": "Use {{class}} fortress",
+    "antiSynergies": "Anti-synergies",
+    "statChanges": "Stat changes"
   },
   "turretPlacement": {
     "title": "Place Turret",

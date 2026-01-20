@@ -16,15 +16,13 @@ import {
   hasUnreadMessages,
   unreadCounts,
   openLeaderboardModal,
+  openStatisticsDashboard,
   hasUnclaimedRewards,
   showDailyQuestsPanel,
   hasUnclaimedQuestRewards,
   unclaimedCompletedCount,
   showShopModal,
   showPillarUnlockModal,
-  showBattlePassModal,
-  hasUnclaimedBPRewards,
-  totalUnclaimedCount,
   openPvpPanel,
   pvpPendingChallenges,
 } from '../../state/index.js';
@@ -123,22 +121,6 @@ export function Header(_props: HeaderProps) {
                 </button>
               </Tooltip>
 
-              {/* Battle Pass - progression */}
-              <Tooltip content="Battle Pass" position="bottom">
-                <button
-                  class={styles.headerBtn}
-                  onClick={() => showBattlePassModal()}
-                  aria-label={hasUnclaimedBPRewards.value ? `Battle Pass (${totalUnclaimedCount.value} rewards)` : 'Battle Pass'}
-                >
-                  <span aria-hidden="true">🎖️</span>
-                  {hasUnclaimedBPRewards.value && (
-                    <span class={styles.badge} aria-hidden="true">
-                      {totalUnclaimedCount.value}
-                    </span>
-                  )}
-                </button>
-              </Tooltip>
-
               {/* World Exploration - gameplay */}
               <Tooltip content="Eksploracja Światów" position="bottom">
                 <button
@@ -177,6 +159,17 @@ export function Header(_props: HeaderProps) {
                   {hasUnclaimedRewards.value && (
                     <span class={styles.dotBadge} aria-label={t('header.rewardsToClaim')} />
                   )}
+                </button>
+              </Tooltip>
+
+              {/* Statistics dashboard */}
+              <Tooltip content={t('common:navigation.statistics')} position="bottom">
+                <button
+                  class={styles.headerBtn}
+                  onClick={() => openStatisticsDashboard()}
+                  aria-label={t('common:navigation.statistics')}
+                >
+                  <span aria-hidden="true">📊</span>
                 </button>
               </Tooltip>
 

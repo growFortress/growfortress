@@ -34,6 +34,9 @@ model User {
   defaultTurretType    String? // 'arrow' | 'cannon' | 'sniper' | 'tesla' | 'frost' | 'flame' | 'support' | 'poison'
   onboardingCompleted  Boolean @default(false)
   description          String? @default("") // Player bio, max 500 chars
+  // Build presets (named loadouts)
+  buildPresets     Json    @default("[]")
+  activePresetId   String?
 
   inventory          Inventory?
   progression        Progression?

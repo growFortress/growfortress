@@ -4,6 +4,7 @@
     "ariaLabel": "Settings Menu",
     "tabs": {
       "audio": "Audio",
+      "game": "Game",
       "graphics": "Graphics",
       "account": "Account",
       "admin": "Admin"
@@ -21,6 +22,23 @@
       "qualityLow": "Low",
       "qualityMedium": "Medium",
       "qualityHigh": "High"
+    },
+    "game": {
+      "autoPickRelics": "Auto-pick relics",
+      "relicPriority": "Relic priority",
+      "relicPriorityHint": "Higher items are picked first when available.",
+      "buildPresets": "Build presets",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "relicCategories": {
+        "build_defining": "Build-defining",
+        "synergy": "Synergy",
+        "class": "Class",
+        "standard": "Standard",
+        "economy": "Economy",
+        "pillar": "Pillar",
+        "cursed": "Cursed"
+      }
     },
     "account": {
       "language": "Language",
@@ -63,6 +81,38 @@
       "terms": "Terms",
       "privacy": "Privacy",
       "cookies": "Cookies"
+    }
+  },
+  "buildPresets": {
+    "title": "Build Presets",
+    "ariaLabel": "Build presets",
+    "description": "Save and switch between your preferred loadouts.",
+    "listTitle": "Saved presets",
+    "create": "New preset",
+    "maxReached": "You can store up to 5 presets.",
+    "empty": "No presets yet.",
+    "active": "Active",
+    "setActive": "Set active",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editorTitle": "Preset editor",
+    "nameLabel": "Preset name",
+    "namePlaceholder": "e.g. Shockwave opener",
+    "classLabel": "Fortress class",
+    "heroesLabel": "Heroes",
+    "turretsLabel": "Turrets",
+    "heroesShort": "heroes",
+    "turretsShort": "turrets",
+    "slotsInfo": "Select up to {{count}}",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "noHeroes": "No heroes unlocked yet.",
+    "noTurrets": "No turrets unlocked yet.",
+    "errors": {
+      "saveFailed": "Failed to save preset.",
+      "deleteFailed": "Failed to delete preset.",
+      "activateFailed": "Failed to activate preset."
     }
   },
   "legalModal": {
@@ -133,9 +183,14 @@
             "title": "Railgun Tower",
             "description": "Fast single-target DPS. Eliminates threats quickly.",
             "benefit": "Role: Covers the tank's damage weakness"
+          },
+          "relic": {
+            "title": "Team Spirit (Relic)",
+            "description": "Synergy relic that powers up matching units.",
+            "benefit": "Bonus: +15% DMG and +5% HP per matching hero"
           }
         },
-        "result": "Vanguard tanks, Railgun kills, Fortress heals — classic defense!"
+        "result": "Vanguard tanks, Railgun kills, Team Spirit boosts — instant build-crafting!"
       },
       "ready": {
         "title": "Ready to Play",
@@ -231,5 +286,30 @@
         "description": "No description"
       }
     }
+  },
+  "statistics": {
+    "title": "Statistics Dashboard",
+    "ariaLabel": "Statistics Dashboard",
+    "emptyTitle": "No statistics yet",
+    "emptySubtitle": "Finish a run to see detailed performance data.",
+    "overview": "Overview",
+    "totalDamage": "Total Damage",
+    "duration": "Duration",
+    "overallDps": "Overall DPS",
+    "waves": "Waves",
+    "heroDps": "DPS per Hero",
+    "hero": "Hero",
+    "damage": "Damage",
+    "dps": "DPS",
+    "share": "Share",
+    "noHeroDamage": "No hero damage recorded",
+    "damageSources": "Damage Sources",
+    "filterOwner": "Filter",
+    "filterAll": "All",
+    "filterHero": "Heroes",
+    "filterTurret": "Turrets",
+    "filterFortress": "Fortress",
+    "filterSystem": "System",
+    "noAttribution": "No source breakdown available"
   }
 }

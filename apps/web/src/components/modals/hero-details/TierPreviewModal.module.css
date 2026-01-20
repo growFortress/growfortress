@@ -6,7 +6,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--color-bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,6 +14,8 @@
   animation: fadeIn 0.2s var(--ease-standard);
   padding: 20px;
   box-sizing: border-box;
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 
 @keyframes fadeIn {
@@ -29,7 +31,7 @@
   border: var(--border-neutral);
   border-top: 4px solid var(--tier-color, var(--color-primary));
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg), 0 0 60px var(--tier-color);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -106,19 +108,18 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* Hero Preview */
-.heroPreview {
+/* Hero Strip */
+.heroStrip {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px 8px;
 }
 
 .avatarContainer {
@@ -149,24 +150,48 @@
   }
 }
 
+ .heroStripInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+ }
+
 .heroName {
   font-family: var(--font-display);
   font-size: 16px;
-  color: var(--color-text-60);
+  color: var(--color-text);
 }
 
-/* Sections */
-.section {
+.heroStripMeta {
+  font-size: 11px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Cards */
+.card {
   background: var(--color-bg-elevated);
   border: var(--border-neutral);
   border-radius: var(--radius-md);
-  padding: 12px 16px;
-  animation: sectionFadeIn 0.4s var(--ease-standard) backwards;
+  padding: 12px 14px;
+  animation: sectionFadeIn 0.3s var(--ease-standard) backwards;
 }
 
-.section:nth-child(2) { animation-delay: 0.1s; }
-.section:nth-child(3) { animation-delay: 0.2s; }
-.section:nth-child(4) { animation-delay: 0.3s; }
+.cardHeader {
+  margin: 0 0 10px 0;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.changeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
 
 @keyframes sectionFadeIn {
   from {
@@ -177,15 +202,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.sectionTitle {
-  margin: 0 0 12px 0;
-  font-family: var(--font-display);
-  font-size: 12px;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 /* Multiplier Comparison */
@@ -212,7 +228,7 @@
 
 .multiplierValue {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
 }
 
@@ -344,27 +360,20 @@
   color: var(--color-text);
 }
 
-/* Upgrade Section */
-.upgradeSection {
-  background: var(--color-bg);
-  border: 2px solid var(--tier-color);
-  border-radius: var(--radius-md);
-  padding: 16px;
+/* Footer */
+.footer {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  animation: upgradeGlow 2s var(--ease-standard) infinite;
-}
-
-@keyframes upgradeGlow {
-  0%, 100% { box-shadow: 0 0 10px var(--tier-color); }
-  50% { box-shadow: 0 0 25px var(--tier-color); }
+  padding: 12px 16px 16px;
+  background: var(--color-bg-elevated);
+  border-top: var(--border-neutral);
 }
 
 .upgradeCost {
   display: flex;
-  gap: 24px;
+  gap: 16px;
 }
 
 .costItem {
@@ -385,15 +394,52 @@
 }
 
 .upgradeButton {
-  width: 100%;
-  padding: 14px 24px !important;
-  font-size: 15px !important;
+  padding: 10px 20px !important;
+  font-size: 13px !important;
   font-weight: bold !important;
   letter-spacing: 1px;
 }
 
+/* Stat Delta Compact - Inline below multiplier */
+.statDeltaCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statDeltaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statDeltaIcon {
+  font-size: 14px;
+}
+
+.statDeltaValues {
+  font-size: 12px;
+  color: var(--color-text-60);
+  font-family: var(--font-mono);
+}
+
+.statDeltaValues strong {
+  color: var(--tier-color);
+  font-weight: bold;
+}
+
+.statDeltaBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--color-success-20);
+  border-radius: var(--radius-xs);
+  color: var(--color-success);
+  font-weight: bold;
+  font-family: var(--font-mono);
+}
+
 /* Responsive */
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .modal {
     width: 95%;
     max-height: calc(100vh - 20px);
@@ -403,11 +449,20 @@
     padding: 12px;
   }
 
-  .heroPreview {
-    padding: 12px;
+  .changeGrid {
+    grid-template-columns: 1fr;
   }
 
   .multiplierValue {
-    font-size: 22px;
+    font-size: 20px;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .upgradeButton {
+    width: 100%;
   }
 }

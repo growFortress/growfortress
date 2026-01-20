@@ -91,6 +91,7 @@
   "navigation": {
     "dailyQuests": "Dzienne Zadania",
     "leaderboards": "Rankingi",
+    "statistics": "Statystyki",
     "messages": "Wiadomości",
     "guild": "Gildia",
     "shop": "Sklep",
@@ -253,7 +254,19 @@
     "operationTimeout": "Przekroczono limit czasu operacji",
     "upgradeStatFailed": "Nie udało się ulepszyć statystyki",
     "equipArtifactFailed": "Nie udało się założyć artefaktu",
-    "unequipArtifactFailed": "Nie udało się zdjąć artefaktu"
+    "unequipArtifactFailed": "Nie udało się zdjąć artefaktu",
+    "compare": "Porównaj",
+    "compareMode": "Porównaj bohaterów obok siebie",
+    "compareWith": "Porównaj z",
+    "selectHero": "Wybierz bohatera...",
+    "vsLabel": "VS",
+    "synergiesTitle": "SYNERGIE",
+    "bestUse": "Najlepsze zastosowanie",
+    "fortressSynergy": "Synergia z fortecą",
+    "synergyActive": "Aktywna",
+    "synergyInactive": "Użyj fortecy {{class}}",
+    "antiSynergies": "Anty-synergie",
+    "statChanges": "Zmiany statystyk"
   },
   "turretPlacement": {
     "title": "Postaw Wieżyczkę",

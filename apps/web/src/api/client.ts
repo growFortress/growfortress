@@ -36,6 +36,8 @@ import type {
   UnlockHeroResponse,
   UnlockTurretRequest,
   UnlockTurretResponse,
+  BuildPresetsUpdateRequest,
+  BuildPreset,
   // Consolidated types from protocol
   MaterialsResponse,
   AddMaterialsResponse,
@@ -361,6 +363,19 @@ export async function updateDefaultLoadout(
     method: "PATCH",
     body: JSON.stringify(data),
   });
+}
+
+// Profile - Update build presets
+export async function updateBuildPresets(
+  data: BuildPresetsUpdateRequest,
+): Promise<{ buildPresets: BuildPreset[]; activePresetId: string | null }> {
+  return request<{ buildPresets: BuildPreset[]; activePresetId: string | null }>(
+    "/v1/profile/build-presets",
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    },
+  );
 }
 
 // Profile - Update player description

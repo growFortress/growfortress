@@ -142,6 +142,24 @@ export const DefaultLoadoutSchema = z.object({
 });
 export type DefaultLoadout = z.infer<typeof DefaultLoadoutSchema>;
 
+// Build presets
+export const BuildPresetSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1).max(30),
+  fortressClass: FortressClassSchema,
+  startingHeroes: z.array(z.string()).max(6),
+  startingTurrets: z.array(z.string()).max(6),
+});
+export type BuildPreset = z.infer<typeof BuildPresetSchema>;
+
+export const BuildPresetsUpdateRequestSchema = z.object({
+  buildPresets: z.array(BuildPresetSchema).max(5),
+  activePresetId: z.string().nullable(),
+});
+export type BuildPresetsUpdateRequest = z.infer<
+  typeof BuildPresetsUpdateRequestSchema
+>;
+
 // User role schema
 export const UserRoleSchema = z.enum(["USER", "ADMIN"]);
 export type UserRole = z.infer<typeof UserRoleSchema>;
@@ -165,6 +183,8 @@ export const ProfileResponseSchema = z.object({
   // Onboarding status
   onboardingCompleted: z.boolean(),
   defaultLoadout: DefaultLoadoutSchema,
+  buildPresets: z.array(BuildPresetSchema).max(5),
+  activePresetId: z.string().nullable(),
   // Unlocked units
   unlockedHeroes: z.array(HeroIdSchema),
   unlockedTurrets: z.array(TurretTypeSchema),

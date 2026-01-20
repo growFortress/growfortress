@@ -1,0 +1,265 @@
+/* SplashScreen - Fullscreen splash with logo */
+
+/* ==========================================================================
+   Container
+   ========================================================================== */
+
+.container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--color-bg);
+  z-index: var(--z-loading);
+  overflow: hidden;
+  animation: splashFadeIn 0.6s ease-out forwards;
+}
+
+@keyframes splashFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.containerExiting {
+  animation: splashFadeOut 0.5s ease-in forwards;
+}
+
+@keyframes splashFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Background
+   ========================================================================== */
+
+.background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Radial gradient glow */
+.glowOrb {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-primary-20) 0%, transparent 70%);
+  filter: blur(80px);
+  animation: orbFloat 6s ease-in-out infinite;
+}
+
+.glowOrb:nth-child(1) {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.glowOrb:nth-child(2) {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--color-secondary-20) 0%, transparent 70%);
+  animation-delay: 1s;
+}
+
+@keyframes orbFloat {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+/* Subtle grid overlay */
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.5;
+}
+
+/* ==========================================================================
+   Content
+   ========================================================================== */
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  z-index: 1;
+  animation: contentSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes contentSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.containerExiting .content {
+  animation: contentSlideOut 0.4s ease-in forwards;
+}
+
+@keyframes contentSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.98);
+  }
+}
+
+/* ==========================================================================
+   Logo Section
+   ========================================================================== */
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Fortress icon container */
+.iconContainer {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Outer glow ring */
+.iconRing {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-primary-30);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: ringRotate 4s linear infinite;
+}
+
+.iconRing::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 1px dashed var(--color-primary-20);
+  border-radius: 50%;
+  animation: ringRotate 8s linear infinite reverse;
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Inner glow */
+.iconGlow {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, var(--color-primary-40) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: iconGlowPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes iconGlowPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* Fortress SVG icon */
+.fortressIcon {
+  width: 72px;
+  height: 90px;
+  position: relative;
+  z-index: 1;
+  animation: iconFloat 3.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 25px var(--color-primary-50));
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Game logo SVG */
+.gameLogo {
+  width: clamp(280px, 60vw, 380px);
+  height: auto;
+  animation: logoShimmer 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px var(--color-primary-30));
+}
+
+@keyframes logoShimmer {
+  0%, 100% {
+    filter: drop-shadow(0 0 15px var(--color-primary-30));
+  }
+  50% {
+    filter: drop-shadow(0 0 25px var(--color-primary-50));
+  }
+}
+
+/* Tagline */
+.tagline {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-50);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  animation: taglineFade 1s ease-out 0.5s both;
+}
+
+@keyframes taglineFade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

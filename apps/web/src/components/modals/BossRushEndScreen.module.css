@@ -9,6 +9,8 @@
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 
 .modal {

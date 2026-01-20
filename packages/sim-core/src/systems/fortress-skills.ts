@@ -9,11 +9,12 @@
  */
 
 import { FP } from '../fixed.js';
-import type { GameState, SimConfig, SkillDefinition } from '../types.js';
+import type { GameState, SimConfig, SkillDefinition, DamageAttribution } from '../types.js';
 import { Xorshift32 } from '../rng.js';
 import { getClassById, getSkillById } from '../data/classes.js';
 import { applyEffectToEnemy } from './projectile.js';
 import { HIT_FLASH_TICKS } from './constants.js';
+import { analytics } from '../analytics.js';
 
 /**
  * Calculate skill damage with commander level scaling
@@ -184,14 +185,22 @@ function executeSkillAtPosition(
   // Scale base damage with commander level (+5% per level)
   const scaledBaseDamage = getScaledSkillDamage(skill.damage, state.commanderLevel);
   const baseDamage = Math.floor(scaledBaseDamage * (1 + totalDamageBonus));
+  const attribution: DamageAttribution = {
+    ownerType: 'fortress',
+    ownerId: 'fortress',
+    mechanicType: 'skill',
+    mechanicId: skill.id,
+  };
 
   for (const enemy of targetEnemies) {
+    const damageDealt = Math.min(baseDamage, enemy.hp);
     enemy.hp -= baseDamage;
     enemy.hitFlashTicks = HIT_FLASH_TICKS;
+    analytics.trackAttributedDamage(attribution, damageDealt);
 
     // Apply additional effects
     for (const effect of skill.effects) {
-      applyEffectToEnemy(effect, enemy, state);
+      applyEffectToEnemy(effect, enemy, state, attribution);
     }
   }
 }

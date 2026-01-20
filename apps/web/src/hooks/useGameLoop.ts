@@ -1,5 +1,5 @@
 import { useRef, useLayoutEffect, useCallback } from 'preact/hooks';
-import type { FortressClass } from '@arcade/sim-core';
+import type { FortressClass, ExtendedRelicDef, RelicCategory, RelicRarity } from '@arcade/sim-core';
 import { Game, type SessionStartOptions } from '../game/Game.js';
 import { GameLoop, type GameSpeed } from '../game/loop.js';
 import { GameApp, type HubState } from '../renderer/GameApp.js';
@@ -33,6 +33,7 @@ import {
   cancelCommand,
   selectedTargetedSkill,
   clearSelectedSkill,
+  lastSessionAnalytics,
   baseGold,
   baseDust,
   baseLevel,
@@ -54,7 +55,35 @@ import {
 import { consumeEnergyLocal } from '../state/energy.signals.js';
 import { selectedWallType, clearWallSelection } from '../components/game/WallPlacementPanel.js';
 import { selectedMilitiaType, clearMilitiaSelection } from '../components/game/MilitiaSpawnPanel.js';
-import { FP } from '@arcade/sim-core';
+import { FP, getRelicById, analytics } from '@arcade/sim-core';
+import { gameSettings } from '../state/settings.signals.js';
+
+const RELIC_RARITY_SCORE: Record<RelicRarity, number> = {
+  common: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+};
+
+function pickRelicIndex(options: string[], priority: RelicCategory[]): number {
+  let bestIndex = 0;
+  let bestScore = -Infinity;
+
+  options.forEach((relicId, index) => {
+    const relic = getRelicById(relicId) as ExtendedRelicDef | undefined;
+    if (!relic) return;
+    const priorityIndex = priority.indexOf(relic.category);
+    const priorityScore = priorityIndex === -1 ? 0 : (priority.length - priorityIndex) * 10;
+    const rarityScore = RELIC_RARITY_SCORE[relic.rarity] ?? 0;
+    const score = priorityScore + rarityScore;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+}
 
 interface StartSessionOptions {
   fortressClass?: FortressClass;
@@ -121,6 +150,12 @@ export function useGameLoop(
         syncGameState(game);
       },
       onChoiceRequired: (options: string[]) => {
+        const settings = gameSettings.value;
+        if (settings.autoPickRelics && options.length > 0) {
+          const index = pickRelicIndex(options, settings.relicPriority);
+          game.chooseRelic(index);
+          return;
+        }
         showChoice(options);
       },
       onGameEnd: (
@@ -142,6 +177,17 @@ export function useGameLoop(
             }
           : null;
         showEndScreenWithStats(won, endState);
+
+        const sessionInfo = game.getSessionInfo();
+        const tickHz = sessionInfo?.tickHz ?? 30;
+        const history = analytics.getSessionHistory();
+        const currentWaveStats = analytics.getCurrentWaveStats();
+        const waves = currentWaveStats ? [...history, currentWaveStats] : history;
+        lastSessionAnalytics.value = {
+          endedAt: Date.now(),
+          tickHz,
+          waves,
+        };
 
         // Update inventory from session end response
         if (newInventory) {

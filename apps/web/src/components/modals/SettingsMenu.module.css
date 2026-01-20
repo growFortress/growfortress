@@ -16,8 +16,9 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: var(--color-bg-overlay);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
   z-index: 1000;
   display: flex;
   justify-content: center;
@@ -130,6 +131,77 @@
   width: 3rem;
   text-align: right;
   font-family: monospace;
+}
+
+.prioritySection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.priorityHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.priorityTitle {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.priorityHint {
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+}
+
+.priorityList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.priorityItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-neutral-dark);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.priorityLabel {
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.priorityButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.priorityBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-neutral);
+  background: var(--color-bg-dark);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.priorityBtn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.priorityBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .settingRow select {

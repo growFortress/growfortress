@@ -28,7 +28,7 @@ describe('getDefaultConfig', () => {
     expect(config.fieldWidth).toBe(FP.fromInt(40));
     expect(config.fieldHeight).toBe(FP.fromInt(15));
     expect(config.fortressX).toBe(FP.fromInt(2));
-    expect(config.enemySpawnX).toBe(FP.fromInt(38));
+    expect(config.enemySpawnX).toBe(FP.fromInt(44));
     expect(config.enemyAttackRange).toBe(FP.fromInt(4));
     expect(config.enemyAttackInterval).toBe(30);
     expect(config.progressionDamageBonus).toBe(1.0);

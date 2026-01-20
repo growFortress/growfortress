@@ -1,0 +1,175 @@
+.modal {
+  max-width: 1100px;
+}
+
+.body {
+  padding: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.overviewCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overviewLabel {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.overviewValue {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.table {
+  display: grid;
+  gap: 8px;
+}
+
+.tableHeader,
+.tableRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, 140px) minmax(80px, 120px) minmax(70px, 100px);
+  gap: 12px;
+  align-items: center;
+}
+
+.tableHeader {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.tableRow {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.filter select {
+  background: rgba(0, 0, 0, 0.4);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.attributionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attributionGroup,
+.ownerGroup {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.attributionSummary,
+.ownerSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.ownerSummary {
+  font-weight: 500;
+}
+
+.attributionBody {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mechanicList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-left: 12px;
+}
+
+.mechanicRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.mechanicId {
+  opacity: 0.8;
+}
+
+.emptyState {
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0.8;
+}
+
+.emptyTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.emptySubtitle {
+  font-size: 0.95rem;
+}
+
+.emptyInline {
+  padding: 12px 0;
+  opacity: 0.7;
+}

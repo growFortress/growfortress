@@ -57,10 +57,19 @@ export function updateFromProfile(data: ProfileResponse): void {
       heroId: data.defaultLoadout.heroId,
       turretType: data.defaultLoadout.turretType as profile.DefaultLoadout['turretType'],
     };
+    profile.buildPresets.value = data.buildPresets || [];
+    profile.activePresetId.value = data.activePresetId ?? null;
 
     // If onboarding is completed, set the fortress class
-    if (data.onboardingCompleted && data.defaultLoadout.fortressClass) {
-      fortress.selectedFortressClass.value = data.defaultLoadout.fortressClass as typeof fortress.selectedFortressClass.value;
+    if (data.onboardingCompleted) {
+      const activePreset = data.activePresetId
+        ? data.buildPresets?.find((preset) => preset.id === data.activePresetId)
+        : null;
+      if (activePreset?.fortressClass) {
+        fortress.selectedFortressClass.value = activePreset.fortressClass as typeof fortress.selectedFortressClass.value;
+      } else if (data.defaultLoadout.fortressClass) {
+        fortress.selectedFortressClass.value = data.defaultLoadout.fortressClass as typeof fortress.selectedFortressClass.value;
+      }
     }
 
     // Update unlocked heroes and turrets from profile

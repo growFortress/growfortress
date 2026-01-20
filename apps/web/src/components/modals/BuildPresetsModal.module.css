@@ -1,0 +1,204 @@
+.modal {
+  width: min(960px, 96vw);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--color-text);
+}
+
+.description {
+  color: var(--color-text-60);
+  margin: 0;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.listTitle {
+  font-weight: 600;
+}
+
+.limitNote {
+  margin: 0;
+  color: var(--color-text-60);
+  font-size: 0.85rem;
+}
+
+.presetList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.presetItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-dark);
+  background: var(--color-bg-elevated);
+}
+
+.presetInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.presetNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.presetName {
+  font-weight: 600;
+}
+
+.activeBadge {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.presetMeta {
+  color: var(--color-text-60);
+  font-size: 0.85rem;
+}
+
+.presetActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.emptyState {
+  padding: 16px;
+  text-align: center;
+  color: var(--color-text-60);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-neutral-dark);
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-dark);
+  background: var(--color-bg-panel);
+}
+
+.editorTitle {
+  font-weight: 600;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: var(--color-text-80);
+}
+
+.input,
+.select {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-dark);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--color-text-60);
+}
+
+.limitHint {
+  color: var(--color-text-50);
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.optionItem {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.optionItem input:disabled + span {
+  opacity: 0.5;
+}
+
+.emptyOptions {
+  color: var(--color-text-50);
+  font-size: 0.85rem;
+}
+
+.editorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primaryButton {
+  background: var(--color-primary);
+  color: #001319;
+}
+
+.secondaryButton {
+  background: var(--color-secondary-30);
+  color: var(--color-text);
+  border-color: var(--color-secondary-70);
+}
+
+.dangerButton {
+  background: var(--color-accent-20);
+  color: var(--color-accent);
+  border-color: var(--color-accent-50);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

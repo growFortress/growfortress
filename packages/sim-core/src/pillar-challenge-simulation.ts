@@ -21,6 +21,7 @@ import type {
   FortressClass,
   PillarId,
   EnemyType,
+  DamageAttribution,
 } from './types.js';
 import { getLaneY, DEFAULT_PHYSICS_CONFIG } from './physics.js';
 import { DEFAULT_MODIFIERS } from './data/relics.js';
@@ -40,6 +41,7 @@ import {
 } from './systems.js';
 import { TURRET_SLOTS } from './data/turrets.js';
 import { getPillarById } from './data/pillars.js';
+import { analytics } from './analytics.js';
 import {
   calculateTotalHpBonus,
   calculateTotalDamageBonus,
@@ -857,7 +859,15 @@ export class PillarChallengeSimulation {
     // Aplikuj DOT
     for (const effect of enemy.activeEffects) {
       if (effect.type === 'burn' && effect.strength && this.state.tick % 30 === 0) {
+        const damageDealt = Math.min(effect.strength, enemy.hp);
         enemy.hp -= effect.strength;
+        const attribution: DamageAttribution = effect.source || {
+          ownerType: 'system',
+          ownerId: 'pillar_challenge',
+          mechanicType: 'dot',
+          mechanicId: 'burn',
+        };
+        analytics.trackAttributedDamage(attribution, damageDealt, 'dot');
       }
     }
   }

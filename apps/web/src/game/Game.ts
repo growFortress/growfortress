@@ -14,6 +14,7 @@ import {
   generateBossRushSummary,
   ENEMY_PHYSICS,
   FP,
+  analytics,
   type BossRushState,
   type BossRushBossStats,
 } from '@arcade/sim-core';
@@ -173,6 +174,11 @@ export class Game {
       // Apply power upgrades for permanent stat bonuses
       config.powerData = sessionInfo.powerData;
 
+      // Apply starting relics for first-run synergy showcase
+      config.startingRelics = sessionInfo.startingRelics;
+
+      analytics.reset();
+      analytics.reset();
       this.simulation = new Simulation(sessionInfo.seed, config);
       this.simulation.setAuditTicks(sessionInfo.segmentAuditTicks);
 
@@ -238,6 +244,7 @@ export class Game {
       turretTiers: snapshot.powerData.turretTiers || {},
     } : undefined;
 
+    analytics.reset();
     this.simulation = new Simulation(snapshot.seed, config);
     this.simulation.setAuditTicks(snapshot.segmentAuditTicks);
     this.simulation.state = snapshot.simulationState;

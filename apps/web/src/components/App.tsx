@@ -12,6 +12,7 @@ import { OnboardingModal } from "./modals/OnboardingModal.js";
 import { SessionRecoveryModal } from "./modals/SessionRecoveryModal.js";
 import { RewardsModal } from "./modals/RewardsModal.js";
 import { SettingsMenu } from "./modals/SettingsMenu.js";
+import { BuildPresetsModal } from "./modals/BuildPresetsModal.js";
 import { PvpPanel, PvpBattleResult, PvpReplayViewer } from "./pvp/index.js";
 import {
   GuildPanel,
@@ -20,10 +21,10 @@ import {
 } from "./guild/index.js";
 import { MessagesModal } from "./messages/MessagesModal.js";
 import { LeaderboardModal } from "./modals/LeaderboardModal.js";
+import { StatisticsDashboardModal } from "./modals/StatisticsDashboardModal.js";
 import { HubPreviewModal } from "./modals/HubPreviewModal.js";
 import { GuildPreviewModal } from "./modals/GuildPreviewModal.js";
 import { DailyQuestsModal } from "./modals/DailyQuestsModal.js";
-import { BattlePassModal } from "./modals/BattlePassModal.js";
 import { ShopModal } from "./modals/ShopModal.js";
 import { LegalModal } from "./modals/LegalModal.js";
 import { SupportPage } from "./support/SupportPage.js";
@@ -33,6 +34,7 @@ import { PillarUnlockModal } from "./modals/PillarUnlockModal.js";
 import { AdminBroadcastPanel, AdminModerationPanel } from "./admin/index.js";
 import { ErrorBoundary } from "./shared/ErrorBoundary.js";
 import { LoadingScreen } from "./shared/LoadingScreen.js";
+import { SplashScreen } from "./shared/SplashScreen.js";
 import { ScreenReaderAnnouncer } from "./shared/ScreenReaderAnnouncer.js";
 import { MinimumScreenSize } from "./shared/MinimumScreenSize.js";
 import { CookieBanner } from "./shared/CookieBanner.js";
@@ -105,6 +107,7 @@ const queryClient = new QueryClient({
 
 // Loading stages for the app initialization
 type LoadingStage =
+  | "splash" // Ekran powitalny z logo
   | "checking_session" // Sprawdzanie lokalnej sesji
   | "verifying_tokens" // Weryfikacja/odświeżanie tokenów
   | "loading_profile" // Ładowanie profilu gracza
@@ -126,7 +129,7 @@ export function App() {
 
 function AppContent() {
   const [loadingStage, setLoadingStage] =
-    useState<LoadingStage>("checking_session");
+    useState<LoadingStage>("splash");
   const [savedSession, setSavedSession] =
     useState<ActiveSessionSnapshot | null>(null);
 
@@ -272,8 +275,15 @@ function AppContent() {
     return unsubscribe;
   }, []);
 
-  // Initial Auth Check
+  // Handle splash screen completion
+  const handleSplashComplete = () => {
+    setLoadingStage("checking_session");
+  };
+
+  // Initial Auth Check - runs after splash completes
   useEffect(() => {
+    if (loadingStage !== "checking_session") return;
+
     const init = async () => {
       try {
         if (checkAuth()) {
@@ -301,7 +311,7 @@ function AppContent() {
       }
     };
     init();
-  }, []);
+  }, [loadingStage]);
 
   const handleLogin = async (username: string, password: string) => {
     authLoading.value = true;
@@ -408,8 +418,11 @@ function AppContent() {
 
   let content: ComponentChildren;
 
-  // Pokaż ekran ładowania podczas inicjalizacji
-  if (loadingStage !== "ready") {
+  // Pokaż ekran powitalny na starcie
+  if (loadingStage === "splash") {
+    content = <SplashScreen durationMs={4000} onComplete={handleSplashComplete} />;
+  } else if (loadingStage !== "ready") {
+    // Pokaż ekran ładowania podczas inicjalizacji
     // Pokaż AuthScreen gdy nie ma uwierzytelnienia i zakończyliśmy sprawdzanie
     if (loadingStage !== "checking_session" && !internalAuth) {
       content = (
@@ -486,6 +499,7 @@ function AppContent() {
           onAbandon={handleSessionAbandon}
         />
         <SettingsMenu onLogout={handleLogout} />
+        <BuildPresetsModal />
         <PvpPanel />
         <PvpBattleResult />
         <PvpReplayViewer />
@@ -494,10 +508,10 @@ function AppContent() {
         <GuildSearchModal onSuccess={() => {}} />
         <MessagesModal />
         <LeaderboardModal />
+        <StatisticsDashboardModal />
         <HubPreviewModal />
         <GuildPreviewModal />
         <DailyQuestsModal />
-        <BattlePassModal />
         <ShopModal />
         <ArtifactsModal />
         <IdleRewardsModal />

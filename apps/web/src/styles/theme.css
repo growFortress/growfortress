@@ -36,7 +36,8 @@
   --color-bg: #0a0a12;
   --color-bg-panel: #12121f;
   --color-bg-elevated: #1a1a2a;
-  --color-bg-overlay: rgba(10, 10, 18, 0.9);
+  --color-bg-overlay: rgba(0, 0, 0, 0.92);
+  --modal-backdrop-blur: 2px;
 
   /* 4. TEXT: White with opacity variants (improved for contrast) */
   --color-text: #ffffff;

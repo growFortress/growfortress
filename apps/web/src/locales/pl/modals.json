@@ -4,6 +4,7 @@
     "ariaLabel": "Menu Ustawień",
     "tabs": {
       "audio": "Audio",
+      "game": "Gra",
       "graphics": "Grafika",
       "account": "Konto",
       "admin": "Admin"
@@ -21,6 +22,23 @@
       "qualityLow": "Niska",
       "qualityMedium": "Średnia",
       "qualityHigh": "Wysoka"
+    },
+    "game": {
+      "autoPickRelics": "Auto-wybór reliktów",
+      "relicPriority": "Priorytet reliktów",
+      "relicPriorityHint": "Wyższe pozycje są wybierane jako pierwsze.",
+      "buildPresets": "Presety buildów",
+      "moveUp": "Przenieś wyżej",
+      "moveDown": "Przenieś niżej",
+      "relicCategories": {
+        "build_defining": "Definiujące build",
+        "synergy": "Synergia",
+        "class": "Klasowe",
+        "standard": "Standardowe",
+        "economy": "Ekonomia",
+        "pillar": "Filary",
+        "cursed": "Przeklęte"
+      }
     },
     "account": {
       "language": "Język",
@@ -63,6 +81,38 @@
       "terms": "Regulamin",
       "privacy": "Prywatność",
       "cookies": "Cookies"
+    }
+  },
+  "buildPresets": {
+    "title": "Presety buildów",
+    "ariaLabel": "Presety buildów",
+    "description": "Zapisuj i przełączaj ulubione zestawy.",
+    "listTitle": "Zapisane presety",
+    "create": "Nowy preset",
+    "maxReached": "Możesz zapisać maksymalnie 5 presetów.",
+    "empty": "Brak zapisanych presetów.",
+    "active": "Aktywny",
+    "setActive": "Ustaw aktywny",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "editorTitle": "Edytor presetu",
+    "nameLabel": "Nazwa presetu",
+    "namePlaceholder": "np. Start fali uderzeniowej",
+    "classLabel": "Klasa fortecy",
+    "heroesLabel": "Bohaterowie",
+    "turretsLabel": "Wieże",
+    "heroesShort": "boh.",
+    "turretsShort": "wieże",
+    "slotsInfo": "Wybierz do {{count}}",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "saving": "Zapisywanie...",
+    "noHeroes": "Brak odblokowanych bohaterów.",
+    "noTurrets": "Brak odblokowanych wież.",
+    "errors": {
+      "saveFailed": "Nie udało się zapisać presetu.",
+      "deleteFailed": "Nie udało się usunąć presetu.",
+      "activateFailed": "Nie udało się aktywować presetu."
     }
   },
   "legalModal": {
@@ -133,9 +183,14 @@
             "title": "Wieża Railgun",
             "description": "Szybki single-target DPS. Eliminuje groźne cele.",
             "benefit": "Rola: Pokrywa słabość tanka w obrażeniach"
+          },
+          "relic": {
+            "title": "Team Spirit (Relikt)",
+            "description": "Relikt synergii, który wzmacnia pasujące jednostki.",
+            "benefit": "Bonus: +15% DMG i +5% HP za każdego pasującego bohatera"
           }
         },
-        "result": "Vanguard tankuje, Railgun zabija, Twierdza leczy — klasyka defense!"
+        "result": "Vanguard tankuje, Railgun zabija, Team Spirit wzmacnia — instant build-crafting!"
       },
       "ready": {
         "title": "Gotowy do Gry",
@@ -231,5 +286,30 @@
         "description": "Brak opisu"
       }
     }
+  },
+  "statistics": {
+    "title": "Panel Statystyk",
+    "ariaLabel": "Panel Statystyk",
+    "emptyTitle": "Brak statystyk",
+    "emptySubtitle": "Zakończ run, aby zobaczyć szczegółowe statystyki.",
+    "overview": "Podsumowanie",
+    "totalDamage": "Łączne obrażenia",
+    "duration": "Czas trwania",
+    "overallDps": "DPS ogółem",
+    "waves": "Fale",
+    "heroDps": "DPS na bohatera",
+    "hero": "Bohater",
+    "damage": "Obrażenia",
+    "dps": "DPS",
+    "share": "Udział",
+    "noHeroDamage": "Brak obrażeń od bohaterów",
+    "damageSources": "Źródła obrażeń",
+    "filterOwner": "Filtruj",
+    "filterAll": "Wszystko",
+    "filterHero": "Bohaterowie",
+    "filterTurret": "Wieżyczki",
+    "filterFortress": "Twierdza",
+    "filterSystem": "System",
+    "noAttribution": "Brak szczegółowego podziału"
   }
 }

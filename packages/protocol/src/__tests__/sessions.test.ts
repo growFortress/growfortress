@@ -83,6 +83,46 @@ describe('Sessions Schemas', () => {
       expect(result.success).toBe(true);
     });
 
+    it('validates response with startingRelics', () => {
+      const result = SessionStartResponseSchema.safeParse({
+        sessionId: 'gs-123',
+        sessionToken: 'token-abc',
+        seed: 12345,
+        simVersion: 1,
+        tickHz: 30,
+        startingWave: 0,
+        segmentAuditTicks: [100, 200],
+        inventory: { gold: 500, dust: 100, sigils: 0 },
+        commanderLevel: 1,
+        progressionBonuses: {
+          damageMultiplier: 1,
+          goldMultiplier: 1,
+          startingGold: 0,
+          maxHeroSlots: 1,
+          maxTurretSlots: 6,
+        },
+        fortressBaseHp: 100,
+        fortressBaseDamage: 10,
+        waveIntervalTicks: 450,
+        powerData: {
+          fortressUpgrades: {
+            statUpgrades: { hp: 0, damage: 0, attackSpeed: 0, range: 0, critChance: 0, critMultiplier: 0, armor: 0, dodge: 0 },
+          },
+          heroUpgrades: [],
+          turretUpgrades: [],
+          itemTiers: [],
+          heroTiers: {},
+          turretTiers: {},
+        },
+        startingRelics: ['team-spirit'],
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.startingRelics).toEqual(['team-spirit']);
+      }
+    });
+
     it('rejects invalid inventory', () => {
       const result = SessionStartResponseSchema.safeParse({
         sessionId: 'gs-123',

@@ -64,6 +64,25 @@ export interface SkillEffect {
   scalingPerLevel?: number; // Additional max damage per hero level
 }
 
+export type DamageOwnerType = 'hero' | 'turret' | 'fortress' | 'system';
+export type DamageMechanicType =
+  | 'basic'
+  | 'skill'
+  | 'dot'
+  | 'ability'
+  | 'secondary'
+  | 'combo'
+  | 'artifact'
+  | 'aura'
+  | 'other';
+
+export interface DamageAttribution {
+  ownerType: DamageOwnerType;
+  ownerId: string;
+  mechanicType: DamageMechanicType;
+  mechanicId: string;
+}
+
 export interface SkillDefinition {
   id: string;
   name: string;
@@ -105,8 +124,15 @@ export interface HeroWeakness {
   effect: WeaknessEffect;
 }
 
+export type WeaknessStatKey =
+  | keyof ModifierSet
+  | 'maxHpMultiplier'
+  | 'attackSpeedMultiplier'
+  | 'damageMultiplier'
+  | 'moveSpeedMultiplier';
+
 export type WeaknessEffect =
-  | { type: 'stat_penalty'; stat: keyof ModifierSet; amount: number; condition?: string }
+  | { type: 'stat_penalty'; stat: WeaknessStatKey; amount: number; condition?: string }
   | { type: 'damage_vulnerability'; damageClass: FortressClass; multiplier: number }
   | { type: 'behavioral'; behavior: string; chance?: number }
   | { type: 'conditional'; condition: string; effect: string };
@@ -626,6 +652,7 @@ export interface StatusEffect {
   remainingTicks: number;      // Ticks remaining
   strength: number;            // Effect strength (e.g., slow percentage, damage per tick)
   appliedTick: number;         // Tick when effect was applied
+  source?: DamageAttribution;  // Who applied this effect (for DOT attribution)
 }
 
 export interface Enemy {
@@ -858,6 +885,10 @@ export interface SimConfig {
   // If provided, only these pillars can be accessed during the session
   // If undefined, all pillars are available (legacy/endless mode)
   unlockedPillars?: PillarId[];
+
+  // NEW: Starting relics (for first-run synergy showcase)
+  // If provided, these relics are added to the player's inventory at session start
+  startingRelics?: string[];
 }
 
 // Main game state

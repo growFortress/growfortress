@@ -99,6 +99,8 @@ export const SessionStartResponseSchema = z.object({
   waveIntervalTicks: z.number().int().min(1),
   // Power upgrades data for permanent stat bonuses
   powerData: PowerDataSchema,
+  // Starting relics for first-run synergy showcase (optional)
+  startingRelics: z.array(z.string()).optional(),
 });
 
 export type SessionStartResponse = z.infer<typeof SessionStartResponseSchema>;

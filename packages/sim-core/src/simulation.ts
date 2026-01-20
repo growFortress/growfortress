@@ -8,6 +8,8 @@ import {
   WaveSpawnEntry,
   FortressClass,
   TurretSlot,
+  ActiveRelic,
+  DamageAttribution,
 } from './types.js';
 import {
   ENEMY_PHYSICS,
@@ -254,7 +256,11 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     nextEnemyId: 1,
     gold: config.startingGold,
     dust: 0,
-    relics: [],
+    relics: (config.startingRelics ?? []).map((relicId): ActiveRelic => ({
+      id: relicId,
+      acquiredWave: config.startingWave,
+      acquiredTick: 0,
+    })),
     skillCooldown: 0,
     lastSkillTick: -config.skillCooldownTicks, // Start with skill ready
     activeSkills,
@@ -848,6 +854,8 @@ export class Simulation {
     enemy: Enemy,
     turretPositions: Map<number, { x: number; y: number }>
   ): boolean {
+    const incomingDamageClass = this.getEnemyDamageClassForPillar(this.state.currentPillar);
+
     // Priority 1: Attack heroes in melee range
     for (const hero of this.state.heroes) {
       // Skip inactive heroes
@@ -865,12 +873,34 @@ export class Simulation {
 
       if (distSq <= meleeRangeSq) {
         // Attack hero
-        const { damageTaken, reflectDamage } = applyDamageToHero(hero, enemy.damage, this.rng);
+        const { damageTaken, reflectDamage } = applyDamageToHero(
+          hero,
+          enemy.damage,
+          this.rng,
+          incomingDamageClass,
+          this.state.tick
+        );
+
+        // If hero died, mark inactive
+        if (hero.currentHp <= 0) {
+          hero.currentHp = 0;
+          hero.state = 'idle';
+          hero.vx = 0;
+          hero.vy = 0;
+        }
 
         // Apply reflect damage back to enemy
         if (reflectDamage > 0) {
+          const damageDealt = Math.min(reflectDamage, enemy.hp);
           enemy.hp -= reflectDamage;
           enemy.hitFlashTicks = 3; // Visual feedback for reflect
+          const attribution: DamageAttribution = {
+            ownerType: 'hero',
+            ownerId: hero.definitionId,
+            mechanicType: 'secondary',
+            mechanicId: 'reflect',
+          };
+          analytics.trackAttributedDamage(attribution, damageDealt);
         }
 
         // Leech special: heal on attack (only if dealt damage)
@@ -916,6 +946,22 @@ export class Simulation {
     }
 
     return false;
+  }
+
+  /**
+   * Map pillar theme -> enemy attack damage class (for hero weaknesses).
+   * This is intentionally coarse-grained until enemies have explicit classes.
+   */
+  private getEnemyDamageClassForPillar(pillarId: string): import('./types.js').FortressClass {
+    switch (pillarId) {
+      case 'streets': return 'natural';
+      case 'science': return 'tech';
+      case 'mutants': return 'natural';
+      case 'cosmos': return 'plasma';
+      case 'magic': return 'void';
+      case 'gods': return 'lightning';
+      default: return 'natural';
+    }
   }
 
   /**
@@ -1344,9 +1390,17 @@ export class Simulation {
 
     // Deal 30% of max HP damage to ALL enemies
     const ANNIHILATION_DAMAGE_PERCENT = 0.3;
+    const attribution: DamageAttribution = {
+      ownerType: 'system',
+      ownerId: 'matrix',
+      mechanicType: 'skill',
+      mechanicId: 'annihilation_wave',
+    };
     for (const enemy of this.state.enemies) {
       const damage = Math.floor(enemy.maxHp * ANNIHILATION_DAMAGE_PERCENT);
+      const damageDealt = Math.min(damage, enemy.hp);
       enemy.hp = Math.max(0, enemy.hp - damage);
+      analytics.trackAttributedDamage(attribution, damageDealt);
     }
 
     // Set cooldown (in waves, not ticks)
@@ -1506,9 +1560,15 @@ export class Simulation {
       .filter(e => e.id !== primary.id)
       .sort((a, b) => a.x - b.x)
       .slice(0, this.state.modifiers.pierceCount);
+    const attribution: DamageAttribution = {
+      ownerType: 'fortress',
+      ownerId: 'fortress',
+      mechanicType: 'secondary',
+      mechanicId: 'pierce',
+    };
 
     for (const target of pierced) {
-      this.damageEnemy(target, damage);
+      this.damageEnemy(target, damage, attribution);
     }
   }
 
@@ -1530,8 +1590,14 @@ export class Simulation {
     const shuffled = this.rng.shuffle([...candidates]);
     const chainTargets = shuffled.slice(0, this.state.modifiers.chainCount);
 
+    const attribution: DamageAttribution = {
+      ownerType: 'fortress',
+      ownerId: 'fortress',
+      mechanicType: 'secondary',
+      mechanicId: 'chain',
+    };
     for (const target of chainTargets) {
-      this.damageEnemy(target, chainDamage);
+      this.damageEnemy(target, chainDamage, attribution);
     }
   }
 
@@ -1547,6 +1613,12 @@ export class Simulation {
     // Use squared distance for efficiency (avoids sqrt)
     const splashRadiusSq = FP.mul(splashRadiusFP, splashRadiusFP);
 
+    const attribution: DamageAttribution = {
+      ownerType: 'fortress',
+      ownerId: 'fortress',
+      mechanicType: 'secondary',
+      mechanicId: 'splash',
+    };
     for (const enemy of this.state.enemies) {
       if (enemy.id === primary.id) continue;
 
@@ -1556,7 +1628,7 @@ export class Simulation {
       const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
 
       if (distSq <= splashRadiusSq) {
-        this.damageEnemy(enemy, splashDamage);
+        this.damageEnemy(enemy, splashDamage, attribution);
       }
     }
   }
@@ -1564,9 +1636,13 @@ export class Simulation {
   /**
    * Apply damage to an enemy
    */
-  private damageEnemy(enemy: Enemy, damage: number): void {
+  private damageEnemy(enemy: Enemy, damage: number, attribution?: DamageAttribution): void {
+    const damageDealt = Math.min(damage, enemy.hp);
     enemy.hp -= damage;
     enemy.hitFlashTicks = HIT_FLASH_TICKS;
+    if (attribution) {
+      analytics.trackAttributedDamage(attribution, damageDealt);
+    }
   }
 
   /**

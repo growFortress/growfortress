@@ -9,7 +9,15 @@
  */
 
 import { FP } from '../fixed.js';
-import type { Enemy, ActiveHero, SkillEffect, GameState, FortressClass, ActiveProjectile } from '../types.js';
+import type {
+  Enemy,
+  ActiveHero,
+  SkillEffect,
+  GameState,
+  FortressClass,
+  ActiveProjectile,
+  DamageAttribution,
+} from '../types.js';
 import { HERO_ATTACK_RANGE_BASE, PROJECTILE_BASE_SPEED } from './constants.js';
 import { getHeroById } from '../data/heroes.js';
 import { applyEffectToEnemy } from './projectile.js';
@@ -201,6 +209,12 @@ export function applySkillEffects(
 ): void {
   const heroDef = getHeroById(hero.definitionId);
   const heroClass = heroDef?.class || 'natural';
+  const skillAttribution: DamageAttribution = {
+    ownerType: 'hero',
+    ownerId: hero.definitionId,
+    mechanicType: 'skill',
+    mechanicId: skillId || 'unknown_skill',
+  };
 
   // Collect damage and additional effects that should be applied via projectile
   let damageAmount = 0;
@@ -275,7 +289,7 @@ export function applySkillEffects(
     for (const effect of projectileEffects) {
       for (const enemy of enemies) {
         // Use proper effect application with duration tracking and speed recalculation
-        applyEffectToEnemy(effect, enemy, state);
+        applyEffectToEnemy(effect, enemy, state, skillAttribution);
       }
     }
   }

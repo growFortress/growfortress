@@ -16,7 +16,11 @@ import {
   type ProgressionBonuses,
   createDefaultPlayerPowerData,
 } from "@arcade/sim-core";
-import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from "@arcade/protocol";
+import {
+  FREE_STARTER_HEROES,
+  FREE_STARTER_TURRETS,
+  type BuildPreset,
+} from "@arcade/protocol";
 import { sendPasswordResetEmail } from "./email.js";
 import { createSystemMessage } from "./messages.js";
 import { recalculateCachedPower } from "./power-upgrades.js";
@@ -455,6 +459,8 @@ export async function getUserProfile(userId: string): Promise<{
     heroId: string | null;
     turretType: string | null;
   };
+  buildPresets: BuildPreset[];
+  activePresetId: string | null;
   unlockedHeroes: string[];
   unlockedTurrets: string[];
   gameConfig: {
@@ -517,6 +523,11 @@ export async function getUserProfile(userId: string): Promise<{
   }
   const unlockedTurrets = Array.from(turretSet);
 
+  const buildPresets = Array.isArray(user.buildPresets)
+    ? (user.buildPresets as BuildPreset[])
+    : [];
+  const activePresetId = user.activePresetId ?? null;
+
   return {
     userId: user.id,
     displayName: user.displayName,
@@ -544,6 +555,8 @@ export async function getUserProfile(userId: string): Promise<{
       heroId: user.defaultHeroId,
       turretType: user.defaultTurretType,
     },
+    buildPresets,
+    activePresetId,
     unlockedHeroes,
     unlockedTurrets,
     gameConfig: {
@@ -629,6 +642,79 @@ export async function updateDefaultLoadout(
     turretType: user.defaultTurretType,
     displayName: user.displayName,
     description: user.description,
+  };
+}
+
+/**
+ * Update build presets and active preset.
+ */
+export async function updateBuildPresets(
+  userId: string,
+  updates: {
+    buildPresets: BuildPreset[];
+    activePresetId: string | null;
+  },
+): Promise<{ buildPresets: BuildPreset[]; activePresetId: string | null }> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      inventory: true,
+      progression: true,
+    },
+  });
+
+  if (!user || !user.inventory || !user.progression) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  // Build unlocked heroes list from inventory + free starters + default
+  const heroSet = new Set<string>([
+    ...FREE_STARTER_HEROES,
+    ...(user.inventory.unlockedHeroIds || []).map(normalizeHeroId),
+  ]);
+  if (user.defaultHeroId) {
+    heroSet.add(normalizeHeroId(user.defaultHeroId));
+  }
+
+  // Build unlocked turrets list from inventory + free starters + default
+  const turretSet = new Set<string>([
+    ...FREE_STARTER_TURRETS,
+    ...(user.inventory.unlockedTurretIds || []),
+  ]);
+  if (user.defaultTurretType) {
+    turretSet.add(user.defaultTurretType);
+  }
+
+  const sanitizedPresets: BuildPreset[] = updates.buildPresets.map((preset) => ({
+    id: preset.id,
+    name: preset.name.trim(),
+    fortressClass: preset.fortressClass,
+    startingHeroes: preset.startingHeroes
+      .map(normalizeHeroId)
+      .filter((id) => heroSet.has(id))
+      .slice(0, 6),
+    startingTurrets: preset.startingTurrets
+      .filter((id) => turretSet.has(id))
+      .slice(0, 6),
+  }));
+
+  const activePresetId =
+    updates.activePresetId &&
+    sanitizedPresets.some((preset) => preset.id === updates.activePresetId)
+      ? updates.activePresetId
+      : null;
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      buildPresets: sanitizedPresets,
+      activePresetId,
+    },
+  });
+
+  return {
+    buildPresets: sanitizedPresets,
+    activePresetId,
   };
 }
 

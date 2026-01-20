@@ -38,6 +38,8 @@ import {
   setLeaderboardError,
   classSelectionVisible,
   selectedFortressClass,
+  buildPresets,
+  activePresetId,
   unlockedHeroIds,
   unlockedTurretIds,
   showSessionRecoveryModal,
@@ -182,10 +184,13 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
   };
 
   const handleStartSession = async () => {
-    // Get the selected fortress class and unlocked units
-    const fortressClass = selectedFortressClass.value || 'natural';
-    const startingHeroes = unlockedHeroIds.value;
-    const startingTurrets = unlockedTurretIds.value;
+    const activePreset = activePresetId.value
+      ? buildPresets.value.find((preset) => preset.id === activePresetId.value)
+      : null;
+    const fortressClass =
+      activePreset?.fortressClass || selectedFortressClass.value || 'natural';
+    const startingHeroes = activePreset?.startingHeroes || unlockedHeroIds.value;
+    const startingTurrets = activePreset?.startingTurrets || unlockedTurretIds.value;
 
     try {
       const sessionInfo = await startSession({
@@ -308,9 +313,13 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
 
   // Boss Rush handlers
   const handleBossRushStart = async () => {
-    const fortressClass = selectedFortressClass.value || 'natural';
-    const startingHeroes = unlockedHeroIds.value;
-    const startingTurrets = unlockedTurretIds.value;
+    const activePreset = activePresetId.value
+      ? buildPresets.value.find((preset) => preset.id === activePresetId.value)
+      : null;
+    const fortressClass =
+      activePreset?.fortressClass || selectedFortressClass.value || 'natural';
+    const startingHeroes = activePreset?.startingHeroes || unlockedHeroIds.value;
+    const startingTurrets = activePreset?.startingTurrets || unlockedTurretIds.value;
 
     const sessionInfo = await startBossRush({
       fortressClass,
