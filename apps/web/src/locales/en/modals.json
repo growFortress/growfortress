@@ -177,6 +177,10 @@
   "choice": {
     "title": "Choose Relic"
   },
+  "battlePass": {
+    "disabledTitle": "Coming soon",
+    "disabledDescription": "Battle Pass is temporarily disabled. Check back later for more info."
+  },
   "upgradeModal": {
     "title": "Turret Details",
     "tierLabel": "Level",

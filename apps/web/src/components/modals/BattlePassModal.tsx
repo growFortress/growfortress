@@ -176,9 +176,11 @@ export function BattlePassModal() {
       >
         <div class={styles.noSeason}>
           <span class={styles.noSeasonIcon}>🎖️</span>
-          <span class={styles.noSeasonTitle}>Coming soon</span>
+          <span class={styles.noSeasonTitle}>
+            {t('battlePass.disabledTitle')}
+          </span>
           <span class={styles.noSeasonDesc}>
-            Battle Pass jest tymczasowo wylaczony. Wroc pozniej po wiecej informacji.
+            {t('battlePass.disabledDescription')}
           </span>
         </div>
       </Modal>

@@ -177,6 +177,10 @@
   "choice": {
     "title": "Wybierz Relikt"
   },
+  "battlePass": {
+    "disabledTitle": "Wkrótce",
+    "disabledDescription": "Battle Pass jest tymczasowo wyłączony. Wróć później po więcej informacji."
+  },
   "upgradeModal": {
     "title": "Szczegóły Wieżyczki",
     "tierLabel": "Poziom",
