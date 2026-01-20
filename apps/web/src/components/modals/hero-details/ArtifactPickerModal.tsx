@@ -38,7 +38,7 @@ export function ArtifactPickerModal({
   onClose,
   onEquip,
 }: ArtifactPickerModalProps) {
-  const { t, language } = useTranslation(['common', 'data']);
+  const { t } = useTranslation(['common', 'data']);
   const allArtifacts = unequippedArtifacts.value;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
