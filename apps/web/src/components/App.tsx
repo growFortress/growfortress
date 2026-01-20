@@ -58,6 +58,7 @@ import {
   setDisplayName,
   onAuthInvalidated,
 } from "../api/auth.js";
+import { useTranslation } from "../i18n/useTranslation.js";
 import {
   authError,
   authLoading,
@@ -131,6 +132,7 @@ function AppContent() {
 
   // Core Authentication State
   const [internalAuth, setInternalAuth] = useState(checkAuth());
+  const { t } = useTranslation("auth");
 
   // Profile Query
   const { data: profile, refetch: refetchProfile } = useQuery({
@@ -315,19 +317,19 @@ function AppContent() {
       if (error instanceof Error && "status" in error) {
         const status = (error as { status: number }).status;
         if (status === 401) {
-          authError.value = "Nieprawidłowa nazwa użytkownika lub hasło";
+          authError.value = t("errors.invalidCredentials");
         } else if (status === 403) {
-          authError.value = "Twoje konto zostało zablokowane";
+          authError.value = t("errors.accountBanned");
         } else if (status === 400) {
           authError.value =
-            "Sprawdź poprawność danych (max 20 znaków, tylko litery, cyfry i _)";
+            t("errors.invalidUsernameFormat");
         } else {
           authError.value =
-            "Nie udało się połączyć z serwerem. Spróbuj ponownie.";
+            t("errors.connectionFailed");
         }
       } else {
         authError.value =
-          "Nie udało się połączyć z serwerem. Spróbuj ponownie.";
+          t("errors.connectionFailed");
       }
       authLoading.value = false;
     }
@@ -350,15 +352,15 @@ function AppContent() {
         (error as { status: number }).status === 400
       ) {
         authError.value =
-          "Rejestracja nieudana. Sprawdź dane i spróbuj ponownie.";
+          t("errors.registrationFailed");
       } else if (
         error instanceof Error &&
         error.message.includes("Validation")
       ) {
-        authError.value = "Sprawdź poprawność wprowadzonych danych";
+        authError.value = t("errors.validationError");
       } else {
         authError.value =
-          "Nie udało się połączyć z serwerem. Spróbuj ponownie.";
+          t("errors.connectionFailed");
       }
       authLoading.value = false;
     }

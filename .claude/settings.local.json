@@ -91,7 +91,8 @@
       "Bash(npx prisma format:*)",
       "Bash(Get-Content \"C:\\\\Users\\\\malgo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--dev-arcade\\\\tasks\\\\b9af9b0.output\" -Tail 300)",
       "Bash(wmic process where \"name=''node.exe''\" get commandline)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "mcp__Neon__get_database_tables"
     ]
   }
 }
