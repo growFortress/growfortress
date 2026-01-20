@@ -19,9 +19,6 @@ import {
   BUNDLES,
   BATTLE_PASS,
   type ShopCategory,
-  type DustPackagePLN,
-  type PremiumHero,
-  type Bundle,
 } from '@arcade/protocol';
 import {
   shopModalVisible,
