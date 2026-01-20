@@ -39,9 +39,7 @@
     "endSessionTitle": "Zakończ sesję",
     "endSessionMessage": "Czy na pewno chcesz zakończyć bieżącą sesję? Twój postęp z obecnego segmentu zostanie zapisany.",
     "endSessionConfirm": "Zakończ",
-    "endSessionCancel": "Kontynuuj grę",
-    "insufficientEnergy": "Brak energii! Poczekaj na regenerację lub doładuj za dust.",
-    "upgradeFailed": "Ulepszenie nieudane. Spróbuj ponownie."
+    "endSessionCancel": "Kontynuuj grę"
   },
   "heroPanel": {
     "slotEmpty": "Slot {{index}}: pusty",
@@ -112,6 +110,16 @@
     "details": "Szczegóły",
     "hide": "Ukryj"
   },
+  "tutorial": {
+    "yourFortress": "Twoja Twierdza",
+    "fortressDescription": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak pociski trafiają wrogów!",
+    "bombAbility": "Umiejętność BOMB",
+    "bombDescription": "Kliknij przycisk BOMB aby zadać obrażenia wszystkim wrogom w zasięgu!",
+    "relics": "Relikty",
+    "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
+    "waveN": "Fala {{n}}",
+    "clickToClose": "Kliknij aby zamknąć"
+  },
   "unlock": {
     "level": "Poziom {{level}}",
     "newUnlock": "Nowe Odblokowanie!",
@@ -150,21 +158,6 @@
     "hpValueText": "{{current}} z {{max}} punktów życia, forteca {{level}}",
     "resourceGold": "Złoto: {{amount}}",
     "resourceDust": "Pył: {{amount}}",
-    "resourcesLabel": "Zasoby",
-    "levelGroupLabel": "Poziom",
-    "shortcutsLabel": "Skróty",
-    "worldExploration": "Eksploracja Światów",
-    "battlePass": "Battle Pass",
-    "battlePassWithRewards": "Battle Pass ({{count}} nagród)",
-    "pvpArena": "Arena PvP",
-    "pvpChallenges": "{{count}} wyzwań",
-    "energy": {
-      "label": "Energia",
-      "full": "PEŁNA",
-      "regen": "+1 za {{time}}",
-      "refillTitle": "Odśwież energię za {{cost}} pyłu",
-      "ariaLabel": "Energia: {{current}} z {{max}}"
-    },
     "levelLabel": "Poziom {{level}}",
     "xpProgress": "Postęp doświadczenia",
     "dailyQuestsWithRewards": "Dzienne Zadania ({{count}} nagród)",
@@ -187,25 +180,7 @@
     "relics": "Relikty",
     "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
     "waveN": "Fala {{n}}",
-    "clickToClose": "Kliknij aby zamknąć",
-    "tips": {
-      "fortress_auto_attack": {
-        "title": "Twoja Twierdza",
-        "description": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak bronią Cię przed wrogami!"
-      },
-      "bomb_skill": {
-        "title": "Umiejętności Twierdzy",
-        "description": "Kliknij umiejętność aby zadać obrażenia wszystkim wrogom. Umiejętności ładują się z czasem."
-      },
-      "relic_selection": {
-        "title": "Wybierz Relikt",
-        "description": "Po każdej fali wybierz relikt, który wzmocni Twoją obronę na całą sesję!"
-      },
-      "speed_controls": {
-        "title": "Kontrola Prędkości",
-        "description": "Przyspiesz grę przyciskami 2x lub 3x gdy poczujesz się pewniej."
-      }
-    }
+    "clickToClose": "Kliknij aby zamknąć"
   },
   "relicsCatalog": {
     "items": {
@@ -328,46 +303,5 @@
     "relics": "Relikty",
     "returnToHub": "Wróć do bazy",
     "playAgain": "Zagraj ponownie"
-  },
-  "turretDetails": {
-    "title": "Szczegóły Wieżyczki",
-    "level": "Poziom",
-    "levelShort": "Poz. {{level}}",
-    "maxLevel": "Maksymalny Poziom",
-    "advanceLevel": "Awans Poziomu",
-    "advanceButton": "Awansuj",
-    "insufficientResources": "Brak Zasobów",
-    "boosts": "Wzmocnienia",
-    "permanentBonuses": "permanentne bonusy dla {{name}}",
-    "damage": "Obrażenia",
-    "attackSpeed": "Szybkość Ataku",
-    "range": "Zasięg",
-    "stats": {
-      "damage": "DMG",
-      "attackSpeed": "ATK/s",
-      "range": "Zasięg"
-    },
-    "turrets": {
-      "railgun": {
-        "name": "Railgun",
-        "role": "Szybkie Obrażenia",
-        "description": "Szybkostrzelna wieża z wysokim DPS"
-      },
-      "artillery": {
-        "name": "Artyleria",
-        "role": "Obrażenia Obszarowe",
-        "description": "Potężne wybuchy na dużym obszarze"
-      },
-      "arc": {
-        "name": "Łuk Plazmowy",
-        "role": "Obrażenia Łańcuchowe",
-        "description": "Błyskawice przeskakują między wrogami"
-      },
-      "cryo": {
-        "name": "Kryo",
-        "role": "Spowolnienie",
-        "description": "Zamraża i spowalnia przeciwników"
-      }
-    }
   }
 }

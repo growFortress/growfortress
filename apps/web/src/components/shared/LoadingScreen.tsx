@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
-import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './LoadingScreen.module.css';
 
 // =============================================================================
@@ -135,7 +134,7 @@ function GameLogo({ class: className }: SVGProps) {
 // =============================================================================
 
 export function LoadingScreen({
-  message,
+  message = 'Ładowanie...',
   progress,
   error,
   onRetry,
@@ -143,10 +142,7 @@ export function LoadingScreen({
   isComplete = false,
   onExitComplete,
 }: LoadingScreenProps) {
-  const { t } = useTranslation();
   const [isExiting, setIsExiting] = useState(false);
-  
-  const displayMessage = message ?? t('shared.loading');
 
   // Handle exit animation
   useEffect(() => {
@@ -203,7 +199,7 @@ export function LoadingScreen({
               <p class={styles.errorMessage}>{error}</p>
               {onRetry && (
                 <button class={styles.retryButton} onClick={onRetry}>
-                  {t('shared.retry')}
+                  Ponów
                 </button>
               )}
             </div>
@@ -216,7 +212,7 @@ export function LoadingScreen({
                 />
               </div>
               <div class={styles.progressText}>
-                <span class={styles.message}>{displayMessage}</span>
+                <span class={styles.message}>{message}</span>
                 {!isIndeterminate && (
                   <span class={styles.progressPercent}>{Math.round(displayProgress)}%</span>
                 )}

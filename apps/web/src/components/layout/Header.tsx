@@ -61,7 +61,7 @@ export function Header(_props: HeaderProps) {
           <div class={styles.leftGroup}>
             {/* Resources Group */}
             <div class={styles.navGroupWrapper}>
-              <span class={styles.groupLabel}>{t('header.resourcesLabel')}</span>
+              <span class={styles.groupLabel}>Zasoby</span>
               <div class={styles.resourceGroup}>
                 <div class={styles.resource} aria-label={t('header.resourceGold', { amount: displayGold.value })}>
                   <span class={styles.resourceIcon} aria-hidden="true">🪙</span>
@@ -78,7 +78,7 @@ export function Header(_props: HeaderProps) {
 
             {/* Level Group */}
             <div class={styles.navGroupWrapper}>
-              <span class={styles.groupLabel}>{t('header.levelGroupLabel')}</span>
+              <span class={styles.groupLabel}>Poziom</span>
               <div class={styles.levelSection} aria-label={t('header.levelLabel', { level: baseLevel.value })}>
                 <span class={styles.levelLabel}>{t('common:labels.lv')}</span>
                 <span class={styles.levelValue}>{baseLevel.value}</span>
@@ -105,7 +105,7 @@ export function Header(_props: HeaderProps) {
           {/* Right: Quick Actions Group */}
           <div class={styles.rightGroup}>
             <div class={styles.navGroupWrapper}>
-            <span class={styles.groupLabel}>{t('header.shortcutsLabel')}</span>
+            <span class={styles.groupLabel}>Skróty</span>
             <div class={styles.buttonGroup}>
               {/* Daily Quests - frequent daily actions */}
               <Tooltip content={t('common:navigation.dailyQuests')} position="bottom">
@@ -124,11 +124,11 @@ export function Header(_props: HeaderProps) {
               </Tooltip>
 
               {/* Battle Pass - progression */}
-              <Tooltip content={t('header.battlePass')} position="bottom">
+              <Tooltip content="Battle Pass" position="bottom">
                 <button
                   class={styles.headerBtn}
                   onClick={() => showBattlePassModal()}
-                  aria-label={hasUnclaimedBPRewards.value ? t('header.battlePassWithRewards', { count: totalUnclaimedCount.value }) : t('header.battlePass')}
+                  aria-label={hasUnclaimedBPRewards.value ? `Battle Pass (${totalUnclaimedCount.value} rewards)` : 'Battle Pass'}
                 >
                   <span aria-hidden="true">🎖️</span>
                   {hasUnclaimedBPRewards.value && (
@@ -140,22 +140,22 @@ export function Header(_props: HeaderProps) {
               </Tooltip>
 
               {/* World Exploration - gameplay */}
-              <Tooltip content={t('header.worldExploration')} position="bottom">
+              <Tooltip content="Eksploracja Światów" position="bottom">
                 <button
                   class={styles.headerBtn}
                   onClick={() => showPillarUnlockModal()}
-                  aria-label={t('header.worldExploration')}
+                  aria-label="Eksploracja Światów"
                 >
                   <span aria-hidden="true">🌍</span>
                 </button>
               </Tooltip>
 
               {/* PvP Arena - competitive */}
-              <Tooltip content={t('header.pvpArena')} position="bottom">
+              <Tooltip content="PvP Arena" position="bottom">
                 <button
                   class={styles.headerBtn}
                   onClick={openPvpPanel}
-                  aria-label={pvpPendingChallenges.value > 0 ? `${t('header.pvpArena')} (${t('header.pvpChallenges', { count: pvpPendingChallenges.value })})` : t('header.pvpArena')}
+                  aria-label={pvpPendingChallenges.value > 0 ? `PvP Arena (${pvpPendingChallenges.value} wyzwań)` : 'PvP Arena'}
                 >
                   <span aria-hidden="true">⚔️</span>
                   {pvpPendingChallenges.value > 0 && (

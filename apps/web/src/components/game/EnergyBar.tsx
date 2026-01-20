@@ -18,7 +18,6 @@ import {
   refilling,
   refillEnergyAction,
 } from '../../state/energy.signals.js';
-import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './EnergyBar.module.css';
 
 interface EnergyBarProps {
@@ -27,7 +26,6 @@ interface EnergyBarProps {
 }
 
 export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
-  const { t } = useTranslation('game');
   const isFull = isEnergyFull.value;
   const hasNoEnergy = !hasEnergy.value;
   const isRefilling = refilling.value;
@@ -46,7 +44,7 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
   ].filter(Boolean).join(' ');
 
   return (
-    <div class={containerClasses} title={t('header.energy.label')}>
+    <div class={containerClasses} title="Energy">
       {/* Icon and count */}
       <div class={styles.iconSection}>
         <span class={styles.icon}>🔋</span>
@@ -56,7 +54,7 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
           </span>
           {/* Hide regen time in compact mode */}
           {!compact && !isFull && regenText && (
-            <span class={styles.regenTime}>{t('header.energy.regen', { time: regenText })}</span>
+            <span class={styles.regenTime}>+1 in {regenText}</span>
           )}
         </div>
       </div>
@@ -68,20 +66,20 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
           variant="energy"
           size={compact ? 'xs' : 'sm'}
           pulseWhenFull={true}
-          ariaLabel={t('header.energy.ariaLabel', { current: currentEnergy.value, max: maxEnergy.value })}
+          ariaLabel={`Energy: ${currentEnergy.value} of ${maxEnergy.value}`}
         />
       </div>
 
       {/* Refill button or full badge */}
       <div class={styles.refillSection}>
         {isFull ? (
-          <span class={styles.fullBadge}>{t('header.energy.full')}</span>
+          <span class={styles.fullBadge}>Full</span>
         ) : (
           <button
             class={`${styles.refillButton} ${isRefilling ? styles.loading : ''}`}
             onClick={handleRefill}
             disabled={!canRefill.value || isRefilling}
-            title={t('header.energy.refillTitle', { cost: refillCost.value })}
+            title={`Refill energy for ${refillCost.value} dust`}
           >
             <span class={styles.refillCost}>
               <span class={styles.dustIcon}>🌫️</span>

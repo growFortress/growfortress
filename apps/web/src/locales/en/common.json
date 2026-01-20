@@ -115,30 +115,12 @@
     "pressEscapeToClose": "Press Escape to close.",
     "windowClosed": "Window closed",
     "close": "Close",
-    "holdToSee": "Hold to see",
-    "announcements": {
-      "waveComplete": "Wave {{wave}} completed!",
-      "waveStart": "Wave {{wave}} started",
-      "bossSpawn": "Boss {{name}} appeared!",
-      "bossDefeated": "Boss {{name}} defeated!",
-      "gameOver": "Game over. Your fortress has been destroyed.",
-      "heroRecruited": "Hero {{name}} joined the team",
-      "heroDefeated": "Hero {{name}} has been defeated",
-      "turretPlaced": "Turret {{name}} placed",
-      "turretDestroyed": "Turret {{name}} destroyed",
-      "levelUp": "Level up to level {{level}}!",
-      "choiceAvailable": "Choice available. Use arrow keys and Enter to select.",
-      "rewardClaimed": "Reward claimed",
-      "errorOccurred": "Error: {{message}}",
-      "loaded": "Loaded"
-    }
+    "holdToSee": "Hold to see"
   },
   "app": {
     "gameAriaLabel": "Grow Fortress Game",
     "leaderboardAriaLabel": "Player ranking",
-    "notificationsAriaLabel": "Notifications",
-    "mainContentSkipLink": "Skip to main content",
-    "loadingMessage": "Loading..."
+    "notificationsAriaLabel": "Notifications"
   },
   "fortressPanel": {
     "profile": "Profile",
@@ -181,21 +163,22 @@
     "statUpgrades": {
       "hp": "Reinforced Walls",
       "damage": "Arsenal",
-      "armor": "Armor",
-      "attackSpeed": "Improved Caliber",
-      "range": "Optical Sensors",
-      "critChance": "Precision Strike",
-      "critMultiplier": "Deadly Force"
-    },
-    "statDescriptions": {
-      "hp": "+{{amount}}% fortress health",
-      "damage": "+{{amount}}% turret damage per level",
-      "armor": "+{{amount}}% damage reduction",
-      "attackSpeed": "+{{amount}}% attack speed per level",
-      "range": "+{{amount}}% attack range",
-      "critChance": "+{{amount}}% critical strike chance",
-      "critMultiplier": "+{{amount}}% critical damage"
+      "armor": "Armor"
     }
+  },
+  "heroDetails": {
+    "title": "Hero Details",
+    "stats": "STATS",
+    "equipment": "EQUIPMENT",
+    "skills": "SKILLS",
+    "noArtifact": "No artifact",
+    "equip": "Equip",
+    "unequip": "Unequip",
+    "none": "None",
+    "operationTimeout": "Operation timed out",
+    "upgradeStatFailed": "Failed to upgrade stat",
+    "equipArtifactFailed": "Failed to equip artifact",
+    "unequipArtifactFailed": "Failed to unequip artifact"
   },
   "turretPlacement": {
     "title": "Place Turret",
@@ -299,6 +282,10 @@
     "contents": "Contents",
     "dustDescription": "Premium currency for shop purchases. Exchange for upgrades, boosters and exclusive items.",
     "bundleDescription": "A bundle of valuable items at a discounted price. Perfect choice for savvy players!",
+    "battlePassDesc": "Unlock exclusive rewards and premium content throughout the season.",
+    "randomHero": "Random hero",
+    "randomArtifact": "Random artifact",
+    "rareMaterialsShort": "Rare materials",
     "premiumRewards": "Exclusive rewards",
     "days": "days",
     "permanentUnlock": "Permanent unlock"

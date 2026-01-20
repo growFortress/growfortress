@@ -39,9 +39,7 @@
     "endSessionTitle": "End Session",
     "endSessionMessage": "Are you sure you want to end the current session? Your progress from the current segment will be saved.",
     "endSessionConfirm": "End",
-    "endSessionCancel": "Continue game",
-    "insufficientEnergy": "Not enough energy! Wait for regeneration or recharge for dust.",
-    "upgradeFailed": "Upgrade failed. Please try again."
+    "endSessionCancel": "Continue game"
   },
   "heroPanel": {
     "slotEmpty": "Slot {{index}}: empty",
@@ -112,6 +110,16 @@
     "details": "Details",
     "hide": "Hide"
   },
+  "tutorial": {
+    "yourFortress": "Your Fortress",
+    "fortressDescription": "Fortress and turrets attack automatically. Watch projectiles hit enemies!",
+    "bombAbility": "BOMB Ability",
+    "bombDescription": "Click BOMB button to damage all enemies in range!",
+    "relics": "Relics",
+    "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
+    "waveN": "Wave {{n}}",
+    "clickToClose": "Click to close"
+  },
   "unlock": {
     "level": "Level {{level}}",
     "newUnlock": "New Unlock!",
@@ -150,21 +158,6 @@
     "hpValueText": "{{current}} of {{max}} health points, fortress {{level}}",
     "resourceGold": "Gold: {{amount}}",
     "resourceDust": "Dust: {{amount}}",
-    "resourcesLabel": "Resources",
-    "levelGroupLabel": "Level",
-    "shortcutsLabel": "Shortcuts",
-    "worldExploration": "World Exploration",
-    "battlePass": "Battle Pass",
-    "battlePassWithRewards": "Battle Pass ({{count}} rewards)",
-    "pvpArena": "PvP Arena",
-    "pvpChallenges": "{{count}} challenges",
-    "energy": {
-      "label": "Energy",
-      "full": "FULL",
-      "regen": "+1 in {{time}}",
-      "refillTitle": "Refill energy for {{cost}} dust",
-      "ariaLabel": "Energy: {{current}} of {{max}}"
-    },
     "levelLabel": "Level {{level}}",
     "xpProgress": "Experience progress",
     "dailyQuestsWithRewards": "Daily Quests ({{count}} rewards)",
@@ -187,25 +180,7 @@
     "relics": "Relics",
     "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
     "waveN": "Wave {{n}}",
-    "clickToClose": "Click to close",
-    "tips": {
-      "fortress_auto_attack": {
-        "title": "Your Fortress",
-        "description": "Fortress and turrets attack automatically. Watch them defend you against enemies!"
-      },
-      "bomb_skill": {
-        "title": "Fortress Skills",
-        "description": "Click a skill to deal damage to all enemies. Skills charge over time."
-      },
-      "relic_selection": {
-        "title": "Choose Relic",
-        "description": "After each wave, choose a relic that will strengthen your defense for the whole session!"
-      },
-      "speed_controls": {
-        "title": "Speed Controls",
-        "description": "Speed up the game with 2x or 3x buttons when you feel more confident."
-      }
-    }
+    "clickToClose": "Click to close"
   },
   "relicsCatalog": {
     "items": {
@@ -328,46 +303,5 @@
     "relics": "Relics",
     "returnToHub": "Return to Hub",
     "playAgain": "Play Again"
-  },
-  "turretDetails": {
-    "title": "Turret Details",
-    "level": "Level",
-    "levelShort": "Lvl {{level}}",
-    "maxLevel": "Max Level",
-    "advanceLevel": "Level Up",
-    "advanceButton": "Advance",
-    "insufficientResources": "Insufficient Resources",
-    "boosts": "Boosts",
-    "permanentBonuses": "permanent bonuses for {{name}}",
-    "damage": "Damage",
-    "attackSpeed": "Attack Speed",
-    "range": "Range",
-    "stats": {
-      "damage": "DMG",
-      "attackSpeed": "ATK/s",
-      "range": "Range"
-    },
-    "turrets": {
-      "railgun": {
-        "name": "Railgun",
-        "role": "Fast Damage",
-        "description": "Fast-firing tower with high DPS"
-      },
-      "artillery": {
-        "name": "Artillery",
-        "role": "Area Damage",
-        "description": "Powerful explosions over a large area"
-      },
-      "arc": {
-        "name": "Plasma Arc",
-        "role": "Chain Damage",
-        "description": "Lightning jumps between enemies"
-      },
-      "cryo": {
-        "name": "Cryo",
-        "role": "Slow",
-        "description": "Freezes and slows enemies"
-      }
-    }
   }
 }
