@@ -407,5 +407,96 @@
       "contentRequired": "Treść wiadomości jest wymagana",
       "sendError": "Nie udało się wysłać wiadomości"
     }
+  },
+  "support": {
+    "title": "Pomoc",
+    "backToGame": "Powrót do gry",
+    "sections": {
+      "tickets": "Zgłoszenia",
+      "legal": "Dokumenty",
+      "about": "O nas"
+    },
+    "tickets": {
+      "newTicket": "Nowe zgłoszenie",
+      "myTickets": "Moje zgłoszenia",
+      "noTickets": "Brak zgłoszeń",
+      "noTicketsDesc": "Utwórz nowe zgłoszenie jeśli potrzebujesz pomocy.",
+      "selectTicket": "Wybierz zgłoszenie aby zobaczyć szczegóły",
+      "loadMore": "Załaduj więcej...",
+      "loading": "Ładowanie zgłoszeń...",
+      "created": "Utworzono",
+      "updated": "Zaktualizowano",
+      "responses": "odpowiedzi",
+      "close": "Zamknij zgłoszenie",
+      "closeConfirm": "Czy na pewno chcesz zamknąć to zgłoszenie?",
+      "closed": "Zgłoszenie zostało zamknięte",
+      "reply": "Odpowiedz",
+      "replyPlaceholder": "Napisz odpowiedź...",
+      "sending": "Wysyłanie...",
+      "send": "Wyślij",
+      "staffResponse": "Support",
+      "yourResponse": "Ty"
+    },
+    "form": {
+      "category": "Kategoria",
+      "categoryPlaceholder": "Wybierz kategorię",
+      "subject": "Temat",
+      "subjectPlaceholder": "Krótki opis problemu",
+      "description": "Opis",
+      "descriptionPlaceholder": "Opisz szczegółowo swój problem...",
+      "submit": "Wyślij zgłoszenie",
+      "submitting": "Wysyłanie...",
+      "success": "Zgłoszenie zostało utworzone!",
+      "charCount": "{{current}}/{{max}}"
+    },
+    "categories": {
+      "BUG_REPORT": "Błąd techniczny",
+      "ACCOUNT_ISSUE": "Problem z kontem",
+      "PAYMENT": "Płatności",
+      "OTHER": "Inne"
+    },
+    "categoryDescriptions": {
+      "BUG_REPORT": "Zgłoś problem techniczny lub błąd",
+      "ACCOUNT_ISSUE": "Problemy z dostępem lub ustawieniami konta",
+      "PAYMENT": "Problemy z płatnościami i zakupami",
+      "OTHER": "Inne pytania lub opinie"
+    },
+    "status": {
+      "OPEN": "Otwarte",
+      "IN_PROGRESS": "W trakcie",
+      "RESOLVED": "Rozwiązane",
+      "CLOSED": "Zamknięte"
+    },
+    "legal": {
+      "title": "Dokumenty prawne",
+      "tabs": {
+        "terms": "Regulamin",
+        "privacy": "Prywatność",
+        "cookies": "Cookies",
+        "payment": "Płatności"
+      }
+    },
+    "about": {
+      "title": "O nas",
+      "gameName": "Grow Fortress",
+      "description": "Grow Fortress to gra tower defense stworzona przez niezależnych deweloperów.",
+      "contact": "Kontakt",
+      "email": "Email",
+      "address": "Adres",
+      "companyInfo": "Informacje o firmie",
+      "copyright": "Wszelkie prawa zastrzeżone."
+    },
+    "errors": {
+      "loadFailed": "Nie udało się załadować zgłoszeń",
+      "createFailed": "Nie udało się utworzyć zgłoszenia",
+      "replyFailed": "Nie udało się wysłać odpowiedzi",
+      "closeFailed": "Nie udało się zamknąć zgłoszenia",
+      "categoryRequired": "Wybierz kategorię",
+      "subjectRequired": "Wprowadź temat",
+      "subjectTooLong": "Temat musi mieć mniej niż 200 znaków",
+      "descriptionRequired": "Wprowadź opis",
+      "descriptionTooLong": "Opis musi mieć mniej niż 2000 znaków",
+      "rateLimited": "Zbyt wiele zgłoszeń. Poczekaj przed utworzeniem kolejnego."
+    }
   }
 }

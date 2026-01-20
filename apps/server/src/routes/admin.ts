@@ -8,6 +8,13 @@ import { getCurrentMetrics } from '../services/metrics.js';
 import { listAllEvents, createScheduledEvent, updateScheduledEvent, deleteScheduledEvent } from '../services/events.js';
 import { createBulkReward } from '../services/bulkRewards.js';
 import { listBugReports, getBugReport } from '../services/bugReports.js';
+import {
+  listAllTickets,
+  getTicketById,
+  updateTicketStatus,
+  addResponse,
+  getTicketStats,
+} from '../services/supportTickets.js';
 import { getSessionStateAtTick } from '../services/debug.js';
 import { createSystemBroadcast } from '../services/messages.js';
 import { BroadcastRequestSchema } from '@arcade/protocol';
@@ -107,6 +114,24 @@ const SessionStateQuerySchema = z.object({
 
 const SessionIdParamSchema = z.object({
   sessionId: z.string().cuid(),
+});
+
+// Support ticket schemas
+const TicketStatusSchema = z.enum(['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED']);
+const TicketCategorySchema = z.enum(['BUG_REPORT', 'ACCOUNT_ISSUE', 'PAYMENT', 'OTHER']);
+
+const TicketListQuerySchema = PaginationQuerySchema.extend({
+  status: TicketStatusSchema.optional(),
+  category: TicketCategorySchema.optional(),
+  search: z.string().optional(),
+});
+
+const UpdateTicketStatusBodySchema = z.object({
+  status: TicketStatusSchema,
+});
+
+const AddTicketResponseBodySchema = z.object({
+  content: z.string().min(1).max(2000),
 });
 
 export async function adminRoutes(fastify: FastifyInstance) {
@@ -727,5 +752,82 @@ export async function adminRoutes(fastify: FastifyInstance) {
     const newPower = await recalculateCachedPower(id);
     await createAuditLog(request.userId!, 'RECALCULATE_POWER', id, { newPower });
     return { success: true, newPower };
+  });
+
+  // ============================================================================
+  // SUPPORT TICKETS
+  // ============================================================================
+
+  // GET /admin/support-tickets - List all support tickets
+  fastify.get('/support-tickets', async (request, reply) => {
+    const parseResult = TicketListQuerySchema.safeParse(request.query);
+    if (!parseResult.success) {
+      return reply.code(400).send({ error: 'Invalid query parameters', details: parseResult.error.flatten() });
+    }
+    const { page, limit, status, category, search } = parseResult.data;
+    return await listAllTickets(page, limit, status, category, search);
+  });
+
+  // GET /admin/support-tickets/stats - Get ticket statistics
+  fastify.get('/support-tickets/stats', async (_request, _reply) => {
+    return await getTicketStats();
+  });
+
+  // GET /admin/support-tickets/:id - Get ticket details with responses
+  fastify.get('/support-tickets/:id', async (request, reply) => {
+    const parseResult = IdParamSchema.safeParse(request.params);
+    if (!parseResult.success) {
+      return reply.code(400).send({ error: 'Invalid ticket ID', details: parseResult.error.flatten() });
+    }
+    const { id } = parseResult.data;
+
+    const ticket = await getTicketById(id, request.userId!, true);
+    if (!ticket) {
+      return reply.code(404).send({ error: 'Ticket not found' });
+    }
+    return ticket;
+  });
+
+  // PATCH /admin/support-tickets/:id/status - Update ticket status
+  fastify.patch('/support-tickets/:id/status', async (request, reply) => {
+    const paramsResult = IdParamSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return reply.code(400).send({ error: 'Invalid ticket ID', details: paramsResult.error.flatten() });
+    }
+    const bodyResult = UpdateTicketStatusBodySchema.safeParse(request.body);
+    if (!bodyResult.success) {
+      return reply.code(400).send({ error: 'Invalid request body', details: bodyResult.error.flatten() });
+    }
+    const { id } = paramsResult.data;
+    const { status } = bodyResult.data;
+
+    const ticket = await updateTicketStatus(id, status);
+    await createAuditLog(request.userId!, 'UPDATE_TICKET_STATUS', id, { status });
+    return ticket;
+  });
+
+  // POST /admin/support-tickets/:id/responses - Add admin response
+  fastify.post('/support-tickets/:id/responses', async (request, reply) => {
+    const paramsResult = IdParamSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return reply.code(400).send({ error: 'Invalid ticket ID', details: paramsResult.error.flatten() });
+    }
+    const bodyResult = AddTicketResponseBodySchema.safeParse(request.body);
+    if (!bodyResult.success) {
+      return reply.code(400).send({ error: 'Invalid request body', details: bodyResult.error.flatten() });
+    }
+    const { id } = paramsResult.data;
+    const { content } = bodyResult.data;
+
+    try {
+      const response = await addResponse(id, request.userId!, content, true);
+      await createAuditLog(request.userId!, 'ADD_TICKET_RESPONSE', id);
+      return response;
+    } catch (error: any) {
+      if (error.message.includes('not found')) {
+        return reply.code(404).send({ error: error.message });
+      }
+      return reply.code(400).send({ error: error.message });
+    }
   });
 }

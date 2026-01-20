@@ -24,6 +24,7 @@
     },
     "account": {
       "language": "Język",
+      "support": "Pomoc i wsparcie",
       "logout": "Wyloguj"
     },
     "admin": {

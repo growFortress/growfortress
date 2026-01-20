@@ -407,5 +407,96 @@
       "contentRequired": "Message content is required",
       "sendError": "Failed to send message"
     }
+  },
+  "support": {
+    "title": "Support",
+    "backToGame": "Back to game",
+    "sections": {
+      "tickets": "Tickets",
+      "legal": "Legal",
+      "about": "About"
+    },
+    "tickets": {
+      "newTicket": "New Ticket",
+      "myTickets": "My Tickets",
+      "noTickets": "No tickets yet",
+      "noTicketsDesc": "Create a new ticket if you need help.",
+      "selectTicket": "Select a ticket to view details",
+      "loadMore": "Load more...",
+      "loading": "Loading tickets...",
+      "created": "Created",
+      "updated": "Updated",
+      "responses": "responses",
+      "close": "Close Ticket",
+      "closeConfirm": "Are you sure you want to close this ticket?",
+      "closed": "Ticket closed successfully",
+      "reply": "Reply",
+      "replyPlaceholder": "Write your response...",
+      "sending": "Sending...",
+      "send": "Send",
+      "staffResponse": "Staff",
+      "yourResponse": "You"
+    },
+    "form": {
+      "category": "Category",
+      "categoryPlaceholder": "Select a category",
+      "subject": "Subject",
+      "subjectPlaceholder": "Brief description of your issue",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe your issue in detail...",
+      "submit": "Submit Ticket",
+      "submitting": "Submitting...",
+      "success": "Ticket created successfully!",
+      "charCount": "{{current}}/{{max}}"
+    },
+    "categories": {
+      "BUG_REPORT": "Bug Report",
+      "ACCOUNT_ISSUE": "Account Issue",
+      "PAYMENT": "Payment",
+      "OTHER": "Other"
+    },
+    "categoryDescriptions": {
+      "BUG_REPORT": "Report a technical issue or bug",
+      "ACCOUNT_ISSUE": "Account access or settings problems",
+      "PAYMENT": "Payment and purchase issues",
+      "OTHER": "Other questions or feedback"
+    },
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In Progress",
+      "RESOLVED": "Resolved",
+      "CLOSED": "Closed"
+    },
+    "legal": {
+      "title": "Legal Documents",
+      "tabs": {
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "cookies": "Cookie Policy",
+        "payment": "Payment Terms"
+      }
+    },
+    "about": {
+      "title": "About Us",
+      "gameName": "Grow Fortress",
+      "description": "Grow Fortress is a tower defense game created by independent developers.",
+      "contact": "Contact",
+      "email": "Email",
+      "address": "Address",
+      "companyInfo": "Company Information",
+      "copyright": "All rights reserved."
+    },
+    "errors": {
+      "loadFailed": "Failed to load tickets",
+      "createFailed": "Failed to create ticket",
+      "replyFailed": "Failed to send response",
+      "closeFailed": "Failed to close ticket",
+      "categoryRequired": "Please select a category",
+      "subjectRequired": "Please enter a subject",
+      "subjectTooLong": "Subject must be under 200 characters",
+      "descriptionRequired": "Please enter a description",
+      "descriptionTooLong": "Description must be under 2000 characters",
+      "rateLimited": "Too many tickets. Please wait before creating another."
+    }
   }
 }

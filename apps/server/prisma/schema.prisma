@@ -134,6 +134,9 @@ model User {
   battlePassProgress BattlePassProgress[]
   activeBoosters     ActiveBooster[]
   cosmetics          UserCosmetic[]
+
+  // Support Tickets
+  supportTickets SupportTicket[]
 }
 
 model PasswordResetToken {
@@ -539,6 +542,55 @@ model BugReport {
 
   @@index([userId])
   @@index([sessionId])
+}
+
+// ============================================================================
+// SUPPORT TICKET SYSTEM
+// ============================================================================
+
+enum TicketCategory {
+  BUG_REPORT
+  ACCOUNT_ISSUE
+  PAYMENT
+  OTHER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model SupportTicket {
+  id          String         @id @default(cuid())
+  userId      String
+  category    TicketCategory
+  subject     String         @db.VarChar(200)
+  description String         @db.Text
+  status      TicketStatus   @default(OPEN)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses TicketResponse[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model TicketResponse {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String?
+  content   String   @db.Text
+  isStaff   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
 }
 
 // ============================================================================

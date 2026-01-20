@@ -74,6 +74,61 @@ export interface BugReportListResponse {
   totalPages: number;
 }
 
+// Support Tickets types
+export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type TicketCategory = 'BUG_REPORT' | 'ACCOUNT_ISSUE' | 'PAYMENT' | 'OTHER';
+
+export interface TicketUser {
+  id: string;
+  username: string;
+  displayName: string;
+}
+
+export interface TicketResponse {
+  id: string;
+  ticketId: string;
+  userId: string | null;
+  content: string;
+  isStaff: boolean;
+  createdAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  category: TicketCategory;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  createdAt: string;
+  updatedAt: string;
+  user: TicketUser;
+  responses: TicketResponse[];
+}
+
+export interface SupportTicketsQuery {
+  page?: number;
+  limit?: number;
+  status?: TicketStatus;
+  category?: TicketCategory;
+  search?: string;
+}
+
+export interface SupportTicketsResponse {
+  tickets: SupportTicket[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface SupportTicketStats {
+  total: number;
+  open: number;
+  inProgress: number;
+  resolved: number;
+  closed: number;
+}
+
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -315,5 +370,38 @@ export const adminApi = {
     return fetchWithAuth(
       `${API_BASE}/debug/session/${sessionId}/state?tick=${tick}`,
     );
+  },
+
+  // Support Tickets
+  async getSupportTickets(query: SupportTicketsQuery = {}): Promise<SupportTicketsResponse> {
+    const params = new URLSearchParams();
+    if (query.page) params.set('page', query.page.toString());
+    if (query.limit) params.set('limit', query.limit.toString());
+    if (query.status) params.set('status', query.status);
+    if (query.category) params.set('category', query.category);
+    if (query.search) params.set('search', query.search);
+    return fetchWithAuth(`${API_BASE}/support-tickets?${params}`);
+  },
+
+  async getSupportTicketStats(): Promise<SupportTicketStats> {
+    return fetchWithAuth(`${API_BASE}/support-tickets/stats`);
+  },
+
+  async getSupportTicket(id: string): Promise<SupportTicket> {
+    return fetchWithAuth(`${API_BASE}/support-tickets/${id}`);
+  },
+
+  async updateSupportTicketStatus(id: string, status: TicketStatus): Promise<SupportTicket> {
+    return fetchWithAuth(`${API_BASE}/support-tickets/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  async addSupportTicketResponse(id: string, content: string): Promise<TicketResponse> {
+    return fetchWithAuth(`${API_BASE}/support-tickets/${id}/responses`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
   },
 };

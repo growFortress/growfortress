@@ -5,6 +5,7 @@ import {
   isAdmin,
   openLegalModal,
 } from "../../state/index.js";
+import { openSupportPage } from "../../state/support.signals.js";
 import {
   audioSettings,
   graphicsSettings,
@@ -201,6 +202,18 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
               <label>{t("settings.account.language")}</label>
               <LanguageSwitcher />
             </div>
+            <button
+              class={styles.menuItem}
+              onClick={() => {
+                closeSettingsMenu();
+                openSupportPage();
+              }}
+            >
+              <span class={styles.menuIcon}>🎫</span>
+              <span class={styles.menuLabel}>
+                {t("settings.account.support")}
+              </span>
+            </button>
             <button class={styles.menuItem} onClick={handleLogout}>
               <span class={styles.menuIcon}>🚪</span>
               <span class={styles.menuLabel}>

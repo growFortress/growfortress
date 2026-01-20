@@ -26,6 +26,7 @@ import { DailyQuestsModal } from "./modals/DailyQuestsModal.js";
 import { BattlePassModal } from "./modals/BattlePassModal.js";
 import { ShopModal } from "./modals/ShopModal.js";
 import { LegalModal } from "./modals/LegalModal.js";
+import { SupportPage } from "./support/SupportPage.js";
 import { ArtifactsModal } from "./modals/ArtifactsModal.js";
 import { IdleRewardsModal } from "./modals/IdleRewardsModal.js";
 import { PillarUnlockModal } from "./modals/PillarUnlockModal.js";
@@ -512,6 +513,7 @@ function AppContent() {
     <>
       {content}
       <LegalModal />
+      <SupportPage />
       <CookieBanner />
     </>
   );

@@ -19,6 +19,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <a href="/events" class="hover:text-gray-300">Events</a>
                     <a href="/rewards" class="hover:text-gray-300">Bulk Rewards</a>
                     <a href="/bug-reports" class="hover:text-gray-300">Bug Reports</a>
+                    <a href="/support-tickets" class="hover:text-gray-300">Support Tickets</a>
                     <a href="/audit-logs" class="hover:text-gray-300">Audit Logs</a>
                     <a href="/config" class="hover:text-gray-300">Remote Config</a>
                     <Button 

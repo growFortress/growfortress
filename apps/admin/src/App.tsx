@@ -9,6 +9,8 @@ import { DashboardPage } from "./pages/DashboardPage.js";
 import { EventsPage } from "./pages/EventsPage.js";
 import { BulkRewardsPage } from "./pages/BulkRewardsPage.js";
 import { BugReportsPage } from "./pages/BugReportsPage.js";
+import { SupportTicketsPage } from "./pages/SupportTicketsPage.js";
+import { SupportTicketDetailPage } from "./pages/SupportTicketDetailPage.js";
 import { SessionDebuggerPage } from "./pages/SessionDebuggerPage.js";
 import { useAuth } from "./hooks/useAuth";
 import { DashboardLayout } from "./layouts/DashboardLayout";
@@ -51,6 +53,8 @@ export function App() {
           <EventsPage path="/events" />
           <BulkRewardsPage path="/rewards" />
           <BugReportsPage path="/bug-reports" />
+          <SupportTicketsPage path="/support-tickets" />
+          <SupportTicketDetailPage path="/support-tickets/:id" />
           <SessionDebuggerPage path="/debug/:sessionId" />
           <PlayerDetailsPage path="/players/:id" />
           <ConfigPage path="/config" />
