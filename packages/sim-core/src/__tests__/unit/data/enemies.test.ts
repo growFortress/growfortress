@@ -18,7 +18,7 @@ describe('ENEMY_ARCHETYPES', () => {
     const runner = ENEMY_ARCHETYPES.runner;
     expect(runner.type).toBe('runner');
     expect(runner.baseHp).toBe(23);
-    expect(runner.baseSpeed).toBe(2.8);
+    expect(runner.baseSpeed).toBe(2.2);
     expect(runner.baseDamage).toBe(6);
     expect(runner.goldReward).toBe(2);
     expect(runner.dustReward).toBe(1);
@@ -28,7 +28,7 @@ describe('ENEMY_ARCHETYPES', () => {
     const bruiser = ENEMY_ARCHETYPES.bruiser;
     expect(bruiser.type).toBe('bruiser');
     expect(bruiser.baseHp).toBe(115);
-    expect(bruiser.baseSpeed).toBe(1.0);
+    expect(bruiser.baseSpeed).toBe(0.8);
     expect(bruiser.baseDamage).toBe(17);
     expect(bruiser.goldReward).toBe(7);
     expect(bruiser.dustReward).toBe(2);  // Reduced from 3
@@ -38,7 +38,7 @@ describe('ENEMY_ARCHETYPES', () => {
     const leech = ENEMY_ARCHETYPES.leech;
     expect(leech.type).toBe('leech');
     expect(leech.baseHp).toBe(46);
-    expect(leech.baseSpeed).toBe(2.0);
+    expect(leech.baseSpeed).toBe(1.6);
     expect(leech.baseDamage).toBe(4);
     expect(leech.goldReward).toBe(5);
     expect(leech.dustReward).toBe(1);  // Reduced from 2
@@ -122,8 +122,8 @@ describe('getEnemyStats', () => {
   describe('speed', () => {
     it('returns speed as fixed-point', () => {
       const stats = getEnemyStats('runner', 1, false);
-      // 2.8 units/tick / 30 Hz in fixed-point
-      expect(stats.speed).toBe(FP.fromFloat(2.8 / 30));
+      // 2.2 units/tick / 30 Hz in fixed-point (speed was reduced from 2.8)
+      expect(stats.speed).toBe(FP.fromFloat(2.2 / 30));
     });
 
     it('speed is not affected by elite status', () => {
@@ -327,17 +327,17 @@ describe('getWaveComposition', () => {
       expect(count5).toBeGreaterThan(count1);
     });
 
-    it('baseEnemies follows formula: 10 + wave * 6, distributed by composition', () => {
+    it('baseEnemies follows formula: 8 + floor(wave * 2.5), distributed by composition', () => {
       const wave1 = getWaveComposition(1, 30);
       const wave10 = getWaveComposition(10, 30);
 
       const count1 = wave1.enemies.reduce((sum, e) => sum + e.count, 0);
       const count10 = wave10.enemies.reduce((sum, e) => sum + e.count, 0);
 
-      // Base: 10 + wave * 6, but distributed with floor() can lose some
-      // Wave 1: base 16, distributed: floor(16*0.6) + floor(16*0.4) = 9+6 = 15
+      // Base: 8 + floor(wave * 2.5), distributed with floor() can lose some
+      // Wave 1: base 10, distributed: floor(10*0.6) + floor(10*0.4) = 6+4 = 10
       // Wave 10 is a boss wave with different composition
-      expect(count1).toBe(15);
+      expect(count1).toBe(10);
       expect(count10).toBeGreaterThan(count1);
     });
   });

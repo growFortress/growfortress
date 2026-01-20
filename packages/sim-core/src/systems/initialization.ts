@@ -90,7 +90,7 @@ export function initializeHeroes(
       movementModifiers: [],
 
       state: 'idle',
-      lastAttackTick: 0,
+      lastAttackTick: -1000, // Ready to attack immediately when entering combat
       lastDeployTick: -1000, // Ready to deploy immediately
       skillCooldowns: {},
       buffs: [],
@@ -136,7 +136,7 @@ export function initializeTurrets(
       tier,
       currentClass: config.class,
       slotIndex: config.slotIndex,
-      lastAttackTick: 0,
+      lastAttackTick: -1000, // Ready to attack immediately
       specialCooldown: 0,
       targetingMode: 'closest_to_fortress',
       currentHp: maxHp,

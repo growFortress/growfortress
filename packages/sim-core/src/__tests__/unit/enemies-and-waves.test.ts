@@ -74,7 +74,7 @@ describe('All Enemy Types', () => {
   describe('Streets Pillar Enemies', () => {
     it('gangster has correct stats', () => {
       expect(ENEMY_ARCHETYPES.gangster.baseHp).toBe(29);
-      expect(ENEMY_ARCHETYPES.gangster.baseSpeed).toBe(2.2);
+      expect(ENEMY_ARCHETYPES.gangster.baseSpeed).toBe(1.8);
       expect(ENEMY_ARCHETYPES.gangster.baseDamage).toBe(9);
     });
 
@@ -288,15 +288,15 @@ describe('Pillar System', () => {
 
 describe('Wave Composition', () => {
   describe('enemy count formula', () => {
-    // Formula: 10 + wave * 6 (doubled from original for intense waves)
-    it('wave 1: 10 + 1*6 = 16 base enemies', () => {
+    // Formula: 8 + floor(wave * 2.5) (increased for early-game challenge)
+    it('wave 1: 8 + floor(1*2.5) = 10 base enemies', () => {
       const comp = getWaveComposition(1, 30);
       const total = comp.enemies.reduce((sum, e) => sum + e.count, 0);
-      // Distributed as floor(16*0.6) + floor(16*0.4) = 9 + 6 = 15
-      expect(total).toBe(15);
+      // Distributed as floor(10*0.6) + floor(10*0.4) = 6 + 4 = 10
+      expect(total).toBe(10);
     });
 
-    it('wave 10: 10 + 10*6 = 70 base enemies (boss wave)', () => {
+    it('wave 10: 8 + floor(10*2.5) = 33 base enemies (boss wave)', () => {
       const comp = getWaveComposition(10, 30);
       const total = comp.enemies.reduce((sum, e) => sum + e.count, 0);
       // Boss wave distribution is different
@@ -326,18 +326,18 @@ describe('Wave Composition', () => {
   });
 
   describe('spawn interval formula', () => {
-    // Formula: (tickHz - effectiveWave * 2) * 0.6, min tickHz/3, further reduced by cycle
-    it('wave 1: (30 - 1*2) * 0.6 = 16.8 ticks', () => {
-      expect(getWaveComposition(1, 30).spawnIntervalTicks).toBe(16);
+    // Formula: max(tickHz * 0.65 - effectiveWave * 0.25, tickHz * 0.3), min 9 ticks
+    it('wave 1: max(19.5 - 0.25, 9) = 19 ticks', () => {
+      expect(getWaveComposition(1, 30).spawnIntervalTicks).toBe(19);
     });
 
-    it('wave 5: (30 - 5*2) * 0.6 = 12 ticks', () => {
-      expect(getWaveComposition(5, 30).spawnIntervalTicks).toBe(12);
+    it('wave 5: max(19.5 - 1.25, 9) = 18 ticks', () => {
+      expect(getWaveComposition(5, 30).spawnIntervalTicks).toBe(18);
     });
 
-    it('high waves: minimum tickHz/3 = 10 ticks', () => {
-      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(10);
-      expect(getWaveComposition(50, 30).spawnIntervalTicks).toBe(10);
+    it('high waves: minimum 9 ticks', () => {
+      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(14);
+      expect(getWaveComposition(50, 30).spawnIntervalTicks).toBe(9);
     });
   });
 
