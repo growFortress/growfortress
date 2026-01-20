@@ -17,6 +17,7 @@ import {
 import { audioManager } from '../../game/AudioManager.js';
 import {
   TURRET_STAT_UPGRADES,
+  getTurretById,
 } from '@arcade/sim-core';
 import {
   type PowerStatUpgrades,
@@ -25,7 +26,6 @@ import {
 import { useState } from 'preact/hooks';
 import { StatUpgradeRow } from '../shared/StatUpgradeRow.js';
 import { Modal } from '../shared/Modal.js';
-import { Button } from '../shared/Button.js';
 import { getAccessToken } from '../../api/auth.js';
 import styles from './UpgradeModal.module.css';
 
@@ -45,22 +45,22 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 }
 
 // Turret names and info (4 turrets)
-const TURRET_INFO: Record<string, { name: string; icon: string; role: string }> = {
-  railgun: { name: 'Railgun', icon: '⚡', role: 'Szybkie Obrażenia' },
-  artillery: { name: 'Artyleria', icon: '💣', role: 'Obszarowe' },
-  arc: { name: 'Łuk Plazmowy', icon: '🔷', role: 'Łańcuchowe' },
-  cryo: { name: 'Kryo', icon: '❄️', role: 'Spowolnienie' },
+const TURRET_INFO: Record<string, { name: string; icon: string; role: string; description: string }> = {
+  railgun: { name: 'Railgun', icon: '⚡', role: 'Szybkie Obrażenia', description: 'Szybkostrzelna wieża z wysokim DPS' },
+  artillery: { name: 'Artyleria', icon: '💣', role: 'Obrażenia Obszarowe', description: 'Potężne wybuchy na dużym obszarze' },
+  arc: { name: 'Łuk Plazmowy', icon: '🔷', role: 'Obrażenia Łańcuchowe', description: 'Błyskawice przeskakują między wrogami' },
+  cryo: { name: 'Kryo', icon: '❄️', role: 'Spowolnienie', description: 'Zamraża i spowalnia przeciwników' },
 };
 
-// Class colors (7 classes)
-const CLASS_COLORS: Record<FortressClass, string> = {
-  natural: '#228b22',
-  ice: '#00bfff',
-  fire: '#ff4500',
-  lightning: '#9932cc',
-  tech: '#00f0ff',
-  void: '#4b0082',
-  plasma: '#00ffff',
+// Class colors and labels (7 classes)
+const CLASS_CONFIG: Record<FortressClass, { color: string; glow: string; label: string }> = {
+  natural: { color: '#228b22', glow: 'rgba(34, 139, 34, 0.3)', label: 'Natura' },
+  ice: { color: '#00bfff', glow: 'rgba(0, 191, 255, 0.3)', label: 'Lód' },
+  fire: { color: '#ff4500', glow: 'rgba(255, 69, 0, 0.3)', label: 'Ogień' },
+  lightning: { color: '#9932cc', glow: 'rgba(153, 50, 204, 0.3)', label: 'Błyskawica' },
+  tech: { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.3)', label: 'Tech' },
+  void: { color: '#4b0082', glow: 'rgba(75, 0, 130, 0.3)', label: 'Próżnia' },
+  plasma: { color: '#00ffff', glow: 'rgba(0, 255, 255, 0.3)', label: 'Plazma' },
 };
 
 // API functions
@@ -115,6 +115,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
 
     if (!turret) return null;
 
+    const turretDef = getTurretById(turret.definitionId);
     const turretUpgrades = powerState.value.turretUpgrades.find(t => t.turretType === turret.definitionId);
     const [loadingStat, setLoadingStat] = useState<string | null>(null);
 
@@ -145,85 +146,138 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
       name: turret.definitionId,
       icon: '🗼',
       role: 'Nieznana',
+      description: 'Brak opisu',
     };
 
+    const classConfig = CLASS_CONFIG[turret.currentClass] || CLASS_CONFIG.natural;
     const canUpgrade = turret.tier < 3;
     const upgradeCost = turret.tier === 1 ? TURRET_UPGRADE_COSTS['1_to_2'] : TURRET_UPGRADE_COSTS['2_to_3'];
     const canAfford = gold >= upgradeCost.gold && dust >= upgradeCost.dust;
 
+    const cssVars = {
+      '--class-color': classConfig.color,
+      '--class-color-20': `${classConfig.color}33`,
+      '--class-color-glow': classConfig.glow,
+    } as JSX.CSSProperties;
+
     return (
-      <Modal visible={visible} onClose={handleClose} showCloseButton={false}>
-        <div class={styles.upgradePanel} style={{ '--class-color': CLASS_COLORS[turret.currentClass] } as JSX.CSSProperties}>
+      <Modal visible={visible} onClose={handleClose} showCloseButton={false} size="xlarge">
+        <div class={styles.upgradePanel} style={cssVars}>
+          {/* Header */}
           <div class={styles.modalHeader}>
             <h3 class={styles.modalTitle}>Szczegóły Wieżyczki</h3>
             <button class={styles.closeButton} onClick={handleClose}>×</button>
           </div>
 
-          {/* Turret header */}
-          <div class={styles.header}>
-            <div class={styles.icon}>{info.icon}</div>
-            <div class={styles.info}>
-              <h3 class={styles.name}>{info.name}</h3>
-              <div class={styles.meta}>
-                <span class={styles.class}>{turret.currentClass}</span>
-                <span class={styles.role}>{info.role}</span>
+          <div class={styles.content}>
+            {/* Hero Section - Big turret display */}
+            <div class={styles.heroSection}>
+              <div class={styles.turretVisual}>
+                <span class={styles.turretIcon}>{info.icon}</span>
               </div>
-            </div>
-            <div class={styles.tierDisplay}>
-              <span class={styles.tierLabel}>Poziom</span>
-              <span class={styles.tierValue}>{turret.tier}</span>
-            </div>
-          </div>
 
-          {/* Tier Upgrade section */}
-          {canUpgrade ? (
-            <div class={styles.upgradeSection}>
-              <h4 class={styles.sectionTitle}>Awans na Poziom {turret.tier + 1}</h4>
-              <div class={styles.upgradePreview}>
-                <span>+25% Obrażeń</span>
-                <span>+15% Sz. Ataku</span>
+              <div class={styles.turretInfo}>
+                <h2 class={styles.turretName}>{info.name}</h2>
+                <div class={styles.turretMeta}>
+                  <span class={styles.turretClass}>{classConfig.label}</span>
+                  <span class={styles.turretRole}>{info.role}</span>
+                </div>
+                {turretDef?.baseStats && (
+                  <div class={styles.baseStats}>
+                    <div class={styles.baseStat}>
+                      <span class={styles.baseStatIcon}>⚔️</span>
+                      <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.damage / 16384)}</span>
+                      <span>DMG</span>
+                    </div>
+                    <div class={styles.baseStat}>
+                      <span class={styles.baseStatIcon}>⚡</span>
+                      <span class={styles.baseStatValue}>{(turretDef.baseStats.attackSpeed / 16384).toFixed(1)}</span>
+                      <span>ATK/s</span>
+                    </div>
+                    <div class={styles.baseStat}>
+                      <span class={styles.baseStatIcon}>🎯</span>
+                      <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.range / 16384)}</span>
+                      <span>Zasięg</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div class={styles.cost}>
-                <span class={`${styles.costItem} ${gold >= upgradeCost.gold ? '' : styles.insufficient}`}>
-                  <span class={styles.costIcon}>💰</span>
-                  {upgradeCost.gold}
-                </span>
-                <span class={`${styles.costItem} ${dust >= upgradeCost.dust ? '' : styles.insufficient}`}>
-                  <span class={styles.costIcon}>🌫️</span>
-                  {upgradeCost.dust}
-                </span>
-              </div>
-              <Button
-                variant="primary"
-                disabled={!canAfford}
-                onClick={() => onUpgrade({ type: 'turret', id: turret.slotIndex })}
-              >
-                {canAfford ? 'Awansuj' : 'Brak zasobów'}
-              </Button>
-            </div>
-          ) : (
-            <div class={styles.maxTier}>
-              <span>Maksymalny poziom osiągnięty</span>
-            </div>
-          )}
 
-          {/* Permanent Stat Bonuses */}
-          <div class={styles.section}>
-            <div class={styles.sectionHeader}>
-              <h4 class={styles.sectionTitle}>Wzmocnienia</h4>
-              <span class={styles.sectionSubtitle}>permanentne bonusy dla tego typu wieży</span>
+              <div class={styles.tierBadge}>
+                <span class={styles.tierLabel}>Poziom</span>
+                <span class={styles.tierValue}>{turret.tier}</span>
+                <span class={styles.tierMax}>/ 3</span>
+              </div>
             </div>
-            <div class={styles.statList}>
-              {TURRET_STAT_UPGRADES.map(config => (
-                <StatUpgradeRow
-                  key={config.stat}
-                  config={config}
-                  currentLevel={turretUpgrades?.statUpgrades[config.stat as keyof PowerStatUpgrades] || 0}
-                  gold={gold}
-                  onUpgrade={() => handleStatUpgrade(config.stat)}
-                  isLoading={loadingStat === config.stat}
-                />
-              ))}
+
+            {/* Two columns: Upgrade + Stats */}
+            <div class={styles.columnsWrapper}>
+              {/* Left: Tier Upgrade */}
+              {canUpgrade ? (
+                <div class={styles.upgradeSection}>
+                  <div class={styles.upgradeSectionHeader}>
+                    <h4 class={styles.sectionTitle}>Awans Poziomu</h4>
+                    <span class={styles.nextTierBadge}>→ Poz. {turret.tier + 1}</span>
+                  </div>
+
+                  <div class={styles.upgradePreview}>
+                    <div class={styles.upgradeBonus}>
+                      <span class={styles.upgradeBonusIcon}>⚔️</span>
+                      <span class={styles.upgradeBonusText}>Obrażenia</span>
+                      <span class={styles.upgradeBonusValue}>+25%</span>
+                    </div>
+                    <div class={styles.upgradeBonus}>
+                      <span class={styles.upgradeBonusIcon}>⚡</span>
+                      <span class={styles.upgradeBonusText}>Szybkość Ataku</span>
+                      <span class={styles.upgradeBonusValue}>+15%</span>
+                    </div>
+                  </div>
+
+                  <div class={styles.upgradeCost}>
+                    <span class={`${styles.costItem} ${gold < upgradeCost.gold ? styles.insufficient : ''}`}>
+                      <span class={styles.costIcon}>💰</span>
+                      {upgradeCost.gold.toLocaleString()}
+                    </span>
+                    <span class={`${styles.costItem} ${dust < upgradeCost.dust ? styles.insufficient : ''}`}>
+                      <span class={styles.costIcon}>🌫️</span>
+                      {upgradeCost.dust}
+                    </span>
+                  </div>
+
+                  <button
+                    class={`${styles.upgradeButton} ${canAfford ? styles.canAfford : styles.cantAfford}`}
+                    disabled={!canAfford}
+                    onClick={() => onUpgrade({ type: 'turret', id: turret.slotIndex })}
+                  >
+                    {canAfford ? 'Awansuj' : 'Brak Zasobów'}
+                  </button>
+                </div>
+              ) : (
+                <div class={styles.maxTier}>
+                  <span class={styles.maxTierIcon}>👑</span>
+                  <span class={styles.maxTierText}>Maksymalny Poziom</span>
+                </div>
+              )}
+
+              {/* Right: Permanent Stat Bonuses */}
+              <div class={styles.section}>
+                <div class={styles.sectionHeader}>
+                  <h4 class={styles.sectionTitle}>Wzmocnienia</h4>
+                  <span class={styles.sectionSubtitle}>permanentne bonusy dla {info.name}</span>
+                </div>
+                <div class={styles.statList}>
+                  {TURRET_STAT_UPGRADES.map(config => (
+                    <StatUpgradeRow
+                      key={config.stat}
+                      config={config}
+                      currentLevel={turretUpgrades?.statUpgrades[config.stat as keyof PowerStatUpgrades] || 0}
+                      gold={gold}
+                      onUpgrade={() => handleStatUpgrade(config.stat)}
+                      isLoading={loadingStat === config.stat}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

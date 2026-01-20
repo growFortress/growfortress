@@ -1,59 +1,43 @@
+/* ============================================================================
+   TURRET DETAILS MODAL - REDESIGN
+   ============================================================================ */
+
 .upgradePanel {
-  width: 360px;
-  padding: 20px;
-  background: var(--color-bg-panel);
-  border: var(--border-neutral);
-  border-left: 3px solid var(--class-color, var(--color-primary));
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  max-height: calc(100vh - 140px);
-  overflow-y: auto;
+  width: 100%;
+  background: linear-gradient(180deg, var(--color-bg-panel) 0%, var(--color-bg) 100%);
+  border-radius: var(--radius-lg);
+  overflow: visible;
 }
 
-.upgradePanel::-webkit-scrollbar {
-  width: 6px;
-}
-
-.upgradePanel::-webkit-scrollbar-track {
-  background: var(--color-bg);
-  border-radius: var(--radius-sm);
-}
-
-.upgradePanel::-webkit-scrollbar-thumb {
-  background: var(--color-neutral);
-  border-radius: var(--radius-sm);
-}
-
-.upgradePanel::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
-}
-
+/* Header with gradient accent */
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: var(--border-neutral);
+  padding: 16px 20px;
+  background: linear-gradient(90deg, var(--class-color-20, rgba(0,255,255,0.1)) 0%, transparent 100%);
+  border-bottom: 1px solid var(--class-color, var(--color-neutral));
 }
 
 .modalTitle {
   font-family: var(--font-display);
-  font-size: 18px;
-  color: var(--color-text);
+  font-size: 14px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 2px;
   margin: 0;
 }
 
 .closeButton {
-  background: var(--color-bg-elevated);
-  border: var(--border-neutral);
+  background: transparent;
+  border: 1px solid var(--color-neutral-20);
   border-radius: var(--radius-sm);
-  color: var(--color-text-60);
-  font-size: 20px;
+  color: var(--color-text-40);
+  font-size: 18px;
   cursor: pointer;
-  padding: 4px 10px;
+  padding: 6px 10px;
   line-height: 1;
-  transition: var(--transition-interactive-normal);
+  transition: all 0.2s ease;
 }
 
 .closeButton:hover {
@@ -62,84 +46,197 @@
   border-color: var(--color-accent);
 }
 
-.header {
+/* Main content area */
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ============================================================================
+   TURRET HERO SECTION - Big visual display
+   ============================================================================ */
+
+.heroSection {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 24px;
+  align-items: center;
+  padding: 20px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-20);
+  position: relative;
+  overflow: hidden;
+}
+
+.heroSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--class-color, var(--color-primary));
+  box-shadow: 0 0 20px var(--class-color, var(--color-primary));
+}
+
+.turretVisual {
+  width: 120px;
+  height: 120px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding-bottom: 14px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid var(--class-color, var(--color-neutral));
+  justify-content: center;
+  background: radial-gradient(circle, var(--class-color-20, rgba(0,255,255,0.15)) 0%, transparent 70%);
+  border-radius: var(--radius-lg);
+  position: relative;
 }
 
-.icon {
-  font-size: 44px;
-  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
-  flex-shrink: 0;
+.turretIcon {
+  font-size: 64px;
+  filter: drop-shadow(0 0 20px var(--class-color, var(--color-primary)));
+  animation: pulse 3s ease-in-out infinite;
 }
 
-.info {
-  flex: 1;
-  min-width: 0;
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-.name {
+.turretInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.turretName {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 28px;
   font-weight: bold;
   color: var(--color-text);
-  margin: 0 0 4px 0;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.meta {
+.turretMeta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.class {
-  font-size: 11px;
-  font-weight: bold;
+.turretClass {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--class-color, var(--color-primary));
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  background: var(--class-color-20, rgba(0,255,255,0.1));
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--class-color, var(--color-primary));
 }
 
-.role {
-  font-size: 11px;
+.turretRole {
+  font-size: 12px;
   color: var(--color-text-60);
+  padding: 4px 10px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
 }
 
-.tierDisplay {
+.baseStats {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.baseStat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-text-80);
+}
+
+.baseStatIcon {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.baseStatValue {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* Tier/Level display */
+.tierBadge {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--color-primary-20);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  padding: 8px 14px;
-  flex-shrink: 0;
+  justify-content: center;
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-bg) 100%);
+  border: 2px solid var(--class-color, var(--color-primary));
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 20px var(--class-color-glow, rgba(0, 255, 255, 0.2)),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
 }
 
 .tierLabel {
-  font-size: 9px;
-  color: var(--color-text-60);
+  font-size: 10px;
+  color: var(--color-text-40);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .tierValue {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 42px;
   font-weight: bold;
-  color: var(--color-primary);
+  color: var(--class-color, var(--color-primary));
   line-height: 1;
+  text-shadow: 0 0 20px var(--class-color, var(--color-primary));
 }
 
-.sectionHeader {
+.tierMax {
+  font-size: 10px;
+  color: var(--color-text-40);
+}
+
+/* ============================================================================
+   TWO-COLUMN LAYOUT
+   ============================================================================ */
+
+.columnsWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ============================================================================
+   UPGRADE SECTION
+   ============================================================================ */
+
+.upgradeSection {
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-elevated) 100%);
+  border: 1px solid var(--class-color, var(--color-neutral));
+  border-radius: var(--radius-md);
+  padding: 20px;
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.upgradeSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .sectionTitle {
@@ -147,302 +244,224 @@
   font-weight: 700;
   color: var(--color-text-60);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   margin: 0;
-}
-
-.sectionSubtitle {
-  font-size: 10px;
-  color: var(--color-text-40);
-  font-style: italic;
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 14px;
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-neutral-20);
-}
-
-.section .sectionTitle {
-  margin-bottom: 4px;
-}
-
-.statList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-
-/* Bonus stats row */
-.bonusRow {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.bonusStat {
-  flex: 1;
-  background: var(--color-bg);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.bonusLabel {
-  font-size: 10px;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.bonusValue {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: bold;
-  color: var(--class-color, var(--color-primary));
-}
-
-/* Slot stats row */
-.slotRow {
-  display: flex;
-  gap: 12px;
-}
-
-.slotStat {
-  flex: 1;
-  background: var(--color-bg);
-  border: var(--border-neutral);
-  border-radius: var(--radius-sm);
-  padding: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.slotIcon {
-  font-size: 16px;
-  opacity: 0.8;
+.sectionTitle::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--class-color, var(--color-primary));
+  border-radius: 2px;
 }
 
-.slotLabel {
-  flex: 1;
-  font-size: 10px;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-}
-
-.slotValue {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--color-text);
-}
-
-/* Tier section */
-.tierSection {
-  margin-bottom: 20px;
-}
-
-.tierInfo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--color-bg);
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-}
-
-.tierInfoLabel {
-  font-size: 10px;
-  color: var(--color-text-60);
-  text-transform: uppercase;
-  line-height: 1.3;
-  opacity: 0.7;
-}
-
-.tierInfoValue {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: bold;
-  color: var(--class-color, var(--color-primary));
-}
-
-.tierHint {
-  margin-top: 10px;
-  padding: 10px 12px;
-  background: var(--color-primary-10);
-  border: var(--border-neutral);
-  border-radius: var(--radius-sm);
+.nextTierBadge {
   font-size: 12px;
-  color: var(--color-text-60);
-  line-height: 1.4;
-}
-
-.upgradeSection {
-  background: var(--color-bg);
-  border: 1px solid var(--class-color, var(--color-neutral));
-  border-radius: var(--radius-md);
-  padding: 16px;
-  margin-bottom: 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  font-weight: 700;
+  color: var(--color-primary);
+  padding: 4px 12px;
+  background: var(--color-primary-20);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
 }
 
 .upgradePreview {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upgradeBonus {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  justify-content: center;
-  margin-bottom: 14px;
-}
-
-.upgradePreview span {
-  background: var(--color-success-20);
-  border: 1px solid var(--color-success);
+  padding: 10px 14px;
+  background: var(--color-success-10);
+  border: 1px solid var(--color-success-40);
   border-radius: var(--radius-sm);
-  padding: 6px 14px;
-  font-size: 13px;
-  color: var(--color-success);
-  font-weight: 700;
-  text-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
 }
 
-.cost {
+.upgradeBonusIcon {
+  font-size: 18px;
+}
+
+.upgradeBonusText {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text-80);
+}
+
+.upgradeBonusValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-success);
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+.upgradeCost {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-bottom: 14px;
+  gap: 16px;
+  padding: 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
 }
 
 .costItem {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 15px;
+  gap: 8px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text);
-  background: var(--color-bg-elevated);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
 }
 
 .costItem.insufficient {
   color: var(--color-accent);
-  background: var(--color-accent-10);
-  /* WCAG: Add non-color indicator - strikethrough + opacity */
   text-decoration: line-through;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .costIcon {
-  font-size: 16px;
+  font-size: 18px;
 }
 
-.maxTier {
-  background: var(--color-primary-20);
-  border: var(--border-primary);
-  border-radius: var(--radius-sm);
-  padding: 20px;
-  text-align: center;
-}
-
-.maxTier span {
+.upgradeButton {
+  width: 100%;
+  padding: 14px 20px;
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upgradeButton.canAfford {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark, #0099aa) 100%);
+  color: var(--color-bg);
+  box-shadow: 0 0 20px var(--color-primary-40);
+}
+
+.upgradeButton.canAfford:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 30px var(--color-primary-60);
+}
+
+.upgradeButton.cantAfford {
+  background: var(--color-bg-elevated);
+  color: var(--color-accent);
+  border: 2px dashed var(--color-accent-40);
+  cursor: not-allowed;
+}
+
+/* Max tier state */
+.maxTier {
+  background: linear-gradient(135deg, var(--color-primary-20) 0%, var(--color-bg) 100%);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.maxTierIcon {
+  font-size: 32px;
+}
+
+.maxTierText {
+  font-family: var(--font-display);
+  font-size: 14px;
   color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 2px;
-  text-shadow: var(--glow-primary);
+  text-shadow: 0 0 20px var(--color-primary);
 }
 
-/* XP Progress section */
-.xpSection {
+/* ============================================================================
+   STAT UPGRADES SECTION (Wzmocnienia)
+   ============================================================================ */
+
+.section {
   background: var(--color-bg);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  margin-bottom: 16px;
-}
-
-.xpHeader {
+  border: 1px solid var(--color-neutral-20);
+  border-radius: var(--radius-md);
+  padding: 20px;
   display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--color-text-60);
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.xpBar {
-  height: 8px;
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.xpFill {
-  height: 100%;
-  background: var(--class-color, var(--color-primary));
-  border-radius: var(--radius-sm);
-  transition: width var(--duration-normal) var(--ease-standard);
-  box-shadow: var(--glow-primary);
-}
-
-/* Skills section */
-.skillList {
+.sectionHeader {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
 }
 
-.skillBadge {
-  background: var(--color-bg-elevated);
-  border: var(--border-width) solid var(--class-color, var(--color-primary));
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  font-size: 11px;
-  font-weight: bold;
-  color: var(--class-color, var(--color-primary));
-  text-transform: uppercase;
+.sectionSubtitle {
+  font-size: 10px;
+  color: var(--color-text-40);
 }
 
-.noSkills {
-  font-size: 12px;
-  color: var(--color-text-60);
-  font-style: italic;
-}
-
-/* Rewards section */
-.rewardsList {
+.statList {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
 }
 
-.rewardItem {
-  background: var(--color-success-20);
-  border: var(--border-width) solid var(--color-success);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 12px;
-  color: var(--color-success);
-}
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
 
-/* Info text */
-.infoText {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: var(--border-neutral);
-  font-size: 11px;
-  color: var(--color-text-60);
-  text-align: center;
-  font-style: italic;
+@media (max-width: 640px) {
+  .upgradePanel {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .heroSection {
+    grid-template-columns: 80px 1fr;
+    gap: 16px;
+  }
+
+  .turretVisual {
+    width: 80px;
+    height: 80px;
+  }
+
+  .turretIcon {
+    font-size: 40px;
+  }
+
+  .turretName {
+    font-size: 22px;
+  }
+
+  .tierBadge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 60px;
+    height: 60px;
+  }
+
+  .tierValue {
+    font-size: 28px;
+  }
+
+  .columnsWrapper {
+    grid-template-columns: 1fr;
+  }
 }

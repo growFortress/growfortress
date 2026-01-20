@@ -240,6 +240,7 @@ export {
   getStarterHeroes,
   getUnlockableHeroes,
   getHeroUnlockCost,
+  isPremiumShopHero,
   getHeroTier,
   calculateHeroStats,
   getXpRequiredForLevel,

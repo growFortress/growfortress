@@ -1179,7 +1179,7 @@ const UNIT_GLACIER: HeroDefinition = {
   rarity: 'epic',
   baseStats: {
     hp: 460,
-    damage: 22,
+    damage: 44,
     attackSpeed: 0.8,
     range: FP.fromInt(4),
     moveSpeed: FP.fromFloat(0.115),
@@ -1383,10 +1383,10 @@ export function getHeroUnlockCost(heroId: string): { gold: number; dust: number 
 
   switch (hero.rarity) {
     case 'starter': return { gold: 0, dust: 0 };
-    case 'common': return { gold: 3000, dust: 350 };    // Reduced from 500
-    case 'rare': return { gold: 6000, dust: 700 };      // Reduced from 1000
-    case 'epic': return { gold: 12000, dust: 1400 };    // Reduced from 2000
-    case 'legendary': return { gold: 0, dust: 3500 };   // Reduced from 5000
+    case 'common': return { gold: 3000, dust: 0 };      // No dust for commons
+    case 'rare': return { gold: 6000, dust: 0 };
+    case 'epic': return { gold: 12000, dust: 0 };
+    case 'legendary': return { gold: 25000, dust: 50 };
     default: return { gold: 0, dust: 0 };
   }
 }

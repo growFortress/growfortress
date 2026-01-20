@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { HEROES, getHeroUnlockCost, isHeroUnlockedAtLevel, getHeroUnlockLevel } from '@arcade/sim-core';
+import { HEROES, getHeroUnlockCost, isHeroUnlockedAtLevel, getHeroUnlockLevel, isPremiumShopHero } from '@arcade/sim-core';
 import type { HeroIdType } from '@arcade/protocol';
 import {
   unlockedHeroIds,
@@ -44,7 +44,7 @@ const CLASS_CONFIG: Record<string, { icon: string; label: string }> = {
   plasma: { icon: '⚛️', label: 'Plazma' },
 };
 
-type HeroStatus = 'owned' | 'available' | 'locked';
+type HeroStatus = 'owned' | 'available' | 'locked' | 'premium';
 
 interface CategorizedHero {
   hero: typeof HEROES[0];
@@ -88,15 +88,18 @@ export function HeroRecruitmentModal() {
   };
 
   // Categorize and sort heroes
-  const { ownedHeroes, availableHeroes, lockedHeroes } = useMemo(() => {
+  const { ownedHeroes, availableHeroes, lockedHeroes, premiumHeroes } = useMemo(() => {
     const categorized: CategorizedHero[] = HEROES.map(hero => {
       const isOwned = unlocked.includes(hero.id);
+      const isPremium = isPremiumShopHero(hero.id);
       const isAvailableByLevel = isHeroUnlockedAtLevel(hero.id, currentFortressLevel);
       const requiredLevel = getHeroUnlockLevel(hero.id);
 
       let status: HeroStatus;
       if (isOwned) {
         status = 'owned';
+      } else if (isPremium) {
+        status = 'premium';
       } else if (isAvailableByLevel) {
         status = 'available';
       } else {
@@ -115,6 +118,7 @@ export function HeroRecruitmentModal() {
 
     const owned = categorized.filter(c => c.status === 'owned').sort(sortByRarity);
     const available = categorized.filter(c => c.status === 'available').sort(sortByRarity);
+    const premium = categorized.filter(c => c.status === 'premium').sort(sortByRarity);
     const locked = categorized.filter(c => c.status === 'locked').sort((a, b) => {
       // Sort locked heroes by required level first, then by rarity
       if (a.requiredLevel !== b.requiredLevel) {
@@ -123,12 +127,13 @@ export function HeroRecruitmentModal() {
       return sortByRarity(a, b);
     });
 
-    return { ownedHeroes: owned, availableHeroes: available, lockedHeroes: locked };
+    return { ownedHeroes: owned, availableHeroes: available, lockedHeroes: locked, premiumHeroes: premium };
   }, [unlocked, currentFortressLevel]);
 
   const renderHeroCard = ({ hero, status, requiredLevel }: CategorizedHero) => {
     const isOwned = status === 'owned';
     const isLocked = status === 'locked';
+    const isPremium = status === 'premium';
     const cost = getHeroUnlockCost(hero.id) || { gold: 0, dust: 0 };
     const canAfford = gold >= cost.gold && dust >= cost.dust;
     const isRecruiting = recruiting === hero.id;
@@ -144,7 +149,7 @@ export function HeroRecruitmentModal() {
     return (
       <div
         key={hero.id}
-        class={`${styles.heroCard} ${isOwned ? styles.owned : ''} ${isLocked ? styles.locked : ''}`}
+        class={`${styles.heroCard} ${isOwned ? styles.owned : ''} ${isLocked || isPremium ? styles.locked : ''}`}
         style={{ '--rarity-color': rarityConfig.color } as JSX.CSSProperties}
       >
         <div class={styles.rarityBadge}>
@@ -181,7 +186,14 @@ export function HeroRecruitmentModal() {
         </div>
 
         <div class={styles.cardFooter}>
-          {isLocked ? (
+          {isPremium ? (
+            <div class={styles.lockedContent}>
+              <div class={styles.lockBadge}>
+                <span class={styles.lockIcon}>💎</span>
+                Premium
+              </div>
+            </div>
+          ) : isLocked ? (
             <div class={styles.lockedContent}>
               <div class={styles.progressContainer}>
                 <div class={styles.progressBar}>
@@ -296,6 +308,20 @@ export function HeroRecruitmentModal() {
               </div>
               <div class={styles.heroGrid}>
                 {lockedHeroes.map(renderHeroCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Premium Heroes */}
+          {premiumHeroes.length > 0 && (
+            <div class={styles.section}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>💎</span>
+                <span class={styles.sectionTitle}>Premium</span>
+                <span class={styles.sectionCount}>{premiumHeroes.length}</span>
+              </div>
+              <div class={styles.heroGrid}>
+                {premiumHeroes.map(renderHeroCard)}
               </div>
             </div>
           )}
