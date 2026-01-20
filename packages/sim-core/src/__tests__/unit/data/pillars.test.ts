@@ -60,10 +60,6 @@ describe('Pillar Definitions - Data Integrity', () => {
     expect(pillar.waveRange.start).toBeGreaterThan(0);
     expect(pillar.waveRange.end).toBeGreaterThanOrEqual(pillar.waveRange.start);
 
-    // Unlock requirement
-    expect(pillar.unlockRequirement).toBeDefined();
-    expect(pillar.unlockRequirement.fortressLevel).toBeGreaterThanOrEqual(1);
-
     // Scenery
     expect(pillar.scenery).toBeDefined();
     expect(pillar.scenery.background).toBeDefined();
@@ -95,16 +91,14 @@ describe('Pillar Definitions - Data Integrity', () => {
     expect(pillar.rewards.regularCompletion).toBeDefined();
   });
 
-  it('first pillar (Streets) should be unlocked at level 1', () => {
+  it('first pillar is Streets', () => {
     const streets = PILLAR_DEFINITIONS[0];
     expect(streets.id).toBe('streets');
-    expect(streets.unlockRequirement.fortressLevel).toBe(1);
   });
 
-  it('last pillar (Gods) should require highest fortress level', () => {
+  it('last pillar is Gods', () => {
     const gods = PILLAR_DEFINITIONS[5];
     expect(gods.id).toBe('gods');
-    expect(gods.unlockRequirement.fortressLevel).toBe(50);
   });
 });
 
@@ -1009,29 +1003,6 @@ describe('Rewards System', () => {
     });
   });
 
-  describe('Unlock Rewards', () => {
-    it('Streets completion unlocks Science pillar', () => {
-      const streets = getPillarById('streets')!;
-      expect(streets.rewards.firstCompletion.unlocks).toContain('pillar_science');
-    });
-
-    it('Science completion unlocks Mutants pillar', () => {
-      const science = getPillarById('science')!;
-      expect(science.rewards.firstCompletion.unlocks).toContain('pillar_mutants');
-    });
-
-    it('Cosmos completion unlocks both Magic and Gods', () => {
-      const cosmos = getPillarById('cosmos')!;
-      expect(cosmos.rewards.firstCompletion.unlocks).toContain('pillar_magic');
-      expect(cosmos.rewards.firstCompletion.unlocks).toContain('pillar_gods');
-    });
-
-    it('Gods completion unlocks true ending', () => {
-      const gods = getPillarById('gods')!;
-      expect(gods.rewards.firstCompletion.unlocks).toContain('true_ending');
-    });
-  });
-
   describe('XP Rewards', () => {
     it('Streets gives 1000 XP on first completion', () => {
       expect(getPillarById('streets')?.rewards.firstCompletion.fortressXp).toBe(1000);
@@ -1107,14 +1078,6 @@ describe('Scenery and Visual Configuration', () => {
 // ============================================================================
 
 describe('Consistency Checks', () => {
-  it('unlock levels are in ascending order', () => {
-    let prevLevel = 0;
-    for (const pillar of PILLAR_DEFINITIONS) {
-      expect(pillar.unlockRequirement.fortressLevel).toBeGreaterThanOrEqual(prevLevel);
-      prevLevel = pillar.unlockRequirement.fortressLevel;
-    }
-  });
-
   it('wave ranges are in ascending order', () => {
     let prevEnd = 0;
     for (const pillar of PILLAR_DEFINITIONS) {

@@ -780,8 +780,6 @@ export {
   unlockedPillarSet,
   unlockedPillars,
   allPillars,
-  availableToUnlock,
-  lockedPillars,
   unlockedCount,
   totalPillars,
   unlockProgress,
@@ -789,7 +787,6 @@ export {
   // Helpers
   isPillarUnlocked,
   getPillarInfo,
-  getUnlockRequirement,
   // Actions
   fetchPillarUnlocks,
   resetPillarUnlocksState,

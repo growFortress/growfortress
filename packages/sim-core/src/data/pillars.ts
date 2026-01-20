@@ -50,11 +50,6 @@ export interface PillarDefinition {
     end: number;
   };
 
-  // Wymagany poziom twierdzy do odblokowania
-  unlockRequirement: {
-    fortressLevel: number;
-  };
-
   // Sceneria
   scenery: {
     background: string;
@@ -111,8 +106,6 @@ const PILLAR_STREETS: PillarDefinition = {
 
   waveRange: { start: 1, end: 10 },
 
-  unlockRequirement: { fortressLevel: 1 },
-
   scenery: {
     background: 'Nocne miasto, neonowe światła, deszcz',
     ambiance: 'Uliczne dźwięki, syreny policyjne',
@@ -161,7 +154,6 @@ const PILLAR_STREETS: PillarDefinition = {
     firstCompletion: {
       dust: 50,
       fortressXp: 1000,
-      unlocks: ['pillar_science'],
     },
     regularCompletion: {
       dust: 12,
@@ -181,8 +173,6 @@ const PILLAR_SCIENCE: PillarDefinition = {
   description: 'Laboratoria, fabryki i kompleksy badawcze. Roboty i AI stanowią główne zagrożenie.',
 
   waveRange: { start: 11, end: 25 },
-
-  unlockRequirement: { fortressLevel: 25 },
 
   scenery: {
     background: 'Sterylne laboratoria, hologramy, maszyny',
@@ -245,7 +235,6 @@ const PILLAR_SCIENCE: PillarDefinition = {
     firstCompletion: {
       dust: 100,
       fortressXp: 2000,
-      unlocks: ['pillar_mutants'],
     },
     regularCompletion: {
       dust: 25,
@@ -266,7 +255,6 @@ const PILLAR_MUTANTS: PillarDefinition = {
 
   waveRange: { start: 26, end: 40 },
 
-  unlockRequirement: { fortressLevel: 35 },
 
   scenery: {
     background: 'Zrujnowane budynki, Akademia, Sentinel Factory',
@@ -329,7 +317,6 @@ const PILLAR_MUTANTS: PillarDefinition = {
     firstCompletion: {
       dust: 150,
       fortressXp: 3000,
-      unlocks: ['pillar_cosmos'],
     },
     regularCompletion: {
       dust: 38,
@@ -350,7 +337,6 @@ const PILLAR_COSMOS: PillarDefinition = {
 
   waveRange: { start: 41, end: 60 },
 
-  unlockRequirement: { fortressLevel: 45 },
 
   scenery: {
     background: 'Przestrzeń kosmiczna, planety, statki',
@@ -413,7 +399,6 @@ const PILLAR_COSMOS: PillarDefinition = {
     firstCompletion: {
       dust: 200,
       fortressXp: 4000,
-      unlocks: ['pillar_magic', 'pillar_gods'],
     },
     regularCompletion: {
       dust: 50,
@@ -434,7 +419,6 @@ const PILLAR_MAGIC: PillarDefinition = {
 
   waveRange: { start: 61, end: 80 },
 
-  unlockRequirement: { fortressLevel: 50 },
 
   scenery: {
     background: 'Wymiary, portale, runy, Mirror Dimension',
@@ -517,7 +501,6 @@ const PILLAR_GODS: PillarDefinition = {
 
   waveRange: { start: 81, end: 100 },
 
-  unlockRequirement: { fortressLevel: 50 },
 
   scenery: {
     background: 'Asgard, Rainbow Bridge, złote pałace',
@@ -580,7 +563,6 @@ const PILLAR_GODS: PillarDefinition = {
     firstCompletion: {
       dust: 375,
       fortressXp: 7500,
-      unlocks: ['true_ending'],
     },
     regularCompletion: {
       dust: 88,

@@ -26,6 +26,9 @@ import {
   isTurretUnlockedAtLevel,
   getTurretUnlockLevel,
   isPillarUnlockedAtLevel,
+  getUnlockedPillarsAtLevel,
+  getPillarUnlockLevel,
+  PILLAR_LEVEL_REQUIREMENTS,
   checkLevelUp,
   getProgressionBonuses,
   calculateTotalHpBonus,
@@ -304,26 +307,110 @@ describe('Level-Based Unlocks', () => {
     });
   });
 
-  describe('isPillarUnlockedAtLevel (Pure Endless Mode)', () => {
-    it('all pillars are always unlocked (Endless mode)', () => {
-      // In Pure Endless mode, all pillars are always available
-      const allPillars = ['streets', 'science', 'mutants', 'cosmos', 'magic', 'gods'] as const;
-      for (const pillarId of allPillars) {
-        expect(isPillarUnlockedAtLevel(pillarId, 1)).toBe(true);
-        expect(isPillarUnlockedAtLevel(pillarId, 10)).toBe(true);
-        expect(isPillarUnlockedAtLevel(pillarId, 50)).toBe(true);
-      }
+  describe('isPillarUnlockedAtLevel (Level-Gated)', () => {
+    it('streets is always unlocked (level 1)', () => {
+      expect(isPillarUnlockedAtLevel('streets', 1)).toBe(true);
+      expect(isPillarUnlockedAtLevel('streets', 100)).toBe(true);
     });
 
-    it('fortressLevel parameter is ignored (backward compatibility)', () => {
-      // Level parameter doesn't matter in Endless mode
-      expect(isPillarUnlockedAtLevel('gods', 1)).toBe(true);
-      expect(isPillarUnlockedAtLevel('magic', 1)).toBe(true);
-      expect(isPillarUnlockedAtLevel('cosmos', 1)).toBe(true);
+    it('science requires level 15', () => {
+      expect(isPillarUnlockedAtLevel('science', 14)).toBe(false);
+      expect(isPillarUnlockedAtLevel('science', 15)).toBe(true);
+      expect(isPillarUnlockedAtLevel('science', 16)).toBe(true);
+    });
+
+    it('mutants requires level 30', () => {
+      expect(isPillarUnlockedAtLevel('mutants', 29)).toBe(false);
+      expect(isPillarUnlockedAtLevel('mutants', 30)).toBe(true);
+      expect(isPillarUnlockedAtLevel('mutants', 31)).toBe(true);
+    });
+
+    it('cosmos requires level 45', () => {
+      expect(isPillarUnlockedAtLevel('cosmos', 44)).toBe(false);
+      expect(isPillarUnlockedAtLevel('cosmos', 45)).toBe(true);
+      expect(isPillarUnlockedAtLevel('cosmos', 46)).toBe(true);
+    });
+
+    it('magic requires level 60', () => {
+      expect(isPillarUnlockedAtLevel('magic', 59)).toBe(false);
+      expect(isPillarUnlockedAtLevel('magic', 60)).toBe(true);
+      expect(isPillarUnlockedAtLevel('magic', 61)).toBe(true);
+    });
+
+    it('gods requires level 80', () => {
+      expect(isPillarUnlockedAtLevel('gods', 79)).toBe(false);
+      expect(isPillarUnlockedAtLevel('gods', 80)).toBe(true);
+      expect(isPillarUnlockedAtLevel('gods', 81)).toBe(true);
     });
 
     it('returns false for invalid pillar ID', () => {
-      expect(isPillarUnlockedAtLevel('invalid' as any, 50)).toBe(false);
+      expect(isPillarUnlockedAtLevel('invalid' as any, 100)).toBe(false);
+    });
+  });
+
+  describe('getUnlockedPillarsAtLevel', () => {
+    it('returns only streets at level 1', () => {
+      expect(getUnlockedPillarsAtLevel(1)).toEqual(['streets']);
+    });
+
+    it('returns streets and science at level 15', () => {
+      expect(getUnlockedPillarsAtLevel(15)).toEqual(['streets', 'science']);
+    });
+
+    it('returns 3 pillars at level 30', () => {
+      const pillars = getUnlockedPillarsAtLevel(30);
+      expect(pillars).toHaveLength(3);
+      expect(pillars).toContain('streets');
+      expect(pillars).toContain('science');
+      expect(pillars).toContain('mutants');
+    });
+
+    it('returns 4 pillars at level 45', () => {
+      const pillars = getUnlockedPillarsAtLevel(45);
+      expect(pillars).toHaveLength(4);
+      expect(pillars).toContain('cosmos');
+    });
+
+    it('returns 5 pillars at level 60', () => {
+      const pillars = getUnlockedPillarsAtLevel(60);
+      expect(pillars).toHaveLength(5);
+      expect(pillars).toContain('magic');
+    });
+
+    it('returns all 6 pillars at level 80', () => {
+      const pillars = getUnlockedPillarsAtLevel(80);
+      expect(pillars).toHaveLength(6);
+      expect(pillars).toContain('gods');
+    });
+  });
+
+  describe('getPillarUnlockLevel', () => {
+    it('returns correct unlock levels for all pillars', () => {
+      expect(getPillarUnlockLevel('streets')).toBe(1);
+      expect(getPillarUnlockLevel('science')).toBe(15);
+      expect(getPillarUnlockLevel('mutants')).toBe(30);
+      expect(getPillarUnlockLevel('cosmos')).toBe(45);
+      expect(getPillarUnlockLevel('magic')).toBe(60);
+      expect(getPillarUnlockLevel('gods')).toBe(80);
+    });
+
+    it('returns 999 for invalid pillar', () => {
+      expect(getPillarUnlockLevel('invalid' as any)).toBe(999);
+    });
+  });
+
+  describe('PILLAR_LEVEL_REQUIREMENTS', () => {
+    it('has all 6 pillars defined', () => {
+      expect(Object.keys(PILLAR_LEVEL_REQUIREMENTS)).toHaveLength(6);
+    });
+
+    it('has correct level requirements', () => {
+      expect(PILLAR_LEVEL_REQUIREMENTS.streets).toBe(1);
+      expect(PILLAR_LEVEL_REQUIREMENTS.science).toBe(15);
+      expect(PILLAR_LEVEL_REQUIREMENTS.mutants).toBe(30);
+      expect(PILLAR_LEVEL_REQUIREMENTS.cosmos).toBe(45);
+      expect(PILLAR_LEVEL_REQUIREMENTS.magic).toBe(60);
+      expect(PILLAR_LEVEL_REQUIREMENTS.gods).toBe(80);
     });
   });
 });
@@ -395,12 +482,15 @@ describe('Progression Bonuses', () => {
       expect(level60Bonuses.startingGold).toBeGreaterThan(level50Bonuses.startingGold);
     });
 
-    it('returns all pillars unlocked at any level (Pure Endless mode)', () => {
-      // In Pure Endless mode, all pillars are always unlocked
-      const expectedPillars = ['streets', 'science', 'mutants', 'cosmos', 'magic', 'gods'];
-      expect(getProgressionBonuses(1).unlockedPillars).toEqual(expectedPillars);
-      expect(getProgressionBonuses(25).unlockedPillars).toEqual(expectedPillars);
-      expect(getProgressionBonuses(50).unlockedPillars).toEqual(expectedPillars);
+    it('returns level-gated pillars', () => {
+      // Level 1: only streets
+      expect(getProgressionBonuses(1).unlockedPillars).toEqual(['streets']);
+      // Level 15: streets + science
+      expect(getProgressionBonuses(15).unlockedPillars).toHaveLength(2);
+      // Level 30: +mutants
+      expect(getProgressionBonuses(30).unlockedPillars).toHaveLength(3);
+      // Level 80: all 6 pillars
+      expect(getProgressionBonuses(80).unlockedPillars).toHaveLength(6);
     });
   });
 
@@ -460,9 +550,15 @@ describe('FORTRESS_LEVELS data', () => {
     expect(level10?.rewards.some(r => r.type === 'hero_slot')).toBe(true);
   });
 
-  it('level 50 has pillar unlocks', () => {
-    const level50 = FORTRESS_LEVELS.find(l => l.level === 50);
-    expect(level50?.rewards.some(r => r.type === 'pillar_unlock')).toBe(true);
+  it('level 15 has pillar unlock (science)', () => {
+    const level15 = FORTRESS_LEVELS.find(l => l.level === 15);
+    expect(level15?.rewards.some(r => r.type === 'pillar_unlock' && r.pillarId === 'science')).toBe(true);
+  });
+
+  it('level 80 has pillar unlock (gods)', () => {
+    // Level 80 is beyond FORTRESS_LEVELS array, use getRewardsForLevel
+    const rewards80 = getRewardsForLevel(80);
+    expect(rewards80.some(r => r.type === 'pillar_unlock' && r.pillarId === 'gods')).toBe(true);
   });
 });
 

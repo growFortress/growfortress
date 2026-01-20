@@ -1,8 +1,8 @@
 /**
  * PillarUnlockModal Component
  *
- * Shows world/pillar progression with unlock requirements and purchase options.
- * Part of the dust-gated world progression system.
+ * Shows world/pillar progression with unlock requirements.
+ * Part of the level-gated world progression system.
  */
 
 import { Modal } from '../shared/Modal.js';
@@ -102,7 +102,7 @@ interface PillarCardProps {
 
 function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
   const info = PILLAR_INFO[pillar.pillarId];
-  const levelMet = fortressLevel >= pillar.fortressLevel;
+  const levelMet = fortressLevel >= pillar.requiredLevel;
 
   const cardClasses = [
     styles.pillarCard,
@@ -120,11 +120,11 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
 
       {/* Pillar info */}
       <div class={styles.pillarInfo}>
-        <h3 class={styles.pillarName}>{pillar.name}</h3>
+        <h3 class={styles.pillarName}>{info?.name || pillar.pillarId}</h3>
         <p class={styles.pillarDescription}>
           {pillar.isUnlocked
             ? 'Odblokowany - możesz grać!'
-            : `Wymagany poziom ${pillar.fortressLevel}`}
+            : `Wymagany poziom ${pillar.requiredLevel}`}
         </p>
       </div>
 
@@ -137,7 +137,7 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
         ) : (
           <div class={`${styles.requirement} ${levelMet ? styles.met : styles.notMet}`}>
             <span class={styles.requirementIcon}>{levelMet ? '✓' : '✗'}</span>
-            <span>Lv. {pillar.fortressLevel}</span>
+            <span>Lv. {pillar.requiredLevel}</span>
           </div>
         )}
       </div>

@@ -212,6 +212,11 @@ export {
   getUnlockedHeroes,
   isHeroUnlockedAtLevel,
   getHeroUnlockLevel,
+  // Pillar unlock system (single source of truth)
+  PILLAR_LEVEL_REQUIREMENTS,
+  isPillarUnlockedAtLevel,
+  getUnlockedPillarsAtLevel,
+  getPillarUnlockLevel,
   // Level rewards
   getRewardsForLevel,
   checkLevelUp,

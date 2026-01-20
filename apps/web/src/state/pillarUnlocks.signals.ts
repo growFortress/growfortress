@@ -8,11 +8,10 @@
 
 import { signal, computed } from '@preact/signals';
 import { getPillarUnlocks } from '../api/pillarUnlocks.js';
-import {
-  PILLAR_UNLOCK_REQUIREMENTS,
-  type GetPillarUnlocksResponse,
-  type PillarUnlockId,
-  type PillarUnlockInfo,
+import type {
+  GetPillarUnlocksResponse,
+  PillarUnlockId,
+  PillarUnlockInfo,
 } from '@arcade/protocol';
 
 // ============================================================================
@@ -32,7 +31,7 @@ export const pillarUnlocksError = signal<string | null>(null);
  */
 export const unlockedPillarSet = computed(() => {
   const state = pillarUnlocksState.value;
-  if (!state) return new Set<PillarUnlockId>(['streets']); // Default: streets always unlocked
+  if (!state) return new Set<PillarUnlockId>(['streets']);
   return new Set(state.unlockedPillars);
 });
 
@@ -51,20 +50,6 @@ export const allPillars = computed(() => {
 });
 
 /**
- * Pillars that are locked but can be unlocked
- */
-export const availableToUnlock = computed(() => {
-  return allPillars.value.filter(p => !p.isUnlocked && p.canUnlock);
-});
-
-/**
- * Pillars that are locked and cannot be unlocked yet
- */
-export const lockedPillars = computed(() => {
-  return allPillars.value.filter(p => !p.isUnlocked && !p.canUnlock);
-});
-
-/**
  * Number of unlocked pillars
  */
 export const unlockedCount = computed(() => {
@@ -75,7 +60,7 @@ export const unlockedCount = computed(() => {
  * Total number of pillars
  */
 export const totalPillars = computed(() => {
-  return PILLAR_UNLOCK_REQUIREMENTS.length;
+  return 6; // streets, science, mutants, cosmos, magic, gods
 });
 
 /**
@@ -108,13 +93,6 @@ export function isPillarUnlocked(pillarId: PillarUnlockId): boolean {
  */
 export function getPillarInfo(pillarId: PillarUnlockId): PillarUnlockInfo | undefined {
   return allPillars.value.find(p => p.pillarId === pillarId);
-}
-
-/**
- * Get unlock requirement for a pillar
- */
-export function getUnlockRequirement(pillarId: PillarUnlockId) {
-  return PILLAR_UNLOCK_REQUIREMENTS.find(req => req.pillarId === pillarId);
 }
 
 // ============================================================================

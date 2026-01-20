@@ -12,6 +12,23 @@
 import { FP, PillarId } from '../types';
 
 // ============================================================================
+// PILLAR LEVEL REQUIREMENTS - Single source of truth
+// ============================================================================
+
+/**
+ * Level-gated pillar unlock requirements.
+ * This is the single source of truth for all pillar unlocking in the game.
+ */
+export const PILLAR_LEVEL_REQUIREMENTS: Record<PillarId, number> = {
+  streets: 1,
+  science: 15,
+  mutants: 30,
+  cosmos: 45,
+  magic: 60,
+  gods: 80,
+};
+
+// ============================================================================
 // INTERFEJSY
 // ============================================================================
 
@@ -323,8 +340,13 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 15: Trzeci slot wieży + ARTILLERY turret
+    // Level 15: Trzeci slot wieży + ARTILLERY turret + Science pillar
     case 15:
+      rewards.push({
+        type: 'pillar_unlock',
+        pillarId: 'science',
+        description: 'Odblokowano Sektor: Nauka i Technologia',
+      });
       rewards.push({
         type: 'turret_slot',
         value: 3,
@@ -370,8 +392,13 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 30: Trzeci slot jednostki + Rift
+    // Level 30: Trzeci slot jednostki + Rift + Mutants pillar
     case 30:
+      rewards.push({
+        type: 'pillar_unlock',
+        pillarId: 'mutants',
+        description: 'Odblokowano Sektor: Mutanci',
+      });
       rewards.push({
         type: 'hero_slot',
         value: 3,
@@ -398,7 +425,7 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 40: Titan + Fire class + slot wieżyczki + Filar
+    // Level 40: Titan + Fire class + slot wieżyczki
     case 40:
       rewards.push({
         type: 'hero_unlock',
@@ -415,15 +442,15 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
         value: 6,
         description: 'Odblokowano 6. slot wieżyczki',
       });
-      rewards.push({
-        type: 'pillar_unlock',
-        pillarId: 'magic',
-        description: 'Odblokowano Filar: Magia',
-      });
       break;
 
-    // Level 45: Czwarty slot jednostki
+    // Level 45: Czwarty slot jednostki + Cosmos pillar
     case 45:
+      rewards.push({
+        type: 'pillar_unlock',
+        pillarId: 'cosmos',
+        description: 'Odblokowano Sektor: Kosmos',
+      });
       rewards.push({
         type: 'hero_slot',
         value: 4,
@@ -439,11 +466,6 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
     // Level 50: Endgame content
     case 50:
       rewards.push({
-        type: 'pillar_unlock',
-        pillarId: 'gods',
-        description: 'Odblokowano Sektor: Nexus',
-      });
-      rewards.push({
         type: 'feature_unlock',
         featureId: 'crystal_matrix',
         description: 'Odblokowano Matrycę Kryształów',
@@ -455,8 +477,13 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 60: Konfiguracja Elektryczna
+    // Level 60: Konfiguracja Elektryczna + Magic pillar
     case 60:
+      rewards.push({
+        type: 'pillar_unlock',
+        pillarId: 'magic',
+        description: 'Odblokowano Sektor: Magia i Wymiary',
+      });
       rewards.push({
         type: 'class_unlock',
         classId: 'lightning',
@@ -464,8 +491,13 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 80: Konfiguracja Próżniowa
+    // Level 80: Konfiguracja Próżniowa + Gods pillar
     case 80:
+      rewards.push({
+        type: 'pillar_unlock',
+        pillarId: 'gods',
+        description: 'Odblokowano Sektor: Bogowie',
+      });
       rewards.push({
         type: 'class_unlock',
         classId: 'void',
@@ -745,12 +777,27 @@ export function getHeroUnlockLevel(heroId: string): number {
 
 /**
  * Sprawdza czy filar jest odblokowany na danym poziomie twierdzy
- * W trybie Endless wszystkie filary są zawsze odblokowane
  */
-export function isPillarUnlockedAtLevel(pillarId: PillarId, _fortressLevel?: number): boolean {
-  // Endless mode: wszystkie filary są zawsze odblokowane
-  const validPillars: PillarId[] = ['streets', 'science', 'mutants', 'cosmos', 'magic', 'gods'];
-  return validPillars.includes(pillarId);
+export function isPillarUnlockedAtLevel(pillarId: PillarId, fortressLevel: number): boolean {
+  const requiredLevel = PILLAR_LEVEL_REQUIREMENTS[pillarId];
+  if (requiredLevel === undefined) return false;
+  return fortressLevel >= requiredLevel;
+}
+
+/**
+ * Pobiera listę odblokowanych filarów na danym poziomie twierdzy
+ */
+export function getUnlockedPillarsAtLevel(fortressLevel: number): PillarId[] {
+  return (Object.entries(PILLAR_LEVEL_REQUIREMENTS) as [PillarId, number][])
+    .filter(([_, level]) => fortressLevel >= level)
+    .map(([pillarId]) => pillarId);
+}
+
+/**
+ * Pobiera wymagany poziom do odblokowania filara
+ */
+export function getPillarUnlockLevel(pillarId: PillarId): number {
+  return PILLAR_LEVEL_REQUIREMENTS[pillarId] ?? 999;
 }
 
 // ============================================================================
@@ -795,9 +842,8 @@ export function getProgressionBonuses(level: number): ProgressionBonuses {
     startingGold += postCapLevels * 3;        // +3 starting gold per level (rebalanced from +5)
   }
 
-  // Endless mode: wszystkie filary są zawsze odblokowane
-  const allPillars: PillarId[] = ['streets', 'science', 'mutants', 'cosmos', 'magic', 'gods'];
-  const unlockedPillars = allPillars;
+  // Level-gated pillar unlocking
+  const unlockedPillars = getUnlockedPillarsAtLevel(level);
 
   return {
     damageMultiplier: 1 + damageBonus,
