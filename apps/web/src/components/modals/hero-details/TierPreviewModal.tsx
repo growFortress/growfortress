@@ -6,7 +6,6 @@ import { HeroAvatar } from '../../shared/HeroAvatar.js';
 import { Button } from '../../shared/Button.js';
 import { SkillCard } from './SkillCard.js';
 import styles from './TierPreviewModal.module.css';
-import { useTranslation } from '../../../i18n/useTranslation.js';
 
 // Class colors
 const CLASS_COLORS: Record<FortressClass, string> = {
@@ -47,7 +46,6 @@ export function TierPreviewModal({
   onClose,
   onUpgrade,
 }: TierPreviewModalProps) {
-  const { t } = useTranslation(['common', 'game']);
   if (!visible) return null;
 
   const classColor = CLASS_COLORS[heroDefinition.class];
@@ -94,7 +92,7 @@ export function TierPreviewModal({
         <div class={styles.header}>
           <button class={styles.backButton} onClick={onClose}>
             <span class={styles.backIcon}>←</span>
-            {t('heroDetails.upgrade.back')}
+            Wróć
           </button>
           <h2 class={styles.title}>
             <span class={styles.tierBadge} style={{ background: nextTierColor }}>
@@ -112,12 +110,12 @@ export function TierPreviewModal({
               <div class={styles.avatarGlow} />
               <HeroAvatar heroId={heroDefinition.id} tier={nextTierNum} size={120} />
             </div>
-            <div class={styles.heroName}>{t(`game:heroes.${heroDefinition.id}.name`)}</div>
+            <div class={styles.heroName}>{heroDefinition.name}</div>
           </div>
 
           {/* Stat Multiplier */}
           <div class={styles.section}>
-            <h3 class={styles.sectionTitle}>{t('heroDetails.upgrade.statMultiplier')}</h3>
+            <h3 class={styles.sectionTitle}>MNOŻNIK STATYSTYK</h3>
             <div class={styles.multiplierComparison}>
               <div class={styles.multiplierFrom}>
                 <span class={styles.multiplierLabel}>Tier {currentTier}</span>
@@ -137,7 +135,7 @@ export function TierPreviewModal({
           {/* New Skills */}
           {newSkills.length > 0 && (
             <div class={styles.section}>
-              <h3 class={styles.sectionTitle}>{t('heroDetails.upgrade.newSkills')}</h3>
+              <h3 class={styles.sectionTitle}>NOWE UMIEJĘTNOŚCI</h3>
               <div class={styles.skillsList}>
                 {newSkills.map((skill, index) => (
                   <div
@@ -145,7 +143,7 @@ export function TierPreviewModal({
                     class={styles.skillItem}
                     style={{ animationDelay: `${0.2 + index * 0.1}s` }}
                   >
-                    <SkillCard heroId={heroDefinition.id} skill={skill} />
+                    <SkillCard skill={skill} />
                   </div>
                 ))}
               </div>
@@ -154,16 +152,16 @@ export function TierPreviewModal({
 
           {/* Visual Changes */}
           <div class={styles.section}>
-            <h3 class={styles.sectionTitle}>{t('heroDetails.upgrade.visualEffects')}</h3>
+            <h3 class={styles.sectionTitle}>EFEKTY WIZUALNE</h3>
             <div class={styles.visualChanges}>
               <div class={styles.visualItem}>
-                <span class={styles.visualLabel}>{t('heroDetails.upgrade.size')}</span>
+                <span class={styles.visualLabel}>Rozmiar</span>
                 <span class={styles.visualValue}>
                   ×{sizeChange.from.toFixed(1)} → ×{sizeChange.to.toFixed(1)}
                 </span>
               </div>
               <div class={styles.visualItem}>
-                <span class={styles.visualLabel}>{t('heroDetails.upgrade.glowIntensity')}</span>
+                <span class={styles.visualLabel}>Intensywność blasku</span>
                 <div class={styles.glowBars}>
                   <div
                     class={styles.glowBar}
@@ -178,7 +176,7 @@ export function TierPreviewModal({
               </div>
               {newParticles.length > 0 && (
                 <div class={styles.visualItem}>
-                  <span class={styles.visualLabel}>{t('heroDetails.upgrade.newEffects')}</span>
+                  <span class={styles.visualLabel}>Nowe efekty</span>
                   <div class={styles.particleList}>
                     {newParticles.map((particle) => (
                       <span key={particle} class={styles.particleBadge}>
@@ -207,7 +205,7 @@ export function TierPreviewModal({
               onClick={onUpgrade}
               class={styles.upgradeButton}
             >
-              {t('heroDetails.upgrade.upgradeToTier', { tier: nextTierNum })}
+              ULEPSZ DO TIER {nextTierNum}
             </Button>
           </div>
         </div>

@@ -9,7 +9,6 @@ import {
 import { unequippedArtifacts } from '../../../state/artifacts.signals.js';
 import { Button } from '../../shared/Button.js';
 import styles from './ArtifactPickerModal.module.css';
-import { useTranslation } from '../../../i18n/useTranslation.js';
 
 // Artifact slot icons
 const SLOT_ICONS: Record<string, string> = {
@@ -38,7 +37,6 @@ export function ArtifactPickerModal({
   onClose,
   onEquip,
 }: ArtifactPickerModalProps) {
-  const { t } = useTranslation(['common', 'game']);
   const allArtifacts = unequippedArtifacts.value;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,9 +104,9 @@ export function ArtifactPickerModal({
         <div class={styles.header}>
           <button class={styles.backButton} onClick={onClose}>
             <span class={styles.backIcon}>←</span>
-            {t('common:heroDetails.upgrade.back')}
+            Wróć
           </button>
-          <h3 class={styles.title}>{t('common:heroDetails.artifactPicker.title')}</h3>
+          <h3 class={styles.title}>Wybierz Artefakt</h3>
         </div>
 
         {/* Filter Toggle */}
@@ -117,13 +115,13 @@ export function ArtifactPickerModal({
             class={`${styles.filterButton} ${filterMode === 'compatible' ? styles.filterActive : ''}`}
             onClick={() => setFilterMode('compatible')}
           >
-            {t('common:heroDetails.artifactPicker.filterCompatible')} ({compatibleArtifacts.length})
+            Kompatybilne ({compatibleArtifacts.length})
           </button>
           <button
             class={`${styles.filterButton} ${filterMode === 'all' ? styles.filterActive : ''}`}
             onClick={() => setFilterMode('all')}
           >
-            {t('common:heroDetails.artifactPicker.filterAll')} ({allArtifacts.length})
+            Wszystkie ({allArtifacts.length})
           </button>
         </div>
 
@@ -132,15 +130,11 @@ export function ArtifactPickerModal({
           {artifacts.length === 0 ? (
             <div class={styles.emptyState}>
               <span class={styles.emptyIcon}>📦</span>
-              <p>
-                {filterMode === 'compatible' 
-                  ? t('common:heroDetails.artifactPicker.emptyCompatible') 
-                  : t('common:heroDetails.artifactPicker.emptyAll')}
-              </p>
+              <p>{filterMode === 'compatible' ? 'Brak kompatybilnych artefaktów' : 'Brak dostępnych artefaktów'}</p>
               <span class={styles.emptyHint}>
                 {filterMode === 'compatible'
-                  ? t('common:heroDetails.artifactPicker.emptyHintCompatible')
-                  : t('common:heroDetails.artifactPicker.emptyHintAll')
+                  ? 'Spróbuj przełączyć na "Wszystkie" lub zdobądź więcej artefaktów'
+                  : 'Zdobywaj artefakty poprzez crafting lub gameplay'
                 }
               </span>
             </div>
@@ -170,14 +164,12 @@ export function ArtifactPickerModal({
 
               {selectedArtifact && (
                 <div class={styles.previewSection}>
-                  <h4 class={styles.previewTitle}>{t('common:heroDetails.artifactPicker.previewTitle')}</h4>
+                  <h4 class={styles.previewTitle}>Podgląd efektów</h4>
                   <div class={styles.effectsList}>
                     {selectedArtifact.definition.effects.map((effect, idx) => (
                       <div key={idx} class={styles.effectItem}>
                         <span class={styles.effectIcon}>✦</span>
-                        <span class={styles.effectDesc}>
-                          {t(`common:artifacts.${selectedArtifact.definition.id}.effects.${idx}`, effect.description)}
-                        </span>
+                        <span class={styles.effectDesc}>{effect.description}</span>
                       </div>
                     ))}
                   </div>
@@ -190,14 +182,14 @@ export function ArtifactPickerModal({
         {/* Footer */}
         <div class={styles.footer}>
           <Button variant="secondary" onClick={onClose}>
-            {t('common:heroDetails.artifactPicker.cancel')}
+            Anuluj
           </Button>
           <Button
             variant="primary"
             disabled={!selectedId || isLoading}
             onClick={handleEquip}
           >
-            {isLoading ? t('common:heroDetails.artifactPicker.equipping') : t('common:heroDetails.artifactPicker.equip')}
+            {isLoading ? 'Zakładanie...' : 'Załóż'}
           </Button>
         </div>
       </div>
@@ -216,7 +208,6 @@ interface ArtifactOptionProps {
 
 function ArtifactOption({ artifact, isSelected, isCompatible, isHeroSpecific, onSelect }: ArtifactOptionProps) {
   const { definition } = artifact;
-  const { t } = useTranslation('common');
 
   const classNames = [
     styles.artifactOption,
@@ -231,11 +222,11 @@ function ArtifactOption({ artifact, isSelected, isCompatible, isHeroSpecific, on
       class={classNames}
       onClick={onSelect}
       disabled={!isCompatible}
-      title={!isCompatible ? t('heroDetails.artifactPicker.incompatibleTooltip') : undefined}
+      title={!isCompatible ? 'Ten artefakt nie jest kompatybilny z tym bohaterem' : undefined}
     >
       {/* Hero-specific badge */}
       {isHeroSpecific && (
-        <span class={styles.heroSpecificBadge} title={t('heroDetails.artifactPicker.artifactSpecific')}>
+        <span class={styles.heroSpecificBadge} title="Artefakt specyficzny dla bohatera">
           ⭐
         </span>
       )}
@@ -244,7 +235,7 @@ function ArtifactOption({ artifact, isSelected, isCompatible, isHeroSpecific, on
         {SLOT_ICONS[definition.slot] || '📦'}
       </span>
       <div class={styles.artifactInfo}>
-        <span class={styles.artifactName}>{t(`artifacts.${definition.id}.name`)}</span>
+        <span class={styles.artifactName}>{definition.polishName}</span>
         <span class={styles.artifactSlot}>{definition.slot}</span>
       </div>
       <span class={styles.rarityBadge}>{definition.rarity}</span>

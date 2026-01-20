@@ -33,7 +33,14 @@ const TIER_COLORS = {
   3: { bg: '#ffd700', label: 'Gold' },
 } as const;
 
-import { useTranslation } from '../../../i18n/useTranslation.js';
+// Role translations
+const ROLE_LABELS: Record<HeroRole, string> = {
+  tank: 'TANK',
+  dps: 'DPS',
+  support: 'SUPPORT',
+  crowd_control: 'KONTROLA',
+  assassin: 'ZABÓJCA',
+};
 
 interface HeroIdentityCardProps {
   heroDefinition: HeroDefinition;
@@ -44,7 +51,6 @@ interface HeroIdentityCardProps {
 }
 
 export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesses = [], power }: HeroIdentityCardProps) {
-  const { t } = useTranslation(['common', 'game']);
   const classColor = CLASS_COLORS[heroDefinition.class];
   const classIcon = CLASS_ICONS[heroDefinition.class];
   const tierColor = TIER_COLORS[currentTier];
@@ -62,7 +68,7 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
       </div>
 
       {/* Hero Name */}
-      <h2 class={styles.heroName}>{t(`game:heroes.${heroDefinition.id}.name`)}</h2>
+      <h2 class={styles.heroName}>{heroDefinition.name}</h2>
 
       {/* Badges Row */}
       <div class={styles.badgesRow}>
@@ -70,10 +76,10 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
           class={`${cardStyles.badge} ${cardStyles.classBadge}`}
           style={{ '--class-color': classColor } as JSX.CSSProperties}
         >
-          {classIcon} {t(`common:elements.${heroDefinition.class}`).toUpperCase()}
+          {classIcon} {heroDefinition.class.toUpperCase()}
         </span>
         <span class={`${cardStyles.badge} ${cardStyles.roleBadge}`}>
-          {t(`common:heroDetails.roles.${heroDefinition.role}`)}
+          {ROLE_LABELS[heroDefinition.role]}
         </span>
       </div>
 
@@ -91,7 +97,7 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
           <span class={styles.tierName}>{tierDef.name}</span>
         </div>
         <div class={styles.levelCompact}>
-          <span class={styles.levelLabel}>{t('common:heroDetails.levelLabel')}</span>
+          <span class={styles.levelLabel}>Poz.</span>
           <span class={styles.levelValue}>{level}</span>
         </div>
       </div>
@@ -108,16 +114,12 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
       {/* Weaknesses Section */}
       {weaknesses.length > 0 && (
         <div class={styles.weaknessSection}>
-          <div class={styles.weaknessHeader}>⚠️ {t('common:heroDetails.weaknessHeader')}</div>
+          <div class={styles.weaknessHeader}>⚠️ SŁABOŚCI</div>
           <div class={styles.weaknessList}>
             {weaknesses.map((weakness) => (
               <div key={weakness.id} class={styles.weaknessItem}>
-                <span class={styles.weaknessName}>
-                  {t(`game:heroes.${heroDefinition.id}.weaknesses.${weakness.id}.name`)}
-                </span>
-                <span class={styles.weaknessDesc}>
-                  {t(`game:heroes.${heroDefinition.id}.weaknesses.${weakness.id}.description`)}
-                </span>
+                <span class={styles.weaknessName}>{weakness.name}</span>
+                <span class={styles.weaknessDesc}>{weakness.description}</span>
               </div>
             ))}
           </div>

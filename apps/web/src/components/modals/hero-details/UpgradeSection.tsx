@@ -1,7 +1,6 @@
 import { Button } from '../../shared/Button.js';
 import cardStyles from './cards.module.css';
 import { HERO_UPGRADE_COSTS } from '@arcade/protocol';
-import { useTranslation } from '../../../i18n/useTranslation.js';
 
 interface UpgradeSectionProps {
   currentTier: 1 | 2 | 3;
@@ -12,14 +11,13 @@ interface UpgradeSectionProps {
 }
 
 export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade, onPreview }: UpgradeSectionProps) {
-  const { t } = useTranslation('common');
   const canUpgrade = currentTier < 3;
 
   if (!canUpgrade) {
     return (
       <div class={cardStyles.maxTierReached}>
         <span class={cardStyles.maxTierIcon}>👑</span>
-        <span class={cardStyles.maxTierText}>{t('heroDetails.upgrade.maxTier')}</span>
+        <span class={cardStyles.maxTierText}>Maksymalny Tier!</span>
       </div>
     );
   }
@@ -32,7 +30,7 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade,
   return (
     <div class={cardStyles.upgradeSection}>
       <div class={cardStyles.upgradeInfo}>
-        <h4>{t('heroDetails.upgrade.nextTier', { tier: currentTier + 1 })}</h4>
+        <h4>Ulepsz do Tier {currentTier + 1}</h4>
         <div class={cardStyles.upgradeCost}>
           <span class={`${cardStyles.costItem} ${canAffordGold ? cardStyles.canAfford : cardStyles.cantAfford}`}>
             🪙 {upgradeCost.gold}
@@ -45,7 +43,7 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade,
       <div class={cardStyles.upgradeButtons}>
         {onPreview && (
           <Button variant="secondary" onClick={onPreview}>
-            {t('heroDetails.upgrade.preview')}
+            PODGLĄD
           </Button>
         )}
         <Button
@@ -53,7 +51,7 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade,
           disabled={!canAfford}
           onClick={onUpgrade}
         >
-          {t('heroDetails.upgrade.upgrade')}
+          ULEPSZ
         </Button>
       </div>
     </div>

@@ -106,7 +106,6 @@ function HeroStatRow({
   onUpgrade,
   isLoading,
 }: HeroStatRowProps) {
-  const { t } = useTranslation('common');
   const hasUpgrade = upgradeLevel !== undefined && maxLevel !== undefined;
   const isMaxed = hasUpgrade && upgradeLevel >= maxLevel;
 
@@ -117,9 +116,9 @@ function HeroStatRow({
       <span class={styles.statValue}>{value}</span>
       {hasUpgrade && (
         <>
-          <span class={styles.statLevel}>{t('heroDetails.levelLabel')} {upgradeLevel}{maxLevel !== Infinity && `/${maxLevel}`}</span>
+          <span class={styles.statLevel}>Lv {upgradeLevel}{maxLevel !== Infinity && `/${maxLevel}`}</span>
           {isMaxed ? (
-            <span class={styles.maxBadge}>{t('heroDetails.maxBadge')}</span>
+            <span class={styles.maxBadge}>MAX</span>
           ) : (
             <button
               class={styles.upgradeBtn}
@@ -214,7 +213,7 @@ interface HeroDetailsModalProps {
 }
 
 export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
-  const { t } = useTranslation(['common', 'game']);
+  const { t } = useTranslation('common');
   const target = upgradeTarget.value;
   const visible = upgradePanelVisible.value;
   const gold = displayGold.value;
@@ -402,7 +401,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
                 {hpConfig && (
                   <HeroStatRow
                     icon={STAT_ICONS.hp}
-                    label={t('heroDetails.hp')}
+                    label="HP"
                     value={upgradedHp}
                     upgradeLevel={hpLevel}
                     maxLevel={hpConfig.maxLevel}
@@ -417,7 +416,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
                 {dmgConfig && (
                   <HeroStatRow
                     icon={STAT_ICONS.damage}
-                    label={t('heroDetails.dmg')}
+                    label="DMG"
                     value={upgradedDamage}
                     upgradeLevel={dmgLevel}
                     maxLevel={dmgConfig.maxLevel}
@@ -430,14 +429,14 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
                 )}
                 {/* Attack Speed (no upgrade) */}
                 <HeroStatRow
-                   icon="⚡"
-                   label={t('heroDetails.as')}
-                   value={upgradedAttackSpeed.toFixed(2)}
+                  icon="⚡"
+                  label="AS"
+                  value={upgradedAttackSpeed.toFixed(2)}
                 />
               </div>
               {/* XP Progress */}
               <div class={styles.xpRow}>
-                <span class={styles.xpLabel}>✨ {t('heroDetails.xpLabel')}</span>
+                <span class={styles.xpLabel}>✨ XP</span>
                 <div class={styles.xpBarContainer}>
                   <div class={styles.xpBar} style={{ width: `${xpProgress}%` }} />
                 </div>
@@ -454,13 +453,11 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
                     {SLOT_ICONS[equippedArtifact.definition.slot] || '📦'}
                   </span>
                   <div class={styles.artifactInfo}>
-                    <span class={styles.artifactName}>{t(`common:artifacts.${equippedArtifact.definition.id}.name`)}</span>
+                    <span class={styles.artifactName}>{equippedArtifact.definition.polishName}</span>
                     <span class={styles.artifactSlot}>{equippedArtifact.definition.slot}</span>
                     <div class={styles.artifactEffects}>
                       {equippedArtifact.definition.effects.slice(0, 2).map((effect, idx) => (
-                        <span key={idx} class={styles.effectTag}>
-                          {t(`common:artifacts.${equippedArtifact.definition.id}.effects.${idx}`, effect.description)}
-                        </span>
+                        <span key={idx} class={styles.effectTag}>{effect.description}</span>
                       ))}
                     </div>
                   </div>
@@ -492,10 +489,10 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
 
             {/* Skills Section */}
             <div class={styles.section}>
-              <h4 class={styles.sectionTitle}>{t('heroDetails.skillsWithTier', { tier: hero.tier })}</h4>
+              <h4 class={styles.sectionTitle}>{t('heroDetails.skills')} (Tier {hero.tier})</h4>
               <div class={styles.skillsList}>
                 {currentTierDef.skills.map(skill => (
-                  <SkillCard key={skill.id} heroId={hero.definitionId} skill={skill} />
+                  <SkillCard key={skill.id} skill={skill} />
                 ))}
               </div>
             </div>
