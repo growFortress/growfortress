@@ -23,6 +23,7 @@ import {
   PvpApiError,
 } from '../../api/pvp.js';
 import type { PvpChallenge } from '@arcade/protocol';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './PvpPanel.module.css';
 
 interface ChallengesListProps {
@@ -201,9 +202,15 @@ function ChallengeCard({
     <div class={styles.challengeCard}>
       <div class={styles.challengeHeader}>
         <div class={styles.challengePlayers}>
-          <span>{challenge.challengerName}</span>
+          <span>
+            {challenge.challengerName}
+            <OnlineStatusIndicator isOnline={challenge.challengerIsOnline} />
+          </span>
           <span class={styles.challengeVs}>vs</span>
-          <span>{challenge.challengedName}</span>
+          <span>
+            {challenge.challengedName}
+            <OnlineStatusIndicator isOnline={challenge.challengedIsOnline} />
+          </span>
         </div>
         {isResolved ? (
           <span class={`${styles.resultBadge} ${

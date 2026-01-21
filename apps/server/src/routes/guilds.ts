@@ -104,6 +104,7 @@ import {
   requireGuildPermission,
   verifyGuildIdMatchesUserGuild,
 } from '../lib/guildMembershipCheck.js';
+import { isUserConnected } from '../services/websocket.js';
 
 const guildRoutes: FastifyPluginAsync = async (fastify) => {
   // ============================================================================
@@ -157,6 +158,12 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       ? guild.members
       : guild.members.slice(0, 5);
 
+    // Add online status to members
+    const membersWithOnlineStatus = limitedMembers.map(member => ({
+      ...member,
+      isOnline: isUserConnected(member.userId),
+    }));
+
     // Get structure bonuses
     const bonuses = getGuildBonusesFromStructures({
       kwatera: guild.structureKwatera,
@@ -168,7 +175,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({
       guild: {
         ...guild,
-        members: limitedMembers,
+        members: membersWithOnlineStatus,
         memberCount: guild._count.members,
         maxMembers: getMemberCapacity(guild.structureKwatera),
       },
@@ -280,6 +287,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         battlesParticipated: membership.battlesParticipated,
         battlesWon: membership.battlesWon,
         joinedAt: membership.joinedAt.toISOString(),
+        isOnline: isUserConnected(membership.userId),
       },
       bonuses,
       structures: guildWithDetails ? {
@@ -444,6 +452,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       roster: roster.map(member => ({
         ...member,
         lastActiveAt: member.lastActiveAt?.toISOString() || null,
+        isOnline: isUserConnected(member.userId),
       })),
     });
   });
@@ -1208,6 +1217,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         userId: c.userId,
         displayName: c.displayName,
         wavesContributed: c.wavesContributed,
+        isOnline: isUserConnected(c.userId),
       })),
     });
   });
@@ -1380,6 +1390,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         damage: m.damage,
         heroId: m.heroId,
         heroTier: m.heroTier,
+        isOnline: isUserConnected(m.userId),
       })),
       totalDamage,
     });

@@ -12,6 +12,7 @@ import {
 } from '../../api/guild.js';
 import { Spinner } from '../shared/Spinner.js';
 import { GuildTag } from '../shared/GuildTag.js';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './GuildPanel.module.css';
 
 interface GuildTowerRaceTabProps {
@@ -145,7 +146,10 @@ export function GuildTowerRaceTab({ onRefresh: _onRefresh }: GuildTowerRaceTabPr
             {guildContributions.map((contrib, index) => (
               <div key={contrib.userId} class={styles.contributionRow}>
                 <span class={styles.contributionRank}>#{index + 1}</span>
-                <span class={styles.contributionName}>{contrib.displayName}</span>
+                <span class={styles.contributionName}>
+                  {contrib.displayName}
+                  <OnlineStatusIndicator isOnline={contrib.isOnline} />
+                </span>
                 <span class={styles.contributionWaves}>
                   {contrib.wavesContributed.toLocaleString()} fal
                 </span>

@@ -29,6 +29,7 @@ import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
 import { Spinner } from '../shared/Spinner.js';
 import { GuildTag } from '../shared/GuildTag.js';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './GuildSearchModal.module.css';
 
 interface GuildSearchModalProps {
@@ -441,7 +442,10 @@ function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProp
           <div class={styles.memberPreviewList}>
             {guild.members.slice(0, 5).map((member: any) => (
               <div key={member.id} class={styles.memberPreviewItem}>
-                <span>{member.user?.displayName || 'Unknown'}</span>
+                <span>
+                  {member.user?.displayName || 'Unknown'}
+                  <OnlineStatusIndicator isOnline={member.isOnline} />
+                </span>
                 <span class={styles.memberRole}>
                   {member.role === 'LEADER' ? '👑' : member.role === 'OFFICER' ? '⚔️' : ''}
                 </span>

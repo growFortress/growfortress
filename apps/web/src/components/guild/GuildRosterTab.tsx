@@ -14,6 +14,7 @@ import {
 } from '../../state/guild.signals.js';
 import { getBattleRoster } from '../../api/guild.js';
 import { Spinner } from '../shared/Spinner.js';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './GuildPanel.module.css';
 
 type SortField = 'name' | 'role' | 'power' | 'wave' | 'battleHero';
@@ -253,6 +254,7 @@ function RosterRow({ member }: RosterRowProps) {
     <div class={`${styles.rosterRow} ${member.battleHero ? styles.rosterRowReady : ''}`}>
       <div class={`${styles.rosterCol} ${styles.rosterColName}`}>
         {member.displayName}
+        <OnlineStatusIndicator isOnline={member.isOnline} />
       </div>
       <div class={`${styles.rosterCol} ${styles.rosterColRole}`}>
         <span class={getRoleClass(member.role)}>{getRoleLabel(member.role)}</span>

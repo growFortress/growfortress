@@ -180,6 +180,8 @@ export const GuildMemberSchema = z.object({
   joinedAt: z.string().datetime(),
   // Total power (cached)
   power: z.number().int().min(0).optional(),
+  // Online status
+  isOnline: z.boolean().optional(),
 });
 export type GuildMember = z.infer<typeof GuildMemberSchema>;
 

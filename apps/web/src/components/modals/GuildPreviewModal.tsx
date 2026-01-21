@@ -12,6 +12,7 @@ import {
   guildPreviewModalOpen,
   closeGuildPreview,
 } from '../../state/guildPreview.signals.js';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './GuildPreviewModal.module.css';
 
 // Role display info
@@ -210,7 +211,10 @@ function MemberCard({ member, rank }: MemberCardProps) {
       <span class={styles.memberRank}>#{rank}</span>
       <span class={styles.memberRole} title={roleName}>{roleIcon}</span>
       <div class={styles.memberInfo}>
-        <span class={styles.memberName}>{member.displayName}</span>
+        <span class={styles.memberName}>
+          {member.displayName}
+          <OnlineStatusIndicator isOnline={member.isOnline} />
+        </span>
         <div class={styles.memberStats}>
           <span class={styles.memberLevel}>Lv.{member.level}</span>
           <span class={styles.memberPower}>{formatPower(member.power)} mocy</span>

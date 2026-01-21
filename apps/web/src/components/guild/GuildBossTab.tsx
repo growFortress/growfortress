@@ -16,6 +16,7 @@ import {
 import { Spinner } from '../shared/Spinner.js';
 import { Button } from '../shared/Button.js';
 import { GuildTag } from '../shared/GuildTag.js';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './GuildPanel.module.css';
 
 interface GuildBossTabProps {
@@ -261,7 +262,10 @@ export function GuildBossTab({ onRefresh }: GuildBossTabProps) {
             {guildBreakdown.map((member) => (
               <div key={member.userId} class={styles.contributionRow}>
                 <span class={styles.contributionRank}>#{member.rank}</span>
-                <span class={styles.contributionName}>{member.displayName}</span>
+                <span class={styles.contributionName}>
+                  {member.displayName}
+                  <OnlineStatusIndicator isOnline={member.isOnline} />
+                </span>
                 <span class={styles.contributionWaves}>
                   {member.damage.toLocaleString()} dmg
                 </span>

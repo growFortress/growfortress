@@ -24,6 +24,7 @@ import {
   clearBattleHero,
 } from '../../api/guild.js';
 import { Button } from '../shared/Button.js';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './GuildPanel.module.css';
 
 interface GuildMembersTabProps {
@@ -392,6 +393,7 @@ function MemberCard({ member, currentMembership, guildId, onRefresh }: MemberCar
           <span class={styles.memberName}>
             {member.user?.displayName || 'Unknown'}
             {isCurrentUser && ' (Ty)'}
+            <OnlineStatusIndicator isOnline={member.isOnline} />
           </span>
           <span class={`${styles.memberRole} ${getRoleStyle(member.role)}`}>
             {getRoleLabel(member.role)}

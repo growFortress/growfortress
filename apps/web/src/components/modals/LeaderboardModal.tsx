@@ -5,6 +5,7 @@ import { useEffect, useCallback, useRef } from 'preact/hooks';
 import { openHubPreview } from '../../state/hubPreview.signals.js';
 import { Modal } from '../shared/Modal.js';
 import { GuildTag } from '../shared/GuildTag.js';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import { useTranslation, currentLanguage } from '../../i18n/useTranslation.js';
 import type { PlayerLeaderboardEntry, PlayerLeaderboardCategory, AvailableReward, ExclusiveItem, GuildLeaderboardEntry } from '@arcade/protocol';
 import { getGuildLeaderboard } from '../../api/guild.js';
@@ -514,7 +515,10 @@ function LeaderboardEntry({ entry, category, isCurrentUser, t }: LeaderboardEntr
       </div>
       <div class={styles.entryInfo}>
         <div class={styles.entryNameRow}>
-          <span class={styles.entryName}>{entry.displayName}</span>
+          <span class={styles.entryName}>
+            {entry.displayName}
+            <OnlineStatusIndicator isOnline={entry.isOnline} />
+          </span>
           {entry.guildId && entry.guildTag && (
             <GuildTag guildId={entry.guildId} tag={entry.guildTag} className={styles.entryGuild} />
           )}

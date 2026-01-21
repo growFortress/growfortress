@@ -13,6 +13,7 @@ import {
 } from '../../state/index.js';
 import { createChallenge, PvpApiError } from '../../api/pvp.js';
 import type { PvpOpponent } from '@arcade/protocol';
+import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './PvpPanel.module.css';
 
 interface OpponentsListProps {
@@ -132,7 +133,10 @@ export function OpponentsList({ onRefresh }: OpponentsListProps) {
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openHubPreview(opponent.userId); }}
               >
-                <div class={styles.opponentName}>{opponent.displayName}</div>
+                <div class={styles.opponentName}>
+                  {opponent.displayName}
+                  <OnlineStatusIndicator isOnline={opponent.isOnline} />
+                </div>
                 <div class={styles.opponentStats}>
                   <span class={`${styles.opponentPower} ${
                     isStronger ? styles.opponentPowerHigh :

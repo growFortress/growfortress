@@ -16,6 +16,7 @@ import {
 } from "@arcade/sim-core";
 import { PVP_CONSTANTS, PVP_ERROR_CODES } from "@arcade/protocol";
 import { recordWeeklyHonorGain } from "./playerLeaderboard.js";
+import { isUserConnected } from "./websocket.js";
 
 // ============================================================================
 // ERROR CLASS
@@ -420,6 +421,7 @@ export async function getOpponents(
         pvpLosses: user.pvpLosses,
         canChallenge: cooldownInfo.canChallenge,
         challengeCooldownEndsAt: cooldownInfo.cooldownEndsAt?.toISOString(),
+        isOnline: isUserConnected(user.id),
       };
     }),
   );
@@ -576,9 +578,11 @@ export async function getChallenges(
       challengerId: c.challengerId,
       challengerName: c.challenger.displayName,
       challengerPower: c.challengerPower,
+      challengerIsOnline: isUserConnected(c.challengerId),
       challengedId: c.challengedId,
       challengedName: c.challenged.displayName,
       challengedPower: c.challengedPower,
+      challengedIsOnline: isUserConnected(c.challengedId),
       status: c.status,
       createdAt: c.createdAt.toISOString(),
       expiresAt: c.expiresAt.toISOString(),
