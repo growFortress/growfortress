@@ -85,7 +85,7 @@ export async function getTotalWavesLeaderboard(
     async () => {
       const [users, total] = await Promise.all([
         prisma.user.findMany({
-          where: { totalWaves: { gt: 0 }, banned: false },
+          where: { banned: false },
           orderBy: { totalWaves: "desc" },
           take: MAX_CACHED_ENTRIES,
           select: {
@@ -101,7 +101,7 @@ export async function getTotalWavesLeaderboard(
             },
           },
         }),
-        prisma.user.count({ where: { totalWaves: { gt: 0 }, banned: false } }),
+        prisma.user.count({ where: { banned: false } }),
       ]);
 
       return {

@@ -841,14 +841,14 @@ export function getProgressionBonuses(level: number): ProgressionBonuses {
   if (level >= 5) startingGold += 5;
 
   // Level 15: +10% damage (już jest w rewards, ale dodajemy tu dla czytelności API)
-  // Level 30: +5% gold
-  if (level >= 30) goldBonus += 0.05;
+  // Level 30: +3% gold (reduced from 5% for economy balance)
+  if (level >= 30) goldBonus += 0.03;
 
   // Post-50: bonuses for continued play (rebalanced for slower progression)
   if (level > 50) {
     const postCapLevels = level - 50;
     damageBonus += postCapLevels * 0.01;      // +1% damage per level (rebalanced from +2%)
-    goldBonus += postCapLevels * 0.005;       // +0.5% gold per level (rebalanced from +1%)
+    goldBonus += postCapLevels * 0.003;       // +0.3% gold per level (reduced from 0.5% for economy balance)
     startingGold += postCapLevels * 3;        // +3 starting gold per level (rebalanced from +5)
   }
 

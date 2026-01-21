@@ -73,9 +73,9 @@ describe('All Enemy Types', () => {
 
   describe('Streets Pillar Enemies', () => {
     it('gangster has correct stats', () => {
-      expect(ENEMY_ARCHETYPES.gangster.baseHp).toBe(29);
-      expect(ENEMY_ARCHETYPES.gangster.baseSpeed).toBe(1.8);
-      expect(ENEMY_ARCHETYPES.gangster.baseDamage).toBe(9);
+      expect(ENEMY_ARCHETYPES.gangster.baseHp).toBe(36);
+      expect(ENEMY_ARCHETYPES.gangster.baseSpeed).toBe(1.58);
+      expect(ENEMY_ARCHETYPES.gangster.baseDamage).toBe(11);
     });
 
     it('mafia_boss is the strongest streets enemy', () => {
@@ -91,8 +91,8 @@ describe('All Enemy Types', () => {
     });
 
     it('ai_core is science boss', () => {
-      expect(ENEMY_ARCHETYPES.ai_core.baseHp).toBe(575);
-      expect(ENEMY_ARCHETYPES.ai_core.goldReward).toBe(40);
+      expect(ENEMY_ARCHETYPES.ai_core.baseHp).toBe(719);
+      expect(ENEMY_ARCHETYPES.ai_core.goldReward).toBe(28);  // Reduced for economy balance
     });
   });
 
@@ -173,47 +173,47 @@ describe('Enemy Stat Scaling', () => {
   describe('wave scaling formula', () => {
     it('wave 1 has no scaling (1.0x)', () => {
       const stats = getEnemyStats('runner', 1, false);
-      expect(stats.hp).toBe(23); // Exact base HP
+      expect(stats.hp).toBe(29); // Exact base HP
     });
 
     it('wave 2 has 12% increase (1.12x)', () => {
       const stats = getEnemyStats('bruiser', 2, false);
-      // 115 * 1.12 = 128.8 → 128
-      expect(stats.hp).toBe(128);
+      // 144 * 1.12 = 161.28 → 161
+      expect(stats.hp).toBe(161);
     });
 
     it('wave 10 has 108% increase (2.08x)', () => {
       const stats = getEnemyStats('runner', 10, false);
-      // 23 * (1 + 9 * 0.12) = 23 * 2.08 = 47.84 → 47
-      expect(stats.hp).toBe(47);
+      // 29 * (1 + 9 * 0.12) = 29 * 2.08 = 60.32 → 60
+      expect(stats.hp).toBe(60);
     });
 
     it('wave 50 has massive scaling', () => {
       const stats = getEnemyStats('runner', 50, false);
-      // 23 * (1 + 49 * 0.12) = 23 * 6.88 = 158.24 → 158
-      expect(stats.hp).toBe(158);
+      // 29 * (1 + 49 * 0.12) = 29 * 6.88 = 199.52 → 199
+      expect(stats.hp).toBe(199);
     });
   });
 
   describe('elite scaling', () => {
-    it('elite HP is 3.5x base', () => {
+    it('elite HP is 3x base', () => {
       const elite = getEnemyStats('bruiser', 1, true);
-      // 115 * 3.5 = 402.5 → 402
-      expect(elite.hp).toBe(402);
+      // 144 * 3 = 432
+      expect(elite.hp).toBe(432);
     });
 
     it('elite damage is 2.5x base', () => {
       const elite = getEnemyStats('bruiser', 1, true);
-      // 17 * 2.5 = 42.5 → 42
-      expect(elite.damage).toBe(42);
+      // 21 * 2.5 = 52.5 → 52
+      expect(elite.damage).toBe(52);
     });
 
     it('elite wave 10 combines both scalings', () => {
       const elite = getEnemyStats('runner', 10, true);
-      // HP: 23 * 2.08 * 3.5 = 167.44 → 167
-      expect(elite.hp).toBe(167);
-      // Damage: 6 * 2.08 * 2.5 = 31.2 → 31
-      expect(elite.damage).toBe(31);
+      // HP: 29 * 2.08 * 3 = 180.96 → 180
+      expect(elite.hp).toBe(180);
+      // Damage: 8 * 2.08 * 2.5 = 41.6 → 41
+      expect(elite.damage).toBe(41);
     });
   });
 
@@ -605,8 +605,8 @@ describe('Leech Enemy', () => {
   });
 
   it('leech has low damage but medium HP', () => {
-    expect(ENEMY_ARCHETYPES.leech.baseDamage).toBe(4);
-    expect(ENEMY_ARCHETYPES.leech.baseHp).toBe(46);
+    expect(ENEMY_ARCHETYPES.leech.baseDamage).toBe(5);
+    expect(ENEMY_ARCHETYPES.leech.baseHp).toBe(58);
   });
 
   it('leech has healing ability described in archetype', () => {
@@ -628,16 +628,16 @@ describe('Enemy Rewards System', () => {
   // Note: Economy balance multiplier is 1.0 (no penalty)
   // Elite multiplier is 3.5x for gold only
   // Dust removed from enemy kills - now earned only via daily quests
-  // Wave scaling: +5% per 10 waves, cycle bonus: +50% per cycle
-  it('elite enemies give approximately 3.5x gold rewards', () => {
-    // Use mafia_boss which has higher gold rewards (gold=25)
+  // Wave scaling: +3% per 10 waves (reduced for balance), cycle bonus: +30% per cycle (reduced for balance)
+  it('elite enemies give 2.5x gold rewards', () => {
+    // Use mafia_boss which has higher gold rewards (gold=18, reduced for balance)
     const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
     const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0, 1);
 
-    // Normal gold = 25, elite gold = floor(25*3.5) = 87
-    // Elite should give significantly more (close to 3.5x)
-    expect(elite.gold).toBeGreaterThan(normal.gold * 3);
-    expect(elite.gold).toBeLessThanOrEqual(normal.gold * 4); // Allow for rounding
+    // Normal gold = 18, elite gold = floor(18*2.5) = 45
+    // Elite should give 2.5x (reduced from 3.5x for balance)
+    expect(elite.gold).toBeGreaterThan(normal.gold * 2);
+    expect(elite.gold).toBeLessThanOrEqual(normal.gold * 3); // Allow for rounding
     // Dust is always 0 (removed from enemy kills)
     expect(elite.dust).toBe(0);
     expect(normal.dust).toBe(0);
@@ -664,15 +664,15 @@ describe('Enemy Rewards System', () => {
 
   it('boss enemies give substantial gold rewards', () => {
     const bossReward = getEnemyRewards('god', false, 1.0, 1.0, 1);
-    // Base: gold=100, dust=0 (dust removed from enemy kills)
-    expect(bossReward.gold).toBe(100);
+    // Base: gold=70 (reduced from 100 for balance), dust=0 (dust removed from enemy kills)
+    expect(bossReward.gold).toBe(70);
     expect(bossReward.dust).toBe(0);
   });
 
   it('elite boss gives massive gold rewards', () => {
     const eliteBoss = getEnemyRewards('god', true, 1.0, 1.0, 1);
-    // Base: gold=100 * 3.5 (elite) = gold=350, dust=0
-    expect(eliteBoss.gold).toBe(350);
+    // Base: gold=70 * 2.5 (elite, reduced from 3.5x for balance) = gold=175, dust=0
+    expect(eliteBoss.gold).toBe(175);
     expect(eliteBoss.dust).toBe(0);
   });
 });
