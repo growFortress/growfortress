@@ -169,10 +169,12 @@ export class EnemySystem {
     viewWidth: number,
     viewHeight: number,
     vfx?: VFXSystem,
-    alpha: number = 1
+    alpha: number = 1,
+    deltaMs: number = 16.66
   ) {
     const currentIds = new Set<number>();
-    const time = performance.now() / 1000; // Seconds for animation
+    const time = performance.now() / 1000;
+    const dt = Math.min(50, Math.max(8, deltaMs)) / 1000;
 
     // 1. Update / Create Visuals
     for (const enemy of state.enemies) {
@@ -242,8 +244,7 @@ export class EnemySystem {
       // Handle Hit Reaction (Squash Animation)
       let squashProgress = this.hitSquashProgress.get(enemy.id) ?? 0;
       if (squashProgress > 0) {
-        // Decay squash over time (fast elastic recovery)
-        squashProgress = Math.max(0, squashProgress - 0.15);
+        squashProgress = Math.max(0, squashProgress - dt * 8);
         this.hitSquashProgress.set(enemy.id, squashProgress);
       }
 
@@ -268,9 +269,10 @@ export class EnemySystem {
       let currentVisualHp = this.visualHp.get(enemy.id) ?? enemy.hp;
       let currentTrailingHp = this.trailingHp.get(enemy.id) ?? enemy.hp;
 
-      // Visual HP lerps quickly to actual HP
+      // Visual HP lerps quickly to actual HP (frame-rate independent)
       if (currentVisualHp !== enemy.hp) {
-          currentVisualHp = currentVisualHp + (enemy.hp - currentVisualHp) * 0.2;
+          const hpLerpFactor = 1 - Math.pow(0.001, dt);
+          currentVisualHp = currentVisualHp + (enemy.hp - currentVisualHp) * hpLerpFactor;
           if (Math.abs(currentVisualHp - enemy.hp) < 0.1) {
               currentVisualHp = enemy.hp;
           }
@@ -279,13 +281,13 @@ export class EnemySystem {
 
       // Trailing HP lerps slowly (shows damage trail)
       if (currentTrailingHp > currentVisualHp) {
-          currentTrailingHp = currentTrailingHp + (currentVisualHp - currentTrailingHp) * 0.05;
+          const trailLerpFactor = 1 - Math.pow(0.05, dt);
+          currentTrailingHp = currentTrailingHp + (currentVisualHp - currentTrailingHp) * trailLerpFactor;
           if (Math.abs(currentTrailingHp - currentVisualHp) < 0.5) {
               currentTrailingHp = currentVisualHp;
           }
           this.trailingHp.set(enemy.id, currentTrailingHp);
       } else if (currentTrailingHp < currentVisualHp) {
-          // Trailing should never be less than visual (healing edge case)
           currentTrailingHp = currentVisualHp;
           this.trailingHp.set(enemy.id, currentTrailingHp);
       }

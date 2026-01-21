@@ -160,42 +160,41 @@ export class ExplosionEffects {
   }
 
   /**
-   * Class-specific impact effect (smaller, faster than explosion)
+   * Class-specific impact effect - subtle sparks without flash
    */
   spawnClassImpact(x: number, y: number, fortressClass: FortressClass, particleMultiplier: number): void {
     const colors = CLASS_VFX_COLORS[fortressClass];
-    const count = Math.floor(8 * particleMultiplier);
-
-    // Small flash
-    this.factory.flash({ x, y, color: colors.glow, size: 12 });
-    this.triggerLightingFlash(x, y, colors.glow, 60);
+    const count = Math.floor(5 * particleMultiplier);
 
     for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
-      const speed = 50 + Math.random() * 80;
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+      const speed = 40 + Math.random() * 60;
       const p = this.pool.acquire();
 
-      p.x = x;
-      p.y = y;
+      p.x = x + (Math.random() - 0.5) * 4;
+      p.y = y + (Math.random() - 0.5) * 4;
       p.vx = Math.cos(angle) * speed;
       p.vy = Math.sin(angle) * speed;
-      p.life = 0.15 + Math.random() * 0.15;
-      p.maxLife = 0.3;
-      p.size = 2 + Math.random() * 3;
-      p.color = Math.random() > 0.5 ? colors.primary : colors.glow;
-      p.drag = 0.9;
+      p.life = 0.12 + Math.random() * 0.1;
+      p.maxLife = p.life;
+      p.size = 1.5 + Math.random() * 2;
+      p.color = Math.random() > 0.6 ? colors.glow : colors.primary;
+      p.drag = 0.92;
+      p.startAlpha = 0.8;
+      p.endAlpha = 0;
 
-      // Class-specific shapes
       switch (fortressClass) {
         case 'ice':
           p.shape = 'diamond';
           p.rotation = Math.random() * Math.PI;
+          p.rotationSpeed = 3;
           break;
         case 'lightning':
           p.shape = 'spark';
           break;
         case 'tech':
           p.shape = 'square';
+          p.size *= 0.8;
           break;
         default:
           p.shape = 'circle';
@@ -206,32 +205,28 @@ export class ExplosionEffects {
   }
 
   /**
-   * Hit impact with ring and shake for satisfying feedback
+   * Hit impact - subtle effect without overwhelming glow
    */
   spawnHitImpact(x: number, y: number, fortressClass: FortressClass, particleMultiplier: number): void {
     const colors = CLASS_VFX_COLORS[fortressClass];
 
     this.spawnClassImpact(x, y, fortressClass, particleMultiplier);
 
-    // Short ring for crisp hit feedback
     const ring = this.pool.acquire();
     ring.x = x;
     ring.y = y;
     ring.vx = 0;
     ring.vy = 0;
-    ring.life = 0.18;
-    ring.maxLife = 0.18;
-    ring.startSize = 6;
-    ring.endSize = 36;
-    ring.size = 6;
-    ring.color = colors.glow;
+    ring.life = 0.12;
+    ring.maxLife = 0.12;
+    ring.startSize = 4;
+    ring.endSize = 20;
+    ring.size = 4;
+    ring.color = colors.primary;
     ring.shape = 'ring';
-    ring.startAlpha = 0.7;
+    ring.startAlpha = 0.4;
     ring.endAlpha = 0;
     this.particles.push(ring);
-
-    // Subtle screen shake
-    this.triggerScreenShake(0.35, 80);
   }
 
   /**

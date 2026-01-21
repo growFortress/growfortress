@@ -164,10 +164,11 @@ export class VFXSystem {
         p.rotation += p.rotationSpeed * dt;
       }
 
-      // Apply drag
+      // Apply drag (frame-rate independent)
       const drag = p.drag ?? 0.95;
-      p.vx *= drag;
-      p.vy *= drag;
+      const dragFactor = Math.pow(drag, dt * 60);
+      p.vx *= dragFactor;
+      p.vy *= dragFactor;
 
       // Spawn secondary particles
       if (p.spawnSecondary && p.life < p.maxLife * 0.7 && Math.random() < 0.1) {

@@ -1,8 +1,8 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import type { GameState, ActiveHero, HeroState } from '@arcade/sim-core';
 import { FP, STORM_FORGE_SYNERGY_RANGE_SQ } from '@arcade/sim-core';
-import { Tween, TweenManager, TweenSequence } from '../animation/Tween.js';
-import { easeOutQuad, easeOutElastic, easeOutCubic } from '../animation/easing.js';
+import { Tween, TweenManager } from '../animation/Tween.js';
+import { easeOutQuad, easeOutElastic } from '../animation/easing.js';
 import type { VFXSystem } from './VFXSystem.js';
 import { getHeroColors, getHeroShapeType, getSkillVfxHandler } from './hero-config.js';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
@@ -50,18 +50,19 @@ const ANIMATION = {
 
 const MOTION = {
   snapDistance: 0.6,
-  retargetDistance: 8.0,
+  retargetDistance: 2.0,
   forceSnapDistance: 80,
-  anticipationRatio: 0.12,
-  overshootRatio: 0.06,
-  anticipationMax: 10,
-  overshootMax: 4,
-  anticipationMaxDistance: 40,
-  anticipationDuration: 50,
-  settleDuration: 90,
-  minDuration: 90,
-  maxDuration: 240,
-  durationPerPixel: 0.6,
+  anticipationRatio: 0.0,
+  overshootRatio: 0.0,
+  anticipationMax: 0,
+  overshootMax: 0,
+  anticipationMaxDistance: 0,
+  anticipationDuration: 0,
+  settleDuration: 30,
+  minDuration: 16,
+  maxDuration: 50,
+  durationPerPixel: 0.15,
+  lerpSpeed: 0.25,
 };
 
 /**
@@ -118,20 +119,17 @@ interface HeroVisual {
   heroId: string;
   animation: HeroAnimationState;
   lastHp: number;
-  lastTier: 1 | 2 | 3;  // Track tier for dirty flagging
+  lastTier: 1 | 2 | 3;
   tweenManager: TweenManager;
   scaleTween: Tween<number> | null;
   alphaTween: Tween<number> | null;
   hpTween: Tween<number> | null;
-  motionSequence: TweenSequence | null;
   motionTarget: { x: number; y: number };
   motionInitialized: boolean;
   lastVisualX: number;
   lastVisualY: number;
   breathingPhase: number;
-  // Track skill cooldowns to detect skill usage
   lastSkillCooldowns: Record<string, number>;
-  // Dirty flags for optimized rendering
   dirty: DirtyFlags;
 }
 
@@ -412,7 +410,6 @@ export class HeroSystem {
       scaleTween: null,
       alphaTween: null,
       hpTween: null,
-      motionSequence: null,
       motionTarget: { x: 0, y: 0 },
       motionInitialized: false,
       lastVisualX: 0,
@@ -485,7 +482,7 @@ export class HeroSystem {
 
     // Scale down
     visual.scaleTween = new Tween(visual.animation.scale, 0, ANIMATION.death, {
-      easing: easeOutCubic,
+      easing: easeOutQuad,
       onUpdate: (value) => {
         visual.animation.scale = value as number;
       },
@@ -788,59 +785,15 @@ export class HeroSystem {
       return;
     }
 
-    if (visual.motionSequence) {
-      visual.motionSequence.update(deltaMs);
-      if (visual.motionSequence.isComplete()) {
-        visual.motionSequence = null;
-      }
-    }
+    visual.motionTarget = { x: targetX, y: targetY };
 
-    const targetShift = Math.hypot(
-      targetX - visual.motionTarget.x,
-      targetY - visual.motionTarget.y
-    );
+    const dist = Math.hypot(targetX - anim.visualX, targetY - anim.visualY);
 
-    if (targetShift > MOTION.retargetDistance) {
-      visual.motionTarget = { x: targetX, y: targetY };
-      const distToTarget = Math.hypot(targetX - anim.visualX, targetY - anim.visualY);
-
-      if (visual.motionSequence) {
-        if (distToTarget > MOTION.forceSnapDistance) {
-          visual.motionSequence = null;
-          anim.visualX = targetX;
-          anim.visualY = targetY;
-        }
-        return;
-      }
-
-      this.startMotionSequence(visual, targetX, targetY);
+    if (dist > MOTION.forceSnapDistance) {
+      anim.visualX = targetX;
+      anim.visualY = targetY;
       return;
     }
-
-    if (!visual.motionSequence) {
-      const dist = Math.hypot(targetX - anim.visualX, targetY - anim.visualY);
-      if (dist > MOTION.snapDistance) {
-        this.startMotionSequence(visual, targetX, targetY);
-      } else {
-        anim.visualX = targetX;
-        anim.visualY = targetY;
-      }
-    }
-  }
-
-  private startMotionSequence(
-    visual: HeroVisual,
-    targetX: number,
-    targetY: number
-  ): void {
-    const anim = visual.animation;
-    const startX = anim.visualX;
-    const startY = anim.visualY;
-    const dx = targetX - startX;
-    const dy = targetY - startY;
-    const dist = Math.hypot(dx, dy);
-
-    visual.motionTarget = { x: targetX, y: targetY };
 
     if (dist <= MOTION.snapDistance) {
       anim.visualX = targetX;
@@ -848,64 +801,9 @@ export class HeroSystem {
       return;
     }
 
-    const dirX = dx / dist;
-    const dirY = dy / dist;
-    const anticipation = Math.min(MOTION.anticipationMax, dist * MOTION.anticipationRatio);
-    const overshoot = Math.min(MOTION.overshootMax, dist * MOTION.overshootRatio);
-    const moveDuration = Math.min(
-      MOTION.maxDuration,
-      Math.max(MOTION.minDuration, dist * MOTION.durationPerPixel)
-    );
-
-    const applyPosition = (value: { x: number; y: number }) => {
-      anim.visualX = value.x;
-      anim.visualY = value.y;
-    };
-
-    const sequence = new TweenSequence();
-
-    if (dist > 10 && dist <= MOTION.anticipationMaxDistance) {
-      const anticipateX = startX - dirX * anticipation;
-      const anticipateY = startY - dirY * anticipation;
-
-      sequence.add(
-        new Tween(
-          { x: startX, y: startY },
-          { x: anticipateX, y: anticipateY },
-          MOTION.anticipationDuration,
-          { easing: easeOutQuad, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
-        )
-      );
-
-      sequence.add(
-        new Tween(
-          { x: anticipateX, y: anticipateY },
-          { x: targetX + dirX * overshoot, y: targetY + dirY * overshoot },
-          moveDuration,
-          { easing: easeOutCubic, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
-        )
-      );
-
-      sequence.add(
-        new Tween(
-          { x: targetX + dirX * overshoot, y: targetY + dirY * overshoot },
-          { x: targetX, y: targetY },
-          MOTION.settleDuration,
-          { easing: easeOutQuad, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
-        )
-      );
-    } else {
-      sequence.add(
-        new Tween(
-          { x: startX, y: startY },
-          { x: targetX, y: targetY },
-          moveDuration,
-          { easing: easeOutCubic, onUpdate: (value) => applyPosition(value as { x: number; y: number }) }
-        )
-      );
-    }
-
-    visual.motionSequence = sequence;
+    const lerpFactor = Math.min(1, MOTION.lerpSpeed * (deltaMs / 16.67));
+    anim.visualX += (targetX - anim.visualX) * lerpFactor;
+    anim.visualY += (targetY - anim.visualY) * lerpFactor;
   }
 
   private drawHeroBody(

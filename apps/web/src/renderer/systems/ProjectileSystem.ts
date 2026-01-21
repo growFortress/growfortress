@@ -46,20 +46,19 @@ const PROJECTILE_CONFIG: Record<ProjectileType, {
   size: number;
   trailLength: number;
   shape: 'circle' | 'spike' | 'bolt' | 'orb' | 'plasma' | 'slash';
-  emissionRate: number; // particles per second
-  motionBlur: number; // stretch factor
-  ghostCount: number; // afterimage count
-  pulseSpeed: number; // core pulse frequency
-  glowLayers: number; // number of glow rings
+  emissionRate: number;
+  motionBlur: number;
+  ghostCount: number;
+  pulseSpeed: number;
+  glowLayers: number;
 }> = {
-  physical: { size: 4, trailLength: 4, shape: 'circle', emissionRate: 6, motionBlur: 1.2, ghostCount: 1, pulseSpeed: 4, glowLayers: 1 },
-  icicle: { size: 5, trailLength: 6, shape: 'spike', emissionRate: 8, motionBlur: 1.5, ghostCount: 1, pulseSpeed: 3, glowLayers: 1 },
-  fireball: { size: 6, trailLength: 8, shape: 'circle', emissionRate: 12, motionBlur: 1.4, ghostCount: 2, pulseSpeed: 8, glowLayers: 2 },
-  bolt: { size: 3, trailLength: 10, shape: 'bolt', emissionRate: 10, motionBlur: 2.0, ghostCount: 2, pulseSpeed: 12, glowLayers: 1 },
-  laser: { size: 2, trailLength: 12, shape: 'bolt', emissionRate: 8, motionBlur: 2.5, ghostCount: 2, pulseSpeed: 6, glowLayers: 1 },
-  // Exclusive hero projectiles
-  plasma_beam: { size: 5, trailLength: 10, shape: 'plasma', emissionRate: 16, motionBlur: 2.0, ghostCount: 3, pulseSpeed: 15, glowLayers: 2 },
-  void_slash: { size: 8, trailLength: 6, shape: 'slash', emissionRate: 12, motionBlur: 1.8, ghostCount: 2, pulseSpeed: 10, glowLayers: 2 },
+  physical: { size: 4, trailLength: 6, shape: 'circle', emissionRate: 4, motionBlur: 1.2, ghostCount: 2, pulseSpeed: 3, glowLayers: 1 },
+  icicle: { size: 5, trailLength: 8, shape: 'spike', emissionRate: 5, motionBlur: 1.5, ghostCount: 2, pulseSpeed: 2, glowLayers: 1 },
+  fireball: { size: 6, trailLength: 10, shape: 'circle', emissionRate: 8, motionBlur: 1.4, ghostCount: 3, pulseSpeed: 5, glowLayers: 2 },
+  bolt: { size: 3, trailLength: 12, shape: 'bolt', emissionRate: 6, motionBlur: 2.0, ghostCount: 3, pulseSpeed: 8, glowLayers: 1 },
+  laser: { size: 2, trailLength: 14, shape: 'bolt', emissionRate: 5, motionBlur: 2.5, ghostCount: 3, pulseSpeed: 4, glowLayers: 1 },
+  plasma_beam: { size: 5, trailLength: 12, shape: 'plasma', emissionRate: 10, motionBlur: 2.0, ghostCount: 4, pulseSpeed: 10, glowLayers: 2 },
+  void_slash: { size: 8, trailLength: 8, shape: 'slash', emissionRate: 8, motionBlur: 1.8, ghostCount: 3, pulseSpeed: 6, glowLayers: 2 },
 };
 
 // Map FortressClass to ProjectileType (7 classes)
@@ -240,7 +239,7 @@ export class ProjectileSystem {
   }
 
   /**
-   * Draw ghost afterimages for motion blur effect (compact version)
+   * Draw ghost afterimages for motion blur effect
    */
   private drawGhostAfterimages(
     g: Graphics,
@@ -248,24 +247,21 @@ export class ProjectileSystem {
     trail: { x: number; y: number }[],
     config: typeof PROJECTILE_CONFIG[ProjectileType]
   ) {
-    if (trail.length < 3 || config.ghostCount === 0) return;
+    if (trail.length < 2 || config.ghostCount === 0) return;
 
     const colors = CLASS_COLORS[fortressClass] || CLASS_COLORS.natural;
-    const ghostCount = config.ghostCount;
-    const ghostSpacing = Math.max(1, Math.floor(trail.length / ghostCount));
+    const ghostCount = Math.min(config.ghostCount, trail.length - 1);
 
-    for (let i = 1; i < ghostCount && i * ghostSpacing < trail.length; i++) {
-      const trailIndex = i * ghostSpacing;
-      const pos = trail[trailIndex];
+    for (let i = 1; i <= ghostCount && i < trail.length; i++) {
+      const pos = trail[i];
       if (!pos) continue;
 
-      const ghostProgress = i / ghostCount;
-      const ghostAlpha = (1 - ghostProgress) * 0.15;
-      const ghostSize = config.size * (0.8 - ghostProgress * 0.4);
+      const ghostProgress = i / (ghostCount + 1);
+      const ghostAlpha = (1 - ghostProgress) * 0.2;
+      const ghostSize = config.size * (0.9 - ghostProgress * 0.5);
 
-      if (ghostAlpha < 0.03 || ghostSize < 0.5) continue;
+      if (ghostAlpha < 0.02 || ghostSize < 0.4) continue;
 
-      // Single subtle ghost circle (no extra glow ring)
       g.circle(pos.x, pos.y, ghostSize)
         .fill({ color: colors.primary, alpha: ghostAlpha });
     }

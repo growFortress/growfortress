@@ -220,7 +220,7 @@ export class GameScene {
       // Update entity systems
       this.turretSystem.update(state, this.width, this.height);
       this.wallSystem.update(state, this.width, this.height, this.effects.vfx);
-      this.enemySystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
+      this.enemySystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha, deltaMs);
       this.militiaSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
       this.heroSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
       this.projectileSystem.update(state, this.width, this.height, renderAlpha, deltaMs);
