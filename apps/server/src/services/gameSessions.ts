@@ -490,6 +490,12 @@ export async function submitSegment(
   try {
     const config = getDefaultConfig();
     applySimConfigSnapshot(config, tokenPayload.simConfig);
+    
+    // Fix: If snapshot doesn't have unlockedPillars (old sessions), use current fortress level
+    if (!config.unlockedPillars) {
+      config.unlockedPillars = await getUnlockedPillarsForUser(session.userId);
+    }
+    
     config.startingWave = startWave;
     config.segmentSize = SEGMENT_SIZE;
     config.tickHz = TICK_HZ;

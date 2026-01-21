@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js';
 import { Simulation, getDefaultConfig } from '@arcade/sim-core';
 import { applySimConfigSnapshot } from './simConfig.js';
+import { getUnlockedPillarsForUser } from './pillarUnlocks.js';
 
 const TICK_HZ = 30;
 
@@ -23,6 +24,11 @@ export async function getSessionStateAtTick(sessionId: string, targetTick: numbe
   const config = getDefaultConfig();
   if (session.configJson) {
     applySimConfigSnapshot(config, session.configJson as any);
+    
+    // Fix: If snapshot doesn't have unlockedPillars (old sessions), use current fortress level
+    if (!config.unlockedPillars) {
+      config.unlockedPillars = await getUnlockedPillarsForUser(session.userId);
+    }
   }
   config.startingWave = session.startingWave;
   config.tickHz = TICK_HZ;
