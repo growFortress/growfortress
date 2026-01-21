@@ -262,6 +262,9 @@
   text-align: center;
   border-top: 1px solid var(--color-neutral-dark);
   background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .version {
@@ -302,6 +305,58 @@
 .linkSeparator {
   color: var(--color-text-20);
   font-size: 10px;
+}
+
+/* Community Links */
+.communitySection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.communityTitle {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.communityLinks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.communityLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-standard);
+  text-decoration: none;
+}
+
+.communityLink:hover {
+  color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.communityLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.communityIcon {
+  font-size: 1.1rem;
 }
 
 /* Account Section Styles */

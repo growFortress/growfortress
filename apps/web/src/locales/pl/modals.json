@@ -85,6 +85,12 @@
       "terms": "Regulamin",
       "privacy": "Prywatność",
       "cookies": "Cookies"
+    },
+    "community": {
+      "title": "Społeczność",
+      "discord": "Discord",
+      "twitter": "X (Twitter)",
+      "reddit": "Reddit"
     }
   },
   "buildPresets": {

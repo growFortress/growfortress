@@ -32,6 +32,7 @@ import { LanguageSwitcher } from "../shared/LanguageSwitcher.js";
 import styles from "./SettingsMenu.module.css";
 import { country, preferredCurrency } from "../../state/profile.signals.js";
 import type { Currency } from "@arcade/protocol";
+import { SOCIAL_LINKS } from "../../config.js";
 
 interface SettingsMenuProps {
   onLogout: () => Promise<void> | void;
@@ -701,6 +702,34 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
       </div>
 
       <div class={styles.footer}>
+        {/* Community Links */}
+        <div class={styles.communitySection}>
+          <span class={styles.communityTitle}>{t("settings.community.title")}</span>
+          <div class={styles.communityLinks}>
+            <a
+              href={SOCIAL_LINKS.DISCORD}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={styles.communityLink}
+              aria-label={t("settings.community.discord")}
+            >
+              <span class={styles.communityIcon}>💬</span>
+              <span>{t("settings.community.discord")}</span>
+            </a>
+            <a
+              href={SOCIAL_LINKS.TWITTER}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={styles.communityLink}
+              aria-label={t("settings.community.twitter")}
+            >
+              <span class={styles.communityIcon}>🐦</span>
+              <span>{t("settings.community.twitter")}</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Legal Links */}
         <div class={styles.legalLinks}>
           <button
             type="button"
@@ -735,6 +764,8 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
             {t("settings.legal.cookies")}
           </button>
         </div>
+
+        {/* Version */}
         <span class={styles.version}>Grow Fortress v0.1</span>
       </div>
     </Modal>

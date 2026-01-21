@@ -319,6 +319,13 @@ CORS_ORIGINS="http://localhost:5173"
 | `leaderboard-snapshot` | Hourly | Cache top 100 in Redis |
 | `metrics-snapshot` | Every 5 min | Record system metrics |
 
+## Community
+
+Join the Grow Fortress community:
+
+- 💬 **[Discord](https://discord.gg/tY87dwqE)** - Chat, strategy discussions, and support
+- 🐦 **[X/Twitter](https://x.com/GrowFortress)** - Updates and announcements
+
 ## License
 
 MIT
