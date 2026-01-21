@@ -604,6 +604,7 @@ export const BattleRosterMemberSchema = z.object({
   highestWave: z.number().int().min(0),
   unlockedHeroCount: z.number().int().min(0),
   lastActiveAt: z.string().datetime().nullable(),
+  isOnline: z.boolean().optional(),
 });
 export type BattleRosterMember = z.infer<typeof BattleRosterMemberSchema>;
 

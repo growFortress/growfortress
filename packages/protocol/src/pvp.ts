@@ -67,9 +67,11 @@ export const PvpChallengeSchema = z.object({
   challengerId: z.string(),
   challengerName: z.string(),
   challengerPower: z.number().int().min(0),
+  challengerIsOnline: z.boolean().optional(),
   challengedId: z.string(),
   challengedName: z.string(),
   challengedPower: z.number().int().min(0),
+  challengedIsOnline: z.boolean().optional(),
   status: PvpChallengeStatusSchema,
   createdAt: z.string().datetime(),
   expiresAt: z.string().datetime(),
@@ -184,6 +186,7 @@ export const PvpOpponentSchema = z.object({
   pvpLosses: z.number().int().min(0),
   canChallenge: z.boolean(),
   challengeCooldownEndsAt: z.string().datetime().optional(),
+  isOnline: z.boolean().optional(),
 });
 
 export type PvpOpponent = z.infer<typeof PvpOpponentSchema>;

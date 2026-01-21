@@ -15,6 +15,7 @@ export const GuildPreviewMemberSchema = z.object({
   role: GuildRoleSchema,
   level: z.number().int().min(1),
   power: z.number().int().min(0),
+  isOnline: z.boolean().optional(),
 });
 export type GuildPreviewMember = z.infer<typeof GuildPreviewMemberSchema>;
 

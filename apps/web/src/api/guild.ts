@@ -450,6 +450,7 @@ export interface TowerRaceContribution {
   userId: string;
   displayName: string;
   wavesContributed: number;
+  isOnline?: boolean;
 }
 
 export interface TowerRaceLeaderboardResponse {
@@ -570,6 +571,7 @@ export interface BossMemberDamage {
   damage: number;
   heroId: string;
   heroTier: number;
+  isOnline?: boolean;
 }
 
 export interface GuildBossInfoResponse {
