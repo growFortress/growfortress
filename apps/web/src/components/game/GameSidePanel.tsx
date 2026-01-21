@@ -42,7 +42,7 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
       <div class={styles.speedControls} data-tutorial="speed-controls">
         <span class={styles.speedLabel}>{t("game:sidePanel.speed")}</span>
         <div class={styles.speedButtons}>
-          {([1, 2, 3] as GameSpeed[]).map((speed) => (
+          {([1, 2] as GameSpeed[]).map((speed) => (
             <button
               key={speed}
               class={`${styles.speedButton} ${currentSpeed === speed ? styles.speedActive : ''}`}

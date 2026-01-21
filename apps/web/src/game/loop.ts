@@ -4,7 +4,7 @@ const TICK_MS = 1000 / CONFIG.TICK_RATE;
 const MAX_DELTA_MS = 100; // Prevent spiral of death
 
 /** Valid game speed multipliers */
-export type GameSpeed = 1 | 2 | 3;
+export type GameSpeed = 1 | 2;
 
 /** Interface for objects that can be stepped in the game loop */
 export interface Steppable {
@@ -107,7 +107,7 @@ export class GameLoop {
     return this.speedMultiplier;
   }
 
-  /** Set game speed multiplier (1x, 2x, 3x) */
+  /** Set game speed multiplier (1x, 2x) */
   setSpeed(speed: GameSpeed): void {
     this.speedMultiplier = speed;
   }

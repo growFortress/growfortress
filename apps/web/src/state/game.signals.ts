@@ -82,7 +82,7 @@ export const gamePhase = signal<GamePhase>('idle');
 // Force reset to hub (used when abandoning session from modal)
 export const forceResetToHub = signal(false);
 
-// Game speed multiplier (1x, 2x, 3x)
+// Game speed multiplier (1x, 2x)
 export const gameSpeed = signal<GameSpeed>(1);
 
 // Game state snapshot (updated each tick during gameplay)
