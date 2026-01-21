@@ -36,7 +36,6 @@ interface TurretSkillBarProps {
 }
 
 export function TurretSkillBar({ compact = false }: TurretSkillBarProps) {
-  const { t } = useTranslation('game');
   const turrets = activeTurrets.value;
   const phase = gamePhase.value;
 
@@ -67,6 +66,7 @@ interface TurretCardProps {
 }
 
 function TurretCard({ turret, compact }: TurretCardProps) {
+  const { t } = useTranslation('game');
   const turretDef = getTurretById(turret.definitionId as 'arrow' | 'cannon' | 'sniper' | 'tesla' | 'frost' | 'flame' | 'support' | 'poison');
   if (!turretDef) return null;
 
