@@ -411,6 +411,43 @@ describe('PvP Routes Integration', () => {
       );
     });
 
+    it('should handle invalid query parameters gracefully', async () => {
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.count.mockResolvedValue(0);
+
+      const token = await generateTestToken('user-123');
+
+      // Test with invalid type - should fall back to default 'all'
+      const response1 = await app.inject({
+        method: 'GET',
+        url: '/v1/pvp/challenges?type=invalid',
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+      expect(response1.statusCode).toBe(200);
+
+      // Test with empty strings - should use defaults
+      const response2 = await app.inject({
+        method: 'GET',
+        url: '/v1/pvp/challenges?type=&limit=&offset=',
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+      expect(response2.statusCode).toBe(200);
+
+      // Test with invalid numeric values - should use defaults
+      const response3 = await app.inject({
+        method: 'GET',
+        url: '/v1/pvp/challenges?limit=abc&offset=xyz',
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+      expect(response3.statusCode).toBe(200);
+    });
+
     it('should paginate results', async () => {
       mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
       mockPrisma.pvpChallenge.count.mockResolvedValue(0);

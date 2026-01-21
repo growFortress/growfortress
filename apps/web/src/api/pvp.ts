@@ -67,10 +67,25 @@ export async function getChallenges(
   offset = 0
 ): Promise<PvpChallengesResponse> {
   const params = new URLSearchParams();
-  params.set('type', type);
-  if (status) params.set('status', status);
-  params.set('limit', limit.toString());
-  params.set('offset', offset.toString());
+  
+  // Ensure type is valid
+  if (type && ['sent', 'received', 'all'].includes(type)) {
+    params.set('type', type);
+  } else {
+    params.set('type', 'all');
+  }
+  
+  // Only add status if it's a valid value
+  if (status && ['PENDING', 'ACCEPTED', 'RESOLVED', 'DECLINED', 'EXPIRED', 'CANCELLED'].includes(status)) {
+    params.set('status', status);
+  }
+  
+  // Ensure limit and offset are valid numbers
+  const validLimit = Math.max(1, Math.min(50, Math.floor(limit || 20)));
+  const validOffset = Math.max(0, Math.floor(offset || 0));
+  
+  params.set('limit', validLimit.toString());
+  params.set('offset', validOffset.toString());
 
   return request<PvpChallengesResponse>(`/v1/pvp/challenges?${params}`);
 }

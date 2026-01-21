@@ -86,7 +86,15 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       query = PvpChallengesQuerySchema.parse(request.query);
     } catch (error) {
-      return reply.status(400).send({ error: 'Invalid query parameters' });
+      fastify.log.error({ 
+        query: request.query, 
+        error: error instanceof Error ? error.message : String(error),
+        userId: request.userId 
+      }, 'Invalid query parameters for GET /v1/pvp/challenges');
+      return reply.status(400).send({ 
+        error: 'Invalid query parameters',
+        details: error instanceof Error ? error.message : undefined
+      });
     }
 
     const result = await getChallenges(

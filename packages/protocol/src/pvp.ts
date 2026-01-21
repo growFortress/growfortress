@@ -104,9 +104,24 @@ export type PvpCreateChallengeResponse = z.infer<typeof PvpCreateChallengeRespon
 
 export const PvpChallengesQuerySchema = z.object({
   status: PvpChallengeStatusSchema.optional(),
-  type: z.enum(['sent', 'received', 'all']).default('all'),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-  offset: z.coerce.number().int().min(0).default(0),
+  type: z
+    .enum(['sent', 'received', 'all'])
+    .catch('all')
+    .default('all'),
+  limit: z
+    .preprocess((val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      return val;
+    }, z.coerce.number().int().min(1).max(50))
+    .catch(20)
+    .default(20),
+  offset: z
+    .preprocess((val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      return val;
+    }, z.coerce.number().int().min(0))
+    .catch(0)
+    .default(0),
 });
 
 export type PvpChallengesQuery = z.infer<typeof PvpChallengesQuerySchema>;
