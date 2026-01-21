@@ -10,11 +10,19 @@ import type {
   PillarChallengeTier,
   CrystalType,
 } from '@arcade/sim-core';
-import type { CrystalProgress } from '../components/items/CrystalMatrix.js';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+export interface CrystalProgress {
+  power: number;
+  space: number;
+  time: number;
+  reality: number;
+  soul: number;
+  mind: number;
+}
 
 export interface PillarChallengeSession {
   sessionId: string;
@@ -180,12 +188,12 @@ export const hasPaidAttempts = computed(() => {
 
 /** Total fragments collected */
 export const totalFragments = computed(() => {
-  return Object.values(crystalProgress.value).reduce((sum, f) => sum + f, 0);
+  return Object.values(crystalProgress.value).reduce((sum: number, f: number) => sum + f, 0);
 });
 
 /** Number of complete crystals */
 export const completeCrystals = computed(() => {
-  return Object.values(crystalProgress.value).filter(f => f >= 10).length;
+  return Object.values(crystalProgress.value).filter((f: number) => f >= 10).length;
 });
 
 /** Check if specific tier is unlocked for pillar */
