@@ -1186,9 +1186,11 @@ export class HeroSystem {
         this.drawVoidStar(g, bodySize, colors, time);
         break;
       default:
+        // Dark outline for contrast
+        g.circle(0, 0, bodySize).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
         g.circle(0, 0, bodySize)
           .fill({ color: colors.primary })
-          .stroke({ width: 3, color: colors.secondary });
+          .stroke({ width: 5, color: colors.secondary });
     }
   }
 
@@ -1198,7 +1200,9 @@ export class HeroSystem {
       const angle = (i * Math.PI) / 3 - Math.PI / 2;
       points.push(Math.cos(angle) * size, Math.sin(angle) * size);
     }
-    g.poly(points).fill({ color: colors.primary }).stroke({ width: 4, color: colors.secondary });
+    // Dark outline for contrast
+    g.poly(points).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
+    g.poly(points).fill({ color: colors.primary }).stroke({ width: 5, color: colors.secondary });
 
     // Inner depth layers (gradient simulation)
     const midPoints: number[] = [];
@@ -1226,7 +1230,9 @@ export class HeroSystem {
   ): void {
     const stretch = 1.2;
     const points = [0, -size * stretch, size, 0, 0, size * stretch, -size, 0];
-    g.poly(points).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+    // Dark outline for contrast
+    g.poly(points).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
+    g.poly(points).fill({ color: colors.primary }).stroke({ width: 5, color: colors.secondary });
 
     // Inner depth layers
     const midPoints = [0, -size * stretch * 0.8, size * 0.8, 0, 0, size * stretch * 0.8, -size * 0.8, 0];
@@ -1255,7 +1261,9 @@ export class HeroSystem {
       const r = i % 2 === 0 ? size : size * 0.85;
       points.push(Math.cos(angle) * r, Math.sin(angle) * r);
     }
-    g.poly(points).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+    // Dark outline for contrast
+    g.poly(points).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
+    g.poly(points).fill({ color: colors.primary }).stroke({ width: 5, color: colors.secondary });
 
     // Inner depth layers
     const innerPoints: number[] = [];
@@ -1282,8 +1290,10 @@ export class HeroSystem {
     colors: { primary: number; secondary: number; accent: number },
     time: number
   ): void {
+    // Dark outline for contrast
+    g.circle(0, 0, size).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
     // Circle base
-    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 5, color: colors.secondary });
 
     // Inner depth layers (gradient simulation)
     g.circle(0, 0, size * 0.8).fill({ color: colors.secondary, alpha: 0.2 });
@@ -1313,8 +1323,10 @@ export class HeroSystem {
     colors: { primary: number; secondary: number; accent: number },
     time: number
   ): void {
+    // Dark outline for contrast
+    g.circle(0, 0, size).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
     // Circle base with icy gradient feel
-    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 5, color: colors.secondary });
 
     // Inner depth layers (icy gradient)
     g.circle(0, 0, size * 0.8).fill({ color: colors.secondary, alpha: 0.2 });
@@ -1354,8 +1366,10 @@ export class HeroSystem {
     colors: { primary: number; secondary: number; accent: number },
     time: number
   ): void {
+    // Dark outline for contrast
+    g.circle(0, 0, size).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
     // Circle base with fire gradient
-    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 3, color: colors.secondary });
+    g.circle(0, 0, size).fill({ color: colors.primary }).stroke({ width: 5, color: colors.secondary });
 
     // Inner depth layers (fiery gradient)
     g.circle(0, 0, size * 0.8).fill({ color: colors.secondary, alpha: 0.25 });
@@ -1409,7 +1423,9 @@ export class HeroSystem {
       const angle = (i * Math.PI) / 3 - Math.PI / 2;
       outerPoints.push(Math.cos(angle) * size, Math.sin(angle) * size);
     }
-    g.poly(outerPoints).fill({ color: colors.primary }).stroke({ width: 4, color: colors.secondary });
+    // Dark outline for contrast
+    g.poly(outerPoints).stroke({ width: 8, color: 0x000000, alpha: 0.6 });
+    g.poly(outerPoints).fill({ color: colors.primary }).stroke({ width: 5, color: colors.secondary });
 
     // Inner void gradient layers (dark center)
     const midPoints: number[] = [];
@@ -1479,7 +1495,9 @@ export class HeroSystem {
       const r = size * (0.85 + wobble + phaseShift);
       bodyPoints.push(Math.cos(angle) * r, Math.sin(angle) * r);
     }
-    g.poly(bodyPoints).fill({ color: colors.primary, alpha: 0.7 }).stroke({ width: 2, color: colors.secondary, alpha: 0.8 });
+    // Dark outline for contrast
+    g.poly(bodyPoints).stroke({ width: 7, color: 0x000000, alpha: 0.5 });
+    g.poly(bodyPoints).fill({ color: colors.primary, alpha: 0.7 }).stroke({ width: 4, color: colors.secondary, alpha: 0.9 });
 
     // Inner translucent layers
     g.circle(0, 0, size * 0.65).fill({ color: colors.secondary, alpha: 0.25 });
@@ -1543,9 +1561,12 @@ export class HeroSystem {
 
     // Main star body - 5-pointed assassin star
     const starRotation = time * 0.8;
+    // Dark outline for contrast
+    g.star(0, 0, 5, size, size * 0.45, starRotation)
+      .stroke({ width: 8, color: 0x000000, alpha: 0.6 });
     g.star(0, 0, 5, size, size * 0.45, starRotation)
       .fill({ color: colors.primary })
-      .stroke({ width: 3, color: colors.secondary });
+      .stroke({ width: 5, color: colors.secondary });
 
     // Inner star layer
     g.star(0, 0, 5, size * 0.7, size * 0.35, starRotation)

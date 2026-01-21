@@ -8,6 +8,7 @@ import {
   ForgotPasswordRequestSchema,
   ResetPasswordRequestSchema,
   BuildPresetsUpdateRequestSchema,
+  UpdateCurrencyRequestSchema,
 } from "@arcade/protocol";
 import {
   registerUser,
@@ -19,6 +20,7 @@ import {
   completeOnboarding,
   updateDefaultLoadout,
   updateBuildPresets,
+  updatePreferredCurrency,
   logoutUser,
   logoutAdmin,
   requestPasswordReset,
@@ -28,6 +30,7 @@ import {
   changePassword,
   getUserEmail,
 } from "../services/auth.js";
+import { resolveLocaleDefaults } from "../services/geoip.js";
 import { withRateLimit } from "../plugins/rateLimit.js";
 import { config, parseDuration } from "../config.js";
 import { redis } from "../lib/redis.js";
@@ -157,10 +160,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       const body = AuthRegisterRequestSchema.parse(request.body);
 
       try {
+        const localeDefaults = resolveLocaleDefaults(request);
         const result = await registerUser(
           body.username,
           body.password,
           body.email,
+          {
+            country: localeDefaults.country,
+            preferredCurrency: localeDefaults.currency,
+          },
         );
 
         setRefreshCookie(
@@ -396,6 +404,25 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     return reply.send({ description: result.description || "" });
   });
+
+  // Update preferred currency
+  fastify.patch(
+    "/v1/profile/currency",
+    withRateLimit("profile"),
+    async (request, reply) => {
+      if (!request.userId) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const body = UpdateCurrencyRequestSchema.parse(request.body);
+      const preferredCurrency = await updatePreferredCurrency(
+        request.userId,
+        body.currency,
+      );
+
+      return reply.send({ preferredCurrency });
+    },
+  );
 
   // Get user email
   fastify.get("/v1/profile/email", async (request, reply) => {

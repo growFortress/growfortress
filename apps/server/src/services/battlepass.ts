@@ -610,6 +610,7 @@ export async function upgradeToPremium(
     productName: `${season.name} - Premium Battle Pass`,
     productDescription: `Unlock premium rewards track with exclusive heroes, skins, and 5,000+ Dust value!`,
     priceGrosze: BATTLE_PASS_CONFIG.premiumPriceGrosze,
+    currency: 'PLN',
     successUrl,
     cancelUrl,
   });
@@ -622,6 +623,7 @@ export async function upgradeToPremium(
       productType: 'BATTLE_PASS',
       productName: `${season.name} - Premium Battle Pass`,
       pricePLN: BATTLE_PASS_CONFIG.premiumPriceGrosze,
+      priceCurrency: 'PLN',
       status: 'PENDING',
       stripeSessionId: session.id,
     },

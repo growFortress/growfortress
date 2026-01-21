@@ -38,6 +38,9 @@ import type {
   UnlockTurretResponse,
   BuildPresetsUpdateRequest,
   BuildPreset,
+  UpdateCurrencyRequest,
+  UpdateCurrencyResponse,
+  type Currency,
   // Consolidated types from protocol
   MaterialsResponse,
   AddMaterialsResponse,
@@ -126,6 +129,16 @@ export async function refreshTokensApi(): Promise<AuthRefreshResponse | null> {
 
 export async function getProfile(): Promise<ProfileResponse> {
   return request<ProfileResponse>("/v1/profile");
+}
+
+export async function updatePreferredCurrency(
+  currency: Currency,
+): Promise<UpdateCurrencyResponse> {
+  const payload: UpdateCurrencyRequest = { currency };
+  return request<UpdateCurrencyResponse>("/v1/profile/currency", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function completeOnboarding(

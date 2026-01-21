@@ -1,7 +1,7 @@
 import { signal, computed } from '@preact/signals';
 import type { FortressClass } from '@arcade/sim-core';
 import type { TurretType } from '@arcade/sim-core';
-import type { UserRole, BuildPreset } from '@arcade/protocol';
+import type { UserRole, BuildPreset, Currency } from '@arcade/protocol';
 
 // Base inventory values (from server profile)
 export const baseGold = signal(0);
@@ -16,6 +16,8 @@ export const playerDescription = signal<string>('');
 export const descriptionUpdating = signal(false);
 export const userRole = signal<UserRole>('USER');
 export const isAdmin = computed(() => userRole.value === 'ADMIN');
+export const country = signal<string | null>(null);
+export const preferredCurrency = signal<Currency>('PLN');
 
 // Onboarding status
 export const onboardingCompleted = signal(false);
@@ -83,6 +85,8 @@ export function resetProfileState(): void {
   playerDescription.value = '';
   descriptionUpdating.value = false;
   userRole.value = 'USER';
+  country.value = null;
+  preferredCurrency.value = 'PLN';
   onboardingCompleted.value = false;
   defaultLoadout.value = {
     fortressClass: null,

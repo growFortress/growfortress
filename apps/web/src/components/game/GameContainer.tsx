@@ -74,9 +74,11 @@ interface GameContainerProps {
 
 export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFailed, onSessionResumed }: GameContainerProps) {
   const { t } = useTranslation('game');
+  const gameAreaRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
   const [sessionStarting, setSessionStarting] = useState(false);
+  const [uiScale, setUiScale] = useState(1);
   const sessionRecoveryVisible = showSessionRecoveryModal.value;
 
   const canvasCallbackRef = useCallback((node: HTMLCanvasElement | null) => {
@@ -141,6 +143,43 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       reset();
     }
   }, [forceResetToHub.value, reset]);
+
+  const updateUiScale = useCallback((width: number, height: number) => {
+    const baseWidth = 1920;
+    const baseHeight = 1080;
+    const nextScale = Math.min(width / baseWidth, height / baseHeight, 1);
+    setUiScale((prev) => (Math.abs(prev - nextScale) < 0.001 ? prev : nextScale));
+  }, []);
+
+  useEffect(() => {
+    const target = gameAreaRef.current;
+    if (!target) {
+      return;
+    }
+
+    const updateFromRect = () => {
+      const rect = target.getBoundingClientRect();
+      updateUiScale(rect.width, rect.height);
+    };
+
+    updateFromRect();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateFromRect);
+      return () => window.removeEventListener('resize', updateFromRect);
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      if (!entries.length) {
+        return;
+      }
+      const rect = entries[0].contentRect;
+      updateUiScale(rect.width, rect.height);
+    });
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [updateUiScale]);
 
   // Sync colony scene visibility with signal
   useEffect(() => {
@@ -356,9 +395,13 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
   const isPlaying = gamePhase.value !== 'idle';
 
   return (
-    <div id="game-container" class={isPlaying ? 'playing' : ''}>
+    <div
+      id="game-container"
+      class={isPlaying ? 'playing' : ''}
+      style={{ '--ui-scale': uiScale.toString() } as Record<string, string>}
+    >
       {/* Game area - contains canvas and hub overlay */}
-      <div id="game-area">
+      <div id="game-area" ref={gameAreaRef}>
         <canvas ref={canvasCallbackRef} id="game-canvas" />
 
         {/* Hub overlay for clicking heroes/turrets before session */}

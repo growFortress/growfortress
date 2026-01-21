@@ -13,11 +13,11 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { audioManager } from '../../game/AudioManager.js';
 import {
-  DUST_PACKAGES_PLN,
-  STARTER_PACK_PRICE_PLN,
   PREMIUM_HEROES,
   BUNDLES,
   type ShopCategory,
+  type Currency,
+  type ShopProduct,
 } from '@arcade/protocol';
 import {
   shopModalVisible,
@@ -52,7 +52,8 @@ interface ProductDetail {
   id: string;
   name: string;
   description: string;
-  pricePLN: number;
+  price: number;
+  currency: Currency;
   dustAmount?: number;
   goldAmount?: number;
   bonusPercent?: number;
@@ -80,7 +81,7 @@ const DUST_SAVINGS: Record<string, number> = {
 };
 
 export function ShopModal() {
-  const { t } = useTranslation('common');
+  const { t, language } = useTranslation('common');
   const isVisible = shopModalVisible.value;
   const data = shopData.value;
   const loading = isLoadingShop.value;
@@ -90,6 +91,27 @@ export function ShopModal() {
   const error = shopError.value;
   const dust = displayDust.value;
   const gold = displayGold.value;
+  const starterPackProduct = data?.categories
+    .find((c) => c.id === "featured")
+    ?.products.find((product) => product.id === "starter_pack");
+
+  const formatPrice = (price: number, currency: Currency) => {
+    const locale = language === 'pl' ? 'pl-PL' : 'en-US';
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(price);
+    } catch {
+      return `${price.toFixed(2)} ${currency}`;
+    }
+  };
+
+  const getCategoryProducts = (categoryId: ShopCategory): ShopProduct[] => {
+    return data?.categories.find((c) => c.id === categoryId)?.products ?? [];
+  };
 
   // Interstitial offer state
   const [showInterstitial, setShowInterstitial] = useState(false);
@@ -222,7 +244,11 @@ export function ShopModal() {
             </div>
           </div>
 
-          <div class={styles.interstitialPrice}>{STARTER_PACK_PRICE_PLN} PLN</div>
+          {starterPackProduct && (
+            <div class={styles.interstitialPrice}>
+              {formatPrice(starterPackProduct.price, starterPackProduct.currency)}
+            </div>
+          )}
 
           <Button
             onClick={handleInterstitialBuy}
@@ -472,7 +498,9 @@ export function ShopModal() {
 
           {/* Price and buy button */}
           <div class={styles.productDetailActions}>
-            <div class={styles.productDetailPrice}>{selectedProduct.pricePLN} PLN</div>
+            <div class={styles.productDetailPrice}>
+              {formatPrice(selectedProduct.price, selectedProduct.currency)}
+            </div>
             <Button
               onClick={handleBuyFromDetail}
               disabled={processing || isHeroOwned}
@@ -489,22 +517,31 @@ export function ShopModal() {
 
   // Render product cards based on category
   const renderProducts = () => {
+    const featuredProducts = getCategoryProducts('featured');
+    const heroProducts = getCategoryProducts('heroes');
+    const dustProducts = getCategoryProducts('dust');
+    const bundleProducts = getCategoryProducts('bundles');
+
     switch (category) {
       case 'featured': {
-        const starterPackDetail: ProductDetail = {
-          type: 'starter_pack',
-          id: 'starter_pack',
-          name: t('shop.starterPack'),
-          description: t('shop.starterPackDesc'),
-          pricePLN: STARTER_PACK_PRICE_PLN,
-          dustAmount: 600,
-          goldAmount: 3000,
-        };
+        const starterPack = featuredProducts.find((product) => product.id === 'starter_pack');
+        const starterPackDetail = starterPack
+          ? {
+              type: 'starter_pack' as const,
+              id: starterPack.id,
+              name: starterPack.name,
+              description: starterPack.description,
+              price: starterPack.price,
+              currency: starterPack.currency,
+              dustAmount: starterPack.dustAmount ?? 600,
+              goldAmount: starterPack.goldAmount ?? 3000,
+            }
+          : null;
 
         return (
           <>
             {/* Starter Pack */}
-            {starterPackAvailable.value && (
+            {starterPackAvailable.value && starterPackDetail && (
               <div
                 class={`${styles.productCard} ${styles.clickable} ${styles.tierLegendary} ${styles.featuredCard}`}
                 onClick={() => handleProductClick(starterPackDetail)}
@@ -540,7 +577,9 @@ export function ShopModal() {
                   </div>
 
                   <div class={styles.featuredActions}>
-                    <div class={styles.productPrice}>{STARTER_PACK_PRICE_PLN} PLN</div>
+                    <div class={styles.productPrice}>
+                      {formatPrice(starterPackDetail.price, starterPackDetail.currency)}
+                    </div>
                     <Button
                       onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust('starter_pack'); }}
                       disabled={processing}
@@ -561,8 +600,10 @@ export function ShopModal() {
       case 'heroes':
         return (
           <>
-            {PREMIUM_HEROES.map((hero) => {
-              const isOwned = unlockedHeroIds.value.includes(hero.heroId);
+            {heroProducts.map((heroProduct) => {
+              const heroInfo = PREMIUM_HEROES.find((hero) => hero.id === heroProduct.id);
+              const heroId = heroProduct.heroId ?? heroInfo?.heroId;
+              const isOwned = heroId ? unlockedHeroIds.value.includes(heroId) : false;
               const classColors: Record<string, string> = {
                 fire: '#ff4500',
                 ice: '#1e90ff',
@@ -577,17 +618,18 @@ export function ShopModal() {
 
               const productDetail: ProductDetail = {
                 type: 'hero',
-                id: hero.id,
-                name: hero.name,
-                description: hero.description,
-                pricePLN: hero.pricePLN,
-                heroClass: hero.class,
-                heroRole: hero.role,
+                id: heroProduct.id,
+                name: heroProduct.name,
+                description: heroProduct.description,
+                price: heroProduct.price,
+                currency: heroProduct.currency,
+                heroClass: heroInfo?.class,
+                heroRole: heroInfo?.role,
               };
 
               return (
                 <div
-                  key={hero.id}
+                  key={heroProduct.id}
                   class={`${styles.productCard} ${styles.clickable} ${styles.tierPremium} ${styles.heroProduct} ${isOwned ? styles.owned : ''}`}
                   onClick={() => handleProductClick(productDetail)}
                 >
@@ -597,35 +639,37 @@ export function ShopModal() {
 
                   <div
                     class={styles.heroAvatar}
-                    style={{ '--hero-class-color': classColors[hero.class] || '#8b5cf6' } as any}
+                    style={{ '--hero-class-color': classColors[heroInfo?.class || ''] || '#8b5cf6' } as any}
                   >
                     <Icon
-                      name={hero.class === 'fire' ? 'fire' : 'frost'}
+                      name={heroInfo?.class === 'fire' ? 'fire' : 'frost'}
                       size={40}
-                      color={classColors[hero.class] || '#8b5cf6'}
+                      color={classColors[heroInfo?.class || ''] || '#8b5cf6'}
                     />
                   </div>
 
-                  <h3 class={styles.productTitle}>{hero.name}</h3>
+                  <h3 class={styles.productTitle}>{heroProduct.name}</h3>
 
                   <div class={styles.heroClassBadges}>
                     <span
                       class={styles.classBadge}
-                      style={{ backgroundColor: classColors[hero.class] || '#8b5cf6' }}
+                      style={{ backgroundColor: classColors[heroInfo?.class || ''] || '#8b5cf6' }}
                     >
-                      {hero.class.toUpperCase()}
+                      {(heroInfo?.class || '').toUpperCase()}
                     </span>
                     <span class={styles.roleBadge}>
-                      {roleLabels[hero.role] || hero.role.toUpperCase()}
+                      {heroInfo?.role ? (roleLabels[heroInfo.role] || heroInfo.role.toUpperCase()) : ''}
                     </span>
                   </div>
 
-                  <p class={styles.heroDescription}>{hero.description}</p>
+                  <p class={styles.heroDescription}>{heroProduct.description}</p>
 
-                  <div class={styles.productPrice}>{hero.pricePLN} PLN</div>
+                  <div class={styles.productPrice}>
+                    {formatPrice(heroProduct.price, heroProduct.currency)}
+                  </div>
 
                   <Button
-                    onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust(hero.id); }}
+                    onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust(heroProduct.id); }}
                     disabled={processing || isOwned}
                     variant="primary"
                     class={styles.buyButton}
@@ -635,7 +679,7 @@ export function ShopModal() {
                 </div>
               );
             })}
-            {PREMIUM_HEROES.every((h) => unlockedHeroIds.value.includes(h.heroId)) && (
+            {heroProducts.length === 0 && (
               <div class={styles.emptyMessage}>
                 {t('shop.allHeroesOwned')}
               </div>
@@ -644,23 +688,24 @@ export function ShopModal() {
         );
 
       case 'dust':
-        return DUST_PACKAGES_PLN.map((pkg) => {
-          const savings = DUST_SAVINGS[pkg.id] || 0;
-          const isBestValue = pkg.id === 'dust_mega';
+        return dustProducts.map((product) => {
+          const savings = DUST_SAVINGS[product.id] || 0;
+          const isBestValue = product.id === 'dust_mega';
 
           const productDetail: ProductDetail = {
             type: 'dust',
-            id: pkg.id,
-            name: `${pkg.dustAmount.toLocaleString()} ${t('shop.dust')}`,
+            id: product.id,
+            name: `${(product.dustAmount ?? 0).toLocaleString()} ${t('shop.dust')}`,
             description: t('shop.dustDescription'),
-            pricePLN: pkg.pricePLN,
-            dustAmount: pkg.dustAmount,
+            price: product.price,
+            currency: product.currency,
+            dustAmount: product.dustAmount,
             bonusPercent: savings,
           };
 
           return (
             <div
-              key={pkg.id}
+              key={product.id}
               class={`${styles.productCard} ${styles.clickable} ${isBestValue ? styles.tierEpic : styles.tierStandard} ${styles.dustProduct}`}
               onClick={() => handleProductClick(productDetail)}
             >
@@ -680,7 +725,7 @@ export function ShopModal() {
               </div>
 
               <h3 class={styles.productTitle}>
-                {pkg.dustAmount.toLocaleString()} {t('shop.dust')}
+                {(product.dustAmount ?? 0).toLocaleString()} {t('shop.dust')}
               </h3>
 
               {savings > 0 && (
@@ -689,10 +734,12 @@ export function ShopModal() {
                 </div>
               )}
 
-              <div class={styles.productPrice}>{pkg.pricePLN} PLN</div>
+              <div class={styles.productPrice}>
+                {formatPrice(product.price, product.currency)}
+              </div>
 
               <Button
-                onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust(pkg.id); }}
+                onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust(product.id); }}
                 disabled={processing}
                 variant="primary"
                 size="sm"
@@ -705,26 +752,28 @@ export function ShopModal() {
         });
 
       case 'bundles':
-        return BUNDLES.map((bundle) => {
+        return bundleProducts.map((product) => {
+          const bundle = BUNDLES.find((item) => item.id === product.id);
           const productDetail: ProductDetail = {
             type: 'bundle',
-            id: bundle.id,
-            name: bundle.name,
+            id: product.id,
+            name: product.name,
             description: t('shop.bundleDescription'),
-            pricePLN: bundle.pricePLN,
-            dustAmount: bundle.dustAmount,
-            goldAmount: bundle.goldAmount,
-            randomHeroCount: bundle.randomHeroCount,
-            randomArtifactCount: bundle.randomArtifactCount,
+            price: product.price,
+            currency: product.currency,
+            dustAmount: product.dustAmount,
+            goldAmount: product.goldAmount,
+            randomHeroCount: bundle?.randomHeroCount ?? 0,
+            randomArtifactCount: bundle?.randomArtifactCount ?? 0,
           };
 
           return (
             <div
-              key={bundle.id}
+              key={product.id}
               class={`${styles.productCard} ${styles.clickable} ${styles.tierEpic}`}
               onClick={() => handleProductClick(productDetail)}
             >
-              {bundle.badgeText && (
+              {bundle?.badgeText && (
                 <div class={`${styles.productBadge} ${styles.badgeBestValue}`}>
                   {bundle.badgeText}
                 </div>
@@ -734,35 +783,37 @@ export function ShopModal() {
                 <Icon name="gem" size={40} color="var(--color-skill)" />
               </div>
 
-              <h3 class={styles.productTitle}>{bundle.name}</h3>
+              <h3 class={styles.productTitle}>{product.name}</h3>
 
               <div class={styles.contentBar}>
                 <div class={styles.contentItem}>
                   <span class={styles.resourceEmoji}>🌫️</span>
-                  <span>{bundle.dustAmount}</span>
+                  <span>{product.dustAmount}</span>
                 </div>
                 <div class={styles.contentItem}>
                   <span class={styles.resourceEmoji}>🪙</span>
-                  <span>{bundle.goldAmount.toLocaleString()}</span>
+                  <span>{(product.goldAmount ?? 0).toLocaleString()}</span>
                 </div>
-                {bundle.randomHeroCount > 0 && (
+                {(bundle?.randomHeroCount ?? 0) > 0 && (
                   <div class={styles.contentItem}>
                     <Icon name="sword" size={16} color="var(--color-primary)" />
-                    <span>{bundle.randomHeroCount}x</span>
+                    <span>{bundle?.randomHeroCount}x</span>
                   </div>
                 )}
-                {bundle.randomArtifactCount > 0 && (
+                {(bundle?.randomArtifactCount ?? 0) > 0 && (
                   <div class={styles.contentItem}>
                     <Icon name="star" size={16} color="var(--color-skill)" />
-                    <span>{bundle.randomArtifactCount}x</span>
+                    <span>{bundle?.randomArtifactCount}x</span>
                   </div>
                 )}
               </div>
 
-              <div class={styles.productPrice}>{bundle.pricePLN} PLN</div>
+              <div class={styles.productPrice}>
+                {formatPrice(product.price, product.currency)}
+              </div>
 
               <Button
-                onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust(bundle.id); }}
+                onClick={(e: MouseEvent) => { e.stopPropagation(); handleBuyDust(product.id); }}
                 disabled={processing}
                 variant="primary"
                 class={styles.buyButton}

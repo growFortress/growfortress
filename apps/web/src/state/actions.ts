@@ -27,6 +27,7 @@ import { resetEnergyState } from './energy.signals.js';
 import { resetPillarUnlocksState } from './pillarUnlocks.signals.js';
 import { getProfile } from '../api/client.js';
 import { GameAnnouncements } from '../components/shared/ScreenReaderAnnouncer.js';
+import { setLanguage } from '../i18n/useTranslation.js';
 
 // Track processed artifact drops to avoid duplicates
 let lastProcessedArtifactDropTick = -1;
@@ -56,6 +57,8 @@ export function updateFromProfile(data: ProfileResponse): void {
     profile.displayName.value = data.displayName;
     profile.playerDescription.value = data.description || '';
     profile.userRole.value = data.role;
+    profile.country.value = data.country ?? null;
+    profile.preferredCurrency.value = data.preferredCurrency;
 
     // Onboarding status
     profile.onboardingCompleted.value = data.onboardingCompleted;
@@ -100,6 +103,13 @@ export function updateFromProfile(data: ProfileResponse): void {
       };
     }
   });
+
+  if (typeof localStorage !== 'undefined') {
+    const storedLanguage = localStorage.getItem('gf-language');
+    if (!storedLanguage) {
+      setLanguage(data.country === 'PL' ? 'pl' : 'en');
+    }
+  }
 }
 
 /**

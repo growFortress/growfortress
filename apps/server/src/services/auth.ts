@@ -20,11 +20,13 @@ import {
   FREE_STARTER_HEROES,
   FREE_STARTER_TURRETS,
   type BuildPreset,
+  type Currency,
 } from "@arcade/protocol";
 import { sendPasswordResetEmail } from "./email.js";
 import { createSystemMessage } from "./messages.js";
 import { recalculateCachedPower } from "./power-upgrades.js";
 import { DEFAULT_REMOTE_CONFIG } from "./gameConfig.js";
+import { getDefaultCurrencyForCountry } from "./geoip.js";
 
 const SALT_ROUNDS = 12;
 
@@ -64,6 +66,7 @@ export async function registerUser(
   username: string,
   password: string,
   email?: string,
+  locale?: { country?: string | null; preferredCurrency?: Currency },
 ): Promise<AuthResult> {
   // Check if username already exists
   const existingUsername = await prisma.user.findUnique({
@@ -87,6 +90,9 @@ export async function registerUser(
 
   // Hash password
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  const country = locale?.country ?? null;
+  const preferredCurrency =
+    locale?.preferredCurrency ?? getDefaultCurrencyForCountry(country);
 
   // Starter pack for new players
   const STARTER_PACK = {
@@ -101,6 +107,8 @@ export async function registerUser(
       email: email?.toLowerCase(),
       passwordHash,
       displayName: username,
+      country,
+      preferredCurrency,
       inventory: {
         create: {
           gold: STARTER_PACK.gold,
@@ -442,6 +450,8 @@ export async function getUserProfile(userId: string): Promise<{
   displayName: string;
   description: string;
   role: "USER" | "ADMIN";
+  country: string | null;
+  preferredCurrency: Currency;
   inventory: { gold: number; dust: number; materials?: Record<string, number> };
   progression: {
     level: number;
@@ -533,6 +543,8 @@ export async function getUserProfile(userId: string): Promise<{
     displayName: user.displayName,
     description: user.description || "",
     role: user.role,
+    country: user.country ?? null,
+    preferredCurrency: user.preferredCurrency as Currency,
     inventory: {
       gold: user.inventory.gold,
       dust: user.inventory.dust,
@@ -643,6 +655,21 @@ export async function updateDefaultLoadout(
     displayName: user.displayName,
     description: user.description,
   };
+}
+
+/**
+ * Update preferred currency
+ */
+export async function updatePreferredCurrency(
+  userId: string,
+  currency: Currency,
+): Promise<Currency> {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { preferredCurrency: currency },
+  });
+
+  return user.preferredCurrency as Currency;
 }
 
 /**

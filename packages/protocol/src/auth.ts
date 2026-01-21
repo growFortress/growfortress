@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CurrencySchema } from "./shop.js";
 
 // Username validation: 3-20 chars, alphanumeric and underscores
 const usernameSchema = z
@@ -176,6 +177,8 @@ export const ProfileResponseSchema = z.object({
   displayName: z.string(),
   description: z.string(),
   role: UserRoleSchema,
+  country: z.string().nullable(),
+  preferredCurrency: CurrencySchema,
   inventory: InventorySchema,
   progression: ProgressionSchema,
   currentWave: z.number().int().min(0),
@@ -193,6 +196,17 @@ export const ProfileResponseSchema = z.object({
 });
 
 export type ProfileResponse = z.infer<typeof ProfileResponseSchema>;
+
+// Update preferred currency
+export const UpdateCurrencyRequestSchema = z.object({
+  currency: CurrencySchema,
+});
+export type UpdateCurrencyRequest = z.infer<typeof UpdateCurrencyRequestSchema>;
+
+export const UpdateCurrencyResponseSchema = z.object({
+  preferredCurrency: CurrencySchema,
+});
+export type UpdateCurrencyResponse = z.infer<typeof UpdateCurrencyResponseSchema>;
 
 // Complete onboarding request
 export const CompleteOnboardingRequestSchema = z.object({

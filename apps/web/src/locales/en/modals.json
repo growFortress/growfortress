@@ -42,6 +42,9 @@
     },
     "account": {
       "language": "Language",
+      "country": "Country",
+      "countryUnknown": "Unknown",
+      "currency": "Currency",
       "email": "Email",
       "noEmail": "Not set",
       "emailPlaceholder": "Enter your email",
@@ -66,6 +69,7 @@
       "codeRequired": "Please enter a code",
       "codeRedeemFailed": "Failed to redeem code",
       "codeRedeemed": "Code redeemed!",
+      "currencyUpdateFailed": "Failed to update currency",
       "support": "Support & Help",
       "logout": "Log Out",
       "deleteAccount": "Delete Account",

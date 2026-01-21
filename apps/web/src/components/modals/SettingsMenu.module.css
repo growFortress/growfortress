@@ -217,6 +217,12 @@
   color: #e0e0e0;
 }
 
+.errorText {
+  color: var(--color-error);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
 .menuItems {
   padding: 1rem 0;
   display: flex;

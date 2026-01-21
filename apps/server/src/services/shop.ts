@@ -11,16 +11,18 @@ import {
   type Stripe,
 } from '../lib/stripe.js';
 import {
-  DUST_PACKAGES_PLN,
+  SHOP_DUST_PACKAGES,
   STARTER_PACK,
-  STARTER_PACK_PRICE_GROSZE,
+  STARTER_PACK_PRICE_MINOR,
   BOOSTER_DEFINITIONS,
   CONVENIENCE_ITEMS,
   SHOP_ERROR_CODES,
   PREMIUM_HEROES,
   BUNDLES,
   BATTLE_PASS,
-  type DustPackagePLN,
+  type ShopDustPackage,
+  type Currency,
+  type PriceByCurrency,
   type GetShopResponse,
   type CreateCheckoutResponse,
   type GetPurchasesResponse,
@@ -36,6 +38,23 @@ import { grantPremiumStatus } from './battlepass.js';
 
 // Rare materials for Starter Pack (pick 3 random)
 const RARE_MATERIALS = ['mutant_dna', 'pym_particles', 'extremis', 'cosmic_dust'];
+const PRICE_DIVISOR = 100;
+
+function getPriceMinor(prices: PriceByCurrency, currency: Currency): number {
+  return prices[currency] ?? prices.PLN;
+}
+
+function toMajorCurrency(priceMinor: number): number {
+  return priceMinor / PRICE_DIVISOR;
+}
+
+async function getUserCurrency(userId: string): Promise<Currency> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { preferredCurrency: true },
+  });
+  return (user?.preferredCurrency as Currency) ?? 'PLN';
+}
 
 // ============================================================================
 // SHOP OVERVIEW
@@ -45,6 +64,7 @@ const RARE_MATERIALS = ['mutant_dna', 'pym_particles', 'extremis', 'cosmic_dust'
  * Get shop overview with products and user purchase info
  */
 export async function getShopOverview(userId: string): Promise<GetShopResponse> {
+  const currency = await getUserCurrency(userId);
   // Get user's purchase counts for limited items
   const purchaseLimits = await prisma.userPurchaseLimit.findMany({
     where: { userId },
@@ -62,7 +82,7 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
   });
   const purchasedSet = new Set(purchasedPackages.map((p: { productId: string }) => p.productId));
   const firstPurchaseBonusAvailable: Record<string, boolean> = {};
-  for (const pkg of DUST_PACKAGES_PLN) {
+  for (const pkg of SHOP_DUST_PACKAGES) {
     firstPurchaseBonusAvailable[pkg.id] = !purchasedSet.has(pkg.id);
   }
 
@@ -91,7 +111,8 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
       type: 'starter_pack' as const,
       name: 'Starter Pack',
       description: `${STARTER_PACK.dustAmount} Dust + ${STARTER_PACK.goldAmount} Gold + ${STARTER_PACK.rareMaterialsCount}x Rare Materials + Founder Badge`,
-      pricePLN: STARTER_PACK_PRICE_GROSZE / 100,
+      price: toMajorCurrency(getPriceMinor(STARTER_PACK_PRICE_MINOR, currency)),
+      currency,
       isLimited: true,
       maxPurchasesPerUser: 1,
       badgeText: 'BEST VALUE',
@@ -104,7 +125,8 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
       type: 'battle_pass' as const,
       name: BATTLE_PASS.name,
       description: BATTLE_PASS.description,
-      pricePLN: BATTLE_PASS.pricePLN,
+      price: toMajorCurrency(getPriceMinor(BATTLE_PASS.priceMinor, currency)),
+      currency,
       isLimited: true,
       maxPurchasesPerUser: 1,
       badgeText: 'SEZON 1',
@@ -113,6 +135,7 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
   }
 
   return {
+    currency,
     categories: [
       {
         id: 'featured',
@@ -129,7 +152,8 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
             type: 'hero' as const,
             name: hero.name,
             description: hero.description,
-            pricePLN: hero.pricePLN,
+            price: toMajorCurrency(getPriceMinor(hero.priceMinor, currency)),
+            currency,
             heroId: hero.heroId,
             isLimited: true,
             maxPurchasesPerUser: 1,
@@ -140,14 +164,15 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
       {
         id: 'dust',
         name: 'Dust',
-        products: DUST_PACKAGES_PLN.map((pkg, idx) => ({
+        products: SHOP_DUST_PACKAGES.map((pkg, idx) => ({
           id: pkg.id,
           type: 'dust' as const,
           name: `${pkg.dustAmount} Dust`,
           description: firstPurchaseBonusAvailable[pkg.id]
             ? `+${pkg.bonusDust} bonus przy pierwszym zakupie!`
             : `Premium waluta`,
-          pricePLN: pkg.pricePLN,
+          price: toMajorCurrency(getPriceMinor(pkg.priceMinor, currency)),
+          currency,
           dustAmount: pkg.dustAmount,
           bonusDust: firstPurchaseBonusAvailable[pkg.id] ? pkg.bonusDust : 0,
           isLimited: false,
@@ -163,7 +188,8 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
           type: 'bundle' as const,
           name: bundle.name,
           description: bundle.description,
-          pricePLN: bundle.pricePLN,
+          price: toMajorCurrency(getPriceMinor(bundle.priceMinor, currency)),
+          currency,
           dustAmount: bundle.dustAmount,
           goldAmount: bundle.goldAmount,
           isLimited: false,
@@ -179,7 +205,8 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
           type: 'booster' as const,
           name: getBoosterName(booster.type),
           description: `${booster.durationHours}h boost`,
-          pricePLN: 0, // Bought with dust
+          price: 0, // Bought with dust
+          currency,
           dustAmount: booster.dustCost,
           boosterType: booster.type,
           boosterDuration: booster.durationHours,
@@ -195,7 +222,8 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
           type: 'convenience' as const,
           name: item.name,
           description: item.description,
-          pricePLN: 0, // Bought with dust
+          price: 0, // Bought with dust
+          currency,
           dustAmount: item.dustCost,
           isLimited: false,
           sortOrder: idx,
@@ -248,13 +276,17 @@ export async function createCheckout(
     }
   }
 
+  const currency = await getUserCurrency(userId);
+  const priceMinor = getPriceMinor(product.priceMinor, currency);
+
   // Create checkout session
   const session = await createCheckoutSession({
     userId,
     productId,
     productName: product.name,
     productDescription: product.description,
-    priceGrosze: product.priceGrosze,
+    priceGrosze: priceMinor,
+    currency,
     successUrl,
     cancelUrl,
   });
@@ -267,7 +299,8 @@ export async function createCheckout(
       productId,
       productType: product.type as any, // Cast needed until Prisma client is regenerated with BUNDLE type
       productName: product.name,
-      pricePLN: product.priceGrosze,
+      pricePLN: priceMinor,
+      priceCurrency: currency,
       status: 'PENDING',
       stripeSessionId: session.id,
     },
@@ -520,7 +553,8 @@ export async function getPurchases(
       productId: p.productId,
       productType: p.productType.toLowerCase() as Purchase['productType'],
       productName: p.productName,
-      pricePLN: p.pricePLN / 100,
+      price: p.pricePLN / 100,
+      currency: (p.priceCurrency as Currency) || 'PLN',
       status: p.status.toLowerCase() as Purchase['status'],
       dustGranted: p.dustGranted ?? undefined,
       goldGranted: p.goldGranted ?? undefined,
@@ -542,22 +576,22 @@ export async function getPurchases(
 interface ProductInfo {
   name: string;
   description: string;
-  priceGrosze: number;
+  priceMinor: PriceByCurrency;
   type: 'DUST' | 'STARTER_PACK' | 'HERO' | 'COSMETIC' | 'BATTLE_PASS' | 'BOOSTER' | 'CONVENIENCE' | 'GACHA' | 'BUNDLE';
   maxPurchases?: number;
-  dustPackage?: DustPackagePLN;
+  dustPackage?: ShopDustPackage;
   heroProduct?: PremiumHeroProduct;
   bundleProduct?: BundleProduct;
 }
 
 function findProduct(productId: string): ProductInfo | null {
   // Check dust packages
-  const dustPkg = DUST_PACKAGES_PLN.find((p) => p.id === productId);
+  const dustPkg = SHOP_DUST_PACKAGES.find((p) => p.id === productId);
   if (dustPkg) {
     return {
       name: `${dustPkg.dustAmount} Dust`,
       description: `Pakiet premium waluty do sklepu`,
-      priceGrosze: dustPkg.priceGrosze,
+      priceMinor: dustPkg.priceMinor,
       type: 'DUST',
       dustPackage: dustPkg,
     };
@@ -568,7 +602,7 @@ function findProduct(productId: string): ProductInfo | null {
     return {
       name: 'Starter Pack',
       description: `Pakiet startowy dla nowych graczy - Dust, Gold, materiały i odznaka Foundera`,
-      priceGrosze: STARTER_PACK_PRICE_GROSZE,
+      priceMinor: STARTER_PACK_PRICE_MINOR,
       type: 'STARTER_PACK',
       maxPurchases: 1,
     };
@@ -580,7 +614,7 @@ function findProduct(productId: string): ProductInfo | null {
     return {
       name: heroProduct.name,
       description: `Ekskluzywna jednostka premium - ${heroProduct.class}/${heroProduct.role}`,
-      priceGrosze: heroProduct.priceGrosze,
+      priceMinor: heroProduct.priceMinor,
       type: 'HERO',
       maxPurchases: 1,
       heroProduct,
@@ -593,7 +627,7 @@ function findProduct(productId: string): ProductInfo | null {
     return {
       name: bundle.name,
       description: `Zestaw wartościowy: ${bundle.dustAmount} Dust, ${bundle.goldAmount} Gold${bundle.randomHeroCount > 0 ? `, ${bundle.randomHeroCount}x jednostka` : ''}${bundle.randomArtifactCount > 0 ? `, ${bundle.randomArtifactCount}x artefakt` : ''}`,
-      priceGrosze: bundle.priceGrosze,
+      priceMinor: bundle.priceMinor,
       type: 'BUNDLE',
       bundleProduct: bundle,
     };
@@ -604,7 +638,7 @@ function findProduct(productId: string): ProductInfo | null {
     return {
       name: BATTLE_PASS.name,
       description: `Premium Battle Pass - ekskluzywne nagrody przez ${BATTLE_PASS.durationDays} dni`,
-      priceGrosze: BATTLE_PASS.priceGrosze,
+      priceMinor: BATTLE_PASS.priceMinor,
       type: 'BATTLE_PASS',
       maxPurchases: 1,
     };
@@ -878,7 +912,8 @@ export async function verifyCheckout(
       productId: purchase.productId,
       productType: purchase.productType.toLowerCase() as Purchase['productType'],
       productName: purchase.productName,
-      pricePLN: purchase.pricePLN / 100,
+      price: purchase.pricePLN / 100,
+      currency: (purchase.priceCurrency as Currency) || 'PLN',
       status: purchase.status.toLowerCase() as Purchase['status'],
       dustGranted: purchase.dustGranted ?? undefined,
       goldGranted: purchase.goldGranted ?? undefined,

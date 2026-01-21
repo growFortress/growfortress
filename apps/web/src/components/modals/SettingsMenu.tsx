@@ -24,11 +24,14 @@ import {
   changePassword,
   redeemBonusCode,
   type BonusCodeRewards,
+  updatePreferredCurrency,
 } from "../../api/client.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
 import { Modal } from "../shared/Modal.js";
 import { LanguageSwitcher } from "../shared/LanguageSwitcher.js";
 import styles from "./SettingsMenu.module.css";
+import { country, preferredCurrency } from "../../state/profile.signals.js";
+import type { Currency } from "@arcade/protocol";
 
 interface SettingsMenuProps {
   onLogout: () => Promise<void> | void;
@@ -37,7 +40,7 @@ interface SettingsMenuProps {
 type SettingsTab = "audio" | "game" | "account" | "admin";
 
 export function SettingsMenu({ onLogout }: SettingsMenuProps) {
-  const { t } = useTranslation("modals");
+  const { t, language } = useTranslation("modals");
   const isVisible = settingsMenuVisible.value;
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -64,6 +67,8 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
   const [bonusCodeLoading, setBonusCodeLoading] = useState(false);
   const [bonusCodeError, setBonusCodeError] = useState("");
   const [bonusCodeSuccess, setBonusCodeSuccess] = useState<BonusCodeRewards | null>(null);
+  const [currencyLoading, setCurrencyLoading] = useState(false);
+  const [currencyError, setCurrencyError] = useState("");
 
   // Load current email when modal opens
   useEffect(() => {
@@ -180,6 +185,39 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
       setBonusCode("");
     } else {
       setBonusCodeError(result.error || t("settings.account.codeRedeemFailed"));
+    }
+  };
+
+  const handleCurrencyChange = async (e: Event) => {
+    const nextCurrency = (e.currentTarget as HTMLSelectElement).value as Currency;
+    if (nextCurrency === preferredCurrency.value) {
+      return;
+    }
+
+    setCurrencyLoading(true);
+    setCurrencyError("");
+    try {
+      const result = await updatePreferredCurrency(nextCurrency);
+      preferredCurrency.value = result.preferredCurrency;
+    } catch (error) {
+      setCurrencyError(
+        error instanceof Error ? error.message : t("settings.account.currencyUpdateFailed"),
+      );
+    } finally {
+      setCurrencyLoading(false);
+    }
+  };
+
+  const getCountryLabel = () => {
+    const code = country.value;
+    if (!code) {
+      return t("settings.account.countryUnknown");
+    }
+    try {
+      const formatter = new Intl.DisplayNames([language], { type: "region" });
+      return formatter.of(code) || code;
+    } catch {
+      return code;
     }
   };
 
@@ -376,6 +414,27 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
             <div class={styles.settingRow}>
               <label>{t("settings.account.language")}</label>
               <LanguageSwitcher />
+            </div>
+            <div class={styles.settingRow}>
+              <label>{t("settings.account.country")}</label>
+              <span class={styles.currentValue}>{getCountryLabel()}</span>
+            </div>
+            <div class={styles.settingRow}>
+              <label>{t("settings.account.currency")}</label>
+              <div>
+                <select
+                  value={preferredCurrency.value}
+                  onChange={handleCurrencyChange}
+                  disabled={currencyLoading}
+                >
+                  <option value="PLN">PLN</option>
+                  <option value="EUR">EUR</option>
+                  <option value="USD">USD</option>
+                </select>
+                {currencyError && (
+                  <div class={styles.errorText}>{currencyError}</div>
+                )}
+              </div>
             </div>
 
             {/* Email Section */}

@@ -187,7 +187,7 @@
   pointer-events: auto;
   padding: 10px 18px;
   min-width: 90px;
-  min-height: 56px;
+  height: 56px;
   box-sizing: border-box;
   background: rgba(0, 20, 40, 0.85);
   border: 1px solid rgba(0, 200, 255, 0.25);
@@ -688,7 +688,7 @@
   }
 
   .waveDisplay {
-    min-height: 42px;
+    height: 42px;
     margin-right: 20px;
   }
 
@@ -733,7 +733,7 @@
   .waveDisplay {
     padding: 6px 10px;
     min-width: 70px;
-    min-height: 42px;
+    height: 38px;
     margin-right: 16px;
   }
 
@@ -815,7 +815,7 @@
   .waveDisplay {
     padding: 4px 6px;
     min-width: 60px;
-    min-height: 34px;
+    height: 34px;
     margin-right: 8px;
   }
 

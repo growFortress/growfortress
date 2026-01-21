@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { config } from "../config.js";
+import type { Currency } from "@arcade/protocol";
 
 // ============================================================================
 // STRIPE CLIENT
@@ -42,6 +43,7 @@ export interface CreateCheckoutParams {
   productName: string;
   productDescription: string;
   priceGrosze: number;
+  currency: Currency;
   successUrl?: string;
   cancelUrl?: string;
   metadata?: Record<string, string>;
@@ -58,13 +60,14 @@ export async function createCheckoutSession(
     throw new Error("Stripe is not configured");
   }
 
+  const currency = params.currency.toLowerCase();
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
-    currency: "pln",
+    currency,
     line_items: [
       {
         price_data: {
-          currency: "pln",
+          currency,
           product_data: {
             name: params.productName,
             description: params.productDescription,

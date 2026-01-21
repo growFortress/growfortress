@@ -2,6 +2,7 @@ import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModal
 import { showColonyScene, colonySceneVisible } from '../../state/idle.signals.js';
 import { Button } from '../shared/Button.js';
 import { Tooltip } from '../shared/Tooltip.js';
+import { Icon } from '../icons/Icon.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './Controls.module.css';
 
@@ -32,7 +33,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={() => { heroRecruitmentModalVisible.value = true; }}
                   aria-label={t('controls.heroesAria')}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '6px' }}>🦸</span> {t('controls.heroesLabel')}
+                  <Icon name="hero" size={16} style={{ marginRight: '6px' }} /> {t('controls.heroesLabel')}
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.collectedMaterials')} position="top">
@@ -42,7 +43,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={showMaterialsModal}
                   aria-label={t('controls.materialsAria')}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '6px' }}>📦</span> {t('controls.materialsLabel')}
+                  <Icon name="materials" size={16} style={{ marginRight: '6px' }} /> {t('controls.materialsLabel')}
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.artifactsItems')} position="top">
@@ -52,7 +53,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={showArtifactsModal}
                   aria-label={t('controls.artifactsAria')}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '6px' }}>⚔️</span> {t('controls.artifactsLabel')}
+                  <Icon name="artifact" size={16} style={{ marginRight: '6px' }} /> {t('controls.artifactsLabel')}
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.claimOfflineRewards')} position="top">
@@ -62,7 +63,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={showColonyScene}
                   aria-label={t('controls.gatheringAria') + (hasPendingRewards.value ? t('controls.pendingRewards') : '')}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '6px' }}>🏭</span> {t('controls.gatheringLabel')}
+                  <Icon name="gathering" size={16} style={{ marginRight: '6px' }} /> {t('controls.gatheringLabel')}
                   {hasPendingRewards.value && <span aria-hidden="true" style={{ marginLeft: '4px', color: '#4ade80' }}>●</span>}
                 </Button>
               </Tooltip>

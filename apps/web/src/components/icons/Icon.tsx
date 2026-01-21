@@ -37,7 +37,20 @@ export type IconName =
   | 'minus'
   | 'refresh'
   | 'arrow-up'
-  | 'arrow-down';
+  | 'arrow-down'
+  // New shortcut icons
+  | 'daily-quests'
+  | 'globe'
+  | 'crossed-swords'
+  | 'chart'
+  | 'castle'
+  | 'envelope'
+  | 'cart'
+  // Management icons
+  | 'hero'
+  | 'materials'
+  | 'artifact'
+  | 'gathering';
 
 interface IconProps {
   /** Icon name */
@@ -92,6 +105,28 @@ const ICONS: Record<IconName, string> = {
   refresh: 'M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
   'arrow-up': 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z',
   'arrow-down': 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z',
+  // Daily Quests - Clipboard with checkmarks
+  'daily-quests': 'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8zm2-6l-4-4 1.41-1.41L10 8.17l4.59-4.59L16 5l-6 6z',
+  // Globe - World exploration
+  'globe': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
+  // Crossed Swords - PvP Arena
+  'crossed-swords': 'M6.2 3.01L2 4.5l4.5 4.5-1 1L3 9.5l-.5 2L6 10l1.5.5L6 14l1.5 1.5 3.5-3.5-1-1 1-1 4.5 4.5 2-.5-.5-2.5L15 10l.5-1.5L19 10l2.5-1.5-1-4.5-4.5 1-1 .5L10.5 1l-4 2 .5 1.5L5 6l1.5 1.5-.3-4.49zM12 10.5L10.5 12l-1-1L11 9.5l1 1zm2-2L12.5 10l-1-1L13 7.5l1 1z',
+  // Chart - Statistics
+  'chart': 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z',
+  // Castle - Guild
+  'castle': 'M21 9V7l-2-1V3h-2v2h-2V3h-2v2h-2V3H9v2H7V3H5v3L3 7v2l2 1v11h6v-5h2v5h6V10l2-1zM7 18v-6h2v2h2v-2h2v2h2v-2h2v6H7zm12-10l-7-3-7 3h14z',
+  // Envelope - Messages
+  'envelope': 'M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z',
+  // Cart - Shop
+  'cart': 'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z',
+  // Hero - Character silhouette with cape
+  'hero': 'M12 2C9.24 2 7 4.24 7 7s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm-7 8v2h14v-2c0-2.66-4.67-4-7-4s-7 1.34-7 4zm2.78-1c1-.7 2.97-1 4.22-1s3.22.3 4.22 1H7.78zM3 14l1-1 3 3v6H4v-5l-1-3zm18 0l-1-1-3 3v6h3v-5l1-3z',
+  // Materials - 3D Box/Crate
+  'materials': 'M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z',
+  // Artifact - Magic crystal/relic
+  'artifact': 'M12 2l-5.5 9L12 22l5.5-11L12 2zm0 3.84L14.93 11H9.07L12 5.84zM9.07 13h5.86L12 18.56 9.07 13zm1.97-2l.96-3.1.96 3.1h-1.92z',
+  // Gathering - Factory/Production
+  'gathering': 'M22 22H2v-2h20v2zM10 2H4v6h6V2zm-2 4H6V4h2v2zm6-4v6h6V2h-6zm4 4h-2V4h2v2zm-6 8V8H6v6h6zm-2-4H8v2h2v-2zm8 4v-6h-6v6h6zm-2-4h-2v2h2v-2zM4 20h4v-4H4v4zm10 0h4v-4h-4v4z',
 };
 
 export function Icon({

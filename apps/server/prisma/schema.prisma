@@ -38,6 +38,10 @@ model User {
   buildPresets     Json    @default("[]")
   activePresetId   String?
 
+  // Locale & currency
+  country           String? // ISO 3166-1 alpha-2
+  preferredCurrency String  @default("PLN") // "PLN" | "EUR" | "USD"
+
   inventory          Inventory?
   progression        Progression?
   powerUpgrades      PowerUpgrades?
@@ -1686,7 +1690,8 @@ model ShopPurchase {
   productId       String // Reference to product (e.g., 'dust_medium', 'starter_pack')
   productType     ProductType
   productName     String
-  pricePLN        Int // Price in grosze (1/100 PLN)
+  pricePLN        Int // Price in minor units (legacy field name)
+  priceCurrency   String @default("PLN")
   status          PurchaseStatus @default(PENDING)
 
   // Stripe integration

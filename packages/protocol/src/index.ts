@@ -24,6 +24,8 @@ export {
   ForgotPasswordRequestSchema,
   ResetPasswordRequestSchema,
   GameConfigSchema,
+  UpdateCurrencyRequestSchema,
+  UpdateCurrencyResponseSchema,
   type AuthRegisterRequest,
   type AuthRegisterResponse,
   type AuthLoginRequest,
@@ -45,6 +47,8 @@ export {
   type ForgotPasswordRequest,
   type ResetPasswordRequest,
   type GameConfig,
+  type UpdateCurrencyRequest,
+  type UpdateCurrencyResponse,
 } from './auth.js';
 
 // Events
@@ -989,17 +993,18 @@ export {
 export {
   // Enums & Types
   ProductTypeSchema,
+  CurrencySchema,
+  PriceByCurrencySchema,
   PurchaseStatusSchema,
   BoosterTypeSchema,
   ConvenienceItemTypeSchema,
   ShopCategorySchema,
   // Product definitions
   ShopProductSchema,
-  DustPackagePLNSchema,
-  DUST_PACKAGES_PLN,
+  ShopDustPackageSchema,
+  SHOP_DUST_PACKAGES,
   STARTER_PACK,
-  STARTER_PACK_PRICE_PLN,
-  STARTER_PACK_PRICE_GROSZE,
+  STARTER_PACK_PRICE_MINOR,
   BOOSTER_DEFINITIONS,
   CONVENIENCE_ITEMS,
   // Bundles
@@ -1027,9 +1032,11 @@ export {
   PREMIUM_HEROES,
   // Types
   type ProductType,
+  type Currency,
+  type PriceByCurrency,
   type PurchaseStatus,
   type ShopProduct,
-  type DustPackagePLN,
+  type ShopDustPackage,
   type BoosterType,
   type BoosterDefinition,
   type ConvenienceItemType,

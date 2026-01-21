@@ -30,6 +30,7 @@ import { colonySceneVisible } from '../../state/idle.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { EnergyBar } from '../game/EnergyBar.js';
+import { Icon } from '../icons/Icon.js';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -112,7 +113,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => showDailyQuestsPanel()}
                   aria-label={hasUnclaimedQuestRewards.value ? t('header.dailyQuestsWithRewards', { count: unclaimedCompletedCount.value }) : t('common:navigation.dailyQuests')}
                 >
-                  <span aria-hidden="true">📋</span>
+                  <Icon name="daily-quests" size={18} />
                   {hasUnclaimedQuestRewards.value && (
                     <span class={styles.badge} aria-hidden="true">
                       {unclaimedCompletedCount.value}
@@ -128,7 +129,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => showPillarUnlockModal()}
                   aria-label={t('header.worldExploration')}
                 >
-                  <span aria-hidden="true">🌍</span>
+                  <Icon name="globe" size={18} />
                 </button>
               </Tooltip>
 
@@ -141,7 +142,7 @@ export function Header(_props: HeaderProps) {
                     ? t('header.pvpArenaWithChallenges', { count: pvpPendingChallenges.value })
                     : t('header.pvpArena')}
                 >
-                  <span aria-hidden="true">⚔️</span>
+                  <Icon name="crossed-swords" size={18} />
                   {pvpPendingChallenges.value > 0 && (
                     <span class={styles.badge} aria-hidden="true">
                       {pvpPendingChallenges.value}
@@ -157,7 +158,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openLeaderboardModal()}
                   aria-label={hasUnclaimedRewards.value ? t('header.leaderboardsWithRewards') : t('common:navigation.leaderboards')}
                 >
-                  <span aria-hidden="true">🏆</span>
+                  <Icon name="trophy" size={18} />
                   {hasUnclaimedRewards.value && (
                     <span class={styles.dotBadge} aria-label={t('header.rewardsToClaim')} />
                   )}
@@ -171,7 +172,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openStatisticsDashboard()}
                   aria-label={t('common:navigation.statistics')}
                 >
-                  <span aria-hidden="true">📊</span>
+                  <Icon name="chart" size={18} />
                 </button>
               </Tooltip>
 
@@ -182,7 +183,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openGuildPanel()}
                   aria-label={t('header.openGuildPanel')}
                 >
-                  <span aria-hidden="true">🏰</span>
+                  <Icon name="castle" size={18} />
                   {hasNewInvitations.value && !isInGuild.value && (
                     <span class={styles.dotBadge} aria-label={t('header.newInvitations')} />
                   )}
@@ -196,7 +197,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openMessagesModal()}
                   aria-label={hasUnreadMessages.value ? t('header.messagesWithUnread', { count: unreadCounts.value.total }) : t('common:navigation.messages')}
                 >
-                  <span aria-hidden="true">✉️</span>
+                  <Icon name="envelope" size={18} />
                   {hasUnreadMessages.value && (
                     <span class={styles.badge} aria-hidden="true">
                       {unreadCounts.value.total > 99 ? '99+' : unreadCounts.value.total}
@@ -212,7 +213,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => showShopModal()}
                   aria-label={t('common:navigation.shop')}
                 >
-                  <span aria-hidden="true">🛒</span>
+                  <Icon name="cart" size={18} />
                 </button>
               </Tooltip>
 
@@ -223,7 +224,7 @@ export function Header(_props: HeaderProps) {
                   onClick={openSettingsMenu}
                   aria-label={t('common:navigation.settings')}
                 >
-                  <span aria-hidden="true">⚙️</span>
+                  <Icon name="settings" size={18} />
                 </button>
               </Tooltip>
             </div>

@@ -17,6 +17,16 @@ export const ProductTypeSchema = z.enum([
 ]);
 export type ProductType = z.infer<typeof ProductTypeSchema>;
 
+export const CurrencySchema = z.enum(['PLN', 'EUR', 'USD']);
+export type Currency = z.infer<typeof CurrencySchema>;
+
+export const PriceByCurrencySchema = z.object({
+  PLN: z.number().int().positive(),
+  EUR: z.number().int().positive(),
+  USD: z.number().int().positive(),
+});
+export type PriceByCurrency = z.infer<typeof PriceByCurrencySchema>;
+
 export const PurchaseStatusSchema = z.enum([
   'pending',      // Checkout created, waiting for payment
   'completed',    // Payment successful, rewards granted
@@ -35,7 +45,8 @@ export interface ShopProduct {
   type: ProductType;
   name: string;
   description: string;
-  pricePLN: number;        // Price in PLN (grosze stored as integer * 100)
+  price: number;           // Price in selected currency (major units)
+  currency: Currency;
 
   // Content (based on type)
   dustAmount?: number;
@@ -61,7 +72,8 @@ export const ShopProductSchema = z.object({
   type: ProductTypeSchema,
   name: z.string(),
   description: z.string(),
-  pricePLN: z.number().positive(),
+  price: z.number().positive(),
+  currency: CurrencySchema,
 
   dustAmount: z.number().int().min(0).optional(),
   bonusDust: z.number().int().min(0).optional(),
@@ -83,31 +95,49 @@ export const ShopProductSchema = z.object({
 // DUST PACKAGES (PLN pricing)
 // ============================================================================
 
-export interface DustPackagePLN {
+export interface ShopDustPackage {
   id: string;
   dustAmount: number;
   bonusDust: number;
-  pricePLN: number;         // e.g., 4.99
-  priceGrosze: number;      // e.g., 499 (for Stripe)
-  stripePriceId?: string;   // Stripe Price ID
+  priceMinor: PriceByCurrency; // Minor units per currency
+  stripePriceIds?: Partial<Record<Currency, string>>;
 }
 
 // 4 dust packages: 5 PLN to 100 PLN range
-export const DUST_PACKAGES_PLN: DustPackagePLN[] = [
-  { id: 'dust_mini', dustAmount: 100, bonusDust: 0, pricePLN: 4.99, priceGrosze: 499 },
-  { id: 'dust_small', dustAmount: 450, bonusDust: 0, pricePLN: 19.99, priceGrosze: 1999 },
-  { id: 'dust_large', dustAmount: 1200, bonusDust: 0, pricePLN: 49.99, priceGrosze: 4999 },
-  { id: 'dust_mega', dustAmount: 2800, bonusDust: 0, pricePLN: 99.99, priceGrosze: 9999 },
+export const SHOP_DUST_PACKAGES: ShopDustPackage[] = [
+  {
+    id: 'dust_mini',
+    dustAmount: 100,
+    bonusDust: 0,
+    priceMinor: { PLN: 499, EUR: 109, USD: 119 },
+  },
+  {
+    id: 'dust_small',
+    dustAmount: 450,
+    bonusDust: 0,
+    priceMinor: { PLN: 1999, EUR: 399, USD: 449 },
+  },
+  {
+    id: 'dust_large',
+    dustAmount: 1200,
+    bonusDust: 0,
+    priceMinor: { PLN: 4999, EUR: 999, USD: 1099 },
+  },
+  {
+    id: 'dust_mega',
+    dustAmount: 2800,
+    bonusDust: 0,
+    priceMinor: { PLN: 9999, EUR: 1999, USD: 2199 },
+  },
 ];
 // mini = 4.99/100, small = 4.44/100 (~11% off), large = 4.17/100 (~16% off), mega = 3.57/100 (~28% off)
 
-export const DustPackagePLNSchema = z.object({
+export const ShopDustPackageSchema = z.object({
   id: z.string(),
   dustAmount: z.number().int().positive(),
   bonusDust: z.number().int().min(0),
-  pricePLN: z.number().positive(),
-  priceGrosze: z.number().int().positive(),
-  stripePriceId: z.string().optional(),
+  priceMinor: PriceByCurrencySchema,
+  stripePriceIds: z.record(z.string()).optional(),
 });
 
 // ============================================================================
@@ -130,8 +160,11 @@ export const STARTER_PACK: StarterPackContent = {
   cosmeticId: 'badge_founder',
 };
 
-export const STARTER_PACK_PRICE_PLN = 19.99;
-export const STARTER_PACK_PRICE_GROSZE = 1999;
+export const STARTER_PACK_PRICE_MINOR: PriceByCurrency = {
+  PLN: 1999,
+  EUR: 499,
+  USD: 549,
+};
 
 // ============================================================================
 // VALUE BUNDLES (zestawy)
@@ -141,8 +174,7 @@ export interface BundleProduct {
   id: string;
   name: string;
   description: string;
-  pricePLN: number;
-  priceGrosze: number;
+  priceMinor: PriceByCurrency;
   // Contents
   dustAmount: number;
   goldAmount: number;
@@ -158,8 +190,7 @@ export const BUNDLES: BundleProduct[] = [
     id: 'bundle_bronze',
     name: 'Zestaw Brązowy',
     description: '250 Dust, 2000 Gold, 3 losowe artefakty',
-    pricePLN: 29.99,
-    priceGrosze: 2999,
+    priceMinor: { PLN: 2999, EUR: 699, USD: 749 },
     dustAmount: 250,
     goldAmount: 2000,
     randomHeroCount: 0,
@@ -169,8 +200,7 @@ export const BUNDLES: BundleProduct[] = [
     id: 'bundle_silver',
     name: 'Zestaw Srebrny',
     description: '700 Dust, 5000 Gold, 1 losowa jednostka, 5 losowych artefaktów',
-    pricePLN: 69.99,
-    priceGrosze: 6999,
+    priceMinor: { PLN: 6999, EUR: 1599, USD: 1699 },
     dustAmount: 700,
     goldAmount: 5000,
     randomHeroCount: 1,
@@ -181,8 +211,7 @@ export const BUNDLES: BundleProduct[] = [
     id: 'bundle_gold',
     name: 'Zestaw Złoty',
     description: '1500 Dust, 12000 Gold, 2 losowe jednostki, 8 losowych artefaktów',
-    pricePLN: 119.99,
-    priceGrosze: 11999,
+    priceMinor: { PLN: 11999, EUR: 2799, USD: 2999 },
     dustAmount: 1500,
     goldAmount: 12000,
     randomHeroCount: 2,
@@ -199,8 +228,7 @@ export interface BattlePassProduct {
   id: string;
   name: string;
   description: string;
-  pricePLN: number;
-  priceGrosze: number;
+  priceMinor: PriceByCurrency;
   seasonNumber: number;
   durationDays: number;
 }
@@ -209,8 +237,7 @@ export const BATTLE_PASS: BattlePassProduct = {
   id: 'battle_pass_premium',
   name: 'Battle Pass Premium',
   description: 'Odblokuj ścieżkę premium z ekskluzywnymi nagrodami przez cały sezon!',
-  pricePLN: 39.99,
-  priceGrosze: 3999,
+  priceMinor: { PLN: 3999, EUR: 899, USD: 999 },
   seasonNumber: 1,
   durationDays: 30,
 };
@@ -306,7 +333,8 @@ export const PurchaseSchema = z.object({
   productId: z.string(),
   productType: ProductTypeSchema,
   productName: z.string(),
-  pricePLN: z.number(),
+  price: z.number(),
+  currency: CurrencySchema,
   status: PurchaseStatusSchema,
   dustGranted: z.number().int().optional(),
   goldGranted: z.number().int().optional(),
@@ -348,6 +376,7 @@ export const ShopCategorySchema = z.enum([
 export type ShopCategory = z.infer<typeof ShopCategorySchema>;
 
 export const GetShopResponseSchema = z.object({
+  currency: CurrencySchema,
   categories: z.array(z.object({
     id: ShopCategorySchema,
     name: z.string(),
@@ -421,8 +450,7 @@ export interface PremiumHeroProduct {
   heroId: string;
   name: string;
   description: string;
-  pricePLN: number;
-  priceGrosze: number;
+  priceMinor: PriceByCurrency;
   class: string;
   role: string;
   rarity: 'epic';
@@ -434,8 +462,7 @@ export const PREMIUM_HEROES: PremiumHeroProduct[] = [
     heroId: 'inferno',
     name: 'Unit-6 "Inferno"',
     description: 'Ekskluzywna jednostka Fire/DPS z poteznym DMG i efektami podpalenia',
-    pricePLN: 29.99,
-    priceGrosze: 2999,
+    priceMinor: { PLN: 2999, EUR: 699, USD: 749 },
     class: 'fire',
     role: 'dps',
     rarity: 'epic',
@@ -445,8 +472,7 @@ export const PREMIUM_HEROES: PremiumHeroProduct[] = [
     heroId: 'glacier',
     name: 'Unit-8 "Glacier"',
     description: 'Ekskluzywna jednostka Ice/Tank z potezna obrona i kontrola tlumu',
-    pricePLN: 29.99,
-    priceGrosze: 2999,
+    priceMinor: { PLN: 2999, EUR: 699, USD: 749 },
     class: 'ice',
     role: 'tank',
     rarity: 'epic',
