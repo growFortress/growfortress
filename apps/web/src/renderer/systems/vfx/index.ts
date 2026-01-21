@@ -180,6 +180,26 @@ export class VFXSystem {
     this.drawParticles();
   }
 
+  /**
+   * Clear all active VFX (particles, texts, staged effects).
+   * Useful when transitioning to hub to avoid lingering visuals.
+   */
+  public clearAll(): void {
+    for (const ft of this.floatingTexts) {
+      this.container.removeChild(ft.text);
+      ft.text.destroy();
+    }
+    this.floatingTexts.length = 0;
+
+    for (const p of this.particles) {
+      this.pool.release(p);
+    }
+    this.particles.length = 0;
+
+    this.stagedEffects.length = 0;
+    this.graphics.clear();
+  }
+
   // --- PARTICLE RENDERING ---
   private drawParticles(): void {
     const g = this.graphics;

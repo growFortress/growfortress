@@ -250,6 +250,7 @@ export class CrystalRenderer {
   public removeCrystal(id: string): void {
     const state = this.visuals.get(id);
     if (state) {
+      state.container.parent?.removeChild(state.container);
       state.container.destroy({ children: true });
       this.visuals.delete(id);
     }

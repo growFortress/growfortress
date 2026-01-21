@@ -65,6 +65,7 @@ export class GameScene {
 
   private width = 0;
   private height = 0;
+  private wasInGame = false;
 
   // Track current pillar for theme changes
   private currentPillar: PillarId = "streets";
@@ -180,6 +181,7 @@ export class GameScene {
     if (this.width === 0 || this.height === 0) return;
 
     if (state) {
+      this.wasInGame = true;
       // Enable interactive layer during gameplay for tactical commands
       this.inputController.enableInteraction();
 
@@ -222,6 +224,12 @@ export class GameScene {
     } else {
       // Disable interactive layer in hub mode so heroes can be clicked
       this.inputController.disableInteraction();
+
+      // Hard reset effects on transition to hub
+      if (this.wasInGame) {
+        this.effects.resetForHub();
+        this.wasInGame = false;
+      }
 
       // Clear any lingering filters from previous game session
       this.effects.clearLowHpWarning();

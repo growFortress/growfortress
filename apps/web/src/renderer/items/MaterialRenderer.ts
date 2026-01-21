@@ -219,6 +219,7 @@ export class MaterialRenderer {
   public removeMaterial(id: string): void {
     const visual = this.visuals.get(id);
     if (visual) {
+      visual.container.parent?.removeChild(visual.container);
       visual.container.destroy({ children: true });
       this.visuals.delete(id);
     }

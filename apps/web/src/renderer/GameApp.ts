@@ -189,6 +189,7 @@ export class GameApp {
   private colonyContainer: Container;
   private currentWidth = 0;
   private currentHeight = 0;
+  private isHubMode = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -329,6 +330,10 @@ export class GameApp {
         crt.time += ticker.deltaTime * 0.01;
         crt.seed = Math.random();
 
+        if (this.isHubMode || this.activeScene === "colony") {
+          this.pruneDestroyedChildren(this.stage);
+        }
+
         // Update screen shake
         const shake = this.screenShake.update(ticker.deltaMS);
         this.gameContainer.position.set(shake.x, shake.y);
@@ -346,6 +351,10 @@ export class GameApp {
 
       // Still update screen shake and filters even without CRT filter
       this.app.ticker.add((ticker) => {
+        if (this.isHubMode || this.activeScene === "colony") {
+          this.pruneDestroyedChildren(this.stage);
+        }
+
         const shake = this.screenShake.update(ticker.deltaMS);
         this.gameContainer.position.set(shake.x, shake.y);
 
@@ -381,6 +390,7 @@ export class GameApp {
   }
 
   public render(state: any, alpha: number, hubState?: HubState) {
+    this.isHubMode = !state;
     if (this.gameScene) {
       this.gameScene.update(state, alpha, hubState);
     }
@@ -499,6 +509,20 @@ export class GameApp {
   public playColonyUpgradeAnimation(colonyId: string) {
     if (this.colonyScene) {
       this.colonyScene.playUpgradeAnimation(colonyId);
+    }
+  }
+
+  private pruneDestroyedChildren(container: Container): void {
+    const children = [...container.children];
+    for (const child of children) {
+      if ((child as { destroyed?: boolean }).destroyed) {
+        container.removeChild(child);
+        continue;
+      }
+
+      if (child instanceof Container && child.children.length > 0) {
+        this.pruneDestroyedChildren(child);
+      }
     }
   }
 }

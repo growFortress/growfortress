@@ -76,6 +76,10 @@ export class FilterManager {
   public update(deltaMS: number) {
     for (let i = this.activeEffects.length - 1; i >= 0; i--) {
       const effect = this.activeEffects[i];
+      if (!this.isContainerAlive(effect.target)) {
+        this.activeEffects.splice(i, 1);
+        continue;
+      }
       effect.elapsed += deltaMS;
 
       const progress = Math.min(effect.elapsed / effect.duration, 1);
@@ -259,6 +263,7 @@ export class FilterManager {
     options: ShockwaveOptions
   ) {
     if (this.qualityLevel === 'low') return;
+    if (!this.isContainerAlive(target)) return;
 
     const {
       x,
@@ -270,7 +275,8 @@ export class FilterManager {
     } = options;
 
     // Normalize coordinates to 0-1 range based on target dimensions
-    const bounds = target.getBounds();
+    const bounds = this.safeGetBounds(target);
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
     const normalizedX = (x - bounds.x) / bounds.width;
     const normalizedY = (y - bounds.y) / bounds.height;
 
@@ -376,6 +382,7 @@ export class FilterManager {
    * Note: PixiJS returns a frozen array for filters, so we must create a new array
    */
   private addFilterToContainer(container: Container, filter: Filter) {
+    if (!this.isContainerAlive(container)) return;
     const currentFilters = container.filters ? [...container.filters] : [];
     currentFilters.push(filter);
     container.filters = currentFilters;
@@ -386,6 +393,7 @@ export class FilterManager {
    * Note: PixiJS returns a frozen array for filters, so we must create a new array
    */
   private removeFilterFromContainer(container: Container, filter: Filter) {
+    if (!this.isContainerAlive(container)) return;
     if (container.filters) {
       const newFilters = container.filters.filter(f => f !== filter);
       // Clean up empty array
@@ -453,6 +461,20 @@ export class FilterManager {
     this.clearAll();
     this.filterCache.clear();
     this.globalContainer = null;
+  }
+
+  private isContainerAlive(container: Container): boolean {
+    const maybeDestroyed = (container as { destroyed?: boolean }).destroyed;
+    return !maybeDestroyed;
+  }
+
+  private safeGetBounds(container: Container): { x: number; y: number; width: number; height: number } | null {
+    try {
+      return container.getBounds();
+    } catch (error) {
+      console.warn("[FilterManager] Failed to read bounds:", error);
+      return null;
+    }
   }
 }
 

@@ -945,6 +945,7 @@ export class ColonyScene {
               .fill({ color: 0xffffff, alpha: alpha * 0.5 });
             requestAnimationFrame(animate);
           } else {
+            flash.parent?.removeChild(flash);
             flash.destroy();
             resolve();
           }

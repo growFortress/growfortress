@@ -146,6 +146,19 @@ export class SceneEffects {
     this.lighting.update(deltaMs);
   }
 
+  /**
+   * Hard reset of all active effects when entering hub.
+   */
+  public resetForHub(): void {
+    this.vfx.clearAll();
+    this.lighting.clearLights();
+    filterManager.clearAll();
+    filterManager.setLowHpWarning(0);
+    this.hitstopRemaining = 0;
+    this.prevEliteKills = 0;
+    this.prevWavesCleared = 0;
+  }
+
   // --- Spawn methods (delegate to VFX) ---
 
   public spawnExplosion(x: number, y: number, color: number): void {
