@@ -287,6 +287,69 @@
       }
     }
   },
+  "dailyQuests": {
+    "title": "Daily Quests",
+    "ariaLabel": "Daily quests",
+    "loading": "Loading daily quests...",
+    "resetsIn": "Resets in {{time}}",
+    "todayProgress": "Today's progress",
+    "ofQuests": "of {{total}} quests",
+    "rewardGold": "{{amount}} gold",
+    "rewardMaterial": "{{name}}",
+    "rewardRandomMaterial": "{{amount}} random materials",
+    "ready": "Ready",
+    "done": "Done",
+    "claim": "Claim",
+    "claiming": "Claiming...",
+    "claimAll": "Claim {{count}} rewards",
+    "claimingAll": "Claiming...",
+    "allClaimed": "All rewards claimed"
+  },
+  "tierEvolution": {
+    "title": "Tier Evolution",
+    "upcomingUnlocks": "Upcoming unlocks"
+  },
+  "pillarUnlock": {
+    "title": "Pillar Unlocks",
+    "unlockedWorlds": "Unlocked worlds",
+    "progressAria": "Unlocked {{unlocked}} of {{total}} worlds",
+    "yourLevel": "Your level",
+    "levelValue": "Level {{level}}",
+    "unlockedDescription": "Unlocked",
+    "requiredLevel": "Requires level {{level}}",
+    "unlockedBadge": "Unlocked"
+  },
+  "artifacts": {
+    "title": "Artifacts",
+    "ariaLabel": "Artifacts and items"
+  },
+  "crafting": {
+    "title": "Crafting",
+    "ariaLabel": "Crafting",
+    "errors": {
+      "failed": "Crafting failed"
+    },
+    "emptyCategory": "No artifacts in this category.",
+    "selectRecipe": "Select a recipe",
+    "effects": "Effects",
+    "materialsRequired": "Materials required",
+    "crafted": "Crafted!",
+    "crafting": "Crafting...",
+    "craftArtifact": "Craft",
+    "missingMaterials": "Missing materials"
+  },
+  "materialsInventory": {
+    "title": "Materials",
+    "ariaLabel": "Materials inventory",
+    "totalMaterials": "Total materials",
+    "uniqueTypes": "Unique types",
+    "filters": {
+      "all": "All",
+      "uncommon": "Uncommon"
+    },
+    "emptyNoMaterials": "No materials yet.",
+    "emptyNoFiltered": "No {{filter}} materials."
+  },
   "statistics": {
     "title": "Statistics Dashboard",
     "ariaLabel": "Statistics Dashboard",

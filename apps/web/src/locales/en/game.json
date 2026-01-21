@@ -77,6 +77,55 @@
     "clickToManageTurret": "Click to manage turret",
     "clickToManageHero": "Click to manage hero"
   },
+  "sidePanel": {
+    "ariaLabel": "Game side panel",
+    "speed": "Speed",
+    "speedAria": "Set speed to {{speed}}x",
+    "resources": "Resources",
+    "pillars": "Pillars",
+    "skills": "Skills",
+    "menu": "Menu",
+    "menuAria": "Open game menu"
+  },
+  "heroSkills": {
+    "title": "Hero Skills"
+  },
+  "turretSkills": {
+    "targetingTitle": "Targeting priority",
+    "targeting": {
+      "closestToFortress": "Closest to fortress",
+      "weakest": "Weakest",
+      "strongest": "Strongest",
+      "nearestToTurret": "Nearest to turret",
+      "fastest": "Fastest"
+    },
+    "overchargeReady": "Overcharge ready",
+    "overchargeActive": "Overcharge active",
+    "cooldownSeconds": "{{seconds}}s cooldown"
+  },
+  "militia": {
+    "title": "Militia",
+    "clickMapHint": "Click on the map to deploy.",
+    "infantry": {
+      "name": "Infantry",
+      "description": "Balanced militia unit with decent HP and damage."
+    },
+    "archer": {
+      "name": "Marksman",
+      "description": "Ranged militia with higher damage but lower HP."
+    },
+    "shieldBearer": {
+      "name": "Shield Bearer",
+      "description": "Tough militia unit with high HP and low damage."
+    }
+  },
+  "energy": {
+    "title": "Energy",
+    "regenIn": "Regen in {{time}}",
+    "ariaLabel": "Energy {{current}} of {{max}}",
+    "full": "Full",
+    "refillTitle": "Refill for {{cost}} dust"
+  },
   "bossSpawn": {
     "warning": "WARNING"
   },
@@ -240,16 +289,6 @@
     "skills": "Skills"
   },
   "waveComplete": "WAVE {{wave}} COMPLETE!",
-  "tutorial": {
-    "yourFortress": "Your Fortress",
-    "fortressDescription": "Fortress and turrets attack automatically. Watch projectiles hit enemies!",
-    "bombAbility": "BOMB Ability",
-    "bombDescription": "Click BOMB button to damage all enemies in range!",
-    "relics": "Relics",
-    "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
-    "waveN": "Wave {{n}}",
-    "clickToClose": "Click to close"
-  },
   "relicsCatalog": {
     "items": {
       "splash-master": {

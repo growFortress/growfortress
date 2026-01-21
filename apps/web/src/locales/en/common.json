@@ -98,6 +98,7 @@
     "settings": "Settings",
     "rewards": "Rewards"
   },
+  "controls": "Controls",
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "connectionFailed": "Connection to server failed",
@@ -365,6 +366,7 @@
     "starterPack": "Starter Pack",
     "starterPackMaterials": "3x Rare Materials",
     "founderBadge": "Founder Badge",
+    "badge": "Badge",
     "buyNow": "Buy now",
     "owned": "Owned",
     "buy": "Buy",

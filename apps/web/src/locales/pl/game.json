@@ -77,6 +77,55 @@
     "clickToManageTurret": "Kliknij, aby zarządzać wieżyczką",
     "clickToManageHero": "Kliknij, aby zarządzać bohaterem"
   },
+  "sidePanel": {
+    "ariaLabel": "Panel boczny gry",
+    "speed": "Prędkość",
+    "speedAria": "Ustaw prędkość na {{speed}}x",
+    "resources": "Zasoby",
+    "pillars": "Filary",
+    "skills": "Umiejętności",
+    "menu": "Menu",
+    "menuAria": "Otwórz menu gry"
+  },
+  "heroSkills": {
+    "title": "Umiejętności bohaterów"
+  },
+  "turretSkills": {
+    "targetingTitle": "Priorytet celu",
+    "targeting": {
+      "closestToFortress": "Najbliżej fortecy",
+      "weakest": "Najsłabszy",
+      "strongest": "Najsilniejszy",
+      "nearestToTurret": "Najbliżej wieżyczki",
+      "fastest": "Najszybszy"
+    },
+    "overchargeReady": "Przeciążenie gotowe",
+    "overchargeActive": "Przeciążenie aktywne",
+    "cooldownSeconds": "Czas odnowienia: {{seconds}}s"
+  },
+  "militia": {
+    "title": "Milicja",
+    "clickMapHint": "Kliknij na mapie, aby rozmieścić.",
+    "infantry": {
+      "name": "Piechota",
+      "description": "Zbalansowana jednostka z solidnym HP i obrażeniami."
+    },
+    "archer": {
+      "name": "Strzelec",
+      "description": "Jednostka dystansowa z wyższymi obrażeniami i niższym HP."
+    },
+    "shieldBearer": {
+      "name": "Tarczownik",
+      "description": "Wytrzymała jednostka z wysokim HP i niskimi obrażeniami."
+    }
+  },
+  "energy": {
+    "title": "Energia",
+    "regenIn": "Regeneracja za {{time}}",
+    "ariaLabel": "Energia {{current}} z {{max}}",
+    "full": "Pełna",
+    "refillTitle": "Uzupełnij za {{cost}} pyłu"
+  },
   "bossSpawn": {
     "warning": "UWAGA"
   },
@@ -240,16 +289,6 @@
     "skills": "Umiejętności"
   },
   "waveComplete": "FALA {{wave}} ZAKOŃCZONA!",
-  "tutorial": {
-    "yourFortress": "Twoja Twierdza",
-    "fortressDescription": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak pociski trafiają wrogów!",
-    "bombAbility": "Umiejętność BOMB",
-    "bombDescription": "Kliknij przycisk BOMB aby zadać obrażenia wszystkim wrogom w zasięgu!",
-    "relics": "Relikty",
-    "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
-    "waveN": "Fala {{n}}",
-    "clickToClose": "Kliknij aby zamknąć"
-  },
   "relicsCatalog": {
     "items": {
       "splash-master": {

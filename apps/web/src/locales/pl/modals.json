@@ -287,6 +287,69 @@
       }
     }
   },
+  "dailyQuests": {
+    "title": "Dzienne zadania",
+    "ariaLabel": "Dzienne zadania",
+    "loading": "Ładowanie dziennych zadań...",
+    "resetsIn": "Reset za {{time}}",
+    "todayProgress": "Dzisiejszy postęp",
+    "ofQuests": "z {{total}} zadań",
+    "rewardGold": "{{amount}} złota",
+    "rewardMaterial": "{{name}}",
+    "rewardRandomMaterial": "{{amount}} losowych materiałów",
+    "ready": "Gotowe",
+    "done": "Odebrane",
+    "claim": "Odbierz",
+    "claiming": "Odbieranie...",
+    "claimAll": "Odbierz {{count}} nagród",
+    "claimingAll": "Odbieranie...",
+    "allClaimed": "Wszystkie nagrody odebrane"
+  },
+  "tierEvolution": {
+    "title": "Ewolucja Tieru",
+    "upcomingUnlocks": "Nadchodzące odblokowania"
+  },
+  "pillarUnlock": {
+    "title": "Odblokowanie Filarów",
+    "unlockedWorlds": "Odblokowane światy",
+    "progressAria": "Odblokowano {{unlocked}} z {{total}} światów",
+    "yourLevel": "Twój poziom",
+    "levelValue": "Poziom {{level}}",
+    "unlockedDescription": "Odblokowano",
+    "requiredLevel": "Wymaga poziomu {{level}}",
+    "unlockedBadge": "Odblokowano"
+  },
+  "artifacts": {
+    "title": "Artefakty",
+    "ariaLabel": "Artefakty i przedmioty"
+  },
+  "crafting": {
+    "title": "Rzemiosło",
+    "ariaLabel": "Rzemiosło",
+    "errors": {
+      "failed": "Nie udało się stworzyć"
+    },
+    "emptyCategory": "Brak artefaktów w tej kategorii.",
+    "selectRecipe": "Wybierz recepturę",
+    "effects": "Efekty",
+    "materialsRequired": "Wymagane materiały",
+    "crafted": "Stworzono!",
+    "crafting": "Tworzenie...",
+    "craftArtifact": "Stwórz",
+    "missingMaterials": "Brak materiałów"
+  },
+  "materialsInventory": {
+    "title": "Materiały",
+    "ariaLabel": "Ekwipunek materiałów",
+    "totalMaterials": "Łącznie materiałów",
+    "uniqueTypes": "Unikalne typy",
+    "filters": {
+      "all": "Wszystkie",
+      "uncommon": "Nietypowe"
+    },
+    "emptyNoMaterials": "Brak materiałów.",
+    "emptyNoFiltered": "Brak materiałów: {{filter}}."
+  },
   "statistics": {
     "title": "Panel Statystyk",
     "ariaLabel": "Panel Statystyk",

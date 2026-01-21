@@ -98,6 +98,7 @@
     "settings": "Ustawienia",
     "rewards": "Nagrody"
   },
+  "controls": "Sterowanie",
   "errors": {
     "generic": "Coś poszło nie tak. Spróbuj ponownie.",
     "connectionFailed": "Błąd połączenia z serwerem",
@@ -365,6 +366,7 @@
     "starterPack": "Starter Pack",
     "starterPackMaterials": "3x Rzadkie Materiały",
     "founderBadge": "Odznaka Założyciela",
+    "badge": "Odznaka",
     "buyNow": "Kup teraz",
     "owned": "Posiadasz",
     "buy": "Kup",
