@@ -2,7 +2,7 @@
  * Guild Create Modal - Form for creating a new guild
  */
 import { useState } from 'preact/hooks';
-import type { GuildAccessMode } from '@arcade/protocol';
+import { type GuildAccessMode, GUILD_CONSTANTS } from '@arcade/protocol';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { showGuildCreate, closeGuildCreate, openGuildPanel, setGuildData, closeGuildSearch } from '../../state/guild.signals.js';
 import { createGuild, getMyGuild } from '../../api/guild.js';
@@ -41,19 +41,21 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
 
     if (!name.trim()) {
       errors.name = t('guild.validation.nameRequired');
-    } else if (name.length < 3) {
+    } else if (name.length < GUILD_CONSTANTS.MIN_NAME_LENGTH) {
       errors.name = t('guild.validation.nameMinLength');
-    } else if (name.length > 30) {
+    } else if (name.length > GUILD_CONSTANTS.MAX_NAME_LENGTH) {
       errors.name = t('guild.validation.nameMaxLength');
     }
 
     if (!tag.trim()) {
       errors.tag = t('guild.validation.tagRequired');
-    } else if (!/^[A-Z0-9]{2,5}$/.test(tag)) {
+    } else if (tag.length < GUILD_CONSTANTS.TAG_MIN_LENGTH) {
+      errors.tag = t('guild.validation.tagMinLength');
+    } else if (!/^[A-Z0-9]+$/.test(tag)) {
       errors.tag = t('guild.validation.tagFormat');
     }
 
-    if (description.length > 500) {
+    if (description.length > GUILD_CONSTANTS.MAX_DESCRIPTION_LENGTH) {
       errors.description = t('guild.validation.descMaxLength');
     }
 
@@ -105,9 +107,9 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
       // Callback to refresh guild data
       onSuccess?.();
     } catch (err: any) {
-      if (err.code === 'GUILD_NAME_TAKEN') {
+      if (err.code === 'NAME_TAKEN') {
         setFieldErrors({ name: t('guild.validation.nameTaken') });
-      } else if (err.code === 'GUILD_TAG_TAKEN') {
+      } else if (err.code === 'TAG_TAKEN') {
         setFieldErrors({ tag: t('guild.validation.tagTaken') });
       } else {
         setError(err.message || t('guild.createError'));
@@ -119,7 +121,7 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
 
   const handleTagInput = (value: string) => {
     // Auto uppercase and filter invalid chars
-    setTag(value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
+    setTag(value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, GUILD_CONSTANTS.TAG_MAX_LENGTH));
   };
 
   return (
@@ -141,13 +143,13 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
             value={name}
             onInput={(e) => setName((e.target as HTMLInputElement).value)}
             placeholder={t('guild.guildNamePlaceholder')}
-            maxLength={30}
+            maxLength={GUILD_CONSTANTS.MAX_NAME_LENGTH}
             disabled={loading}
           />
           {fieldErrors.name && (
             <span class={styles.fieldError}>{fieldErrors.name}</span>
           )}
-          <span class={styles.fieldHint}>{name.length}/30 {t('guild.characters')}</span>
+          <span class={styles.fieldHint}>{name.length}/{GUILD_CONSTANTS.MAX_NAME_LENGTH} {t('guild.characters')}</span>
         </div>
 
         {/* Tag field */}
@@ -162,7 +164,7 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
             value={tag}
             onInput={(e) => handleTagInput((e.target as HTMLInputElement).value)}
             placeholder={t('guild.guildTagPlaceholder')}
-            maxLength={5}
+            maxLength={GUILD_CONSTANTS.TAG_MAX_LENGTH}
             disabled={loading}
           />
           {fieldErrors.tag && (
@@ -182,14 +184,14 @@ export function GuildCreateModal({ onSuccess }: GuildCreateModalProps) {
             value={description}
             onInput={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
             placeholder={t('guild.descriptionPlaceholder')}
-            maxLength={500}
+            maxLength={GUILD_CONSTANTS.MAX_DESCRIPTION_LENGTH}
             rows={3}
             disabled={loading}
           />
           {fieldErrors.description && (
             <span class={styles.fieldError}>{fieldErrors.description}</span>
           )}
-          <span class={styles.fieldHint}>{description.length}/500 {t('guild.characters')}</span>
+          <span class={styles.fieldHint}>{description.length}/{GUILD_CONSTANTS.MAX_DESCRIPTION_LENGTH} {t('guild.characters')}</span>
         </div>
 
         {/* Access Mode field */}

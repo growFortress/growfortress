@@ -121,8 +121,16 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       const guild = await createGuild(request.userId, body);
       return reply.send({ guild });
     } catch (error: any) {
+      // Handle Zod validation errors
+      if (error.name === 'ZodError') {
+        return reply.status(400).send({ 
+          error: 'VALIDATION_ERROR', 
+          code: 'VALIDATION_ERROR',
+          details: error.errors 
+        });
+      }
       if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
-        return reply.status(400).send({ error: error.message });
+        return reply.status(400).send({ error: error.message, code: error.message });
       }
       throw error;
     }

@@ -1,6 +1,75 @@
 import { z } from 'zod';
 
 // ============================================================================
+// CONSTANTS
+// ============================================================================
+
+export const GUILD_CONSTANTS = {
+  // Name/tag constraints
+  MIN_NAME_LENGTH: 3,
+  MAX_NAME_LENGTH: 30, // Increased from 24 to 30
+  TAG_MIN_LENGTH: 2,   // Decreased from 3 to 2
+  TAG_MAX_LENGTH: 5,
+  MAX_DESCRIPTION_LENGTH: 500, // Increased from 200 to 500
+
+  // Member limits (based on Kwatera structure level)
+  MEMBER_BASE_CAPACITY: 10,
+  MEMBER_MAX_CAPACITY: 30,
+
+  // Donation limits
+  MIN_DONATION_GOLD: 100,
+  MIN_DONATION_DUST: 10,
+  MAX_DAILY_DONATION_GOLD: 50000,
+  MAX_DAILY_DONATION_DUST: 500,
+
+  // Time limits
+  INVITATION_EXPIRY_HOURS: 72,
+  APPLICATION_EXPIRY_HOURS: 72,
+  BATTLE_COOLDOWN_HOURS: 24,
+  WITHDRAWAL_COOLDOWN_HOURS: 24,
+
+  // Applications
+  MAX_ACTIVE_APPLICATIONS_PER_PLAYER: 5,
+  MAX_APPLICATION_MESSAGE_LENGTH: 200,
+
+  // Treasury
+  MAX_WITHDRAWAL_PERCENT: 0.20,
+
+  // Arena 5v5 Battles
+  ARENA_PARTICIPANTS: 5,
+  MAX_DAILY_ATTACKS: 10,
+  ATTACK_COOLDOWN_SAME_GUILD_HOURS: 24,
+  MAX_ATTACKS_RECEIVED_PER_DAY: 3,
+  ARENA_DURATION_TICKS: 1800, // 60 seconds at 30Hz
+
+  // Shield
+  SHIELD_DURATION_HOURS: 24,
+  SHIELD_GOLD_COST: 5000,
+  MAX_SHIELDS_PER_WEEK: 2,
+
+  // Honor (ELO)
+  BASE_HONOR: 1000,
+  MIN_HONOR: 100,
+  HONOR_K_FACTOR: 32,
+
+  // Structure upgrades
+  STRUCTURE_MAX_LEVEL: 20,
+  STRUCTURE_UPGRADE_BASE_GOLD: 500, // Cost = 500 × (level + 1)²
+  STRUCTURE_UPGRADE_BASE_DUST: 25,  // Cost = 25 × (level + 1)
+  STRUCTURE_BONUS_PER_LEVEL: 0.01,  // +1% per level for skarbiec/akademia/zbrojownia
+
+  // Guild Boss
+  BOSS_TOTAL_HP: 50_000_000,
+  BOSS_ATTACKS_PER_DAY: 1,
+
+  // Guild Coins (earned from battles/boss)
+  COINS_ARENA_WIN: 50,
+  COINS_ARENA_LOSS: 10,
+  COINS_BOSS_PARTICIPATION: 5,
+  COINS_BOSS_TOP_DAMAGE: 25,
+} as const;
+
+// ============================================================================
 // ENUMS
 // ============================================================================
 
@@ -86,7 +155,7 @@ export type SetBattleHeroRequest = z.infer<typeof SetBattleHeroRequestSchema>;
 // ============================================================================
 
 export const GuildSettingsSchema = z.object({
-  minLevel: z.number().int().min(1).max(100).default(1),
+  minLevel: z.number().int().min(1).max(1000).default(1),
   autoAcceptInvites: z.boolean().default(false),
   battleCooldownHours: z.number().int().min(1).max(168).default(24),
   accessMode: GuildAccessModeSchema.default('INVITE_ONLY'),
@@ -199,9 +268,9 @@ export type GuildWithMembers = z.infer<typeof GuildWithMembersSchema>;
 // ============================================================================
 
 export const CreateGuildRequestSchema = z.object({
-  name: z.string().min(3).max(24),
-  tag: z.string().min(3).max(5).regex(/^[A-Z0-9]+$/, 'Tag must be uppercase letters and numbers only'),
-  description: z.string().max(200).optional(),
+  name: z.string().min(GUILD_CONSTANTS.MIN_NAME_LENGTH).max(GUILD_CONSTANTS.MAX_NAME_LENGTH),
+  tag: z.string().min(GUILD_CONSTANTS.TAG_MIN_LENGTH).max(GUILD_CONSTANTS.TAG_MAX_LENGTH).regex(/^[A-Z0-9]+$/, 'Tag must be uppercase letters and numbers only'),
+  description: z.string().max(GUILD_CONSTANTS.MAX_DESCRIPTION_LENGTH).optional(),
   settings: GuildSettingsSchema.partial().optional(),
 });
 export type CreateGuildRequest = z.infer<typeof CreateGuildRequestSchema>;
@@ -699,128 +768,7 @@ export const GuildBossSchema = z.object({
 });
 export type GuildBoss = z.infer<typeof GuildBossSchema>;
 
-// BigInt helper for damage values that can exceed JS safe integer limit
-const BigIntStringSchema = z.union([z.number().int().min(0), z.string()]);
-
-export const GuildBossAttemptSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  displayName: z.string(),
-  guildId: z.string(),
-  damage: BigIntStringSchema, // BigInt serialized as string for large values
-  heroId: z.string(),
-  heroTier: z.number().int().min(1).max(3),
-  heroPower: z.number().int().min(0),
-  attemptedAt: z.string().datetime(),
-});
-export type GuildBossAttempt = z.infer<typeof GuildBossAttemptSchema>;
-
-export const GuildBossStatusResponseSchema = z.object({
-  boss: GuildBossSchema,
-  myTodaysAttempt: GuildBossAttemptSchema.nullable(),
-  canAttack: z.boolean(),
-  myTotalDamage: z.number().int().min(0),
-  guildTotalDamage: z.number().int().min(0),
-  guildRank: z.number().int().min(1).nullable(),
-});
-export type GuildBossStatusResponse = z.infer<typeof GuildBossStatusResponseSchema>;
-
-export const GuildBossLeaderboardEntrySchema = z.object({
-  rank: z.number().int().min(1),
-  guildId: z.string(),
-  guildName: z.string(),
-  guildTag: z.string(),
-  totalDamage: z.number().int().min(0),
-  participantCount: z.number().int().min(0),
-});
-export type GuildBossLeaderboardEntry = z.infer<typeof GuildBossLeaderboardEntrySchema>;
-
-export const GuildBossLeaderboardResponseSchema = z.object({
-  boss: GuildBossSchema,
-  entries: z.array(GuildBossLeaderboardEntrySchema),
-  myGuildEntry: GuildBossLeaderboardEntrySchema.nullable(),
-});
-export type GuildBossLeaderboardResponse = z.infer<typeof GuildBossLeaderboardResponseSchema>;
-
-export const GuildBossAttackResponseSchema = z.object({
-  attempt: GuildBossAttemptSchema,
-  bossCurrentHp: BigIntStringSchema, // BigInt serialized as string
-  guildCoinsEarned: z.number().int().min(0),
-});
-export type GuildBossAttackResponse = z.infer<typeof GuildBossAttackResponseSchema>;
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-export const GUILD_CONSTANTS = {
-  // Name/tag constraints
-  MIN_NAME_LENGTH: 3,
-  MAX_NAME_LENGTH: 24,
-  TAG_MIN_LENGTH: 3,
-  TAG_MAX_LENGTH: 5,
-  MAX_DESCRIPTION_LENGTH: 200,
-
-  // Member limits (based on Kwatera structure level)
-  MEMBER_BASE_CAPACITY: 10,
-  MEMBER_MAX_CAPACITY: 30,
-
-  // Donation limits
-  MIN_DONATION_GOLD: 100,
-  MIN_DONATION_DUST: 10,
-  MAX_DAILY_DONATION_GOLD: 50000,
-  MAX_DAILY_DONATION_DUST: 500,
-
-  // Time limits
-  INVITATION_EXPIRY_HOURS: 72,
-  APPLICATION_EXPIRY_HOURS: 72,
-  BATTLE_COOLDOWN_HOURS: 24,
-  WITHDRAWAL_COOLDOWN_HOURS: 24,
-
-  // Applications
-  MAX_ACTIVE_APPLICATIONS_PER_PLAYER: 5,
-  MAX_APPLICATION_MESSAGE_LENGTH: 200,
-
-  // Treasury
-  MAX_WITHDRAWAL_PERCENT: 0.20,
-
-  // Arena 5v5 Battles
-  ARENA_PARTICIPANTS: 5,
-  MAX_DAILY_ATTACKS: 10,
-  ATTACK_COOLDOWN_SAME_GUILD_HOURS: 24,
-  MAX_ATTACKS_RECEIVED_PER_DAY: 3,
-  ARENA_DURATION_TICKS: 1800, // 60 seconds at 30Hz
-
-  // Shield
-  SHIELD_DURATION_HOURS: 24,
-  SHIELD_GOLD_COST: 5000,
-  MAX_SHIELDS_PER_WEEK: 2,
-
-  // Honor (ELO)
-  BASE_HONOR: 1000,
-  MIN_HONOR: 100,
-  HONOR_K_FACTOR: 32,
-
-  // Structure upgrades
-  STRUCTURE_MAX_LEVEL: 20,
-  STRUCTURE_UPGRADE_BASE_GOLD: 500, // Cost = 500 × (level + 1)²
-  STRUCTURE_UPGRADE_BASE_DUST: 25,  // Cost = 25 × (level + 1)
-  STRUCTURE_BONUS_PER_LEVEL: 0.01,  // +1% per level for skarbiec/akademia/zbrojownia
-
-  // Guild Boss
-  BOSS_TOTAL_HP: 50_000_000,
-  BOSS_ATTACKS_PER_DAY: 1,
-
-  // Guild Coins (earned from battles/boss)
-  COINS_ARENA_WIN: 50,
-  COINS_ARENA_LOSS: 10,
-  COINS_BOSS_PARTICIPATION: 5,
-  COINS_BOSS_TOP_DAMAGE: 25,
-} as const;
-
-// ============================================================================
-// ERROR CODES
-// ============================================================================
+// ===================================
 
 export const GUILD_ERROR_CODES = {
   // Guild errors
