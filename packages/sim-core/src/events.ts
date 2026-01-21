@@ -512,7 +512,18 @@ function validateSpawnMilitia(
     return { valid: false, reason: 'Invalid militia type' };
   }
 
-  // Could add resource cost check here in the future
+  const type = event.militiaType as MilitiaType;
+
+  // Check if at max militia count
+  if (state.militia.length >= state.maxMilitiaCount) {
+    return { valid: false, reason: 'Max militia count reached' };
+  }
+
+  // Check if this type is on cooldown
+  if (state.militiaSpawnCooldowns[type] > state.tick) {
+    return { valid: false, reason: 'Militia type on cooldown' };
+  }
+
   return { valid: true };
 }
 

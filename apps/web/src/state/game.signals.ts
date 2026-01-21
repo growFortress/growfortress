@@ -74,6 +74,10 @@ export interface GameStateSnapshot {
   // Fortress class skills
   fortressActiveSkills: string[];
   fortressSkillCooldowns: Record<string, number>;
+  // Militia system
+  militiaCount: number;
+  maxMilitiaCount: number;
+  militiaSpawnCooldowns: Record<string, number>;
 }
 
 // Game phase

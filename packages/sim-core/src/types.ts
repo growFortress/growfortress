@@ -977,6 +977,8 @@ export interface GameState {
   // NEW: Militia/Guards system
   militia: Militia[];
   nextMilitiaId: number;
+  militiaSpawnCooldowns: Record<MilitiaType, number>;  // Cooldown ticks for each type
+  maxMilitiaCount: number;  // Max active militia (default 8)
 
   // NEW: Projectiles in flight
   projectiles: ActiveProjectile[];

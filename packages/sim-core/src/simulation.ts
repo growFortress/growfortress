@@ -342,6 +342,12 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     // Militia system
     militia: [],
     nextMilitiaId: 1,
+    militiaSpawnCooldowns: {
+      infantry: 0,
+      archer: 0,
+      shield_bearer: 0,
+    },
+    maxMilitiaCount: 8,
   };
 }
 

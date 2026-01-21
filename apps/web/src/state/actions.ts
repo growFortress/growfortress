@@ -191,6 +191,10 @@ export function syncGameState(gameInstance: Game): void {
         // Fortress class skills
         fortressActiveSkills: state.activeSkills || [],
         fortressSkillCooldowns: state.skillCooldowns || {},
+        // Militia system
+        militiaCount: state.militia.length,
+        maxMilitiaCount: state.maxMilitiaCount,
+        militiaSpawnCooldowns: state.militiaSpawnCooldowns || {},
       };
       game.gameState.value = snapshot;
 

@@ -49,7 +49,7 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     role: 'melee',
     baseHp: 50,
     baseDamage: 20,      // Increased from 15
-    baseSpeed: 0.5,      // Increased from 0.05 (~15.0 units/sec at 30Hz)
+    baseSpeed: 0.35,     // Reduced from 0.5 (30% slower for balance)
     attackRange: 1.5,
     attackInterval: 45,  // 1.5 seconds
     duration: 300,       // 10 seconds
@@ -64,7 +64,7 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     role: 'ranged',
     baseHp: 30,
     baseDamage: 28,      // Increased from 20
-    baseSpeed: 0.5,      // Increased from 0.04
+    baseSpeed: 0.35,     // Reduced from 0.5 (30% slower for balance)
     attackRange: 8,
     attackInterval: 60,  // 2 seconds
     duration: 300,       // 10 seconds
@@ -79,7 +79,7 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     role: 'tank',
     baseHp: 100,
     baseDamage: 10,      // Increased from 5
-    baseSpeed: 0.5,      // Increased from 0.03
+    baseSpeed: 0.35,     // Reduced from 0.5 (30% slower for balance)
     attackRange: 1.5,
     attackInterval: 90,  // 3 seconds
     duration: 450,       // 15 seconds

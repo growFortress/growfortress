@@ -22,13 +22,24 @@ const MILITIA_SEPARATION_RADIUS = FP.fromFloat(1.5); // Radius for separation ch
 
 /**
  * Spawn a new militia unit at the specified position
+ * Returns null if spawn limits are exceeded
  */
 export function spawnMilitia(
   state: GameState,
   type: MilitiaType,
   x: number,
   y: number
-): Militia {
+): Militia | null {
+  // Check if at max militia count
+  if (state.militia.length >= state.maxMilitiaCount) {
+    return null;
+  }
+
+  // Check if this type is on cooldown
+  if (state.militiaSpawnCooldowns[type] > state.tick) {
+    return null;
+  }
+
   const def = getMilitiaDefinition(type);
 
   const militia: Militia = {
@@ -74,7 +85,10 @@ export function spawnMilitiaSquad(
     const offsetX = FP.mul(FP.fromFloat(i - (count - 1) / 2), spacing);
     const x = FP.add(centerX, offsetX);
     const militia = spawnMilitia(state, type, x, centerY);
-    spawned.push(militia);
+    // Only add if spawn was successful (not null due to limits)
+    if (militia) {
+      spawned.push(militia);
+    }
   }
 
   return spawned;
@@ -176,6 +190,8 @@ export function updateMilitia(
     if (state.tick >= militia.expirationTick || militia.currentHp <= 0) {
       militia.state = 'dead';
       militiaToRemove.push(militia.id);
+      // Set cooldown for this militia type (5 seconds = 150 ticks at 30 ticks/sec)
+      state.militiaSpawnCooldowns[militia.type] = state.tick + 150;
       continue;
     }
 

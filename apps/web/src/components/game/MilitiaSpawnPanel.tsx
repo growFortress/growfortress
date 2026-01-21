@@ -1,5 +1,5 @@
 import { signal } from '@preact/signals';
-import { gamePhase, displayGold } from '../../state/index.js';
+import { gamePhase, displayGold, gameState } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './MilitiaSpawnPanel.module.css';
 
@@ -53,17 +53,34 @@ export function MilitiaSpawnPanel() {
   const phase = gamePhase.value;
   const gold = displayGold.value;
   const selected = selectedMilitiaType.value;
+  const state = gameState.value;
 
   // Only show during gameplay
   if (phase === 'idle') {
     return null;
   }
 
+  const militiaCount = state?.militiaCount ?? 0;
+  const maxMilitiaCount = state?.maxMilitiaCount ?? 8;
+  const militiaSpawnCooldowns = state?.militiaSpawnCooldowns ?? {};
+  const currentTick = state?.tick ?? 0;
+
   const handleMilitiaClick = (type: MilitiaType) => {
     const militiaDef = MILITIA_TYPES[type];
 
     // Check if player can afford it
     if (gold < militiaDef.cost) {
+      return;
+    }
+
+    // Check if at max count
+    if (militiaCount >= maxMilitiaCount) {
+      return;
+    }
+
+    // Check if on cooldown
+    const cooldown = militiaSpawnCooldowns[type] ?? 0;
+    if (cooldown > currentTick) {
       return;
     }
 
@@ -75,11 +92,16 @@ export function MilitiaSpawnPanel() {
     }
   };
 
+  const atMaxCount = militiaCount >= maxMilitiaCount;
+
   return (
     <div class={styles.panel}>
       <div class={styles.header}>
         <span class={styles.icon}>🤖</span>
         <span class={styles.title}>{t('militia.title')}</span>
+        <span class={styles.militiaCounter}>
+          {militiaCount}/{maxMilitiaCount}
+        </span>
       </div>
 
       <div class={styles.militiaList}>
@@ -87,13 +109,17 @@ export function MilitiaSpawnPanel() {
           const militia = MILITIA_TYPES[type];
           const canAfford = gold >= militia.cost;
           const isSelected = selected === type;
+          const cooldown = militiaSpawnCooldowns[type] ?? 0;
+          const onCooldown = cooldown > currentTick;
+          const cooldownRemaining = onCooldown ? Math.ceil((cooldown - currentTick) / 30) : 0;
+          const isDisabled = !canAfford || atMaxCount || onCooldown;
 
           return (
             <button
               key={type}
-              class={`${styles.militiaButton} ${isSelected ? styles.selected : ''} ${!canAfford ? styles.disabled : ''}`}
+              class={`${styles.militiaButton} ${isSelected ? styles.selected : ''} ${isDisabled ? styles.disabled : ''}`}
               onClick={() => handleMilitiaClick(type)}
-              disabled={!canAfford}
+              disabled={isDisabled}
               title={t(militia.descriptionKey)}
             >
               <span class={styles.militiaIcon}>{militia.icon}</span>
@@ -111,6 +137,11 @@ export function MilitiaSpawnPanel() {
                   <span class={styles.goldIcon}>🪙</span>
                   {militia.cost}
                 </span>
+                {onCooldown && (
+                  <span class={styles.cooldownBadge}>
+                    ⏱ {cooldownRemaining}s
+                  </span>
+                )}
               </div>
               {isSelected && <span class={styles.selectedBadge}>✓</span>}
             </button>
@@ -118,10 +149,16 @@ export function MilitiaSpawnPanel() {
         })}
       </div>
 
-      {selected && (
+      {selected && !atMaxCount && (
         <div class={styles.hint}>
           <span class={styles.hintIcon}>👆</span>
           {t('militia.clickMapHint')}
+        </div>
+      )}
+      {atMaxCount && (
+        <div class={styles.hint}>
+          <span class={styles.hintIcon}>⚠️</span>
+          Max militia reached ({maxMilitiaCount})
         </div>
       )}
     </div>
