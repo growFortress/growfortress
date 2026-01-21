@@ -768,7 +768,59 @@ export const GuildBossSchema = z.object({
 });
 export type GuildBoss = z.infer<typeof GuildBossSchema>;
 
-// ===================================
+// BigInt helper for damage values that can exceed JS safe integer limit
+const BigIntStringSchema = z.union([z.number().int().min(0), z.string()]);
+
+export const GuildBossAttemptSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  displayName: z.string(),
+  guildId: z.string(),
+  damage: BigIntStringSchema, // BigInt serialized as string for large values
+  heroId: z.string(),
+  heroTier: z.number().int().min(1).max(3),
+  heroPower: z.number().int().min(0),
+  attemptedAt: z.string().datetime(),
+});
+export type GuildBossAttempt = z.infer<typeof GuildBossAttemptSchema>;
+
+export const GuildBossStatusResponseSchema = z.object({
+  boss: GuildBossSchema,
+  myTodaysAttempt: GuildBossAttemptSchema.nullable(),
+  canAttack: z.boolean(),
+  myTotalDamage: z.number().int().min(0),
+  guildTotalDamage: z.number().int().min(0),
+  guildRank: z.number().int().min(1).nullable(),
+});
+export type GuildBossStatusResponse = z.infer<typeof GuildBossStatusResponseSchema>;
+
+export const GuildBossLeaderboardEntrySchema = z.object({
+  rank: z.number().int().min(1),
+  guildId: z.string(),
+  guildName: z.string(),
+  guildTag: z.string(),
+  totalDamage: z.number().int().min(0),
+  participantCount: z.number().int().min(0),
+});
+export type GuildBossLeaderboardEntry = z.infer<typeof GuildBossLeaderboardEntrySchema>;
+
+export const GuildBossLeaderboardResponseSchema = z.object({
+  boss: GuildBossSchema,
+  entries: z.array(GuildBossLeaderboardEntrySchema),
+  myGuildEntry: GuildBossLeaderboardEntrySchema.nullable(),
+});
+export type GuildBossLeaderboardResponse = z.infer<typeof GuildBossLeaderboardResponseSchema>;
+
+export const GuildBossAttackResponseSchema = z.object({
+  attempt: GuildBossAttemptSchema,
+  bossCurrentHp: BigIntStringSchema, // BigInt serialized as string
+  guildCoinsEarned: z.number().int().min(0),
+});
+export type GuildBossAttackResponse = z.infer<typeof GuildBossAttackResponseSchema>;
+
+// ============================================================================
+// ERROR CODES
+// ============================================================================
 
 export const GUILD_ERROR_CODES = {
   // Guild errors
