@@ -4,6 +4,7 @@ import { LoginForm } from './LoginForm.js';
 import { RegisterForm } from './RegisterForm.js';
 import { ForgotPasswordForm } from './ForgotPasswordForm.js';
 import { ResetPasswordForm } from './ResetPasswordForm.js';
+import { AuthBackgroundBattle } from './AuthBackgroundBattle.js';
 import { forgotPassword, resetPassword } from '../../api/client.js';
 import styles from './AuthScreen.module.css';
 
@@ -72,33 +73,15 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
 
   return (
     <div class={styles.authScreen}>
+      {/* Animated battle background */}
+      <AuthBackgroundBattle className={styles.backgroundBattle} />
+      
       <div class={styles.authBox}>
         <h1 class={styles.logo}>
           <span class={styles.logoGrow}>Grow</span>
           <span class={styles.logoFortress}>Fortress</span>
         </h1>
         <p class={styles.tagline}>{t('common:app.tagline')}</p>
-
-        {/* Save Info Box */}
-        <div class={styles.saveInfoBox}>
-          <div class={styles.saveInfoTitle}>{t('saveInfo.title')}</div>
-          <div class={styles.saveInfoContent}>
-            <div class={styles.saveInfoItem}>
-              <span class={styles.saveInfoIcon}>🎮</span>
-              <div>
-                <div class={styles.saveInfoLabel}>{t('saveInfo.guest')}</div>
-                <div class={styles.saveInfoWarning}>{t('saveInfo.guestWarning')}</div>
-              </div>
-            </div>
-            <div class={styles.saveInfoItem}>
-              <span class={styles.saveInfoIcon}>✅</span>
-              <div>
-                <div class={styles.saveInfoLabel}>{t('saveInfo.account')}</div>
-                <div class={styles.saveInfoBenefit}>{t('saveInfo.accountBenefit')}</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {authScreen.value === 'login' && (
           <>
@@ -158,49 +141,52 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
           <div class={styles.error}>{authError.value}</div>
         )}
 
-        {/* Analytics info */}
-        <div class={styles.analyticsInfo}>
-          <span class={styles.analyticsIcon}>📊</span>
-          <div class={styles.analyticsText}>
-            {t('analytics.info')}{' '}
-            <button
-              type="button"
-              class={styles.analyticsLink}
-              onClick={() => openLegalModal('privacy')}
-            >
-              {t('analytics.details')}
-            </button>
+        {/* Compact footer info */}
+        <div class={styles.footerInfo}>
+          {/* Analytics info */}
+          <div class={styles.analyticsInfo}>
+            <span class={styles.analyticsIcon}>📊</span>
+            <div class={styles.analyticsText}>
+              {t('analytics.info')}{' '}
+              <button
+                type="button"
+                class={styles.analyticsLink}
+                onClick={() => openLegalModal('privacy')}
+              >
+                {t('analytics.details')}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Data protection info */}
-        <div class={styles.analyticsInfo}>
-          <span class={styles.analyticsIcon}>🔒</span>
-          <div class={styles.analyticsText}>
-            {t('dataProtection.info')}{' '}
-            <button
-              type="button"
-              class={styles.analyticsLink}
-              onClick={() => openLegalModal('privacy')}
-            >
-              {t('dataProtection.details')}
-            </button>
+          {/* Data protection info */}
+          <div class={styles.analyticsInfo}>
+            <span class={styles.analyticsIcon}>🔒</span>
+            <div class={styles.analyticsText}>
+              {t('dataProtection.info')}{' '}
+              <button
+                type="button"
+                class={styles.analyticsLink}
+                onClick={() => openLegalModal('privacy')}
+              >
+                {t('dataProtection.details')}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Studio info */}
-        <div class={styles.studioInfo}>
-          <span class={styles.studioIcon}>🏢</span>
-          <div class={styles.studioText}>
-            {t('madeBy')}{' '}
-            <a
-              href={`/company/index-${language === 'pl' ? 'pl' : 'en'}.html`}
-              target="_blank"
-              rel="noopener noreferrer"
-              class={styles.studioLink}
-            >
-              PlazaWorks
-            </a>
+          {/* Studio info */}
+          <div class={styles.studioInfo}>
+            <span class={styles.studioIcon}>🏢</span>
+            <div class={styles.studioText}>
+              {t('madeBy')}{' '}
+              <a
+                href={`/company/index-${language === 'pl' ? 'pl' : 'en'}.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class={styles.studioLink}
+              >
+                PlazaWorks
+              </a>
+            </div>
           </div>
         </div>
       </div>

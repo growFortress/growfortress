@@ -1,5 +1,6 @@
 import { useState, useId } from 'preact/hooks';
 import { authLoading } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
 import styles from './AuthScreen.module.css';
 
@@ -11,8 +12,11 @@ interface ResetPasswordFormProps {
 }
 
 export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: ResetPasswordFormProps) {
+  const { t } = useTranslation('auth');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const loading = authLoading.value;
@@ -23,7 +27,7 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setLocalError('Hasła nie są identyczne');
+      setLocalError(t('resetPassword.passwordMismatch'));
       return;
     }
     setLocalError(null);
@@ -35,10 +39,10 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
     return (
       <div class={styles.authForm}>
         <p class={styles.success}>
-          Twoje hasło zostało pomyślnie zresetowane.
+          {t('resetPassword.success')}
         </p>
         <div class={styles.authToggle} onClick={onBack}>
-          <strong>Wróć do logowania</strong>
+          <strong>{t('resetPassword.backToLogin')}</strong>
         </div>
       </div>
     );
@@ -48,10 +52,10 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
     <form
       class={styles.authForm}
       onSubmit={handleSubmit}
-      aria-label="Resetowanie hasła"
+      aria-label={t('aria.forgotPasswordForm')}
     >
       <p class={styles.instructions}>
-        Wpisz nowe hasło dla swojego konta.
+        {t('resetPassword.instructions')}
       </p>
 
       {(error || localError) && (
@@ -60,36 +64,56 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
         </div>
       )}
 
-      <div class={styles.inputGroup}>
+      <div class={`${styles.inputGroup} ${styles.hasIcon}`}>
         <label htmlFor={passwordId} class={styles.srOnly}>
-          Nowe hasło
+          {t('resetPassword.password')}
         </label>
+        <span class={styles.inputIcon} aria-hidden="true">🔒</span>
         <input
           id={passwordId}
-          type="password"
-          placeholder="Nowe hasło (min. 6 znaków)"
+          type={showPassword ? 'text' : 'password'}
+          placeholder={t('resetPassword.passwordPlaceholder')}
           required
           minLength={6}
           autocomplete="new-password"
           value={password}
           onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
         />
+        <button
+          type="button"
+          class={styles.passwordToggle}
+          onClick={() => setShowPassword(!showPassword)}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          tabIndex={-1}
+        >
+          {showPassword ? '👁️' : '👁️‍🗨️'}
+        </button>
       </div>
 
-      <div class={styles.inputGroup}>
+      <div class={`${styles.inputGroup} ${styles.hasIcon}`}>
         <label htmlFor={confirmPasswordId} class={styles.srOnly}>
-          Potwierdź nowe hasło
+          {t('resetPassword.confirmPassword')}
         </label>
+        <span class={styles.inputIcon} aria-hidden="true">🔒</span>
         <input
           id={confirmPasswordId}
-          type="password"
-          placeholder="Potwierdź nowe hasło"
+          type={showConfirmPassword ? 'text' : 'password'}
+          placeholder={t('resetPassword.confirmPlaceholder')}
           required
           minLength={6}
           autocomplete="new-password"
           value={confirmPassword}
           onInput={(e) => setConfirmPassword((e.target as HTMLInputElement).value)}
         />
+        <button
+          type="button"
+          class={styles.passwordToggle}
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+          tabIndex={-1}
+        >
+          {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+        </button>
       </div>
 
       <Button
@@ -98,11 +122,11 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
         disabled={loading}
         class={styles.authBtn}
       >
-        {loading ? 'Resetowanie...' : 'Zresetuj hasło'}
+        {loading ? t('resetPassword.submitting') : t('resetPassword.submit')}
       </Button>
 
       <div class={styles.authToggle} onClick={onBack}>
-        <strong>Anuluj</strong>
+        <strong>{t('resetPassword.cancel')}</strong>
       </div>
     </form>
   );

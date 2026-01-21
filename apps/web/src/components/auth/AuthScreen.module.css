@@ -21,28 +21,76 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-bg);
+  /* Animated gradient background - very subtle, ambient effect */
+  background: linear-gradient(-45deg, 
+    var(--color-bg),           /* #0a0a12 */
+    var(--color-bg-panel),     /* #12121f */
+    #0d1620,                   /* subtle blue tint */
+    var(--color-bg-elevated)   /* #1a1a2a */
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 120s ease-in-out infinite;
   z-index: 100;
   cursor: default;
   overflow-x: hidden;
   overflow-y: auto;
   padding: 24px 16px;
   box-sizing: border-box;
+  position: relative; /* For absolute positioned battle canvas */
+}
+
+/* Background battle canvas */
+.backgroundBattle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gradientShift {
+  0%, 100% { 
+    background-position: 0% 50%; 
+  }
+  50% { 
+    background-position: 100% 50%; 
+  }
 }
 
 .authBox {
   width: 100%;
   max-width: 480px;
   padding: 48px;
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
+  /* Subtle glassmorphism effect */
+  background: var(--glass-bg);                    /* rgba(18, 18, 31, 0.75) */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);            /* Safari support */
+  border: var(--border-primary);                  /* Keep cartoon 3px style */
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg), var(--glow-primary);
+  box-shadow: 
+    var(--shadow-lg),                             /* 6px 6px cartoon shadow */
+    0 0 40px rgba(0, 229, 255, 0.08);            /* Very subtle cyan glow */
   display: flex;
   flex-direction: column;
   gap: 32px;
   text-align: center;
   position: relative;
+  z-index: 1; /* Above battle background */
+}
+
+/* Subtle top highlight for depth */
+.authBox::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 /* Logo Styles */
@@ -52,6 +100,19 @@
   align-items: baseline;
   justify-content: center;
   gap: 12px;
+  /* Entrance animation */
+  animation: logoEntrance 0.6s var(--ease-out-expo) both;
+}
+
+@keyframes logoEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .logoGrow {
@@ -70,7 +131,18 @@
   text-transform: uppercase;
   letter-spacing: 4px;
   color: var(--color-primary);
-  text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+  /* Subtle glow pulse animation */
+  text-shadow: 0 0 30px rgba(0, 229, 255, 0.5);
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    text-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(0, 229, 255, 0.6);
+  }
 }
 
 .tagline {
@@ -149,6 +221,18 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  animation: slideInFade 0.35s var(--ease-out-expo);
+}
+
+@keyframes slideInFade {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .inputGroup {
@@ -157,6 +241,27 @@
   gap: 8px;
   text-align: left;
   position: relative;
+}
+
+/* Input icon styling */
+.inputIcon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--color-text-40);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: var(--transition-interactive-normal);
+  /* Force emoji to be monochrome */
+  filter: grayscale(1);
+  -webkit-filter: grayscale(1);
+}
+
+/* Adjust input padding when icon is present */
+.inputGroup.hasIcon input {
+  padding-left: 45px;
 }
 
 .inputGroup input {
@@ -187,11 +292,20 @@
   box-shadow: var(--shadow-sm), var(--glow-primary);
 }
 
+/* Icon glow on focus */
+.inputGroup input:focus ~ .inputIcon {
+  color: var(--color-primary-70);
+  opacity: 1;
+  filter: grayscale(1) brightness(1.2);
+  -webkit-filter: grayscale(1) brightness(1.2);
+}
+
 /* Visual validation indicators - invalid state */
 .inputGroup input[aria-invalid="true"] {
   border-color: var(--color-accent);
   border-left-color: var(--color-accent);
   background: var(--color-accent-10);
+  animation: shake 0.3s ease;
 }
 
 .inputGroup input[aria-invalid="true"]:focus {
@@ -213,6 +327,40 @@
   border-left-color: var(--color-success);
 }
 
+/* Validation icon */
+.validationIcon {
+  position: absolute;
+  right: 12px;
+  top: 14px;
+  font-size: 16px;
+  pointer-events: none;
+  animation: scaleIn 0.2s var(--ease-spring);
+}
+
+.validationIcon.valid {
+  color: var(--color-success);
+}
+
+.validationIcon.invalid {
+  color: var(--color-accent);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Adjust validation icon position when password toggle is present */
+.inputGroup.hasPasswordToggle .validationIcon {
+  right: 40px;
+}
+
 .authToggle {
   margin-top: 16px;
   font-size: 14px;
@@ -223,6 +371,16 @@
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  animation: fadeIn 0.4s ease 0.2s both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .authToggle strong {
@@ -239,6 +397,37 @@
   color: var(--color-text);
 }
 
+/* Password toggle button */
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--color-text-40);
+  opacity: 0.7;
+  transition: var(--transition-interactive-normal);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordToggle:hover {
+  color: var(--color-primary-70);
+  opacity: 1;
+}
+
+.passwordToggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Adjust forgot password link position when toggle is present */
 .forgotPasswordLink {
   font-size: 13px;
   color: var(--color-text-40);
@@ -287,6 +476,30 @@
 .error {
   color: var(--color-accent);
   text-shadow: 0 0 5px var(--color-accent-30);
+  animation: errorFadeIn 0.3s ease, shake 0.4s ease;
+}
+
+@keyframes errorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  10%, 30%, 50%, 70%, 90% { 
+    transform: translateX(-6px); 
+  }
+  20%, 40%, 60%, 80% { 
+    transform: translateX(6px); 
+  }
 }
 
 .loading {
@@ -340,6 +553,7 @@
   text-align: center;
   margin-top: 16px;
   line-height: 1.6;
+  animation: fadeIn 0.4s ease 0.3s both;
 }
 
 .legalLink {
@@ -364,27 +578,36 @@
   outline-offset: 2px;
 }
 
+/* Footer info boxes - compact grid layout */
+.footerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+
 /* Analytics info */
 .analyticsInfo {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 16px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.15);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .analyticsIcon {
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .analyticsText {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-text-40);
-  line-height: 1.5;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .analyticsLink {
@@ -392,7 +615,7 @@
   border: none;
   color: var(--color-primary-70);
   cursor: pointer;
-  font-size: 11px;
+  font-size: 10px;
   font-family: var(--font-body);
   padding: 0;
   text-decoration: underline;
@@ -404,8 +627,8 @@
 }
 
 .analyticsLink:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: 1px solid var(--color-primary);
+  outline-offset: 1px;
 }
 
 /* Studio info */
@@ -413,27 +636,28 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.15);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .studioIcon {
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .studioText {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-text-40);
-  line-height: 1.5;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .studioLink {
   color: var(--color-primary-70);
-  font-size: 11px;
+  font-size: 10px;
   font-family: var(--font-body);
   text-decoration: underline;
   transition: color var(--duration-fast) var(--ease-standard);
@@ -444,8 +668,8 @@
 }
 
 .studioLink:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: 1px solid var(--color-primary);
+  outline-offset: 1px;
 }
 
 @media (max-height: 720px) {

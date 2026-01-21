@@ -54,10 +54,11 @@ export function ForgotPasswordForm({ onSubmit, onBack, error }: ForgotPasswordFo
         </div>
       )}
 
-      <div class={styles.inputGroup}>
+      <div class={`${styles.inputGroup} ${styles.hasIcon}`}>
         <label htmlFor={emailId} class={styles.srOnly}>
           {t('forgotPassword.email')}
         </label>
+        <span class={styles.inputIcon} aria-hidden="true">📧</span>
         <input
           id={emailId}
           type="email"
