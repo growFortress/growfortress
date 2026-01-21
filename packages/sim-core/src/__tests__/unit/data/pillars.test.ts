@@ -144,39 +144,81 @@ describe('Wave Ranges - Complete Coverage', () => {
 // ============================================================================
 
 describe('getPillarForWave', () => {
-  describe('Streets Pillar (waves 1-10)', () => {
-    it.each([1, 5, 10])('wave %i should be in Streets pillar', (wave) => {
+  describe('With all pillars unlocked (no filter)', () => {
+    it.each([1, 5, 10])('wave %i (first cycle) should be in Streets pillar', (wave) => {
       expect(getPillarForWave(wave)?.id).toBe('streets');
     });
-  });
 
-  describe('Science Pillar (waves 11-25)', () => {
-    it.each([11, 18, 25])('wave %i should be in Science pillar', (wave) => {
+    it.each([11, 15, 20])('wave %i (first cycle) should be in Science pillar', (wave) => {
       expect(getPillarForWave(wave)?.id).toBe('science');
     });
-  });
 
-  describe('Mutants Pillar (waves 26-40)', () => {
-    it.each([26, 33, 40])('wave %i should be in Mutants pillar', (wave) => {
+    it.each([21, 25, 30])('wave %i (first cycle) should be in Mutants pillar', (wave) => {
       expect(getPillarForWave(wave)?.id).toBe('mutants');
     });
-  });
 
-  describe('Cosmos Pillar (waves 41-60)', () => {
-    it.each([41, 50, 60])('wave %i should be in Cosmos pillar', (wave) => {
+    it.each([31, 35, 40])('wave %i (first cycle) should be in Cosmos pillar', (wave) => {
       expect(getPillarForWave(wave)?.id).toBe('cosmos');
     });
-  });
 
-  describe('Magic Pillar (waves 61-80)', () => {
-    it.each([61, 70, 80])('wave %i should be in Magic pillar', (wave) => {
+    it.each([41, 45, 50])('wave %i (first cycle) should be in Magic pillar', (wave) => {
       expect(getPillarForWave(wave)?.id).toBe('magic');
+    });
+
+    it.each([51, 55, 60])('wave %i (first cycle) should be in Gods pillar', (wave) => {
+      expect(getPillarForWave(wave)?.id).toBe('gods');
+    });
+
+    it('wave 61+ cycles back through all pillars', () => {
+      // 60-wave cycle: 6 pillars * 10 waves each
+      expect(getPillarForWave(61)?.id).toBe('streets'); // Cycle repeats
+      expect(getPillarForWave(71)?.id).toBe('science');
+      expect(getPillarForWave(81)?.id).toBe('mutants');
+      expect(getPillarForWave(121)?.id).toBe('streets'); // Cycle 2
     });
   });
 
-  describe('Gods Pillar (waves 81-100)', () => {
-    it.each([81, 90, 100])('wave %i should be in Gods pillar', (wave) => {
-      expect(getPillarForWave(wave)?.id).toBe('gods');
+  describe('With only Streets unlocked (early game)', () => {
+    const unlockedPillars: PillarId[] = ['streets'];
+
+    it('all waves should be Streets when only Streets is unlocked', () => {
+      expect(getPillarForWave(1, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(10, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(11, unlockedPillars)?.id).toBe('streets'); // Not Science!
+      expect(getPillarForWave(50, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(100, unlockedPillars)?.id).toBe('streets');
+    });
+  });
+
+  describe('With Streets + Science unlocked (mid game)', () => {
+    const unlockedPillars: PillarId[] = ['streets', 'science'];
+
+    it('rotates between Streets and Science every 10 waves', () => {
+      // Waves 1-10: Streets
+      expect(getPillarForWave(1, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(10, unlockedPillars)?.id).toBe('streets');
+      
+      // Waves 11-20: Science
+      expect(getPillarForWave(11, unlockedPillars)?.id).toBe('science');
+      expect(getPillarForWave(20, unlockedPillars)?.id).toBe('science');
+      
+      // Waves 21-30: Streets (cycle repeats)
+      expect(getPillarForWave(21, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(30, unlockedPillars)?.id).toBe('streets');
+      
+      // Waves 31-40: Science
+      expect(getPillarForWave(31, unlockedPillars)?.id).toBe('science');
+    });
+  });
+
+  describe('With 3 pillars unlocked', () => {
+    const unlockedPillars: PillarId[] = ['streets', 'science', 'mutants'];
+
+    it('rotates through 3 pillars every 10 waves (30-wave cycle)', () => {
+      expect(getPillarForWave(1, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(11, unlockedPillars)?.id).toBe('science');
+      expect(getPillarForWave(21, unlockedPillars)?.id).toBe('mutants');
+      expect(getPillarForWave(31, unlockedPillars)?.id).toBe('streets'); // Cycle repeats
     });
   });
 
@@ -185,46 +227,12 @@ describe('getPillarForWave', () => {
       expect(getPillarForWave(0)).toBeUndefined();
     });
 
-    it('wave 101+ cycles back through pillars (Endless mode)', () => {
-      // Wave 101 = effective wave 1 (cycle 1) = Streets
-      expect(getPillarForWave(101)?.id).toBe('streets');
-      // Wave 111 = effective wave 11 (cycle 1) = Science
-      expect(getPillarForWave(111)?.id).toBe('science');
-      // Wave 200 = effective wave 100 (cycle 1) = Gods
-      expect(getPillarForWave(200)?.id).toBe('gods');
-      // Wave 201 = effective wave 1 (cycle 2) = Streets
-      expect(getPillarForWave(201)?.id).toBe('streets');
-    });
-
     it('negative waves should return undefined', () => {
       expect(getPillarForWave(-1)).toBeUndefined();
     });
-  });
 
-  describe('Pillar transitions', () => {
-    it('wave 10 -> 11 transitions from Streets to Science', () => {
-      expect(getPillarForWave(10)?.id).toBe('streets');
-      expect(getPillarForWave(11)?.id).toBe('science');
-    });
-
-    it('wave 25 -> 26 transitions from Science to Mutants', () => {
-      expect(getPillarForWave(25)?.id).toBe('science');
-      expect(getPillarForWave(26)?.id).toBe('mutants');
-    });
-
-    it('wave 40 -> 41 transitions from Mutants to Cosmos', () => {
-      expect(getPillarForWave(40)?.id).toBe('mutants');
-      expect(getPillarForWave(41)?.id).toBe('cosmos');
-    });
-
-    it('wave 60 -> 61 transitions from Cosmos to Magic', () => {
-      expect(getPillarForWave(60)?.id).toBe('cosmos');
-      expect(getPillarForWave(61)?.id).toBe('magic');
-    });
-
-    it('wave 80 -> 81 transitions from Magic to Gods', () => {
-      expect(getPillarForWave(80)?.id).toBe('magic');
-      expect(getPillarForWave(81)?.id).toBe('gods');
+    it('empty unlock list falls back to streets', () => {
+      expect(getPillarForWave(1, [])?.id).toBe('streets');
     });
   });
 });
@@ -361,20 +369,31 @@ describe('Endless Mode Helpers', () => {
   });
 
   describe('Cycle and pillar integration', () => {
-    it('getPillarForWave uses effective wave correctly', () => {
-      // Cycle 0
-      expect(getPillarForWave(1)?.id).toBe('streets');  // Effective wave 1
-      expect(getPillarForWave(11)?.id).toBe('science'); // Effective wave 11
-      expect(getPillarForWave(100)?.id).toBe('gods');   // Effective wave 100
+    it('getPillarForWave cycles through all pillars correctly', () => {
+      // With all 6 pillars unlocked, cycle is 60 waves (6 pillars * 10 waves each)
+      
+      // First cycle (waves 1-60)
+      expect(getPillarForWave(1)?.id).toBe('streets');   // Waves 1-10
+      expect(getPillarForWave(11)?.id).toBe('science');  // Waves 11-20
+      expect(getPillarForWave(21)?.id).toBe('mutants');  // Waves 21-30
+      expect(getPillarForWave(31)?.id).toBe('cosmos');   // Waves 31-40
+      expect(getPillarForWave(41)?.id).toBe('magic');    // Waves 41-50
+      expect(getPillarForWave(51)?.id).toBe('gods');     // Waves 51-60
 
-      // Cycle 1
-      expect(getPillarForWave(101)?.id).toBe('streets'); // Effective wave 1
-      expect(getPillarForWave(111)?.id).toBe('science'); // Effective wave 11
-      expect(getPillarForWave(200)?.id).toBe('gods');    // Effective wave 100
+      // Second cycle (waves 61-120) - repeats
+      expect(getPillarForWave(61)?.id).toBe('streets');  // Cycle repeats
+      expect(getPillarForWave(71)?.id).toBe('science');
+      expect(getPillarForWave(121)?.id).toBe('streets'); // Third cycle starts
+    });
 
-      // Cycle 2
-      expect(getPillarForWave(201)?.id).toBe('streets'); // Effective wave 1
-      expect(getPillarForWave(281)?.id).toBe('gods');    // Effective wave 81
+    it('respects unlocked pillars in cycle', () => {
+      const unlockedPillars: PillarId[] = ['streets', 'science'];
+      
+      // With 2 pillars, cycle is 20 waves (2 * 10)
+      expect(getPillarForWave(1, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(11, unlockedPillars)?.id).toBe('science');
+      expect(getPillarForWave(21, unlockedPillars)?.id).toBe('streets'); // Cycle repeats
+      expect(getPillarForWave(41, unlockedPillars)?.id).toBe('streets');
     });
   });
 });

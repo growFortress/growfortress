@@ -250,34 +250,30 @@ describe('Pillar System', () => {
   });
 
   describe('getPillarForWave', () => {
-    it('wave 1-10 is Streets', () => {
-      expect(getPillarForWave(1)?.id).toBe('streets');
+    it('rotates through all 6 pillars every 10 waves (when all unlocked)', () => {
+      // No unlock filter = all pillars available
+      expect(getPillarForWave(1)?.id).toBe('streets');   // Waves 1-10
       expect(getPillarForWave(10)?.id).toBe('streets');
+      expect(getPillarForWave(11)?.id).toBe('science');  // Waves 11-20
+      expect(getPillarForWave(20)?.id).toBe('science');
+      expect(getPillarForWave(21)?.id).toBe('mutants');  // Waves 21-30
+      expect(getPillarForWave(30)?.id).toBe('mutants');
+      expect(getPillarForWave(31)?.id).toBe('cosmos');   // Waves 31-40
+      expect(getPillarForWave(40)?.id).toBe('cosmos');
+      expect(getPillarForWave(41)?.id).toBe('magic');    // Waves 41-50
+      expect(getPillarForWave(50)?.id).toBe('magic');
+      expect(getPillarForWave(51)?.id).toBe('gods');     // Waves 51-60
+      expect(getPillarForWave(60)?.id).toBe('gods');
     });
 
-    it('wave 11-25 is Science', () => {
-      expect(getPillarForWave(11)?.id).toBe('science');
-      expect(getPillarForWave(25)?.id).toBe('science');
-    });
-
-    it('wave 26-40 is Mutants', () => {
-      expect(getPillarForWave(26)?.id).toBe('mutants');
-      expect(getPillarForWave(40)?.id).toBe('mutants');
-    });
-
-    it('wave 41-60 is Cosmos', () => {
-      expect(getPillarForWave(41)?.id).toBe('cosmos');
-      expect(getPillarForWave(60)?.id).toBe('cosmos');
-    });
-
-    it('wave 61-80 is Magic', () => {
-      expect(getPillarForWave(61)?.id).toBe('magic');
-      expect(getPillarForWave(80)?.id).toBe('magic');
-    });
-
-    it('wave 81-100 is Gods', () => {
-      expect(getPillarForWave(81)?.id).toBe('gods');
-      expect(getPillarForWave(100)?.id).toBe('gods');
+    it('respects unlocked pillars filter', () => {
+      const unlockedPillars: PillarId[] = ['streets', 'science'];
+      
+      // Should only rotate between Streets and Science
+      expect(getPillarForWave(1, unlockedPillars)?.id).toBe('streets');
+      expect(getPillarForWave(11, unlockedPillars)?.id).toBe('science');
+      expect(getPillarForWave(21, unlockedPillars)?.id).toBe('streets'); // Cycle repeats
+      expect(getPillarForWave(31, unlockedPillars)?.id).toBe('science');
     });
   });
 });
@@ -354,10 +350,11 @@ describe('Wave Composition', () => {
       expect(types).toContain('ai_core');
     });
 
-    it('wave 50 is a boss wave (Cosmos pillar)', () => {
+    it('wave 50 is a boss wave (Magic pillar)', () => {
       const comp = getWaveComposition(50, 30);
       const types = comp.enemies.map(e => e.type);
-      expect(types).toContain('cosmic_beast');
+      // Wave 50 = Magic pillar (waves 41-50 in new rotation system)
+      expect(types).toContain('demon'); // Magic pillar boss
     });
 
     it('boss wave has exactly 1 boss', () => {
@@ -387,7 +384,7 @@ describe('Wave Composition', () => {
     });
 
     it('Gods uses einherjar, bruiser, runner', () => {
-      const comp = getWaveComposition(85, 30);
+      const comp = getWaveComposition(55, 30); // Wave 55 = Gods pillar (waves 51-60)
       const types = comp.enemies.map(e => e.type);
       const validTypes = ['einherjar', 'bruiser', 'runner', 'titan', 'god'];
       for (const type of types) {

@@ -597,7 +597,10 @@ export function getWaveComposition(
     // Use pillar-specific enemies
     const pillarEnemies = PILLAR_ENEMIES[pillar.id];
     const isBossWave = effectiveWave % 10 === 0; // Every 10th effective wave is a boss wave
-    const waveInPillar = effectiveWave - pillar.waveRange.start + 1;
+    
+    // Calculate wave position within current pillar cycle (1-10)
+    // Since pillars rotate every 10 waves, we need the position in the current 10-wave cycle
+    const waveInPillar = ((wave - 1) % 10) + 1;
 
     if (isBossWave) {
       // Boss wave: fewer enemies but includes a boss

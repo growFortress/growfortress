@@ -44,7 +44,8 @@ export interface PillarDefinition {
   subtitle: string;
   description: string;
 
-  // Zakres fal
+  // Zakres fal (LEGACY - tylko dokumentacja, nie używane do rotacji)
+  // Rotacja filarów jest teraz oparta na poziomie gracza (odblokowane filary)
   waveRange: {
     start: number;
     end: number;
@@ -598,9 +599,8 @@ export function getPillarById(id: PillarId): PillarDefinition | undefined {
 /**
  * Pobiera filar dla danej fali (obsługuje endless mode - fale 101+)
  * @param wave - Numer fali
- * @param unlockedPillars - Opcjonalna lista odblokowanych filarów (z serwera)
- *                         Jeśli nie podana, wszystkie filary są dostępne
- *                         Jeśli podana, tylko odblokowane filary są używane
+ * @param unlockedPillars - Lista odblokowanych filarów (z serwera, oparta na poziomie gracza)
+ *                         Rotacja następuje TYLKO przez odblokowane filary
  */
 export function getPillarForWave(
   wave: number,
@@ -618,29 +618,20 @@ export function getPillarForWave(
     return PILLAR_DEFINITIONS[0];
   }
 
-  // For unlocked pillars mode: cycle through available pillars evenly
-  if (unlockedPillars !== undefined && availablePillars.length < PILLAR_DEFINITIONS.length) {
-    // Calculate waves per pillar based on available count
-    // Each pillar gets 10 waves, then cycle
-    const wavesPerPillar = 10;
-    const totalCycleWaves = availablePillars.length * wavesPerPillar;
-    const effectiveWave = ((wave - 1) % totalCycleWaves) + 1;
-    const pillarIndex = Math.floor((effectiveWave - 1) / wavesPerPillar);
-    return availablePillars[pillarIndex];
-  }
-
-  // Legacy/full unlock mode: use original wave ranges
-  const effectiveWave = ((wave - 1) % 100) + 1;
-  return PILLAR_DEFINITIONS.find(p =>
-    effectiveWave >= p.waveRange.start && effectiveWave <= p.waveRange.end
-  );
+  // FIXED: Always cycle through available pillars evenly (10 waves per pillar)
+  // This ensures pillar rotation respects player's level-based unlocks
+  const wavesPerPillar = 10;
+  const totalCycleWaves = availablePillars.length * wavesPerPillar;
+  const effectiveWave = ((wave - 1) % totalCycleWaves) + 1;
+  const pillarIndex = Math.floor((effectiveWave - 1) / wavesPerPillar);
+  return availablePillars[pillarIndex];
 }
 
 /**
  * Sprawdza czy filar jest odblokowany
  * @param pillarId - ID filaru do sprawdzenia
- * @param unlockedPillars - Opcjonalna lista odblokowanych filarów (z serwera)
- *                         Jeśli nie podana, wszystkie filary są odblokowane (tryb legacy/endless)
+ * @param unlockedPillars - Lista odblokowanych filarów (z serwera, oparta na poziomie gracza)
+ *                         Jeśli nie podana, zakładamy że wszystkie filary są odblokowane
  */
 export function isPillarUnlocked(
   pillarId: PillarId,
@@ -650,7 +641,7 @@ export function isPillarUnlocked(
   if (unlockedPillars !== undefined) {
     return unlockedPillars.includes(pillarId);
   }
-  // Legacy/endless mode: wszystkie filary odblokowane
+  // No unlock list provided: assume all pillars unlocked
   return getPillarById(pillarId) !== undefined;
 }
 
@@ -695,24 +686,24 @@ export function isHeroNaturalForPillar(pillarId: PillarId, heroId: string): bool
 
 /**
  * Pobiera odblokowane filary
- * @param unlockedPillars - Opcjonalna lista odblokowanych filarów (z serwera)
- *                         Jeśli nie podana, wszystkie filary są odblokowane (tryb legacy/endless)
+ * @param unlockedPillars - Lista odblokowanych filarów (z serwera, oparta na poziomie gracza)
+ *                         Jeśli nie podana, zakładamy że wszystkie filary są odblokowane
  */
 export function getUnlockedPillars(unlockedPillars?: PillarId[]): PillarDefinition[] {
   // If unlock list provided, filter to only unlocked
   if (unlockedPillars !== undefined) {
     return PILLAR_DEFINITIONS.filter(p => unlockedPillars.includes(p.id));
   }
-  // Legacy/endless mode: wszystkie filary dostępne
+  // No unlock list provided: assume all pillars unlocked
   return PILLAR_DEFINITIONS;
 }
 
 /**
  * Pobiera następny filar do odblokowania
- * W trybie Endless zwraca undefined (wszystko odblokowane)
+ * Obecnie nieużywane - odblokowania są zarządzane przez system fortress level
  */
 export function getNextPillarToUnlock(_fortressLevel?: number): PillarDefinition | undefined {
-  // Endless mode: nic do odblokowania
+  // Pillar unlocks are managed by fortress level system
   return undefined;
 }
 
