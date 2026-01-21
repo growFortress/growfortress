@@ -9,44 +9,213 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 32px;
+  animation: fadeInScale 0.5s ease-out;
 }
 
-.resultIcon {
-  font-size: 48px;
-  line-height: 1;
-  animation: iconBounce 0.6s ease-out;
-}
-
-@keyframes iconBounce {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.2); }
+@keyframes fadeInScale {
+  0% { transform: scale(0.9); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-.resultTitle {
+.resultIcon {
+  font-size: 60px;
+  line-height: 1;
+  animation: iconBounce 0.6s ease-out;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes iconBounce {
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.waveTitle {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
   margin: 0;
+  background: linear-gradient(135deg, var(--color-text), var(--color-text-80));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textGlow 2s ease-in-out infinite alternate;
 }
 
-.resultTitle.victory {
-  color: var(--color-success);
-  text-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+.waveTitle.victory {
+  background: linear-gradient(135deg, var(--color-success), #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(74, 222, 128, 0.5);
 }
 
-.resultTitle.defeat {
-  color: var(--color-accent);
-  text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+.waveTitle.defeat {
+  background: linear-gradient(135deg, var(--color-accent), #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes textGlow {
+  0% { filter: drop-shadow(0 0 5px rgba(74, 222, 128, 0.3)); }
+  100% { filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.6)); }
+}
+
+.motivationText {
+  font-size: 14px;
+  color: var(--color-text-60);
+  font-style: italic;
+  margin: 0;
+  animation: fadeIn 0.8s ease-out 0.3s both;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-5px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .waveInfo {
   font-size: 14px;
   color: var(--color-text-60);
+}
+
+/* Rankings Section */
+.rankingsSection {
+  margin-bottom: 28px;
+  animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+.rankingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.rankingCard {
+  background: linear-gradient(135deg, var(--color-bg-elevated), rgba(59, 130, 246, 0.1));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.rankingCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.rankingCard:hover::before {
+  left: 100%;
+}
+
+.rankingCard:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-primary-40);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+}
+
+.rankingCard.weeklyRank {
+  background: linear-gradient(135deg, var(--color-bg-elevated), rgba(251, 191, 36, 0.15));
+}
+
+.rankingCard.weeklyRank.top10 {
+  border: 2px solid var(--color-warning);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1));
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  animation: top10Pulse 2s ease-in-out infinite;
+}
+
+@keyframes top10Pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.5); }
+}
+
+.rankingCard.totalRank {
+  background: linear-gradient(135deg, var(--color-bg-elevated), rgba(139, 92, 246, 0.1));
+}
+
+.rankingIcon {
+  font-size: 28px;
+  animation: iconPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.rankingLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-60);
+}
+
+.rankingValue {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.rankingCard.weeklyRank .rankingValue {
+  color: var(--color-warning);
+  text-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.rankingCard.totalRank .rankingValue {
+  color: var(--color-primary);
+}
+
+.top10Badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-warning);
+  background: rgba(251, 191, 36, 0.2);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  animation: badgeShine 2s ease-in-out infinite;
+}
+
+@keyframes badgeShine {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.rankingLoading,
+.rankingError,
+.noRankingMessage {
+  text-align: center;
+  padding: 16px;
+  color: var(--color-text-60);
+  font-size: 14px;
+}
+
+.rankingError {
+  color: var(--color-accent);
 }
 
 /* Stats grid */
@@ -55,10 +224,11 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 24px;
+  animation: fadeIn 0.6s ease-out 0.4s both;
 }
 
 .statCard {
-  background: var(--color-bg-elevated);
+  background: linear-gradient(135deg, var(--color-bg-elevated), rgba(59, 130, 246, 0.05));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: 16px 12px;
@@ -66,17 +236,43 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent, rgba(59, 130, 246, 0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.statCard:hover::before {
+  opacity: 1;
 }
 
 .statCard:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px) scale(1.02);
   border-color: var(--color-primary-40);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
 }
 
 .statIcon {
-  font-size: 20px;
+  font-size: 24px;
   opacity: 0.9;
+  animation: iconAppear 0.6s ease-out;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes iconAppear {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
 }
 
 .statLabel {
@@ -89,9 +285,17 @@
 
 .statValue {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   color: var(--color-text);
+  animation: countUp 1s ease-out;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes countUp {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .statValue.gold {
@@ -111,43 +315,111 @@
   display: flex;
   justify-content: center;
   gap: 24px;
-  padding: 16px;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(59, 130, 246, 0.1));
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.15), rgba(59, 130, 246, 0.15));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.6s ease-out 0.5s both;
+  box-shadow: 0 4px 16px rgba(74, 222, 128, 0.1);
+}
+
+.rewardsSummary::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.1) 0%, transparent 70%);
+  animation: rewardGlow 3s ease-in-out infinite;
+}
+
+@keyframes rewardGlow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
 }
 
 .rewardItem {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
+  position: relative;
+  z-index: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+  animation: rewardItemAppear 0.8s ease-out;
+}
+
+@keyframes rewardItemAppear {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.rewardItem:nth-child(1) {
+  animation-delay: 0.6s;
+}
+
+.rewardItem:nth-child(2) {
+  animation-delay: 0.7s;
+}
+
+.rewardItem:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+.rewardItem:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .rewardItem.gold {
   color: var(--color-warning);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 }
 
 .rewardItem.dust {
   color: var(--color-primary);
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 .rewardItem.xp {
   color: var(--color-success);
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
 }
 
 .rewardIcon {
-  font-size: 18px;
+  font-size: 22px;
+  animation: iconBounce 0.6s ease-out;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 /* Actions */
 .actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
+  animation: fadeIn 0.6s ease-out 0.6s both;
+}
+
+.actions :global(.button) {
+  min-width: 140px;
+  transition: all 0.3s ease;
+}
+
+.actions :global(.button:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.actions :global(.button:active) {
+  transform: translateY(0);
 }
 
 /* Responsive */
@@ -156,16 +428,37 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .rankingsGrid {
+    grid-template-columns: 1fr;
+  }
+
   .rewardsSummary {
     flex-wrap: wrap;
     gap: 16px;
+    padding: 16px;
   }
 
-  .resultTitle {
-    font-size: 24px;
+  .waveTitle {
+    font-size: 28px;
+  }
+
+  .resultIcon {
+    font-size: 48px;
   }
 
   .statValue {
     font-size: 24px;
+  }
+
+  .rankingValue {
+    font-size: 28px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions :global(.button) {
+    width: 100%;
   }
 }

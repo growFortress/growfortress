@@ -198,8 +198,9 @@ function executeSkillAtPosition(
     enemy.hitFlashTicks = HIT_FLASH_TICKS;
     analytics.trackAttributedDamage(attribution, damageDealt);
 
-    // Apply additional effects
+    // Apply additional effects (skip 'damage' effect since damage is already applied above)
     for (const effect of skill.effects) {
+      if (effect.type === 'damage') continue; // Skip damage effect to avoid double damage
       applyEffectToEnemy(effect, enemy, state, attribution);
     }
   }

@@ -1,12 +1,16 @@
+import { useEffect, useState } from 'preact/hooks';
 import {
   showEndScreen,
   endScreenWon,
   endGameStats,
   hideEndScreen,
+  isAuthenticated,
+  getUserRankForCategory,
 } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
+import { fetchUserRanks } from '../../api/leaderboard.js';
 import styles from './EndScreen.module.css';
 
 interface EndScreenProps {
@@ -16,14 +20,36 @@ interface EndScreenProps {
 
 export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
   const { t } = useTranslation('game');
-  const handlePlayAgain = async () => {
-    hideEndScreen();
-    await onPlayAgain();
-  };
+  const [rankingLoading, setRankingLoading] = useState(false);
+  const [rankingError, setRankingError] = useState<string | null>(null);
 
   const won = endScreenWon.value;
   const stats = endGameStats.value;
   const xpEarned = stats?.sessionXpEarned ?? 0;
+
+  // Fetch user rankings when screen is shown and user is authenticated
+  useEffect(() => {
+    if (showEndScreen.value && isAuthenticated.value) {
+      setRankingLoading(true);
+      setRankingError(null);
+      fetchUserRanks()
+        .catch((err) => {
+          console.error('Failed to fetch user ranks:', err);
+          setRankingError(err.message || 'Failed to load ranking');
+        })
+        .finally(() => {
+          setRankingLoading(false);
+        });
+    }
+  }, [showEndScreen.value, isAuthenticated.value]);
+
+  const weeklyRank = getUserRankForCategory('weeklyWaves');
+  const totalRank = getUserRankForCategory('totalWaves');
+
+  const handlePlayAgain = async () => {
+    hideEndScreen();
+    await onPlayAgain();
+  };
 
   const handleReturnToHub = () => {
     hideEndScreen();
@@ -43,11 +69,57 @@ export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
       <div class={styles.resultHeader}>
         <span class={styles.resultIcon}>{won ? '🏆' : '💀'}</span>
         {stats && (
-          <span class={styles.waveInfo}>
-            {t('endScreen.waveReached', { wave: stats.wavesCleared })}
-          </span>
+          <>
+            <h2 class={`${styles.waveTitle} ${won ? styles.victory : styles.defeat}`}>
+              {t('endScreen.waveReached', { wave: stats.wavesCleared })}
+            </h2>
+            {won && (
+              <p class={styles.motivationText}>{t('endScreen.victoryMessage')}</p>
+            )}
+            {!won && (
+              <p class={styles.motivationText}>{t('endScreen.defeatMessage')}</p>
+            )}
+          </>
         )}
       </div>
+
+      {/* Rankings Section */}
+      {isAuthenticated.value && (
+        <div class={styles.rankingsSection}>
+          {rankingLoading ? (
+            <div class={styles.rankingLoading}>{t('endScreen.loadingRank')}</div>
+          ) : rankingError ? (
+            <div class={styles.rankingError}>{t('endScreen.rankingError')}</div>
+          ) : (
+            <div class={styles.rankingsGrid}>
+              {weeklyRank && (
+                <div class={`${styles.rankingCard} ${styles.weeklyRank} ${weeklyRank.rank && weeklyRank.rank <= 10 ? styles.top10 : ''}`}>
+                  <span class={styles.rankingIcon}>🏅</span>
+                  <span class={styles.rankingLabel}>{t('endScreen.weeklyRank')}</span>
+                  <span class={styles.rankingValue}>
+                    {weeklyRank.rank ? `#${weeklyRank.rank}` : t('endScreen.noRank')}
+                  </span>
+                  {weeklyRank.rank && weeklyRank.rank <= 10 && (
+                    <span class={styles.top10Badge}>{t('endScreen.top10')}</span>
+                  )}
+                </div>
+              )}
+              {totalRank && (
+                <div class={`${styles.rankingCard} ${styles.totalRank}`}>
+                  <span class={styles.rankingIcon}>⭐</span>
+                  <span class={styles.rankingLabel}>{t('endScreen.totalRank')}</span>
+                  <span class={styles.rankingValue}>
+                    {totalRank.rank ? `#${totalRank.rank}` : t('endScreen.noRank')}
+                  </span>
+                </div>
+              )}
+              {!weeklyRank && !totalRank && !rankingLoading && !rankingError && (
+                <div class={styles.noRankingMessage}>{t('endScreen.noRankingYet')}</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {stats && (
         <>

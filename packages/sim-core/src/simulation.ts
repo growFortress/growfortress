@@ -84,6 +84,7 @@ import {
   rollArtifactDropFromBoss,
   rollArtifactDropFromWave,
 } from './data/artifacts.js';
+import { hasHeroPassive } from './data/heroes.js';
 import type { CrystalType, CrystalMatrixState, MaterialType } from './types.js';
 
 // ============================================================================
@@ -1006,8 +1007,23 @@ export class Simulation {
           enemy.lastAttackTick = this.state.tick;
 
           // Deal damage to fortress
-          this.state.fortressHp -= enemy.damage;
-          analytics.trackFortressDamage(enemy.damage);
+          let fortressDamage = enemy.damage;
+          
+          // Veteran (Vanguard Tier 2): 5% fortress damage absorbed by heroes with veteran passive
+          const veteranHeroes = this.state.heroes.filter(hero => {
+            const heroTier = (hero.tier || 1) as 1 | 2 | 3;
+            const heroLevel = hero.level || 1;
+            return hasHeroPassive(hero.definitionId, 'veteran', heroTier, heroLevel);
+          });
+          
+          if (veteranHeroes.length > 0) {
+            // Each veteran hero absorbs 5% of fortress damage
+            const damageAbsorbed = Math.floor(fortressDamage * 0.05 * veteranHeroes.length);
+            fortressDamage = Math.max(0, fortressDamage - damageAbsorbed);
+          }
+          
+          this.state.fortressHp -= fortressDamage;
+          analytics.trackFortressDamage(fortressDamage);
 
           // Leech special: heal back some HP on attack
           if (enemy.type === 'leech') {

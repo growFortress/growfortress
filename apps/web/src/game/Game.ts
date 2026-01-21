@@ -621,6 +621,12 @@ export class Game {
       targetY,
     };
 
+    // Store skill target position for VFX
+    lastSkillTargetPositions.value = {
+      ...lastSkillTargetPositions.value,
+      [skillId]: { x: targetX, y: targetY },
+    };
+
     audioManager.playSfx('skill_activate');
     this.events.push(event);
     this.simulation.setEvents([...this.events]);

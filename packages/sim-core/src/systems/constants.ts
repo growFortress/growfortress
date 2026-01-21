@@ -42,6 +42,9 @@ export const HIT_FLASH_TICKS = 3;
 /** Arrival radius for steering (when to slow down) - must be smaller than attack range */
 export const HERO_ARRIVAL_RADIUS = FP.fromFloat(1.5);
 
+/** Preferred combat distance from enemies (as percentage of attack range) - prevents models from overlapping */
+export const HERO_PREFERRED_COMBAT_DISTANCE_RATIO = FP.fromFloat(0.75); // 75% of attack range
+
 /** Separation radius between heroes */
 export const HERO_SEPARATION_RADIUS = FP.fromFloat(2.5);
 

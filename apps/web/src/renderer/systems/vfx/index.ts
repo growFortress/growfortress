@@ -451,6 +451,10 @@ export class VFXSystem {
     this.skills.spawnShieldThrow(points);
   }
 
+  public spawnEarthquakeShockwave(x: number, y: number, intensity: number = 1): void {
+    this.skills.spawnEarthquakeShockwave(x, y, intensity);
+  }
+
   public spawnWorldbreaker(x: number, y: number): void {
     this.triggerScreenShake(15, 600);
     this.skills.spawnGroundSmash(x, y, 1.5);
@@ -656,7 +660,21 @@ export class VFXSystem {
     });
   }
 
-  public spawnSkillActivation(x: number, y: number, fortressClass: FortressClass, skillLevel: number = 1): void {
+  public spawnSkillActivation(
+    x: number,
+    y: number,
+    fortressClass: FortressClass,
+    skillLevel: number = 1,
+    skillId?: string
+  ): void {
+    // Use dedicated effect for Earthquake skill
+    if (skillId === 'earthquake') {
+      const intensity = 0.8 + skillLevel * 0.2;
+      this.spawnEarthquakeShockwave(x, y, intensity);
+      return;
+    }
+
+    // Default effect for other skills
     const colors = CLASS_VFX_COLORS[fortressClass];
     const intensity = 0.8 + skillLevel * 0.2;
 

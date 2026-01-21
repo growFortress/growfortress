@@ -46,6 +46,7 @@ export {
   PILLAR_INFO,
   unifiedLevel,
   unifiedXpProgress,
+  lastSkillTargetPositions,
   type GameStateSnapshot,
   type GameSpeed,
 } from './game.signals.js';

@@ -559,6 +559,118 @@ export class SkillEffects {
   // ============================================================
 
   /**
+   * Earthquake Shockwave - massive ground wave with cracks and debris
+   * Dedicated effect for "Fala Uderzeniowa" fortress skill
+   */
+  spawnEarthquakeShockwave(x: number, y: number, intensity: number = 1): void {
+    const colors = CLASS_VFX_COLORS.natural;
+    const radius = 450; // Scale to match skill radius 15 units (≈450px on screen)
+
+    // Strong screen shake for earthquake
+    this.triggerScreenShake(10 * intensity, 400);
+
+    // Central flash
+    this.factory.flash({ x, y, color: colors.glow, size: 40 * intensity });
+    this.factory.flash({ x, y, color: 0xffffff, size: 30 * intensity });
+
+    // Multiple expanding shockwave rings (scaled to actual radius)
+    for (let i = 0; i < 4; i++) {
+      this.factory.ring({
+        x, y,
+        color: i % 2 === 0 ? colors.glow : colors.primary,
+        startSize: 20 + i * 15,
+        endSize: radius * (0.3 + i * 0.2), // Scale to actual skill radius
+        life: 0.5 + i * 0.1,
+        alpha: 0.8 - i * 0.15,
+      });
+    }
+
+    // Ground crack lines radiating outward (8 directions)
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI * 2 * i) / 8;
+      const crackLen = radius * 0.8; // Scale to skill radius
+
+      for (let j = 0; j < 10; j++) {
+        const progress = j / 10;
+        const crack = this.pool.acquire();
+        crack.x = x + Math.cos(angle) * crackLen * progress;
+        crack.y = y + Math.sin(angle) * crackLen * progress * 0.3; // Flattened for ground
+        crack.vx = Math.cos(angle) * 30;
+        crack.vy = Math.sin(angle) * 15;
+        crack.life = 0.6 - progress * 0.3;
+        crack.maxLife = 0.6;
+        crack.size = 6 * (1 - progress * 0.6) * intensity;
+        crack.color = 0x8b4513; // Brown for ground cracks
+        crack.shape = 'spark';
+        this.particles.push(crack);
+      }
+    }
+
+    // Debris flying up and outward
+    for (let i = 0; i < 40 * intensity; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * radius * 0.5;
+      const speed = 100 + Math.random() * 150;
+      const debris = this.pool.acquire();
+      debris.x = x + Math.cos(angle) * dist;
+      debris.y = y + Math.sin(angle) * dist * 0.3;
+      debris.vx = Math.cos(angle) * speed * 0.6;
+      debris.vy = -Math.abs(Math.sin(angle) * speed) - 60;
+      debris.life = 0.7 + Math.random() * 0.4;
+      debris.maxLife = debris.life;
+      debris.size = 5 + Math.random() * 8;
+      debris.color = Math.random() > 0.5 ? 0x8b4513 : 0x654321; // Brown debris
+      debris.shape = 'square';
+      debris.rotation = Math.random() * Math.PI;
+      debris.rotationSpeed = (Math.random() - 0.5) * 12;
+      debris.gravity = 200;
+      this.particles.push(debris);
+    }
+
+    // Dust cloud expanding outward
+    this.factory.smoke(x, y, intensity * 1.5);
+
+    // Additional dust particles for ground effect
+    for (let i = 0; i < 30 * intensity; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * radius * 0.6;
+      const dust = this.pool.acquire();
+      dust.x = x + Math.cos(angle) * dist;
+      dust.y = y + Math.sin(angle) * dist * 0.3;
+      dust.vx = Math.cos(angle) * (40 + Math.random() * 60);
+      dust.vy = -20 - Math.random() * 40;
+      dust.life = 0.8 + Math.random() * 0.4;
+      dust.maxLife = dust.life;
+      dust.startSize = 4;
+      dust.endSize = 12;
+      dust.size = 4;
+      dust.color = 0xaaaaaa; // Gray dust
+      dust.startAlpha = 0.6;
+      dust.endAlpha = 0;
+      dust.shape = 'circle';
+      dust.gravity = 50;
+      this.particles.push(dust);
+    }
+
+    // Radial energy particles (green natural energy)
+    for (let i = 0; i < 20; i++) {
+      const angle = (Math.PI * 2 * i) / 20;
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * 100 * intensity;
+      p.vy = Math.sin(angle) * 100 * intensity;
+      p.life = 0.5;
+      p.maxLife = 0.5;
+      p.size = 4 + Math.random() * 4;
+      p.color = Math.random() > 0.5 ? colors.primary : colors.glow;
+      p.shape = 'circle';
+      p.drag = 0.92;
+      this.particles.push(p);
+    }
+  }
+
+  /**
    * Ground Smash - powerful ground pound
    */
   spawnGroundSmash(x: number, y: number, intensity: number = 1): void {

@@ -183,8 +183,9 @@ export class SceneEffects {
     y: number,
     fortressClass: FortressClass,
     skillLevel?: number,
+    skillId?: string,
   ): void {
-    this.vfx.spawnSkillActivation(x, y, fortressClass, skillLevel);
+    this.vfx.spawnSkillActivation(x, y, fortressClass, skillLevel ?? 1, skillId);
   }
 
   public spawnHeroDeployment(x: number, y: number, fortressClass: FortressClass): void {

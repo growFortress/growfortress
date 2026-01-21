@@ -40,6 +40,7 @@ import {
 import {
   HERO_ARRIVAL_RADIUS,
   HERO_BASE_ATTACK_INTERVAL,
+  HERO_PREFERRED_COMBAT_DISTANCE_RATIO,
 } from './constants.js';
 import {
   calculateWeaknessStatPenalty,
@@ -241,6 +242,55 @@ export function updateHeroes(
 // ============================================================================
 
 /**
+ * Calculate preferred target position that maintains optimal combat distance
+ * Prevents heroes from getting too close to enemies, improving VFX visibility
+ * Returns a position that is preferredDistance away from the enemy in the direction of the hero
+ */
+function calculatePreferredCombatPosition(
+  hero: ActiveHero,
+  target: { x: number; y: number },
+  attackRange: number
+): { x: number; y: number } {
+  const dx = FP.sub(target.x, hero.x);
+  const dy = FP.sub(target.y, hero.y);
+  const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+
+  if (distSq === 0) {
+    // Already on target, move slightly away
+    return { x: target.x, y: target.y };
+  }
+
+  const dist = FP.sqrt(distSq);
+  const preferredDistance = FP.mul(attackRange, HERO_PREFERRED_COMBAT_DISTANCE_RATIO);
+
+  // If already at or beyond preferred distance, use target position as-is
+  if (dist >= preferredDistance) {
+    return { x: target.x, y: target.y };
+  }
+
+  // Calculate position that maintains preferred distance from enemy
+  // Direction from enemy to hero (away from enemy)
+  const awayFromEnemyDx = FP.sub(hero.x, target.x);
+  const awayFromEnemyDy = FP.sub(hero.y, target.y);
+  const awayDistSq = FP.add(FP.mul(awayFromEnemyDx, awayFromEnemyDx), FP.mul(awayFromEnemyDy, awayFromEnemyDy));
+  
+  if (awayDistSq === 0) {
+    // Hero and enemy are at same position, use a default direction
+    return { x: FP.add(target.x, preferredDistance), y: target.y };
+  }
+
+  const normalized = FP.normalize2D(awayFromEnemyDx, awayFromEnemyDy);
+  const offsetX = FP.mul(normalized.x, preferredDistance);
+  const offsetY = FP.mul(normalized.y, preferredDistance);
+
+  // Preferred position is enemy position + offset (maintaining preferred distance from enemy)
+  const preferredX = FP.add(target.x, offsetX);
+  const preferredY = FP.add(target.y, offsetY);
+
+  return { x: preferredX, y: preferredY };
+}
+
+/**
  * Update hero steering based on current state
  * Sets velocity direction, actual movement happens in physics phase
  */
@@ -251,18 +301,21 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, config: SimConfi
   const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
   const maxSpeed = calculateEffectiveSpeed(stats.moveSpeed, hero.movementModifiers, state.tick);
   const fieldWidth = config.fieldWidth;
+  const attackRange = getHeroAttackRange(heroDef.role);
 
   switch (hero.state) {
     case 'combat': {
       // Move towards the hero's actual target (not just closest enemy)
       // Priority: focusTarget > currentTarget > closest
       let moveTarget: { x: number; y: number } | null = null;
+      let targetEnemy: Enemy | null = null;
 
   // Priority 1: Focus target (team-wide command from player)
       if (hero.focusTargetId !== undefined) {
         const focusEnemy = state.enemies.find(e => e.id === hero.focusTargetId);
     if (focusEnemy && isEnemyTargetable(focusEnemy, fieldWidth)) {
           moveTarget = focusEnemy;
+          targetEnemy = focusEnemy;
         } else if (!focusEnemy || focusEnemy.hp <= 0) {
           hero.focusTargetId = undefined;
         }
@@ -273,6 +326,7 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, config: SimConfi
         const currentEnemy = state.enemies.find(e => e.id === hero.currentTargetId);
     if (currentEnemy && isEnemyTargetable(currentEnemy, fieldWidth)) {
           moveTarget = currentEnemy;
+          targetEnemy = currentEnemy;
         } else if (!currentEnemy || currentEnemy.hp <= 0) {
           hero.currentTargetId = undefined;
         }
@@ -287,11 +341,22 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, config: SimConfi
         );
         if (closestEnemy) {
           moveTarget = closestEnemy;
+          targetEnemy = closestEnemy;
         }
       }
 
-      if (moveTarget) {
-        const steering = steerTowards(hero, moveTarget.x, moveTarget.y, maxSpeed, HERO_ARRIVAL_RADIUS);
+      if (moveTarget && targetEnemy) {
+        // Check if hero is in attack range
+        const distSq = FP.distSq(hero.x, hero.y, targetEnemy.x, targetEnemy.y);
+        const attackRangeSq = FP.mul(attackRange, attackRange);
+        const isInRange = distSq <= attackRangeSq;
+
+        // If in range, maintain preferred combat distance instead of moving directly to enemy
+        const steeringTarget = isInRange
+          ? calculatePreferredCombatPosition(hero, moveTarget, attackRange)
+          : moveTarget;
+
+        const steering = steerTowards(hero, steeringTarget.x, steeringTarget.y, maxSpeed, HERO_ARRIVAL_RADIUS);
         hero.vx = FP.add(hero.vx, steering.ax);
         hero.vy = FP.add(hero.vy, steering.ay);
       } else {
@@ -669,6 +734,32 @@ function updateHeroBuffs(hero: ActiveHero, state: GameState): void {
             id: 'command_aura_buff',
             stat: 'damageBonus',
             amount: 0.1, // +10% damage
+            expirationTick: state.tick + 30, // Refresh every second
+          });
+        }
+      }
+    }
+  }
+
+  // Veteran (Vanguard Tier 2): +20% armor (incomingDamageReduction) for nearby allies
+  if (hasHeroPassive(hero.definitionId, 'veteran', heroTier as 1 | 2 | 3, heroLevel)) {
+    // Apply armor buff to all other heroes if not already present
+    for (const ally of state.heroes) {
+      if (ally === hero) continue;
+
+      // Check if hero is within 5 units (fixed-point)
+      const distSq = FP.distSq(hero.x, hero.y, ally.x, ally.y);
+      const auraRange = FP.fromInt(5);
+      const auraRangeSq = FP.mul(auraRange, auraRange);
+
+      if (distSq <= auraRangeSq) {
+        // Check if already has veteran armor buff
+        const hasVeteranBuff = ally.buffs.some(b => b.id === 'veteran_armor_buff');
+        if (!hasVeteranBuff) {
+          ally.buffs.push({
+            id: 'veteran_armor_buff',
+            stat: 'incomingDamageReduction',
+            amount: 0.2, // +20% damage reduction (armor)
             expirationTick: state.tick + 30, // Refresh every second
           });
         }

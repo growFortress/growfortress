@@ -8,7 +8,7 @@ import type {
   TurretSlot,
   PillarId,
 } from "@arcade/sim-core";
-import { FP } from "@arcade/sim-core";
+import { FP, getSkillById } from "@arcade/sim-core";
 import { EnemySystem } from "../systems/EnemySystem.js";
 import { ProjectileSystem } from "../systems/ProjectileSystem.js";
 import { HeroSystem } from "../systems/HeroSystem.js";
@@ -20,7 +20,7 @@ import {
   parallaxBackground,
   ParallaxBackground,
 } from "../effects/ParallaxBackground.js";
-import { fpXToScreen } from "../CoordinateSystem.js";
+import { fpXToScreen, fpYToScreen } from "../CoordinateSystem.js";
 
 // Import extracted components
 import { EnvironmentRenderer, themeManager } from "./environment/index.js";
@@ -70,6 +70,9 @@ export class GameScene {
 
   // Track current pillar for theme changes
   private currentPillar: PillarId = "streets";
+
+  // Track fortress skill activations for VFX
+  private lastSkillCooldowns: Record<string, number> = {};
 
   constructor(_app: Application) {
     this.container = new Container();
@@ -217,6 +220,9 @@ export class GameScene {
       const hasActiveEnemies = state.enemies && state.enemies.length > 0;
       this.environment.update(deltaMs, hasActiveEnemies);
 
+      // Detect fortress skill activations and trigger VFX
+      this.detectFortressSkillActivations(state);
+
       // Update entity systems
       this.turretSystem.update(state, this.width, this.height);
       this.wallSystem.update(state, this.width, this.height, this.effects.vfx);
@@ -344,8 +350,9 @@ export class GameScene {
     y: number,
     fortressClass: FortressClass,
     skillLevel?: number,
+    skillId?: string,
   ) {
-    this.effects.spawnSkillActivation(x, y, fortressClass, skillLevel);
+    this.effects.spawnSkillActivation(x, y, fortressClass, skillLevel, skillId);
 
     // Trigger light flicker for electrical skills
     if (fortressClass === "lightning") {
@@ -353,8 +360,13 @@ export class GameScene {
       this.environment.triggerLightFlicker(intensity);
     }
 
-    // Strong skills can cause ground cracks
-    if (skillLevel && skillLevel >= 2) {
+    // Strong skills can cause ground cracks (earthquake already has its own cracks)
+    if (skillLevel && skillLevel >= 2 && skillId !== 'earthquake') {
+      this.environment.spawnCrack(x, y);
+    }
+
+    // Earthquake always spawns ground cracks (in addition to VFX cracks)
+    if (skillId === 'earthquake') {
       this.environment.spawnCrack(x, y);
     }
   }
@@ -381,6 +393,44 @@ export class GameScene {
     // Lightning turrets cause subtle flicker
     if (fortressClass === "lightning") {
       this.environment.triggerLightFlicker(0.3);
+    }
+  }
+
+  /**
+   * Detect fortress skill activations and trigger VFX
+   */
+  private detectFortressSkillActivations(state: GameState): void {
+    // Import signal to get skill positions (dynamic import to avoid circular dependency)
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { lastSkillTargetPositions } = require('../../state/index.js');
+
+    for (const skillId of Object.keys(state.skillCooldowns)) {
+      const currentCooldown = state.skillCooldowns[skillId] || 0;
+      const lastCooldown = this.lastSkillCooldowns[skillId] ?? 0;
+
+      // Skill was just activated: cooldown went from 0 to > 0
+      if (currentCooldown > 0 && lastCooldown === 0) {
+        // Get skill definition to determine level
+        const skill = getSkillById(state.fortressClass, skillId);
+        if (!skill) continue;
+
+        // Get target position from signal (stored when skill was activated)
+        const position = lastSkillTargetPositions.value[skillId];
+        if (!position) continue;
+
+        // Convert fixed-point to screen coordinates
+        const screenX = fpXToScreen(position.x, this.width);
+        const screenY = fpYToScreen(position.y, this.height);
+
+        // Determine skill level based on commander level
+        const skillLevel = state.commanderLevel < 10 ? 1 : state.commanderLevel < 25 ? 2 : 3;
+
+        // Trigger visual effect
+        this.spawnSkillActivation(screenX, screenY, state.fortressClass, skillLevel, skillId);
+      }
+
+      // Update tracked cooldown
+      this.lastSkillCooldowns[skillId] = currentCooldown;
     }
   }
 }

@@ -199,6 +199,9 @@ export const currentPillarInfo = computed(() => {
   return PILLAR_INFO[currentPillar.value];
 });
 
+// Track last skill target positions for VFX (skillId -> { x, y })
+export const lastSkillTargetPositions = signal<Record<string, { x: number; y: number }>>({});
+
 /**
  * XP needed to advance from level N to level N+1 (matches fortress-progression.ts)
  */

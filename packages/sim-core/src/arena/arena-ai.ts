@@ -11,6 +11,7 @@ import { FP } from '../fixed.js';
 import type { ActiveHero } from '../types.js';
 import type { ArenaState, ArenaSide, ArenaFortress } from './arena-state.js';
 import { getHeroById, calculateHeroStats } from '../data/heroes.js';
+import { HERO_PREFERRED_COMBAT_DISTANCE_RATIO } from '../systems/constants.js';
 
 // ============================================================================
 // TYPES
@@ -133,6 +134,7 @@ export function selectHeroTarget(
 
 /**
  * Get movement direction for hero towards target
+ * Maintains preferred combat distance when in attack range to prevent model overlap
  */
 export function getHeroMovementDirection(
   hero: ActiveHero,
@@ -142,6 +144,7 @@ export function getHeroMovementDirection(
     return { vx: 0, vy: 0 };
   }
 
+  const heroRange = getHeroRange(hero);
   const dx = FP.sub(target.x, hero.x);
   const dy = FP.sub(target.y, hero.y);
 
@@ -154,6 +157,51 @@ export function getHeroMovementDirection(
   const dist = FP.sqrt(distSq);
   if (dist === 0) {
     return { vx: 0, vy: 0 };
+  }
+
+  // If attacking a target (fortress or hero) and in range, maintain preferred distance
+  let targetX = target.x;
+  let targetY = target.y;
+  
+  if ((target.type === 'fortress' || target.type === 'hero') && dist <= heroRange) {
+    const preferredDistance = FP.mul(heroRange, HERO_PREFERRED_COMBAT_DISTANCE_RATIO);
+    
+    // If closer than preferred distance, calculate position to maintain distance from enemy
+    if (dist < preferredDistance && dist > 0) {
+      // Direction from enemy to hero (away from enemy)
+      const awayFromEnemyDx = FP.sub(hero.x, target.x);
+      const awayFromEnemyDy = FP.sub(hero.y, target.y);
+      const awayDistSq = FP.add(FP.mul(awayFromEnemyDx, awayFromEnemyDx), FP.mul(awayFromEnemyDy, awayFromEnemyDy));
+      
+      if (awayDistSq > 0) {
+        const normalized = FP.normalize2D(awayFromEnemyDx, awayFromEnemyDy);
+        const offsetX = FP.mul(normalized.x, preferredDistance);
+        const offsetY = FP.mul(normalized.y, preferredDistance);
+        
+        // Preferred position is enemy position + offset (maintaining preferred distance from enemy)
+        targetX = FP.add(target.x, offsetX);
+        targetY = FP.add(target.y, offsetY);
+        
+        // Recalculate direction to preferred position
+        const newDx = FP.sub(targetX, hero.x);
+        const newDy = FP.sub(targetY, hero.y);
+        const newDistSq = FP.add(FP.mul(newDx, newDx), FP.mul(newDy, newDy));
+        
+        if (newDistSq > 0) {
+          const newDist = FP.sqrt(newDistSq);
+          if (newDist > 0) {
+            // Get hero speed from definition (moveSpeed is already in FP format!)
+            const def = getHeroById(hero.definitionId);
+            const baseSpeed = def ? def.baseStats.moveSpeed : FP.fromFloat(0.1);
+
+            const vx = FP.div(FP.mul(newDx, baseSpeed), newDist);
+            const vy = FP.div(FP.mul(newDy, baseSpeed), newDist);
+
+            return { vx, vy };
+          }
+        }
+      }
+    }
   }
 
   // Get hero speed from definition (moveSpeed is already in FP format!)

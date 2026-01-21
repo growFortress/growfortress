@@ -135,7 +135,10 @@ function HeroSkillGroup({ hero, compact }: HeroSkillGroupProps) {
 
   // Get skills for current tier
   const tierInfo = heroDef.tiers.find(t => t.tier === hero.tier);
-  const skills = tierInfo?.skills || [];
+  const allSkills = tierInfo?.skills || [];
+  
+  // Filter out passive skills - they're always active and shouldn't show cooldowns
+  const skills = allSkills.filter(skill => !skill.isPassive);
 
   if (skills.length === 0) {
     return null;
