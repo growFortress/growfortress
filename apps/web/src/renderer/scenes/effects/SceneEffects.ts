@@ -121,7 +121,7 @@ export class SceneEffects {
    * Check and trigger hitstop on elite kill.
    * Returns true if currently in hitstop (should skip visual updates).
    */
-  public checkHitstop(eliteKills: number): boolean {
+  public checkHitstop(eliteKills: number, deltaMs: number): boolean {
     // Trigger new hitstop on elite kill
     if (eliteKills > this.prevEliteKills) {
       this.hitstopRemaining = Math.max(this.hitstopRemaining, 3); // ~50ms at 60fps (3 frames)
@@ -132,7 +132,7 @@ export class SceneEffects {
     if (this.hitstopRemaining > 0) {
       this.hitstopRemaining--;
       // Still update VFX during hitstop (they look better continuing)
-      this.vfx.update(16.66);
+      this.vfx.update(deltaMs);
       return true; // In hitstop
     }
     return false; // Not in hitstop

@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import type { GameState, ActiveProjectile, FortressClass, ProjectileType } from '@arcade/sim-core';
 import { FP } from '@arcade/sim-core';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
+import { graphicsSettings } from '../../state/settings.signals.js';
 
 // --- CLASS COLORS (7 classes) ---
 const CLASS_COLORS: Record<FortressClass, { primary: number; secondary: number; glow: number; core: number }> = {
@@ -35,6 +36,11 @@ function blendColors(color1: number, color2: number, t: number): number {
   return (r << 16) | (g << 8) | b;
 }
 
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 // --- PROJECTILE VISUAL CONFIG (compact, refined design) ---
 const PROJECTILE_CONFIG: Record<ProjectileType, {
   size: number;
@@ -46,14 +52,14 @@ const PROJECTILE_CONFIG: Record<ProjectileType, {
   pulseSpeed: number; // core pulse frequency
   glowLayers: number; // number of glow rings
 }> = {
-  physical: { size: 4, trailLength: 6, shape: 'circle', emissionRate: 10, motionBlur: 1.2, ghostCount: 2, pulseSpeed: 4, glowLayers: 1 },
-  icicle: { size: 5, trailLength: 8, shape: 'spike', emissionRate: 12, motionBlur: 1.5, ghostCount: 2, pulseSpeed: 3, glowLayers: 1 },
-  fireball: { size: 6, trailLength: 10, shape: 'circle', emissionRate: 20, motionBlur: 1.4, ghostCount: 3, pulseSpeed: 8, glowLayers: 2 },
-  bolt: { size: 3, trailLength: 12, shape: 'bolt', emissionRate: 15, motionBlur: 2.0, ghostCount: 3, pulseSpeed: 12, glowLayers: 1 },
-  laser: { size: 2, trailLength: 16, shape: 'bolt', emissionRate: 12, motionBlur: 2.5, ghostCount: 4, pulseSpeed: 6, glowLayers: 1 },
+  physical: { size: 4, trailLength: 4, shape: 'circle', emissionRate: 6, motionBlur: 1.2, ghostCount: 1, pulseSpeed: 4, glowLayers: 1 },
+  icicle: { size: 5, trailLength: 6, shape: 'spike', emissionRate: 8, motionBlur: 1.5, ghostCount: 1, pulseSpeed: 3, glowLayers: 1 },
+  fireball: { size: 6, trailLength: 8, shape: 'circle', emissionRate: 12, motionBlur: 1.4, ghostCount: 2, pulseSpeed: 8, glowLayers: 2 },
+  bolt: { size: 3, trailLength: 10, shape: 'bolt', emissionRate: 10, motionBlur: 2.0, ghostCount: 2, pulseSpeed: 12, glowLayers: 1 },
+  laser: { size: 2, trailLength: 12, shape: 'bolt', emissionRate: 8, motionBlur: 2.5, ghostCount: 2, pulseSpeed: 6, glowLayers: 1 },
   // Exclusive hero projectiles
-  plasma_beam: { size: 5, trailLength: 14, shape: 'plasma', emissionRate: 25, motionBlur: 2.0, ghostCount: 4, pulseSpeed: 15, glowLayers: 2 },
-  void_slash: { size: 8, trailLength: 8, shape: 'slash', emissionRate: 18, motionBlur: 1.8, ghostCount: 3, pulseSpeed: 10, glowLayers: 2 },
+  plasma_beam: { size: 5, trailLength: 10, shape: 'plasma', emissionRate: 16, motionBlur: 2.0, ghostCount: 3, pulseSpeed: 15, glowLayers: 2 },
+  void_slash: { size: 8, trailLength: 6, shape: 'slash', emissionRate: 12, motionBlur: 1.8, ghostCount: 2, pulseSpeed: 10, glowLayers: 2 },
 };
 
 // Map FortressClass to ProjectileType (7 classes)
@@ -76,6 +82,8 @@ interface ProjectileVisual {
   rotationAngle: number;
   energyIntensity: number;
   birthTime: number;
+  prevX: number;
+  prevY: number;
   // Store class for impact VFX
   fortressClass: FortressClass;
 }
@@ -118,14 +126,23 @@ export class ProjectileSystem {
     this.impactCallback = callback;
   }
 
-  public update(state: GameState, viewWidth: number, viewHeight: number) {
+  public update(
+    state: GameState,
+    viewWidth: number,
+    viewHeight: number,
+    alpha: number = 1,
+    deltaMs: number = 16.66
+  ) {
     const g = this.graphics;
     const gg = this.ghostGraphics;
     g.clear();
     gg.clear();
 
-    this.time += 16.66; // Approximate frame time in ms
-    const dt = 16.66 / 1000;
+    const safeDeltaMs = Math.min(50, Math.max(8, deltaMs));
+    this.time += safeDeltaMs;
+    const dt = safeDeltaMs / 1000;
+    const effectIntensity = this.getEffectIntensity();
+    const renderAlpha = Math.max(0, Math.min(1, alpha));
 
     const currentIds = new Set<number>();
 
@@ -143,6 +160,8 @@ export class ProjectileSystem {
           rotationAngle: 0,
           energyIntensity: 1,
           birthTime: this.time,
+          prevX: projectile.x,
+          prevY: projectile.y,
           fortressClass: projectile.class,
         };
         this.visuals.set(projectile.id, visual);
@@ -150,7 +169,7 @@ export class ProjectileSystem {
 
       // Update animation state
       const projectileType = CLASS_TO_PROJECTILE[projectile.class] || 'physical';
-      const config = PROJECTILE_CONFIG[projectileType];
+      const config = this.getScaledConfig(PROJECTILE_CONFIG[projectileType], effectIntensity);
       visual.pulsePhase += config.pulseSpeed * dt;
       visual.rotationAngle += dt * 3; // Slow rotation
 
@@ -159,7 +178,8 @@ export class ProjectileSystem {
       visual.energyIntensity = 0.85 + Math.sin(visual.pulsePhase) * 0.15 + Math.min(age * 2, 0.15);
 
       // Calculate screen X position from simulation
-      const screenX = fpXToScreen(projectile.x, viewWidth);
+      const interpolated = this.getInterpolatedPosition(projectile, visual, renderAlpha);
+      const screenX = fpXToScreen(interpolated.x, viewWidth);
 
       // Calculate screen Y by interpolating between start and actual target position
       const startScreenY = this.getSourceScreenY(projectile, viewHeight);
@@ -167,7 +187,7 @@ export class ProjectileSystem {
 
       // Calculate progress (0 = at start, 1 = at target)
       const startX = FP.toFloat(projectile.startX);
-      const currentX = FP.toFloat(projectile.x);
+      const currentX = FP.toFloat(interpolated.x);
       const targetX = FP.toFloat(projectile.targetX);
       const totalDist = Math.abs(targetX - startX);
       const traveledDist = Math.abs(currentX - startX);
@@ -190,6 +210,10 @@ export class ProjectileSystem {
 
       // Draw projectile based on class
       this.drawProjectile(g, projectile, screenX, screenY, visual.trail, visual);
+
+      // Store previous simulation position for next-frame interpolation
+      visual.prevX = projectile.x;
+      visual.prevY = projectile.y;
     }
 
     // Detect projectile impacts and spawn class-specific VFX
@@ -408,7 +432,7 @@ export class ProjectileSystem {
       g.stroke({ width: width, color: trailColor, alpha: alpha * 0.5 });
     }
 
-    // Sparse sparkle particles (reduced frequency)
+    // Sparse sparkle particles (reduced frequency, deterministic)
     const sparklePhase = visual.pulsePhase;
     for (let i = 3; i < trail.length; i += 3) {
       const progress = i / trail.length;
@@ -416,9 +440,10 @@ export class ProjectileSystem {
       const alpha = (1 - progress) * 0.4 * sparkleOffset;
       const size = config.size * (1 - progress) * 0.25;
 
-      if (size > 0.3 && Math.random() > 0.6) {
-        const offsetX = (Math.random() - 0.5) * 4;
-        const offsetY = (Math.random() - 0.5) * 4;
+      const seedBase = visual.birthTime * 0.001 + i * 1.37 + Math.floor(sparklePhase * 2);
+      if (size > 0.3 && seededRandom(seedBase) > 0.6) {
+        const offsetX = (seededRandom(seedBase + 1.11) - 0.5) * 4;
+        const offsetY = (seededRandom(seedBase + 2.22) - 0.5) * 4;
 
         // Single sparkle (no extra glow)
         g.circle(trail[i].x + offsetX, trail[i].y + offsetY, size)
@@ -819,8 +844,8 @@ export class ProjectileSystem {
 
     // Calculate movement direction for slash orientation
     let angle = 0;
-    if (trail.length > 0) {
-      const lastTrail = trail[0];
+    if (trail.length > 1) {
+      const lastTrail = trail[1];
       angle = Math.atan2(y - lastTrail.y, x - lastTrail.x);
     }
 
@@ -889,5 +914,49 @@ export class ProjectileSystem {
     // Small impact spark
     g.circle(x, y, size * 0.25)
       .fill({ color: 0xffffff, alpha: 0.9 });
+  }
+
+  private getInterpolatedPosition(
+    projectile: ActiveProjectile,
+    visual: ProjectileVisual,
+    alpha: number
+  ): { x: number; y: number } {
+    const clampedAlpha = Math.max(0, Math.min(1, alpha));
+    if (clampedAlpha >= 1) {
+      return { x: projectile.x, y: projectile.y };
+    }
+
+    if (clampedAlpha <= 0) {
+      return { x: visual.prevX, y: visual.prevY };
+    }
+
+    const t = FP.fromFloat(clampedAlpha);
+    return {
+      x: FP.lerp(visual.prevX, projectile.x, t),
+      y: FP.lerp(visual.prevY, projectile.y, t),
+    };
+  }
+
+  private getEffectIntensity(): number {
+    const { particles, quality } = graphicsSettings.value;
+    const qualityScale = quality === 'low' ? 0.5 : quality === 'medium' ? 0.75 : 1;
+    return Math.max(0.35, Math.min(1, particles * qualityScale));
+  }
+
+  private getScaledConfig(
+    config: typeof PROJECTILE_CONFIG[ProjectileType],
+    intensity: number
+  ): typeof PROJECTILE_CONFIG[ProjectileType] {
+    const trailLength = Math.max(2, Math.round(config.trailLength * intensity));
+    const ghostCount = Math.max(0, Math.round(config.ghostCount * intensity));
+    const glowLayers = Math.max(1, Math.round(config.glowLayers * intensity));
+    const emissionRate = Math.max(4, config.emissionRate * intensity);
+    return {
+      ...config,
+      trailLength,
+      ghostCount,
+      glowLayers,
+      emissionRate,
+    };
   }
 }

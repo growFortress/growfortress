@@ -66,6 +66,7 @@ export class GameScene {
   private width = 0;
   private height = 0;
   private wasInGame = false;
+  private lastUpdateTime = 0;
 
   // Track current pillar for theme changes
   private currentPillar: PillarId = "streets";
@@ -173,9 +174,11 @@ export class GameScene {
   }
 
   public update(state: GameState | null, alpha: number, hubState?: HubState) {
-    void alpha;
-
-    const deltaMs = 16.66; // Approximate frame time
+    const now = performance.now();
+    const deltaMs =
+      this.lastUpdateTime > 0 ? Math.min(50, Math.max(8, now - this.lastUpdateTime)) : 16.66;
+    this.lastUpdateTime = now;
+    const renderAlpha = Math.max(0, Math.min(1, alpha));
 
     // Ensure we have dimensions
     if (this.width === 0 || this.height === 0) return;
@@ -199,7 +202,7 @@ export class GameScene {
       this.effects.checkLowHpWarning(hpPercent);
 
       // Hitstop on elite kill - returns true if in hitstop (should skip updates)
-      if (this.effects.checkHitstop(state.eliteKills)) {
+      if (this.effects.checkHitstop(state.eliteKills, deltaMs)) {
         // Update environment (for dynamic portal)
         const hasActiveEnemies = state.enemies && state.enemies.length > 0;
         this.environment.update(deltaMs, hasActiveEnemies);
@@ -217,10 +220,10 @@ export class GameScene {
       // Update entity systems
       this.turretSystem.update(state, this.width, this.height);
       this.wallSystem.update(state, this.width, this.height, this.effects.vfx);
-      this.enemySystem.update(state, this.width, this.height, this.effects.vfx);
-      this.militiaSystem.update(state, this.width, this.height, this.effects.vfx);
-      this.heroSystem.update(state, this.width, this.height, this.effects.vfx);
-      this.projectileSystem.update(state, this.width, this.height);
+      this.enemySystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
+      this.militiaSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
+      this.heroSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
+      this.projectileSystem.update(state, this.width, this.height, renderAlpha, deltaMs);
     } else {
       // Disable interactive layer in hub mode so heroes can be clicked
       this.inputController.disableInteraction();

@@ -1,10 +1,11 @@
 import { Container, Graphics } from 'pixi.js';
 import type { GameState, Enemy, EnemyType, StatusEffectType } from '@arcade/sim-core';
-import { popComboTriggers } from '@arcade/sim-core';
+import { FP, popComboTriggers } from '@arcade/sim-core';
 import { VFXSystem } from './VFXSystem.js';
 import { audioManager } from '../../game/AudioManager.js';
 import { EnemyVisualPool, type EnemyVisualBundle } from '../ObjectPool.js';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
+import { graphicsSettings } from '../../state/settings.signals.js';
 
 // --- CONSTANTS ---
 const THEME = {
@@ -163,7 +164,13 @@ export class EnemySystem {
     this.visualPool.prewarm(30);
   }
 
-  public update(state: GameState, viewWidth: number, viewHeight: number, vfx?: VFXSystem) {
+  public update(
+    state: GameState,
+    viewWidth: number,
+    viewHeight: number,
+    vfx?: VFXSystem,
+    alpha: number = 1
+  ) {
     const currentIds = new Set<number>();
     const time = Date.now() / 1000; // Seconds for animation
 
@@ -180,7 +187,7 @@ export class EnemySystem {
         this.enemyTypes.set(enemy.id, enemy.type); // Track type for death VFX
 
         // Spawn portal VFX when new enemy emerges
-        if (vfx) {
+        if (vfx && this.shouldSpawnPortalEffect(enemy)) {
           // Portal is at right edge of screen, center of path
           const portalX = viewWidth + 5;
           const pathTop = viewHeight * 0.35;
@@ -198,8 +205,9 @@ export class EnemySystem {
       const visual = bundle.container;
 
       // Update Position - use actual enemy.y from simulation for pathfinding
-      const x = fpXToScreen(enemy.x, viewWidth);
-      const y = fpYToScreen(enemy.y, viewHeight);
+      const interpolated = this.getInterpolatedPosition(enemy, alpha);
+      const x = fpXToScreen(interpolated.x, viewWidth);
+      const y = fpYToScreen(interpolated.y, viewHeight);
       visual.position.set(x, y);
 
       // --- SPAWN ANIMATION ---
@@ -924,5 +932,25 @@ export class EnemySystem {
     const order: StatusEffectType[] = ['slow', 'freeze', 'burn', 'poison', 'stun'];
     const present = new Set(effects.map(e => e.type));
     return order.filter(type => present.has(type)).join(',');
+  }
+
+  private getInterpolatedPosition(enemy: Enemy, alpha: number): { x: number; y: number } {
+    const clampedAlpha = Math.max(0, Math.min(1, alpha));
+    if (clampedAlpha >= 1) {
+      return { x: enemy.x, y: enemy.y };
+    }
+    const backstep = FP.fromFloat(1 - clampedAlpha);
+    return {
+      x: FP.sub(enemy.x, FP.mul(enemy.vx, backstep)),
+      y: FP.sub(enemy.y, FP.mul(enemy.vy, backstep)),
+    };
+  }
+
+  private shouldSpawnPortalEffect(enemy: Enemy): boolean {
+    const { quality, particles } = graphicsSettings.value;
+    if (quality === 'low' || particles <= 0.6) return false;
+    if (enemy.isElite) return true;
+    if (quality === 'medium') return enemy.id % 3 === 0;
+    return enemy.id % 2 === 0;
   }
 }

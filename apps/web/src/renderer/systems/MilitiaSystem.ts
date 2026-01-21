@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import type { GameState, Militia, MilitiaType, MilitiaState } from '@arcade/sim-core';
+import { FP } from '@arcade/sim-core';
 import { VFXSystem } from './VFXSystem.js';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
 
@@ -142,7 +143,13 @@ export class MilitiaSystem {
     this.visualPool.prewarm(15);
   }
 
-  public update(state: GameState, viewWidth: number, viewHeight: number, vfx?: VFXSystem) {
+  public update(
+    state: GameState,
+    viewWidth: number,
+    viewHeight: number,
+    vfx?: VFXSystem,
+    alpha: number = 1
+  ) {
     const currentIds = new Set<number>();
     const time = Date.now() / 1000;
 
@@ -161,8 +168,9 @@ export class MilitiaSystem {
       }
 
       // Update position
-      const x = fpXToScreen(militia.x, viewWidth);
-      const y = fpYToScreen(militia.y, viewHeight);
+      const interpolated = this.getInterpolatedPosition(militia, alpha);
+      const x = fpXToScreen(interpolated.x, viewWidth);
+      const y = fpYToScreen(interpolated.y, viewHeight);
       bundle.container.position.set(x, y);
 
       // Animation based on state
@@ -416,5 +424,17 @@ export class MilitiaSystem {
     this.lastHp.clear();
     this.visualHp.clear();
     this.lastState.clear();
+  }
+
+  private getInterpolatedPosition(militia: Militia, alpha: number): { x: number; y: number } {
+    const clampedAlpha = Math.max(0, Math.min(1, alpha));
+    if (clampedAlpha >= 1) {
+      return { x: militia.x, y: militia.y };
+    }
+    const backstep = FP.fromFloat(1 - clampedAlpha);
+    return {
+      x: FP.sub(militia.x, FP.mul(militia.vx, backstep)),
+      y: FP.sub(militia.y, FP.mul(militia.vy, backstep)),
+    };
   }
 }

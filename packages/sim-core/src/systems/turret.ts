@@ -21,6 +21,7 @@ import { getTurretById, calculateTurretStats, TURRET_SLOTS } from '../data/turre
 import { createTurretProjectile, applyEffectToEnemy } from './projectile.js';
 import { TURRET_ATTACK_INTERVAL_BASE, HIT_FLASH_TICKS } from './constants.js';
 import { getTurretSynergyBonus } from './synergy.js';
+import { isEnemyTargetable } from './helpers.js';
 import { analytics } from '../analytics.js';
 
 // Overcharge constants
@@ -98,9 +99,7 @@ export function updateTurrets(
     const rangeSq = FP.mul(rangeFp, rangeFp);
     const fieldWidth = config.fieldWidth;
     const enemiesInRange = state.enemies.filter(e => {
-      // Don't target dead enemies or those still spawning
-      if (e.hp <= 0) return false;
-      if (e.x > fieldWidth) return false;
+      if (!isEnemyTargetable(e, fieldWidth)) return false;
       const distSq = FP.distSq(e.x, e.y, turretX, turretY);
       return distSq <= rangeSq;
     });

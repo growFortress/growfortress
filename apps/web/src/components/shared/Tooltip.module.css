@@ -14,23 +14,23 @@
 /* Tooltip container */
 .tooltip {
   position: absolute;
-  z-index: var(--z-tooltip, 9999);
-  max-width: 280px;
-  padding: 8px 12px;
+  z-index: var(--tooltip-z, var(--z-tooltip, 9999));
+  max-width: var(--tooltip-max-width);
+  padding: var(--tooltip-padding);
 
   /* Glassmorphism */
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--elevation-2);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--tooltip-bg);
+  border: var(--tooltip-border);
+  border-radius: var(--tooltip-radius);
+  box-shadow: var(--tooltip-shadow);
+  backdrop-filter: blur(var(--tooltip-blur));
+  -webkit-backdrop-filter: blur(var(--tooltip-blur));
 
   /* Typography */
   font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--color-text);
+  font-size: var(--tooltip-font-size);
+  line-height: var(--tooltip-line-height);
+  color: var(--tooltip-text);
   text-align: left;
 
   /* Animation */

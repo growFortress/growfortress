@@ -20,13 +20,15 @@
 }
 
 .tooltip {
-  background: var(--color-bg-elevated);
-  border: var(--border-primary);
-  border-radius: var(--radius-md);
+  background: var(--tooltip-bg);
+  border: var(--tooltip-border);
+  border-radius: var(--tooltip-radius);
   padding: 14px 18px;
   text-align: center;
   max-width: 240px;
-  box-shadow: var(--shadow-md), var(--glow-primary);
+  box-shadow: var(--tooltip-shadow);
+  backdrop-filter: blur(var(--tooltip-blur));
+  -webkit-backdrop-filter: blur(var(--tooltip-blur));
   position: relative;
 }
 

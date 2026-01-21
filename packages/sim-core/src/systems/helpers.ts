@@ -64,6 +64,16 @@ export function findClosestEnemy2D(enemies: Enemy[], x: number, y: number): Enem
 }
 
 /**
+ * Check if an enemy should be targetable/attackable.
+ * Filters out dead enemies and those still spawning off-field.
+ */
+export function isEnemyTargetable(enemy: Enemy, fieldWidth: number): boolean {
+  if (enemy.hp <= 0) return false;
+  if (enemy.x > fieldWidth) return false;
+  return true;
+}
+
+/**
  * Get hero attack range based on role
  */
 export function getHeroAttackRange(role: string): number {

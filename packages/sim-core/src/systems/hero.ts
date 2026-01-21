@@ -60,6 +60,7 @@ import {
   findClosestEnemy2D,
   getHeroAttackRange,
   applySkillEffects,
+  isEnemyTargetable,
 } from './helpers.js';
 
 // ============================================================================
@@ -206,7 +207,12 @@ export function updateHeroes(
         const b = activeHeroes[j];
         const collision = detectCircleCollision(a, b);
         if (collision) {
-          resolveCollision(a, b, collision);
+          const maxOverlap = FP.fromFloat(0.5);
+          const limitedCollision =
+            collision.overlap > maxOverlap
+              ? { ...collision, overlap: maxOverlap }
+              : collision;
+          resolveCollision(a, b, limitedCollision);
         }
       }
     }
@@ -247,12 +253,13 @@ export function updateHeroes(
  * Update hero steering based on current state
  * Sets velocity direction, actual movement happens in physics phase
  */
-function updateHeroSteering(hero: ActiveHero, state: GameState, _config: SimConfig): void {
+function updateHeroSteering(hero: ActiveHero, state: GameState, config: SimConfig): void {
   const heroDef = getHeroById(hero.definitionId);
   if (!heroDef) return;
 
   const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
   const maxSpeed = calculateEffectiveSpeed(stats.moveSpeed, hero.movementModifiers, state.tick);
+  const fieldWidth = config.fieldWidth;
 
   switch (hero.state) {
     case 'combat': {
@@ -260,25 +267,33 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, _config: SimConf
       // Priority: focusTarget > currentTarget > closest
       let moveTarget: { x: number; y: number } | null = null;
 
-      // Priority 1: Focus target (team-wide command from player)
+  // Priority 1: Focus target (team-wide command from player)
       if (hero.focusTargetId !== undefined) {
         const focusEnemy = state.enemies.find(e => e.id === hero.focusTargetId);
-        if (focusEnemy) {
+    if (focusEnemy && isEnemyTargetable(focusEnemy, fieldWidth)) {
           moveTarget = focusEnemy;
+        } else if (!focusEnemy || focusEnemy.hp <= 0) {
+          hero.focusTargetId = undefined;
         }
       }
 
       // Priority 2: Current attack target
       if (!moveTarget && hero.currentTargetId !== undefined) {
         const currentEnemy = state.enemies.find(e => e.id === hero.currentTargetId);
-        if (currentEnemy) {
+    if (currentEnemy && isEnemyTargetable(currentEnemy, fieldWidth)) {
           moveTarget = currentEnemy;
+        } else if (!currentEnemy || currentEnemy.hp <= 0) {
+          hero.currentTargetId = undefined;
         }
       }
 
       // Priority 3: Fall back to closest enemy
       if (!moveTarget) {
-        const closestEnemy = findClosestEnemy2D(state.enemies, hero.x, hero.y);
+        const closestEnemy = findClosestEnemy2D(
+      state.enemies.filter(e => isEnemyTargetable(e, fieldWidth)),
+          hero.x,
+          hero.y
+        );
         if (closestEnemy) {
           moveTarget = closestEnemy;
         }
@@ -288,6 +303,10 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, _config: SimConf
         const steering = steerTowards(hero, moveTarget.x, moveTarget.y, maxSpeed, HERO_ARRIVAL_RADIUS);
         hero.vx = FP.add(hero.vx, steering.ax);
         hero.vy = FP.add(hero.vy, steering.ay);
+      } else {
+        // No valid target - dampen velocity so heroes don't drift indefinitely
+        hero.vx = FP.mul(hero.vx, FP.fromFloat(0.6));
+        hero.vy = FP.mul(hero.vy, FP.fromFloat(0.6));
       }
       break;
     }
@@ -344,9 +363,7 @@ function performHeroAttack(
   const attackRangeSq = FP.mul(attackRange, attackRange);
   const fieldWidth = config.fieldWidth;
   const enemiesInRange = state.enemies.filter(e => {
-    // Don't target dead enemies or those still spawning
-    if (e.hp <= 0) return false;
-    if (e.x > fieldWidth) return false;
+    if (!isEnemyTargetable(e, fieldWidth)) return false;
     const distSq = FP.distSq(hero.x, hero.y, e.x, e.y);
     return distSq <= attackRangeSq;
   });
@@ -384,9 +401,9 @@ function performHeroAttack(
       } else {
         // Focus target not in range, use normal AI
         target = selectBestTarget(hero, enemiesInRange, state, config);
-        // Clear focus if enemy is dead
-        const focusStillExists = state.enemies.some(e => e.id === hero.focusTargetId);
-        if (!focusStillExists) {
+        // Clear focus if enemy is dead or removed
+        const focusEnemy = state.enemies.find(e => e.id === hero.focusTargetId);
+        if (!focusEnemy || focusEnemy.hp <= 0) {
           hero.focusTargetId = undefined;
         }
       }
@@ -542,9 +559,7 @@ function updateHeroCombat(
   const attackRangeSq = FP.mul(attackRange, attackRange);
   const fieldWidth = config.fieldWidth;
   const enemiesInRange = state.enemies.filter(e => {
-    // Don't target dead enemies or those still spawning
-    if (e.hp <= 0) return false;
-    if (e.x > fieldWidth) return false;
+    if (!isEnemyTargetable(e, fieldWidth)) return false;
     const distSq = FP.distSq(hero.x, hero.y, e.x, e.y);
     return distSq <= attackRangeSq;
   });

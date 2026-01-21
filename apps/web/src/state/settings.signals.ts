@@ -11,8 +11,8 @@ export interface AudioSettings {
 
 const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   masterVolume: 1.0,
-  musicVolume: 0.6,
-  sfxVolume: 0.8,
+  musicVolume: 0.5,
+  sfxVolume: 0.6,
   muted: false,
 };
 

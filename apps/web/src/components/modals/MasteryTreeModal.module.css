@@ -332,13 +332,15 @@
 
 .tooltip {
   position: fixed;
-  z-index: var(--z-tooltip);
+  z-index: var(--tooltip-z, var(--z-tooltip));
   width: 280px;
   padding: 16px;
-  background: var(--glass-bg-dark);
-  border: 2px solid var(--glass-border-light);
-  border-radius: var(--radius-md);
-  backdrop-filter: blur(var(--glass-blur-lg));
+  background: var(--tooltip-bg);
+  border: var(--tooltip-border);
+  border-radius: var(--tooltip-radius);
+  box-shadow: var(--tooltip-shadow);
+  backdrop-filter: blur(var(--tooltip-blur));
+  -webkit-backdrop-filter: blur(var(--tooltip-blur));
   pointer-events: none;
   opacity: 0;
   transform: translateY(8px);

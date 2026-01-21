@@ -89,7 +89,7 @@ export function selectTarget(
   // This prevents heroes from constantly switching targets
   if (hero.currentTargetId !== undefined) {
     const currentTarget = enemiesInRange.find(e => e.id === hero.currentTargetId);
-    if (currentTarget) {
+    if (currentTarget && currentTarget.hp > 0) {
       // Check if this target is heavily over-targeted
       const targetCount = getTargetCount(currentTarget.id);
       const combatHeroCount = state.heroes.filter(h => h.state === 'combat').length;

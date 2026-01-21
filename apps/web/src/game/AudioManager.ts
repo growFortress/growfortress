@@ -20,6 +20,13 @@ class AudioManager {
 
   // Music state
   private currentMusic: OscillatorNode | AudioBufferSourceNode | null = null;
+  private lastSfxTimes: Map<string, number> = new Map();
+
+  private static readonly SFX_THROTTLE_MS: Record<string, number> = {
+    hit: 70,
+    explosion: 120,
+    combo: 120,
+  };
 
   private constructor() {
     this.setupSettingsListener();
@@ -156,6 +163,7 @@ class AudioManager {
   public playSfx(id: string): void {
     if (!this.context || !this.sfxGain || audioSettings.value.muted) return;
     if (this.context.state === 'suspended') return;
+    if (this.isSfxThrottled(id)) return;
 
     switch (id) {
       case 'hit':
@@ -237,6 +245,18 @@ class AudioManager {
         // Default blip for unknown sounds
         this.playBlip(440, 0.1);
     }
+  }
+
+  private isSfxThrottled(id: string): boolean {
+    const minInterval = AudioManager.SFX_THROTTLE_MS[id];
+    if (!minInterval) return false;
+    const now = performance.now();
+    const last = this.lastSfxTimes.get(id) ?? 0;
+    if (now - last < minInterval) {
+      return true;
+    }
+    this.lastSfxTimes.set(id, now);
+    return false;
   }
 
   /**

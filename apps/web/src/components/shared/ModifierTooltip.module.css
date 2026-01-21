@@ -1,10 +1,12 @@
 .tooltip {
-  background: var(--color-bg-elevated);
-  border: var(--border-primary);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  background: var(--tooltip-bg);
+  border: var(--tooltip-border);
+  border-radius: var(--tooltip-radius);
+  padding: var(--tooltip-padding);
   min-width: 160px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--tooltip-shadow);
+  backdrop-filter: blur(var(--tooltip-blur));
+  -webkit-backdrop-filter: blur(var(--tooltip-blur));
 }
 
 .compact {

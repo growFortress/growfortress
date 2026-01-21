@@ -153,7 +153,13 @@ export class HeroSystem {
     this.onHeroClick = callback;
   }
 
-  public update(state: GameState, viewWidth: number, viewHeight: number, vfx?: VFXSystem) {
+  public update(
+    state: GameState,
+    viewWidth: number,
+    viewHeight: number,
+    vfx?: VFXSystem,
+    alpha: number = 1
+  ) {
     const currentIds = new Set<string>();
     const { now, deltaMs, time } = this.getFrameTiming();
 
@@ -162,7 +168,7 @@ export class HeroSystem {
 
       const visual = this.syncHeroVisual(hero);
       this.applyHeroStateChanges(visual, hero);
-      const screenPosition = this.getHeroScreenPosition(hero, viewWidth, viewHeight);
+      const screenPosition = this.getHeroScreenPosition(hero, viewWidth, viewHeight, alpha);
       this.handleSkillVfx(visual, hero, screenPosition.x, screenPosition.y, state, viewWidth, viewHeight, vfx);
 
       // Motion smoothing with anticipation/overshoot
@@ -199,11 +205,25 @@ export class HeroSystem {
   private getHeroScreenPosition(
     hero: ActiveHero,
     viewWidth: number,
-    viewHeight: number
+    viewHeight: number,
+    alpha: number
   ): { x: number; y: number } {
+    const interpolated = this.getInterpolatedPosition(hero, alpha);
     return {
-      x: fpXToScreen(hero.x, viewWidth),
-      y: fpYToScreen(hero.y, viewHeight),
+      x: fpXToScreen(interpolated.x, viewWidth),
+      y: fpYToScreen(interpolated.y, viewHeight),
+    };
+  }
+
+  private getInterpolatedPosition(hero: ActiveHero, alpha: number): { x: number; y: number } {
+    const clampedAlpha = Math.max(0, Math.min(1, alpha));
+    if (clampedAlpha >= 1) {
+      return { x: hero.x, y: hero.y };
+    }
+    const backstep = FP.fromFloat(1 - clampedAlpha);
+    return {
+      x: FP.sub(hero.x, FP.mul(hero.vx, backstep)),
+      y: FP.sub(hero.y, FP.mul(hero.vy, backstep)),
     };
   }
 

@@ -15,6 +15,7 @@ import {
   fpXToScreen,
   turretYToScreen,
   FIELD_WIDTH,
+  calculateEnemyLaneY,
 } from "../CoordinateSystem.js";
 import i18n from "../../i18n/index.js";
 
@@ -184,7 +185,10 @@ export class TurretSystem {
     this.updateSlots(state.turretSlots, viewWidth, viewHeight, occupiedSlots);
 
     // Then, update turret visuals
-    this.updateTurrets(state, viewWidth, viewHeight);
+    const slotByIndex = new Map(
+      state.turretSlots.map((slot) => [slot.index, slot]),
+    );
+    this.updateTurrets(state, viewWidth, viewHeight, slotByIndex);
   }
 
   private updateSlots(
@@ -332,15 +336,17 @@ export class TurretSystem {
     state: GameState,
     viewWidth: number,
     viewHeight: number,
+    slotByIndex: Map<number, TurretSlot>,
   ) {
     const currentTurretSlots = new Set<number>();
     const time = Date.now() / 1000;
+    const enemyLaneYCache = new Map<number, number>();
 
     for (const turret of state.turrets) {
       currentTurretSlots.add(turret.slotIndex);
 
       // Find the slot for this turret
-      const slot = state.turretSlots.find((s) => s.index === turret.slotIndex);
+      const slot = slotByIndex.get(turret.slotIndex);
       if (!slot) continue;
 
       let visual = this.turretVisuals.get(turret.slotIndex);
@@ -358,7 +364,15 @@ export class TurretSystem {
       visual.container.position.set(screenX, screenY);
 
       // Update visuals
-      this.updateTurretVisual(visual, turret, state, time, viewWidth);
+      this.updateTurretVisual(
+        visual,
+        turret,
+        state,
+        time,
+        viewWidth,
+        viewHeight,
+        enemyLaneYCache,
+      );
     }
 
     // Remove turrets no longer present
@@ -373,15 +387,6 @@ export class TurretSystem {
 
   private createTurretVisual(turret: ActiveTurret): TurretVisual {
     const container = new Container();
-
-    // Make turret clickable
-    container.eventMode = "static";
-    container.cursor = "pointer";
-    container.on("pointerdown", () => {
-      if (this.onTurretClick) {
-        this.onTurretClick(turret.definitionId, turret.slotIndex);
-      }
-    });
 
     // Range indicator circle (drawn first so it's behind turret)
     const rangeCircle = new Graphics();
@@ -423,7 +428,7 @@ export class TurretSystem {
     hitArea.fill({ color: 0x000000, alpha: 0.001 }); // Nearly invisible
     container.addChild(hitArea);
 
-    return {
+    const visual: TurretVisual = {
       container,
       rotation: 0,
       lastAttackTick: 0,
@@ -443,6 +448,17 @@ export class TurretSystem {
       muzzleFlashAlpha: 0,
       energyPulse: 0,
     };
+
+    // Make turret clickable (use current turretId from visual)
+    container.eventMode = "static";
+    container.cursor = "pointer";
+    container.on("pointerdown", () => {
+      if (this.onTurretClick) {
+        this.onTurretClick(visual.turretId, turret.slotIndex);
+      }
+    });
+
+    return visual;
   }
 
   private updateTurretVisual(
@@ -451,6 +467,8 @@ export class TurretSystem {
     state: GameState,
     time: number,
     viewWidth: number,
+    viewHeight: number,
+    enemyLaneYCache: Map<number, number>,
   ) {
     const body = visual.container.getChildByLabel("body") as Graphics;
     const barrel = visual.container.getChildByLabel("barrel") as Graphics;
@@ -461,6 +479,10 @@ export class TurretSystem {
     ) as Graphics;
 
     if (!body || !barrel || !tierBadge) return;
+
+    if (turret.definitionId !== visual.turretId) {
+      visual.turretId = turret.definitionId;
+    }
 
     // Check for tier/class changes
     if (turret.tier !== visual.lastTier) {
@@ -497,8 +519,11 @@ export class TurretSystem {
     // Find nearest enemy for targeting
     const targetAngle = this.findTargetAngle(
       visual.container.x,
+      visual.container.y,
       state.enemies,
       viewWidth,
+      viewHeight,
+      enemyLaneYCache,
     );
 
     // Smooth rotation towards target (slower for less "jittery" appearance)
@@ -1529,8 +1554,11 @@ export class TurretSystem {
 
   private findTargetAngle(
     turretX: number,
+    turretY: number,
     enemies: Enemy[],
     viewWidth: number,
+    viewHeight: number,
+    enemyLaneYCache: Map<number, number>,
   ): number | null {
     if (enemies.length === 0) return null;
 
@@ -1540,7 +1568,14 @@ export class TurretSystem {
 
     for (const enemy of enemies) {
       const enemyScreenX = fpXToScreen(enemy.x, viewWidth);
-      const dist = Math.abs(enemyScreenX - turretX);
+      let enemyScreenY = enemyLaneYCache.get(enemy.id);
+      if (enemyScreenY === undefined) {
+        enemyScreenY = calculateEnemyLaneY(enemy.id, viewHeight);
+        enemyLaneYCache.set(enemy.id, enemyScreenY);
+      }
+      const dx = enemyScreenX - turretX;
+      const dy = enemyScreenY - turretY;
+      const dist = dx * dx + dy * dy;
       if (dist < nearestDist) {
         nearestDist = dist;
         nearest = enemy;
@@ -1549,9 +1584,14 @@ export class TurretSystem {
 
     // Calculate angle to enemy (pointing right = 0, up = -PI/2)
     const enemyScreenX = fpXToScreen(nearest.x, viewWidth);
+    let enemyScreenY = enemyLaneYCache.get(nearest.id);
+    if (enemyScreenY === undefined) {
+      enemyScreenY = calculateEnemyLaneY(nearest.id, viewHeight);
+      enemyLaneYCache.set(nearest.id, enemyScreenY);
+    }
     const dx = enemyScreenX - turretX;
-    // Assume enemies are roughly at same Y for simplicity
-    return Math.atan2(0, dx) + Math.PI / 2;
+    const dy = enemyScreenY - turretY;
+    return Math.atan2(dy, dx) + Math.PI / 2;
   }
 
   private drawRangeCircle(

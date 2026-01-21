@@ -179,15 +179,18 @@
 /* Tooltip for material details */
 .tooltip {
   position: absolute;
-  background: var(--color-bg-panel);
-  border: var(--border-width) solid var(--rarity-color);
-  border-radius: var(--radius-sm);
+  background: var(--tooltip-bg);
+  border: var(--tooltip-border);
+  border-color: var(--rarity-color, var(--tooltip-border-color));
+  border-radius: var(--tooltip-radius);
   padding: 12px;
   min-width: 200px;
   max-width: 280px;
   z-index: 3000;
   pointer-events: none;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--tooltip-shadow);
+  backdrop-filter: blur(var(--tooltip-blur));
+  -webkit-backdrop-filter: blur(var(--tooltip-blur));
 }
 
 .tooltipName {
