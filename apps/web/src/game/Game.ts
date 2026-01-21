@@ -24,7 +24,9 @@ import { startSession, submitSegment, endSession, SessionStartResponse, SegmentS
 import { startBossRush as apiStartBossRush, finishBossRush as apiFinishBossRush } from '../api/boss-rush.js';
 import type { PartialRewards } from '../api/client.js';
 import { saveActiveSession, clearActiveSession, type ActiveSessionSnapshot } from '../storage/idb.js';
+import { getUserId } from '../api/auth.js';
 import { deferTask } from '../utils/scheduler.js';
+import { logger } from '../utils/logger.js';
 import {
   bossRushActive,
   initBossRushSession,
@@ -780,6 +782,7 @@ export class Game {
     if (!this.sessionInfo || !this.simulation) return;
 
     const snapshot: ActiveSessionSnapshot = {
+      userId: getUserId() || undefined,
       sessionId: this.sessionInfo.sessionId,
       sessionToken: this.sessionInfo.sessionToken,
       seed: this.sessionInfo.seed,
@@ -976,7 +979,9 @@ export class Game {
     // End intermission if active
     signalEndIntermission();
 
-    console.log(`Boss Rush: Spawned ${bossStats.name} (Cycle ${bossStats.cycle + 1}, Boss ${(bossStats.bossIndex % 7) + 1}/7)`);
+    logger.debug(
+      `Boss Rush: Spawned ${bossStats.name} (Cycle ${bossStats.cycle + 1}, Boss ${(bossStats.bossIndex % 7) + 1}/7)`,
+    );
   }
 
   /** Advance the Boss Rush simulation by one tick */
@@ -1076,7 +1081,9 @@ export class Game {
     this.bossEntityId = null;
     this.currentBossStats = null;
 
-    console.log(`Boss Rush: Boss killed! Total damage: ${this.bossRushState.totalDamageDealt}, Bosses killed: ${this.bossRushState.bossesKilled}`);
+    logger.debug(
+      `Boss Rush: Boss killed! Total damage: ${this.bossRushState.totalDamageDealt}, Bosses killed: ${this.bossRushState.bossesKilled}`,
+    );
   }
 
   /** Handle player death in Boss Rush */

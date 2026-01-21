@@ -76,7 +76,11 @@ export function updateFromProfile(data: ProfileResponse): void {
         fortress.selectedFortressClass.value = activePreset.fortressClass as typeof fortress.selectedFortressClass.value;
       } else if (data.defaultLoadout.fortressClass) {
         fortress.selectedFortressClass.value = data.defaultLoadout.fortressClass as typeof fortress.selectedFortressClass.value;
+      } else {
+        fortress.selectedFortressClass.value = null;
       }
+    } else {
+      fortress.selectedFortressClass.value = null;
     }
 
     // Update unlocked heroes and turrets from profile

@@ -9,6 +9,7 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import type { ColonyStatus } from '@arcade/protocol';
 import { easeOutBack, easeOutElastic } from '../animation/easing.js';
 import i18n from '../../i18n/index.js';
+import { logger } from '../../utils/logger.js';
 
 // Theme colors matching game style
 const THEME = {
@@ -174,20 +175,20 @@ export class ColonyScene {
    * Initialize buildings (creates all building visuals)
    */
   private initBuildings() {
-    console.log('[ColonyScene] Initializing buildings...');
+    logger.debug('[ColonyScene] Initializing buildings...');
     for (const [id, config] of Object.entries(COLONY_CONFIG)) {
       if (!this.buildings.has(id)) {
         this.createBuilding(id, config);
       }
     }
-    console.log('[ColonyScene] Buildings initialized:', this.buildings.size);
+    logger.debug('[ColonyScene] Buildings initialized:', this.buildings.size);
   }
 
   /**
    * Initialize/resize the scene
    */
   public onResize(width: number, height: number) {
-    console.log('[ColonyScene] onResize:', width, 'x', height);
+    logger.debug('[ColonyScene] onResize:', width, 'x', height);
     this.width = width;
     this.height = height;
     this.centerX = width / 2;
@@ -344,12 +345,12 @@ export class ColonyScene {
    * Set colonies to display
    */
   public setColonies(colonies: ColonyStatus[]) {
-    console.log('[ColonyScene] setColonies called with:', colonies.length, 'colonies');
+    logger.debug('[ColonyScene] setColonies called with:', colonies.length, 'colonies');
 
     // Create buildings for all colony types
     for (const [id, config] of Object.entries(COLONY_CONFIG)) {
       if (!this.buildings.has(id)) {
-        console.log('[ColonyScene] Creating building:', id);
+        logger.debug('[ColonyScene] Creating building:', id);
         this.createBuilding(id, config);
       }
     }
@@ -358,7 +359,12 @@ export class ColonyScene {
     for (const colony of colonies) {
       const visual = this.buildings.get(colony.id);
       if (visual) {
-        console.log('[ColonyScene] Updating building:', colony.id, 'unlocked:', colony.unlocked);
+        logger.debug(
+          '[ColonyScene] Updating building:',
+          colony.id,
+          'unlocked:',
+          colony.unlocked,
+        );
         visual.colony = colony;
         this.updateBuildingVisual(visual);
       }
@@ -368,7 +374,7 @@ export class ColonyScene {
     this.repositionBuildings();
     this.sortBuildingsByDepth();
 
-    console.log('[ColonyScene] Buildings created:', this.buildings.size);
+    logger.debug('[ColonyScene] Buildings created:', this.buildings.size);
   }
 
   /**

@@ -172,7 +172,7 @@ export class EnemySystem {
     alpha: number = 1
   ) {
     const currentIds = new Set<number>();
-    const time = Date.now() / 1000; // Seconds for animation
+    const time = performance.now() / 1000; // Seconds for animation
 
     // 1. Update / Create Visuals
     for (const enemy of state.enemies) {

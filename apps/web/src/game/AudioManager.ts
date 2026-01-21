@@ -1,5 +1,6 @@
 import { effect } from '@preact/signals';
 import { audioSettings } from '../state/settings.signals.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Audio Manager - Handles all game audio using Web Audio API
@@ -62,7 +63,7 @@ class AudioManager {
       this.isInitialized = true;
       this.updateVolumes();
 
-      console.log('[AudioManager] Initialized successfully');
+      logger.debug('[AudioManager] Initialized successfully');
     } catch (error) {
       console.error('[AudioManager] Failed to initialize:', error);
     }
@@ -78,7 +79,7 @@ class AudioManager {
       try {
         await this.context.resume();
         this.isResumed = true;
-        console.log('[AudioManager] Context resumed');
+        logger.debug('[AudioManager] Context resumed');
       } catch (error) {
         console.error('[AudioManager] Failed to resume context:', error);
       }
@@ -1284,7 +1285,7 @@ class AudioManager {
     // For now, play a simple ambient drone
     this.playAmbientDrone();
 
-    console.log(`[AudioManager] Playing music: ${id}`);
+    logger.debug(`[AudioManager] Playing music: ${id}`);
   }
 
   /**

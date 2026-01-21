@@ -154,15 +154,6 @@ export function updateHeroes(
 
   // Phase 1: Calculate steering forces and update velocities
   for (const hero of state.heroes) {
-    // Dead heroes are inactive
-    if (hero.currentHp <= 0) {
-      hero.currentHp = 0;
-      hero.state = 'idle';
-      hero.vx = 0;
-      hero.vy = 0;
-      continue;
-    }
-
     // Clean up expired movement modifiers
     hero.movementModifiers = cleanupExpiredModifiers(hero.movementModifiers, state.tick);
 

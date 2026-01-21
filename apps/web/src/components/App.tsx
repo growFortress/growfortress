@@ -60,6 +60,7 @@ import {
   clearTokens,
   setDisplayName,
   onAuthInvalidated,
+  getUserId,
 } from "../api/auth.js";
 import { useTranslation } from "../i18n/useTranslation.js";
 import {
@@ -238,7 +239,7 @@ function AppContent() {
   // Check for session recovery when auth is confirmed
   useEffect(() => {
     if (internalAuth) {
-      getActiveSession().then((session) => {
+      getActiveSession(getUserId()).then((session) => {
         if (session) {
           setSavedSession(session);
           pendingSessionSnapshot.value = {

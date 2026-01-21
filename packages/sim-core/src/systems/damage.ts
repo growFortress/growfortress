@@ -1,20 +1,11 @@
 /**
  * Damage System
  *
- * Handles damage application to heroes and turrets:
- * - Weakness damage vulnerability
- * - Artifact defensive effects (dodge, block)
- * - Special passive abilities
+ * Handles damage application to heroes and turrets.
  */
 
 import type { ActiveHero, ActiveTurret, FortressClass } from '../types.js';
 import { Xorshift32 } from '../rng.js';
-import { getHeroById, hasHeroPassive } from '../data/heroes.js';
-import { calculateWeaknessDamageMultiplier } from './weakness.js';
-import {
-  calculateHeroArtifactBlockChance,
-  calculateHeroArtifactDodgeChance,
-} from './artifacts.js';
 
 /**
  * Result of damage application to hero
@@ -30,46 +21,14 @@ export interface HeroDamageResult {
  * @returns object with actual damage taken and reflect damage to apply to attacker
  */
 export function applyDamageToHero(
-  hero: ActiveHero,
-  damage: number,
-  rng: Xorshift32,
-  incomingDamageClass?: FortressClass,
+  _hero: ActiveHero,
+  _damage: number,
+  _rng: Xorshift32,
+  _incomingDamageClass?: FortressClass,
   _currentTick?: number
 ): HeroDamageResult {
-  if (damage <= 0) return { damageTaken: 0, reflectDamage: 0 };
-  if (hero.currentHp <= 0) return { damageTaken: 0, reflectDamage: 0 };
-
-  const heroDef = getHeroById(hero.definitionId);
-
-  // Artifact defensive effects
-  const dodgeChance = calculateHeroArtifactDodgeChance(hero.equippedArtifact);
-  if (dodgeChance > 0 && rng.nextFloat() < dodgeChance) {
-    return { damageTaken: 0, reflectDamage: 0 };
-  }
-
-  let finalDamage = damage;
-  const blockChance = calculateHeroArtifactBlockChance(hero.equippedArtifact);
-  if (blockChance > 0 && rng.nextFloat() < blockChance) {
-    // Simple block model: halve incoming damage
-    finalDamage = Math.floor(finalDamage * 0.5);
-  }
-
-  // Weakness damage vulnerability (if we know the incoming class)
-  if (heroDef && incomingDamageClass) {
-    const vuln = calculateWeaknessDamageMultiplier(heroDef.weaknesses, incomingDamageClass);
-    finalDamage = Math.floor(finalDamage * vuln);
-  }
-
-  // Apply damage
-  const damageTaken = Math.min(finalDamage, hero.currentHp);
-  hero.currentHp -= damageTaken;
-
-  // Optional: Glacier passive - slow attacker on hit (flag only; caller decides how to apply)
-  const slowAttacker =
-    heroDef?.id === 'glacier' &&
-    hasHeroPassive(hero.definitionId, 'cryo_armor', (hero.tier || 1) as 1 | 2 | 3, hero.level || 1);
-
-  return { damageTaken, reflectDamage: 0, ...(slowAttacker ? { slowAttacker: true } : {}) };
+  // Heroes are immortal in main gameplay; ignore incoming damage.
+  return { damageTaken: 0, reflectDamage: 0 };
 }
 
 /**

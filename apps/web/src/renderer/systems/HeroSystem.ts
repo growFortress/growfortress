@@ -50,11 +50,13 @@ const ANIMATION = {
 
 const MOTION = {
   snapDistance: 0.6,
-  retargetDistance: 3.0,
+  retargetDistance: 8.0,
+  forceSnapDistance: 80,
   anticipationRatio: 0.12,
-  overshootRatio: 0.15,
+  overshootRatio: 0.06,
   anticipationMax: 10,
-  overshootMax: 12,
+  overshootMax: 4,
+  anticipationMaxDistance: 40,
   anticipationDuration: 50,
   settleDuration: 90,
   minDuration: 90,
@@ -143,7 +145,7 @@ export class HeroSystem {
   constructor() {
     this.container = new Container();
     this.container.interactiveChildren = true;
-    this.lastUpdateTime = Date.now();
+    this.lastUpdateTime = performance.now();
   }
 
   /**
@@ -196,8 +198,11 @@ export class HeroSystem {
   }
 
   private getFrameTiming(): { now: number; deltaMs: number; time: number } {
-    const now = Date.now();
-    const deltaMs = now - this.lastUpdateTime;
+    const now = performance.now();
+    const deltaMs =
+      this.lastUpdateTime > 0
+        ? Math.min(50, Math.max(8, now - this.lastUpdateTime))
+        : 16.66;
     this.lastUpdateTime = now;
     return { now, deltaMs, time: now / 1000 };
   }
@@ -796,6 +801,18 @@ export class HeroSystem {
     );
 
     if (targetShift > MOTION.retargetDistance) {
+      visual.motionTarget = { x: targetX, y: targetY };
+      const distToTarget = Math.hypot(targetX - anim.visualX, targetY - anim.visualY);
+
+      if (visual.motionSequence) {
+        if (distToTarget > MOTION.forceSnapDistance) {
+          visual.motionSequence = null;
+          anim.visualX = targetX;
+          anim.visualY = targetY;
+        }
+        return;
+      }
+
       this.startMotionSequence(visual, targetX, targetY);
       return;
     }
@@ -847,7 +864,7 @@ export class HeroSystem {
 
     const sequence = new TweenSequence();
 
-    if (dist > 10) {
+    if (dist > 10 && dist <= MOTION.anticipationMaxDistance) {
       const anticipateX = startX - dirX * anticipation;
       const anticipateY = startY - dirY * anticipation;
 
@@ -1635,7 +1652,7 @@ export class HeroSystem {
 
     // Glow effect for combat
     if (state === 'combat') {
-      indicatorAlpha = 0.7 + Math.sin(Date.now() / 150) * 0.3;
+      indicatorAlpha = 0.7 + Math.sin(performance.now() / 150) * 0.3;
     }
 
     const radius = 4 * indicatorScale;

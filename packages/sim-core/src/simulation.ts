@@ -883,14 +883,6 @@ export class Simulation {
           this.state.tick
         );
 
-        // If hero died, mark inactive
-        if (hero.currentHp <= 0) {
-          hero.currentHp = 0;
-          hero.state = 'idle';
-          hero.vx = 0;
-          hero.vy = 0;
-        }
-
         // Apply reflect damage back to enemy
         if (reflectDamage > 0) {
           const damageDealt = Math.min(reflectDamage, enemy.hp);

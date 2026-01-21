@@ -13,6 +13,7 @@
  */
 
 import type { Application } from 'pixi.js';
+import { logger } from '../utils/logger.js';
 
 // =============================================================================
 // Types
@@ -188,7 +189,7 @@ export class PerformanceMonitor {
     // Add to ticker
     app.ticker.add(this.update, this);
 
-    console.log('[PerformanceMonitor] Initialized');
+    logger.debug('[PerformanceMonitor] Initialized');
   }
 
   public destroy(): void {
@@ -197,7 +198,7 @@ export class PerformanceMonitor {
     }
     this.isRunning = false;
     this.eventCallbacks.clear();
-    console.log('[PerformanceMonitor] Destroyed');
+    logger.debug('[PerformanceMonitor] Destroyed');
   }
 
   // ===========================================================================
@@ -291,7 +292,9 @@ export class PerformanceMonitor {
       this.setQuality(newQuality);
       this.qualityCooldown = this.qualityCooldownDuration;
       this.emitEvent('quality-change');
-      console.log(`[PerformanceMonitor] Quality reduced: ${this.currentQuality} -> ${newQuality} (FPS: ${Math.round(fpsAverage)})`);
+      logger.debug(
+        `[PerformanceMonitor] Quality reduced: ${this.currentQuality} -> ${newQuality} (FPS: ${Math.round(fpsAverage)})`,
+      );
     }
     // Can increase quality
     else if (fpsAverage >= this.thresholds.targetFPS - 5 && currentIndex > 0) {
@@ -299,7 +302,9 @@ export class PerformanceMonitor {
       this.setQuality(newQuality);
       this.qualityCooldown = this.qualityCooldownDuration * 2; // Longer cooldown for upgrades
       this.emitEvent('quality-change');
-      console.log(`[PerformanceMonitor] Quality increased: ${this.currentQuality} -> ${newQuality} (FPS: ${Math.round(fpsAverage)})`);
+      logger.debug(
+        `[PerformanceMonitor] Quality increased: ${this.currentQuality} -> ${newQuality} (FPS: ${Math.round(fpsAverage)})`,
+      );
     }
 
     // Memory warning

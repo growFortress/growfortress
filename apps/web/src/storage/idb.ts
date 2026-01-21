@@ -140,6 +140,7 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
 
 // Active Session Persistence (for page refresh recovery)
 export interface ActiveSessionSnapshot {
+  userId?: string;
   sessionId: string;
   sessionToken: string;
   seed: number;
@@ -233,7 +234,9 @@ export async function saveActiveSession(snapshot: ActiveSessionSnapshot): Promis
   });
 }
 
-export async function getActiveSession(): Promise<ActiveSessionSnapshot | null> {
+export async function getActiveSession(
+  userId?: string | null,
+): Promise<ActiveSessionSnapshot | null> {
   const snapshot = await getSetting<ActiveSessionSnapshot>(ACTIVE_SESSION_KEY);
   if (!snapshot) return null;
 
@@ -244,6 +247,11 @@ export async function getActiveSession(): Promise<ActiveSessionSnapshot | null> 
   }
 
   if (!snapshot.simulationState) {
+    await clearActiveSession();
+    return null;
+  }
+
+  if (userId && snapshot.userId && snapshot.userId !== userId) {
     await clearActiveSession();
     return null;
   }

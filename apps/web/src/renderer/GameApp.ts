@@ -4,6 +4,7 @@ import { GameScene, type HubState } from "./scenes/GameScene.js";
 import { ColonyScene } from "./scenes/ColonyScene.js";
 import { filterManager, FilterManager } from "./effects/FilterManager.js";
 import type { ColonyStatus } from "@arcade/protocol";
+import { logger } from "../utils/logger.js";
 
 // =============================================================================
 // WebGPU Detection & Renderer Info
@@ -201,14 +202,14 @@ export class GameApp {
   }
 
   async init() {
-    console.log("[GameApp] Starting initialization...");
+    logger.debug("[GameApp] Starting initialization...");
 
     // Check WebGPU availability
     const webgpuAvailable = await isWebGPUAvailable();
-    console.log(`[GameApp] WebGPU available: ${webgpuAvailable}`);
+    logger.debug(`[GameApp] WebGPU available: ${webgpuAvailable}`);
 
     // Initialize with preference for WebGPU if available
-    console.log("[GameApp] Initializing PixiJS Application...");
+    logger.debug("[GameApp] Initializing PixiJS Application...");
     const resizeTarget = this.canvas.parentElement ?? window;
     const initOptions = {
       canvas: this.canvas,
@@ -228,7 +229,7 @@ export class GameApp {
       });
     } catch (error) {
       if (webgpuAvailable) {
-        console.warn(
+        logger.warn(
           "[GameApp] WebGPU init failed, falling back to WebGL:",
           error,
         );
@@ -244,13 +245,13 @@ export class GameApp {
       }
     }
 
-    console.log("[GameApp] PixiJS Application initialized");
+    logger.debug("[GameApp] PixiJS Application initialized");
 
     // Get and store renderer info
     this.rendererInfo = getRendererInfo(this.app);
 
     // Log renderer info for debugging
-    console.log(
+    logger.user(
       `[GameApp] Renderer: ${this.rendererInfo.type.toUpperCase()}`,
       `| GPU: ${this.rendererInfo.renderer}`,
       `| Hardware Accelerated: ${this.rendererInfo.isHardwareAccelerated}`,
@@ -446,7 +447,7 @@ export class GameApp {
       this.colonyScene.onResize(this.currentWidth, this.currentHeight);
     }
 
-    console.log("[GameApp] Switched to colony scene");
+    logger.debug("[GameApp] Switched to colony scene");
   }
 
   /**
@@ -462,7 +463,7 @@ export class GameApp {
     // Deselect buildings when leaving
     this.colonyScene?.deselectAll();
 
-    console.log("[GameApp] Switched to game scene");
+    logger.debug("[GameApp] Switched to game scene");
   }
 
   /**

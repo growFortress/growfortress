@@ -11,6 +11,7 @@
 import type { ServerEvent } from "@arcade/protocol";
 import { CONFIG } from "../config.js";
 import { getAccessToken } from "./auth.js";
+import { logger } from "../utils/logger.js";
 
 function resolveWebSocketUrl(
   protocol: string,
@@ -74,7 +75,7 @@ class WebSocketClient {
 
     const token = getAccessToken();
     if (!token) {
-      console.warn("[WebSocket] No access token available, cannot connect");
+      logger.warn("[WebSocket] No access token available, cannot connect");
       return;
     }
 
@@ -91,7 +92,7 @@ class WebSocketClient {
       this.ws = new WebSocket(wsUrl, [authProtocol]);
 
       this.ws.onopen = () => {
-        console.log("[WebSocket] Connected");
+        logger.user("[WebSocket] Connected");
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.reconnectDelay = 1000;
@@ -104,7 +105,7 @@ class WebSocketClient {
       };
 
       this.ws.onclose = (event) => {
-        console.log("[WebSocket] Disconnected:", event.code, event.reason);
+        logger.user("[WebSocket] Disconnected:", event.code, event.reason);
         this.cleanup();
 
         // Attempt to reconnect if not manual close
@@ -114,7 +115,7 @@ class WebSocketClient {
       };
 
       this.ws.onerror = (error) => {
-        console.error("[WebSocket] Error:", error);
+        logger.error("[WebSocket] Error:", error);
         this.isConnecting = false;
       };
 
@@ -123,11 +124,11 @@ class WebSocketClient {
           const message = JSON.parse(event.data) as ServerEvent;
           this.handleMessage(message);
         } catch (error) {
-          console.error("[WebSocket] Failed to parse message:", error);
+          logger.error("[WebSocket] Failed to parse message:", error);
         }
       };
     } catch (error) {
-      console.error("[WebSocket] Failed to connect:", error);
+      logger.error("[WebSocket] Failed to connect:", error);
       this.isConnecting = false;
       this.scheduleReconnect();
     }
@@ -201,7 +202,7 @@ class WebSocketClient {
         try {
           handler(message.data);
         } catch (error) {
-          console.error("[WebSocket] Handler error:", error);
+          logger.error("[WebSocket] Handler error:", error);
         }
       }
     }
@@ -228,7 +229,7 @@ class WebSocketClient {
 
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log("[WebSocket] Max reconnect attempts reached");
+      logger.warn("[WebSocket] Max reconnect attempts reached");
       return;
     }
 
@@ -237,7 +238,7 @@ class WebSocketClient {
       this.maxReconnectDelay,
     );
 
-    console.log(
+    logger.debug(
       `[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1})`,
     );
 

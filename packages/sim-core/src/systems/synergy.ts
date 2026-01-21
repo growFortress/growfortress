@@ -275,7 +275,6 @@ function getStormForgeHeroes(state: GameState): { storm: ActiveHero; forge: Acti
   let forge: ActiveHero | undefined;
 
   for (const hero of state.heroes) {
-    if (hero.currentHp <= 0) continue;
     if (hero.definitionId === 'storm') storm = hero;
     if (hero.definitionId === 'forge') forge = hero;
     if (storm && forge) break;

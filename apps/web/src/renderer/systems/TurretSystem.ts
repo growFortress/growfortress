@@ -339,7 +339,7 @@ export class TurretSystem {
     slotByIndex: Map<number, TurretSlot>,
   ) {
     const currentTurretSlots = new Set<number>();
-    const time = Date.now() / 1000;
+    const time = performance.now() / 1000;
     const enemyLaneYCache = new Map<number, number>();
 
     for (const turret of state.turrets) {

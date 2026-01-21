@@ -151,7 +151,7 @@ export class MilitiaSystem {
     alpha: number = 1
   ) {
     const currentIds = new Set<number>();
-    const time = Date.now() / 1000;
+    const time = performance.now() / 1000;
 
     // 1. Update / Create Visuals
     for (const militia of state.militia) {

@@ -1138,8 +1138,9 @@ export class VFXSystem {
     const colors = CLASS_VFX_COLORS.plasma;
 
     for (let i = 0; i < 4; i++) {
-      const angle = (Math.PI * 2 * i) / 4 + Date.now() * 0.003;
-      const dist = 15 + Math.sin(Date.now() * 0.005 + i) * 5;
+      const now = performance.now();
+      const angle = (Math.PI * 2 * i) / 4 + now * 0.003;
+      const dist = 15 + Math.sin(now * 0.005 + i) * 5;
       const p = this.pool.acquire();
       p.x = x + Math.cos(angle) * dist;
       p.y = y + Math.sin(angle) * dist;

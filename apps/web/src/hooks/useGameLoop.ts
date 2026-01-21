@@ -57,6 +57,7 @@ import { selectedWallType, clearWallSelection } from '../components/game/WallPla
 import { selectedMilitiaType, clearMilitiaSelection } from '../components/game/MilitiaSpawnPanel.js';
 import { FP, getRelicById, analytics } from '@arcade/sim-core';
 import { gameSettings } from '../state/settings.signals.js';
+import { logger } from '../utils/logger.js';
 
 const RELIC_RARITY_SCORE: Record<RelicRarity, number> = {
   common: 1,
@@ -311,7 +312,7 @@ export function useGameLoop(
       .then(() => {
         if (destroyed) return;
 
-        console.log('[GameLoop] Renderer initialized successfully');
+        logger.debug('[GameLoop] Renderer initialized successfully');
 
         // Set up hero click handler for hub mode
         renderer.setOnHeroClick((heroId: string) => {
@@ -383,7 +384,7 @@ export function useGameLoop(
         startHubLoop();
       })
       .catch((error) => {
-        console.error('[GameLoop] Failed to initialize renderer:', error);
+        logger.error('[GameLoop] Failed to initialize renderer:', error);
         // Still try to start the hub loop - some rendering is better than none
         startHubLoop();
       });
@@ -544,10 +545,10 @@ export function useGameLoop(
   }, []);
 
   const updateColonies = useCallback((colonies: import('@arcade/protocol').ColonyStatus[]): void => {
-    console.log('[useGameLoop] updateColonies called with:', colonies.length, 'colonies');
+    logger.debug('[useGameLoop] updateColonies called with:', colonies.length, 'colonies');
     const renderer = rendererRef.current;
     if (!renderer) {
-      console.log('[useGameLoop] No renderer available!');
+      logger.debug('[useGameLoop] No renderer available!');
       return;
     }
     renderer.setColonies(colonies);
