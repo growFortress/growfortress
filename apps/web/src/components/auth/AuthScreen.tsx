@@ -79,6 +79,27 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
         </h1>
         <p class={styles.tagline}>{t('common:app.tagline')}</p>
 
+        {/* Save Info Box */}
+        <div class={styles.saveInfoBox}>
+          <div class={styles.saveInfoTitle}>{t('saveInfo.title')}</div>
+          <div class={styles.saveInfoContent}>
+            <div class={styles.saveInfoItem}>
+              <span class={styles.saveInfoIcon}>🎮</span>
+              <div>
+                <div class={styles.saveInfoLabel}>{t('saveInfo.guest')}</div>
+                <div class={styles.saveInfoWarning}>{t('saveInfo.guestWarning')}</div>
+              </div>
+            </div>
+            <div class={styles.saveInfoItem}>
+              <span class={styles.saveInfoIcon}>✅</span>
+              <div>
+                <div class={styles.saveInfoLabel}>{t('saveInfo.account')}</div>
+                <div class={styles.saveInfoBenefit}>{t('saveInfo.accountBenefit')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {authScreen.value === 'login' && (
           <>
             <LoginForm onSubmit={onLogin} onForgotPassword={showForgotPassword} />
@@ -136,6 +157,21 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
         {authError.value && authScreen.value !== 'forgot_password' && authScreen.value !== 'reset_password' && (
           <div class={styles.error}>{authError.value}</div>
         )}
+
+        {/* Analytics info */}
+        <div class={styles.analyticsInfo}>
+          <span class={styles.analyticsIcon}>📊</span>
+          <div class={styles.analyticsText}>
+            {t('analytics.info')}{' '}
+            <button
+              type="button"
+              class={styles.analyticsLink}
+              onClick={() => openLegalModal('privacy')}
+            >
+              {t('analytics.details')}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

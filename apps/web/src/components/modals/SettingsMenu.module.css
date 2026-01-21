@@ -1,6 +1,6 @@
 .menu {
-  width: 90vw;
-  max-width: 500px;
+  width: 95vw;
+  max-width: 750px;
   background: var(--color-bg-panel);
   border: var(--border-primary);
   border-radius: var(--radius-lg);
@@ -111,6 +111,54 @@
   gap: 1.5rem;
 }
 
+/* Save Status Info Box */
+.saveStatusBox {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-success);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.saveStatusHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.saveStatusIcon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.saveStatusTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.saveStatusContent {
+  padding-left: 30px;
+}
+
+.saveStatusLabel {
+  font-size: 13px;
+  color: var(--color-success);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.saveStatusDesc {
+  font-size: 12px;
+  color: var(--color-text-60);
+  line-height: 1.5;
+}
+
 .settingRow {
   display: flex;
   justify-content: space-between;
@@ -131,6 +179,55 @@
   width: 3rem;
   text-align: right;
   font-family: monospace;
+}
+
+/* Audio Grid - 2 columns for volume sliders */
+.audioGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.audioGrid .settingRow {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.audioGrid .settingRow input[type="range"] {
+  width: 100%;
+}
+
+.audioGrid .settingRow span {
+  width: auto;
+}
+
+/* Account Basic Grid - 2 columns for language, country, currency */
+.accountBasicGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 1.5rem;
+  margin: 1rem 0 2rem 0;
+}
+
+.accountBasicGrid .settingRow {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.accountBasicGrid .settingRow label {
+  font-size: 0.9rem;
+  color: var(--color-text-dim);
+}
+
+/* Account Sections Grid - 2 columns for Email and Password */
+.accountSectionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .prioritySection {
@@ -258,13 +355,13 @@
 }
 
 .footer {
-  padding: 1rem;
+  padding: 1.5rem;
   text-align: center;
-  border-top: 1px solid var(--color-neutral-dark);
+  border-top: 1px solid var(--color-border);
   background: rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1.5rem;
 }
 
 .version {
@@ -311,7 +408,7 @@
 .communitySection {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 1rem;
 }
 
 .communityTitle {
@@ -323,10 +420,10 @@
 }
 
 .communityLinks {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  justify-items: center;
 }
 
 .communityLink {
@@ -361,10 +458,11 @@
 
 /* Account Section Styles */
 .accountSection {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-neutral-dark);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .sectionHeader {
@@ -622,4 +720,30 @@
 .confirmDeleteBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Responsiveness */
+@media (max-width: 900px) {
+  .audioGrid,
+  .accountBasicGrid,
+  .accountSectionsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .menu {
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .content {
+    padding: 1rem;
+  }
+  
+  .footer {
+    padding: 1rem;
+  }
 }

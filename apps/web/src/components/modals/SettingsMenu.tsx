@@ -236,56 +236,59 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
             }
           />
         </div>
-        <div class={styles.settingRow}>
-          <label>{t("settings.audio.masterVolume")}</label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={s.masterVolume}
-            disabled={s.muted}
-            onInput={(e) =>
-              updateAudioSettings({
-                masterVolume: parseFloat(e.currentTarget.value),
-              })
-            }
-          />
-          <span>{Math.round(s.masterVolume * 100)}%</span>
-        </div>
-        <div class={styles.settingRow}>
-          <label>{t("settings.audio.musicVolume")}</label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={s.musicVolume}
-            disabled={s.muted}
-            onInput={(e) =>
-              updateAudioSettings({
-                musicVolume: parseFloat(e.currentTarget.value),
-              })
-            }
-          />
-          <span>{Math.round(s.musicVolume * 100)}%</span>
-        </div>
-        <div class={styles.settingRow}>
-          <label>{t("settings.audio.sfxVolume")}</label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={s.sfxVolume}
-            disabled={s.muted}
-            onInput={(e) =>
-              updateAudioSettings({
-                sfxVolume: parseFloat(e.currentTarget.value),
-              })
-            }
-          />
-          <span>{Math.round(s.sfxVolume * 100)}%</span>
+        
+        <div class={styles.audioGrid}>
+          <div class={styles.settingRow}>
+            <label>{t("settings.audio.masterVolume")}</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={s.masterVolume}
+              disabled={s.muted}
+              onInput={(e) =>
+                updateAudioSettings({
+                  masterVolume: parseFloat(e.currentTarget.value),
+                })
+              }
+            />
+            <span>{Math.round(s.masterVolume * 100)}%</span>
+          </div>
+          <div class={styles.settingRow}>
+            <label>{t("settings.audio.musicVolume")}</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={s.musicVolume}
+              disabled={s.muted}
+              onInput={(e) =>
+                updateAudioSettings({
+                  musicVolume: parseFloat(e.currentTarget.value),
+                })
+              }
+            />
+            <span>{Math.round(s.musicVolume * 100)}%</span>
+          </div>
+          <div class={styles.settingRow}>
+            <label>{t("settings.audio.sfxVolume")}</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={s.sfxVolume}
+              disabled={s.muted}
+              onInput={(e) =>
+                updateAudioSettings({
+                  sfxVolume: parseFloat(e.currentTarget.value),
+                })
+              }
+            />
+            <span>{Math.round(s.sfxVolume * 100)}%</span>
+          </div>
         </div>
       </div>
     );
@@ -412,34 +415,51 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
         {activeTab === "game" && renderGameSettings()}
         {activeTab === "account" && (
           <div class={styles.settingsGroup}>
-            <div class={styles.settingRow}>
-              <label>{t("settings.account.language")}</label>
-              <LanguageSwitcher />
-            </div>
-            <div class={styles.settingRow}>
-              <label>{t("settings.account.country")}</label>
-              <span class={styles.currentValue}>{getCountryLabel()}</span>
-            </div>
-            <div class={styles.settingRow}>
-              <label>{t("settings.account.currency")}</label>
-              <div>
-                <select
-                  value={preferredCurrency.value}
-                  onChange={handleCurrencyChange}
-                  disabled={currencyLoading}
-                >
-                  <option value="PLN">PLN</option>
-                  <option value="EUR">EUR</option>
-                  <option value="USD">USD</option>
-                </select>
-                {currencyError && (
-                  <div class={styles.errorText}>{currencyError}</div>
-                )}
+            {/* Save Status Info Box - Full Width */}
+            <div class={styles.saveStatusBox}>
+              <div class={styles.saveStatusHeader}>
+                <span class={styles.saveStatusIcon}>💾</span>
+                <span class={styles.saveStatusTitle}>{t("settings.account.saveStatus")}</span>
+              </div>
+              <div class={styles.saveStatusContent}>
+                <div class={styles.saveStatusLabel}>{t("settings.account.saveStatusCloud")}</div>
+                <div class={styles.saveStatusDesc}>{t("settings.account.saveStatusCloudDesc")}</div>
               </div>
             </div>
 
-            {/* Email Section */}
-            <div class={styles.accountSection}>
+            {/* Basic Settings Grid - 2 columns */}
+            <div class={styles.accountBasicGrid}>
+              <div class={styles.settingRow}>
+                <label>{t("settings.account.language")}</label>
+                <LanguageSwitcher />
+              </div>
+              <div class={styles.settingRow}>
+                <label>{t("settings.account.country")}</label>
+                <span class={styles.currentValue}>{getCountryLabel()}</span>
+              </div>
+              <div class={styles.settingRow}>
+                <label>{t("settings.account.currency")}</label>
+                <div>
+                  <select
+                    value={preferredCurrency.value}
+                    onChange={handleCurrencyChange}
+                    disabled={currencyLoading}
+                  >
+                    <option value="PLN">PLN</option>
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                  {currencyError && (
+                    <div class={styles.errorText}>{currencyError}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Email and Password Grid - 2 columns */}
+            <div class={styles.accountSectionsGrid}>
+              {/* Email Section */}
+              <div class={styles.accountSection}>
               <div class={styles.sectionHeader}>
                 <span class={styles.sectionIcon}>📧</span>
                 <span class={styles.sectionTitle}>{t("settings.account.email")}</span>
@@ -495,10 +515,10 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
               {emailSuccess && (
                 <p class={styles.successMessage}>{t("settings.account.emailUpdated")}</p>
               )}
-            </div>
+              </div>
 
-            {/* Password Section */}
-            <div class={styles.accountSection}>
+              {/* Password Section */}
+              <div class={styles.accountSection}>
               <div class={styles.sectionHeader}>
                 <span class={styles.sectionIcon}>🔒</span>
                 <span class={styles.sectionTitle}>{t("settings.account.password")}</span>
@@ -566,9 +586,10 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
                   </div>
                 </form>
               )}
+              </div>
             </div>
 
-            {/* Bonus Code Section */}
+            {/* Bonus Code Section - Full Width */}
             <div class={styles.accountSection}>
               <div class={styles.sectionHeader}>
                 <span class={styles.sectionIcon}>🎁</span>
