@@ -7,7 +7,7 @@ import {
   getWaveComposition,
 } from '../../data/enemies.js';
 import { PILLAR_DEFINITIONS, getPillarForWave } from '../../data/pillars.js';
-import type { EnemyType } from '../../types.js';
+import type { EnemyType, PillarId } from '../../types.js';
 
 // ============================================================================
 // TEST 1: ALL 19 ENEMY TYPES
