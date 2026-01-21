@@ -232,6 +232,7 @@ export async function attackBoss(
   }
 
   const guildId = membership.guildId;
+  const heroId = membership.battleHeroId;
   const boss = await getCurrentBoss();
 
   // Check if boss is still active
@@ -284,7 +285,7 @@ export async function attackBoss(
         guildId,
         userId,
         damage: BigInt(damage),
-        heroId: membership.battleHeroId,
+        heroId,
         heroTier,
         heroPower,
       },

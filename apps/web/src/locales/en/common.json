@@ -121,7 +121,8 @@
   "app": {
     "gameAriaLabel": "Grow Fortress Game",
     "leaderboardAriaLabel": "Player ranking",
-    "notificationsAriaLabel": "Notifications"
+    "notificationsAriaLabel": "Notifications",
+    "tagline": "Tower Defense"
   },
   "fortressPanel": {
     "profile": "Profile",
