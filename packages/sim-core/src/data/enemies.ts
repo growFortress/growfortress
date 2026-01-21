@@ -20,7 +20,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   runner: {
     type: 'runner',
     baseHp: 29,
-    baseSpeed: 1.94,  // Reduced from 2.2 for balance
+    baseSpeed: 2.33,  // Increased from 1.94 (previously 2.2)
     baseDamage: 8,
     goldReward: 1,  // Reduced from 2 for economy balance
     dustReward: 1,
@@ -29,7 +29,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   bruiser: {
     type: 'bruiser',
     baseHp: 144,
-    baseSpeed: 0.70,  // Reduced from 0.8 for balance
+    baseSpeed: 0.84,  // Increased from 0.70 (previously 0.8)
     baseDamage: 21,
     goldReward: 5,  // Reduced from 7 for economy balance
     dustReward: 2,
@@ -38,7 +38,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   leech: {
     type: 'leech',
     baseHp: 58,
-    baseSpeed: 1.41,  // Reduced from 1.6 for balance
+    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
     baseDamage: 5,
     goldReward: 4,  // Reduced from 5 for economy balance
     dustReward: 1,
@@ -49,7 +49,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   gangster: {
     type: 'gangster',
     baseHp: 36,
-    baseSpeed: 1.58,  // Reduced from 1.8 for balance
+    baseSpeed: 1.90,  // Increased from 1.58 (previously 1.8)
     baseDamage: 11,
     goldReward: 3,  // Reduced from 4 for economy balance
     dustReward: 1,
@@ -58,7 +58,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   thug: {
     type: 'thug',
     baseHp: 86,
-    baseSpeed: 1.06,  // Reduced from 1.2 for balance
+    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
     baseDamage: 18,
     goldReward: 4,  // Reduced from 6 for economy balance
     dustReward: 1,
@@ -67,7 +67,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   mafia_boss: {
     type: 'mafia_boss',
     baseHp: 431,
-    baseSpeed: 0.57,  // Reduced from 0.65 for balance
+    baseSpeed: 0.68,  // Increased from 0.57 (previously 0.65)
     baseDamage: 36,
     goldReward: 18,  // Reduced from 25 for economy balance
     dustReward: 5,
@@ -78,7 +78,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   robot: {
     type: 'robot',
     baseHp: 65,
-    baseSpeed: 1.23,  // Reduced from 1.4 for balance
+    baseSpeed: 1.48,  // Increased from 1.23 (previously 1.4)
     baseDamage: 15,
     goldReward: 4,  // Reduced from 5 for economy balance
     dustReward: 1,
@@ -87,7 +87,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   drone: {
     type: 'drone',
     baseHp: 21,
-    baseSpeed: 2.11,  // Reduced from 2.4 for balance
+    baseSpeed: 2.53,  // Increased from 2.11 (previously 2.4)
     baseDamage: 8,
     goldReward: 2,  // Reduced from 3 for economy balance
     dustReward: 1,
@@ -96,7 +96,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   ai_core: {
     type: 'ai_core',
     baseHp: 719,
-    baseSpeed: 0.35,  // Reduced from 0.4 for balance
+    baseSpeed: 0.42,  // Increased from 0.35 (previously 0.4)
     baseDamage: 44,
     goldReward: 28,  // Reduced from 40 for economy balance
     dustReward: 8,
@@ -107,7 +107,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   sentinel: {
     type: 'sentinel',
     baseHp: 288,
-    baseSpeed: 0.88,  // Reduced from 1.0 for balance
+    baseSpeed: 1.06,  // Increased from 0.88 (previously 1.0)
     baseDamage: 29,
     goldReward: 9,  // Reduced from 12 for economy balance
     dustReward: 3,
@@ -116,7 +116,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   mutant_hunter: {
     type: 'mutant_hunter',
     baseHp: 115,
-    baseSpeed: 1.41,  // Reduced from 1.6 for balance
+    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
     baseDamage: 21,
     goldReward: 5,  // Reduced from 7 for economy balance
     dustReward: 2,
@@ -127,7 +127,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   kree_soldier: {
     type: 'kree_soldier',
     baseHp: 100,
-    baseSpeed: 1.23,  // Reduced from 1.4 for balance
+    baseSpeed: 1.48,  // Increased from 1.23 (previously 1.4)
     baseDamage: 18,
     goldReward: 5,  // Reduced from 7 for economy balance
     dustReward: 2,
@@ -136,7 +136,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   skrull: {
     type: 'skrull',
     baseHp: 73,
-    baseSpeed: 1.41,  // Reduced from 1.6 for balance
+    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
     baseDamage: 15,
     goldReward: 4,  // Reduced from 6 for economy balance
     dustReward: 1,
@@ -145,7 +145,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   cosmic_beast: {
     type: 'cosmic_beast',
     baseHp: 575,
-    baseSpeed: 0.70,  // Reduced from 0.8 for balance
+    baseSpeed: 0.84,  // Increased from 0.70 (previously 0.8)
     baseDamage: 50,
     goldReward: 21,  // Reduced from 30 for economy balance
     dustReward: 6,
@@ -156,7 +156,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   demon: {
     type: 'demon',
     baseHp: 130,
-    baseSpeed: 1.06,  // Reduced from 1.2 for balance
+    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
     baseDamage: 26,
     goldReward: 6,  // Reduced from 9 for economy balance
     dustReward: 2,
@@ -165,7 +165,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   sorcerer: {
     type: 'sorcerer',
     baseHp: 58,
-    baseSpeed: 0.88,  // Reduced from 1.0 for balance
+    baseSpeed: 1.06,  // Increased from 0.88 (previously 1.0)
     baseDamage: 36,
     goldReward: 7,  // Reduced from 10 for economy balance
     dustReward: 3,
@@ -174,7 +174,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   dimensional_being: {
     type: 'dimensional_being',
     baseHp: 863,
-    baseSpeed: 0.44,  // Reduced from 0.5 for balance
+    baseSpeed: 0.53,  // Increased from 0.44 (previously 0.5)
     baseDamage: 58,
     goldReward: 35,  // Reduced from 50 for economy balance
     dustReward: 10,
@@ -185,7 +185,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   einherjar: {
     type: 'einherjar',
     baseHp: 173,
-    baseSpeed: 1.06,  // Reduced from 1.2 for balance
+    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
     baseDamage: 31,
     goldReward: 9,  // Reduced from 12 for economy balance
     dustReward: 3,
@@ -194,7 +194,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   titan: {
     type: 'titan',
     baseHp: 1150,
-    baseSpeed: 0.31,  // Reduced from 0.35 for balance
+    baseSpeed: 0.37,  // Increased from 0.31 (previously 0.35)
     baseDamage: 73,
     goldReward: 42,  // Reduced from 60 for economy balance
     dustReward: 13,
@@ -203,7 +203,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   god: {
     type: 'god',
     baseHp: 1438,
-    baseSpeed: 0.70,  // Reduced from 0.8 for balance
+    baseSpeed: 0.84,  // Increased from 0.70 (previously 0.8)
     baseDamage: 86,
     goldReward: 70,  // Reduced from 100 for economy balance
     dustReward: 25,
@@ -217,7 +217,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   catapult: {
     type: 'catapult',
     baseHp: 100,
-    baseSpeed: 0.57,  // Reduced from 0.65 for balance
+    baseSpeed: 0.68,  // Increased from 0.57 (previously 0.65)
     baseDamage: 50,
     goldReward: 11,  // Reduced from 15 for economy balance
     dustReward: 3,
@@ -226,7 +226,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   sapper: {
     type: 'sapper',
     baseHp: 56,
-    baseSpeed: 1.94,  // Reduced from 2.2 for balance
+    baseSpeed: 2.33,  // Increased from 1.94 (previously 2.2)
     baseDamage: 10,
     goldReward: 7,  // Reduced from 10 for economy balance
     dustReward: 2,
@@ -235,7 +235,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   healer: {
     type: 'healer',
     baseHp: 44,
-    baseSpeed: 1.06,  // Reduced from 1.2 for balance
+    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
     baseDamage: 6,
     goldReward: 8,  // Reduced from 12 for economy balance
     dustReward: 2,
@@ -244,7 +244,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   shielder: {
     type: 'shielder',
     baseHp: 75,
-    baseSpeed: 0.88,  // Reduced from 1.0 for balance
+    baseSpeed: 1.06,  // Increased from 0.88 (previously 1.0)
     baseDamage: 13,
     goldReward: 10,  // Reduced from 14 for economy balance
     dustReward: 3,
@@ -253,7 +253,7 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   teleporter: {
     type: 'teleporter',
     baseHp: 38,
-    baseSpeed: 1.41,  // Reduced from 1.6 for balance
+    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
     baseDamage: 15,
     goldReward: 6,  // Reduced from 8 for economy balance
     dustReward: 2,

@@ -18,7 +18,7 @@ describe('ENEMY_ARCHETYPES', () => {
     const runner = ENEMY_ARCHETYPES.runner;
     expect(runner.type).toBe('runner');
     expect(runner.baseHp).toBe(29);
-    expect(runner.baseSpeed).toBe(1.94);
+    expect(runner.baseSpeed).toBe(2.33);
     expect(runner.baseDamage).toBe(8);
     expect(runner.goldReward).toBe(1);  // Reduced for economy balance
     expect(runner.dustReward).toBe(1);
@@ -28,7 +28,7 @@ describe('ENEMY_ARCHETYPES', () => {
     const bruiser = ENEMY_ARCHETYPES.bruiser;
     expect(bruiser.type).toBe('bruiser');
     expect(bruiser.baseHp).toBe(144);
-    expect(bruiser.baseSpeed).toBe(0.70);
+    expect(bruiser.baseSpeed).toBe(0.84);
     expect(bruiser.baseDamage).toBe(21);
     expect(bruiser.goldReward).toBe(5);  // Reduced for economy balance
     expect(bruiser.dustReward).toBe(2);  // Reduced from 3
@@ -38,7 +38,7 @@ describe('ENEMY_ARCHETYPES', () => {
     const leech = ENEMY_ARCHETYPES.leech;
     expect(leech.type).toBe('leech');
     expect(leech.baseHp).toBe(58);
-    expect(leech.baseSpeed).toBe(1.41);
+    expect(leech.baseSpeed).toBe(1.69);
     expect(leech.baseDamage).toBe(5);
     expect(leech.goldReward).toBe(4);  // Reduced for economy balance
     expect(leech.dustReward).toBe(1);  // Reduced from 2
@@ -122,8 +122,8 @@ describe('getEnemyStats', () => {
   describe('speed', () => {
     it('returns speed as fixed-point', () => {
       const stats = getEnemyStats('runner', 1, false);
-      // 1.94 units/tick / 30 Hz in fixed-point (speed was reduced from 2.2)
-      expect(stats.speed).toBe(FP.fromFloat(1.94 / 30));
+      // 2.33 units/tick / 30 Hz in fixed-point (speed was increased by 20%)
+      expect(stats.speed).toBe(FP.fromFloat(2.33 / 30));
     });
 
     it('speed is not affected by elite status', () => {

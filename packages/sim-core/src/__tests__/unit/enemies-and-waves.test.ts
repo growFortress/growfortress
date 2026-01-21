@@ -74,7 +74,7 @@ describe('All Enemy Types', () => {
   describe('Streets Pillar Enemies', () => {
     it('gangster has correct stats', () => {
       expect(ENEMY_ARCHETYPES.gangster.baseHp).toBe(36);
-      expect(ENEMY_ARCHETYPES.gangster.baseSpeed).toBe(1.58);
+      expect(ENEMY_ARCHETYPES.gangster.baseSpeed).toBe(1.90);
       expect(ENEMY_ARCHETYPES.gangster.baseDamage).toBe(11);
     });
 
