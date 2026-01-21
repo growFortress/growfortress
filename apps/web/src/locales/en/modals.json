@@ -73,6 +73,7 @@
       "codeRedeemFailed": "Failed to redeem code",
       "codeRedeemed": "Code redeemed!",
       "currencyUpdateFailed": "Failed to update currency",
+      "aboutStudio": "About PlazaWorks Studio",
       "support": "Support & Help",
       "logout": "Log Out",
       "deleteAccount": "Delete Account",
@@ -138,7 +139,8 @@
       "cookies": "Cookies",
       "payment": "Payments"
     },
-    "footer": "© {{year}} PlazaWorks • help@growfortress.com"
+    "footer": "© {{year}} PlazaWorks • help@growfortress.com",
+    "madeBy": "Made by"
   },
   "cookieBanner": {
     "label": "Cookie notice",

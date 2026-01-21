@@ -73,6 +73,7 @@
       "codeRedeemFailed": "Nie udało się zrealizować kodu",
       "codeRedeemed": "Kod zrealizowany!",
       "currencyUpdateFailed": "Nie udało się zaktualizować waluty",
+      "aboutStudio": "O studiu PlazaWorks",
       "support": "Pomoc i wsparcie",
       "logout": "Wyloguj",
       "deleteAccount": "Usuń konto",
@@ -138,7 +139,8 @@
       "cookies": "Cookies",
       "payment": "Płatności"
     },
-    "footer": "© {{year}} PlazaWorks • help@growfortress.com"
+    "footer": "© {{year}} PlazaWorks • help@growfortress.com",
+    "madeBy": "Stworzone przez"
   },
   "cookieBanner": {
     "label": "Informacja o cookies",

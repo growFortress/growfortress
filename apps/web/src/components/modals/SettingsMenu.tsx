@@ -415,18 +415,6 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
         {activeTab === "game" && renderGameSettings()}
         {activeTab === "account" && (
           <div class={styles.settingsGroup}>
-            {/* Save Status Info Box - Full Width */}
-            <div class={styles.saveStatusBox}>
-              <div class={styles.saveStatusHeader}>
-                <span class={styles.saveStatusIcon}>💾</span>
-                <span class={styles.saveStatusTitle}>{t("settings.account.saveStatus")}</span>
-              </div>
-              <div class={styles.saveStatusContent}>
-                <div class={styles.saveStatusLabel}>{t("settings.account.saveStatusCloud")}</div>
-                <div class={styles.saveStatusDesc}>{t("settings.account.saveStatusCloudDesc")}</div>
-              </div>
-            </div>
-
             {/* Basic Settings Grid - 2 columns */}
             <div class={styles.accountBasicGrid}>
               <div class={styles.settingRow}>
@@ -634,6 +622,18 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
               </form>
             </div>
 
+            <a
+              href={`/company/index-${language === "pl" ? "pl" : "en"}.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={styles.menuItem}
+              style={{ textDecoration: "none" }}
+            >
+              <span class={styles.menuIcon}>🏢</span>
+              <span class={styles.menuLabel}>
+                {t("settings.account.aboutStudio")}
+              </span>
+            </a>
             <button
               class={styles.menuItem}
               onClick={() => {
@@ -787,7 +787,7 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
         </div>
 
         {/* Version */}
-        <span class={styles.version}>Grow Fortress v0.1</span>
+        <span class={styles.version}>Grow Fortress v1.0</span>
       </div>
     </Modal>
   );

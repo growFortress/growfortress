@@ -217,6 +217,16 @@ export function SupportPage(): JSX.Element | null {
               <span class={styles.navIcon}>📜</span>
               {t('support.sections.legal')}
             </button>
+            <a
+              href={`/company/index-${lang}.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={styles.navItem}
+              style={{ textDecoration: 'none' }}
+            >
+              <span class={styles.navIcon}>🏢</span>
+              {t('support.aboutStudio')}
+            </a>
           </nav>
         </aside>
 

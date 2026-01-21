@@ -408,6 +408,46 @@
   outline-offset: 2px;
 }
 
+/* Studio info */
+.studioInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.studioIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.studioText {
+  font-size: 11px;
+  color: var(--color-text-40);
+  line-height: 1.5;
+}
+
+.studioLink {
+  color: var(--color-primary-70);
+  font-size: 11px;
+  font-family: var(--font-body);
+  text-decoration: underline;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.studioLink:hover {
+  color: var(--color-primary);
+}
+
+.studioLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 @media (max-height: 720px) {
   .authScreen {
     align-items: flex-start;

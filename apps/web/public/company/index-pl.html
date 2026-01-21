@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlazaWorks | Marcin Płaza - Web Development & Game Dev</title>
+    <meta name="description" content="PlazaWorks - Tworzenie stron, aplikacji, systemów, integracji i rozwiązań AI. Twórca Grow Fortress.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-elevated: #1a1a24;
+            --accent-cyan: #00ffd5;
+            --accent-purple: #a855f7;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --border-color: #2a2a3a;
+            --glow-cyan: 0 0 30px rgba(0, 255, 213, 0.3);
+            --glow-purple: 0 0 30px rgba(168, 85, 247, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 213, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 213, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(168, 85, 247, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 50%, rgba(0, 255, 213, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 0% 80%, rgba(59, 130, 246, 0.1), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-bracket {
+            color: var(--text-muted);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::before {
+            content: '>';
+            position: absolute;
+            left: -1rem;
+            opacity: 0;
+            color: var(--accent-cyan);
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .nav-links a:hover::before {
+            opacity: 1;
+            left: -0.8rem;
+        }
+
+        .lang-switch a {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--accent-cyan);
+            border-radius: 6px;
+            color: var(--accent-cyan) !important;
+            font-weight: 500;
+        }
+
+        .lang-switch a::before {
+            display: none !important;
+        }
+
+        .lang-switch a:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-dark) !important;
+        }
+
+        /* Main Content */
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        section {
+            padding: 6rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 8rem;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text {
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 213, 0.1);
+            border: 1px solid rgba(0, 255, 213, 0.3);
+            border-radius: 100px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1.5rem;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: var(--bg-dark);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(0, 255, 213, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* Terminal Card */
+        .terminal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            animation: fadeInUp 1s ease 0.3s both;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1rem;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #febc2e; }
+        .terminal-dot.green { background: #28c840; }
+
+        .terminal-title {
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .terminal-line {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .terminal-prompt {
+            color: var(--accent-cyan);
+        }
+
+        .terminal-command {
+            color: var(--text-primary);
+        }
+
+        .terminal-output {
+            color: var(--text-secondary);
+            padding-left: 1.5rem;
+        }
+
+        .terminal-output.success {
+            color: #28c840;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background: var(--accent-cyan);
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+        }
+
+        /* Portfolio Section */
+        .portfolio-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .portfolio-image {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+        }
+
+        .portfolio-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, 
+                rgba(0, 255, 213, 0.1), 
+                rgba(168, 85, 247, 0.1));
+            z-index: 1;
+        }
+
+        .portfolio-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 2rem;
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 30px rgba(0, 255, 213, 0.5));
+        }
+
+        .portfolio-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .portfolio-info h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .portfolio-info h3 a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .portfolio-info h3 a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .portfolio-info p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-tag {
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Services Section */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .service-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .service-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .service-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Tech Stack Section */
+        .tech-section {
+            background: var(--bg-card);
+            border-radius: 24px;
+            margin: 2rem auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .tech-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .tech-category h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tech-category h4::before {
+            content: '//';
+            color: var(--text-muted);
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tech-pill {
+            padding: 0.4rem 0.9rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .tech-pill:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+
+        /* About Section */
+        .about-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        .about-text h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-text p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .company-info {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .company-detail {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+        }
+
+        .detail-value {
+            color: var(--accent-cyan);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Contact Section */
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .contact-info h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .contact-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .contact-link:hover {
+            border-color: var(--accent-cyan);
+            transform: translateX(8px);
+        }
+
+        .contact-link-icon {
+            font-size: 1.5rem;
+        }
+
+        .contact-form {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-cyan);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-content,
+            .portfolio-showcase,
+            .about-content,
+            .contact-content {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            section {
+                padding: 4rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-gradient"></div>
+
+    <nav>
+        <div class="nav-content">
+            <a href="#" class="logo">
+                <span class="logo-bracket">[</span>PlazaWorks<span class="logo-bracket">]</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#portfolio">portfolio</a></li>
+                <li><a href="#uslugi">usługi</a></li>
+                <li><a href="#o-mnie">o mnie</a></li>
+                <li><a href="#kontakt">kontakt</a></li>
+                <li class="lang-switch"><a href="index-en.html">EN</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        <span class="badge-dot"></span>
+                        Dostępny do współpracy
+                    </div>
+                    <h1>
+                        Tworzę <span class="highlight">cyfrowe doświadczenia</span> które działają
+                    </h1>
+                    <p class="hero-description">
+                        Full-stack developer & twórca gier webowych. Buduję strony, aplikacje, systemy i rozwiązania AI. Od pomysłu do wdrożenia.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#kontakt" class="btn btn-primary">
+                            Porozmawiajmy →
+                        </a>
+                        <a href="#portfolio" class="btn btn-secondary">
+                            Zobacz projekty
+                        </a>
+                    </div>
+                </div>
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                        <span class="terminal-title">plazaworks.sh</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">whoami</span>
+                        </div>
+                        <div class="terminal-output">Marcin Płaza @ PlazaWorks</div>
+                        
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">cat skills.txt</span>
+                        </div>
+                        <div class="terminal-output">React, Vue, Next.js, TypeScript</div>
+                        <div class="terminal-output">Node.js, Express, NestJS, PHP</div>
+                        <div class="terminal-output">Three.js, Canvas, WebGL, Pixi.js</div>
+                        <div class="terminal-output">PostgreSQL, MongoDB, Redis, MySQL</div>
+                        <div class="terminal-output">Docker, Linux, Nginx, CI/CD</div>
+                        <div class="terminal-output">REST API, GraphQL, WebSockets</div>
+                        <div class="terminal-output">OpenAI, LangChain, AI Integration</div>
+                        <div class="terminal-output">Git, AWS, Cloudflare, Vercel</div>
+                        
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command">./deploy --project growfortress</span>
+                        </div>
+                        <div class="terminal-output success">✓ Deployed to growfortress.com</div>
+                        
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span>
+                            <span class="terminal-command"><span class="typing-cursor"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="portfolio">
+            <div class="section-header">
+                <span class="section-tag">// portfolio</span>
+                <h2 class="section-title">Flagowy projekt</h2>
+            </div>
+            <div class="portfolio-showcase animate-on-scroll">
+                <div class="portfolio-image">
+                    <div class="portfolio-placeholder">
+                        <span class="game-icon">🏰</span>
+                        <span class="portfolio-label">Grow Fortress: Age of Super Hero</span>
+                    </div>
+                </div>
+                <div class="portfolio-info">
+                    <h3><a href="https://growfortress.com" target="_blank">Grow Fortress →</a></h3>
+                    <p>
+                        Tower Defense RPG w przeglądarce. Broń swojej twierdzy przed falami wrogów, 
+                        rozwijaj bohaterów, zbieraj loot i buduj potężne obrony. Gra łączy mechaniki 
+                        idle games z aktywną rozgrywką strategiczną.
+                    </p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">React</span>
+                        <span class="tech-tag">TypeScript</span>
+                        <span class="tech-tag">HTML5 Canvas</span>
+                        <span class="tech-tag">WebGL</span>
+                        <span class="tech-tag">Node.js</span>
+                    </div>
+                    <a href="https://growfortress.com" target="_blank" class="btn btn-primary">
+                        Zagraj teraz →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="uslugi">
+            <div class="section-header">
+                <span class="section-tag">// usługi</span>
+                <h2 class="section-title">Jak mogę pomóc?</h2>
+            </div>
+            <div class="services-grid">
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon">🌐</div>
+                    <h3>Strony internetowe</h3>
+                    <p>Nowoczesne, szybkie strony i landing page. Od wizytówek po rozbudowane serwisy. Responsywne, zoptymalizowane pod SEO.</p>
+                </div>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon">📱</div>
+                    <h3>Aplikacje webowe</h3>
+                    <p>Interaktywne aplikacje SPA/PWA. Panele administracyjne, dashboardy, narzędzia biznesowe. React, Vue, Node.js.</p>
+                </div>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon">⚙️</div>
+                    <h3>Systemy i backend</h3>
+                    <p>Skalowalne API, mikroserwisy, bazy danych. Architektura dopasowana do Twoich potrzeb. Od MVP po rozwiązania enterprise.</p>
+                </div>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon">🔗</div>
+                    <h3>Integracje</h3>
+                    <p>Łączenie systemów, API, automatyzacja procesów. Płatności, CRM, ERP, zewnętrzne serwisy. Wszystko działa razem.</p>
+                </div>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon">🔒</div>
+                    <h3>Bezpieczeństwo</h3>
+                    <p>Audyty bezpieczeństwa, implementacja zabezpieczeń, OWASP best practices. Ochrona danych i infrastruktury.</p>
+                </div>
+                <div class="service-card animate-on-scroll">
+                    <div class="service-icon">🤖</div>
+                    <h3>Rozwiązania AI</h3>
+                    <p>Integracja modeli AI, chatboty, automatyzacja z LLM, analiza danych. Praktyczne zastosowania sztucznej inteligencji.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech-stack" class="tech-section">
+            <div class="section-header">
+                <span class="section-tag">// tech stack</span>
+                <h2 class="section-title">Narzędzia, które znam</h2>
+            </div>
+            <div class="tech-categories animate-on-scroll">
+                <div class="tech-category">
+                    <h4>Frontend</h4>
+                    <div class="tech-tags">
+                        <span class="tech-pill">React</span>
+                        <span class="tech-pill">Vue.js</span>
+                        <span class="tech-pill">Next.js</span>
+                        <span class="tech-pill">TypeScript</span>
+                        <span class="tech-pill">JavaScript</span>
+                        <span class="tech-pill">HTML5</span>
+                        <span class="tech-pill">CSS3</span>
+                        <span class="tech-pill">Tailwind</span>
+                        <span class="tech-pill">SASS</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>Backend</h4>
+                    <div class="tech-tags">
+                        <span class="tech-pill">Node.js</span>
+                        <span class="tech-pill">Express</span>
+                        <span class="tech-pill">NestJS</span>
+                        <span class="tech-pill">PHP</span>
+                        <span class="tech-pill">Laravel</span>
+                        <span class="tech-pill">Python</span>
+                        <span class="tech-pill">REST API</span>
+                        <span class="tech-pill">GraphQL</span>
+                        <span class="tech-pill">WebSockets</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>Bazy danych</h4>
+                    <div class="tech-tags">
+                        <span class="tech-pill">PostgreSQL</span>
+                        <span class="tech-pill">MySQL</span>
+                        <span class="tech-pill">MongoDB</span>
+                        <span class="tech-pill">Redis</span>
+                        <span class="tech-pill">SQLite</span>
+                        <span class="tech-pill">Prisma</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>Game Dev</h4>
+                    <div class="tech-tags">
+                        <span class="tech-pill">Three.js</span>
+                        <span class="tech-pill">Pixi.js</span>
+                        <span class="tech-pill">HTML5 Canvas</span>
+                        <span class="tech-pill">WebGL</span>
+                        <span class="tech-pill">Phaser</span>
+                        <span class="tech-pill">Game Design</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>DevOps & Tools</h4>
+                    <div class="tech-tags">
+                        <span class="tech-pill">Git</span>
+                        <span class="tech-pill">Docker</span>
+                        <span class="tech-pill">Linux</span>
+                        <span class="tech-pill">Nginx</span>
+                        <span class="tech-pill">CI/CD</span>
+                        <span class="tech-pill">AWS</span>
+                        <span class="tech-pill">Vercel</span>
+                        <span class="tech-pill">Cloudflare</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>AI & Automation</h4>
+                    <div class="tech-tags">
+                        <span class="tech-pill">OpenAI API</span>
+                        <span class="tech-pill">LangChain</span>
+                        <span class="tech-pill">Claude API</span>
+                        <span class="tech-pill">Prompt Engineering</span>
+                        <span class="tech-pill">Web Scraping</span>
+                        <span class="tech-pill">Automatyzacja</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="o-mnie">
+            <div class="section-header">
+                <span class="section-tag">// o mnie</span>
+                <h2 class="section-title">Kim jestem?</h2>
+            </div>
+            <div class="about-content">
+                <div class="about-text animate-on-scroll">
+                    <h3>Marcin Płaza</h3>
+                    <p>
+                        Prowadzę PlazaWorks – jednoosobową działalność łączącą pasję do tworzenia gier 
+                        z profesjonalnymi usługami web development. Specjalizuję się w aplikacjach 
+                        webowych, od interaktywnych gier po systemy biznesowe.
+                    </p>
+                    <p>
+                        Pierwsze strony stawiałem w gimnazjum – od tego czasu minęło ponad 10 lat 
+                        ciągłej nauki i rozwoju. Znam technologie od podszewki, bo przerabiałem 
+                        je wszystkie: od czystego HTML/CSS, przez PHP, po nowoczesny React i Node.js.
+                    </p>
+                    <p>
+                        Moje podejście: zrozumieć problem, zaprojektować rozwiązanie, dostarczyć 
+                        działający produkt. Bez corporate bullshitu, bez zbędnych spotkań. 
+                        Konkret i efekty.
+                    </p>
+                    
+                    <div class="company-info">
+                        <div class="company-detail">
+                            <span class="detail-label">NIP:</span>
+                            <span class="detail-value">6020152779</span>
+                        </div>
+                        <div class="company-detail">
+                            <span class="detail-label">REGON:</span>
+                            <span class="detail-value">543561198</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-grid animate-on-scroll">
+                    <div class="stat-card">
+                        <div class="stat-number">10+</div>
+                        <div class="stat-label">lat z webami</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">∞</div>
+                        <div class="stat-label">linii kodu</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">zaangażowania</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">&lt;1h</div>
+                        <div class="stat-label">czas odpowiedzi</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="kontakt">
+            <div class="section-header">
+                <span class="section-tag">// kontakt</span>
+                <h2 class="section-title">Porozmawiajmy</h2>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info animate-on-scroll">
+                    <h3>Masz projekt w głowie?</h3>
+                    <p>
+                        Opisz czego potrzebujesz – stronę, aplikację, integrację czy coś zupełnie innego. 
+                        Odpowiadam w ciągu 24 godzin. Bez zobowiązań.
+                    </p>
+                    <div class="contact-links">
+                        <a href="mailto:help@growfortress.com" class="contact-link">
+                            <span class="contact-link-icon">📧</span>
+                            help@growfortress.com
+                        </a>
+                        <a href="https://growfortress.com" target="_blank" class="contact-link">
+                            <span class="contact-link-icon">🎮</span>
+                            growfortress.com
+                        </a>
+                    </div>
+                </div>
+                <form class="contact-form animate-on-scroll" action="#" method="POST">
+                    <div class="form-group">
+                        <label for="name">Imię / Firma</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Wiadomość</label>
+                        <textarea id="message" name="message" placeholder="Opisz swój projekt lub zadaj pytanie..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        Wyślij wiadomość →
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-text">
+                © 2025 PlazaWorks Marcin Płaza | NIP: 6020152779
+            </div>
+            <div class="footer-links">
+                <a href="mailto:help@growfortress.com" title="Email">📧</a>
+                <a href="https://growfortress.com" target="_blank" title="Grow Fortress">🎮</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Form submission (placeholder)
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Dziękuję za wiadomość! Odpowiem najszybciej jak to możliwe.');
+            this.reset();
+        });
+    </script>
+</body>
+</html>

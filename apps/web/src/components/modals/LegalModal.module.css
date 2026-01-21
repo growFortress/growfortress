@@ -156,6 +156,17 @@
   font-size: 11px;
 }
 
+.companyLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.companyLink:hover {
+  color: var(--color-primary-bright);
+  text-decoration: underline;
+}
+
 /* Scrollbar styling */
 .content::-webkit-scrollbar {
   width: 6px;

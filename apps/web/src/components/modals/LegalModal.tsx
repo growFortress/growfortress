@@ -89,7 +89,19 @@ export function LegalModal() {
 
       <div class={styles.footer}>
         <span class={styles.companyInfo}>
-          {t("legalModal.footer", { year: new Date().getFullYear() })}
+          © {new Date().getFullYear()}{" "}
+          <a
+            href={`/company/index-${languageKey}.html`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class={styles.companyLink}
+          >
+            PlazaWorks
+          </a>
+          {" • "}
+          <a href="mailto:help@growfortress.com" class={styles.companyLink}>
+            help@growfortress.com
+          </a>
         </span>
       </div>
     </Modal>

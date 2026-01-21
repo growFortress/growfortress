@@ -13,7 +13,7 @@ interface AuthScreenProps {
 }
 
 export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t, language } = useTranslation(['auth', 'common']);
 
   const showLoginForm = () => {
     authScreen.value = 'login';
@@ -170,6 +170,37 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
             >
               {t('analytics.details')}
             </button>
+          </div>
+        </div>
+
+        {/* Data protection info */}
+        <div class={styles.analyticsInfo}>
+          <span class={styles.analyticsIcon}>🔒</span>
+          <div class={styles.analyticsText}>
+            {t('dataProtection.info')}{' '}
+            <button
+              type="button"
+              class={styles.analyticsLink}
+              onClick={() => openLegalModal('privacy')}
+            >
+              {t('dataProtection.details')}
+            </button>
+          </div>
+        </div>
+
+        {/* Studio info */}
+        <div class={styles.studioInfo}>
+          <span class={styles.studioIcon}>🏢</span>
+          <div class={styles.studioText}>
+            {t('madeBy')}{' '}
+            <a
+              href={`/company/index-${language === 'pl' ? 'pl' : 'en'}.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={styles.studioLink}
+            >
+              PlazaWorks
+            </a>
           </div>
         </div>
       </div>
