@@ -316,7 +316,7 @@ function RecipeDetailView({
   showSuccess,
   onCraft,
 }: RecipeDetailViewProps) {
-  const { t, language } = useTranslation(['common', 'data']);
+  const { t, language } = useTranslation(['common', 'data', 'modals']);
   const cost = calculateArtifactCraftCost(artifact.id);
   const artifactName = t(`data:artifacts.${artifact.id}.name`, {
     defaultValue: language === 'pl' ? artifact.polishName : artifact.name,
