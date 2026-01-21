@@ -36,6 +36,15 @@ export const PurchaseStatusSchema = z.enum([
 ]);
 export type PurchaseStatus = z.infer<typeof PurchaseStatusSchema>;
 
+export const BoosterTypeSchema = z.enum([
+  'xp_1.5x',
+  'gold_1.5x',
+  'material_1.5x',
+  'ultimate_1.5x',    // All above
+]);
+export type BoosterType = z.infer<typeof BoosterTypeSchema>;
+
+
 // ============================================================================
 // SHOP PRODUCTS
 // ============================================================================
@@ -80,7 +89,7 @@ export const ShopProductSchema = z.object({
   goldAmount: z.number().int().min(0).optional(),
   heroId: z.string().optional(),
   cosmeticId: z.string().optional(),
-  boosterType: z.string().optional(),
+  boosterType: BoosterTypeSchema.optional(),
   boosterDuration: z.number().int().positive().optional(),
 
   isLimited: z.boolean(),
@@ -247,13 +256,8 @@ export const BATTLE_PASS: BattlePassProduct = {
 // ============================================================================
 
 // Boosters are 1.5x (not 2x!) - balanced, not OP
-export const BoosterTypeSchema = z.enum([
-  'xp_1.5x',
-  'gold_1.5x',
-  'material_1.5x',
-  'ultimate_1.5x',    // All above
-]);
-export type BoosterType = z.infer<typeof BoosterTypeSchema>;
+// Product definitions moved up
+
 
 export interface BoosterDefinition {
   id: string;

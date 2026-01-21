@@ -1,12 +1,13 @@
 /**
  * Shop State Management - Microtransactions signals
  */
-import { signal, computed } from '@preact/signals';
+import { signal, computed, type Signal, type ReadonlySignal } from '@preact/signals';
 import type {
   GetShopResponse,
   ActiveBooster,
   Purchase,
   ShopCategory,
+  ShopProduct,
 } from '@arcade/protocol';
 import type { MaterialType } from '@arcade/sim-core';
 import * as shopApi from '../api/shop.js';
@@ -18,43 +19,43 @@ import { baseDust, baseGold } from './profile.signals.js';
 // ============================================================================
 
 // Shop data from server
-export const shopData = signal<GetShopResponse | null>(null);
+export const shopData: Signal<GetShopResponse | null> = signal<GetShopResponse | null>(null);
 
 // Active boosters
-export const activeBoosters = signal<ActiveBooster[]>([]);
+export const activeBoosters: Signal<ActiveBooster[]> = signal<ActiveBooster[]>([]);
 
 // Purchase history
-export const purchaseHistory = signal<Purchase[]>([]);
+export const purchaseHistory: Signal<Purchase[]> = signal<Purchase[]>([]);
 
 // Loading states
-export const isLoadingShop = signal(false);
-export const isProcessingPurchase = signal(false);
+export const isLoadingShop: Signal<boolean> = signal(false);
+export const isProcessingPurchase: Signal<boolean> = signal(false);
 
 // UI state
-export const shopModalVisible = signal(false);
-export const selectedCategory = signal<ShopCategory>('featured');
-export const checkoutSessionId = signal<string | null>(null);
-export const checkoutStatus = signal<'idle' | 'pending' | 'success' | 'failed' | 'expired'>('idle');
+export const shopModalVisible: Signal<boolean> = signal(false);
+export const selectedCategory: Signal<ShopCategory> = signal<ShopCategory>('featured');
+export const checkoutSessionId: Signal<string | null> = signal<string | null>(null);
+export const checkoutStatus: Signal<'idle' | 'pending' | 'success' | 'failed' | 'expired'> = signal<'idle' | 'pending' | 'success' | 'failed' | 'expired'>('idle');
 
 // Error state
-export const shopError = signal<string | null>(null);
+export const shopError: Signal<string | null> = signal<string | null>(null);
 
 // Last successful purchase (for success modal)
-export const lastPurchase = signal<Purchase | null>(null);
+export const lastPurchase: Signal<Purchase | null> = signal<Purchase | null>(null);
 
 // ============================================================================
 // COMPUTED VALUES
 // ============================================================================
 
 // Products for current category
-export const currentCategoryProducts = computed(() => {
+export const currentCategoryProducts: ReadonlySignal<ShopProduct[]> = computed(() => {
   if (!shopData.value) return [];
   const category = shopData.value.categories.find((c) => c.id === selectedCategory.value);
   return category?.products ?? [];
 });
 
 // Is starter pack available
-export const starterPackAvailable = computed(() => {
+export const starterPackAvailable: ReadonlySignal<boolean> = computed(() => {
   return shopData.value?.starterPackAvailable ?? false;
 });
 
@@ -69,14 +70,14 @@ export function getActiveBooster(type: string): ActiveBooster | undefined {
 }
 
 // Check if any XP boost is active
-export const hasActiveXpBoost = computed(() => {
+export const hasActiveXpBoost: ReadonlySignal<boolean> = computed(() => {
   return activeBoosters.value.some(
     (b) => b.type === 'xp_1.5x' || b.type === 'ultimate_1.5x',
   );
 });
 
 // Check if any gold boost is active
-export const hasActiveGoldBoost = computed(() => {
+export const hasActiveGoldBoost: ReadonlySignal<boolean> = computed(() => {
   return activeBoosters.value.some(
     (b) => b.type === 'gold_1.5x' || b.type === 'ultimate_1.5x',
   );
@@ -222,12 +223,12 @@ export async function buyWithDust(
         } else {
           // Add new booster
           const boosterType = itemId.includes('xp')
-            ? 'xp_2x'
+            ? 'xp_1.5x'
             : itemId.includes('gold')
-              ? 'gold_2x'
+              ? 'gold_1.5x'
               : itemId.includes('material')
-                ? 'material_2x'
-                : 'ultimate_2x';
+                ? 'material_1.5x'
+                : 'ultimate_1.5x';
 
           activeBoosters.value = [
             ...activeBoosters.value,

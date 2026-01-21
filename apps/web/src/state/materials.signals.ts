@@ -1,4 +1,4 @@
-import { signal, computed } from '@preact/signals';
+import { signal, computed, type Signal, type ReadonlySignal } from '@preact/signals';
 import type { MaterialType } from '@arcade/sim-core';
 
 // Types
@@ -19,16 +19,16 @@ export interface MaterialInfo {
 }
 
 // Player materials inventory (persistent, from profile)
-export const playerMaterials = signal<Record<string, number>>({});
+export const playerMaterials: Signal<Record<string, number>> = signal<Record<string, number>>({});
 
 // Recent material drops (for notifications)
-export const recentDrops = signal<MaterialDrop[]>([]);
+export const recentDrops: Signal<MaterialDrop[]> = signal<MaterialDrop[]>([]);
 
 // Materials modal visibility
-export const materialsModalVisible = signal(false);
+export const materialsModalVisible: Signal<boolean> = signal(false);
 
 // Total unique materials count
-export const uniqueMaterialsCount = computed(() => {
+export const uniqueMaterialsCount: ReadonlySignal<number> = computed(() => {
   return Object.keys(playerMaterials.value).filter(
     key => playerMaterials.value[key] > 0
   ).length;

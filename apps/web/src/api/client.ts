@@ -40,7 +40,7 @@ import type {
   BuildPreset,
   UpdateCurrencyRequest,
   UpdateCurrencyResponse,
-  type Currency,
+  Currency,
   // Consolidated types from protocol
   MaterialsResponse,
   AddMaterialsResponse,
