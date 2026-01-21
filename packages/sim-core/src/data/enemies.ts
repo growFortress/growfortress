@@ -574,9 +574,9 @@ export function getWaveComposition(
 
   // Enemy count scales with actual wave (more enemies in higher cycles)
   // Increased for better early-game challenge
-  const baseEnemies = wave <= 30
+  const baseEnemies = (wave <= 30
     ? 8 + Math.floor(wave * 2.5)
-    : 8 + Math.floor(30 * 2.5 + (wave - 30) * 1.8);
+    : 8 + Math.floor(30 * 2.5 + (wave - 30) * 1.8)) * 2;
 
   // Elite chance scales slower early, then ramps to cap later
   const eliteCap = wave < 60 ? 0.35 : 0.5;

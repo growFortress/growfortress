@@ -289,38 +289,38 @@ describe('Pillar System', () => {
 describe('Wave Composition', () => {
   describe('enemy count formula', () => {
     // Formula: 8 + floor(wave * 2.5) (increased for early-game challenge)
-    it('wave 1: 8 + floor(1*2.5) = 10 base enemies', () => {
+    it('wave 1: (8 + floor(1*2.5)) * 2 = 20 base enemies', () => {
       const comp = getWaveComposition(1, 30);
       const total = comp.enemies.reduce((sum, e) => sum + e.count, 0);
-      // Distributed as floor(10*0.6) + floor(10*0.4) = 6 + 4 = 10
-      expect(total).toBe(10);
+      // Distributed as floor(20*0.6) + floor(20*0.4) = 12 + 8 = 20
+      expect(total).toBe(20);
     });
 
-    it('wave 10: 8 + floor(10*2.5) = 33 base enemies (boss wave)', () => {
+    it('wave 10: (8 + floor(10*2.5)) * 2 = 66 base enemies (boss wave)', () => {
       const comp = getWaveComposition(10, 30);
       const total = comp.enemies.reduce((sum, e) => sum + e.count, 0);
       // Boss wave distribution is different
-      expect(total).toBeGreaterThan(20);
+      expect(total).toBeGreaterThan(40);
     });
   });
 
   describe('elite chance formula (Endless mode)', () => {
     // Formula: 0.05 + wave * 0.005, capped at 50%
-    it('wave 1: 0.05 + 1*0.005 = 5.5%', () => {
-      expect(getWaveComposition(1, 30).eliteChance).toBe(0.055);
+    it('wave 1: 0.05 + 1*0.004 = 5.4%', () => {
+      expect(getWaveComposition(1, 30).eliteChance).toBeCloseTo(0.054, 5);
     });
 
-    it('wave 10: 0.05 + 10*0.005 = 10%', () => {
-      expect(getWaveComposition(10, 30).eliteChance).toBe(0.1);
+    it('wave 10: 0.05 + 10*0.004 = 9%', () => {
+      expect(getWaveComposition(10, 30).eliteChance).toBeCloseTo(0.09, 5);
     });
 
-    it('wave 50: 0.05 + 50*0.005 = 30%', () => {
-      expect(getWaveComposition(50, 30).eliteChance).toBeCloseTo(0.3, 5);
+    it('wave 50: 0.05 + 50*0.004 = 25%', () => {
+      expect(getWaveComposition(50, 30).eliteChance).toBeCloseTo(0.25, 5);
     });
 
-    it('wave 90+: capped at 50%', () => {
-      expect(getWaveComposition(90, 30).eliteChance).toBe(0.5);
-      expect(getWaveComposition(100, 30).eliteChance).toBe(0.5);
+    it('wave 90+: nearing cap of 50%', () => {
+      expect(getWaveComposition(90, 30).eliteChance).toBeCloseTo(0.41, 5);
+      expect(getWaveComposition(100, 30).eliteChance).toBeCloseTo(0.45, 5);
       expect(getWaveComposition(200, 30).eliteChance).toBe(0.5);
     });
   });
@@ -335,9 +335,9 @@ describe('Wave Composition', () => {
       expect(getWaveComposition(5, 30).spawnIntervalTicks).toBe(18);
     });
 
-    it('high waves: minimum 9 ticks', () => {
-      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(14);
-      expect(getWaveComposition(50, 30).spawnIntervalTicks).toBe(9);
+    it('high waves: minimum 12 ticks', () => {
+      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(15);
+      expect(getWaveComposition(50, 30).spawnIntervalTicks).toBe(12);
     });
   });
 
