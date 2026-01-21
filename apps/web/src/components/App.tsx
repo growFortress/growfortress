@@ -39,6 +39,7 @@ import { SplashScreen } from "./shared/SplashScreen.js";
 import { ScreenReaderAnnouncer } from "./shared/ScreenReaderAnnouncer.js";
 import { MinimumScreenSize } from "./shared/MinimumScreenSize.js";
 import { CookieBanner } from "./shared/CookieBanner.js";
+import { Analytics } from "@vercel/analytics/react";
 import { syncManager } from "../storage/sync.js";
 import {
   getActiveSession,
@@ -534,6 +535,7 @@ function AppContent() {
       <LegalModal />
       <SupportPage />
       <CookieBanner />
+      <Analytics />
     </>
   );
 }
