@@ -1,15 +1,16 @@
 import type { FortressClass, TurretType } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './LoadoutDisplay.module.css';
 
 // Configuration info mapping
-const CLASS_INFO: Record<FortressClass, { name: string; icon: string; color: string }> = {
-  natural: { name: 'Standardowa', icon: '🌿', color: '#228b22' },
-  ice: { name: 'Kriogeniczna', icon: '❄️', color: '#00bfff' },
-  fire: { name: 'Termiczna', icon: '🔥', color: '#ff4500' },
-  lightning: { name: 'Elektryczna', icon: '⚡', color: '#9932cc' },
-  tech: { name: 'Kwantowa', icon: '🔧', color: '#00f0ff' },
-  void: { name: 'Próżniowa', icon: '🌀', color: '#4b0082' },
-  plasma: { name: 'Plazmowa', icon: '⚛️', color: '#00ffff' },
+const CLASS_INFO: Record<FortressClass, { nameKey: string; icon: string; color: string }> = {
+  natural: { nameKey: 'game:loadout.classes.standard', icon: '🌿', color: '#228b22' },
+  ice: { nameKey: 'game:loadout.classes.cryogenic', icon: '❄️', color: '#00bfff' },
+  fire: { nameKey: 'game:loadout.classes.thermal', icon: '🔥', color: '#ff4500' },
+  lightning: { nameKey: 'game:loadout.classes.electrical', icon: '⚡', color: '#9932cc' },
+  tech: { nameKey: 'game:loadout.classes.quantum', icon: '🔧', color: '#00f0ff' },
+  void: { nameKey: 'game:loadout.classes.void', icon: '🌀', color: '#4b0082' },
+  plasma: { nameKey: 'game:loadout.classes.plasma', icon: '⚛️', color: '#00ffff' },
 };
 
 // Unit info mapping
@@ -38,11 +39,11 @@ const HERO_INFO: Record<string, { name: string; icon: string; color: string }> =
 };
 
 // Tower info mapping
-const TURRET_INFO: Record<TurretType, { name: string; icon: string; color: string }> = {
-  railgun: { name: 'Wieża Railgun', icon: '🎯', color: '#4a5568' },
-  artillery: { name: 'Wieża Artyleryjska', icon: '💣', color: '#696969' },
-  arc: { name: 'Wieża Łukowa', icon: '🔷', color: '#9932cc' },
-  cryo: { name: 'Wieża Kriogeniczna', icon: '❄️', color: '#00bfff' },
+const TURRET_INFO: Record<TurretType, { nameKey: string; icon: string; color: string }> = {
+  railgun: { nameKey: 'game:loadout.turrets.railgun', icon: '🎯', color: '#4a5568' },
+  artillery: { nameKey: 'game:loadout.turrets.artillery', icon: '💣', color: '#696969' },
+  arc: { nameKey: 'game:loadout.turrets.bow', icon: '🔷', color: '#9932cc' },
+  cryo: { nameKey: 'game:loadout.turrets.cryogenic', icon: '❄️', color: '#00bfff' },
 };
 
 interface LoadoutDisplayProps {
@@ -52,6 +53,7 @@ interface LoadoutDisplayProps {
 }
 
 export function LoadoutDisplay({ fortressClass, heroId, turretType }: LoadoutDisplayProps) {
+  const { t } = useTranslation('game');
   if (!fortressClass && !heroId && !turretType) {
     return null;
   }
@@ -62,14 +64,16 @@ export function LoadoutDisplay({ fortressClass, heroId, turretType }: LoadoutDis
 
   return (
     <div class={styles.loadoutContainer}>
-      <div class={styles.loadoutTitle}>Domyślny Loadout</div>
+      <div class={styles.loadoutTitle}>{t('loadout.defaultLoadout')}</div>
       <div class={styles.loadoutItems}>
         {classInfo && (
           <div class={styles.loadoutItem} style={{ borderColor: classInfo.color }}>
             <span class={styles.itemIcon}>{classInfo.icon}</span>
             <div class={styles.itemInfo}>
-              <span class={styles.itemLabel}>Konfiguracja</span>
-              <span class={styles.itemName} style={{ color: classInfo.color }}>{classInfo.name}</span>
+              <span class={styles.itemLabel}>{t('loadout.configuration')}</span>
+              <span class={styles.itemName} style={{ color: classInfo.color }}>
+                {t(classInfo.nameKey)}
+              </span>
             </div>
           </div>
         )}
@@ -77,7 +81,7 @@ export function LoadoutDisplay({ fortressClass, heroId, turretType }: LoadoutDis
           <div class={styles.loadoutItem} style={{ borderColor: heroInfo.color }}>
             <span class={styles.itemIcon}>{heroInfo.icon}</span>
             <div class={styles.itemInfo}>
-              <span class={styles.itemLabel}>Jednostka</span>
+              <span class={styles.itemLabel}>{t('loadout.unit')}</span>
               <span class={styles.itemName} style={{ color: heroInfo.color }}>{heroInfo.name}</span>
             </div>
           </div>
@@ -86,8 +90,10 @@ export function LoadoutDisplay({ fortressClass, heroId, turretType }: LoadoutDis
           <div class={styles.loadoutItem} style={{ borderColor: turretInfo.color }}>
             <span class={styles.itemIcon}>{turretInfo.icon}</span>
             <div class={styles.itemInfo}>
-              <span class={styles.itemLabel}>Wieża</span>
-              <span class={styles.itemName} style={{ color: turretInfo.color }}>{turretInfo.name}</span>
+              <span class={styles.itemLabel}>{t('loadout.tower')}</span>
+              <span class={styles.itemName} style={{ color: turretInfo.color }}>
+                {t(turretInfo.nameKey)}
+              </span>
             </div>
           </div>
         )}

@@ -16,6 +16,7 @@ import {
   turretYToScreen,
   FIELD_WIDTH,
 } from "../CoordinateSystem.js";
+import i18n from "../../i18n/index.js";
 
 // --- CLASS COLORS (7 classes) ---
 const CLASS_COLORS: Record<
@@ -309,7 +310,7 @@ export class TurretSystem {
 
     // Level text below lock icon
     const levelText = new Text({
-      text: `Poz. ${unlockLevel}`,
+      text: i18n.t("game:hubOverlay.levelShort", { level: unlockLevel }),
       style: {
         fontSize: 9,
         fill: 0x888888,

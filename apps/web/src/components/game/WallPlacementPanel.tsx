@@ -1,29 +1,30 @@
 import { signal } from '@preact/signals';
 import { gamePhase, displayGold } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './WallPlacementPanel.module.css';
 
 // Wall type definitions (sci-fi themed)
 const WALL_TYPES = {
   basic: {
-    name: 'Pole Siłowe',
+    nameKey: 'game:wallPlacement.basic.name',
     icon: '🔷',
     hp: 100,
     cost: 50,
-    description: 'Bariera energetyczna. Spowalnia wrogów o 50%.',
+    descriptionKey: 'game:wallPlacement.basic.description',
   },
   reinforced: {
-    name: 'Tarcza Plazmowa',
+    nameKey: 'game:wallPlacement.reinforced.name',
     icon: '🔶',
     hp: 300,
     cost: 150,
-    description: 'Wzmocniona bariera. Spowalnia o 75%.',
+    descriptionKey: 'game:wallPlacement.reinforced.description',
   },
   gate: {
-    name: 'Brama Fazowa',
+    nameKey: 'game:wallPlacement.gate.name',
     icon: '🌀',
     hp: 150,
     cost: 100,
-    description: 'Przepuszcza sojuszników, blokuje wrogów.',
+    descriptionKey: 'game:wallPlacement.gate.description',
   },
 } as const;
 
@@ -42,6 +43,7 @@ export function clearWallSelection(): void {
 }
 
 export function WallPlacementPanel() {
+  const { t } = useTranslation('game');
   const phase = gamePhase.value;
   const gold = displayGold.value;
   const selected = selectedWallType.value;
@@ -71,7 +73,7 @@ export function WallPlacementPanel() {
     <div class={styles.panel}>
       <div class={styles.header}>
         <span class={styles.icon}>⚡</span>
-        <span class={styles.title}>Bariery</span>
+        <span class={styles.title}>{t('wallPlacement.title')}</span>
       </div>
 
       <div class={styles.wallList}>
@@ -86,11 +88,16 @@ export function WallPlacementPanel() {
               class={`${styles.wallButton} ${isSelected ? styles.selected : ''} ${!canAfford ? styles.disabled : ''}`}
               onClick={() => handleWallClick(type)}
               disabled={!canAfford}
-              title={`${wall.name}: ${wall.description}\nHP: ${wall.hp} | Koszt: ${wall.cost}g`}
+              title={t('wallPlacement.tooltip', {
+                name: t(wall.nameKey),
+                description: t(wall.descriptionKey),
+                hp: wall.hp,
+                cost: wall.cost,
+              })}
             >
               <span class={styles.wallIcon}>{wall.icon}</span>
               <div class={styles.wallInfo}>
-                <span class={styles.wallName}>{wall.name}</span>
+                <span class={styles.wallName}>{t(wall.nameKey)}</span>
                 <span class={styles.wallCost}>
                   <span class={styles.goldIcon}>🪙</span>
                   {wall.cost}
@@ -104,7 +111,7 @@ export function WallPlacementPanel() {
 
       {selected && (
         <div class={styles.hint}>
-          Kliknij na mapę aby postawić barierę
+          {t('wallPlacement.clickMapHint')}
         </div>
       )}
     </div>

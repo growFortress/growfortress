@@ -260,6 +260,7 @@
     "compareWith": "Compare with",
     "selectHero": "Select a hero...",
     "vsLabel": "VS",
+    "changeHero": "Change hero",
     "synergiesTitle": "SYNERGIES",
     "bestUse": "Best use",
     "fortressSynergy": "Fortress synergy",
@@ -270,7 +271,9 @@
   },
   "turretPlacement": {
     "title": "Place Turret",
+    "titleReplace": "Change Turret",
     "subtitle": "Select turret type for slot #{{slot}}",
+    "subtitleReplace": "Select a new turret for slot #{{slot}}",
     "roles": {
       "dps": "Damage",
       "aoe": "Area Damage",
@@ -285,6 +288,16 @@
     "noGold": "No gold",
     "owned": "Owned",
     "purchaseError": "Failed to purchase turret",
+    "change": "Change turret",
+    "cancel": "Cancel"
+  },
+  "heroPlacement": {
+    "title": "Change Hero",
+    "subtitle": "Select a hero for slot #{{slot}}",
+    "inUse": "In use",
+    "current": "Current",
+    "noHeroes": "No heroes unlocked yet.",
+    "slotMissing": "Selected slot is unavailable.",
     "cancel": "Cancel"
   },
   "leaderboard": {
@@ -397,6 +410,25 @@
       "race": "Race",
       "boss": "Boss",
       "roster": "Roster"
+    },
+    "roster": {
+      "loadError": "Failed to load roster",
+      "officerOnly": "Only Leaders and Officers can view the roster.",
+      "members": "members",
+      "readyForBattle": "ready for battle",
+      "filters": {
+        "all": "All",
+        "withBattleHero": "With Battle Hero",
+        "withoutBattleHero": "Without Battle Hero"
+      },
+      "player": "Player",
+      "role": "Role",
+      "power": "Power",
+      "wave": "Wave",
+      "battleHero": "Battle Hero",
+      "empty": "No members matching criteria",
+      "hint": "Members with a Battle Hero can be selected for Arena 5v5 battles.",
+      "hintRequirement": "At least 5 ready players are required to attack."
     },
     "refresh": "Refresh",
     "loadError": "Failed to load guild data",

@@ -1328,6 +1328,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         attemptedAt: result.attempt!.attemptedAt.toISOString(),
       },
       bossCurrentHp: result.bossCurrentHp?.toString(),
+      guildCoinsEarned: result.guildCoinsEarned ?? 0,
     });
   });
 

@@ -29,6 +29,8 @@ import {
   showErrorToast,
   selectedFortressClass,
   activeSynergies,
+  heroPlacementModalVisible,
+  heroPlacementSlotIndex,
 } from '../../state/index.js';
 import {
   type PowerStatUpgrades,
@@ -508,6 +510,17 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
       defaultValue: language === 'pl' ? polishName : name,
     });
 
+  const heroSlotIndex = gamePhase.value === 'idle'
+    ? hubHeroes.value.findIndex((h) => h.definitionId === hero.definitionId)
+    : -1;
+
+  const handleChangeHero = () => {
+    if (gamePhase.value !== 'idle' || heroSlotIndex === -1) return;
+    heroPlacementSlotIndex.value = heroSlotIndex;
+    heroPlacementModalVisible.value = true;
+    handleClose();
+  };
+
   return (
     <Modal visible={visible} size="fullscreen" class={`${styles.heroDetailsModal} ${compareMode ? styles.compareMode : ''}`} onClick={handleBackdropClick}>
       <div class={styles.heroDetailsPanel} style={{ '--class-color': classColor } as JSX.CSSProperties}>
@@ -527,6 +540,15 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
             >
               ⚖️ {t('heroDetails.compare')}
             </button>
+            {gamePhase.value === 'idle' && heroSlotIndex !== -1 && (
+              <button
+                class={styles.changeHeroButton}
+                onClick={handleChangeHero}
+                type="button"
+              >
+                {t('heroDetails.changeHero')}
+              </button>
+            )}
             <button class={styles.closeButton} onClick={handleClose}>×</button>
           </div>
         </div>

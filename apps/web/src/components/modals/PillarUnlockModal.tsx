@@ -21,6 +21,7 @@ import { PILLAR_INFO } from '../../state/index.js';
 import type { PillarUnlockInfo } from '@arcade/protocol';
 import styles from './PillarUnlockModal.module.css';
 import { useEffect } from 'preact/hooks';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 interface PillarUnlockModalProps {
   visible: boolean;
@@ -28,6 +29,7 @@ interface PillarUnlockModalProps {
 }
 
 export function PillarUnlockModal({ visible, onClose }: PillarUnlockModalProps) {
+  const { t } = useTranslation(['modals', 'common']);
   // Fetch pillar unlocks when modal opens
   useEffect(() => {
     if (visible) {
@@ -44,13 +46,13 @@ export function PillarUnlockModal({ visible, onClose }: PillarUnlockModalProps) 
     <Modal
       visible={visible}
       onClose={onClose}
-      title="Eksploracja Światów"
+      title={t('pillarUnlock.title')}
       size="large"
     >
       {/* Progress section */}
       <div class={styles.progressSection}>
         <div class={styles.progressInfo}>
-          <span class={styles.progressLabel}>Odblokowane światy</span>
+          <span class={styles.progressLabel}>{t('pillarUnlock.unlockedWorlds')}</span>
           <span class={styles.progressValue}>
             {unlockedCount.value} / {totalPillars.value}
           </span>
@@ -61,12 +63,12 @@ export function PillarUnlockModal({ visible, onClose }: PillarUnlockModalProps) 
             variant="primary"
             size="md"
             glow
-            ariaLabel={`${unlockedCount.value} z ${totalPillars.value} światów odblokowanych`}
+            ariaLabel={t('pillarUnlock.progressAria', { unlocked: unlockedCount.value, total: totalPillars.value })}
           />
         </div>
         <div class={styles.levelDisplay}>
-          <span class={styles.levelLabel}>Twój poziom:</span>
-          <span class={styles.levelValue}>Lv. {fortressLevel}</span>
+          <span class={styles.levelLabel}>{t('pillarUnlock.yourLevel')}</span>
+          <span class={styles.levelValue}>{t('pillarUnlock.levelValue', { level: fortressLevel })}</span>
         </div>
       </div>
 
@@ -77,7 +79,7 @@ export function PillarUnlockModal({ visible, onClose }: PillarUnlockModalProps) 
 
       {/* Loading state */}
       {isLoading && pillars.length === 0 ? (
-        <div class={styles.loading}>Ładowanie...</div>
+        <div class={styles.loading}>{t('common:shared.loading')}</div>
       ) : (
         /* Pillar list */
         <div class={styles.pillarList}>
@@ -101,6 +103,7 @@ interface PillarCardProps {
 }
 
 function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
+  const { t } = useTranslation('modals');
   const info = PILLAR_INFO[pillar.pillarId];
   const levelMet = fortressLevel >= pillar.requiredLevel;
 
@@ -123,8 +126,8 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
         <h3 class={styles.pillarName}>{info?.name || pillar.pillarId}</h3>
         <p class={styles.pillarDescription}>
           {pillar.isUnlocked
-            ? 'Odblokowany - możesz grać!'
-            : `Wymagany poziom ${pillar.requiredLevel}`}
+            ? t('pillarUnlock.unlockedDescription')
+            : t('pillarUnlock.requiredLevel', { level: pillar.requiredLevel })}
         </p>
       </div>
 
@@ -132,12 +135,12 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
       <div class={styles.requirements}>
         {pillar.isUnlocked ? (
           <span class={styles.unlockedBadge}>
-            ✓ Odblokowany
+            {t('pillarUnlock.unlockedBadge')}
           </span>
         ) : (
           <div class={`${styles.requirement} ${levelMet ? styles.met : styles.notMet}`}>
             <span class={styles.requirementIcon}>{levelMet ? '✓' : '✗'}</span>
-            <span>Lv. {pillar.requiredLevel}</span>
+            <span>{t('pillarUnlock.levelValue', { level: pillar.requiredLevel })}</span>
           </div>
         )}
       </div>

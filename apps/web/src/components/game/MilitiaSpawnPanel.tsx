@@ -1,35 +1,36 @@
 import { signal } from '@preact/signals';
 import { gamePhase, displayGold } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './MilitiaSpawnPanel.module.css';
 
 // Militia type definitions (sci-fi themed)
 const MILITIA_TYPES = {
   infantry: {
-    name: 'Dron Bojowy',
+    nameKey: 'game:militia.infantry.name',
     icon: '🤖',
     hp: 50,
     damage: 15,
     cost: 10,  // Reduced from 30
-    duration: '10s',
-    description: 'Dron szturmowy. Blokuje natarcie wroga.',
+    durationSeconds: 10,
+    descriptionKey: 'game:militia.infantry.description',
   },
   archer: {
-    name: 'Dron Snajper',
+    nameKey: 'game:militia.archer.name',
     icon: '🎯',
     hp: 30,
     damage: 20,
     cost: 15,  // Reduced from 40
-    duration: '10s',
-    description: 'Dron laserowy. Atakuje z dystansu.',
+    durationSeconds: 10,
+    descriptionKey: 'game:militia.archer.description',
   },
   shield_bearer: {
-    name: 'Ciężki Mech',
+    nameKey: 'game:militia.shieldBearer.name',
     icon: '🦾',
     hp: 100,
     damage: 5,
     cost: 20,  // Reduced from 60
-    duration: '15s',
-    description: 'Opancerzony mech. Wysoka wytrzymałość.',
+    durationSeconds: 15,
+    descriptionKey: 'game:militia.shieldBearer.description',
   },
 } as const;
 
@@ -48,6 +49,7 @@ export function clearMilitiaSelection(): void {
 }
 
 export function MilitiaSpawnPanel() {
+  const { t } = useTranslation('game');
   const phase = gamePhase.value;
   const gold = displayGold.value;
   const selected = selectedMilitiaType.value;
@@ -77,7 +79,7 @@ export function MilitiaSpawnPanel() {
     <div class={styles.panel}>
       <div class={styles.header}>
         <span class={styles.icon}>🤖</span>
-        <span class={styles.title}>Drony</span>
+        <span class={styles.title}>{t('militia.title')}</span>
       </div>
 
       <div class={styles.militiaList}>
@@ -92,11 +94,11 @@ export function MilitiaSpawnPanel() {
               class={`${styles.militiaButton} ${isSelected ? styles.selected : ''} ${!canAfford ? styles.disabled : ''}`}
               onClick={() => handleMilitiaClick(type)}
               disabled={!canAfford}
-              title={militia.description}
+              title={t(militia.descriptionKey)}
             >
               <span class={styles.militiaIcon}>{militia.icon}</span>
               <div class={styles.militiaInfo}>
-                <span class={styles.militiaName}>{militia.name}</span>
+                <span class={styles.militiaName}>{t(militia.nameKey)}</span>
                 <div class={styles.militiaStats}>
                   <span class={`${styles.stat} ${styles.statHp}`}>
                     ♥ {militia.hp}
@@ -119,7 +121,7 @@ export function MilitiaSpawnPanel() {
       {selected && (
         <div class={styles.hint}>
           <span class={styles.hintIcon}>👆</span>
-          Kliknij na mapę
+          {t('militia.clickMapHint')}
         </div>
       )}
     </div>

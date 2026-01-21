@@ -87,7 +87,7 @@ const MATERIAL_NAMES: Record<string, string> = {
 };
 
 export function CraftingModal() {
-  const { t, language } = useTranslation(['common', 'data']);
+  const { t, language } = useTranslation(['common', 'data', 'modals']);
   const isVisible = craftingModalVisible.value;
   const slotFilter = activeSlotFilter.value;
   const gold = baseGold.value;
@@ -174,7 +174,7 @@ export function CraftingModal() {
         }
       }
     } catch {
-      showErrorToast('Crafting failed. Please try again.');
+      showErrorToast(t('crafting.errors.failed'));
     } finally {
       crafting.value = null;
     }
@@ -213,10 +213,10 @@ export function CraftingModal() {
   return (
     <Modal
       visible={isVisible}
-      title="Crafting"
+      title={t('crafting.title')}
       onClose={hideCraftingModal}
       class={styles.craftingModal}
-      ariaLabel="Crafting Menu"
+      ariaLabel={t('crafting.ariaLabel')}
     >
       {/* Filters */}
       <div class={styles.filters}>
@@ -237,7 +237,7 @@ export function CraftingModal() {
         {/* Left panel - Recipe list */}
         <div class={styles.recipeListPanel}>
           {filteredArtifacts.length === 0 ? (
-            <div class={styles.emptyList}>No recipes in this category</div>
+            <div class={styles.emptyList}>{t('crafting.emptyCategory')}</div>
           ) : (
             filteredArtifacts.map((artifact) => {
               const owned = hasArtifact(artifact.id);
@@ -262,7 +262,7 @@ export function CraftingModal() {
                       {t(`heroDetails.artifactSlots.${artifact.slot}`)}
                     </span>
                   </div>
-                  {owned && <span class={styles.ownedBadgeSmall}>Owned</span>}
+                  {owned && <span class={styles.ownedBadgeSmall}>{t('common:labels.owned')}</span>}
                 </button>
               );
             })
@@ -274,7 +274,7 @@ export function CraftingModal() {
           {!selectedArtifact ? (
             <div class={styles.emptyDetail}>
               <span class={styles.emptyIcon}>⚒️</span>
-              <span>Select a recipe to view details</span>
+              <span>{t('crafting.selectRecipe')}</span>
             </div>
           ) : (
             <RecipeDetailView
@@ -347,7 +347,7 @@ function RecipeDetailView({
       {/* Effects section */}
       {artifact.effects && artifact.effects.length > 0 && (
         <div class={styles.effectsSection}>
-          <h4 class={styles.sectionTitle}>Effects</h4>
+          <h4 class={styles.sectionTitle}>{t('crafting.effects')}</h4>
           <div class={styles.effectsList}>
             {artifact.effects.map((effect, idx) => (
               <div key={idx} class={styles.effectTag}>
@@ -363,7 +363,7 @@ function RecipeDetailView({
       {/* Materials section */}
       {cost && (
         <div class={styles.materialsSection}>
-          <h4 class={styles.sectionTitle}>Materials Required</h4>
+          <h4 class={styles.sectionTitle}>{t('crafting.materialsRequired')}</h4>
           <div class={styles.materialsList}>
             {cost.materials.map(({ material, amount }) => {
               const owned = materials[material] ?? 0;
@@ -410,7 +410,7 @@ function RecipeDetailView({
             <span class={styles.goldIcon}>🪙</span>
             <div class={styles.goldProgress}>
               <div class={styles.materialHeader}>
-                <span class={styles.materialName}>Gold</span>
+                <span class={styles.materialName}>{t('common:resources.gold')}</span>
                 <span class={styles.materialQuantity}>
                   {gold.toLocaleString()}/{cost.gold.toLocaleString()}
                 </span>
@@ -430,7 +430,7 @@ function RecipeDetailView({
       <div class={styles.craftButtonContainer}>
         {isOwned ? (
           <div class={styles.ownedContainer}>
-            <span class={styles.ownedBadgeLarge}>✓ Owned</span>
+            <span class={styles.ownedBadgeLarge}>✓ {t('common:labels.owned')}</span>
           </div>
         ) : (
           <button
@@ -441,17 +441,17 @@ function RecipeDetailView({
             {showSuccess ? (
               <>
                 <span class={styles.successIcon}>✓</span>
-                Crafted!
+                {t('crafting.crafted')}
               </>
             ) : isCrafting ? (
               <>
                 <span class={styles.spinner} />
-                Crafting...
+                {t('crafting.crafting')}
               </>
             ) : canCraft ? (
-              'Craft Artifact'
+              t('crafting.craftArtifact')
             ) : (
-              'Missing Materials'
+              t('crafting.missingMaterials')
             )}
           </button>
         )}

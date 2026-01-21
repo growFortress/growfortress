@@ -4,37 +4,8 @@ import { FP, STORM_FORGE_SYNERGY_RANGE_SQ } from '@arcade/sim-core';
 import { Tween, TweenManager, TweenSequence } from '../animation/Tween.js';
 import { easeOutQuad, easeOutElastic, easeOutCubic } from '../animation/easing.js';
 import type { VFXSystem } from './VFXSystem.js';
+import { getHeroColors, getHeroShapeType, getSkillVfxHandler } from './hero-config.js';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
-
-// Unit-specific colors (configuration-based)
-const HERO_COLORS: Record<string, { primary: number; secondary: number; accent: number }> = {
-  // Premium heroes
-  inferno: { primary: 0xff4500, secondary: 0xff8c00, accent: 0xffd700 }, // Fire DPS - orange/gold
-  glacier: { primary: 0x1e90ff, secondary: 0xb0e0e6, accent: 0x87ceeb }, // Ice Tank - blue
-  // New unit IDs
-  storm: { primary: 0x9932cc, secondary: 0xdda0dd, accent: 0xffff00 }, // Elektryczna - purple/yellow
-  forge: { primary: 0x00f0ff, secondary: 0xff00aa, accent: 0xccff00 }, // Kwantowa - cyan/pink
-  titan: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 }, // Standardowa - green
-  vanguard: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 }, // Standardowa - green
-  rift: { primary: 0xff4500, secondary: 0xff8c00, accent: 0xffd700 }, // Termiczna - orange/gold
-  frost_unit: { primary: 0x00bfff, secondary: 0xe0ffff, accent: 0x87ceeb }, // Kriogeniczna - blue
-  // Exclusive heroes
-  spectre: { primary: 0x00ffff, secondary: 0xff00ff, accent: 0xffffff }, // Plasma - cyan/magenta/white
-  omega: { primary: 0xffd700, secondary: 0x1a1a2a, accent: 0xffaa00 }, // Legendary - gold/black/orange
-  // Legacy IDs for backwards compatibility
-  thunderlord: { primary: 0x9932cc, secondary: 0xdda0dd, accent: 0xffff00 },
-  iron_sentinel: { primary: 0x00f0ff, secondary: 0xff00aa, accent: 0xccff00 },
-  jade_titan: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 },
-  spider_sentinel: { primary: 0xff0000, secondary: 0x0000ff, accent: 0xffffff },
-  shield_captain: { primary: 0x228b22, secondary: 0x8fbc8f, accent: 0x98fb98 },
-  scarlet_mage: { primary: 0xff4500, secondary: 0xff8c00, accent: 0xffd700 },
-  frost_archer: { primary: 0x00bfff, secondary: 0xe0ffff, accent: 0x87ceeb },
-  flame_phoenix: { primary: 0xff4500, secondary: 0xffd700, accent: 0xff0000 },
-  venom_assassin: { primary: 0x1a1a1a, secondary: 0x8b0000, accent: 0x00ff00 },
-  arcane_sorcerer: { primary: 0x4b0082, secondary: 0xff4500, accent: 0x00ff00 },
-  frost_giant: { primary: 0x00ced1, secondary: 0x228b22, accent: 0xffd700 },
-  cosmic_guardian: { primary: 0x8b4513, secondary: 0xff4500, accent: 0xffd700 },
-};
 
 // State colors
 const STATE_COLORS: Record<HeroState, number> = {
@@ -184,60 +155,18 @@ export class HeroSystem {
 
   public update(state: GameState, viewWidth: number, viewHeight: number, vfx?: VFXSystem) {
     const currentIds = new Set<string>();
-    const now = Date.now();
-    const deltaMs = now - this.lastUpdateTime;
-    this.lastUpdateTime = now;
-    const time = now / 1000;
+    const { now, deltaMs, time } = this.getFrameTiming();
 
     for (const hero of state.heroes) {
       currentIds.add(hero.definitionId);
 
-      let visual = this.visuals.get(hero.definitionId);
-      if (!visual) {
-        visual = this.createHeroVisual(hero);
-        this.container.addChild(visual.container);
-        this.visuals.set(hero.definitionId, visual);
-        // Start spawn animation
-        this.startSpawnAnimation(visual);
-      }
-
-      // Handle state changes
-      if (visual.lastState !== hero.state) {
-        this.onStateChange(visual, visual.lastState, hero.state);
-        visual.lastState = hero.state;
-        visual.dirty.stateIndicator = true;
-        visual.dirty.body = true; // Body glow changes with combat state
-      }
-
-      // Handle tier changes
-      const currentTier = hero.tier as 1 | 2 | 3;
-      if (visual.lastTier !== currentTier) {
-        visual.lastTier = currentTier;
-        visual.dirty.tierBadge = true;
-        visual.dirty.body = true; // Body size changes with tier
-      }
-
-      // Handle HP changes
-      const hpPercent = hero.maxHp > 0 ? hero.currentHp / hero.maxHp : 0;
-      if (Math.abs(visual.lastHp - hpPercent) > 0.01) {
-        this.startHpTransition(visual, visual.lastHp, hpPercent);
-        visual.lastHp = hpPercent;
-        visual.dirty.hpBar = true;
-      }
-
-      // Detect skill usage and trigger VFX
-      if (vfx && hero.skillCooldowns) {
-        const screenX = fpXToScreen(hero.x, viewWidth);
-        const screenY = fpYToScreen(hero.y, viewHeight);
-        this.detectAndTriggerSkillVFX(visual, hero, screenX, screenY, state, viewWidth, viewHeight, vfx);
-      }
-
-      // Update position target (screen space)
-      const screenX = fpXToScreen(hero.x, viewWidth);
-      const screenY = fpYToScreen(hero.y, viewHeight);
+      const visual = this.syncHeroVisual(hero);
+      this.applyHeroStateChanges(visual, hero);
+      const screenPosition = this.getHeroScreenPosition(hero, viewWidth, viewHeight);
+      this.handleSkillVfx(visual, hero, screenPosition.x, screenPosition.y, state, viewWidth, viewHeight, vfx);
 
       // Motion smoothing with anticipation/overshoot
-      this.updateMotion(visual, screenX, screenY, deltaMs);
+      this.updateMotion(visual, screenPosition.x, screenPosition.y, deltaMs);
 
       // Update tweens
       visual.tweenManager.update(deltaMs);
@@ -249,7 +178,7 @@ export class HeroSystem {
       const offset = this.updateHeroVisual(visual, hero, time);
 
       // Apply final position with animation offset
-      visual.container.position.set(visual.animation.visualX + offset.x, visual.animation.visualY + offset.y);
+      this.applyHeroPosition(visual, offset);
     }
 
     if (vfx) {
@@ -257,6 +186,94 @@ export class HeroSystem {
     }
 
     // Remove dead/removed heroes with death animation
+    this.cleanupMissingHeroes(currentIds);
+  }
+
+  private getFrameTiming(): { now: number; deltaMs: number; time: number } {
+    const now = Date.now();
+    const deltaMs = now - this.lastUpdateTime;
+    this.lastUpdateTime = now;
+    return { now, deltaMs, time: now / 1000 };
+  }
+
+  private getHeroScreenPosition(
+    hero: ActiveHero,
+    viewWidth: number,
+    viewHeight: number
+  ): { x: number; y: number } {
+    return {
+      x: fpXToScreen(hero.x, viewWidth),
+      y: fpYToScreen(hero.y, viewHeight),
+    };
+  }
+
+  private getTierKey(tier: number): 1 | 2 | 3 {
+    if (tier === 1 || tier === 2 || tier === 3) {
+      return tier;
+    }
+    return 1;
+  }
+
+  private syncHeroVisual(hero: ActiveHero): HeroVisual {
+    let visual = this.visuals.get(hero.definitionId);
+    if (!visual) {
+      visual = this.createHeroVisual(hero);
+      this.container.addChild(visual.container);
+      this.visuals.set(hero.definitionId, visual);
+      // Start spawn animation
+      this.startSpawnAnimation(visual);
+    }
+    return visual;
+  }
+
+  private applyHeroStateChanges(visual: HeroVisual, hero: ActiveHero): void {
+    if (visual.lastState !== hero.state) {
+      this.onStateChange(visual, visual.lastState, hero.state);
+      visual.lastState = hero.state;
+      visual.dirty.stateIndicator = true;
+      visual.dirty.body = true; // Body glow changes with combat state
+    }
+
+    const currentTier = this.getTierKey(hero.tier);
+    if (visual.lastTier !== currentTier) {
+      visual.lastTier = currentTier;
+      visual.dirty.tierBadge = true;
+      visual.dirty.body = true; // Body size changes with tier
+    }
+
+    const hpPercent = hero.maxHp > 0 ? hero.currentHp / hero.maxHp : 0;
+    if (Math.abs(visual.lastHp - hpPercent) > 0.01) {
+      this.startHpTransition(visual, visual.lastHp, hpPercent);
+      visual.lastHp = hpPercent;
+      visual.dirty.hpBar = true;
+    }
+  }
+
+  private handleSkillVfx(
+    visual: HeroVisual,
+    hero: ActiveHero,
+    screenX: number,
+    screenY: number,
+    state: GameState,
+    viewWidth: number,
+    viewHeight: number,
+    vfx?: VFXSystem
+  ): void {
+    if (!vfx || !hero.skillCooldowns) {
+      return;
+    }
+
+    this.detectAndTriggerSkillVFX(visual, hero, screenX, screenY, state, viewWidth, viewHeight, vfx);
+  }
+
+  private applyHeroPosition(visual: HeroVisual, offset: { x: number; y: number }): void {
+    visual.container.position.set(
+      visual.animation.visualX + offset.x,
+      visual.animation.visualY + offset.y
+    );
+  }
+
+  private cleanupMissingHeroes(currentIds: Set<string>): void {
     for (const [id, visual] of this.visuals) {
       if (!currentIds.has(id)) {
         if (!visual.animation.isDying) {
@@ -365,7 +382,7 @@ export class HeroSystem {
       lastState: hero.state,
       heroId: hero.definitionId,
       lastHp: hpPercent,
-      lastTier: hero.tier as 1 | 2 | 3,
+      lastTier: this.getTierKey(hero.tier),
       tweenManager: new TweenManager(),
       scaleTween: null,
       alphaTween: null,
@@ -591,22 +608,46 @@ export class HeroSystem {
   }
 
   private updateHeroVisual(visual: HeroVisual, hero: ActiveHero, time: number): { x: number; y: number } {
-    const shadow = visual.container.getChildByLabel('shadow') as Graphics;
-    const body = visual.container.getChildByLabel('body') as Graphics;
-    const hpBar = visual.container.getChildByLabel('hpBar') as Graphics;
-    const stateIndicator = visual.container.getChildByLabel('state') as Graphics;
-    const tierBadge = visual.container.getChildByLabel('tier') as Graphics;
-
+    const { shadow, body, hpBar, stateIndicator, tierBadge } = this.getHeroVisualParts(visual);
     const anim = visual.animation;
     const offset = { x: anim.offsetX, y: anim.offsetY };
 
-    if (!body || !hpBar || !stateIndicator || !tierBadge) return offset;
+    if (!body || !hpBar || !stateIndicator || !tierBadge) {
+      return offset;
+    }
 
-    const colors = HERO_COLORS[hero.definitionId] || { primary: 0x888888, secondary: 0xaaaaaa, accent: 0xffffff };
-    const tierKey = hero.tier as 1 | 2 | 3;
+    const colors = getHeroColors(hero.definitionId);
+    const tierKey = this.getTierKey(hero.tier);
     const size = SIZES.heroBase * SIZES.tierMultiplier[tierKey];
 
-    // Apply animated scale and alpha
+    this.applyHeroTransforms(visual, hero, time);
+    this.renderShadow(shadow, size, time, anim);
+    this.renderBody(visual, body, hero, size, colors, time, anim);
+    this.renderHpBar(visual, hpBar, anim);
+    this.renderStateIndicator(visual, stateIndicator, hero.state, anim);
+    this.renderTierBadge(visual, tierBadge, tierKey);
+
+    return offset;
+  }
+
+  private getHeroVisualParts(visual: HeroVisual): {
+    shadow: Graphics | null;
+    body: Graphics | null;
+    hpBar: Graphics | null;
+    stateIndicator: Graphics | null;
+    tierBadge: Graphics | null;
+  } {
+    return {
+      shadow: visual.container.getChildByLabel('shadow') as Graphics | null,
+      body: visual.container.getChildByLabel('body') as Graphics | null,
+      hpBar: visual.container.getChildByLabel('hpBar') as Graphics | null,
+      stateIndicator: visual.container.getChildByLabel('state') as Graphics | null,
+      tierBadge: visual.container.getChildByLabel('tier') as Graphics | null,
+    };
+  }
+
+  private applyHeroTransforms(visual: HeroVisual, hero: ActiveHero, time: number): void {
+    const anim = visual.animation;
     const baseScale = anim.scale || 1;
     const breatheStrength = hero.state === 'idle' ? 0.035 : 0.02;
     const breathe = 1 + Math.sin(time * 2 + visual.breathingPhase) * breatheStrength;
@@ -617,43 +658,60 @@ export class HeroSystem {
 
     visual.container.scale.set(baseScale * breathe * stretchX, baseScale * breathe * stretchY);
     visual.container.alpha = anim.alpha || 1;
+  }
 
-    // Draw shadow (ground indicator for depth)
-    if (shadow && !anim.isDying) {
-      shadow.clear();
-      // Elliptical shadow below the hero
+  private renderShadow(
+    shadow: Graphics | null,
+    size: number,
+    time: number,
+    anim: HeroAnimationState
+  ): void {
+    if (!shadow) {
+      return;
+    }
+
+    shadow.clear();
+    if (!anim.isDying) {
       const shadowOffsetY = size * 0.9;
       const shadowWidth = size * 0.8;
       const shadowHeight = size * 0.25;
-      // Subtle breathing animation for shadow
       const shadowPulse = 1 + Math.sin(time * 2) * 0.05;
       shadow.ellipse(0, shadowOffsetY, shadowWidth * shadowPulse, shadowHeight)
         .fill({ color: 0x000000, alpha: 0.35 });
-    } else if (shadow && anim.isDying) {
-      // Fade shadow during death
-      shadow.clear();
+    } else {
       const shadowOffsetY = size * 0.9;
       const shadowWidth = size * 0.8 * (1 - anim.deathProgress);
       const shadowHeight = size * 0.25 * (1 - anim.deathProgress);
       shadow.ellipse(0, shadowOffsetY, shadowWidth, shadowHeight)
         .fill({ color: 0x000000, alpha: 0.35 * (1 - anim.deathProgress) });
     }
+  }
 
-    // Body needs redraw if dirty, in combat (animated), spawning, or dying
-    // Combat state has continuous animation (glow, shake, tier 3 particles)
+  private renderBody(
+    visual: HeroVisual,
+    body: Graphics,
+    hero: ActiveHero,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number,
+    anim: HeroAnimationState
+  ): void {
     const needsBodyRedraw = visual.dirty.body ||
                             hero.state === 'combat' ||
                             anim.isSpawning ||
                             anim.isDying ||
-                            hero.tier === 3; // Tier 3 has rotating particles
+                            hero.tier === 3;
 
-    if (needsBodyRedraw) {
-      body.clear();
-      this.drawHeroBody(body, hero, size, colors, time, anim);
-      visual.dirty.body = false;
+    if (!needsBodyRedraw) {
+      return;
     }
 
-    // HP bar only redraws when HP is transitioning or dirty
+    body.clear();
+    this.drawHeroBody(body, hero, size, colors, time, anim);
+    visual.dirty.body = false;
+  }
+
+  private renderHpBar(visual: HeroVisual, hpBar: Graphics, anim: HeroAnimationState): void {
     const isHpAnimating = visual.hpTween && !visual.hpTween.isComplete();
     if (visual.dirty.hpBar || isHpAnimating) {
       hpBar.clear();
@@ -662,24 +720,29 @@ export class HeroSystem {
         visual.dirty.hpBar = false;
       }
     }
+  }
 
-    // State indicator only redraws when state changes or transitioning
-    if (visual.dirty.stateIndicator || anim.isTransitioning || hero.state === 'combat') {
+  private renderStateIndicator(
+    visual: HeroVisual,
+    stateIndicator: Graphics,
+    state: HeroState,
+    anim: HeroAnimationState
+  ): void {
+    if (visual.dirty.stateIndicator || anim.isTransitioning || state === 'combat') {
       stateIndicator.clear();
-      this.drawStateIndicator(stateIndicator, hero.state, anim);
-      if (!anim.isTransitioning && hero.state !== 'combat') {
+      this.drawStateIndicator(stateIndicator, state, anim);
+      if (!anim.isTransitioning && state !== 'combat') {
         visual.dirty.stateIndicator = false;
       }
     }
+  }
 
-    // Tier badge is static - only redraw on tier change
+  private renderTierBadge(visual: HeroVisual, tierBadge: Graphics, tier: 1 | 2 | 3): void {
     if (visual.dirty.tierBadge) {
       tierBadge.clear();
-      this.drawTierBadge(tierBadge, hero.tier);
+      this.drawTierBadge(tierBadge, tier);
       visual.dirty.tierBadge = false;
     }
-
-    return offset;
   }
 
   private updateMotion(
@@ -818,11 +881,38 @@ export class HeroSystem {
   ) {
     const heroId = hero.definitionId;
 
-    // === LAYER 1: Pulsating Ring (Tier 2+) ===
+    // === LAYER 0: Tier 1 Subtle Edge Glow ===
+    if (hero.tier === 1) {
+      const glowAlpha = 0.15 + Math.sin(time * 2) * 0.05;
+      g.circle(0, 0, size * 1.08).fill({ color: colors.accent, alpha: glowAlpha });
+    }
+
+    // === LAYER 1: Tier 2+ Pulsating Ring with Background Particles ===
     if (hero.tier >= 2) {
-      const ringRadius = size * (1.05 + Math.sin(time * 4) * 0.03);
-      const ringAlpha = 0.4 + Math.sin(time * 6) * 0.1;
-      g.circle(0, 0, ringRadius).stroke({ width: 2, color: colors.secondary, alpha: ringAlpha });
+      // Outer pulsing ring
+      const ringRadius = size * (1.1 + Math.sin(time * 4) * 0.04);
+      const ringAlpha = 0.5 + Math.sin(time * 6) * 0.15;
+      g.circle(0, 0, ringRadius).stroke({ width: 3, color: colors.secondary, alpha: ringAlpha });
+
+      // Inner secondary ring
+      const innerRingRadius = size * (1.02 + Math.sin(time * 5 + 1) * 0.02);
+      g.circle(0, 0, innerRingRadius).stroke({ width: 1, color: colors.accent, alpha: ringAlpha * 0.6 });
+
+      // Background ambient particles (Tier 2)
+      const bgParticleCount = 6;
+      for (let i = 0; i < bgParticleCount; i++) {
+        const angle = time * 1.5 + (i * Math.PI * 2) / bgParticleCount;
+        const radius = size * (1.15 + Math.sin(time * 3 + i) * 0.1);
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        const pAlpha = 0.3 + Math.sin(time * 5 + i * 2) * 0.15;
+        g.circle(px, py, 2).fill({ color: colors.accent, alpha: pAlpha });
+      }
+    }
+
+    // === LAYER 2: Tier 3 Class Aura ===
+    if (hero.tier === 3) {
+      this.drawTier3Aura(g, heroId, size, colors, time);
     }
 
     // === LAYER 3: Class-Specific Body Shape ===
@@ -833,32 +923,43 @@ export class HeroSystem {
     const corePulse = 1 + Math.sin(time * 5) * 0.05;
     g.circle(0, 0, coreSize * corePulse).fill({ color: colors.accent, alpha: 0.9 });
 
-    // Inner detail - energy lines
-    for (let i = 0; i < 3; i++) {
-      const angle = time * 2 + (i * Math.PI * 2) / 3;
-      const lineLength = coreSize * 0.8;
+    // Inner detail - energy lines (more for higher tiers)
+    const lineCount = hero.tier + 2;
+    for (let i = 0; i < lineCount; i++) {
+      const angle = time * 2 + (i * Math.PI * 2) / lineCount;
+      const lineLength = coreSize * (0.7 + hero.tier * 0.1);
+      const lineAlpha = 0.4 + hero.tier * 0.1;
       g.moveTo(0, 0)
         .lineTo(Math.cos(angle) * lineLength, Math.sin(angle) * lineLength)
-        .stroke({ width: 1, color: 0xffffff, alpha: 0.5 });
+        .stroke({ width: 1 + hero.tier * 0.3, color: 0xffffff, alpha: lineAlpha });
     }
 
-    // === LAYER 5: Tier 3 Rotating Particles ===
+    // === LAYER 5: Tier 3 Rotating Particles with Trails ===
     if (hero.tier === 3) {
-      const particleCount = 8;
+      const particleCount = 10;
       for (let i = 0; i < particleCount; i++) {
         const angle = time * 2.5 + (i * Math.PI * 2) / particleCount;
-        const orbitRadius = size * 1.4;
-        const particleSize = 3 + Math.sin(time * 8 + i) * 1;
+        const orbitRadius = size * 1.5;
+        const particleSize = 3.5 + Math.sin(time * 8 + i) * 1.5;
         const px = Math.cos(angle) * orbitRadius;
         const py = Math.sin(angle) * orbitRadius;
 
-        // Particle trail
-        const trailAngle = angle - 0.3;
-        g.moveTo(Math.cos(trailAngle) * orbitRadius, Math.sin(trailAngle) * orbitRadius)
-          .lineTo(px, py)
-          .stroke({ width: 2, color: colors.accent, alpha: 0.4 });
+        // Extended particle trail
+        const trailLength = 0.5;
+        for (let t = 0; t < 3; t++) {
+          const trailAngle = angle - trailLength * (t + 1) * 0.15;
+          const trailAlpha = 0.4 - t * 0.12;
+          const trailSize = particleSize * (1 - t * 0.2);
+          g.circle(
+            Math.cos(trailAngle) * orbitRadius,
+            Math.sin(trailAngle) * orbitRadius,
+            trailSize
+          ).fill({ color: colors.accent, alpha: trailAlpha });
+        }
 
-        g.circle(px, py, particleSize).fill({ color: colors.accent, alpha: 0.8 });
+        // Main particle with glow
+        g.circle(px, py, particleSize * 1.5).fill({ color: colors.accent, alpha: 0.3 });
+        g.circle(px, py, particleSize).fill({ color: colors.accent, alpha: 0.9 });
       }
     }
 
@@ -873,6 +974,12 @@ export class HeroSystem {
       // Weapon flash indicator
       const flashAlpha = (Math.sin(time * 15) + 1) / 2 * anim.combatIntensity * 0.8;
       g.circle(size * 0.6, -size * 0.6, 5).fill({ color: 0xffff00, alpha: flashAlpha });
+
+      // Combat intensity ring (Tier 2+)
+      if (hero.tier >= 2) {
+        const combatRingAlpha = anim.combatIntensity * 0.3 * (Math.sin(time * 10) + 1) / 2;
+        g.circle(0, 0, size * 1.3).stroke({ width: 2, color: 0xff4444, alpha: combatRingAlpha });
+      }
     }
 
     // === LAYER 7: Death Effect ===
@@ -901,6 +1008,106 @@ export class HeroSystem {
   }
 
   /**
+   * Draw Tier 3 class-specific aura effect
+   */
+  private drawTier3Aura(
+    g: Graphics,
+    heroId: string,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    const shapeType = getHeroShapeType(heroId);
+
+    switch (shapeType) {
+      case 'lightning':
+        // Electric sparks aura
+        for (let i = 0; i < 8; i++) {
+          const sparkAngle = time * 4 + (i * Math.PI * 2) / 8;
+          const sparkDist = size * (1.3 + Math.random() * 0.2);
+          const sparkLength = size * 0.15;
+          const sx = Math.cos(sparkAngle) * sparkDist;
+          const sy = Math.sin(sparkAngle) * sparkDist;
+          const sparkAlpha = 0.5 + Math.sin(time * 15 + i * 3) * 0.3;
+
+          g.moveTo(sx, sy)
+            .lineTo(sx + Math.random() * sparkLength - sparkLength / 2, sy + Math.random() * sparkLength - sparkLength / 2)
+            .stroke({ width: 2, color: 0xffff00, alpha: sparkAlpha });
+        }
+        break;
+
+      case 'flame':
+        // Flame particles rising
+        for (let i = 0; i < 6; i++) {
+          const flameX = (Math.sin(time * 3 + i * 2) * size * 0.8);
+          const flameY = -size * (1.2 + ((time * 2 + i) % 1) * 0.5);
+          const flameAlpha = 0.4 - ((time * 2 + i) % 1) * 0.3;
+          g.circle(flameX, flameY, 3).fill({ color: colors.accent, alpha: flameAlpha });
+        }
+        break;
+
+      case 'frost':
+        // Snowflake particles floating
+        for (let i = 0; i < 6; i++) {
+          const snowAngle = time * 0.5 + (i * Math.PI * 2) / 6;
+          const snowDist = size * (1.3 + Math.sin(time * 2 + i) * 0.15);
+          const sx = Math.cos(snowAngle) * snowDist;
+          const sy = Math.sin(snowAngle) * snowDist;
+          // Mini snowflake
+          for (let j = 0; j < 6; j++) {
+            const armAngle = (j * Math.PI) / 3;
+            g.moveTo(sx, sy)
+              .lineTo(sx + Math.cos(armAngle) * 4, sy + Math.sin(armAngle) * 4)
+              .stroke({ width: 1, color: 0xadd8e6, alpha: 0.5 });
+          }
+        }
+        break;
+
+      case 'voidPortal':
+      case 'voidStar':
+        // Dark matter particles being pulled in
+        for (let i = 0; i < 8; i++) {
+          const voidAngle = time * -2 + (i * Math.PI * 2) / 8;
+          const voidDist = size * (1.6 - ((time + i * 0.3) % 1) * 0.4);
+          const vx = Math.cos(voidAngle) * voidDist;
+          const vy = Math.sin(voidAngle) * voidDist;
+          const voidAlpha = ((time + i * 0.3) % 1) * 0.5;
+          g.circle(vx, vy, 2).fill({ color: 0x4b0082, alpha: voidAlpha });
+        }
+        break;
+
+      case 'phantom':
+        // Phase echoes
+        for (let i = 0; i < 3; i++) {
+          const echoAlpha = 0.1 - i * 0.03;
+          const echoOffset = Math.sin(time * 4 + i) * (3 + i * 2);
+          g.circle(echoOffset, 0, size * 0.9).stroke({ width: 1, color: colors.accent, alpha: echoAlpha });
+        }
+        break;
+
+      case 'octagonGear':
+        // Tech holographic rings
+        for (let i = 0; i < 2; i++) {
+          const techRingRadius = size * (1.25 + i * 0.15);
+          const techRotation = time * (i % 2 === 0 ? 1 : -1);
+          const dashCount = 8;
+          for (let j = 0; j < dashCount; j++) {
+            const dashAngle = techRotation + (j * Math.PI * 2) / dashCount;
+            const dashLength = Math.PI / dashCount * 0.6;
+            g.arc(0, 0, techRingRadius, dashAngle, dashAngle + dashLength)
+              .stroke({ width: 1, color: 0x00ffff, alpha: 0.4 });
+          }
+        }
+        break;
+
+      default:
+        // Generic power aura
+        const auraAlpha = 0.2 + Math.sin(time * 3) * 0.1;
+        g.circle(0, 0, size * 1.35).stroke({ width: 2, color: colors.accent, alpha: auraAlpha });
+    }
+  }
+
+  /**
    * Draw class-specific hero shape
    */
   private drawHeroShape(
@@ -911,49 +1118,36 @@ export class HeroSystem {
     time: number
   ): void {
     const bodySize = size * 0.85;
+    const shapeType = getHeroShapeType(heroId);
 
-    switch (heroId) {
-      // Tank classes - Hexagonal shield shape
-      case 'titan':
-      case 'jade_titan':
-      case 'vanguard':
-      case 'shield_captain':
-      case 'glacier':
+    switch (shapeType) {
+      case 'hexagon':
         this.drawHexagon(g, bodySize, colors);
         break;
-
-      // Fire classes - Star/Flame shape
-      case 'inferno':
+      case 'flame':
         this.drawFlameShape(g, bodySize, colors, time);
         break;
-
-      // Mage classes - Diamond/Crystal shape
-      case 'rift':
-      case 'scarlet_mage':
-      case 'arcane_sorcerer':
+      case 'diamond':
         this.drawDiamond(g, bodySize, colors, time);
         break;
-
-      // Tech classes - Octagonal gear shape
-      case 'forge':
-      case 'iron_sentinel':
+      case 'octagonGear':
         this.drawOctagonGear(g, bodySize, colors, time);
         break;
-
-      // Electric classes - Lightning bolt inner shape
-      case 'storm':
-      case 'thunderlord':
+      case 'lightning':
         this.drawLightningShape(g, bodySize, colors, time);
         break;
-
-      // Ice classes - Crystal/Snowflake shape
-      case 'frost_unit':
-      case 'frost_archer':
-      case 'frost_giant':
+      case 'frost':
         this.drawFrostShape(g, bodySize, colors, time);
         break;
-
-      // Default - Enhanced circle
+      case 'voidPortal':
+        this.drawVoidPortal(g, bodySize, colors, time);
+        break;
+      case 'phantom':
+        this.drawPhantom(g, bodySize, colors, time);
+        break;
+      case 'voidStar':
+        this.drawVoidStar(g, bodySize, colors, time);
+        break;
       default:
         g.circle(0, 0, bodySize)
           .fill({ color: colors.primary })
@@ -1160,6 +1354,219 @@ export class HeroSystem {
     // Inner glow circle
     g.circle(0, 0, size * 0.4)
       .fill({ color: colors.accent, alpha: 0.4 + Math.sin(time * 5) * 0.1 });
+  }
+
+  /**
+   * Draw Void Portal shape for Titan (void tank)
+   * Hexagon base with swirling void particles being pulled inward
+   */
+  private drawVoidPortal(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    // Outer hexagon shell
+    const outerPoints: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 - Math.PI / 2;
+      outerPoints.push(Math.cos(angle) * size, Math.sin(angle) * size);
+    }
+    g.poly(outerPoints).fill({ color: colors.primary }).stroke({ width: 4, color: colors.secondary });
+
+    // Inner void gradient layers (dark center)
+    const midPoints: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 - Math.PI / 2;
+      midPoints.push(Math.cos(angle) * size * 0.75, Math.sin(angle) * size * 0.75);
+    }
+    g.poly(midPoints).fill({ color: 0x1a0a2e, alpha: 0.6 });
+
+    // Dark core (void center)
+    g.circle(0, 0, size * 0.4).fill({ color: 0x0a0014, alpha: 0.9 });
+
+    // Swirling void particles being pulled inward
+    const particleCount = 12;
+    for (let i = 0; i < particleCount; i++) {
+      const baseAngle = (i * Math.PI * 2) / particleCount + time * 1.5;
+      const spiralProgress = ((time * 0.8 + i * 0.3) % 1);
+      const radius = size * (0.8 - spiralProgress * 0.5);
+      const angle = baseAngle + spiralProgress * Math.PI;
+
+      const px = Math.cos(angle) * radius;
+      const py = Math.sin(angle) * radius;
+      const particleSize = 2 + (1 - spiralProgress) * 2;
+      const particleAlpha = 0.3 + (1 - spiralProgress) * 0.5;
+
+      g.circle(px, py, particleSize).fill({ color: colors.accent, alpha: particleAlpha });
+    }
+
+    // Pulsing void ring
+    const ringRadius = size * (0.5 + Math.sin(time * 3) * 0.05);
+    const ringAlpha = 0.4 + Math.sin(time * 4) * 0.15;
+    g.circle(0, 0, ringRadius).stroke({ width: 2, color: colors.accent, alpha: ringAlpha });
+
+    // Inner energy tendrils reaching outward
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 + time * 0.5;
+      const tendrilLength = size * (0.3 + Math.sin(time * 4 + i) * 0.1);
+      const tendrilAlpha = 0.5 + Math.sin(time * 5 + i * 2) * 0.2;
+
+      g.moveTo(0, 0)
+        .lineTo(Math.cos(angle) * tendrilLength, Math.sin(angle) * tendrilLength)
+        .stroke({ width: 2, color: colors.accent, alpha: tendrilAlpha });
+    }
+  }
+
+  /**
+   * Draw Phantom shape for Spectre (plasma DPS)
+   * Translucent ghostly form with flickering edges and phase effect
+   */
+  private drawPhantom(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    // Outer ghostly glow
+    const glowAlpha = 0.15 + Math.sin(time * 3) * 0.05;
+    g.circle(0, 0, size * 1.15).fill({ color: colors.accent, alpha: glowAlpha });
+
+    // Main phantom body - irregular wobbling shape
+    const bodyPoints: number[] = [];
+    const segments = 16;
+    for (let i = 0; i < segments; i++) {
+      const angle = (i * Math.PI * 2) / segments;
+      const wobble = Math.sin(time * 6 + i * 1.2) * 0.08;
+      const phaseShift = Math.sin(time * 4 + i * 0.8) * 0.05;
+      const r = size * (0.85 + wobble + phaseShift);
+      bodyPoints.push(Math.cos(angle) * r, Math.sin(angle) * r);
+    }
+    g.poly(bodyPoints).fill({ color: colors.primary, alpha: 0.7 }).stroke({ width: 2, color: colors.secondary, alpha: 0.8 });
+
+    // Inner translucent layers
+    g.circle(0, 0, size * 0.65).fill({ color: colors.secondary, alpha: 0.25 });
+    g.circle(0, 0, size * 0.45).fill({ color: colors.accent, alpha: 0.2 });
+
+    // Phase flickering effect - multiple offset copies
+    const flickerIntensity = Math.sin(time * 10) * 0.5 + 0.5;
+    if (flickerIntensity > 0.7) {
+      const offsetX = Math.sin(time * 15) * 3;
+      const offsetY = Math.cos(time * 12) * 2;
+      g.circle(offsetX, offsetY, size * 0.6).fill({ color: colors.accent, alpha: 0.15 });
+    }
+
+    // Plasma energy wisps
+    const wispCount = 5;
+    for (let i = 0; i < wispCount; i++) {
+      const wispAngle = time * 2 + (i * Math.PI * 2) / wispCount;
+      const wispRadius = size * (0.5 + Math.sin(time * 3 + i) * 0.15);
+      const wispX = Math.cos(wispAngle) * wispRadius;
+      const wispY = Math.sin(wispAngle) * wispRadius;
+      const wispAlpha = 0.4 + Math.sin(time * 8 + i * 2) * 0.2;
+
+      // Wisp trail
+      const trailAngle = wispAngle - 0.4;
+      const trailX = Math.cos(trailAngle) * wispRadius * 0.8;
+      const trailY = Math.sin(trailAngle) * wispRadius * 0.8;
+      g.moveTo(trailX, trailY).lineTo(wispX, wispY)
+        .stroke({ width: 2, color: colors.accent, alpha: wispAlpha * 0.5 });
+
+      g.circle(wispX, wispY, 3).fill({ color: colors.accent, alpha: wispAlpha });
+    }
+
+    // Central plasma core
+    const coreFlicker = 0.8 + Math.sin(time * 12) * 0.2;
+    g.circle(0, 0, size * 0.2 * coreFlicker).fill({ color: 0xffffff, alpha: 0.6 });
+
+    // Stealth shimmer lines
+    for (let i = 0; i < 3; i++) {
+      const shimmerY = -size * 0.5 + (i * size * 0.5);
+      const shimmerWidth = size * (0.4 + Math.sin(time * 6 + i) * 0.2);
+      const shimmerAlpha = 0.2 + Math.sin(time * 8 + i * 3) * 0.1;
+      g.moveTo(-shimmerWidth, shimmerY).lineTo(shimmerWidth, shimmerY)
+        .stroke({ width: 1, color: 0xffffff, alpha: shimmerAlpha });
+    }
+  }
+
+  /**
+   * Draw Void Star shape for Omega (void assassin)
+   * Dynamic star with dark matter core and deadly energy
+   */
+  private drawVoidStar(
+    g: Graphics,
+    size: number,
+    colors: { primary: number; secondary: number; accent: number },
+    time: number
+  ): void {
+    // Outer deadly aura
+    const auraAlpha = 0.2 + Math.sin(time * 4) * 0.08;
+    g.star(0, 0, 8, size * 1.2, size * 0.6, time * 0.3)
+      .fill({ color: colors.accent, alpha: auraAlpha });
+
+    // Main star body - 5-pointed assassin star
+    const starRotation = time * 0.8;
+    g.star(0, 0, 5, size, size * 0.45, starRotation)
+      .fill({ color: colors.primary })
+      .stroke({ width: 3, color: colors.secondary });
+
+    // Inner star layer
+    g.star(0, 0, 5, size * 0.7, size * 0.35, starRotation)
+      .fill({ color: colors.secondary, alpha: 0.4 });
+
+    // Dark matter core (black hole effect)
+    g.circle(0, 0, size * 0.35).fill({ color: 0x0a0a0a, alpha: 0.95 });
+    g.circle(0, 0, size * 0.25).fill({ color: 0x000000 });
+
+    // Golden energy ring around core
+    const ringPulse = 1 + Math.sin(time * 5) * 0.1;
+    g.circle(0, 0, size * 0.3 * ringPulse)
+      .stroke({ width: 2, color: colors.accent, alpha: 0.8 });
+
+    // Rotating energy blades (assassin motif)
+    const bladeCount = 5;
+    for (let i = 0; i < bladeCount; i++) {
+      const bladeAngle = starRotation + (i * Math.PI * 2) / bladeCount;
+      const bladeLength = size * 0.6;
+      const bladeWidth = size * 0.08;
+      const bladeAlpha = 0.6 + Math.sin(time * 6 + i * 2) * 0.2;
+
+      // Blade points (elongated diamond)
+      const tipX = Math.cos(bladeAngle) * bladeLength;
+      const tipY = Math.sin(bladeAngle) * bladeLength;
+      const perpAngle = bladeAngle + Math.PI / 2;
+      const sideX = Math.cos(perpAngle) * bladeWidth;
+      const sideY = Math.sin(perpAngle) * bladeWidth;
+      const baseX = Math.cos(bladeAngle) * size * 0.25;
+      const baseY = Math.sin(bladeAngle) * size * 0.25;
+
+      const bladePoints = [
+        baseX + sideX, baseY + sideY,
+        tipX, tipY,
+        baseX - sideX, baseY - sideY,
+      ];
+      g.poly(bladePoints).fill({ color: colors.accent, alpha: bladeAlpha });
+    }
+
+    // Dark matter particles orbiting
+    const particleCount = 6;
+    for (let i = 0; i < particleCount; i++) {
+      const orbitAngle = time * 3 + (i * Math.PI * 2) / particleCount;
+      const orbitRadius = size * 0.5;
+      const px = Math.cos(orbitAngle) * orbitRadius;
+      const py = Math.sin(orbitAngle) * orbitRadius;
+      const pSize = 2 + Math.sin(time * 8 + i) * 1;
+
+      g.circle(px, py, pSize).fill({ color: 0x1a1a2a, alpha: 0.8 });
+      // Particle glow
+      g.circle(px, py, pSize * 2).fill({ color: colors.accent, alpha: 0.2 });
+    }
+
+    // Execute indicator - pulsing red when ready
+    const executeGlow = (Math.sin(time * 8) + 1) / 2;
+    if (executeGlow > 0.7) {
+      g.circle(0, 0, size * 0.15).fill({ color: 0xff0000, alpha: executeGlow * 0.4 });
+    }
   }
 
   private drawHpBar(g: Graphics, hpPercent: number) {
@@ -1389,147 +1796,8 @@ export class HeroSystem {
     targetY: number,
     vfx: VFXSystem
   ): void {
-    switch (heroId) {
-      // === UNIT-7 "STORM" ===
-      case 'storm':
-        switch (skillId) {
-          case 'arc_strike':
-            // Cast effect at hero - projectile carries the damage
-            vfx.spawnClassImpact(heroX, heroY, 'lightning');
-            break;
-          case 'chain_lightning':
-            // Cast effect at hero - projectile carries the damage
-            vfx.spawnClassImpact(heroX, heroY, 'lightning');
-            break;
-          case 'ion_cannon':
-            vfx.spawnEmpBlast(heroX, heroY);
-            break;
-          default:
-            // Generic cast effect at hero
-            vfx.spawnClassImpact(heroX, heroY, 'lightning');
-        }
-        break;
-
-      // === UNIT-3 "FORGE" ===
-      case 'forge':
-        switch (skillId) {
-          case 'laser_burst':
-            vfx.spawnLaserBeam(heroX, heroY, targetX, targetY);
-            break;
-          case 'missile_barrage': {
-            // Generate spread of targets
-            const missileTargets = [];
-            for (let i = 0; i < 5; i++) {
-              missileTargets.push({
-                x: targetX + (Math.random() - 0.5) * 100,
-                y: targetY + (Math.random() - 0.5) * 60,
-              });
-            }
-            vfx.spawnMissileBarrage(heroX, heroY, missileTargets);
-            break;
-          }
-          case 'nano_swarm':
-            vfx.spawnLaserBeam(heroX, heroY, targetX, targetY);
-            break;
-          default:
-            vfx.spawnClassImpact(targetX, targetY, 'tech');
-        }
-        break;
-
-      // === UNIT-1 "TITAN" ===
-      case 'titan':
-        switch (skillId) {
-          case 'smash':
-            vfx.spawnGroundSmash(heroX, heroY, 80);
-            break;
-          case 'seismic_stomp':
-            vfx.spawnGroundSmash(heroX, heroY, 120);
-            break;
-          case 'kinetic_burst':
-            vfx.spawnKineticBurst(heroX, heroY, 100);
-            break;
-          default:
-            vfx.spawnGroundSmash(heroX, heroY, 60);
-        }
-        break;
-
-      // === UNIT-0 "VANGUARD" ===
-      case 'vanguard':
-        switch (skillId) {
-          case 'barrier_pulse':
-          case 'dual_barrier': {
-            // Create bounce path from hero to target and back
-            const shieldPath = [
-              { x: heroX, y: heroY },
-              { x: targetX, y: targetY },
-              { x: heroX + 50, y: heroY - 50 }, // Bounce point
-              { x: heroX, y: heroY }, // Return
-            ];
-            vfx.spawnShieldThrow(shieldPath);
-            break;
-          }
-          case 'kinetic_hammer':
-            // Kinetic hammer - thrown projectile (impact VFX triggers on hit)
-            vfx.spawnHammerThrow(heroX, heroY, targetX, targetY);
-            break;
-          default: {
-            const defaultPath = [
-              { x: heroX, y: heroY },
-              { x: targetX, y: targetY },
-            ];
-            vfx.spawnShieldThrow(defaultPath);
-          }
-        }
-        break;
-
-      // === UNIT-9 "RIFT" ===
-      case 'rift':
-        switch (skillId) {
-          case 'plasma_bolt':
-            vfx.spawnPlasmaBolt(heroX, heroY, targetX, targetY);
-            break;
-          case 'plasma_wave':
-            // Cast effect at hero - projectile carries the damage
-            vfx.spawnThermalImpact(heroX, heroY, 60);
-            break;
-          case 'plasma_shield':
-            // Shield spawns at hero position - not a projectile
-            vfx.spawnThermalImpact(heroX, heroY, 60);
-            break;
-          default:
-            vfx.spawnPlasmaBolt(heroX, heroY, targetX, targetY);
-        }
-        break;
-
-      // === UNIT-5 "FROST" ===
-      case 'frost':
-        switch (skillId) {
-          case 'cryo_shot':
-            vfx.spawnFrostArrow(heroX, heroY, targetX, targetY);
-            break;
-          case 'multi_shot': {
-            // Create spread of targets
-            const arrowTargets = [
-              { x: targetX - 40, y: targetY - 20 },
-              { x: targetX, y: targetY },
-              { x: targetX + 40, y: targetY + 20 },
-            ];
-            vfx.spawnMultiShot(heroX, heroY, arrowTargets);
-            break;
-          }
-          case 'shatter_shot':
-            // Frost arrow travels - freeze impact happens when projectile hits
-            vfx.spawnFrostArrow(heroX, heroY, targetX, targetY);
-            break;
-          default:
-            vfx.spawnFrostArrow(heroX, heroY, targetX, targetY);
-        }
-        break;
-
-      default:
-        // Unknown hero - use generic class effect based on projectile class
-        vfx.spawnSkillActivation(heroX, heroY, 'natural');
-    }
+    const handler = getSkillVfxHandler(heroId, skillId);
+    handler({ heroX, heroY, targetX, targetY, vfx });
   }
 
   /**

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'preact/hooks';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { MATERIAL_DEFINITIONS } from '@arcade/sim-core';
 import type { ColonyStatus } from '@arcade/protocol';
 import {
@@ -42,14 +43,6 @@ const MATERIAL_ICONS: Record<string, string> = {
   super_soldier_serum: '💉',
 };
 
-// Colony names (Polish)
-const COLONY_NAMES: Record<string, string> = {
-  farm: 'Farma',
-  mine: 'Kopalnia',
-  market: 'Targ',
-  factory: 'Fabryka',
-};
-
 // Building popup component (shown when clicking a building in scene)
 function BuildingPopup({
   colony,
@@ -60,20 +53,22 @@ function BuildingPopup({
   onClose: () => void;
   onUpgrade: () => void;
 }) {
+  const { t } = useTranslation(['modals', 'common', 'game']);
   const isUpgrading = upgradingColony.value === colony.id;
   const playerGold = baseGold.value;
   const canAfford = playerGold >= colony.upgradeCost;
   const isMaxLevel = colony.level >= colony.maxLevel;
+  const colonyName = t(`game:colonyScene.colonyNames.${colony.id}`, { defaultValue: colony.name });
 
   if (!colony.unlocked) {
     return (
       <div class={`${styles.buildingPopup} ${styles.locked}`} onClick={(e) => e.stopPropagation()}>
-        <div class={styles.buildingPopupName}>{COLONY_NAMES[colony.id] || colony.name}</div>
+        <div class={styles.buildingPopupName}>{colonyName}</div>
         <div class={styles.buildingPopupUnlock}>
-          Odblokuj na poziomie {colony.unlockLevel}
+          {t('game:colonyScene.unlockAtLevel', { level: colony.unlockLevel })}
         </div>
         <button class={styles.colonyUpgradeBtn} onClick={onClose} style={{ marginTop: '8px', opacity: 0.6 }}>
-          Zamknij
+          {t('common:buttons.close')}
         </button>
       </div>
     );
@@ -82,25 +77,27 @@ function BuildingPopup({
   return (
     <div class={styles.buildingPopup} onClick={(e) => e.stopPropagation()}>
       <div class={styles.buildingPopupName}>
-        {COLONY_NAMES[colony.id] || colony.name} Lv.{colony.level}
+        {t('idleRewards.buildingNameLevel', { name: colonyName, level: colony.level })}
       </div>
       <div class={styles.buildingPopupStats}>
-        Produkcja: {colony.goldPerHour} 🪙/h
+        {t('game:colonyScene.production')}: {colony.goldPerHour} 🪙/h
       </div>
       {colony.pendingGold > 0 && (
         <div class={styles.buildingPopupPending}>
-          Zebrano: +{colony.pendingGold} 🪙
+          {t('game:colonyScene.collected')}: +{colony.pendingGold} 🪙
         </div>
       )}
       {isMaxLevel ? (
-        <span class={styles.colonyMaxLevel}>MAX LEVEL</span>
+        <span class={styles.colonyMaxLevel}>{t('game:colonyScene.maxLevel')}</span>
       ) : (
         <button
           class={styles.colonyUpgradeBtn}
           onClick={onUpgrade}
           disabled={!canAfford || isUpgrading || !colony.canUpgrade}
         >
-          {isUpgrading ? 'Ulepszanie...' : `Ulepsz za ${colony.upgradeCost} 🪙`}
+          {isUpgrading
+            ? t('game:colonyScene.upgrading')
+            : t('idleRewards.upgradeForCost', { cost: colony.upgradeCost })}
         </button>
       )}
     </div>
@@ -108,6 +105,7 @@ function BuildingPopup({
 }
 
 export function IdleRewardsModal() {
+  const { t } = useTranslation(['modals', 'common']);
   const isVisible = idleRewardsModalVisible.value;
   const state = idleRewardsState.value;
   const claiming = claimingRewards.value;
@@ -160,10 +158,10 @@ export function IdleRewardsModal() {
   return (
     <Modal
       visible={isVisible}
-      title="Idle Rewards"
+      title={t('idleRewards.title')}
       onClose={hideIdleRewardsModal}
       class={styles.modalContent}
-      ariaLabel="Offline Rewards"
+      ariaLabel={t('idleRewards.ariaLabel')}
     >
       {/* Colony Scene with Pixi canvas */}
       {hasColonies && (
@@ -202,7 +200,7 @@ export function IdleRewardsModal() {
 
       {/* Compact rewards display */}
       <div class={styles.rewards}>
-        <h3 class={styles.sectionTitle}>Zdobyte nagrody</h3>
+        <h3 class={styles.sectionTitle}>{t('idleRewards.rewardsTitle')}</h3>
 
         <div class={styles.compactRewards}>
           {/* Gold from colonies */}

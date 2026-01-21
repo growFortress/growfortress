@@ -1,5 +1,6 @@
 import { getArtifactById } from '@arcade/sim-core';
 import { recentArtifactDrops } from '../../state/artifacts.signals.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './ArtifactDrop.module.css';
 
 // Rarity colors (matching game theme)
@@ -29,6 +30,7 @@ const SLOT_ICONS: Record<string, string> = {
 };
 
 export function ArtifactDrop() {
+  const { t } = useTranslation('game');
   const drops = recentArtifactDrops.value;
 
   if (drops.length === 0) {
@@ -69,7 +71,7 @@ export function ArtifactDrop() {
             <div class={styles.info}>
               <div class={styles.header}>
                 <span class={styles.rarityLabel}>
-                  {drop.isDuplicate ? 'DUPLIKAT' : artifact.rarity.toUpperCase()}
+                  {drop.isDuplicate ? t('artifactDrop.duplicate') : artifact.rarity.toUpperCase()}
                 </span>
                 {artifact.rarity === 'legendary' && !drop.isDuplicate && (
                   <span class={styles.starBurst}>★</span>
@@ -78,10 +80,10 @@ export function ArtifactDrop() {
               <span class={styles.name}>{artifact.polishName}</span>
               {drop.isDuplicate ? (
                 <span class={styles.dustReward}>
-                  +{drop.dustValue} 🌫️ Dust
+                  {t('artifactDrop.dustReward', { amount: drop.dustValue })}
                 </span>
               ) : (
-                <span class={styles.newLabel}>NOWY ARTEFAKT!</span>
+                <span class={styles.newLabel}>{t('artifactDrop.newArtifact')}</span>
               )}
             </div>
           </div>

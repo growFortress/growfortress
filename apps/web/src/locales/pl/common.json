@@ -260,6 +260,7 @@
     "compareWith": "Porównaj z",
     "selectHero": "Wybierz bohatera...",
     "vsLabel": "VS",
+    "changeHero": "Zmień bohatera",
     "synergiesTitle": "SYNERGIE",
     "bestUse": "Najlepsze zastosowanie",
     "fortressSynergy": "Synergia z fortecą",
@@ -270,7 +271,9 @@
   },
   "turretPlacement": {
     "title": "Postaw Wieżyczkę",
+    "titleReplace": "Zmień Wieżyczkę",
     "subtitle": "Wybierz typ wieżyczki dla slotu #{{slot}}",
+    "subtitleReplace": "Wybierz nową wieżyczkę dla slotu #{{slot}}",
     "roles": {
       "dps": "Obrażenia",
       "aoe": "Obrażenia Obszarowe",
@@ -285,6 +288,16 @@
     "noGold": "Brak złota",
     "owned": "Posiadana",
     "purchaseError": "Nie udało się kupić wieżyczki",
+    "change": "Zmień wieżyczkę",
+    "cancel": "Anuluj"
+  },
+  "heroPlacement": {
+    "title": "Zmień Bohatera",
+    "subtitle": "Wybierz bohatera dla slotu #{{slot}}",
+    "inUse": "W użyciu",
+    "current": "Aktualny",
+    "noHeroes": "Nie masz jeszcze odblokowanych bohaterów.",
+    "slotMissing": "Wybrany slot jest niedostępny.",
     "cancel": "Anuluj"
   },
   "leaderboard": {
@@ -397,6 +410,25 @@
       "race": "Wyścig",
       "boss": "Boss",
       "roster": "Roster"
+    },
+    "roster": {
+      "loadError": "Nie udało się załadować rosteru",
+      "officerOnly": "Tylko Lider i Oficerowie mogą przeglądać roster.",
+      "members": "członków",
+      "readyForBattle": "gotowych do bitwy",
+      "filters": {
+        "all": "Wszyscy",
+        "withBattleHero": "Z Battle Hero",
+        "withoutBattleHero": "Bez Battle Hero"
+      },
+      "player": "Gracz",
+      "role": "Rola",
+      "power": "Moc",
+      "wave": "Fala",
+      "battleHero": "Battle Hero",
+      "empty": "Brak członków spełniających kryteria",
+      "hint": "Członkowie z ustawionym Battle Hero mogą być wybrani do bitwy Arena 5v5.",
+      "hintRequirement": "Minimum 5 gotowych graczy wymaganych do ataku."
     },
     "refresh": "Odśwież",
     "loadError": "Nie udało się załadować danych gildii",

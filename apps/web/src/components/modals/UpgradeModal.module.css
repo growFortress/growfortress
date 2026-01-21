@@ -160,6 +160,28 @@
   margin-top: 8px;
 }
 
+.turretActions {
+  margin-top: 12px;
+}
+
+.changeButton {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-neutral-20);
+  background: transparent;
+  color: var(--color-text-60);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+}
+
+.changeButton:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-50);
+  background: var(--color-primary-10);
+}
+
 .baseStat {
   display: flex;
   align-items: center;

@@ -343,7 +343,7 @@ score = (wavesCleared × 100)
 
 ## Guild System
 
-Multiplayer team system for 10-20 players. See [guild-system.md](./guild-system.md) for full documentation.
+Multiplayer team system for 10-30 players. See [guild-system.md](./guild-system.md) for full documentation.
 
 ### Key Features
 
@@ -356,10 +356,10 @@ Multiplayer team system for 10-20 players. See [guild-system.md](./guild-system.
 
 ### Guild Bonuses (Level 20)
 
-- +40% Gold from sessions
-- +20% Dust from sessions
-- +30% XP from sessions
-- 20 member capacity
+- +20% Gold from sessions (Skarbiec)
+- +20% XP from sessions (Akademia)
+- +20% stats (Zbrojownia)
+- 30 member capacity (Kwatera)
 
 ### Hierarchy
 

@@ -11,6 +11,7 @@ import {
 import { BOSS_RUSH_SEQUENCE, BOSS_RUSH_MILESTONES } from '@arcade/sim-core';
 import { getBossRushHistory, getBossRushLeaderboard } from '../../api/boss-rush.js';
 import { PILLAR_INFO } from '../../state/game.signals.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './BossRushSetupModal.module.css';
 
 /** Pillar emoji lookup */
@@ -28,6 +29,7 @@ interface BossRushSetupModalProps {
 }
 
 export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
+  const { t } = useTranslation('modals');
   const [showBossSequence, setShowBossSequence] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -101,29 +103,29 @@ export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
       <div class={styles.modal}>
         <div class={styles.header}>
           <span class={styles.icon}>⚔️</span>
-          <h2>BOSS RUSH</h2>
+          <h2>{t('bossRushSetup.title')}</h2>
           <span class={styles.icon}>⚔️</span>
         </div>
 
         <p class={styles.description}>
-          Walcz z serią potężnych bossów!
+          {t('bossRushSetup.descriptionLine1')}
           <br />
-          Im dalej zajdziesz, tym więcej obrażeń zadasz i wyżej w rankingu.
+          {t('bossRushSetup.descriptionLine2')}
         </p>
 
         {/* Best score box */}
         <div class={styles.bestScore}>
-          <div class={styles.bestScoreHeader}>📊 Twój najlepszy wynik</div>
+          <div class={styles.bestScoreHeader}>{t('bossRushSetup.bestScore')}</div>
           {loadingHistory ? (
-            <div class={styles.bestScoreValues}>Ładowanie...</div>
+            <div class={styles.bestScoreValues}>{t('bossRushSetup.loading')}</div>
           ) : userBestDamage.value > 0 ? (
             <div class={styles.bestScoreValues}>
-              <span class={styles.damage}>{formatDamage(userBestDamage.value)} DMG</span>
+              <span class={styles.damage}>{t('bossRushSetup.bestDamage', { damage: formatDamage(userBestDamage.value) })}</span>
               <span class={styles.separator}>|</span>
-              <span class={styles.bosses}>{userBestBossesKilled.value} bossów</span>
+              <span class={styles.bosses}>{t('bossRushSetup.bestBosses', { count: userBestBossesKilled.value })}</span>
             </div>
           ) : (
-            <div class={styles.bestScoreValues}>Brak wyników - zagraj pierwszy raz!</div>
+            <div class={styles.bestScoreValues}>{t('bossRushSetup.noScores')}</div>
           )}
         </div>
 
@@ -133,7 +135,7 @@ export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
             class={styles.sequenceToggle}
             onClick={() => setShowBossSequence(!showBossSequence)}
           >
-            <span>Sekwencja bossów ({BOSS_RUSH_SEQUENCE.length})</span>
+            <span>{t('bossRushSetup.sequenceTitle', { count: BOSS_RUSH_SEQUENCE.length })}</span>
             <span class={styles.chevron}>{showBossSequence ? '▲' : '▼'}</span>
           </button>
 
@@ -150,7 +152,7 @@ export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
                 </div>
               ))}
               <div class={styles.cycleNote}>
-                Po 7 bossach cykl się powtarza z 2x skalowaniem
+                {t('bossRushSetup.cycleNote')}
               </div>
             </div>
           )}
@@ -158,11 +160,11 @@ export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
 
         {/* Milestones info */}
         <div class={styles.milestonesSection}>
-          <div class={styles.milestonesHeader}>🏆 Nagrody milestone</div>
+          <div class={styles.milestonesHeader}>{t('bossRushSetup.milestonesTitle')}</div>
           <div class={styles.milestonesList}>
             {BOSS_RUSH_MILESTONES.slice(0, 3).map((milestone) => (
               <div key={milestone.bossCount} class={styles.milestoneItem}>
-                <span class={styles.milestoneCount}>{milestone.bossCount} bossów</span>
+                <span class={styles.milestoneCount}>{t('bossRushSetup.milestoneCount', { count: milestone.bossCount })}</span>
                 <span class={styles.milestoneReward}>
                   {milestone.materials.map((m) => m.id.replace('boss_', '').replace('_', ' ')).join(', ')}
                 </span>
@@ -174,14 +176,14 @@ export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
         {/* Buttons */}
         <div class={styles.buttons}>
           <Button variant="secondary" onClick={handleCancel}>
-            Anuluj
+            {t('bossRushSetup.cancel')}
           </Button>
           <Button
             variant="skill"
             onClick={handleStart}
             disabled={bossRushLoading.value}
           >
-            {bossRushLoading.value ? 'Ładowanie...' : '🚀 ROZPOCZNIJ'}
+            {bossRushLoading.value ? t('bossRushSetup.loading') : t('bossRushSetup.start')}
           </Button>
         </div>
       </div>

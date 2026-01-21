@@ -1,16 +1,17 @@
 import { gameState } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './CrystalDisplay.module.css';
 
 /**
  * Ancient Crystal colors and names (Starożytne Kryształy)
  */
-const CRYSTAL_INFO: Record<string, { name: string; polishName: string; color: string; glowColor: string }> = {
-  power: { name: 'Power', polishName: 'Kryształ Mocy', color: '#9932cc', glowColor: '#da70d6' },
-  void: { name: 'Void', polishName: 'Kryształ Próżni', color: '#0000ff', glowColor: '#87ceeb' },
-  chrono: { name: 'Chrono', polishName: 'Kryształ Czasu', color: '#00ff00', glowColor: '#98fb98' },
-  matter: { name: 'Matter', polishName: 'Kryształ Materii', color: '#ff0000', glowColor: '#ff6347' },
-  vitae: { name: 'Vitae', polishName: 'Kryształ Życia', color: '#ffa500', glowColor: '#ffd700' },
-  psi: { name: 'Psi', polishName: 'Kryształ Umysłu', color: '#ffff00', glowColor: '#fffacd' },
+const CRYSTAL_INFO: Record<string, { nameKey: string; color: string; glowColor: string }> = {
+  power: { nameKey: 'game:crystalDisplay.crystals.power', color: '#9932cc', glowColor: '#da70d6' },
+  void: { nameKey: 'game:crystalDisplay.crystals.void', color: '#0000ff', glowColor: '#87ceeb' },
+  chrono: { nameKey: 'game:crystalDisplay.crystals.chrono', color: '#00ff00', glowColor: '#98fb98' },
+  matter: { nameKey: 'game:crystalDisplay.crystals.matter', color: '#ff0000', glowColor: '#ff6347' },
+  vitae: { nameKey: 'game:crystalDisplay.crystals.vitae', color: '#ffa500', glowColor: '#ffd700' },
+  psi: { nameKey: 'game:crystalDisplay.crystals.psi', color: '#ffff00', glowColor: '#fffacd' },
 };
 
 // Legacy mapping for backwards compatibility
@@ -32,6 +33,7 @@ interface CrystalDisplayProps {
  * Display collected Ancient Crystals (Starożytne Kryształy) and fragments
  */
 export function CrystalDisplay({ onAnnihilationClick }: CrystalDisplayProps) {
+  const { t } = useTranslation('game');
   const state = gameState.value;
   if (!state) return null;
 
@@ -47,15 +49,16 @@ export function CrystalDisplay({ onAnnihilationClick }: CrystalDisplayProps) {
   return (
     <div class={styles.container}>
       <div class={styles.header}>
-        <span class={styles.title}>Starożytne Kryształy</span>
+        <span class={styles.title}>{t('crystalDisplay.ancientCrystals')}</span>
         {gauntletState?.isAssembled && (
-          <span class={styles.matrixBadge}>MATRYCA AKTYWNA</span>
+          <span class={styles.matrixBadge}>{t('crystalDisplay.matrixActive')}</span>
         )}
       </div>
 
       <div class={styles.crystalsRow}>
         {CRYSTAL_ORDER.map((crystalType) => {
           const info = CRYSTAL_INFO[crystalType];
+          const crystalName = t(info.nameKey);
           const isCollected = collectedCrystals.includes(crystalType);
           // Check both new and legacy fragment names
           const fragment = infinityStoneFragments.find((f) => {
@@ -74,7 +77,7 @@ export function CrystalDisplay({ onAnnihilationClick }: CrystalDisplayProps) {
                 '--crystal-color': info.color,
                 '--crystal-glow': info.glowColor,
               }}
-              title={`${info.polishName}${isCollected ? ' (Zebrano)' : fragmentCount > 0 ? ` (${fragmentCount}/10 fragmentów)` : ''}`}
+              title={`${crystalName}${isCollected ? t('crystalDisplay.collected') : fragmentCount > 0 ? t('crystalDisplay.fragments', { count: fragmentCount }) : ''}`}
             >
               <div class={styles.crystalGem} />
               {!isCollected && fragmentCount > 0 && (
@@ -89,16 +92,16 @@ export function CrystalDisplay({ onAnnihilationClick }: CrystalDisplayProps) {
         <div class={styles.annihilationSection}>
           {gauntletState.annihilationCooldown > 0 ? (
             <span class={styles.cooldown}>
-              Fala Anihilacji: {gauntletState.annihilationCooldown} fal
+              {t('crystalDisplay.annihilationCooldown', { count: gauntletState.annihilationCooldown })}
             </span>
           ) : (
             <button
               class={styles.annihilationButton}
               onClick={onAnnihilationClick}
               disabled={state.enemyCount === 0}
-              title="Aktywuj Falę Anihilacji - zadaje 30% obrażeń wszystkim wrogom"
+              title={t('crystalDisplay.annihilationTooltip')}
             >
-              Fala Anihilacji
+              {t('crystalDisplay.annihilationWave')}
             </button>
           )}
         </div>

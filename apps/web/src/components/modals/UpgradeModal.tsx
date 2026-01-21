@@ -13,6 +13,8 @@ import {
   updateTurretStatLevel,
   updateTotalPower,
   showErrorToast,
+  turretPlacementModalVisible,
+  turretPlacementSlotIndex,
 } from '../../state/index.js';
 import { audioManager } from '../../game/AudioManager.js';
 import {
@@ -180,6 +182,13 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
     const upgradeCost = turret.tier === 1 ? TURRET_UPGRADE_COSTS['1_to_2'] : TURRET_UPGRADE_COSTS['2_to_3'];
     const canAfford = gold >= upgradeCost.gold && dust >= upgradeCost.dust;
 
+    const handleChangeTurret = () => {
+      turretPlacementSlotIndex.value = target.slotIndex;
+      turretPlacementModalVisible.value = true;
+      upgradePanelVisible.value = false;
+      upgradeTarget.value = null;
+    };
+
     const cssVars = {
       '--class-color': classConfig.color,
       '--class-color-20': `${classConfig.color}33`,
@@ -226,6 +235,17 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
                       <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.range / 16384)}</span>
                       <span>{t('upgradeModal.stats.range')}</span>
                     </div>
+                  </div>
+                )}
+                {gamePhase.value === 'idle' && (
+                  <div class={styles.turretActions}>
+                    <button
+                      class={styles.changeButton}
+                      onClick={handleChangeTurret}
+                      type="button"
+                    >
+                      {t('turretPlacement.change')}
+                    </button>
                   </div>
                 )}
               </div>

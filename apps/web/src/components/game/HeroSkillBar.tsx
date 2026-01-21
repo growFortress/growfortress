@@ -1,6 +1,7 @@
 import type { ActiveHero } from '@arcade/sim-core';
 import { getHeroById } from '@arcade/sim-core';
 import { activeHeroes, gamePhase } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './HeroSkillBar.module.css';
 
 // Unique skill icons by skill ID (hero skills)
@@ -98,6 +99,7 @@ interface HeroSkillBarProps {
 }
 
 export function HeroSkillBar({ compact = false }: HeroSkillBarProps) {
+  const { t } = useTranslation('game');
   const heroes = activeHeroes.value;
   const phase = gamePhase.value;
 
@@ -110,7 +112,7 @@ export function HeroSkillBar({ compact = false }: HeroSkillBarProps) {
     <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`}>
       {!compact && (
         <div class={styles.header}>
-          <span class={styles.title}>Bohaterowie</span>
+          <span class={styles.title}>{t('heroSkills.title')}</span>
         </div>
       )}
       <div class={styles.heroSkills}>

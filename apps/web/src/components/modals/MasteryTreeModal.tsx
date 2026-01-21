@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { Modal } from '../shared/Modal.js';
 import type { FortressClass, MasteryNodeDefinition, MasteryTreeDefinition } from '@arcade/sim-core';
 import { canUnlockNode, calculateRespecReturn } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import {
   masteryState,
   masteryModalVisible,
@@ -120,6 +121,7 @@ function getNodeEffectsList(node: MasteryNodeDefinition): string[] {
 // ============================================================================
 
 export function MasteryTreeModal() {
+  const { t } = useTranslation('modals');
   const isVisible = masteryModalVisible.value;
   const state = masteryState.value;
   const selectedClass = selectedMasteryClass.value;
@@ -232,11 +234,11 @@ export function MasteryTreeModal() {
       {/* Header */}
       <div class={styles.header}>
         <div class={styles.headerLeft}>
-          <h2 class={styles.headerTitle}>Drzewka Mistrzowskie</h2>
+          <h2 class={styles.headerTitle}>{t('masteryTree.title')}</h2>
         </div>
         <div class={styles.headerRight}>
           <div class={styles.pointsDisplay}>
-            <span class={styles.pointsLabel}>Dostepne MP</span>
+            <span class={styles.pointsLabel}>{t('masteryTree.availablePoints')}</span>
             <span class={styles.pointsValue}>{availablePoints}</span>
             <span class={styles.pointsIcon}>🌫️</span>
           </div>
@@ -257,7 +259,7 @@ export function MasteryTreeModal() {
               <span class={styles.classTabIcon}>{config.icon}</span>
               <span class={styles.classTabName}>{config.name}</span>
               <span class={styles.classTabProgress}>
-                {summary.unlocked}/{treeDefinition?.totalNodes ?? 18} wezlow
+                {t('masteryTree.nodesUnlocked', { unlocked: summary.unlocked, total: treeDefinition?.totalNodes ?? 18 })}
               </span>
             </button>
           );
@@ -269,14 +271,14 @@ export function MasteryTreeModal() {
         {state.isLoading ? (
           <div class={styles.loading}>
             <div class={styles.loadingSpinner} />
-            <span class={styles.loadingText}>Ladowanie drzewka...</span>
+            <span class={styles.loadingText}>{t('masteryTree.loading')}</span>
           </div>
         ) : state.error ? (
           <div class={styles.error}>
             <span class={styles.errorIcon}>⚠️</span>
             <span class={styles.errorText}>{state.error}</span>
             <button class={styles.retryButton} onClick={() => loadMasteryData()}>
-              Sprobuj ponownie
+              {t('masteryTree.retry')}
             </button>
           </div>
         ) : treeDefinition && classProgress ? (
@@ -302,11 +304,11 @@ export function MasteryTreeModal() {
 
               <div class={styles.detailsStats}>
                 <div class={styles.detailsStat}>
-                  <span class={styles.detailsStatLabel}>Wydane MP</span>
+                  <span class={styles.detailsStatLabel}>{t('masteryTree.pointsSpent')}</span>
                   <span class={styles.detailsStatValue}>{classProgress.pointsSpent}</span>
                 </div>
                 <div class={styles.detailsStat}>
-                  <span class={styles.detailsStatLabel}>Odblokowane wezly</span>
+                  <span class={styles.detailsStatLabel}>{t('masteryTree.unlockedNodes')}</span>
                   <span class={styles.detailsStatValue}>
                     {classProgress.unlockedNodes.length}/{treeDefinition.totalNodes}
                   </span>
@@ -314,7 +316,7 @@ export function MasteryTreeModal() {
 
                 <div class={styles.progressBarContainer}>
                   <div class={styles.progressBarLabel}>
-                    <span>Postep</span>
+                    <span>{t('masteryTree.progress')}</span>
                     <span>{Math.round((classProgress.unlockedNodes.length / treeDefinition.totalNodes) * 100)}%</span>
                   </div>
                   <div class={styles.progressBar}>
@@ -338,7 +340,7 @@ export function MasteryTreeModal() {
               ) : (
                 <div class={styles.emptySelection}>
                   <span class={styles.emptyIcon}>🎯</span>
-                  <span class={styles.emptyText}>Kliknij wezel aby zobaczyc szczegoly</span>
+                  <span class={styles.emptyText}>{t('masteryTree.selectNode')}</span>
                 </div>
               )}
 
@@ -349,10 +351,10 @@ export function MasteryTreeModal() {
                   onClick={handleRespec}
                   disabled={respeccing || classProgress.pointsSpent === 0}
                 >
-                  {respeccing ? 'Resetowanie...' : 'Resetuj drzewko'}
+                  {respeccing ? t('masteryTree.respecInProgress') : t('masteryTree.respec')}
                 </button>
                 <div class={styles.respecWarning}>
-                  Tracisz 50% wydanych punktow przy resecie
+                  {t('masteryTree.respecWarning')}
                 </div>
               </div>
             </div>

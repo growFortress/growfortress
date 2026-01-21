@@ -2,6 +2,7 @@ import type { FortressClass } from "@arcade/sim-core";
 import { VFXSystem } from "../../systems/VFXSystem.js";
 import { lightingSystem, LightingSystem } from "../../effects/LightingSystem.js";
 import { filterManager } from "../../effects/FilterManager.js";
+import i18n from "../../../i18n/index.js";
 
 /**
  * SceneEffects coordinates all visual effects for the game scene:
@@ -192,6 +193,11 @@ export class SceneEffects {
     // Floating text in center of screen
     const centerX = this.width / 2;
     const centerY = this.height / 3;
-    this.vfx.spawnFloatingText(centerX, centerY, `WAVE ${wave} COMPLETE!`, 0x00ff9d);
+    this.vfx.spawnFloatingText(
+      centerX,
+      centerY,
+      i18n.t("game:waveComplete", { wave }),
+      0x00ff9d,
+    );
   }
 }

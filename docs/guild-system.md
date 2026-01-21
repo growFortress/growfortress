@@ -1,6 +1,6 @@
 # Guild System (System Gildii)
 
-System gildii dla Grow Fortress. Umozliwia tworzenie zespolow 10-20 graczy z hierarchia rang, wspolnym skarbcem, bitwami Arena 5v5, Weekly Tower Race i Guild Boss.
+System gildii dla Grow Fortress. Umozliwia tworzenie zespolow 10-30 graczy z hierarchia rang, wspolnym skarbcem, bitwami Arena 5v5, Weekly Tower Race i Guild Boss.
 
 ## Spis tresci
 
@@ -21,7 +21,7 @@ System gildii dla Grow Fortress. Umozliwia tworzenie zespolow 10-20 graczy z hie
 
 ### Glowne funkcje
 
-- **Gildie 10-20 osob** - dynamiczny limit czlonkow zalezny od poziomu gildii
+- **Gildie 10-30 osob** - dynamiczny limit czlonkow zalezny od poziomu gildii
 - **Hierarchia rang** - Leader, Officer, Member z roznymi uprawnieniami
 - **Battle Hero** - kazdy czlonek ustawia 1 bohatera do bitew gildyjnych
 - **Arena 5v5** - instant PvP, Leader wybiera 5 czlonkow do ataku
@@ -174,9 +174,10 @@ Tygodniowa rywalizacja gildii oparta na sumie fal przejsciowych przez wszystkich
 |---------|---------|
 | 1 | 500 Guild Coins |
 | 2 | 300 Guild Coins |
-| 3 | 100 Guild Coins |
-| 4-10 | 50 Guild Coins |
-| 11-20 | 25 Guild Coins |
+| 3 | 200 Guild Coins |
+| 4-10 | 100 Guild Coins |
+| 11-25 | 50 Guild Coins |
+| 26-50 | 25 Guild Coins |
 
 ### API
 
@@ -247,13 +248,8 @@ const damage = Math.floor(heroPower * randomMultiplier * tierMultiplier * 100);
 
 | Akcja | Nagroda |
 |-------|---------|
-| Uczestnictwo (atak) | 50 Guild Coins |
-| Top damage w gildii | +200 Guild Coins |
-| 1 miejsce (gildia) | 500 Guild Coins |
-| 2 miejsce | 300 Guild Coins |
-| 3 miejsce | 200 Guild Coins |
-| 4-10 miejsce | 100 Guild Coins |
-| 11-20 miejsce | 50 Guild Coins |
+| Uczestnictwo (atak) | 5 Guild Coins |
+| Top damage w gildii (tygodniowo) | +25 Guild Coins (planowane) |
 
 ### API
 
@@ -540,45 +536,68 @@ export function closeGuildPreview(): void;
 // packages/protocol/src/guild.ts
 
 export const GUILD_CONSTANTS = {
-  // Nazwa i tag
-  NAME_MIN_LENGTH: 3,
-  NAME_MAX_LENGTH: 24,
+  // Name/tag constraints
+  MIN_NAME_LENGTH: 3,
+  MAX_NAME_LENGTH: 24,
   TAG_MIN_LENGTH: 3,
   TAG_MAX_LENGTH: 5,
+  MAX_DESCRIPTION_LENGTH: 200,
 
-  // Czlonkostwo
-  BASE_MEMBER_CAPACITY: 10,
-  MAX_MEMBER_CAPACITY: 20,
-  MAX_LEVEL: 20,
+  // Member limits (based on Kwatera structure level)
+  MEMBER_BASE_CAPACITY: 10,
+  MEMBER_MAX_CAPACITY: 30,
 
-  // Zaproszenia
+  // Donation limits
+  MIN_DONATION_GOLD: 100,
+  MIN_DONATION_DUST: 10,
+  MAX_DAILY_DONATION_GOLD: 50000,
+  MAX_DAILY_DONATION_DUST: 500,
+
+  // Time limits
   INVITATION_EXPIRY_HOURS: 72,
+  APPLICATION_EXPIRY_HOURS: 72,
+  BATTLE_COOLDOWN_HOURS: 24,
+  WITHDRAWAL_COOLDOWN_HOURS: 24,
 
-  // Skarbiec
-  WITHDRAW_COOLDOWN_HOURS: 24,
+  // Applications
+  MAX_ACTIVE_APPLICATIONS_PER_PLAYER: 5,
+  MAX_APPLICATION_MESSAGE_LENGTH: 200,
 
-  // Arena 5v5
-  DAILY_ATTACK_LIMIT: 10,
-  ATTACK_SAME_GUILD_COOLDOWN_HOURS: 24,
+  // Treasury
+  MAX_WITHDRAWAL_PERCENT: 0.20,
+
+  // Arena 5v5 Battles
+  ARENA_PARTICIPANTS: 5,
+  MAX_DAILY_ATTACKS: 10,
+  ATTACK_COOLDOWN_SAME_GUILD_HOURS: 24,
+  MAX_ATTACKS_RECEIVED_PER_DAY: 3,
+  ARENA_DURATION_TICKS: 1800, // 60 seconds at 30Hz
+
+  // Shield
   SHIELD_DURATION_HOURS: 24,
-  SHIELD_COST_GOLD: 5000,
-  SHIELD_MAX_PER_WEEK: 2,
-  ARENA_TEAM_SIZE: 5,
+  SHIELD_GOLD_COST: 5000,
+  MAX_SHIELDS_PER_WEEK: 2,
 
   // Honor (ELO)
-  STARTING_HONOR: 1000,
+  BASE_HONOR: 1000,
   MIN_HONOR: 100,
-  MAX_HONOR: 3000,
-  K_FACTOR: 32,
+  HONOR_K_FACTOR: 32,
 
-  // Guild Coins
-  COINS_ARENA_WIN: 100,
-  COINS_ARENA_PARTICIPATION: 30,
-  COINS_BOSS_PARTICIPATION: 50,
-  COINS_BOSS_TOP_DAMAGE: 200,
+  // Structure upgrades
+  STRUCTURE_MAX_LEVEL: 20,
+  STRUCTURE_UPGRADE_BASE_GOLD: 500, // Cost = 500 × (level + 1)²
+  STRUCTURE_UPGRADE_BASE_DUST: 25,  // Cost = 25 × (level + 1)
+  STRUCTURE_BONUS_PER_LEVEL: 0.01,  // +1% per level for skarbiec/akademia/zbrojownia
 
   // Guild Boss
   BOSS_TOTAL_HP: 50_000_000,
+  BOSS_ATTACKS_PER_DAY: 1,
+
+  // Guild Coins (earned from battles/boss)
+  COINS_ARENA_WIN: 50,
+  COINS_ARENA_LOSS: 10,
+  COINS_BOSS_PARTICIPATION: 5,
+  COINS_BOSS_TOP_DAMAGE: 25,
 } as const;
 ```
 

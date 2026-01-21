@@ -8,6 +8,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import type { ColonyStatus } from '@arcade/protocol';
 import { easeOutBack, easeOutElastic } from '../animation/easing.js';
+import i18n from '../../i18n/index.js';
 
 // Theme colors matching game style
 const THEME = {
@@ -762,9 +763,14 @@ export class ColonyScene {
       },
     });
 
+    const colonyId = colony?.id ?? '';
+    const colonyName = colonyId
+      ? i18n.t(`game:colonyScene.colonyNames.${colonyId}`, { defaultValue: config.name })
+      : config.name;
+
     // Name
     const nameText = new Text({
-      text: config.name.toUpperCase(),
+      text: colonyName.toUpperCase(),
       style: nameStyle,
     });
     nameText.anchor.set(0.5, 0);
@@ -774,7 +780,10 @@ export class ColonyScene {
     if (colony?.unlocked) {
       // Level and production
       const levelText = new Text({
-        text: `Lv.${colony.level} • ${colony.goldPerHour} 🪙/h`,
+        text: i18n.t('game:colonyScene.levelWithProduction', {
+          level: colony.level,
+          goldPerHour: colony.goldPerHour,
+        }),
         style: infoStyle,
       });
       levelText.anchor.set(0.5, 0);
@@ -794,7 +803,7 @@ export class ColonyScene {
     } else if (colony) {
       // Unlock requirement
       const unlockText = new Text({
-        text: `Lv.${colony.unlockLevel} wymagany`,
+        text: i18n.t('game:colonyScene.unlockRequired', { level: colony.unlockLevel }),
         style: infoStyle,
       });
       unlockText.anchor.set(0.5, 0);

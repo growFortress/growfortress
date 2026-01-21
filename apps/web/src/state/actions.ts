@@ -1,7 +1,12 @@
 import { batch } from '@preact/signals';
 import type { ProfileResponse, SegmentSubmitResponse } from '@arcade/protocol';
 import type { ActiveHero, ActiveTurret } from '@arcade/sim-core';
-import { getTurretById, getRewardsForLevel } from '@arcade/sim-core';
+import {
+  getTurretById,
+  getRewardsForLevel,
+  LEVEL_UP_DUST_REWARD,
+  LEVEL_UP_GOLD_REWARD,
+} from '@arcade/sim-core';
 import type { Game } from '../game/Game.js';
 import type { GameStateSnapshot } from './game.signals.js';
 import type { LeaderboardEntry, GameEndState } from './ui.signals.js';
@@ -21,9 +26,11 @@ import { resetDailyQuestsState } from './dailyQuests.signals.js';
 import { resetEnergyState } from './energy.signals.js';
 import { resetPillarUnlocksState } from './pillarUnlocks.signals.js';
 import { getProfile } from '../api/client.js';
+import { GameAnnouncements } from '../components/shared/ScreenReaderAnnouncer.js';
 
 // Track processed artifact drops to avoid duplicates
 let lastProcessedArtifactDropTick = -1;
+let lastCommanderLevel = 0;
 
 /**
  * Update state from a profile response.
@@ -137,6 +144,8 @@ export function syncGameState(gameInstance: Game): void {
   const state = gameInstance.getState();
   const phase = gameInstance.getPhase();
 
+  const previousCommanderLevel = lastCommanderLevel;
+
   batch(() => {
     game.gamePhase.value = phase;
 
@@ -170,6 +179,14 @@ export function syncGameState(gameInstance: Game): void {
         fortressSkillCooldowns: state.skillCooldowns || {},
       };
       game.gameState.value = snapshot;
+
+      if (previousCommanderLevel > 0 && state.commanderLevel > previousCommanderLevel) {
+        for (let level = previousCommanderLevel + 1; level <= state.commanderLevel; level++) {
+          ui.queueLevelUpNotification(level, LEVEL_UP_GOLD_REWARD, LEVEL_UP_DUST_REWARD);
+          GameAnnouncements.levelUp(level);
+        }
+      }
+      lastCommanderLevel = state.commanderLevel;
 
       // Sync fortress HP
       game.fortressHp.value = state.fortressHp ?? 100;
@@ -205,6 +222,7 @@ export function syncGameState(gameInstance: Game): void {
       game.gameState.value = null;
       // Reset tracking when game ends
       lastProcessedArtifactDropTick = -1;
+      lastCommanderLevel = 0;
     }
   });
 }

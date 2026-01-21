@@ -745,6 +745,7 @@ export type GuildBossLeaderboardResponse = z.infer<typeof GuildBossLeaderboardRe
 export const GuildBossAttackResponseSchema = z.object({
   attempt: GuildBossAttemptSchema,
   bossCurrentHp: BigIntStringSchema, // BigInt serialized as string
+  guildCoinsEarned: z.number().int().min(0),
 });
 export type GuildBossAttackResponse = z.infer<typeof GuildBossAttackResponseSchema>;
 

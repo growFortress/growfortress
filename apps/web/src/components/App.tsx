@@ -7,6 +7,7 @@ import { Leaderboard } from "./layout/Leaderboard.js";
 import { SyncStatus } from "./toasts/SyncStatus.js";
 import { RewardsToast } from "./toasts/RewardsToast.js";
 import { ErrorToast } from "./toasts/ErrorToast.js";
+import { LevelUpToast } from "./toasts/LevelUpToast.js";
 import { UnlockNotificationQueue } from "./game/UnlockNotification.js";
 import { OnboardingModal } from "./modals/OnboardingModal.js";
 import { SessionRecoveryModal } from "./modals/SessionRecoveryModal.js";
@@ -135,7 +136,7 @@ function AppContent() {
 
   // Core Authentication State
   const [internalAuth, setInternalAuth] = useState(checkAuth());
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation(["auth", "common"]);
 
   // Profile Query
   const { data: profile, refetch: refetchProfile } = useQuery({
@@ -462,12 +463,12 @@ function AppContent() {
             (e.target as HTMLElement).style.top = "-40px";
           }}
         >
-          Przejdź do głównej zawartości
+          {t("common:app.skipToContent")}
         </a>
 
         <div id="app">
           <Header />
-          <main id="main-content" role="main" aria-label="Gra Grow Fortress">
+          <main id="main-content" role="main" aria-label={t("common:app.gameAriaLabel")}>
             <GameContainer
               onLoadProfile={loadProfile}
               savedSession={savedSession}
@@ -475,16 +476,17 @@ function AppContent() {
               onSessionResumed={handleSessionResumed}
             />
           </main>
-          <aside role="complementary" aria-label="Ranking graczy">
+          <aside role="complementary" aria-label={t("common:app.leaderboardAriaLabel")}>
             <Leaderboard />
           </aside>
         </div>
 
         {/* Toast notifications */}
-        <div role="region" aria-label="Powiadomienia" aria-live="polite">
+        <div role="region" aria-label={t("common:app.notificationsAriaLabel")} aria-live="polite">
           <SyncStatus />
           <RewardsToast />
           <ErrorToast />
+          <LevelUpToast />
           <UnlockNotificationQueue
             notifications={unlockNotifications.value}
             onDismiss={dismissUnlockNotification}

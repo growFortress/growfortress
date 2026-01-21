@@ -239,6 +239,8 @@ export {
   // Level rewards
   getRewardsForLevel,
   checkLevelUp,
+  LEVEL_UP_DUST_REWARD,
+  LEVEL_UP_GOLD_REWARD,
   type FortressLevelReward,
   type FortressLevel,
   type FortressTier,

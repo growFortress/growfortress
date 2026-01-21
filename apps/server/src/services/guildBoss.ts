@@ -48,6 +48,7 @@ export interface AttackBossResult {
   error?: string;
   attempt?: GuildBossAttempt;
   bossCurrentHp?: number;
+  guildCoinsEarned?: number;
 }
 
 // ============================================================================
@@ -272,9 +273,12 @@ export async function attackBoss(
   // For now, we don't have fortress class per member, so skip this
   const damage = baseDamage;
 
-  // Create attempt and update boss HP
-  const [attempt] = await prisma.$transaction([
-    prisma.guildBossAttempt.create({
+  // Award guild coins for participation (centralized constant)
+  const guildCoinsEarned = GUILD_CONSTANTS.COINS_BOSS_PARTICIPATION;
+
+  // Create attempt, update boss HP, and award coins atomically
+  const { attempt, bossCurrentHp } = await prisma.$transaction(async (tx) => {
+    const attempt = await tx.guildBossAttempt.create({
       data: {
         guildBossId: boss.id,
         guildId,
@@ -284,26 +288,52 @@ export async function attackBoss(
         heroTier,
         heroPower,
       },
-    }),
-    prisma.guildBoss.update({
+    });
+
+    await tx.guildBoss.update({
       where: { id: boss.id },
       data: {
         currentHp: {
           decrement: BigInt(damage),
         },
       },
-    }),
-  ]);
+    });
 
-  // Get updated boss HP
-  const updatedBoss = await prisma.guildBoss.findUnique({
-    where: { id: boss.id },
+    const treasury = await tx.guildTreasury.update({
+      where: { guildId },
+      data: { guildCoins: { increment: guildCoinsEarned } },
+    });
+
+    await tx.guildTreasuryLog.create({
+      data: {
+        guildId,
+        userId,
+        transactionType: 'REWARD_DISTRIBUTION',
+        guildCoinsAmount: guildCoinsEarned,
+        description: `Guild Boss participation (Week ${boss.weekKey})`,
+        referenceId: boss.id,
+        balanceAfterGold: treasury.gold,
+        balanceAfterDust: treasury.dust,
+        balanceAfterGuildCoins: treasury.guildCoins,
+      },
+    });
+
+    const updatedBoss = await tx.guildBoss.findUnique({
+      where: { id: boss.id },
+      select: { currentHp: true },
+    });
+
+    return {
+      attempt,
+      bossCurrentHp: Math.max(0, Number(updatedBoss?.currentHp || 0)),
+    };
   });
 
   return {
     success: true,
     attempt,
-    bossCurrentHp: Math.max(0, Number(updatedBoss?.currentHp || 0)),
+    bossCurrentHp,
+    guildCoinsEarned,
   };
 }
 

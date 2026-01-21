@@ -1,0 +1,124 @@
+.container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--color-text);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-60);
+  font-size: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.heroCard {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-20);
+  background: var(--color-bg-elevated);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+  position: relative;
+}
+
+.heroCard:hover {
+  border-color: var(--color-primary-50);
+  background: var(--color-primary-10);
+}
+
+.heroCard.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.avatarWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.heroName {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.heroMeta {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.usedBadge,
+.currentBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.usedBadge {
+  background: var(--color-accent-20);
+  color: var(--color-accent);
+}
+
+.currentBadge {
+  background: var(--color-primary-20);
+  color: var(--color-primary);
+}
+
+.emptyState {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-60);
+  border: 1px dashed var(--color-neutral-20);
+  border-radius: var(--radius-md);
+}
+
+.closeButton {
+  align-self: center;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-neutral-20);
+  background: transparent;
+  color: var(--color-text-60);
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+}
+
+.closeButton:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-50);
+  background: var(--color-primary-10);
+}

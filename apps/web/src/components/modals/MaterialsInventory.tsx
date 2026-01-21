@@ -7,6 +7,7 @@ import {
   uniqueMaterialsCount,
 } from '../../state/materials.signals.js';
 import { Modal } from '../shared/Modal.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './MaterialsInventory.module.css';
 
 // Rarity colors
@@ -32,19 +33,20 @@ const MATERIAL_ICONS: Record<string, string> = {
 };
 
 // Rarity filter options
-const RARITY_FILTERS: { value: MaterialRarity | 'all'; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'common', label: 'Common' },
-  { value: 'uncommon', label: 'Uncommon' },
-  { value: 'rare', label: 'Rare' },
-  { value: 'epic', label: 'Epic' },
-  { value: 'legendary', label: 'Legendary' },
+const RARITY_FILTERS: { value: MaterialRarity | 'all'; labelKey: string }[] = [
+  { value: 'all', labelKey: 'materialsInventory.filters.all' },
+  { value: 'common', labelKey: 'common:rarity.common' },
+  { value: 'uncommon', labelKey: 'materialsInventory.filters.uncommon' },
+  { value: 'rare', labelKey: 'common:rarity.rare' },
+  { value: 'epic', labelKey: 'common:rarity.epic' },
+  { value: 'legendary', labelKey: 'common:rarity.legendary' },
 ];
 
 // Active filter
 const activeFilter = signal<MaterialRarity | 'all'>('all');
 
 export function MaterialsInventory() {
+  const { t } = useTranslation(['modals', 'common']);
   const isVisible = materialsModalVisible.value;
   const materials = playerMaterials.value;
   const filter = activeFilter.value;
@@ -63,18 +65,18 @@ export function MaterialsInventory() {
   return (
     <Modal
       visible={isVisible}
-      title="Materials"
+      title={t('materialsInventory.title')}
       onClose={hideMaterialsModal}
       class={styles.modalContent}
-      ariaLabel="Materials Inventory"
+      ariaLabel={t('materialsInventory.ariaLabel')}
     >
       <div class={styles.stats}>
         <div class={styles.stat}>
-          <span class={styles.statLabel}>Total Materials</span>
+          <span class={styles.statLabel}>{t('materialsInventory.totalMaterials')}</span>
           <span class={styles.statValue}>{totalMaterials}</span>
         </div>
         <div class={styles.stat}>
-          <span class={styles.statLabel}>Unique Types</span>
+          <span class={styles.statLabel}>{t('materialsInventory.uniqueTypes')}</span>
           <span class={styles.statValue}>{uniqueMaterialsCount.value}</span>
         </div>
       </div>
@@ -86,7 +88,7 @@ export function MaterialsInventory() {
             class={`${styles.filterBtn} ${filter === f.value ? styles.active : ''}`}
             onClick={() => (activeFilter.value = f.value)}
           >
-            {f.label}
+            {t(f.labelKey)}
           </button>
         ))}
       </div>
@@ -94,8 +96,8 @@ export function MaterialsInventory() {
       {filteredMaterials.length === 0 ? (
         <div class={styles.empty}>
           {Object.keys(materials).length === 0
-            ? 'No materials collected yet. Defeat enemies and complete waves to find materials!'
-            : `No ${filter} materials found.`}
+            ? t('materialsInventory.emptyNoMaterials')
+            : t('materialsInventory.emptyNoFiltered', { filter })}
         </div>
       ) : (
         <div class={styles.grid}>

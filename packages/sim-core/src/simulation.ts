@@ -66,6 +66,8 @@ import {
   calculateWaveCompleteXp,
   getXpForLevel,
   getTotalXpForLevel,
+  LEVEL_UP_DUST_REWARD,
+  LEVEL_UP_GOLD_REWARD,
 } from './data/fortress-progression.js';
 import {
   isBossEnemy,
@@ -1756,6 +1758,8 @@ export class Simulation {
    * Updates commanderLevel based on sessionXpEarned
    */
   private checkAndUpdateLevel(): void {
+    const previousLevel = this.state.commanderLevel;
+
     // Calculate effective total XP (XP at session start + session XP earned)
     // Since we don't have the exact starting XP, we use the threshold for the starting level
     const effectiveTotalXp = this.xpNeededForInitialLevel + this.state.sessionXpEarned;
@@ -1778,6 +1782,22 @@ export class Simulation {
     // Update commander level if it changed
     if (newLevel !== this.state.commanderLevel) {
       this.state.commanderLevel = newLevel;
+
+      if (newLevel > previousLevel) {
+        const levelsGained = newLevel - previousLevel;
+        const goldReward = LEVEL_UP_GOLD_REWARD * levelsGained;
+        const dustReward = LEVEL_UP_DUST_REWARD * levelsGained;
+
+        this.state.gold += goldReward;
+        this.state.dust += dustReward;
+        this.state.goldEarned += goldReward;
+        this.state.dustEarned += dustReward;
+        this.state.segmentGoldEarned += goldReward;
+        this.state.segmentDustEarned += dustReward;
+
+        analytics.trackEconomy('earn', 'gold', goldReward);
+        analytics.trackEconomy('earn', 'dust', dustReward);
+      }
     }
   }
 

@@ -194,6 +194,50 @@ export function clearUnlockNotifications(): void {
 }
 
 // ============================================================================
+// LEVEL-UP NOTIFICATIONS
+// ============================================================================
+
+export interface LevelUpNotification {
+  id: string;
+  level: number;
+  goldReward: number;
+  dustReward: number;
+}
+
+export const levelUpNotifications = signal<LevelUpNotification[]>([]);
+
+let levelUpNotificationId = 0;
+
+/**
+ * Queue a level-up notification.
+ */
+export function queueLevelUpNotification(level: number, goldReward: number, dustReward: number): void {
+  levelUpNotifications.value = [
+    ...levelUpNotifications.value,
+    {
+      id: `level-up-${++levelUpNotificationId}`,
+      level,
+      goldReward,
+      dustReward,
+    },
+  ];
+}
+
+/**
+ * Dismiss a specific level-up notification.
+ */
+export function dismissLevelUpNotification(id: string): void {
+  levelUpNotifications.value = levelUpNotifications.value.filter((n) => n.id !== id);
+}
+
+/**
+ * Clear all level-up notifications.
+ */
+export function clearLevelUpNotifications(): void {
+  levelUpNotifications.value = [];
+}
+
+// ============================================================================
 // PILLAR UNLOCK MODAL
 // ============================================================================
 
@@ -230,5 +274,6 @@ export function resetUIState(): void {
   buildPresetsModalVisible.value = false;
   errorToasts.value = [];
   unlockNotifications.value = [];
+  levelUpNotifications.value = [];
   pillarUnlockModalVisible.value = false;
 }

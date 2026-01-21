@@ -114,6 +114,16 @@ export const XP_SOURCES: Record<string, XPSource> = {
 };
 
 // ============================================================================
+// LEVEL-UP RESOURCE REWARDS
+// ============================================================================
+
+/**
+ * Flat rewards granted on each commander level-up.
+ */
+export const LEVEL_UP_DUST_REWARD = 3;
+export const LEVEL_UP_GOLD_REWARD = 50;
+
+// ============================================================================
 // KONFIGURACJA SLOTÓW (ZAKUP ZA ZŁOTO + POZIOM)
 // ============================================================================
 

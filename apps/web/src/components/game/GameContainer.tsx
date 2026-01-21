@@ -30,6 +30,7 @@ const MaterialsInventory = lazy(() => import('../modals/MaterialsInventory.js').
 const ArtifactsModal = lazy(() => import('../modals/ArtifactsModal.js').then(m => ({ default: m.ArtifactsModal })));
 const CraftingModal = lazy(() => import('../modals/CraftingModal.js').then(m => ({ default: m.CraftingModal })));
 const HeroRecruitmentModal = lazy(() => import('../modals/HeroRecruitmentModal.js').then(m => ({ default: m.HeroRecruitmentModal })));
+const HeroPlacementModal = lazy(() => import('../modals/HeroPlacementModal.js').then(m => ({ default: m.HeroPlacementModal })));
 const BossRushSetupModal = lazy(() => import('../modals/BossRushSetupModal.js').then(m => ({ default: m.BossRushSetupModal })));
 const BossRushEndScreen = lazy(() => import('../modals/BossRushEndScreen.js').then(m => ({ default: m.BossRushEndScreen })));
 import type { ActiveSessionSnapshot } from '../../storage/idb.js';
@@ -50,6 +51,7 @@ import {
   artifactsModalVisible,
   craftingModalVisible,
   heroRecruitmentModalVisible,
+  heroPlacementModalVisible,
   showBossRushSetup,
   showBossRushEndScreen,
 } from '../../state/index.js';
@@ -406,6 +408,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       {artifactsModalVisible.value && <Suspense fallback={null}><ArtifactsModal /></Suspense>}
       {craftingModalVisible.value && <Suspense fallback={null}><CraftingModal /></Suspense>}
       {heroRecruitmentModalVisible.value && <Suspense fallback={null}><HeroRecruitmentModal /></Suspense>}
+      {heroPlacementModalVisible.value && <Suspense fallback={null}><HeroPlacementModal /></Suspense>}
       {showBossRushSetup.value && <Suspense fallback={null}><BossRushSetupModal onStart={handleBossRushStart} /></Suspense>}
       {showBossRushEndScreen.value && <Suspense fallback={null}><BossRushEndScreen onPlayAgain={handleBossRushPlayAgain} onMenu={handleBossRushMenu} /></Suspense>}
 

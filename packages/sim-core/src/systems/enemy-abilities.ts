@@ -19,8 +19,8 @@ import { TURRET_SLOTS } from '../data/turrets.js';
 // ============================================================================
 
 // Catapult
-const CATAPULT_ATTACK_RANGE = FP.fromFloat(15); // Can attack from far away
-const CATAPULT_ATTACK_COOLDOWN = 90; // 3 seconds between attacks
+const CATAPULT_ATTACK_RANGE = FP.fromFloat(12); // Slightly shorter range
+const CATAPULT_ATTACK_COOLDOWN = 105; // 3.5 seconds between attacks
 
 // Healer
 const HEALER_HEAL_RANGE = FP.fromFloat(4); // Heals enemies within 4 units
@@ -28,7 +28,7 @@ const HEALER_HEAL_COOLDOWN = 30; // Heals every second
 const HEALER_HEAL_PERCENT = 0.02; // 2% of max HP per heal
 
 // Shielder
-const SHIELDER_SHIELD_RANGE = FP.fromFloat(4); // Shield aura radius
+const SHIELDER_SHIELD_RANGE = FP.fromFloat(3); // Shield aura radius
 const SHIELDER_SHIELD_AMOUNT = 0.3; // 30% damage reduction for shielded enemies
 
 // Teleporter
@@ -36,7 +36,7 @@ const TELEPORTER_COOLDOWN = 150; // 5 seconds between teleports
 const TELEPORTER_CHANCE = 0.01; // 1% chance per tick when off cooldown
 
 // Sapper
-const SAPPER_BOMB_DAMAGE_MULTIPLIER = 5; // 5x damage to walls
+const SAPPER_BOMB_DAMAGE_MULTIPLIER = 4; // 4x damage to walls
 
 // ============================================================================
 // ABILITY STATE TRACKING
@@ -205,6 +205,9 @@ function updateTeleporterAbility(
   state: GameState,
   rng: Xorshift32
 ): void {
+  // Don't teleport when already at fortress doorstep
+  if (enemy.x <= FP.fromInt(6)) return;
+
   const abilityState = getAbilityState(enemy.id);
   const cooldown = state.tick - abilityState.lastAbilityTick;
 

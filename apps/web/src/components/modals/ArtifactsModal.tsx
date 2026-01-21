@@ -86,7 +86,7 @@ async function upgradeItem(itemId: string): Promise<{
 }
 
 export function ArtifactsModal() {
-  const { t, language } = useTranslation(['common', 'data']);
+  const { t, language } = useTranslation(['common', 'data', 'modals']);
   const isVisible = artifactsModalVisible.value;
   const getArtifactName = (artifactId: string, name: string, polishName: string) =>
     t(`data:artifacts.${artifactId}.name`, {
@@ -134,10 +134,10 @@ export function ArtifactsModal() {
   return (
     <Modal
       visible={isVisible}
-      title="Inventory"
+      title={t('artifacts.title')}
       onClose={hideArtifactsModal}
       class={styles.modalContent}
-      ariaLabel="Player Inventory"
+      ariaLabel={t('artifacts.ariaLabel')}
     >
       <div class={styles.tabs}>
         <button

@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import type { BattleRosterMember } from '@arcade/protocol';
 import { getHeroById } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import {
   playerGuild,
   isGuildOfficer,
@@ -19,6 +20,7 @@ type SortField = 'name' | 'role' | 'power' | 'wave' | 'battleHero';
 type SortDir = 'asc' | 'desc';
 
 export function GuildRosterTab() {
+  const { t } = useTranslation('common');
   const [roster, setRoster] = useState<BattleRosterMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +44,11 @@ export function GuildRosterTab() {
       const data = await getBattleRoster(guild.id);
       setRoster(data.roster);
     } catch (err: any) {
-      setError(err.message || 'Nie udalo sie zaladowac rostera');
+      setError(err.message || t('guild.roster.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [guild?.id]);
+  }, [guild?.id, t]);
 
   useEffect(() => {
     loadRoster();
@@ -58,7 +60,7 @@ export function GuildRosterTab() {
   if (!isGuildOfficer.value) {
     return (
       <div class={styles.empty}>
-        <p>Tylko Lider i Oficerowie moga przegladac roster.</p>
+        <p>{t('guild.roster.officerOnly')}</p>
       </div>
     );
   }
@@ -131,13 +133,13 @@ export function GuildRosterTab() {
         <div class={styles.rosterStats}>
           <span class={styles.rosterStatItem}>
             <span class={styles.rosterStatValue}>{roster.length}</span>
-            <span class={styles.rosterStatLabel}>czlonkow</span>
+            <span class={styles.rosterStatLabel}>{t('guild.roster.members')}</span>
           </span>
           <span class={styles.rosterStatItem}>
             <span class={`${styles.rosterStatValue} ${styles.rosterStatReady}`}>
               {readyCount}
             </span>
-            <span class={styles.rosterStatLabel}>gotowych do bitwy</span>
+            <span class={styles.rosterStatLabel}>{t('guild.roster.readyForBattle')}</span>
           </span>
         </div>
 
@@ -148,9 +150,9 @@ export function GuildRosterTab() {
             onChange={(e) => setFilterBattleHero((e.target as HTMLSelectElement).value as any)}
             class={styles.filterSelect}
           >
-            <option value="all">Wszyscy</option>
-            <option value="with">Z Battle Hero</option>
-            <option value="without">Bez Battle Hero</option>
+            <option value="all">{t('guild.roster.filters.all')}</option>
+            <option value="with">{t('guild.roster.filters.withBattleHero')}</option>
+            <option value="without">{t('guild.roster.filters.withoutBattleHero')}</option>
           </select>
         </div>
       </div>
@@ -162,38 +164,38 @@ export function GuildRosterTab() {
             class={`${styles.rosterCol} ${styles.rosterColName}`}
             onClick={() => handleSort('name')}
           >
-            Gracz{getSortIndicator('name')}
+            {t('guild.roster.player')}{getSortIndicator('name')}
           </div>
           <div
             class={`${styles.rosterCol} ${styles.rosterColRole}`}
             onClick={() => handleSort('role')}
           >
-            Rola{getSortIndicator('role')}
+            {t('guild.roster.role')}{getSortIndicator('role')}
           </div>
           <div
             class={`${styles.rosterCol} ${styles.rosterColPower}`}
             onClick={() => handleSort('power')}
           >
-            Power{getSortIndicator('power')}
+            {t('guild.roster.power')}{getSortIndicator('power')}
           </div>
           <div
             class={`${styles.rosterCol} ${styles.rosterColWave}`}
             onClick={() => handleSort('wave')}
           >
-            Fala{getSortIndicator('wave')}
+            {t('guild.roster.wave')}{getSortIndicator('wave')}
           </div>
           <div
             class={`${styles.rosterCol} ${styles.rosterColHero}`}
             onClick={() => handleSort('battleHero')}
           >
-            Battle Hero{getSortIndicator('battleHero')}
+            {t('guild.roster.battleHero')}{getSortIndicator('battleHero')}
           </div>
         </div>
 
         <div class={styles.rosterTableBody}>
           {sortedRoster.length === 0 ? (
             <div class={styles.rosterEmpty}>
-              Brak czlonkow spelniajacych kryteria
+              {t('guild.roster.empty')}
             </div>
           ) : (
             sortedRoster.map((member) => (
@@ -205,8 +207,7 @@ export function GuildRosterTab() {
 
       {/* Info hint */}
       <p class={styles.rosterHint}>
-        Czlonkowie z ustawionym Battle Hero moga byc wybrani do bitwy Arena 5v5.
-        Minimum 5 gotowych graczy wymaganych do ataku.
+        {t('guild.roster.hint')} {t('guild.roster.hintRequirement')}
       </p>
     </div>
   );
@@ -221,11 +222,12 @@ interface RosterRowProps {
 }
 
 function RosterRow({ member }: RosterRowProps) {
+  const { t } = useTranslation('common');
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'LEADER': return 'Lider';
-      case 'OFFICER': return 'Oficer';
-      default: return 'Czlonek';
+      case 'LEADER': return t('fortressPanel.guildRoles.LEADER');
+      case 'OFFICER': return t('fortressPanel.guildRoles.OFFICER');
+      default: return t('fortressPanel.guildRoles.MEMBER');
     }
   };
 
@@ -266,7 +268,7 @@ function RosterRow({ member }: RosterRowProps) {
           <div class={styles.battleHeroCell}>
             <span class={styles.battleHeroCellName}>{heroName}</span>
             <span class={styles.battleHeroCellStats}>
-              T{member.battleHero.tier} | {formatPower(member.battleHero.power)}
+              {t('heroDetails.tierShort', { tier: member.battleHero.tier })} | {formatPower(member.battleHero.power)}
             </span>
           </div>
         ) : (

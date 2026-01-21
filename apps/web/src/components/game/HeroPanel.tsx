@@ -161,7 +161,7 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
           aria-label={t('heroPanel.slotEmpty', { index: index + 1 })}
         >
           <div class={styles.emptyIcon} aria-hidden="true">+</div>
-          <span class={styles.emptyText}>Empty</span>
+          <span class={styles.emptyText}>{t('heroPanel.empty')}</span>
         </div>
       );
     }

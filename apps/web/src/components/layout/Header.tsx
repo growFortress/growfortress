@@ -122,22 +122,24 @@ export function Header(_props: HeaderProps) {
               </Tooltip>
 
               {/* World Exploration - gameplay */}
-              <Tooltip content="Eksploracja Światów" position="bottom">
+              <Tooltip content={t('header.worldExploration')} position="bottom">
                 <button
                   class={styles.headerBtn}
                   onClick={() => showPillarUnlockModal()}
-                  aria-label="Eksploracja Światów"
+                  aria-label={t('header.worldExploration')}
                 >
                   <span aria-hidden="true">🌍</span>
                 </button>
               </Tooltip>
 
               {/* PvP Arena - competitive */}
-              <Tooltip content="PvP Arena" position="bottom">
+              <Tooltip content={t('header.pvpArena')} position="bottom">
                 <button
                   class={styles.headerBtn}
                   onClick={openPvpPanel}
-                  aria-label={pvpPendingChallenges.value > 0 ? `PvP Arena (${pvpPendingChallenges.value} wyzwań)` : 'PvP Arena'}
+                  aria-label={pvpPendingChallenges.value > 0
+                    ? t('header.pvpArenaWithChallenges', { count: pvpPendingChallenges.value })
+                    : t('header.pvpArena')}
                 >
                   <span aria-hidden="true">⚔️</span>
                   {pvpPendingChallenges.value > 0 && (

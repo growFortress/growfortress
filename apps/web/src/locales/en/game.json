@@ -73,7 +73,47 @@
   "hubOverlay": {
     "unlockAtLevel": "Unlock at level {{level}}",
     "levelShort": "Lvl {{level}}",
-    "clickToAddTurret": "Click to add turret"
+    "clickToAddTurret": "Click to add turret",
+    "clickToManageTurret": "Click to manage turret",
+    "clickToManageHero": "Click to manage hero"
+  },
+  "bossSpawn": {
+    "warning": "WARNING"
+  },
+  "vfx": {
+    "killStreak": {
+      "doubleKill": "DOUBLE KILL!",
+      "tripleKill": "TRIPLE KILL!",
+      "rampage": "RAMPAGE!",
+      "dominating": "DOMINATING!",
+      "godlike": "GODLIKE!"
+    },
+    "combos": {
+      "steamBurst": "STEAM BURST!",
+      "electrocute": "ELECTROCUTE!",
+      "shatter": "SHATTER!"
+    }
+  },
+  "colonyScene": {
+    "colonyNames": {
+      "farm": "Farm",
+      "mine": "Mine",
+      "market": "Market",
+      "factory": "Factory"
+    },
+    "rewardsToClaim": "Rewards to claim",
+    "nextClaimInMinutes": "Next claim in {{minutes}} min",
+    "claiming": "Claiming...",
+    "claimRewards": "Claim rewards",
+    "noRewards": "No rewards",
+    "unlockAtLevel": "Unlock at level {{level}}",
+    "levelLabel": "Level {{level}}",
+    "production": "Production",
+    "collected": "Collected",
+    "maxLevel": "Max level",
+    "upgrading": "Upgrading...",
+    "levelWithProduction": "Lv.{{level}} • {{goldPerHour}} 🪙/h",
+    "unlockRequired": "Lv.{{level}} required"
   },
   "fortressSkills": {
     "title": "Fortress Skills",
@@ -186,6 +226,9 @@
     "xpProgress": "Experience progress",
     "dailyQuestsWithRewards": "Daily Quests ({{count}} rewards)",
     "leaderboardsWithRewards": "Leaderboards (rewards to claim)",
+    "worldExploration": "World Exploration",
+    "pvpArena": "PvP Arena",
+    "pvpArenaWithChallenges": "PvP Arena ({{count}} challenges)",
     "messagesWithUnread": "Messages ({{count}} unread)",
     "openGuildPanel": "Open guild panel",
     "newInvitations": "New invitations",
@@ -196,6 +239,7 @@
     "rewards": "Rewards",
     "skills": "Skills"
   },
+  "waveComplete": "WAVE {{wave}} COMPLETE!",
   "tutorial": {
     "yourFortress": "Your Fortress",
     "fortressDescription": "Fortress and turrets attack automatically. Watch projectiles hit enemies!",

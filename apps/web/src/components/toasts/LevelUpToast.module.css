@@ -1,0 +1,138 @@
+.container {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  min-width: 260px;
+  pointer-events: auto;
+  cursor: pointer;
+
+  opacity: 0;
+  transform: translateY(-12px) scale(0.98);
+  transition: all 0.25s var(--ease-standard);
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast.exiting {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+}
+
+.badge {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: var(--color-primary);
+  color: var(--color-bg);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.icon {
+  font-size: 28px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.4));
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.rewards {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.rewardDust {
+  color: #00bfff;
+  font-weight: 600;
+}
+
+.rewardGold {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.dismissHint {
+  position: absolute;
+  bottom: 2px;
+  right: 10px;
+  font-size: 9px;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.queueCount {
+  background: var(--color-bg-panel);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--color-text-60);
+  font-weight: bold;
+}
+
+@media (max-width: 500px) {
+  .container {
+    top: 60px;
+  }
+
+  .toast {
+    min-width: auto;
+    max-width: calc(100vw - 28px);
+    padding: 10px 14px;
+  }
+
+  .icon {
+    font-size: 22px;
+  }
+
+  .title {
+    font-size: 0.85rem;
+  }
+
+  .rewards {
+    font-size: 12px;
+  }
+}

@@ -3,6 +3,7 @@ import { useState, useEffect } from "preact/hooks";
 import {
   gamePhase,
   hubTurrets,
+  hubHeroes,
   turretSlots,
   hubInitialized,
   upgradeTarget,
@@ -15,6 +16,8 @@ import { colonySceneVisible } from "../../state/idle.signals.js";
 import { getMaxTurretSlots } from "@arcade/sim-core";
 import { audioManager } from "../../game/AudioManager.js";
 import { useCoordinates } from "../../hooks/useCoordinates.js";
+import { fpYToScreen } from "../../renderer/CoordinateSystem.js";
+import { useTranslation } from "../../i18n/useTranslation.js";
 import styles from "./HubOverlay.module.css";
 
 /**
@@ -22,6 +25,8 @@ import styles from "./HubOverlay.module.css";
  * when the game is in idle phase (before starting a session).
  */
 export function HubOverlay() {
+  const { t } = useTranslation("game");
+
   // Track canvas dimensions for accurate positioning
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
@@ -81,6 +86,7 @@ export function HubOverlay() {
   }
 
   const turrets = hubTurrets.value;
+  const heroes = hubHeroes.value;
   const slots = turretSlots.value;
   const fortressLevel = baseLevel.value;
   const maxUnlockedSlots = getMaxTurretSlots(fortressLevel);
@@ -105,11 +111,29 @@ export function HubOverlay() {
 
   return (
     <div class={styles.overlay}>
+      {/* Hero click areas */}
+      {heroes.map((hero, index) => (
+        <button
+          key={`${hero.definitionId}-${index}`}
+          class={`${styles.heroArea} ${styles.heroHitbox}`}
+          onClick={() => {
+            audioManager.playSfx("ui_click");
+            upgradeTarget.value = { type: "hero", heroId: hero.definitionId };
+            upgradePanelVisible.value = true;
+          }}
+          style={
+            {
+              left: `${toScreenX(hero.x)}px`,
+              top: `${fpYToScreen(hero.y, canvasSize.height)}px`,
+            } as JSX.CSSProperties
+          }
+          title={t("hubOverlay.clickToManageHero")}
+        />
+      ))}
+
       {/* Turret slot click areas */}
       {slots.map((slot) => {
         const hasTurret = turrets.some((t) => t.slotIndex === slot.index);
-        // Skip occupied slots - turrets are rendered on canvas
-        if (hasTurret) return null;
 
         // Check if slot is unlocked based on fortress level
         const isUnlocked = slot.index <= maxUnlockedSlots;
@@ -123,7 +147,7 @@ export function HubOverlay() {
         return (
           <button
             key={slot.index}
-            class={`${styles.turretArea} ${styles.empty}`}
+            class={`${styles.turretArea} ${hasTurret ? styles.occupiedOverlay : styles.empty}`}
             onClick={() => handleTurretClick(slot.index)}
             style={
               {
@@ -131,9 +155,13 @@ export function HubOverlay() {
                 top: `${toScreenY(slot.y)}px`,
               } as JSX.CSSProperties
             }
-            title="Kliknij, aby dodać wieżyczkę"
+            title={
+              hasTurret
+                ? t("hubOverlay.clickToManageTurret")
+                : t("hubOverlay.clickToAddTurret")
+            }
           >
-            <span class={styles.addIcon}>+</span>
+            {!hasTurret && <span class={styles.addIcon}>+</span>}
           </button>
         );
       })}

@@ -2,6 +2,7 @@ import type { ActiveTurret, TurretTargetingMode } from '@arcade/sim-core';
 import { getTurretById } from '@arcade/sim-core';
 import { activeTurrets, gamePhase } from '../../state/index.js';
 import { setTurretTargeting, activateOvercharge } from '../../state/gameActions.signals.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './TurretSkillBar.module.css';
 
 // Turret icons (matching actual turret types)
@@ -22,12 +23,12 @@ const TURRET_ICONS: Record<string, string> = {
 };
 
 // Targeting mode short labels
-const TARGETING_SHORT: Record<TurretTargetingMode, string> = {
-  closest_to_fortress: 'Bliż.',
-  weakest: 'Słab.',
-  strongest: 'Siln.',
-  nearest_to_turret: 'Blisk.',
-  fastest: 'Szyb.',
+const TARGETING_LABEL_KEYS: Record<TurretTargetingMode, string> = {
+  closest_to_fortress: 'game:turretSkills.targeting.closestToFortress',
+  weakest: 'game:turretSkills.targeting.weakest',
+  strongest: 'game:turretSkills.targeting.strongest',
+  nearest_to_turret: 'game:turretSkills.targeting.nearestToTurret',
+  fastest: 'game:turretSkills.targeting.fastest',
 };
 
 interface TurretSkillBarProps {
@@ -35,6 +36,7 @@ interface TurretSkillBarProps {
 }
 
 export function TurretSkillBar({ compact = false }: TurretSkillBarProps) {
+  const { t } = useTranslation('game');
   const turrets = activeTurrets.value;
   const phase = gamePhase.value;
 
@@ -110,7 +112,11 @@ function TurretCard({ turret, compact }: TurretCardProps) {
         class={`${styles.overchargeBtn} ${overchargeActive ? styles.active : ''} ${overchargeReady && !overchargeActive ? styles.ready : ''}`}
         onClick={handleOverchargeClick}
         disabled={!overchargeReady || overchargeActive}
-        title={overchargeActive ? 'AKTYWNY!' : overchargeReady ? 'Overcharge: 2x DMG przez 5s' : `${Math.ceil(overchargeCooldown / 30)}s`}
+        title={overchargeActive
+          ? t('turretSkills.overchargeActive')
+          : overchargeReady
+            ? t('turretSkills.overchargeReady')
+            : t('turretSkills.cooldownSeconds', { seconds: Math.ceil(overchargeCooldown / 30) })}
       >
         {overchargeActive ? (
           <span class={styles.overchargeText}>2x</span>
@@ -129,11 +135,11 @@ function TurretCard({ turret, compact }: TurretCardProps) {
         class={styles.targetSelect}
         value={targetingMode}
         onChange={handleTargetingChange}
-        title="Cel wieżyczki"
+        title={t('turretSkills.targetingTitle')}
       >
-        {(Object.keys(TARGETING_SHORT) as TurretTargetingMode[]).map((mode) => (
+        {(Object.keys(TARGETING_LABEL_KEYS) as TurretTargetingMode[]).map((mode) => (
           <option key={mode} value={mode}>
-            {TARGETING_SHORT[mode]}
+            {t(TARGETING_LABEL_KEYS[mode])}
           </option>
         ))}
       </select>

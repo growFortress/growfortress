@@ -94,8 +94,8 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   aria-label={t('controls.bossRushComingSoon')}
                   style={{ opacity: 0.6 }}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>👹</span> Boss Rush
-                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>SOON</span>
+                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>👹</span> {t('controls.bossRushLabel')}
+                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>{t('controls.soonBadge')}</span>
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.comingSoon')} position="top">
@@ -103,11 +103,11 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   variant="skill"
                   size="sm"
                   disabled={true}
-                  aria-label="Pillar Challenge - Coming Soon"
+                  aria-label={t('controls.pillarChallengeComingSoon')}
                   style={{ opacity: 0.6 }}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>🌀</span> Pillar
-                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>SOON</span>
+                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>🌀</span> {t('controls.pillarChallengeLabel')}
+                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>{t('controls.soonBadge')}</span>
                 </Button>
               </Tooltip>
             </div>
@@ -126,7 +126,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
             class={styles.menuButton}
           >
             <span class={styles.menuIcon}>☰</span>
-            <span class={styles.menuLabel}>Menu</span>
+            <span class={styles.menuLabel}>{t('game:sidePanel.menu')}</span>
           </button>
         </div>
       )}

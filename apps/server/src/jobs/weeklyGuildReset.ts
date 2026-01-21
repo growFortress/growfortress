@@ -13,7 +13,7 @@ import { distributeTowerRaceMedals, cleanupExpiredBonuses } from '../services/gu
  *
  * This job runs every Monday at 00:00 UTC and:
  * 1. Finalizes Tower Race for the previous week and distributes rewards
- * 2. Finalizes Guild Boss for the previous week and distributes rewards
+ * 2. Finalizes Guild Boss for the previous week (reward distribution TODO)
  */
 async function processWeeklyGuildReset(job: Job<GuildWeeklyResetJob>): Promise<void> {
   // Get the week that just ended (the job runs at the start of a new week)

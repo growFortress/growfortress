@@ -37,17 +37,17 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
   }
 
   return (
-    <aside class={styles.sidePanel} aria-label="Panel gry">
+    <aside class={styles.sidePanel} aria-label={t("game:sidePanel.ariaLabel")}>
       {/* Speed Controls */}
       <div class={styles.speedControls} data-tutorial="speed-controls">
-        <span class={styles.speedLabel}>Prędkość</span>
+        <span class={styles.speedLabel}>{t("game:sidePanel.speed")}</span>
         <div class={styles.speedButtons}>
           {([1, 2, 3] as GameSpeed[]).map((speed) => (
             <button
               key={speed}
               class={`${styles.speedButton} ${currentSpeed === speed ? styles.speedActive : ''}`}
               onClick={() => onSpeedChange(speed)}
-              aria-label={`Prędkość ${speed}x`}
+              aria-label={t("game:sidePanel.speedAria", { speed })}
               aria-pressed={currentSpeed === speed}
             >
               {speed}x
@@ -58,7 +58,7 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
 
       {/* Resources Section */}
       <section class={styles.resourcesSection}>
-        <h3 class={styles.sectionTitle}>Zasoby</h3>
+        <h3 class={styles.sectionTitle}>{t("game:sidePanel.resources")}</h3>
         <div class={styles.resourcesList}>
           <div class={styles.resourceItem}>
             <span class={styles.resourceIcon} aria-hidden="true">🪙</span>
@@ -77,13 +77,13 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
 
       {/* Pillar Display Section */}
       <section class={styles.pillarSection}>
-        <h3 class={styles.sectionTitle}>Filary</h3>
+        <h3 class={styles.sectionTitle}>{t("game:sidePanel.pillars")}</h3>
         <PillarDisplay />
       </section>
 
       {/* Skills Section */}
       <section class={styles.skillsSection}>
-        <h3 class={styles.sectionTitle}>Umiejętności</h3>
+        <h3 class={styles.sectionTitle}>{t("game:sidePanel.skills")}</h3>
         <div class={styles.skillsContainer}>
           <HeroSkillBar />
           <TurretSkillBar />
@@ -95,10 +95,10 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
       <button
         class={styles.menuButton}
         onClick={onMenuClick}
-        aria-label="Menu gry"
+        aria-label={t("game:sidePanel.menuAria")}
       >
         <span class={styles.menuIcon}>☰</span>
-        <span class={styles.menuLabel}>Menu</span>
+        <span class={styles.menuLabel}>{t("game:sidePanel.menu")}</span>
       </button>
     </aside>
   );

@@ -140,6 +140,16 @@ export const turretPlacementSlotIndex = signal<number | null>(null);
  */
 export const heroRecruitmentModalVisible = signal(false);
 
+/**
+ * Whether the hero placement modal is visible (for changing hero slots)
+ */
+export const heroPlacementModalVisible = signal(false);
+
+/**
+ * Slot index where hero will be placed/replaced
+ */
+export const heroPlacementSlotIndex = signal<number | null>(null);
+
 // --- SYNERGY ---
 
 export interface SynergyBonus {

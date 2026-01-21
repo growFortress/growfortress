@@ -12,6 +12,7 @@ import {
   isPowerLoaded,
   openPowerUpgradeModal,
 } from '../../state/power.signals.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './PowerDisplay.module.css';
 
 interface PowerDisplayProps {
@@ -19,6 +20,7 @@ interface PowerDisplayProps {
 }
 
 export function PowerDisplay({ compact = false }: PowerDisplayProps) {
+  const { t } = useTranslation('game');
   const state = powerState.value;
   const loaded = isPowerLoaded.value;
   const powerStr = totalPowerDisplay.value;
@@ -42,7 +44,7 @@ export function PowerDisplay({ compact = false }: PowerDisplayProps) {
       <div
         class={`${styles.container} ${styles.compact}`}
         onClick={handleClick}
-        title="Kliknij, aby otworzyc panel ulepszen"
+        title={t('powerDisplay.openUpgrades')}
       >
         <span class={styles.powerIcon}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -64,7 +66,7 @@ export function PowerDisplay({ compact = false }: PowerDisplayProps) {
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
           </svg>
         </span>
-        <span class={styles.label}>Power Level</span>
+        <span class={styles.label}>{t('powerDisplay.title')}</span>
       </div>
 
       <div class={styles.mainValue} style={{ color: `#${colorHex}` }}>
@@ -74,7 +76,7 @@ export function PowerDisplay({ compact = false }: PowerDisplayProps) {
       <div class={styles.breakdown}>
         <div class={styles.breakdownItem}>
           <span class={styles.breakdownIcon}>🏰</span>
-          <span class={styles.breakdownLabel}>Twierdza</span>
+          <span class={styles.breakdownLabel}>{t('powerDisplay.fortress')}</span>
           <span class={styles.breakdownValue}>
             {state.fortressPower ? formatPower(state.fortressPower.totalPower) : '0'}
           </span>
@@ -82,7 +84,7 @@ export function PowerDisplay({ compact = false }: PowerDisplayProps) {
 
         <div class={styles.breakdownItem}>
           <span class={styles.breakdownIcon}>👤</span>
-          <span class={styles.breakdownLabel}>Bohaterowie</span>
+          <span class={styles.breakdownLabel}>{t('powerDisplay.heroes')}</span>
           <span class={styles.breakdownValue}>
             {formatPower(state.heroPower.reduce((sum, hp) => sum + hp.power.totalPower, 0))}
           </span>
@@ -90,7 +92,7 @@ export function PowerDisplay({ compact = false }: PowerDisplayProps) {
 
         <div class={styles.breakdownItem}>
           <span class={styles.breakdownIcon}>🗼</span>
-          <span class={styles.breakdownLabel}>Wiezyczki</span>
+          <span class={styles.breakdownLabel}>{t('powerDisplay.turrets')}</span>
           <span class={styles.breakdownValue}>
             {formatPower(state.turretPower.reduce((sum, tp) => sum + tp.power.totalPower, 0))}
           </span>
@@ -98,7 +100,7 @@ export function PowerDisplay({ compact = false }: PowerDisplayProps) {
 
         <div class={styles.breakdownItem}>
           <span class={styles.breakdownIcon}>💎</span>
-          <span class={styles.breakdownLabel}>Przedmioty</span>
+          <span class={styles.breakdownLabel}>{t('powerDisplay.items')}</span>
           <span class={styles.breakdownValue}>
             {formatPower(state.itemPower)}
           </span>
@@ -106,7 +108,7 @@ export function PowerDisplay({ compact = false }: PowerDisplayProps) {
       </div>
 
       <div class={styles.hint}>
-        Kliknij, aby ulepszyc
+        {t('powerDisplay.clickToUpgrade')}
       </div>
     </div>
   );

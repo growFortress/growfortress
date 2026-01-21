@@ -11,6 +11,7 @@ import type { JSX } from 'preact';
 import { useState, useCallback, useEffect } from 'preact/hooks';
 import type { ColonyStatus } from '@arcade/protocol';
 import { MATERIAL_DEFINITIONS } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import {
   idleRewardsState,
   claimIdleRewards,
@@ -25,14 +26,6 @@ import {
 } from '../../state/idle.signals.js';
 import { baseGold, baseDust } from '../../state/profile.signals.js';
 import styles from './ColonySceneOverlay.module.css';
-
-// Colony names (Polish)
-const COLONY_NAMES: Record<string, string> = {
-  farm: 'Farma',
-  mine: 'Kopalnia',
-  market: 'Targ',
-  factory: 'Fabryka',
-};
 
 // Material icons
 const MATERIAL_ICONS: Record<string, string> = {
@@ -56,6 +49,7 @@ export function ColonySceneOverlay({
   onUpgradeAnimation,
   onClaimAnimation,
 }: ColonySceneOverlayProps): JSX.Element | null {
+  const { t } = useTranslation(['game', 'common']);
   const isVisible = colonySceneVisible.value;
   const state = idleRewardsState.value;
   const claiming = claimingRewards.value;
@@ -129,7 +123,7 @@ export function ColonySceneOverlay({
       <header class={styles.header}>
         <button class={styles.backButton} onClick={handleBack}>
           <span class={styles.backIcon}>←</span>
-          <span class={styles.backText}>Wróć</span>
+          <span class={styles.backText}>{t('common:buttons.back')}</span>
         </button>
 
         <div class={styles.resources}>
@@ -156,7 +150,7 @@ export function ColonySceneOverlay({
         {/* Rewards preview */}
         {hasRewards && (
           <div class={styles.rewardsPreview}>
-            <span class={styles.rewardsLabel}>Nagrody do odebrania</span>
+            <span class={styles.rewardsLabel}>{t('game:colonyScene.rewardsToClaim')}</span>
             <div class={styles.rewardsList}>
               {pendingGold > 0 && (
                 <span class={styles.rewardChip}>
@@ -186,7 +180,7 @@ export function ColonySceneOverlay({
         {/* CTA Button */}
         {state && !state.canClaim && state.minutesUntilNextClaim > 0 ? (
           <div class={styles.waitMessage}>
-            Następny odbiór za {state.minutesUntilNextClaim} min
+            {t('game:colonyScene.nextClaimInMinutes', { minutes: state.minutesUntilNextClaim })}
           </div>
         ) : (
           <button
@@ -194,7 +188,11 @@ export function ColonySceneOverlay({
             onClick={handleClaim}
             disabled={!canClaim || claiming}
           >
-            {claiming ? 'Odbieranie...' : canClaim ? 'Odbierz nagrody' : 'Brak nagród'}
+            {claiming
+              ? t('game:colonyScene.claiming')
+              : canClaim
+                ? t('game:colonyScene.claimRewards')
+                : t('game:colonyScene.noRewards')}
           </button>
         )}
       </div>
@@ -226,9 +224,10 @@ interface BuildingPopupProps {
 }
 
 function BuildingPopup({ colony, isUpgrading, playerGold, onClose, onUpgrade }: BuildingPopupProps): JSX.Element {
+  const { t } = useTranslation(['game', 'common']);
   const canAfford = playerGold >= colony.upgradeCost;
   const isMaxLevel = colony.level >= colony.maxLevel;
-  const name = COLONY_NAMES[colony.id] || colony.name;
+  const name = t(`game:colonyScene.colonyNames.${colony.id}`, { defaultValue: colony.name });
 
   // Locked building - gray, not red
   if (!colony.unlocked) {
@@ -240,7 +239,7 @@ function BuildingPopup({ colony, isUpgrading, playerGold, onClose, onUpgrade }: 
           <span class={styles.popupName}>{name}</span>
         </div>
         <div class={styles.popupLockInfo}>
-          Dostępne od poziomu {colony.unlockLevel}
+          {t('game:colonyScene.unlockAtLevel', { level: colony.unlockLevel })}
         </div>
       </div>
     );
@@ -251,17 +250,17 @@ function BuildingPopup({ colony, isUpgrading, playerGold, onClose, onUpgrade }: 
       <button class={styles.popupClose} onClick={onClose}>×</button>
       <div class={styles.popupHeader}>
         <span class={styles.popupName}>{name}</span>
-        <span class={styles.popupLevel}>Poziom {colony.level}</span>
+        <span class={styles.popupLevel}>{t('game:colonyScene.levelLabel', { level: colony.level })}</span>
       </div>
 
       <div class={styles.popupStats}>
         <div class={styles.popupStat}>
-          <span class={styles.popupStatLabel}>Produkcja</span>
+          <span class={styles.popupStatLabel}>{t('game:colonyScene.production')}</span>
           <span class={styles.popupStatValue}>{colony.goldPerHour} 🪙/h</span>
         </div>
         {colony.pendingGold > 0 && (
           <div class={styles.popupStat}>
-            <span class={styles.popupStatLabel}>Zebrano</span>
+            <span class={styles.popupStatLabel}>{t('game:colonyScene.collected')}</span>
             <span class={styles.popupStatValueGold}>+{colony.pendingGold} 🪙</span>
           </div>
         )}
@@ -269,7 +268,7 @@ function BuildingPopup({ colony, isUpgrading, playerGold, onClose, onUpgrade }: 
 
       <div class={styles.popupActions}>
         {isMaxLevel ? (
-          <div class={styles.maxLevelBadge}>Maksymalny poziom</div>
+          <div class={styles.maxLevelBadge}>{t('game:colonyScene.maxLevel')}</div>
         ) : (
           <button
             class={styles.upgradeButton}
@@ -277,10 +276,10 @@ function BuildingPopup({ colony, isUpgrading, playerGold, onClose, onUpgrade }: 
             disabled={!canAfford || isUpgrading || !colony.canUpgrade}
           >
             {isUpgrading ? (
-              'Ulepszanie...'
+              t('game:colonyScene.upgrading')
             ) : (
               <>
-                Ulepsz
+                {t('common:buttons.upgrade')}
                 <span class={styles.upgradeCost}>
                   {colony.upgradeCost} 🪙
                 </span>

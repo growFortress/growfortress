@@ -86,7 +86,7 @@ function getAllUpcomingUnlocks(
 }
 
 export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolutionModalProps) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'modals']);
   const currentTier = getFortressTier(fortressLevel);
   const currentTierName = t(`fortressPanel.tierNames.${currentTier}`, {
     defaultValue: getFortressTierName(currentTier),
@@ -187,7 +187,7 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Ewolucja Twierdzy"
+      title={t('tierEvolution.title')}
       size="medium"
     >
       <div class={styles.content}>
@@ -359,7 +359,7 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
         {/* Upcoming Unlocks */}
         {!isMaxLevel && upcomingUnlocks.length > 0 && (
           <div class={styles.unlocksSection}>
-            <h3 class={styles.unlocksSectionTitle}>Nastepne Odblokowania</h3>
+            <h3 class={styles.unlocksSectionTitle}>{t('tierEvolution.upcomingUnlocks')}</h3>
             <div class={styles.unlocksList}>
               {upcomingUnlocks.map(({ level, rewards }) => (
                 <div key={level} class={styles.unlockItem}>

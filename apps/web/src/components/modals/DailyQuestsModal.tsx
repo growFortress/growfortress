@@ -24,6 +24,7 @@ import { ProgressBar } from '../shared/ProgressBar.js';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance.js';
 import styles from './DailyQuestsModal.module.css';
 import { useEffect } from 'preact/hooks';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 // Quest icons
 const QUEST_ICONS: Record<string, string> = {
@@ -42,6 +43,7 @@ const BONUS_ICONS: Record<string, string> = {
 };
 
 export function DailyQuestsModal() {
+  const { t } = useTranslation(['modals', 'common']);
   const isVisible = dailyQuestsPanelVisible.value;
   const state = dailyQuestsState.value;
   const claiming = claimingQuest.value;
@@ -68,12 +70,12 @@ export function DailyQuestsModal() {
     return (
       <Modal
         visible={isVisible}
-        title="Daily Quests"
+        title={t('dailyQuests.title')}
         onClose={hideDailyQuestsPanel}
         class={styles.modalContent}
-        ariaLabel="Daily Quests"
+        ariaLabel={t('dailyQuests.ariaLabel')}
       >
-        <div class={styles.loading}>Loading quests...</div>
+        <div class={styles.loading}>{t('dailyQuests.loading')}</div>
       </Modal>
     );
   }
@@ -91,22 +93,22 @@ export function DailyQuestsModal() {
   return (
     <Modal
       visible={isVisible}
-      title="Daily Quests"
+      title={t('dailyQuests.title')}
       onClose={hideDailyQuestsPanel}
       class={styles.modalContent}
-      ariaLabel="Daily Quests"
+      ariaLabel={t('dailyQuests.ariaLabel')}
     >
       {/* Header Section */}
       <div class={styles.header}>
         <div class={styles.headerTop}>
           <span class={styles.resetTimerBadge}>
             <span class={styles.timerIcon}>⏰</span>
-            <span>Resets: {resetTime}</span>
+            <span>{t('dailyQuests.resetsIn', { time: resetTime })}</span>
           </span>
         </div>
 
         <div class={styles.overallProgressSection}>
-          <span class={styles.overallProgressLabel}>Today's Progress</span>
+          <span class={styles.overallProgressLabel}>{t('dailyQuests.todayProgress')}</span>
           <ProgressBar
             percent={progress}
             class={styles.overallProgressBar}
@@ -115,8 +117,8 @@ export function DailyQuestsModal() {
           />
           <div class={styles.overallProgressStats}>
             <span>
-              <span class={styles.statsHighlight}>{completedCount}</span> of{' '}
-              {state.quests.length} Quests
+              <span class={styles.statsHighlight}>{completedCount}</span>{' '}
+              {t('dailyQuests.ofQuests', { total: state.quests.length })}
             </span>
           </div>
         </div>
@@ -164,9 +166,9 @@ export function DailyQuestsModal() {
                 <div class={styles.questHeader}>
                   <span class={styles.questName}>{def.name}</span>
                   {isCompleted && !isClaimed && (
-                    <span class={styles.readyBadge}>Ready</span>
+                    <span class={styles.readyBadge}>{t('dailyQuests.ready')}</span>
                   )}
-                  {isClaimed && <span class={styles.claimedBadge}>Done</span>}
+                  {isClaimed && <span class={styles.claimedBadge}>{t('dailyQuests.done')}</span>}
                 </div>
                 <p class={styles.questDesc}>{def.description}</p>
 
@@ -196,10 +198,9 @@ export function DailyQuestsModal() {
                         {BONUS_ICONS[quest.bonusType] || '🎁'}
                       </span>
                       <span>
-                        {quest.bonusType === 'gold' && `+${quest.bonusValue}`}
-                        {quest.bonusType === 'material' && `+1 ${quest.bonusValue}`}
-                        {quest.bonusType === 'random_material' &&
-                          `+${quest.bonusValue}`}
+                        {quest.bonusType === 'gold' && t('dailyQuests.rewardGold', { amount: quest.bonusValue })}
+                        {quest.bonusType === 'material' && t('dailyQuests.rewardMaterial', { name: quest.bonusValue })}
+                        {quest.bonusType === 'random_material' && t('dailyQuests.rewardRandomMaterial', { amount: quest.bonusValue })}
                       </span>
                     </div>
                   )}
@@ -212,7 +213,7 @@ export function DailyQuestsModal() {
                       onClick={() => handleClaimQuest(quest.questId as DailyQuestId)}
                       disabled={isClaiming || claimingAllRewards}
                     >
-                      {isClaiming ? '...' : 'Claim'}
+                      {isClaiming ? t('dailyQuests.claiming') : t('dailyQuests.claim')}
                     </button>
                   ) : isClaimed ? (
                     <div class={styles.claimedCheckmark}>✓</div>
@@ -234,12 +235,14 @@ export function DailyQuestsModal() {
                 onClick={handleClaimAll}
                 disabled={claimingAllRewards || claiming !== null}
               >
-                {claimingAllRewards ? 'Claiming...' : `Claim All (${unclaimedCount})`}
+                {claimingAllRewards
+                  ? t('dailyQuests.claimingAll')
+                  : t('dailyQuests.claimAll', { count: unclaimedCount })}
               </button>
             </div>
           ) : (
             <div class={styles.allClaimedMessage}>
-              ✓ All rewards claimed! See you tomorrow.
+              {t('dailyQuests.allClaimed')}
             </div>
           )}
         </div>

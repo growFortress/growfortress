@@ -98,6 +98,11 @@ export {
   queueUnlockNotifications,
   dismissUnlockNotification,
   clearUnlockNotifications,
+  // Level-up notifications
+  levelUpNotifications,
+  queueLevelUpNotification,
+  dismissLevelUpNotification,
+  clearLevelUpNotifications,
   // Pillar unlock modal
   pillarUnlockModalVisible,
   showPillarUnlockModal,
@@ -107,6 +112,7 @@ export {
   type SyncStatus,
   type ErrorToastData,
   type UnlockNotification,
+  type LevelUpNotification,
 } from './ui.signals.js';
 
 // Actions
@@ -152,6 +158,8 @@ export {
   turretPlacementModalVisible,
   turretPlacementSlotIndex,
   heroRecruitmentModalVisible,
+  heroPlacementModalVisible,
+  heroPlacementSlotIndex,
   activeSynergies,
   upgradeTarget,
   upgradePanelVisible,

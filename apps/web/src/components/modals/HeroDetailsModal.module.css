@@ -802,6 +802,28 @@
   cursor: not-allowed;
 }
 
+/* Change hero button */
+.changeHeroButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-60);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+}
+
+.changeHeroButton:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-50);
+  background: var(--color-primary-10);
+}
+
 /* Compare Selector */
 .compareSelector {
   display: flex;

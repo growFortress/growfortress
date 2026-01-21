@@ -191,7 +191,7 @@ export function ShopModal() {
           <button
             class={styles.interstitialClose}
             onClick={handleInterstitialClose}
-            aria-label="Close"
+            aria-label={t('buttons.close')}
           >
             <Icon name="close" size={18} />
           </button>
@@ -218,7 +218,7 @@ export function ShopModal() {
             </div>
             <div class={styles.contentItem}>
               <Icon name="trophy" size={18} color="var(--color-skill)" />
-              <span class={styles.contentValue}>Badge</span>
+              <span class={styles.contentValue}>{t('shop.badge')}</span>
             </div>
           </div>
 
@@ -342,7 +342,7 @@ export function ShopModal() {
           <button
             class={styles.productDetailClose}
             onClick={handleCloseProductDetail}
-            aria-label="Close"
+            aria-label={t('buttons.close')}
           >
             <Icon name="close" size={18} />
           </button>
@@ -535,7 +535,7 @@ export function ShopModal() {
                     </div>
                     <div class={styles.contentItem}>
                       <Icon name="trophy" size={16} color="var(--color-skill)" />
-                      <span>Badge</span>
+                      <span>{t('shop.badge')}</span>
                     </div>
                   </div>
 

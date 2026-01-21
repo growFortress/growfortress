@@ -73,7 +73,47 @@
   "hubOverlay": {
     "unlockAtLevel": "Odblokuj na poziomie {{level}}",
     "levelShort": "Poz. {{level}}",
-    "clickToAddTurret": "Kliknij, aby dodać wieżyczkę"
+    "clickToAddTurret": "Kliknij, aby dodać wieżyczkę",
+    "clickToManageTurret": "Kliknij, aby zarządzać wieżyczką",
+    "clickToManageHero": "Kliknij, aby zarządzać bohaterem"
+  },
+  "bossSpawn": {
+    "warning": "UWAGA"
+  },
+  "vfx": {
+    "killStreak": {
+      "doubleKill": "PODWÓJNE ZABÓJSTWO!",
+      "tripleKill": "POTRÓJNE ZABÓJSTWO!",
+      "rampage": "RZEŹ!",
+      "dominating": "DOMINACJA!",
+      "godlike": "BOSKO!"
+    },
+    "combos": {
+      "steamBurst": "PARA!",
+      "electrocute": "PORAŻENIE!",
+      "shatter": "ROZTRZASK!"
+    }
+  },
+  "colonyScene": {
+    "colonyNames": {
+      "farm": "Farma",
+      "mine": "Kopalnia",
+      "market": "Targ",
+      "factory": "Fabryka"
+    },
+    "rewardsToClaim": "Nagrody do odebrania",
+    "nextClaimInMinutes": "Następny odbiór za {{minutes}} min",
+    "claiming": "Odbieranie...",
+    "claimRewards": "Odbierz nagrody",
+    "noRewards": "Brak nagród",
+    "unlockAtLevel": "Dostępne od poziomu {{level}}",
+    "levelLabel": "Poziom {{level}}",
+    "production": "Produkcja",
+    "collected": "Zebrano",
+    "maxLevel": "Maksymalny poziom",
+    "upgrading": "Ulepszanie...",
+    "levelWithProduction": "Poz.{{level}} • {{goldPerHour}} 🪙/h",
+    "unlockRequired": "Poz.{{level}} wymagany"
   },
   "fortressSkills": {
     "title": "Umiejętności Twierdzy",
@@ -186,6 +226,9 @@
     "xpProgress": "Postęp doświadczenia",
     "dailyQuestsWithRewards": "Dzienne Zadania ({{count}} nagród)",
     "leaderboardsWithRewards": "Rankingi (nagrody do odebrania)",
+    "worldExploration": "Eksploracja Światów",
+    "pvpArena": "PvP Arena",
+    "pvpArenaWithChallenges": "PvP Arena ({{count}} wyzwań)",
     "messagesWithUnread": "Wiadomości ({{count}} nieprzeczytanych)",
     "openGuildPanel": "Otwórz panel gildii",
     "newInvitations": "Nowe zaproszenia",
@@ -196,6 +239,7 @@
     "rewards": "Nagrody",
     "skills": "Umiejętności"
   },
+  "waveComplete": "FALA {{wave}} ZAKOŃCZONA!",
   "tutorial": {
     "yourFortress": "Twoja Twierdza",
     "fortressDescription": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak pociski trafiają wrogów!",

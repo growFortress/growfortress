@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './SplashScreen.module.css';
 
 // =============================================================================
@@ -127,6 +128,7 @@ export function SplashScreen({
   durationMs = 4000,
   onComplete,
 }: SplashScreenProps) {
+  const { t } = useTranslation('common');
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
@@ -171,7 +173,7 @@ export function SplashScreen({
             <FortressIcon class={styles.fortressIcon} />
           </div>
           <GameLogo class={styles.gameLogo} />
-          <p class={styles.tagline}>Tower Defense Roguelite</p>
+      <p class={styles.tagline}>{t('app.tagline')}</p>
         </div>
       </div>
     </div>

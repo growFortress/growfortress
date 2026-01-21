@@ -13,7 +13,7 @@ interface AuthScreenProps {
 }
 
 export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
-  const { t } = useTranslation('auth');
+  const { t } = useTranslation(['auth', 'common']);
 
   const showLoginForm = () => {
     authScreen.value = 'login';
@@ -77,7 +77,7 @@ export function AuthScreen({ onLogin, onRegister }: AuthScreenProps) {
           <span class={styles.logoGrow}>Grow</span>
           <span class={styles.logoFortress}>Fortress</span>
         </h1>
-        <p class={styles.tagline}>Tower Defense Roguelite</p>
+        <p class={styles.tagline}>{t('common:app.tagline')}</p>
 
         {authScreen.value === 'login' && (
           <>

@@ -11,6 +11,7 @@
  */
 
 import { Container, Graphics, Text, Ticker, type Application } from 'pixi.js';
+import i18n from '../../i18n/index.js';
 
 // =============================================================================
 // Types
@@ -169,7 +170,7 @@ export class BossSpawnSequence {
 
     // Warning text
     const warningText = new Text({
-      text: 'WARNING',
+      text: i18n.t('game:bossSpawn.warning'),
       style: {
         fontFamily: 'Orbitron, sans-serif',
         fontSize: 48,

@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import { analytics } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './StatsPanel.module.css';
 
 interface StatsPanelProps {
@@ -9,6 +10,7 @@ interface StatsPanelProps {
 }
 
 export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
+  const { t } = useTranslation('game');
   const [stats, setStats] = useState<any>(null); // Using any for flexibility with analytics internals
 
   useEffect(() => {
@@ -83,9 +85,9 @@ export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
 
   // Prepare chart data
   const damageSources = [
-    { label: 'Heroes', value: stats.damageBySource.hero + stats.damageBySource.skill, className: styles.barHero },
-    { label: 'Turrets', value: stats.damageBySource.turret, className: styles.barTurret },
-    { label: 'Fortress', value: stats.damageBySource.fortress, className: styles.barFortress },
+    { label: t('statsPanel.sources.heroes'), value: stats.damageBySource.hero + stats.damageBySource.skill, className: styles.barHero },
+    { label: t('statsPanel.sources.turrets'), value: stats.damageBySource.turret, className: styles.barTurret },
+    { label: t('statsPanel.sources.fortress'), value: stats.damageBySource.fortress, className: styles.barFortress },
   ].sort((a, b) => b.value - a.value);
 
   const topHeroes = Object.entries(stats.damageByHero)
@@ -97,15 +99,15 @@ export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
     <div class={styles.overlay} onClick={onClose}>
       <div class={styles.panel} onClick={e => e.stopPropagation()}>
         <div class={styles.header}>
-          <h2>Battle Statistics</h2>
+          <h2>{t('statsPanel.title')}</h2>
           <button class={styles.closeButton} onClick={onClose}>✕</button>
         </div>
 
         <div class={styles.content}>
           <div class={styles.section}>
             <div class={styles.sectionTitle}>
-              <span>Damage Distribution</span>
-              <span>Total: {Math.floor(stats.totalDamage).toLocaleString()}</span>
+              <span>{t('statsPanel.damageDistribution')}</span>
+              <span>{t('statsPanel.totalDamage', { total: Math.floor(stats.totalDamage).toLocaleString() })}</span>
             </div>
             <div class={styles.chartContainer}>
               {damageSources.map(item => (
@@ -127,7 +129,7 @@ export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
 
           <div class={styles.section}>
             <div class={styles.sectionTitle}>
-              <span>Top Heroes (MVP)</span>
+              <span>{t('statsPanel.topHeroes')}</span>
             </div>
             <div class={styles.chartContainer}>
               {topHeroes.length > 0 ? topHeroes.map(item => (
@@ -143,17 +145,17 @@ export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
                     </span>
                   </div>
                 </div>
-              )) : <div style={{textAlign: 'center', color: '#666'}}>No hero damage recorded</div>}
+              )) : <div style={{textAlign: 'center', color: '#666'}}>{t('statsPanel.noHeroDamage')}</div>}
             </div>
           </div>
 
           <div class={styles.section}>
             <div class={styles.sectionTitle}>
-              <span>Support & Tanking</span>
+              <span>{t('statsPanel.supportAndTanking')}</span>
             </div>
             <div class={styles.chartContainer}>
               {Object.entries(stats.damageTakenByHero || {}).length > 0 && (
-                 <div style={{marginBottom: '0.5rem', opacity: 0.8, fontSize: '0.8rem'}}>Damage Taken (Tanking)</div>
+                 <div style={{marginBottom: '0.5rem', opacity: 0.8, fontSize: '0.8rem'}}>{t('statsPanel.damageTaken')}</div>
               )}
               {Object.entries(stats.damageTakenByHero || {})
                 .map(([name, value]) => ({ label: name, value: value as number, className: styles.barFortress }))
@@ -172,7 +174,7 @@ export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
               ))}
               
               {Object.entries(stats.healingBySource || {}).length > 0 && (
-                 <div style={{marginTop: '1rem', marginBottom: '0.5rem', opacity: 0.8, fontSize: '0.8rem'}}>Healing Done</div>
+                 <div style={{marginTop: '1rem', marginBottom: '0.5rem', opacity: 0.8, fontSize: '0.8rem'}}>{t('statsPanel.healingDone')}</div>
               )}
               {Object.entries(stats.healingBySource || {})
                 .map(([name, value]) => ({ label: name, value: value as number, className: styles.barSkill }))
@@ -193,22 +195,22 @@ export function StatsPanel({ isOpen, onClose }: StatsPanelProps) {
           </div>
 
           <div class={styles.section}>
-            <div class={styles.sectionTitle}>Economy</div>
+            <div class={styles.sectionTitle}>{t('statsPanel.economy')}</div>
             <div class={styles.economyGrid}>
               <div class={styles.economyItem}>
-                <span class={styles.economyLabel}>Gold Earned</span>
+                <span class={styles.economyLabel}>{t('statsPanel.goldEarned')}</span>
                 <span class={`${styles.economyValue} ${styles.gold}`}>+{stats.economy.goldEarned}</span>
               </div>
               <div class={styles.economyItem}>
-                <span class={styles.economyLabel}>Gold Spent</span>
+                <span class={styles.economyLabel}>{t('statsPanel.goldSpent')}</span>
                 <span class={`${styles.economyValue} ${styles.gold}`}>-{stats.economy.goldSpent}</span>
               </div>
               <div class={styles.economyItem}>
-                <span class={styles.economyLabel}>Dust Earned</span>
+                <span class={styles.economyLabel}>{t('statsPanel.dustEarned')}</span>
                 <span class={`${styles.economyValue} ${styles.dust}`}>+{stats.economy.dustEarned}</span>
               </div>
               <div class={styles.economyItem}>
-                <span class={styles.economyLabel}>Dust Spent</span>
+                <span class={styles.economyLabel}>{t('statsPanel.dustSpent')}</span>
                 <span class={`${styles.economyValue} ${styles.dust}`}>-{stats.economy.dustSpent}</span>
               </div>
             </div>

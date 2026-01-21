@@ -70,6 +70,19 @@
   box-shadow: var(--shadow-sm), var(--glow-primary);
 }
 
+/* Hero hitbox - keep canvas visuals visible */
+.heroArea.heroHitbox {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.heroArea.heroHitbox:hover {
+  border: var(--border-primary);
+  background: var(--color-primary-10);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
 .heroArea:hover {
   border-color: var(--color-primary);
   background: var(--color-primary-30);
@@ -135,6 +148,19 @@
 
 .addIcon {
   display: none; /* Canvas renders the slot visuals */
+}
+
+/* Occupied turret hitbox - keep canvas visuals visible */
+.turretArea.occupiedOverlay {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.turretArea.occupiedOverlay:hover {
+  border: var(--border-primary);
+  background: var(--color-primary-10);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
 }
 
 /* Locked turret slot */

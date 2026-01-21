@@ -9,6 +9,7 @@ import {
   turretPlacementSlotIndex,
   activeTurrets,
   hubTurrets,
+  gamePhase,
   unlockedTurretIds,
   baseGold,
   baseLevel,
@@ -54,6 +55,12 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
   const { t } = useTranslation('common');
   const slotIndex = turretPlacementSlotIndex.value;
   const [isLoading, setIsLoading] = useState(false);
+  const isIdle = gamePhase.value === 'idle';
+  const turretList = isIdle ? hubTurrets.value : activeTurrets.value;
+  const currentTurret = slotIndex !== null
+    ? turretList.find((t) => t.slotIndex === slotIndex)
+    : undefined;
+  const isReplacing = !!currentTurret;
 
   const handleSelect = async (turretType: TurretType) => {
     if (slotIndex === null || isLoading) return;
@@ -85,7 +92,7 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
       setIsLoading(false);
     }
 
-    // Add turret to local state for display
+    // Add/replace turret in local state for display
     const turretTier = 1 as const;
     const turretDefinition = getTurretById(turretType);
     const baseHp = turretDefinition?.baseStats.hp ?? 150;
@@ -103,8 +110,13 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
       maxHp,
     };
 
-    activeTurrets.value = [...activeTurrets.value, newTurret];
-    hubTurrets.value = [...hubTurrets.value, newTurret];
+    const replaceTurret = (list: ActiveTurret[]) => {
+      const filtered = list.filter((t) => t.slotIndex !== slotIndex);
+      return [...filtered, newTurret];
+    };
+
+    activeTurrets.value = replaceTurret(activeTurrets.value);
+    hubTurrets.value = replaceTurret(hubTurrets.value);
 
     // Close modal
     turretPlacementModalVisible.value = false;
@@ -122,7 +134,9 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
   };
 
   // Get turret IDs already in loadout
-  const usedTurretIds = activeTurrets.value.map((t) => t.definitionId);
+  const usedTurretIds = turretList
+    .filter((t) => t.slotIndex !== slotIndex)
+    .map((t) => t.definitionId);
   const currentGold = baseGold.value;
   const currentFortressLevel = baseLevel.value;
 
@@ -133,9 +147,13 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
       onClick={handleClose}
     >
       <div class={styles.container}>
-        <h2 class={styles.title}>{t('turretPlacement.title')}</h2>
+        <h2 class={styles.title}>
+          {isReplacing ? t('turretPlacement.titleReplace') : t('turretPlacement.title')}
+        </h2>
         <p class={styles.subtitle}>
-          {t('turretPlacement.subtitle', { slot: slotIndex !== null ? slotIndex + 1 : '?' })}
+          {isReplacing
+            ? t('turretPlacement.subtitleReplace', { slot: slotIndex !== null ? slotIndex + 1 : '?' })
+            : t('turretPlacement.subtitle', { slot: slotIndex !== null ? slotIndex + 1 : '?' })}
         </p>
 
         <div class={styles.turretGrid}>
