@@ -605,7 +605,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
           {/* Right Column - Stats, Skills, Tier Upgrade */}
           <div class={styles.rightColumn}>
             {/* Stats Section */}
-            <div class={styles.section}>
+            <div class={styles.section} data-tutorial="hero-stat-upgrades">
               <h4 class={styles.sectionTitle}>{t('heroDetails.stats')}</h4>
               <div class={styles.statList}>
                 {/* HP with upgrade */}

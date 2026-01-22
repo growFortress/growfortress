@@ -231,6 +231,30 @@
       "title": "Synergia Twojego Buildu",
       "description": "Vanguard tankuje, Railgun eliminuje cele, Twierdza Natury regeneruje HP. Szukaj reliktów wzmacniających Natural!"
     },
+    "fortressUpgrades": {
+      "title": "Ulepszenia Twierdzy",
+      "description": "Wydawaj zloto, aby na stale wzmocnic HP, obrazenia i pancerz twierdzy."
+    },
+    "heroStatUpgrades": {
+      "title": "Ulepszenia statystyk bohatera",
+      "description": "Ulepszaj HP i obrazenia bohatera za zloto, aby byl silniejszy miedzy runami."
+    },
+    "heroTiers": {
+      "title": "Tiery bohatera",
+      "description": "Ulepsz tier bohatera, aby odblokowac nowe umiejetnosci i wieksze mnozniki."
+    },
+    "fortressUnlocks": {
+      "title": "Tiery i odblokowania",
+      "description": "Wyzszy poziom twierdzy odblokowuje nowe sloty i funkcje. Sprawdz postep tierow."
+    },
+    "manualControl": {
+      "title": "Manualna kontrola",
+      "description": "Kliknij bohatera, aby przejąć kontrolę. Ruch: WASD, strzał: PPM, wyjście: Esc."
+    },
+    "heroDrag": {
+      "title": "Przeciągnij, by przestawić",
+      "description": "Możesz przeciągnąć bohatera na polu bitwy, aby szybko zmienić jego pozycję."
+    },
     "dismiss": "Rozumiem"
   },
   "unlock": {

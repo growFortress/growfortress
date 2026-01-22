@@ -17,7 +17,7 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade,
 
   if (!canUpgrade) {
     return (
-      <div class={cardStyles.maxTierReached}>
+      <div class={cardStyles.maxTierReached} data-tutorial="hero-tier-upgrade">
         <span class={cardStyles.maxTierIcon}>👑</span>
         <span class={cardStyles.maxTierText}>{t('heroDetails.maxTierReached')}</span>
       </div>
@@ -30,7 +30,7 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade,
   const canAfford = canAffordGold && canAffordDust;
 
   return (
-    <div class={cardStyles.upgradeSection}>
+    <div class={cardStyles.upgradeSection} data-tutorial="hero-tier-upgrade">
       <div class={cardStyles.upgradeInfo}>
         <h4>{t('heroDetails.upgradeToTier', { tier: currentTier + 1 })}</h4>
         <div class={cardStyles.upgradeCost}>

@@ -402,7 +402,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     >
       {/* Game area - contains canvas and hub overlay */}
       <div id="game-area" ref={gameAreaRef}>
-        <canvas ref={canvasCallbackRef} id="game-canvas" />
+        <canvas ref={canvasCallbackRef} id="game-canvas" data-tutorial="game-canvas" />
 
         {/* Hub overlay for clicking heroes/turrets before session */}
         <HubOverlay />

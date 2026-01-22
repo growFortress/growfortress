@@ -407,6 +407,15 @@ export class GameApp {
   }
 
   /**
+   * Set callback for hero click events during gameplay (tactical selection)
+   */
+  public setOnHeroSelect(callback: ((heroId: string) => void) | null) {
+    if (this.gameScene) {
+      this.gameScene.setOnHeroSelect(callback);
+    }
+  }
+
+  /**
    * Set callback for turret click events
    */
   public setOnTurretClick(
@@ -425,6 +434,28 @@ export class GameApp {
   ) {
     if (this.gameScene) {
       this.gameScene.setOnFieldClick(callback);
+    }
+  }
+
+  /**
+   * Set callback for field right click events (manual attack)
+   */
+  public setOnFieldRightClick(
+    callback: ((worldX: number, worldY: number) => void) | null,
+  ) {
+    if (this.gameScene) {
+      this.gameScene.setOnFieldRightClick(callback);
+    }
+  }
+
+  /**
+   * Set callback for hero drag events (tactical repositioning)
+   */
+  public setOnHeroDrag(
+    callback: ((heroId: string, worldX: number, worldY: number) => void) | null,
+  ) {
+    if (this.gameScene) {
+      this.gameScene.setOnHeroDrag(callback);
     }
   }
 

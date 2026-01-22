@@ -53,11 +53,11 @@
 }
 
 .waveTitle.defeat {
-  background: linear-gradient(135deg, var(--color-accent), #ef4444);
+  background: linear-gradient(135deg, #4ade80, #22c55e);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+  text-shadow: 0 0 30px rgba(74, 222, 128, 0.5);
 }
 
 @keyframes textGlow {

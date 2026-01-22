@@ -67,7 +67,7 @@ export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
     >
       {/* Result Header */}
       <div class={styles.resultHeader}>
-        <span class={styles.resultIcon}>{won ? '🏆' : '💀'}</span>
+        {won && <span class={styles.resultIcon}>🏆</span>}
         {stats && (
           <>
             <h2 class={`${styles.waveTitle} ${won ? styles.victory : styles.defeat}`}>

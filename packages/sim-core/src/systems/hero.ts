@@ -59,10 +59,11 @@ import {
 import { createHeroProjectile } from './projectile.js';
 import {
   findClosestEnemy2D,
-  getHeroAttackRange,
   applySkillEffects,
   isEnemyTargetable,
 } from './helpers.js';
+
+const MANUAL_ATTACK_RANGE_BONUS = FP.fromInt(2);
 
 // ============================================================================
 // AI SYSTEM (Simplified Role-Based)
@@ -225,7 +226,7 @@ export function updateHeroes(
         updateHeroCombat(hero, state, config, rng);
         break;
       case 'commanded':
-        updateHeroCommandedState(hero, state, config);
+        updateHeroCommandedState(hero, state, config, rng);
         break;
     }
 
@@ -301,7 +302,7 @@ function updateHeroSteering(hero: ActiveHero, state: GameState, config: SimConfi
   const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
   const maxSpeed = calculateEffectiveSpeed(stats.moveSpeed, hero.movementModifiers, state.tick);
   const fieldWidth = config.fieldWidth;
-  const attackRange = getHeroAttackRange(heroDef.role);
+  const attackRange = stats.range;
 
   switch (hero.state) {
     case 'combat': {
@@ -409,13 +410,14 @@ function performHeroAttack(
   hero: ActiveHero,
   state: GameState,
   config: SimConfig,
-  rng: Xorshift32
+  rng: Xorshift32,
+  attackRange: number,
+  manualOnly: boolean = false
 ): void {
   const heroDef = getHeroById(hero.definitionId);
   if (!heroDef) return;
 
   // Check if enemies in range (2D distance)
-  const attackRange = getHeroAttackRange(heroDef.role);
   const attackRangeSq = FP.mul(attackRange, attackRange);
   const fieldWidth = config.fieldWidth;
   const enemiesInRange = state.enemies.filter(e => {
@@ -444,13 +446,26 @@ function performHeroAttack(
     // Check behavioral weaknesses
     const behavioralEffects = checkBehavioralWeaknesses(heroDef.weaknesses);
 
-    hero.lastAttackTick = state.tick;
+    // Find target using AI-based targeting (or manual focus only)
+    let target: Enemy | null = null;
 
-    // Find target using AI-based targeting (or random if weakness triggers)
-    let target: Enemy | null;
-
-    // Priority 1: Focus target if set (team-wide focus fire command)
-    if (hero.focusTargetId !== undefined) {
+    if (manualOnly) {
+      if (hero.focusTargetId === undefined) {
+        hero.currentTargetId = undefined;
+        return;
+      }
+      const focusEnemy = enemiesInRange.find(e => e.id === hero.focusTargetId);
+      if (!focusEnemy) {
+        const focusAlive = state.enemies.find(e => e.id === hero.focusTargetId);
+        if (!focusAlive || focusAlive.hp <= 0) {
+          hero.focusTargetId = undefined;
+        }
+        hero.currentTargetId = undefined;
+        return;
+      }
+      target = focusEnemy;
+    } else if (hero.focusTargetId !== undefined) {
+      // Priority 1: Focus target if set (team-wide focus fire command)
       const focusEnemy = enemiesInRange.find(e => e.id === hero.focusTargetId);
       if (focusEnemy) {
         target = focusEnemy;
@@ -476,6 +491,8 @@ function performHeroAttack(
     if (!target) {
       return;
     }
+
+    hero.lastAttackTick = state.tick;
 
     // Update current target for AI tracking
     hero.currentTargetId = target.id;
@@ -562,7 +579,7 @@ function performHeroAttack(
 
     // Apply conditional weakness penalties to damage
     const isFirstAttack = hero.lastAttackTick === state.tick;
-    const isMeleeRange = getHeroAttackRange(heroDef.role) <= FP.fromInt(3);
+    const isMeleeRange = attackRange <= FP.fromInt(3);
     finalDamage = applyConditionalWeaknessesToDamage(hero, finalDamage, heroDef.weaknesses, {
       enemyCount: enemiesInRange.length,
       isFirstAttack,
@@ -607,11 +624,13 @@ function updateHeroCombat(
 ): void {
   const heroDef = getHeroById(hero.definitionId);
   if (!heroDef) return;
+  const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
+  const isManualControlled = hero.isManualControlled === true;
 
   // Heroes no longer retreat - they have lifesteal to sustain in combat
 
   // Check if enemies in range (2D distance)
-  const attackRange = getHeroAttackRange(heroDef.role);
+  const attackRange = stats.range;
   const attackRangeSq = FP.mul(attackRange, attackRange);
   const fieldWidth = config.fieldWidth;
   const enemiesInRange = state.enemies.filter(e => {
@@ -635,7 +654,7 @@ function updateHeroCombat(
   }
 
   // Perform attack using shared logic
-  performHeroAttack(hero, state, config, rng);
+  performHeroAttack(hero, state, config, rng, attackRange, isManualControlled);
 
   // Check and use skills
   useHeroSkills(hero, state, config, rng, enemiesInRange);
@@ -644,34 +663,75 @@ function updateHeroCombat(
 /**
  * Hero executing a player-issued command (moving to target position)
  */
-function updateHeroCommandedState(hero: ActiveHero, state: GameState, _config: SimConfig): void {
+function updateHeroCommandedState(
+  hero: ActiveHero,
+  state: GameState,
+  config: SimConfig,
+  rng: Xorshift32
+): void {
+  const heroDef = getHeroById(hero.definitionId);
+  if (!heroDef) return;
+
+  const isManualControlled = hero.isManualControlled === true;
+  const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
+  const attackRange = isManualControlled
+    ? FP.add(stats.range, MANUAL_ATTACK_RANGE_BONUS)
+    : stats.range;
   // Validate command
   if (!hero.commandTarget || !hero.isCommanded) {
-    // No valid command, return to normal AI
-    hero.state = state.enemies.length > 0 ? 'combat' : 'idle';
-    hero.isCommanded = false;
-    hero.commandTarget = undefined;
-    return;
+    if (!isManualControlled) {
+      // No valid command, return to normal AI
+      hero.state = state.enemies.length > 0 ? 'combat' : 'idle';
+      hero.isCommanded = false;
+      hero.commandTarget = undefined;
+      return;
+    }
+
+    // Manual control without a target: keep commanded state and hold position
+    hero.isCommanded = true;
+    hero.commandTarget = { x: hero.x, y: hero.y };
   }
 
   // Check if reached target (within arrival radius of 1.5 units)
-  const dx = FP.sub(hero.x, hero.commandTarget.x);
-  const dy = FP.sub(hero.y, hero.commandTarget.y);
-  const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
-  const arrivalRadiusSq = FP.fromFloat(2.25); // 1.5^2
+  if (hero.commandTarget) {
+    const dx = FP.sub(hero.x, hero.commandTarget.x);
+    const dy = FP.sub(hero.y, hero.commandTarget.y);
+    const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+    const arrivalRadiusSq = FP.fromFloat(2.25); // 1.5^2
 
-  if (distSq <= arrivalRadiusSq) {
-    // Reached destination - return to normal AI
-    hero.state = state.enemies.length > 0 ? 'combat' : 'idle';
-    hero.isCommanded = false;
-    hero.commandTarget = undefined;
-    hero.vx = 0;
-    hero.vy = 0;
-    return;
+    if (distSq <= arrivalRadiusSq) {
+      if (!isManualControlled) {
+        // Reached destination - return to normal AI
+        hero.state = state.enemies.length > 0 ? 'combat' : 'idle';
+        hero.isCommanded = false;
+        hero.commandTarget = undefined;
+        hero.vx = 0;
+        hero.vy = 0;
+        return;
+      }
+
+      hero.vx = 0;
+      hero.vy = 0;
+    }
   }
 
   // While moving to target, hero can still attack enemies in range
   // This allows tactical positioning while maintaining combat effectiveness
+  const attackRangeSq = FP.mul(attackRange, attackRange);
+  const fieldWidth = config.fieldWidth;
+  const enemiesInRange = state.enemies.filter(e => {
+    if (!isEnemyTargetable(e, fieldWidth)) return false;
+    const distSq = FP.distSq(hero.x, hero.y, e.x, e.y);
+    return distSq <= attackRangeSq;
+  });
+
+  if (enemiesInRange.length === 0) {
+    hero.currentTargetId = undefined;
+    return;
+  }
+
+  performHeroAttack(hero, state, config, rng, attackRange);
+  useHeroSkills(hero, state, config, rng, enemiesInRange);
 }
 
 // ============================================================================

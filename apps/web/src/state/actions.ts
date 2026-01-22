@@ -14,6 +14,7 @@ import * as profile from './profile.signals.js';
 import * as game from './game.signals.js';
 import * as ui from './ui.signals.js';
 import * as fortress from './fortress.signals.js';
+import * as command from './command.signals.js';
 import { addArtifactDrop, resetArtifactsState } from './artifacts.signals.js';
 import { resetMaterialsState, updatePlayerMaterials } from './materials.signals.js';
 import { resetIdleState } from './idle.signals.js';
@@ -325,6 +326,10 @@ export function resetGameState(): void {
   batch(() => {
     game.gamePhase.value = 'idle';
     game.gameState.value = null;
+    command.commandSelectedHeroId.value = null;
+    command.commandTargetPosition.value = null;
+    command.manualControlHeroId.value = null;
+    command.manualMoveInput.value = { x: 0, y: 0 };
 
     // Reset fortress state but keep selected class for next game
     fortress.activeHeroes.value = [];

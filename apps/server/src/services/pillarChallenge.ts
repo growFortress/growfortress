@@ -484,6 +484,15 @@ export async function submitPillarChallenge(
             heroId: (payload.heroId as string) ?? '',
             targetX: (payload.targetX as number) ?? 0,
             targetY: (payload.targetY as number) ?? 0,
+            commandType: (payload.commandType as 'move' | 'focus' | 'retreat') ?? undefined,
+            targetEnemyId: (payload.targetEnemyId as number) ?? undefined,
+          };
+        case 'HERO_CONTROL':
+          return {
+            type: 'HERO_CONTROL' as const,
+            tick: e.tick,
+            heroId: (payload.heroId as string) ?? '',
+            active: (payload.active as boolean) ?? false,
           };
         default:
           return { type: 'REROLL_RELICS' as const, tick: e.tick };

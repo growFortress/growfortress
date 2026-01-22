@@ -4,7 +4,7 @@ import type {
   BossRushStartResponse,
   BossRushFinishResponse,
 } from "@arcade/protocol";
-import type { FortressClass, Enemy } from "@arcade/sim-core";
+import type { FortressClass, Enemy, GameState, ActiveHero } from "@arcade/sim-core";
 import {
   Simulation,
   getDefaultConfig,
@@ -60,6 +60,8 @@ import {
   resetBossRushState,
   bossRushStartTime,
   lastSkillTargetPositions,
+  manualControlHeroId,
+  manualMoveInput,
 } from "../state/index.js";
 
 /** Options for starting an endless session */
@@ -130,6 +132,8 @@ export class Game {
   private lastBossDamageCheck = 0;
   private lastFortressHp = 0;
   private lastLevel = 0;
+  private lastManualInput = { x: 0, y: 0 };
+  private lastManualHeroId: string | null = null;
 
   constructor(callbacks: GameCallbacks) {
     this.callbacks = callbacks;
@@ -378,6 +382,8 @@ export class Game {
 
     const state = this.simulation.state;
 
+    this.applyManualControlInput(state);
+
     // Monitor fortress damage
     if (this.lastFortressHp > state.fortressHp) {
       audioManager.playSfx("fortress_damage");
@@ -453,6 +459,105 @@ export class Game {
     }
 
     this.callbacks.onStateChange();
+  }
+
+  private applyManualControlInput(state: GameState): void {
+    if (!this.simulation || this.phase !== "playing") {
+      return;
+    }
+
+    const heroId = manualControlHeroId.value;
+    if (!heroId) {
+      this.lastManualHeroId = null;
+      this.lastManualInput = { x: 0, y: 0 };
+      return;
+    }
+
+    const hero = state.heroes.find((h) => h.definitionId === heroId);
+    if (!hero) {
+      return;
+    }
+
+    if (this.lastManualHeroId !== heroId) {
+      this.lastManualHeroId = heroId;
+      this.lastManualInput = { x: 0, y: 0 };
+    }
+
+    const input = manualMoveInput.value;
+    const inputChanged =
+      input.x !== this.lastManualInput.x || input.y !== this.lastManualInput.y;
+    if (!inputChanged) {
+      return;
+    }
+
+    if (input.x === 0 && input.y === 0) {
+      this.issueHeroCommand(heroId, hero.x, hero.y);
+      this.lastManualInput = { ...input };
+      return;
+    }
+
+    const target = this.getManualControlTarget(hero, input);
+    this.issueHeroCommand(heroId, target.x, target.y);
+    this.lastManualInput = { ...input };
+  }
+
+  private getManualControlTarget(
+    hero: ActiveHero,
+    input: { x: number; y: number }
+  ): { x: number; y: number } {
+    if (!this.simulation) {
+      return { x: hero.x, y: hero.y };
+    }
+
+    const config = this.simulation.config;
+    const heroX = FP.toFloat(hero.x);
+    const heroY = FP.toFloat(hero.y);
+    const minX = FP.toFloat(FP.add(config.fortressX, hero.radius));
+    const maxX = FP.toFloat(FP.sub(config.enemySpawnX, hero.radius));
+    const minY = FP.toFloat(hero.radius);
+    const maxY = FP.toFloat(FP.sub(config.fieldHeight, hero.radius));
+    const dirX = input.x;
+    const dirY = input.y;
+
+    let t = Infinity;
+    if (dirX > 0) {
+      t = Math.min(t, (maxX - heroX) / dirX);
+    } else if (dirX < 0) {
+      t = Math.min(t, (minX - heroX) / dirX);
+    }
+
+    if (dirY > 0) {
+      t = Math.min(t, (maxY - heroY) / dirY);
+    } else if (dirY < 0) {
+      t = Math.min(t, (minY - heroY) / dirY);
+    }
+
+    if (!Number.isFinite(t) || t <= 0) {
+      return { x: hero.x, y: hero.y };
+    }
+
+    const targetX = Math.min(Math.max(heroX + dirX * t, minX), maxX);
+    const targetY = Math.min(Math.max(heroY + dirY * t, minY), maxY);
+    return { x: FP.fromFloat(targetX), y: FP.fromFloat(targetY) };
+  }
+
+  /** Toggle manual control for a hero */
+  setHeroManualControl(heroId: string, active: boolean): void {
+    if (!this.simulation || this.phase !== "playing") return;
+
+    const state = this.simulation.state;
+    const hero = state.heroes.find((h) => h.definitionId === heroId);
+    if (!hero) return;
+
+    const event: GameEvent = {
+      type: "HERO_CONTROL",
+      tick: state.tick,
+      heroId,
+      active,
+    };
+
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
   }
 
   private async submitCurrentSegment(): Promise<void> {
@@ -697,6 +802,29 @@ export class Game {
       heroId,
       targetX,
       targetY,
+    };
+
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
+  /** Focus a specific enemy for a hero (manual target) */
+  setHeroFocusTarget(heroId: string, targetEnemyId: number): void {
+    if (!this.simulation || this.phase !== "playing") return;
+
+    const state = this.simulation.state;
+
+    const hero = state.heroes.find((h) => h.definitionId === heroId);
+    if (!hero) return;
+    const enemy = state.enemies.find((e) => e.id === targetEnemyId);
+    if (!enemy) return;
+
+    const event: GameEvent = {
+      type: "HERO_COMMAND",
+      tick: state.tick,
+      heroId,
+      commandType: "focus",
+      targetEnemyId,
     };
 
     this.events.push(event);

@@ -3,11 +3,18 @@ import {
   gameState,
   gamePhase,
   showChoiceModal,
+  manualControlHeroId,
+  commandSelectedHeroId,
+  hubInitialized,
+  selectedFortressClass,
+  upgradePanelVisible,
+  upgradeTarget,
 } from "../state/index.js";
 import {
   showTutorialTip,
   isTipCompleted,
   activeTutorialTip,
+  tutorialProgress,
 } from "../state/tutorial.signals.js";
 import { getTutorialSteps } from "./tutorialSteps.js";
 import { useTranslation } from "../i18n/useTranslation.js";
@@ -26,8 +33,16 @@ export function useTutorialTriggers(): void {
   const hasTriggeredWave2 = useRef(false);
   const hasTriggeredRelicTip = useRef(false);
   const hasTriggeredSynergyTip = useRef(false);
+  const hasTriggeredFortressUpgradesTip = useRef(false);
+  const hasTriggeredFortressUnlocksTip = useRef(false);
+  const hasTriggeredHeroStatTip = useRef(false);
+  const hasTriggeredHeroTierTip = useRef(false);
+  const hasTriggeredManualTip = useRef(false);
+  const hasTriggeredDragTip = useRef(false);
   const bombSkillTimeoutRef = useRef<number | null>(null);
   const synergyTimeoutRef = useRef<number | null>(null);
+  const fortressTipTimeoutRef = useRef<number | null>(null);
+  const heroTipTimeoutRef = useRef<number | null>(null);
 
   // Reset refs when returning to idle
   useEffect(() => {
@@ -36,6 +51,10 @@ export function useTutorialTriggers(): void {
       hasTriggeredWave2.current = false;
       hasTriggeredRelicTip.current = false;
       hasTriggeredSynergyTip.current = false;
+      hasTriggeredFortressUpgradesTip.current = false;
+      hasTriggeredFortressUnlocksTip.current = false;
+      hasTriggeredManualTip.current = false;
+      hasTriggeredDragTip.current = false;
       if (bombSkillTimeoutRef.current) {
         clearTimeout(bombSkillTimeoutRef.current);
         bombSkillTimeoutRef.current = null;
@@ -44,8 +63,28 @@ export function useTutorialTriggers(): void {
         clearTimeout(synergyTimeoutRef.current);
         synergyTimeoutRef.current = null;
       }
+      if (fortressTipTimeoutRef.current) {
+        clearTimeout(fortressTipTimeoutRef.current);
+        fortressTipTimeoutRef.current = null;
+      }
+      if (heroTipTimeoutRef.current) {
+        clearTimeout(heroTipTimeoutRef.current);
+        heroTipTimeoutRef.current = null;
+      }
     }
   }, [gamePhase.value]);
+
+  // Reset hero upgrade tips when closing the hero details panel
+  useEffect(() => {
+    if (!upgradePanelVisible.value) {
+      hasTriggeredHeroStatTip.current = false;
+      hasTriggeredHeroTierTip.current = false;
+      if (heroTipTimeoutRef.current) {
+        clearTimeout(heroTipTimeoutRef.current);
+        heroTipTimeoutRef.current = null;
+      }
+    }
+  }, [upgradePanelVisible.value]);
 
   // Wave-based triggers
   useEffect(() => {
@@ -95,6 +134,110 @@ export function useTutorialTriggers(): void {
     }
   }, [gameState.value?.wave, gamePhase.value, tutorialSteps]);
 
+  // Hub tips: fortress upgrades and tier unlocks
+  useEffect(() => {
+    if (gamePhase.value !== "idle") return;
+    if (!hubInitialized.value || !selectedFortressClass.value) return;
+
+    if (!hasTriggeredFortressUpgradesTip.current && !isTipCompleted("fortress_upgrades")) {
+      hasTriggeredFortressUpgradesTip.current = true;
+
+      fortressTipTimeoutRef.current = window.setTimeout(() => {
+        if (!activeTutorialTip.value && !isTipCompleted("fortress_upgrades")) {
+          showTutorialTip(tutorialSteps.fortress_upgrades);
+        }
+      }, 800);
+      return;
+    }
+
+    if (
+      !hasTriggeredFortressUnlocksTip.current
+      && isTipCompleted("fortress_upgrades")
+      && !isTipCompleted("fortress_unlocks")
+    ) {
+      hasTriggeredFortressUnlocksTip.current = true;
+
+      fortressTipTimeoutRef.current = window.setTimeout(() => {
+        if (!activeTutorialTip.value && !isTipCompleted("fortress_unlocks")) {
+          showTutorialTip(tutorialSteps.fortress_unlocks);
+        }
+      }, 800);
+    }
+  }, [gamePhase.value, hubInitialized.value, selectedFortressClass.value, tutorialSteps, tutorialProgress.value]);
+
+  // Manual control tip (when player takes over a hero)
+  useEffect(() => {
+    if (gamePhase.value !== "playing") return;
+    if (!manualControlHeroId.value || hasTriggeredManualTip.current) return;
+
+    hasTriggeredManualTip.current = true;
+
+    if (!isTipCompleted("manual_control") && !activeTutorialTip.value) {
+      showTutorialTip(tutorialSteps.manual_control);
+    } else if (!isTipCompleted("hero_drag") && !activeTutorialTip.value) {
+      showTutorialTip(tutorialSteps.hero_drag);
+      hasTriggeredDragTip.current = true;
+    }
+  }, [manualControlHeroId.value, gamePhase.value, tutorialSteps]);
+
+  // Hero upgrade tips (when hero details modal opens)
+  useEffect(() => {
+    const target = upgradeTarget.value;
+    if (!upgradePanelVisible.value || target?.type !== "hero") return;
+
+    if (!hasTriggeredHeroStatTip.current && !isTipCompleted("hero_stat_upgrades")) {
+      hasTriggeredHeroStatTip.current = true;
+
+      heroTipTimeoutRef.current = window.setTimeout(() => {
+        if (!activeTutorialTip.value && !isTipCompleted("hero_stat_upgrades")) {
+          showTutorialTip(tutorialSteps.hero_stat_upgrades);
+        }
+      }, 400);
+      return;
+    }
+
+    if (
+      !hasTriggeredHeroTierTip.current
+      && isTipCompleted("hero_stat_upgrades")
+      && !isTipCompleted("hero_tiers")
+    ) {
+      hasTriggeredHeroTierTip.current = true;
+
+      heroTipTimeoutRef.current = window.setTimeout(() => {
+        if (!activeTutorialTip.value && !isTipCompleted("hero_tiers")) {
+          showTutorialTip(tutorialSteps.hero_tiers);
+        }
+      }, 400);
+    }
+  }, [upgradePanelVisible.value, upgradeTarget.value, tutorialSteps, tutorialProgress.value]);
+
+  // Drag tip (when selecting a hero for commands)
+  useEffect(() => {
+    if (gamePhase.value !== "playing") return;
+    if (!commandSelectedHeroId.value || hasTriggeredDragTip.current) return;
+
+    hasTriggeredDragTip.current = true;
+
+    if (!isTipCompleted("hero_drag")) {
+      setTimeout(() => {
+        if (!activeTutorialTip.value && !isTipCompleted("hero_drag")) {
+          showTutorialTip(tutorialSteps.hero_drag);
+        }
+      }, 800);
+    }
+  }, [commandSelectedHeroId.value, gamePhase.value, tutorialSteps]);
+
+  // Drag tip after manual control was completed
+  useEffect(() => {
+    if (gamePhase.value !== "playing") return;
+    if (hasTriggeredDragTip.current) return;
+    if (!tutorialProgress.value.has("manual_control")) return;
+    if (isTipCompleted("hero_drag") || activeTutorialTip.value) return;
+
+    hasTriggeredDragTip.current = true;
+    showTutorialTip(tutorialSteps.hero_drag);
+  }, [tutorialProgress.value, gamePhase.value, tutorialSteps]);
+
   // Relic selection trigger (when choice modal opens)
   useEffect(() => {
     if (showChoiceModal.value && !hasTriggeredRelicTip.current) {
@@ -134,6 +277,12 @@ export function useTutorialTriggers(): void {
       }
       if (synergyTimeoutRef.current) {
         clearTimeout(synergyTimeoutRef.current);
+      }
+      if (fortressTipTimeoutRef.current) {
+        clearTimeout(fortressTipTimeoutRef.current);
+      }
+      if (heroTipTimeoutRef.current) {
+        clearTimeout(heroTipTimeoutRef.current);
       }
     };
   }, []);

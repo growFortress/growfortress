@@ -6,7 +6,13 @@ export type TutorialStepId =
   | "bomb_skill"
   | "relic_selection"
   | "speed_controls"
-  | "build_synergy";
+  | "build_synergy"
+  | "fortress_upgrades"
+  | "hero_stat_upgrades"
+  | "hero_tiers"
+  | "fortress_unlocks"
+  | "manual_control"
+  | "hero_drag";
 
 // Tutorial tip configuration
 export interface TutorialTip {

@@ -30,6 +30,9 @@ const HP_COLORS = {
   border: 0x444444,
 };
 
+// Manual control indicator
+const MANUAL_CONTROL_COLOR = 0x00f5ff;
+
 // Size constants
 const SIZES = {
   heroBase: 30,
@@ -111,12 +114,14 @@ interface DirtyFlags {
   hpBar: boolean;     // HP value changed
   stateIndicator: boolean;  // Combat state changed
   tierBadge: boolean; // Tier level changed
+  manualIndicator: boolean; // Manual control indicator changed
 }
 
 interface HeroVisual {
   container: Container;
   lastState: HeroState;
   heroId: string;
+  lastManualControlled: boolean;
   animation: HeroAnimationState;
   lastHp: number;
   lastTier: 1 | 2 | 3;
@@ -257,11 +262,18 @@ export class HeroSystem {
       visual.dirty.body = true; // Body glow changes with combat state
     }
 
+    const manualControlled = hero.isManualControlled === true;
+    if (visual.lastManualControlled !== manualControlled) {
+      visual.lastManualControlled = manualControlled;
+      visual.dirty.manualIndicator = true;
+    }
+
     const currentTier = this.getTierKey(hero.tier);
     if (visual.lastTier !== currentTier) {
       visual.lastTier = currentTier;
       visual.dirty.tierBadge = true;
       visual.dirty.body = true; // Body size changes with tier
+      visual.dirty.manualIndicator = true;
     }
 
     const hpPercent = hero.maxHp > 0 ? hero.currentHp / hero.maxHp : 0;
@@ -357,6 +369,12 @@ export class HeroSystem {
     body.label = 'body';
     container.addChild(body);
 
+    // Manual control indicator (ring)
+    const manualIndicator = new Graphics();
+    manualIndicator.label = 'manual';
+    manualIndicator.visible = false;
+    container.addChild(manualIndicator);
+
     // HP bar (hidden - heroes are immortal)
     const hpBar = new Graphics();
     hpBar.label = 'hpBar';
@@ -404,6 +422,7 @@ export class HeroSystem {
       container,
       lastState: hero.state,
       heroId: hero.definitionId,
+      lastManualControlled: hero.isManualControlled === true,
       lastHp: hpPercent,
       lastTier: this.getTierKey(hero.tier),
       tweenManager: new TweenManager(),
@@ -442,6 +461,7 @@ export class HeroSystem {
         hpBar: true,
         stateIndicator: true,
         tierBadge: true,
+        manualIndicator: true,
       },
     };
   }
@@ -630,7 +650,7 @@ export class HeroSystem {
   }
 
   private updateHeroVisual(visual: HeroVisual, hero: ActiveHero, time: number): { x: number; y: number } {
-    const { shadow, body, hpBar, stateIndicator, tierBadge } = this.getHeroVisualParts(visual);
+    const { shadow, body, hpBar, stateIndicator, tierBadge, manualIndicator } = this.getHeroVisualParts(visual);
     const anim = visual.animation;
     const offset = { x: anim.offsetX, y: anim.offsetY };
 
@@ -645,6 +665,7 @@ export class HeroSystem {
     this.applyHeroTransforms(visual, hero, time);
     this.renderShadow(shadow, size, time, anim);
     this.renderBody(visual, body, hero, size, colors, time, anim);
+    this.renderManualIndicator(visual, manualIndicator, hero, size, time);
     this.renderHpBar(visual, hpBar, anim);
     this.renderStateIndicator(visual, stateIndicator, hero.state, anim);
     this.renderTierBadge(visual, tierBadge, tierKey);
@@ -655,6 +676,7 @@ export class HeroSystem {
   private getHeroVisualParts(visual: HeroVisual): {
     shadow: Graphics | null;
     body: Graphics | null;
+    manualIndicator: Graphics | null;
     hpBar: Graphics | null;
     stateIndicator: Graphics | null;
     tierBadge: Graphics | null;
@@ -662,6 +684,7 @@ export class HeroSystem {
     return {
       shadow: visual.container.getChildByLabel('shadow') as Graphics | null,
       body: visual.container.getChildByLabel('body') as Graphics | null,
+      manualIndicator: visual.container.getChildByLabel('manual') as Graphics | null,
       hpBar: visual.container.getChildByLabel('hpBar') as Graphics | null,
       stateIndicator: visual.container.getChildByLabel('state') as Graphics | null,
       tierBadge: visual.container.getChildByLabel('tier') as Graphics | null,
@@ -731,6 +754,39 @@ export class HeroSystem {
     body.clear();
     this.drawHeroBody(body, hero, size, colors, time, anim);
     visual.dirty.body = false;
+  }
+
+  private renderManualIndicator(
+    visual: HeroVisual,
+    manualIndicator: Graphics | null,
+    hero: ActiveHero,
+    size: number,
+    time: number
+  ): void {
+    if (!manualIndicator) {
+      return;
+    }
+
+    const isManual = hero.isManualControlled === true;
+    manualIndicator.visible = isManual;
+    if (!isManual) {
+      return;
+    }
+
+    const pulse = 0.65 + Math.sin(time * 6) * 0.2;
+    manualIndicator.alpha = pulse;
+
+    if (!visual.dirty.manualIndicator) {
+      return;
+    }
+
+    manualIndicator.clear();
+    const radius = size * 0.95;
+    manualIndicator.circle(0, 0, radius)
+      .stroke({ width: 3, color: MANUAL_CONTROL_COLOR, alpha: 0.9 });
+    manualIndicator.circle(0, 0, radius * 0.55)
+      .stroke({ width: 2, color: MANUAL_CONTROL_COLOR, alpha: 0.5 });
+    visual.dirty.manualIndicator = false;
   }
 
   private renderHpBar(visual: HeroVisual, hpBar: Graphics, anim: HeroAnimationState): void {

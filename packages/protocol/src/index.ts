@@ -56,11 +56,13 @@ export {
   ChooseRelicEventSchema,
   RerollRelicsEventSchema,
   ActivateSnapEventSchema,
+  HeroControlEventSchema,
   GameEventSchema,
   CheckpointSchema,
   type ChooseRelicEvent,
   type RerollRelicsEvent,
   type ActivateSnapEvent,
+  type HeroControlEvent,
   type GameEvent,
   type Checkpoint,
 } from "./events.js";

@@ -188,7 +188,6 @@ export class ColonyScene {
    * Initialize/resize the scene
    */
   public onResize(width: number, height: number) {
-    logger.debug('[ColonyScene] onResize:', width, 'x', height);
     this.width = width;
     this.height = height;
     this.centerX = width / 2;

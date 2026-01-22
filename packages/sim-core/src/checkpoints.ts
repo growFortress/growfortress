@@ -241,6 +241,7 @@ export function computeCheckpointHash(state: GameState): number {
     appendNumber(data, hero.radius);
     appendNumber(data, hero.mass);
     appendString(data, hero.state);
+    appendBool(data, hero.isManualControlled ?? false);
     appendNumber(data, hero.lastAttackTick);
     appendNumber(data, hero.lastDeployTick);
     appendOptionalNumber(data, hero.currentTargetId);

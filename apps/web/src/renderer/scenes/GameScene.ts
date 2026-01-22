@@ -21,6 +21,7 @@ import {
   ParallaxBackground,
 } from "../effects/ParallaxBackground.js";
 import { fpXToScreen, fpYToScreen } from "../CoordinateSystem.js";
+import { lastSkillTargetPositions } from "../../state/index.js";
 
 // Import extracted components
 import { EnvironmentRenderer, themeManager } from "./environment/index.js";
@@ -150,6 +151,13 @@ export class GameScene {
   }
 
   /**
+   * Set callback for hero click events during gameplay (tactical selection).
+   */
+  public setOnHeroSelect(callback: ((heroId: string) => void) | null) {
+    this.inputController.setOnHeroClick(callback);
+  }
+
+  /**
    * Set callback for turret click events in hub mode
    */
   public setOnTurretClick(
@@ -165,6 +173,24 @@ export class GameScene {
     callback: ((worldX: number, worldY: number) => void) | null,
   ) {
     this.inputController.setOnFieldClick(callback);
+  }
+
+  /**
+   * Set callback for field right click events (manual attack)
+   */
+  public setOnFieldRightClick(
+    callback: ((worldX: number, worldY: number) => void) | null,
+  ) {
+    this.inputController.setOnFieldRightClick(callback);
+  }
+
+  /**
+   * Set callback for hero drag events (tactical repositioning)
+   */
+  public setOnHeroDrag(
+    callback: ((heroId: string, worldX: number, worldY: number) => void) | null,
+  ) {
+    this.inputController.setOnHeroDrag(callback);
   }
 
   /**
@@ -190,6 +216,9 @@ export class GameScene {
       this.wasInGame = true;
       // Enable interactive layer during gameplay for tactical commands
       this.inputController.enableInteraction();
+      this.inputController.setManualAimActive(
+        state.heroes.some((hero) => hero.isManualControlled === true),
+      );
 
       // Check for pillar/theme change
       if (state.currentPillar !== this.currentPillar) {
@@ -224,6 +253,12 @@ export class GameScene {
       this.detectFortressSkillActivations(state);
 
       // Update entity systems
+      this.inputController.updateHeroTargets(
+        state.heroes,
+        this.width,
+        this.height,
+        renderAlpha,
+      );
       this.turretSystem.update(state, this.width, this.height);
       this.wallSystem.update(state, this.width, this.height, this.effects.vfx);
       this.enemySystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha, deltaMs);
@@ -233,6 +268,8 @@ export class GameScene {
     } else {
       // Disable interactive layer in hub mode so heroes can be clicked
       this.inputController.disableInteraction();
+      this.inputController.setManualAimActive(false);
+      this.inputController.clearHeroTargets();
 
       // Hard reset effects on transition to hub
       if (this.wasInGame) {
@@ -400,10 +437,6 @@ export class GameScene {
    * Detect fortress skill activations and trigger VFX
    */
   private detectFortressSkillActivations(state: GameState): void {
-    // Import signal to get skill positions (dynamic import to avoid circular dependency)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { lastSkillTargetPositions } = require('../../state/index.js');
-
     for (const skillId of Object.keys(state.skillCooldowns)) {
       const currentCooldown = state.skillCooldowns[skillId] || 0;
       const lastCooldown = this.lastSkillCooldowns[skillId] ?? 0;

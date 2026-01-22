@@ -231,6 +231,30 @@
       "title": "Your Build Synergy",
       "description": "Vanguard tanks, Railgun kills, Natural Fortress heals. Look for Natural-boosting relics!"
     },
+    "fortressUpgrades": {
+      "title": "Fortress Upgrades",
+      "description": "Spend gold here to permanently boost Fortress HP, damage, and armor."
+    },
+    "heroStatUpgrades": {
+      "title": "Hero Stat Upgrades",
+      "description": "Upgrade hero HP and damage with gold to make them stronger between runs."
+    },
+    "heroTiers": {
+      "title": "Hero Tiers",
+      "description": "Upgrade to higher tiers to unlock new skills and bigger stat multipliers."
+    },
+    "fortressUnlocks": {
+      "title": "Tiers & Unlocks",
+      "description": "Fortress levels unlock new slots and features. Check your tier progress here."
+    },
+    "manualControl": {
+      "title": "Manual Control",
+      "description": "Click a hero to take control. Move with WASD, shoot with right click, exit with Esc."
+    },
+    "heroDrag": {
+      "title": "Drag to Reposition",
+      "description": "You can drag a hero on the battlefield to quickly change their position."
+    },
     "dismiss": "Got it"
   },
   "unlock": {

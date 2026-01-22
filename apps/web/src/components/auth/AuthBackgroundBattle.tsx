@@ -54,8 +54,13 @@ export function AuthBackgroundBattle({ className }: AuthBackgroundBattleProps) {
     if (!canvasRef.current) return;
 
     let destroyed = false;
+    let initialized = false;
     const app = new Application();
     appRef.current = app;
+    const destroyApp = (target: Application | null | undefined) => {
+      if (!target || !initialized || typeof target.destroy !== 'function') return;
+      target.destroy(true, { children: true, texture: true });
+    };
 
     const initBattle = async () => {
       if (destroyed || !canvasRef.current) return;
@@ -73,9 +78,10 @@ export function AuthBackgroundBattle({ className }: AuthBackgroundBattleProps) {
           resolution: window.devicePixelRatio || 1,
           autoDensity: true,
         });
+        initialized = true;
 
-        if (destroyed) {
-          app.destroy(true);
+        if (destroyed || appRef.current !== app) {
+          destroyApp(app);
           return;
         }
 
@@ -195,6 +201,10 @@ export function AuthBackgroundBattle({ className }: AuthBackgroundBattleProps) {
 
         animationFrameRef.current = requestAnimationFrame(animate);
       } catch (e) {
+        destroyApp(app);
+        if (appRef.current === app) {
+          appRef.current = null;
+        }
         console.warn('Failed to initialize AuthBackgroundBattle:', e);
       }
     };
@@ -206,11 +216,11 @@ export function AuthBackgroundBattle({ className }: AuthBackgroundBattleProps) {
       destroyed = true;
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
-      if (appRef.current) {
-        appRef.current.destroy(true, { children: true, texture: true });
-        appRef.current = null;
-      }
+      const currentApp = appRef.current;
+      appRef.current = null;
+      destroyApp(currentApp);
       entitiesRef.current = [];
     };
   }, []);

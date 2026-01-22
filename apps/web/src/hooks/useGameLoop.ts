@@ -31,6 +31,10 @@ import {
   commandSelectedHeroId,
   setCommandTarget,
   cancelCommand,
+  gamePhase,
+  manualControlHeroId,
+  setManualControlHero,
+  setManualMoveInput,
   selectedTargetedSkill,
   clearSelectedSkill,
   lastSessionAnalytics,
@@ -165,6 +169,9 @@ export function useGameLoop(
         newProgression?: { level: number; xp: number; totalXp: number; xpToNextLevel: number },
         finalWave?: number
       ) => {
+        setManualControlHero(null);
+        setManualMoveInput(0, 0);
+
         const state = game.getState();
         const endState: GameEndState | null = state
           ? {
@@ -225,6 +232,9 @@ export function useGameLoop(
         showRewardsToast(gold, dust, xp);
       },
       onBossRushEnd: () => {
+        setManualControlHero(null);
+        setManualMoveInput(0, 0);
+
         // CRITICAL: Stop the game loop so hub loop can take over
         loop.stop();
 
@@ -236,6 +246,235 @@ export function useGameLoop(
       },
     });
     gameRef.current = game;
+
+    const manualKeys = { up: false, down: false, left: false, right: false };
+    const MANUAL_AIM_MAX_DISTANCE = 4;
+
+    const isTypingTarget = (target: EventTarget | null): boolean => {
+      const element = target as HTMLElement | null;
+      if (!element) return false;
+      const tagName = element.tagName?.toLowerCase();
+      return tagName === 'input' || tagName === 'textarea' || element.isContentEditable;
+    };
+
+    const clearManualKeys = () => {
+      manualKeys.up = false;
+      manualKeys.down = false;
+      manualKeys.left = false;
+      manualKeys.right = false;
+    };
+
+    const exitManualControl = () => {
+      const currentManual = manualControlHeroId.value;
+      if (!currentManual) return;
+      game.setHeroManualControl(currentManual, false);
+      setManualControlHero(null);
+      setManualMoveInput(0, 0);
+    };
+
+    const getClosestEnemy = (
+      worldX: number,
+      worldY: number,
+      maxDistance: number | null
+    ): number | null => {
+      const state = game.getState();
+      if (!state || state.enemies.length === 0) {
+        return null;
+      }
+
+      let bestId: number | null = null;
+      let bestDistSq = Infinity;
+
+      for (const enemy of state.enemies) {
+        if (enemy.hp <= 0) continue;
+        const ex = FP.toFloat(enemy.x);
+        const ey = FP.toFloat(enemy.y);
+        const dx = ex - worldX;
+        const dy = ey - worldY;
+        const distSq = dx * dx + dy * dy;
+        if (distSq < bestDistSq) {
+          bestDistSq = distSq;
+          bestId = enemy.id;
+        }
+      }
+
+      if (bestId === null) {
+        return null;
+      }
+
+      if (maxDistance !== null && bestDistSq > maxDistance * maxDistance) {
+        return null;
+      }
+
+      return bestId;
+    };
+
+    const triggerManualAttackAt = (worldX: number, worldY: number) => {
+      const heroId = manualControlHeroId.value;
+      if (!heroId) return;
+      const enemyId = getClosestEnemy(worldX, worldY, MANUAL_AIM_MAX_DISTANCE);
+      if (enemyId === null) {
+        triggerManualAttackNearest();
+        return;
+      }
+      game.setHeroFocusTarget(heroId, enemyId);
+    };
+
+    const triggerManualAttackNearest = () => {
+      const heroId = manualControlHeroId.value;
+      if (!heroId) return;
+      const state = game.getState();
+      if (!state) return;
+      const hero = state.heroes.find((h) => h.definitionId === heroId);
+      if (!hero) return;
+
+      const heroX = FP.toFloat(hero.x);
+      const heroY = FP.toFloat(hero.y);
+      const enemyId = getClosestEnemy(heroX, heroY, null);
+      if (enemyId === null) return;
+      game.setHeroFocusTarget(heroId, enemyId);
+    };
+
+    const updateManualInput = () => {
+      const rawX = (manualKeys.right ? 1 : 0) - (manualKeys.left ? 1 : 0);
+      const rawY = (manualKeys.down ? 1 : 0) - (manualKeys.up ? 1 : 0);
+      if (rawX === 0 && rawY === 0) {
+        setManualMoveInput(0, 0);
+        return;
+      }
+      const length = Math.hypot(rawX, rawY) || 1;
+      setManualMoveInput(rawX / length, rawY / length);
+    };
+
+    const shouldCaptureInput = () =>
+      manualControlHeroId.value !== null && gamePhase.value === 'playing';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return;
+
+      if (event.code === 'Escape' && manualControlHeroId.value) {
+        event.preventDefault();
+        exitManualControl();
+        return;
+      }
+
+      if ((event.code === 'Space' || event.key === ' ') && manualControlHeroId.value) {
+        if (!event.repeat && shouldCaptureInput()) {
+          event.preventDefault();
+          triggerManualAttackNearest();
+        }
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      let changed = false;
+
+      switch (key) {
+        case 'w':
+        case 'arrowup':
+          if (!manualKeys.up) {
+            manualKeys.up = true;
+            changed = true;
+          }
+          break;
+        case 's':
+        case 'arrowdown':
+          if (!manualKeys.down) {
+            manualKeys.down = true;
+            changed = true;
+          }
+          break;
+        case 'a':
+        case 'arrowleft':
+          if (!manualKeys.left) {
+            manualKeys.left = true;
+            changed = true;
+          }
+          break;
+        case 'd':
+        case 'arrowright':
+          if (!manualKeys.right) {
+            manualKeys.right = true;
+            changed = true;
+          }
+          break;
+        default:
+          return;
+      }
+
+      if (shouldCaptureInput()) {
+        event.preventDefault();
+      }
+
+      if (changed) {
+        updateManualInput();
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      let changed = false;
+
+      switch (key) {
+        case 'w':
+        case 'arrowup':
+          if (manualKeys.up) {
+            manualKeys.up = false;
+            changed = true;
+          }
+          break;
+        case 's':
+        case 'arrowdown':
+          if (manualKeys.down) {
+            manualKeys.down = false;
+            changed = true;
+          }
+          break;
+        case 'a':
+        case 'arrowleft':
+          if (manualKeys.left) {
+            manualKeys.left = false;
+            changed = true;
+          }
+          break;
+        case 'd':
+        case 'arrowright':
+          if (manualKeys.right) {
+            manualKeys.right = false;
+            changed = true;
+          }
+          break;
+        default:
+          return;
+      }
+
+      if (shouldCaptureInput()) {
+        event.preventDefault();
+      }
+
+      if (changed) {
+        updateManualInput();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      if (!manualKeys.up && !manualKeys.down && !manualKeys.left && !manualKeys.right) {
+        return;
+      }
+      clearManualKeys();
+      setManualMoveInput(0, 0);
+    };
+
+    const handleContextMenu = (event: MouseEvent) => {
+      if (shouldCaptureInput()) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleWindowBlur);
+    canvas.addEventListener('contextmenu', handleContextMenu);
 
     // Set up game action callbacks for UI components
     setTurretTargetingFn.value = (slotIndex, mode) => game.setTurretTargeting(slotIndex, mode);
@@ -326,6 +565,30 @@ export function useGameLoop(
           upgradePanelVisible.value = true;
         });
 
+        // Set up hero click handler during gameplay (manual control)
+        renderer.setOnHeroSelect((heroId: string) => {
+          if (gamePhase.value !== 'playing') {
+            return;
+          }
+
+          const currentManual = manualControlHeroId.value;
+          if (currentManual === heroId) {
+            game.setHeroManualControl(heroId, false);
+            setManualControlHero(null);
+            setManualMoveInput(0, 0);
+            return;
+          }
+
+          if (currentManual) {
+            game.setHeroManualControl(currentManual, false);
+          }
+
+          cancelCommand();
+          setManualControlHero(heroId);
+          game.setHeroManualControl(heroId, true);
+          updateManualInput();
+        });
+
         // Set up field click handler for tactical commands and targeted skills
         renderer.setOnFieldClick((worldX: number, worldY: number) => {
           // Convert world coordinates to fixed-point
@@ -377,6 +640,22 @@ export function useGameLoop(
           }
         });
 
+        // Right click for manual attack targeting
+        renderer.setOnFieldRightClick((worldX: number, worldY: number) => {
+          if (manualControlHeroId.value) {
+            triggerManualAttackAt(worldX, worldY);
+          }
+        });
+
+        // Set up hero drag handler for tactical repositioning
+        renderer.setOnHeroDrag((heroId: string, worldX: number, worldY: number) => {
+          const fpX = FP.fromFloat(worldX);
+          const fpY = FP.fromFloat(worldY);
+          if (game) {
+            game.issueHeroCommand(heroId, fpX, fpY);
+          }
+        });
+
         // Initial sync
         syncGameState(game);
 
@@ -391,6 +670,10 @@ export function useGameLoop(
 
     return () => {
       destroyed = true;
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleWindowBlur);
+      canvas.removeEventListener('contextmenu', handleContextMenu);
       stopHubLoop();
       loop.destroy();
       renderer.destroy();

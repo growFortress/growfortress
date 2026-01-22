@@ -42,6 +42,15 @@ export const HeroCommandEventSchema = BaseEventSchema.extend({
 
 export type HeroCommandEvent = z.infer<typeof HeroCommandEventSchema>;
 
+// Hero manual control toggle (player takes/releases direct control)
+export const HeroControlEventSchema = BaseEventSchema.extend({
+  type: z.literal('HERO_CONTROL'),
+  heroId: z.string(),
+  active: z.boolean(),
+});
+
+export type HeroControlEvent = z.infer<typeof HeroControlEventSchema>;
+
 // Activate fortress skill at target location
 export const ActivateSkillEventSchema = BaseEventSchema.extend({
   type: z.literal('ACTIVATE_SKILL'),
@@ -104,6 +113,7 @@ export const GameEventSchema = z.discriminatedUnion('type', [
   RerollRelicsEventSchema,
   ActivateSnapEventSchema,
   HeroCommandEventSchema,
+  HeroControlEventSchema,
   ActivateSkillEventSchema,
   PlaceWallEventSchema,
   RemoveWallEventSchema,

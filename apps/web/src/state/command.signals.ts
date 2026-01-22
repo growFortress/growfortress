@@ -11,12 +11,32 @@ export const commandSelectedHeroId = signal<string | null>(null);
 // Target position for command (fixed-point coordinates)
 export const commandTargetPosition = signal<{ x: number; y: number } | null>(null);
 
+// Currently controlled hero for manual movement (null = none)
+export const manualControlHeroId = signal<string | null>(null);
+
+// Manual movement input (normalized direction)
+export const manualMoveInput = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+
 /**
  * Select a hero for command mode
  */
 export function selectHeroForCommand(heroId: string): void {
   commandSelectedHeroId.value = heroId;
   commandTargetPosition.value = null;
+}
+
+/**
+ * Set manual control hero (null = release control)
+ */
+export function setManualControlHero(heroId: string | null): void {
+  manualControlHeroId.value = heroId;
+}
+
+/**
+ * Update manual movement input (normalized direction)
+ */
+export function setManualMoveInput(x: number, y: number): void {
+  manualMoveInput.value = { x, y };
 }
 
 /**

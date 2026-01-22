@@ -42,6 +42,9 @@ export function validateEvent(
     case 'HERO_COMMAND':
       return validateHeroCommand(event, state);
 
+    case 'HERO_CONTROL':
+      return validateHeroControl(event, state);
+
     case 'ACTIVATE_SKILL':
       return validateActivateSkill(event, state);
 
@@ -176,9 +179,32 @@ function validateHeroCommand(
     if (!enemy) {
       return { valid: false, reason: 'Target enemy not found' };
     }
+
+    if (event.heroId) {
+      const hero = state.heroes.find(h => h.definitionId === event.heroId);
+      if (!hero) {
+        return { valid: false, reason: 'Hero not found' };
+      }
+    }
   }
 
   // 'retreat' command has no special requirements
+
+  return { valid: true };
+}
+
+function validateHeroControl(
+  event: { type: 'HERO_CONTROL'; tick: number; heroId: string; active: boolean },
+  state: GameState
+): EventValidation {
+  if (state.ended) {
+    return { valid: false, reason: 'Game has ended' };
+  }
+
+  const hero = state.heroes.find(h => h.definitionId === event.heroId);
+  if (!hero) {
+    return { valid: false, reason: 'Hero not found' };
+  }
 
   return { valid: true };
 }
@@ -232,6 +258,9 @@ export function applyEvent(
 
     case 'HERO_COMMAND':
       return applyHeroCommand(event, state);
+
+    case 'HERO_CONTROL':
+      return applyHeroControl(event, state);
 
     case 'ACTIVATE_SKILL':
       // Skill execution happens in simulation.processEvents() after this event is applied
@@ -356,6 +385,13 @@ function applyHeroCommand(
       const enemy = state.enemies.find(e => e.id === event.targetEnemyId);
       if (!enemy) return false;
 
+      if (event.heroId) {
+        const hero = state.heroes.find(h => h.definitionId === event.heroId);
+        if (!hero) return false;
+        hero.focusTargetId = event.targetEnemyId;
+        return true;
+      }
+
       // Set focus target on all heroes
       for (const hero of state.heroes) {
         hero.focusTargetId = event.targetEnemyId;
@@ -366,6 +402,31 @@ function applyHeroCommand(
     default:
       return false;
   }
+}
+
+function applyHeroControl(
+  event: { type: 'HERO_CONTROL'; tick: number; heroId: string; active: boolean },
+  state: GameState
+): boolean {
+  const hero = state.heroes.find(h => h.definitionId === event.heroId);
+  if (!hero) return false;
+
+  hero.isManualControlled = event.active;
+
+  if (event.active) {
+    hero.isCommanded = true;
+    hero.state = 'commanded';
+    if (!hero.commandTarget) {
+      hero.commandTarget = { x: hero.x, y: hero.y };
+    }
+    return true;
+  }
+
+  hero.isCommanded = false;
+  hero.focusTargetId = undefined;
+  hero.commandTarget = undefined;
+  hero.state = state.enemies.length > 0 ? 'combat' : 'idle';
+  return true;
 }
 
 // ============================================================================

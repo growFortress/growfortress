@@ -384,6 +384,7 @@ export function FortressInfoPanel() {
               </div>
               <button
                 class={styles.tierButton}
+                data-tutorial="fortress-tier"
                 onClick={() => setEvolutionModalOpen(true)}
                 aria-label={t('fortressPanel.tierClick', { tier: currentTier })}
                 aria-expanded={evolutionModalOpen}
@@ -415,7 +416,7 @@ export function FortressInfoPanel() {
       </section>
 
       {/* FORTRESS UPGRADES SECTION */}
-      <section class={styles.section} aria-labelledby="upgrades-title">
+      <section class={styles.section} aria-labelledby="upgrades-title" data-tutorial="fortress-upgrades">
         <div class={styles.sectionHeader}>
           <span id="upgrades-title" class={styles.sectionTitle}>{t('fortressPanel.fortressUpgrades')}</span>
           <div class={styles.sectionLine} />

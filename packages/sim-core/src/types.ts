@@ -236,6 +236,7 @@ export interface ActiveHero {
   // Command system (player-issued orders)
   commandTarget?: { x: number; y: number };  // Target position (fixed-point)
   isCommanded?: boolean;                      // Whether hero is executing a command
+  isManualControlled?: boolean;               // Player direct control toggle
 
   // Shield system (temporary HP that absorbs damage)
   shieldAmount?: number;       // Current shield HP

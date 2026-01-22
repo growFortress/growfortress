@@ -101,6 +101,7 @@ export function initializeHeroes(
       buffs: [],
       equippedArtifact: artifactId,
       equippedItems: [],
+      isManualControlled: false,
     };
 
     validHeroIndex++;

@@ -1,7 +1,7 @@
 export const ABOUT_US = {
   pl: {
     gameName: 'Grow Fortress',
-    description: 'Grow Fortress to gra tower defense stworzona przez niezależnych deweloperów. Buduj twierdzę, rekrutuj bohaterów i broń się przed hordami wrogów!',
+    description: 'Nieskończona tower defense z roguelike wyborami co falę, walkami PvP arena i wojnami gildii. Bez instalacji — graj natychmiast w przeglądarce. Strategiczne wybory reliktów, rankingi na żywo i idle progression.',
     companyName: 'PlazaWorks Marcin Płaza',
     email: 'help@growfortress.com',
     address: {
@@ -14,7 +14,7 @@ export const ABOUT_US = {
   },
   en: {
     gameName: 'Grow Fortress',
-    description: 'Grow Fortress is a tower defense game created by independent developers. Build your fortress, recruit heroes, and defend against hordes of enemies!',
+    description: 'Endless tower defense with roguelike choices every wave, PvP arena battles, and guild wars. No install required — play instantly in your browser. Strategic relic choices, real-time leaderboards, and idle progression.',
     companyName: 'PlazaWorks Marcin Płaza',
     email: 'help@growfortress.com',
     address: {

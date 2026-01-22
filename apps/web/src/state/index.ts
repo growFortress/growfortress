@@ -342,10 +342,14 @@ export {
 export {
   commandSelectedHeroId,
   commandTargetPosition,
+  manualControlHeroId,
+  manualMoveInput,
   selectHeroForCommand,
   setCommandTarget,
   cancelCommand,
   clearCommandForHero,
+  setManualControlHero,
+  setManualMoveInput,
 } from './command.signals.js';
 
 // PvP Arena signals
