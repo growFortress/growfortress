@@ -164,6 +164,8 @@ export interface ActiveSessionSnapshot {
   fortressBaseHp: number;
   fortressBaseDamage: number;
   waveIntervalTicks: number;
+  currentPillar?: GameState["currentPillar"];
+  pillarRotation?: boolean;
   // Power upgrades data for permanent stat bonuses
   powerData?: {
     fortressUpgrades: {

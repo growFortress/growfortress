@@ -9,8 +9,20 @@ import {
   guildStructures,
   structuresLoading,
   isGuildLeader,
+  isGuildOfficer,
 } from '../../state/guild.signals.js';
-import { updateGuild, leaveGuild, disbandGuild, getStructures, upgradeStructure } from '../../api/guild.js';
+import {
+  updateGuild,
+  updateGuildDescription,
+  updateGuildNotes,
+  getGuildNotes,
+  updateGuildEmblem,
+  leaveGuild,
+  disbandGuild,
+  getStructures,
+  upgradeStructure,
+} from '../../api/guild.js';
+import { resizeImageToBase64 } from '../../utils/image.js';
 import { Button } from '../shared/Button.js';
 import styles from './GuildPanel.module.css';
 
@@ -36,6 +48,11 @@ const STRUCTURE_INFO: Record<GuildStructureType, { name: string; icon: string; b
 export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState('');
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [editingEmblem, setEditingEmblem] = useState(false);
+  const [emblemUrl, setEmblemUrl] = useState('');
+  const [uploadingEmblem, setUploadingEmblem] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [disbanding, setDisbanding] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -56,12 +73,23 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
   const bonuses = guildBonuses.value;
   const structures = guildStructures.value;
 
-  // Load structures when component mounts
+  // Load structures and notes when component mounts
   useEffect(() => {
     if (guild) {
       loadStructures();
+      loadNotes();
     }
   }, [guild?.id]);
+
+  const loadNotes = async () => {
+    if (!guild) return;
+    try {
+      const data = await getGuildNotes(guild.id);
+      setNotes(data.notes || '');
+    } catch (error) {
+      console.error('Failed to load notes:', error);
+    }
+  };
 
   const loadStructures = async () => {
     if (!guild) return;
@@ -101,7 +129,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
 
     setActionLoading(true);
     try {
-      await updateGuild(guild.id, { description });
+      await updateGuildDescription(guild.id, description || null);
       setEditing(false);
       onRefresh();
     } catch (error) {
@@ -109,6 +137,63 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleEditNotes = async () => {
+    if (!editingNotes) {
+      setNotes(guild.internalNotes || '');
+      setEditingNotes(true);
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      await updateGuildNotes(guild.id, notes || null);
+      setEditingNotes(false);
+      onRefresh();
+    } catch (error) {
+      console.error('Failed to update notes:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEmblemFileChange = async (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingEmblem(true);
+      // Resize and convert to base64
+      const base64 = await resizeImageToBase64(file, 256, 256, 0.9);
+      setEmblemUrl(base64);
+    } catch (error: any) {
+      console.error('Failed to process image:', error);
+      alert(error.message || 'Nie udało się przetworzyć obrazu');
+    } finally {
+      setUploadingEmblem(false);
+    }
+  };
+
+  const handleSaveEmblem = async () => {
+    if (!guild) return;
+
+    setActionLoading(true);
+    try {
+      await updateGuildEmblem(guild.id, emblemUrl || null);
+      setEditingEmblem(false);
+      setEmblemUrl('');
+      onRefresh();
+    } catch (error) {
+      console.error('Failed to update emblem:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancelEmblem = () => {
+    setEditingEmblem(false);
+    setEmblemUrl(guild.emblemUrl || '');
   };
 
   const handleLeaveGuild = async () => {
@@ -193,10 +278,95 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
 
   return (
     <div class={styles.infoSection}>
+      {/* Guild Emblem */}
+      <div class={styles.sectionHeader}>
+        <span class={styles.sectionTitle}>Herb drużyny</span>
+        {isGuildOfficer.value && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (!editingEmblem) {
+                setEmblemUrl(guild.emblemUrl || '');
+                setEditingEmblem(true);
+              } else {
+                handleSaveEmblem();
+              }
+            }}
+            disabled={actionLoading || uploadingEmblem}
+          >
+            {editingEmblem ? 'Zapisz' : 'Edytuj'}
+          </Button>
+        )}
+      </div>
+      {editingEmblem ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {emblemUrl && (
+            <img
+              src={emblemUrl}
+              alt="Guild emblem preview"
+              style={{ maxWidth: '128px', maxHeight: '128px', borderRadius: '8px', border: '1px solid var(--color-border)' }}
+            />
+          )}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            onChange={handleEmblemFileChange}
+            disabled={uploadingEmblem}
+            style={{ marginBottom: '0.5rem' }}
+          />
+          <input
+            type="text"
+            placeholder="Lub wklej URL obrazu"
+            value={emblemUrl}
+            onInput={(e) => setEmblemUrl((e.target as HTMLInputElement).value)}
+            maxLength={500}
+            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelEmblem}
+              disabled={actionLoading}
+            >
+              Anuluj
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {guild.emblemUrl ? (
+            <img
+              src={guild.emblemUrl}
+              alt="Guild emblem"
+              style={{ width: '64px', height: '64px', borderRadius: '8px', border: '1px solid var(--color-border)' }}
+            />
+          ) : (
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '8px',
+              border: '1px solid var(--color-border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-text-muted)',
+              fontSize: '24px'
+            }}>
+              🛡️
+            </div>
+          )}
+          <span style={{ color: 'var(--color-text-muted)' }}>
+            {guild.emblemUrl ? 'Herb ustawiony' : 'Brak herbu'}
+          </span>
+        </div>
+      )}
+
       {/* Description */}
       <div class={styles.sectionHeader}>
-        <span class={styles.sectionTitle}>Opis</span>
-        {isGuildLeader.value && (
+        <span class={styles.sectionTitle}>Opis (publiczny)</span>
+        {isGuildOfficer.value && (
           <Button
             variant="ghost"
             size="sm"
@@ -208,17 +378,76 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
         )}
       </div>
       {editing ? (
-        <textarea
-          class={styles.guildDescription}
-          value={description}
-          onInput={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
-          rows={3}
-          maxLength={500}
-          style={{ resize: 'vertical', width: '100%' }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <textarea
+            class={styles.guildDescription}
+            value={description}
+            onInput={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
+            rows={4}
+            maxLength={1000}
+            style={{ resize: 'vertical', width: '100%' }}
+            placeholder="Opis widoczny dla wszystkich (w rankingach, wyszukiwaniu)"
+          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setEditing(false);
+                setDescription(guild.description || '');
+              }}
+            >
+              Anuluj
+            </Button>
+          </div>
+        </div>
       ) : (
         <div class={styles.guildDescription}>
           {guild.description || 'Brak opisu'}
+        </div>
+      )}
+
+      {/* Internal Notes - Only for members */}
+      <div class={styles.sectionHeader}>
+        <span class={styles.sectionTitle}>Notatki gildii (tylko dla członków)</span>
+        {isGuildOfficer.value && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleEditNotes}
+            disabled={actionLoading}
+          >
+            {editingNotes ? 'Zapisz' : 'Edytuj'}
+          </Button>
+        )}
+      </div>
+      {editingNotes ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <textarea
+            class={styles.guildDescription}
+            value={notes}
+            onInput={(e) => setNotes((e.target as HTMLTextAreaElement).value)}
+            rows={6}
+            maxLength={5000}
+            style={{ resize: 'vertical', width: '100%' }}
+            placeholder="Prywatne notatki widoczne tylko dla członków gildii"
+          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setEditingNotes(false);
+                setNotes(guild.internalNotes || '');
+              }}
+            >
+              Anuluj
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div class={styles.guildDescription} style={{ whiteSpace: 'pre-wrap' }}>
+          {guild.internalNotes || 'Brak notatek'}
         </div>
       )}
 

@@ -447,6 +447,7 @@
     "loadingRank": "Loading ranking...",
     "rankingError": "Failed to load ranking",
     "returnToHub": "Return to Hub",
-    "playAgain": "Play Again"
+    "playAgain": "Play Again",
+    "autoTransition": "Returning to hub in {{seconds}}s..."
   }
 }

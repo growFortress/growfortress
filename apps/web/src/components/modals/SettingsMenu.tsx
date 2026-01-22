@@ -23,6 +23,7 @@ import {
   updateEmail,
   changePassword,
   redeemBonusCode,
+  getReferralStatus,
   type BonusCodeRewards,
   updatePreferredCurrency,
 } from "../../api/client.js";
@@ -31,7 +32,7 @@ import { Modal } from "../shared/Modal.js";
 import { LanguageSwitcher } from "../shared/LanguageSwitcher.js";
 import styles from "./SettingsMenu.module.css";
 import { country, preferredCurrency } from "../../state/profile.signals.js";
-import type { Currency } from "@arcade/protocol";
+import type { Currency, ReferralStatusResponse } from "@arcade/protocol";
 import { SOCIAL_LINKS } from "../../config.js";
 
 interface SettingsMenuProps {
@@ -71,10 +72,17 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
   const [currencyLoading, setCurrencyLoading] = useState(false);
   const [currencyError, setCurrencyError] = useState("");
 
+  // Referral state
+  const [referralStatus, setReferralStatus] = useState<ReferralStatusResponse | null>(null);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralError, setReferralError] = useState("");
+  const [referralCopied, setReferralCopied] = useState(false);
+
   // Load current email when modal opens
   useEffect(() => {
     if (isVisible) {
       void loadEmail();
+      void loadReferralStatus();
     } else {
       // Reset forms when modal closes
       setShowEmailForm(false);
@@ -90,12 +98,48 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
       setBonusCode("");
       setBonusCodeError("");
       setBonusCodeSuccess(null);
+      setReferralStatus(null);
+      setReferralError("");
+      setReferralCopied(false);
     }
   }, [isVisible]);
 
   const loadEmail = async () => {
     const email = await getEmail();
     setCurrentEmail(email);
+  };
+
+  const loadReferralStatus = async () => {
+    setReferralLoading(true);
+    setReferralError("");
+    try {
+      const status = await getReferralStatus();
+      setReferralStatus(status);
+    } catch {
+      setReferralError(t("settings.account.referralUnavailable"));
+    } finally {
+      setReferralLoading(false);
+    }
+  };
+
+  const referralLink = referralStatus
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/?ref=${referralStatus.referralCode}`
+    : "";
+
+  const handleCopyReferralLink = async () => {
+    if (!referralLink) return;
+    if (!navigator.clipboard?.writeText) {
+      setReferralError(t("settings.account.referralCopyFailed"));
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setReferralCopied(true);
+      setReferralError("");
+      setTimeout(() => setReferralCopied(false), 2000);
+    } catch {
+      setReferralError(t("settings.account.referralCopyFailed"));
+    }
   };
 
   const handleLogout = () => {
@@ -575,6 +619,78 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
                 </form>
               )}
               </div>
+            </div>
+
+            {/* Referral Section */}
+            <div class={styles.accountSection}>
+              <div class={styles.sectionHeader}>
+                <span class={styles.sectionIcon}>🔗</span>
+                <span class={styles.sectionTitle}>{t("settings.account.referralTitle")}</span>
+              </div>
+              <p class={styles.sectionDescription}>{t("settings.account.referralDescription")}</p>
+              {referralLoading && (
+                <p class={styles.sectionHint}>{t("settings.account.referralLoading")}</p>
+              )}
+              {!referralLoading && referralStatus && (
+                <>
+                  <div class={styles.referralLinkRow}>
+                    <input
+                      type="text"
+                      class={`${styles.formInput} ${styles.referralLinkInput}`}
+                      value={referralLink}
+                      readOnly
+                    />
+                    <button
+                      type="button"
+                      class={styles.copyBtn}
+                      onClick={handleCopyReferralLink}
+                      disabled={!referralLink}
+                    >
+                      {referralCopied
+                        ? t("settings.account.referralCopied")
+                        : t("settings.account.referralCopy")}
+                    </button>
+                  </div>
+                  <div class={styles.referralStats}>
+                    <div class={styles.referralStat}>
+                      <span class={styles.referralStatLabel}>
+                        {t("settings.account.referralInvites")}
+                      </span>
+                      <span class={styles.referralStatValue}>
+                        {referralStatus.inviteCount}
+                      </span>
+                    </div>
+                    <div class={styles.referralRewards}>
+                      <span class={styles.referralRewardsTitle}>
+                        {t("settings.account.referralRewardsTitle")}
+                      </span>
+                      <div class={styles.referralRewardRow}>
+                        <span class={styles.referralRewardLabel}>
+                          {t("settings.account.referralRewardYou")}
+                        </span>
+                        <span class={styles.rewardItem}>
+                          🪙 +{referralStatus.rewards.inviter.gold}
+                        </span>
+                        <span class={styles.rewardItem}>
+                          💎 +{referralStatus.rewards.inviter.dust}
+                        </span>
+                      </div>
+                      <div class={styles.referralRewardRow}>
+                        <span class={styles.referralRewardLabel}>
+                          {t("settings.account.referralRewardFriend")}
+                        </span>
+                        <span class={styles.rewardItem}>
+                          🪙 +{referralStatus.rewards.invitee.gold}
+                        </span>
+                        <span class={styles.rewardItem}>
+                          💎 +{referralStatus.rewards.invitee.dust}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              {referralError && <p class={styles.formError}>{referralError}</p>}
             </div>
 
             {/* Bonus Code Section - Full Width */}

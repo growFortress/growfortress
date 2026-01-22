@@ -447,6 +447,7 @@
     "loadingRank": "Ładowanie rankingu...",
     "rankingError": "Nie udało się załadować rankingu",
     "returnToHub": "Wróć do bazy",
-    "playAgain": "Zagraj ponownie"
+    "playAgain": "Zagraj ponownie",
+    "autoTransition": "Powrót do hubu za {{seconds}}s..."
   }
 }

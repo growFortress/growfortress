@@ -42,9 +42,10 @@ import { GuildBossTab } from './GuildBossTab.js';
 import { GuildApplicationsTab } from './GuildApplicationsTab.js';
 import { GuildMedalsTab } from './GuildMedalsTab.js';
 import { GuildTrophiesTab } from './GuildTrophiesTab.js';
+import { GuildChatTab } from './GuildChatTab.js';
 import styles from './GuildPanel.module.css';
 
-type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications' | 'medals' | 'trophies';
+type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications' | 'medals' | 'trophies' | 'chat';
 
 interface NavItem {
   id: TabType;
@@ -156,6 +157,7 @@ export function GuildPanel() {
   const navItems: NavItem[] = [
     { id: 'info', label: t('guild.tabs.info'), icon: '📊' },
     { id: 'members', label: t('guild.tabs.members'), icon: '👥' },
+    { id: 'chat', label: 'Chat', icon: '💬' },
     { id: 'treasury', label: t('guild.tabs.treasury'), icon: '💰' },
     { id: 'battles', label: t('guild.tabs.battles'), icon: '⚔️' },
     { id: 'trophies', label: 'Trofea', icon: '🏆' },
@@ -263,6 +265,7 @@ export function GuildPanel() {
             <div class={styles.tabContent}>
               {activeTab === 'info' && <GuildInfoTab onRefresh={refreshData} />}
               {activeTab === 'members' && <GuildMembersTab onRefresh={refreshData} />}
+              {activeTab === 'chat' && <GuildChatTab />}
               {activeTab === 'treasury' && <GuildTreasuryTab onRefresh={refreshData} />}
               {activeTab === 'battles' && <GuildBattlesTab onRefresh={refreshData} />}
               {activeTab === 'tower-race' && <GuildTowerRaceTab onRefresh={refreshData} />}

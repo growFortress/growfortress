@@ -5,6 +5,12 @@ import type {
   CreateGuildRequest,
   CreateGuildResponse,
   UpdateGuildRequest,
+  UpdateGuildDescriptionRequest,
+  UpdateGuildNotesRequest,
+  UpdateGuildEmblemRequest,
+  SendGuildMessageRequest,
+  GuildChatMessagesQuery,
+  GuildChatMessagesResponse,
   GuildSearchQuery,
   GuildSearchResponse,
   MyGuildResponse,
@@ -97,6 +103,68 @@ export async function updateGuild(guildId: string, data: UpdateGuildRequest): Pr
     method: 'PATCH',
     body: JSON.stringify(data),
   });
+}
+
+export async function updateGuildDescription(
+  guildId: string,
+  description: string | null
+): Promise<{ guild: GuildWithMembers }> {
+  const data: UpdateGuildDescriptionRequest = { description };
+  return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/description`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateGuildNotes(
+  guildId: string,
+  notes: string | null
+): Promise<{ guild: GuildWithMembers }> {
+  const data: UpdateGuildNotesRequest = { notes };
+  return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/notes`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getGuildNotes(guildId: string): Promise<{ notes: string | null }> {
+  const guild = await getGuild(guildId);
+  return { notes: guild.guild.internalNotes ?? null };
+}
+
+export async function updateGuildEmblem(
+  guildId: string,
+  emblemUrl: string | null
+): Promise<{ guild: GuildWithMembers }> {
+  const data: UpdateGuildEmblemRequest = { emblemUrl };
+  return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/emblem`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function sendGuildMessage(
+  guildId: string,
+  content: string
+): Promise<{ message: any }> {
+  const data: SendGuildMessageRequest = { content };
+  return guildRequest(`/v1/guilds/${encodeURIComponent(guildId)}/chat/messages`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getGuildMessages(
+  guildId: string,
+  query?: GuildChatMessagesQuery
+): Promise<GuildChatMessagesResponse> {
+  const params = new URLSearchParams();
+  if (query?.limit) params.set('limit', query.limit.toString());
+  if (query?.offset) params.set('offset', query.offset.toString());
+  const qs = params.toString();
+  return guildRequest<GuildChatMessagesResponse>(
+    `/v1/guilds/${encodeURIComponent(guildId)}/chat/messages${qs ? '?' + qs : ''}`
+  );
 }
 
 export async function disbandGuild(guildId: string): Promise<{ success: boolean }> {

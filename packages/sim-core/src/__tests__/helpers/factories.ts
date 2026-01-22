@@ -203,6 +203,7 @@ export function createSimConfig(overrides: Partial<SimConfig> = {}): SimConfig {
     startingTurrets: [],
     turretSlots: [],
     currentPillar: 'streets',
+    pillarRotation: true,
     commanderLevel: 1,
     ...overrides,
   };

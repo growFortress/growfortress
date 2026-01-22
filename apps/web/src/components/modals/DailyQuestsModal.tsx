@@ -35,6 +35,15 @@ const QUEST_ICONS: Record<string, string> = {
   dedicated: '🏆',
 };
 
+// Quest type themes (for color styling)
+const QUEST_TYPE_THEMES: Record<string, 'completion' | 'slayer' | 'boss'> = {
+  first_blood: 'completion',
+  dedicated: 'completion',
+  wave_hunter: 'slayer',
+  elite_slayer: 'slayer',
+  boss_slayer: 'boss',
+};
+
 // Bonus type icons
 const BONUS_ICONS: Record<string, string> = {
   gold: '🪙',
@@ -139,6 +148,10 @@ export function DailyQuestsModal() {
           const isClaimed = quest.claimed;
           const isClaiming = claiming === quest.questId;
 
+          // Determine quest type theme
+          const questType = QUEST_TYPE_THEMES[quest.questId] || 'completion';
+          const questTypeClass = `questType${questType.charAt(0).toUpperCase() + questType.slice(1)}`;
+
           // Determine card state class
           let cardStateClass = styles.inProgress;
           if (isClaimed) {
@@ -150,7 +163,7 @@ export function DailyQuestsModal() {
           return (
             <div
               key={quest.questId}
-              class={`${styles.questCard} ${cardStateClass}`}
+              class={`${styles.questCard} ${styles[questTypeClass]} ${cardStateClass}`}
               style={getItemStyle(index)}
             >
               {/* Icon Section */}

@@ -45,6 +45,7 @@ import energyRoutes from "./routes/energy.js";
 import pillarUnlocksRoutes from "./routes/pillarUnlocks.js";
 import battlepassRoutes from "./routes/battlepass.js";
 import { supportTicketRoutes } from "./routes/supportTickets.js";
+import referralRoutes from "./routes/referrals.js";
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -176,6 +177,7 @@ export async function buildApp() {
   await fastify.register(pillarUnlocksRoutes);
   await fastify.register(battlepassRoutes);
   await fastify.register(supportTicketRoutes);
+  await fastify.register(referralRoutes);
 
   // Admin routes (separate auth system)
   await fastify.register(adminRoutes, { prefix: "/admin" });

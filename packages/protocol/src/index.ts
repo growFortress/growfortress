@@ -51,6 +51,14 @@ export {
   type UpdateCurrencyResponse,
 } from "./auth.js";
 
+// Referrals
+export {
+  ReferralRewardSchema,
+  ReferralStatusResponseSchema,
+  type ReferralReward,
+  type ReferralStatusResponse,
+} from "./referrals.js";
+
 // Events
 export {
   ChooseRelicEventSchema,
@@ -243,6 +251,8 @@ export {
   TURRET_UNLOCK_COST,
   FREE_STARTER_HEROES,
   FREE_STARTER_TURRETS,
+  LEGACY_HERO_ID_MAP,
+  normalizeHeroId,
   UnlockHeroRequestSchema,
   UnlockHeroResponseSchema,
   UnlockTurretRequestSchema,
@@ -402,6 +412,9 @@ export {
   CreateGuildRequestSchema,
   CreateGuildResponseSchema,
   UpdateGuildRequestSchema,
+  UpdateGuildDescriptionRequestSchema,
+  UpdateGuildNotesRequestSchema,
+  UpdateGuildEmblemRequestSchema,
   GuildSearchQuerySchema,
   GuildSearchResponseSchema,
   // Membership
@@ -474,6 +487,11 @@ export {
   GuildBossLeaderboardEntrySchema,
   GuildBossLeaderboardResponseSchema,
   GuildBossAttackResponseSchema,
+  // Chat
+  GuildChatMessageSchema,
+  SendGuildMessageRequestSchema,
+  GuildChatMessagesQuerySchema,
+  GuildChatMessagesResponseSchema,
   // Constants
   GUILD_CONSTANTS,
   GUILD_ERROR_CODES,
@@ -496,6 +514,9 @@ export {
   type CreateGuildRequest,
   type CreateGuildResponse,
   type UpdateGuildRequest,
+  type UpdateGuildDescriptionRequest,
+  type UpdateGuildNotesRequest,
+  type UpdateGuildEmblemRequest,
   type GuildSearchQuery,
   type GuildSearchResponse,
   type MyGuildResponse,
@@ -556,6 +577,10 @@ export {
   type GuildBossLeaderboardEntry,
   type GuildBossLeaderboardResponse,
   type GuildBossAttackResponse,
+  type GuildChatMessage,
+  type SendGuildMessageRequest,
+  type GuildChatMessagesQuery,
+  type GuildChatMessagesResponse,
   type GuildErrorCode,
 } from "./guild.js";
 
@@ -717,6 +742,9 @@ export {
   ThreadNewEventSchema,
   ThreadParticipantAddedEventSchema,
   ThreadParticipantLeftEventSchema,
+  ChatGlobalMessageEventSchema,
+  ChatGuildMessageEventSchema,
+  GuildChatMessageEventSchema,
   GuildInvitationEventSchema,
   GuildInvitationStatusEventSchema,
   GuildKickedEventSchema,
@@ -741,6 +769,9 @@ export {
   type ThreadNewEvent,
   type ThreadParticipantAddedEvent,
   type ThreadParticipantLeftEvent,
+  type ChatGlobalMessageEvent,
+  type ChatGuildMessageEvent,
+  type GuildChatMessageEvent,
   type GuildInvitationEvent,
   type GuildInvitationStatusEvent,
   type GuildKickedEvent,

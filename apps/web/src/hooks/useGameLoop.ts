@@ -1,5 +1,5 @@
 import { useRef, useLayoutEffect, useCallback } from 'preact/hooks';
-import type { FortressClass, ExtendedRelicDef, RelicCategory, RelicRarity } from '@arcade/sim-core';
+import type { FortressClass, ExtendedRelicDef, RelicCategory, RelicRarity, ActiveHero, PillarId } from '@arcade/sim-core';
 import { Game, type SessionStartOptions } from '../game/Game.js';
 import { GameLoop, type GameSpeed } from '../game/loop.js';
 import { GameApp, type HubState } from '../renderer/GameApp.js';
@@ -94,6 +94,7 @@ interface StartSessionOptions {
   fortressClass?: FortressClass;
   startingHeroes?: string[];
   startingTurrets?: string[];
+  pillarId?: PillarId;
 }
 
 interface UseGameLoopReturn {
@@ -501,15 +502,17 @@ export function useGameLoop(
       // Get hub state from signals
       const hubState: HubState | undefined = hubInitialized.value
         ? {
-            heroes: hubHeroes.value,
+            heroes: hubHeroes.value.filter((h): h is ActiveHero => h !== null),
             turrets: hubTurrets.value,
             turretSlots: turretSlots.value,
           }
         : undefined;
 
       // Create a simple state key to detect changes
+      // Include unlocked slots count to detect slot purchases
+      const unlockedSlotsCount = hubState ? hubState.turretSlots.filter(s => s.isUnlocked).length : 0;
       const stateKey = hubState
-        ? `${hubState.heroes.length}-${hubState.turrets.length}-${hubState.turretSlots}`
+        ? `${hubState.heroes.length}-${hubState.turrets.length}-${unlockedSlotsCount}`
         : 'none';
 
       const stateChanged = stateKey !== lastHubStateKey;
@@ -690,6 +693,7 @@ export function useGameLoop(
       fortressClass: options.fortressClass || 'natural',
       startingHeroes: options.startingHeroes || [],
       startingTurrets: options.startingTurrets || [],
+      pillarId: options.pillarId,
     };
 
     try {

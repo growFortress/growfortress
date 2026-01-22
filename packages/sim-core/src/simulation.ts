@@ -172,6 +172,7 @@ export function getDefaultConfig(availableRelics: string[] = RELICS.map(r => r.i
 
     // Pillar/Chapter system
     currentPillar: 'streets',
+    pillarRotation: true,
   };
 }
 
@@ -588,15 +589,22 @@ export class Simulation {
     this.state.wave++;
     this.state.waveComplete = false;
 
-    // Update current pillar based on wave (filtered by unlocked pillars if set)
-    const newPillar = getPillarForWave(this.state.wave, this.config.unlockedPillars);
-    if (newPillar && newPillar.id !== this.state.currentPillar) {
-      this.state.currentPillar = newPillar.id;
-      // Immediately recalculate pillar modifiers for new pillar
-      this.updatePillarModifiers();
+    // Update current pillar based on wave only when rotation is enabled
+    if (this.config.pillarRotation) {
+      const newPillar = getPillarForWave(this.state.wave, this.config.unlockedPillars);
+      if (newPillar && newPillar.id !== this.state.currentPillar) {
+        this.state.currentPillar = newPillar.id;
+        // Immediately recalculate pillar modifiers for new pillar
+        this.updatePillarModifiers();
+      }
     }
 
-    const composition = getWaveComposition(this.state.wave, this.config.tickHz, this.config.unlockedPillars);
+    const composition = getWaveComposition(
+      this.state.wave,
+      this.config.tickHz,
+      this.config.unlockedPillars,
+      this.config.pillarRotation ? undefined : this.state.currentPillar
+    );
     const queue: WaveSpawnEntry[] = [];
 
     let spawnTick = this.state.tick + this.config.waveIntervalTicks;

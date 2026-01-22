@@ -1,6 +1,7 @@
 /**
  * Shop Service - Handles Stripe payments, purchases, and dust-based buying
  */
+import { randomInt } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
 import {
   createCheckoutSession,
@@ -39,6 +40,19 @@ import { grantPremiumStatus } from './battlepass.js';
 // Rare materials for Starter Pack (pick 3 random)
 const RARE_MATERIALS = ['mutant_dna', 'pym_particles', 'extremis', 'cosmic_dust'];
 const PRICE_DIVISOR = 100;
+
+/**
+ * Fisher-Yates shuffle using cryptographically secure random.
+ * Returns a new shuffled array without modifying the original.
+ */
+function secureShuffleArray<T>(array: readonly T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
 
 function getPriceMinor(prices: PriceByCurrency, currency: Currency): number {
   return prices[currency] ?? prices.PLN;
@@ -695,7 +709,7 @@ async function grantProductRewards(
 
   if (product.type === 'STARTER_PACK') {
     // Pick random rare materials
-    const shuffled = [...RARE_MATERIALS].sort(() => Math.random() - 0.5);
+    const shuffled = secureShuffleArray(RARE_MATERIALS);
     const selectedMaterials = shuffled.slice(0, STARTER_PACK.rareMaterialsCount);
     const materialsToGrant: Record<string, number> = {};
     for (const mat of selectedMaterials) {
@@ -783,7 +797,7 @@ async function grantProductRewards(
         ].filter(h => !ownedHeroes.has(h));
 
         if (availableHeroes.length > 0) {
-          const shuffled = [...availableHeroes].sort(() => Math.random() - 0.5);
+          const shuffled = secureShuffleArray(availableHeroes);
           const heroesToGrant = shuffled.slice(0, Math.min(bundle.randomHeroCount, availableHeroes.length));
 
           if (heroesToGrant.length > 0) {

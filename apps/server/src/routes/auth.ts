@@ -29,6 +29,8 @@ import {
   updateEmail,
   changePassword,
   getUserEmail,
+  createGuestUser,
+  convertGuestToUser,
 } from "../services/auth.js";
 import { resolveLocaleDefaults } from "../services/geoip.js";
 import { withRateLimit } from "../plugins/rateLimit.js";
@@ -169,6 +171,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             country: localeDefaults.country,
             preferredCurrency: localeDefaults.currency,
           },
+          body.referralCode,
         );
 
         setRefreshCookie(
@@ -194,6 +197,116 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           }
         }
         throw error;
+      }
+    },
+  );
+
+  // Create guest session (rate limited to prevent abuse)
+  fastify.post(
+    "/v1/auth/guest",
+    withRateLimit("auth", { config: { public: true } }),
+    async (request, reply) => {
+      try {
+        const localeDefaults = resolveLocaleDefaults(request);
+        const result = await createGuestUser({
+          country: localeDefaults.country,
+          preferredCurrency: localeDefaults.currency,
+        });
+
+        setRefreshCookie(
+          reply,
+          USER_REFRESH_COOKIE,
+          result.refreshToken,
+          USER_REFRESH_COOKIE_PATH,
+        );
+
+        return reply.status(201).send({
+          accessToken: result.accessToken,
+          userId: result.userId,
+          displayName: result.displayName,
+          expiresAt: result.expiresAt,
+          isGuest: true,
+        });
+      } catch (error) {
+        console.error("[Auth] Guest creation failed:", error);
+        return reply.status(500).send({ error: "Failed to create guest session" });
+      }
+    },
+  );
+
+  // Convert guest to registered user
+  fastify.post(
+    "/v1/auth/convert-guest",
+    withRateLimit("auth"),
+    async (request, reply) => {
+      if (!request.userId) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      if (!request.isGuest) {
+        return reply.status(400).send({ error: "Not a guest user" });
+      }
+
+      const body = request.body as {
+        username?: string;
+        password?: string;
+        email?: string;
+        referralCode?: string;
+      };
+
+      if (!body.username || body.username.length < 3 || body.username.length > 20) {
+        return reply.status(400).send({ error: "Username must be 3-20 characters" });
+      }
+
+      if (!/^[a-zA-Z0-9_]+$/.test(body.username)) {
+        return reply.status(400).send({ error: "Username can only contain letters, numbers, and underscores" });
+      }
+
+      if (!body.password || body.password.length < 8) {
+        return reply.status(400).send({ error: "Password must be at least 8 characters" });
+      }
+
+      if (body.email && !body.email.includes("@")) {
+        return reply.status(400).send({ error: "Invalid email address" });
+      }
+
+      try {
+        const result = await convertGuestToUser(
+          request.userId,
+          body.username,
+          body.password,
+          body.email,
+          body.referralCode,
+        );
+
+        setRefreshCookie(
+          reply,
+          USER_REFRESH_COOKIE,
+          result.refreshToken,
+          USER_REFRESH_COOKIE_PATH,
+        );
+
+        return reply.send({
+          accessToken: result.accessToken,
+          userId: result.userId,
+          displayName: result.displayName,
+          expiresAt: result.expiresAt,
+          isGuest: false,
+        });
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.message === "USERNAME_TAKEN") {
+            return reply.status(400).send({ error: "Username is already taken" });
+          }
+          if (error.message === "EMAIL_TAKEN") {
+            return reply.status(400).send({ error: "Email is already in use" });
+          }
+          if (error.message === "NOT_A_GUEST") {
+            return reply.status(400).send({ error: "Not a guest user" });
+          }
+        }
+        console.error("[Auth] Guest conversion failed:", error);
+        return reply.status(500).send({ error: "Failed to convert guest account" });
       }
     },
   );

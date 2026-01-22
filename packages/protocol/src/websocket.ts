@@ -5,7 +5,7 @@ import {
   MessageSchema,
 } from "./messages.js";
 import { ChatMessageSchema } from "./chat.js";
-import { GuildInvitationStatusSchema } from "./guild.js";
+import { GuildInvitationStatusSchema, GuildChatMessageSchema } from "./guild.js";
 
 // ============================================================================
 // SERVER -> CLIENT EVENTS
@@ -101,6 +101,18 @@ export const ChatGuildMessageEventSchema = z.object({
   }),
 });
 export type ChatGuildMessageEvent = z.infer<typeof ChatGuildMessageEventSchema>;
+
+/**
+ * Guild chat message (new event for guild chat system)
+ */
+export const GuildChatMessageEventSchema = z.object({
+  type: z.literal("guild:chat:message"),
+  data: z.object({
+    guildId: z.string(),
+    message: GuildChatMessageSchema,
+  }),
+});
+export type GuildChatMessageEvent = z.infer<typeof GuildChatMessageEventSchema>;
 
 /**
  * Guild invitation received
@@ -233,6 +245,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
   ThreadParticipantLeftEventSchema,
   ChatGlobalMessageEventSchema,
   ChatGuildMessageEventSchema,
+  GuildChatMessageEventSchema,
   GuildInvitationEventSchema,
   GuildInvitationStatusEventSchema,
   GuildKickedEventSchema,

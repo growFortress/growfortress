@@ -8,7 +8,6 @@ import {
   pvpLosses,
   pvpWinRate,
   userPower,
-  pvpPendingChallenges,
   pvpOpponentsLoading,
   pvpChallengesLoading,
   setPvpOpponents,
@@ -38,7 +37,7 @@ export function PvpPanel() {
       // Load stats, opponents, and challenges in parallel
       const [statsData, opponentsData, sentData, receivedData] = await Promise.all([
         getPvpStats(),
-        getOpponents(20, 0),
+        getOpponents(8, 0),
         getChallenges('sent', undefined, 20, 0),
         getChallenges('received', undefined, 20, 0),
       ]);
@@ -65,7 +64,6 @@ export function PvpPanel() {
     return null;
   }
 
-  const pendingCount = pvpPendingChallenges.value;
   const wins = pvpWins.value;
   const losses = pvpLosses.value;
   const isLoading = pvpOpponentsLoading.value || pvpChallengesLoading.value;
@@ -133,16 +131,6 @@ export function PvpPanel() {
             <span class={styles.tabText}>Przeciwnicy</span>
           </button>
           <button
-            class={`${styles.tab} ${pvpActiveTab.value === 'challenges' ? styles.tabActive : ''}`}
-            onClick={() => setActivePvpTab('challenges')}
-          >
-            <span class={styles.tabIcon}>📨</span>
-            <span class={styles.tabText}>Wyzwania</span>
-            {pendingCount > 0 && (
-              <span class={styles.tabBadge}>{pendingCount}</span>
-            )}
-          </button>
-          <button
             class={`${styles.tab} ${pvpActiveTab.value === 'history' ? styles.tabActive : ''}`}
             onClick={() => setActivePvpTab('history')}
           >
@@ -166,9 +154,6 @@ export function PvpPanel() {
         <div class={styles.content}>
           {pvpActiveTab.value === 'opponents' && (
             <OpponentsList onRefresh={refreshData} />
-          )}
-          {pvpActiveTab.value === 'challenges' && (
-            <ChallengesList filter="pending" onRefresh={refreshData} />
           )}
           {pvpActiveTab.value === 'history' && (
             <ChallengesList filter="resolved" onRefresh={refreshData} />

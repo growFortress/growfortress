@@ -1,5 +1,6 @@
 const USER_ID_KEY = "arcade_user_id";
 const DISPLAY_NAME_KEY = "arcade_display_name";
+const IS_GUEST_KEY = "arcade_is_guest";
 
 let accessToken: string | null = null;
 
@@ -93,6 +94,7 @@ export function clearTokens(): void {
   accessToken = null;
   safeRemoveItem(USER_ID_KEY);
   safeRemoveItem(DISPLAY_NAME_KEY);
+  safeRemoveItem(IS_GUEST_KEY);
   notifyAuthInvalidated();
 }
 
@@ -126,4 +128,21 @@ export function isTokenExpired(): boolean {
 
 export function isAuthenticated(): boolean {
   return !!getAccessToken() && !isTokenExpired();
+}
+
+// Guest mode helpers
+export function setGuestModeStorage(isGuest: boolean): void {
+  if (isGuest) {
+    safeSetItem(IS_GUEST_KEY, "true");
+  } else {
+    safeRemoveItem(IS_GUEST_KEY);
+  }
+}
+
+export function isGuestUser(): boolean {
+  return safeGetItem(IS_GUEST_KEY) === "true";
+}
+
+export function clearGuestModeStorage(): void {
+  safeRemoveItem(IS_GUEST_KEY);
 }

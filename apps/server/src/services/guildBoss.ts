@@ -59,6 +59,25 @@ const BOSS_TOTAL_HP = BigInt(GUILD_CONSTANTS.BOSS_TOTAL_HP);
 const BOSS_TYPES = ['dragon', 'titan', 'demon', 'leviathan', 'phoenix'];
 const FORTRESS_WEAKNESSES = ['castle', 'arcane', 'nature', 'shadow', 'forge'];
 
+/**
+ * Map weakness string to FortressClass
+ * Weakness names: 'castle', 'arcane', 'nature', 'shadow', 'forge'
+ * FortressClass: 'natural' | 'ice' | 'fire' | 'lightning' | 'tech' | 'void' | 'plasma'
+ */
+function mapWeaknessToFortressClass(weakness: string | null): string | null {
+  if (!weakness) return null;
+  
+  const mapping: Record<string, string> = {
+    'castle': 'natural',   // Standard fortress class
+    'arcane': 'void',       // Arcane magic -> void
+    'nature': 'natural',    // Nature -> natural
+    'shadow': 'void',       // Shadow -> void
+    'forge': 'tech',        // Forge -> tech
+  };
+  
+  return mapping[weakness] || null;
+}
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -271,8 +290,23 @@ export async function attackBoss(
   const baseDamage = Math.floor(heroPower * randomMultiplier * tierMultiplier * 100);
 
   // Apply weakness bonus (+25% if fortress class matches boss weakness)
-  // For now, we don't have fortress class per member, so skip this
-  const damage = baseDamage;
+  let damage = baseDamage;
+  const bossWeaknessClass = mapWeaknessToFortressClass(boss.weakness);
+  
+  if (bossWeaknessClass) {
+    // Get user's fortress class
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { defaultFortressClass: true },
+    });
+    
+    const userFortressClass = user?.defaultFortressClass || 'natural';
+    
+    // Apply +25% bonus if fortress class matches weakness
+    if (userFortressClass === bossWeaknessClass) {
+      damage = Math.floor(damage * 1.25);
+    }
+  }
 
   // Award guild coins for participation (centralized constant)
   const guildCoinsEarned = GUILD_CONSTANTS.COINS_BOSS_PARTICIPATION;

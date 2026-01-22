@@ -8,6 +8,7 @@ import {
   getXpForLevel,
   getProgressionBonuses,
   createDefaultPlayerPowerData,
+  type PillarId,
 } from '@arcade/sim-core';
 import type { SessionStartRequest } from '@arcade/protocol';
 import { getUserProfile } from './auth.js';
@@ -190,6 +191,8 @@ export async function startGameSession(
     }>;
   };
   startingRelics?: string[];
+  currentPillar: PillarId;
+  pillarRotation: boolean;
 } | null> {
   // Get user profile
   const profile = await getUserProfile(userId);
@@ -280,6 +283,13 @@ export async function startGameSession(
 
   // Fetch unlocked pillars for dust-gated progression
   const unlockedPillars = await getUnlockedPillarsForUser(userId);
+  const latestUnlockedPillar = unlockedPillars[unlockedPillars.length - 1] ?? 'streets';
+  const requestedPillar = options.pillarId;
+  const currentPillar =
+    requestedPillar && unlockedPillars.includes(requestedPillar)
+      ? requestedPillar
+      : latestUnlockedPillar;
+  const pillarRotation = false;
 
   // Grant starter synergy relic on first run for immediate "wow" moment
   // Condition: user has never completed any waves (highestWave === 0)
@@ -305,6 +315,8 @@ export async function startGameSession(
     },
     guildStatBoost,
     unlockedPillars,
+    currentPillar,
+    pillarRotation,
     startingRelics,
   });
 
@@ -389,6 +401,8 @@ export async function startGameSession(
     powerData,
     // Starting relics for first-run synergy showcase
     startingRelics: simConfig.startingRelics,
+    currentPillar: simConfig.currentPillar,
+    pillarRotation: simConfig.pillarRotation,
   };
 }
 

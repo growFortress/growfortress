@@ -1,20 +1,23 @@
 /**
  * HubPreviewModal - View other players' hub configurations
- * Shows fortress class, heroes, turrets, and player stats
+ * Shows visual preview of fortress with heroes/turrets + stats panel
  */
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { Modal } from '../shared/Modal.js';
 import { Button } from '../shared/Button.js';
 import { Spinner } from '../shared/Spinner.js';
-import type { HubPreviewHero, HubPreviewTurret, HubPreviewArtifact } from '@arcade/protocol';
-import { getHeroById, getTurretById, getArtifactById } from '@arcade/sim-core';
+import type { HubPreviewHero, HubPreviewTurret } from '@arcade/protocol';
+import { getHeroById, getTurretById } from '@arcade/sim-core';
 import {
   hubPreviewData,
   hubPreviewLoading,
   hubPreviewError,
   hubPreviewModalOpen,
+  hubPreviewHubState,
+  hubPreviewFortressClass,
   closeHubPreview,
 } from '../../state/hubPreview.signals.js';
+import { HubPreviewRenderer } from '../../renderer/HubPreviewRenderer.js';
 import { createChallenge, PvpApiError } from '../../api/pvp.js';
 import { getUserId } from '../../api/auth.js';
 import { showErrorToast } from '../../state/index.js';
@@ -48,12 +51,76 @@ export function HubPreviewModal() {
   const data = hubPreviewData.value;
   const loading = hubPreviewLoading.value;
   const error = hubPreviewError.value;
+  const hubState = hubPreviewHubState.value;
+  const fortressClass = hubPreviewFortressClass.value;
 
   const [challengeLoading, setChallengeLoading] = useState(false);
+  const [rendererReady, setRendererReady] = useState(false);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rendererRef = useRef<HubPreviewRenderer | null>(null);
 
   // Check if this is the current user's profile
   const currentUserId = getUserId();
   const isOwnProfile = data?.userId === currentUserId;
+
+  // Initialize renderer when modal opens and data is ready
+  useEffect(() => {
+    if (!isVisible || !canvasRef.current || !data || !hubState || !fortressClass) {
+      return;
+    }
+
+    let mounted = true;
+
+    const initRenderer = async () => {
+      if (rendererRef.current) {
+        rendererRef.current.destroy();
+        rendererRef.current = null;
+      }
+
+      const renderer = new HubPreviewRenderer(canvasRef.current!);
+      rendererRef.current = renderer;
+
+      try {
+        await renderer.init();
+        if (!mounted) {
+          renderer.destroy();
+          return;
+        }
+
+        renderer.configure(fortressClass, data.level);
+        renderer.startAnimation(hubState);
+        setRendererReady(true);
+      } catch (err) {
+        console.error('Failed to initialize hub preview renderer:', err);
+      }
+    };
+
+    // Small delay to ensure canvas is properly sized
+    const timeoutId = setTimeout(initRenderer, 50);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+      if (rendererRef.current) {
+        rendererRef.current.destroy();
+        rendererRef.current = null;
+      }
+      setRendererReady(false);
+    };
+  }, [isVisible, data?.userId, hubState, fortressClass]);
+
+  // Handle window resize
+  useEffect(() => {
+    if (!rendererRef.current || !rendererReady) return;
+
+    const handleResize = () => {
+      rendererRef.current?.resize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [rendererReady]);
 
   const handleChallenge = async () => {
     if (!data || challengeLoading || isOwnProfile) return;
@@ -89,7 +156,8 @@ export function HubPreviewModal() {
       isOpen={isVisible}
       onClose={closeHubPreview}
       title="Profil gracza"
-      size="large"
+      size="xlarge"
+      class={styles.modalLarge}
       bodyClass={styles.modalBody}
     >
       <div class={styles.container} style={{ '--class-color': classColor } as React.CSSProperties}>
@@ -120,70 +188,83 @@ export function HubPreviewModal() {
               </div>
             </div>
 
-            {/* Stats Grid */}
-            <div class={styles.statsGrid}>
-              <div class={styles.stat}>
-                <span class={styles.statValue}>{data.level}</span>
-                <span class={styles.statLabel}>Poziom</span>
+            {/* Visual Preview Layout */}
+            <div class={styles.previewLayout}>
+              {/* Canvas Section */}
+              <div class={styles.canvasContainer}>
+                <canvas ref={canvasRef} class={styles.previewCanvas} />
+                {!rendererReady && (
+                  <div class={styles.canvasLoading}>
+                    <Spinner size="md" />
+                  </div>
+                )}
               </div>
-              <div class={styles.stat}>
-                <span class={styles.statValue}>{data.highestWave}</span>
-                <span class={styles.statLabel}>Najwyzsza fala</span>
-              </div>
-              <div class={styles.stat}>
-                <span class={styles.statValue}>{formatPower(data.totalPower)}</span>
-                <span class={styles.statLabel}>Moc</span>
+
+              {/* Stats Panel */}
+              <div class={styles.statsPanel}>
+                {/* Compact Stats */}
+                <div class={styles.compactStatsGrid}>
+                  <div class={styles.compactStat}>
+                    <span class={styles.compactStatValue}>{data.level}</span>
+                    <span class={styles.compactStatLabel}>Poziom</span>
+                  </div>
+                  <div class={styles.compactStat}>
+                    <span class={styles.compactStatValue}>{data.highestWave}</span>
+                    <span class={styles.compactStatLabel}>Fala</span>
+                  </div>
+                  <div class={styles.compactStat}>
+                    <span class={styles.compactStatValue}>{formatPower(data.totalPower)}</span>
+                    <span class={styles.compactStatLabel}>Moc</span>
+                  </div>
+                </div>
+
+                {/* Fortress Class */}
+                <div class={styles.compactFortressClass} style={{ borderColor: classColor }}>
+                  <span class={styles.compactFortressIcon}>🏰</span>
+                  <span class={styles.compactClassName} style={{ color: classColor }}>
+                    {CLASS_NAMES[data.fortressClass] ?? data.fortressClass}
+                  </span>
+                </div>
+
+                {/* Heroes List */}
+                {data.heroes.length > 0 && (
+                  <div class={styles.compactSection}>
+                    <h4 class={styles.compactSectionTitle}>Bohaterowie ({data.heroes.length})</h4>
+                    <div class={styles.compactList}>
+                      {data.heroes.map((hero) => (
+                        <CompactHeroItem key={hero.heroId} hero={hero} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Turrets List */}
+                {data.turrets.length > 0 && (
+                  <div class={styles.compactSection}>
+                    <h4 class={styles.compactSectionTitle}>Wiezyczki ({data.turrets.length})</h4>
+                    <div class={styles.compactList}>
+                      {data.turrets.map((turret) => (
+                        <CompactTurretItem key={`${turret.turretType}-${turret.slotIndex}`} turret={turret} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Exclusive Items */}
+                {data.exclusiveItems.length > 0 && (
+                  <div class={styles.compactSection}>
+                    <h4 class={styles.compactSectionTitle}>Przedmioty</h4>
+                    <div class={styles.exclusiveList}>
+                      {data.exclusiveItems.map((itemId) => (
+                        <span key={itemId} class={styles.exclusiveItem}>
+                          {itemId}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Fortress Class */}
-            <div class={styles.section}>
-              <h3 class={styles.sectionTitle}>Twierdza</h3>
-              <div class={styles.fortressClass} style={{ borderColor: classColor }}>
-                <span class={styles.fortressIcon}>🏰</span>
-                <span class={styles.className} style={{ color: classColor }}>
-                  {CLASS_NAMES[data.fortressClass] ?? data.fortressClass}
-                </span>
-              </div>
-            </div>
-
-            {/* Heroes Section */}
-            {data.heroes.length > 0 && (
-              <div class={styles.section}>
-                <h3 class={styles.sectionTitle}>Bohaterowie ({data.heroes.length})</h3>
-                <div class={styles.heroGrid}>
-                  {data.heroes.map((hero) => (
-                    <HeroCard key={hero.heroId} hero={hero} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Turrets Section */}
-            {data.turrets.length > 0 && (
-              <div class={styles.section}>
-                <h3 class={styles.sectionTitle}>Wiezyczki ({data.turrets.length})</h3>
-                <div class={styles.turretGrid}>
-                  {data.turrets.map((turret) => (
-                    <TurretCard key={`${turret.turretType}-${turret.slotIndex}`} turret={turret} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Exclusive Items */}
-            {data.exclusiveItems.length > 0 && (
-              <div class={styles.section}>
-                <h3 class={styles.sectionTitle}>Przedmioty ekskluzywne</h3>
-                <div class={styles.exclusiveList}>
-                  {data.exclusiveItems.map((itemId) => (
-                    <span key={itemId} class={styles.exclusiveItem}>
-                      {itemId}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* PvP Challenge Button - only show for other players */}
             {!isOwnProfile && (
@@ -216,86 +297,55 @@ export function HubPreviewModal() {
 // SUB-COMPONENTS
 // ============================================================================
 
-interface HeroCardProps {
+interface CompactHeroItemProps {
   hero: HubPreviewHero;
 }
 
-function HeroCard({ hero }: HeroCardProps) {
+function CompactHeroItem({ hero }: CompactHeroItemProps) {
   const heroDef = getHeroById(hero.heroId);
   const heroName = heroDef?.name ?? hero.heroId;
 
   return (
-    <div class={styles.heroCard}>
-      <div class={styles.heroHeader}>
-        <span class={styles.heroAvatar}>
-          🦸
-        </span>
-        <div class={styles.heroInfo}>
-          <span class={styles.heroName}>{heroName}</span>
-          <div class={styles.heroStats}>
-            <span class={styles.heroTier}>T{hero.tier}</span>
-            <span class={styles.heroLevel}>Lv.{hero.level}</span>
-          </div>
+    <div class={styles.compactItem}>
+      <span class={styles.compactItemIcon}>🦸</span>
+      <div class={styles.compactItemInfo}>
+        <span class={styles.compactItemName}>{heroName}</span>
+        <div class={styles.compactItemMeta}>
+          <span class={styles.compactItemTier}>T{hero.tier}</span>
+          <span>Lv.{hero.level}</span>
+          {hero.equippedArtifacts.length > 0 && (
+            <span>{hero.equippedArtifacts.length} art.</span>
+          )}
         </div>
       </div>
-      {hero.equippedArtifacts.length > 0 && (
-        <div class={styles.artifactList}>
-          {hero.equippedArtifacts.map((artifact) => (
-            <ArtifactBadge key={artifact.artifactId} artifact={artifact} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
 
-interface TurretCardProps {
+interface CompactTurretItemProps {
   turret: HubPreviewTurret;
 }
 
-function TurretCard({ turret }: TurretCardProps) {
+function CompactTurretItem({ turret }: CompactTurretItemProps) {
   const turretDef = getTurretById(turret.turretType);
   const turretName = turretDef?.name ?? turret.turretType;
 
   return (
-    <div class={styles.turretCard}>
-      <div class={styles.turretHeader}>
-        <span class={styles.turretIcon}>
-          🗼
-        </span>
-        <div class={styles.turretInfo}>
-          <span class={styles.turretName}>{turretName}</span>
-          <div class={styles.turretStats}>
-            <span class={styles.turretSlot}>Slot {turret.slotIndex + 1}</span>
-            <span class={styles.turretLevel}>Lv.{turret.level}</span>
-          </div>
+    <div class={styles.compactItem}>
+      <span class={styles.compactItemIcon}>🗼</span>
+      <div class={styles.compactItemInfo}>
+        <span class={styles.compactItemName}>{turretName}</span>
+        <div class={styles.compactItemMeta}>
+          <span class={styles.compactItemTier}>T{turret.tier}</span>
+          <span>Lv.{turret.level}</span>
+          <span>Slot {turret.slotIndex + 1}</span>
         </div>
       </div>
     </div>
   );
 }
 
-interface ArtifactBadgeProps {
-  artifact: HubPreviewArtifact;
-}
 
-function ArtifactBadge({ artifact }: ArtifactBadgeProps) {
-  const artifactDef = getArtifactById(artifact.artifactId);
-  const artifactName = artifactDef?.name ?? artifact.artifactId;
-
-  const slotIcons: Record<string, string> = {
-    weapon: '⚔️',
-    armor: '🛡️',
-    accessory: '💍',
-  };
-
-  return (
-    <span class={styles.artifactBadge} title={artifactName}>
-      <span class={styles.artifactSlotIcon}>{slotIcons[artifact.slotType] ?? '📦'}</span>
-      <span class={styles.artifactLevel}>+{artifact.level}</span>
-    </span>
-  );
-}
 
 // ============================================================================
 // UTILS

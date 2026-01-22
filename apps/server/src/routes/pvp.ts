@@ -3,6 +3,7 @@ import {
   PvpCreateChallengeRequestSchema,
   PvpChallengesQuerySchema,
 } from '@arcade/protocol';
+import { withRateLimit } from '../plugins/rateLimit.js';
 import {
   getOpponents,
   createChallenge,
@@ -17,15 +18,29 @@ import {
 } from '../services/pvp.js';
 
 const pvpRoutes: FastifyPluginAsync = async (fastify) => {
+  // Helper to check if guest user is trying to access PvP features
+  const requireRegistration = (request: any, reply: any): boolean => {
+    if (request.isGuest) {
+      reply.status(403).send({
+        error: 'Registration required',
+        code: 'REGISTRATION_REQUIRED',
+        message: 'Create an account to access PvP Arena'
+      });
+      return false;
+    }
+    return true;
+  };
+
   // ============================================================================
   // OPPONENTS
   // ============================================================================
 
-  // Get list of random opponents for PVP arena (always 6 random players)
+  // Get list of random opponents for PVP arena (max 8, shuffled)
   fastify.get('/v1/pvp/opponents', async (request, reply) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
+    if (!requireRegistration(request, reply)) return;
 
     const query = request.query as { limit?: string; offset?: string } | undefined;
     const limit = query?.limit ? Number(query.limit) : undefined;
@@ -42,11 +57,12 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
   // CHALLENGES
   // ============================================================================
 
-  // Create a new challenge
-  fastify.post('/v1/pvp/challenges', async (request, reply) => {
+  // Create a new challenge (instant battle; rate limited)
+  fastify.post('/v1/pvp/challenges', withRateLimit('pvpChallenges'), async (request, reply) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
+    if (!requireRegistration(request, reply)) return;
 
     let body;
     try {
@@ -56,10 +72,10 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
-      const challenge = await createChallenge(request.userId, body.challengedId, {
+      const response = await createChallenge(request.userId, body.challengedId, {
         enforcePowerRange: true,
       });
-      return reply.status(201).send({ challenge });
+      return reply.status(201).send(response);
     } catch (error) {
       if (error instanceof PvpError) {
         const statusMap: Record<string, number> = {

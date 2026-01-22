@@ -21,7 +21,7 @@ import {
   ParallaxBackground,
 } from "../effects/ParallaxBackground.js";
 import { fpXToScreen, fpYToScreen } from "../CoordinateSystem.js";
-import { lastSkillTargetPositions } from "../../state/index.js";
+import { lastSkillTargetPositions, currentPillar } from "../../state/index.js";
 
 // Import extracted components
 import { EnvironmentRenderer, themeManager } from "./environment/index.js";
@@ -44,6 +44,10 @@ export interface HubState {
  * - SceneEffects: VFX, lighting, hitstop, wave effects
  * - Entity systems: Enemies, heroes, turrets, projectiles, walls, militia
  */
+interface GameSceneOptions {
+  enableParallax?: boolean;
+}
+
 export class GameScene {
   public container: Container;
 
@@ -62,7 +66,7 @@ export class GameScene {
 
   // Exposed for external access
   public lighting: LightingSystem;
-  public parallax: ParallaxBackground;
+  private parallax: ParallaxBackground | null = null;
 
   private width = 0;
   private height = 0;
@@ -71,17 +75,25 @@ export class GameScene {
 
   // Track current pillar for theme changes
   private currentPillar: PillarId = "streets";
+  private hasInitializedTheme = false;
+  private hasInitializedHubTheme = false;
 
   // Track fortress skill activations for VFX
   private lastSkillCooldowns: Record<string, number> = {};
 
-  constructor(_app: Application) {
+  // Preview mode for viewing other players' hubs
+  private isPreviewMode = false;
+  private previewStaticTerrain = false;
+
+  constructor(_app: Application, options: GameSceneOptions = {}) {
     this.container = new Container();
     this.container.interactiveChildren = true;
 
     // Parallax Background (behind everything)
-    this.parallax = parallaxBackground;
-    this.container.addChild(this.parallax.container);
+    if (options.enableParallax !== false) {
+      this.parallax = parallaxBackground;
+      this.container.addChild(this.parallax.container);
+    }
 
     // Environment Renderer (static background: sky, deck, tower)
     this.environment = new EnvironmentRenderer();
@@ -134,7 +146,7 @@ export class GameScene {
     this.height = height;
 
     // Initialize parallax with new dimensions
-    this.parallax.initialize(width, height);
+    this.parallax?.initialize(width, height);
 
     // Resize components
     this.effects.onResize();
@@ -220,10 +232,12 @@ export class GameScene {
         state.heroes.some((hero) => hero.isManualControlled === true),
       );
 
-      // Check for pillar/theme change
-      if (state.currentPillar !== this.currentPillar) {
+      // Check for pillar/theme change or initialize theme on first render
+      if (!this.hasInitializedTheme || state.currentPillar !== this.currentPillar) {
         this.currentPillar = state.currentPillar;
-        this.updateTheme(state.currentPillar);
+        // Force theme update on first initialization to ensure correct theme is applied
+        this.updateTheme(state.currentPillar, !this.hasInitializedTheme);
+        this.hasInitializedTheme = true;
       }
 
       // Wave complete effect
@@ -275,6 +289,18 @@ export class GameScene {
       if (this.wasInGame) {
         this.effects.resetForHub();
         this.wasInGame = false;
+        // Reset theme initialization flags so they update on next game start
+        this.hasInitializedTheme = false;
+        this.hasInitializedHubTheme = false;
+      }
+
+      // Update theme in hub mode based on currentPillar signal
+      // Initialize theme on first hub render or when pillar changes
+      const hubPillar = currentPillar.value || 'streets';
+      if (!this.hasInitializedHubTheme || hubPillar !== this.currentPillar) {
+        this.currentPillar = hubPillar;
+        this.updateTheme(hubPillar, true);
+        this.hasInitializedHubTheme = true;
       }
 
       // Clear any lingering filters from previous game session
@@ -291,7 +317,7 @@ export class GameScene {
     }
 
     // Update Parallax background
-    this.parallax.update(deltaMs);
+    this.parallax?.update(deltaMs);
 
     // Update effects (VFX + lighting)
     this.effects.update(deltaMs);
@@ -301,13 +327,15 @@ export class GameScene {
    * Update environment theme based on pillar.
    * Updates both EnvironmentRenderer and ParallaxBackground.
    */
-  private updateTheme(pillarId: PillarId): void {
+  private updateTheme(pillarId: PillarId, force: boolean = false): void {
     // Update environment renderer theme
-    this.environment.setTheme(pillarId);
+    this.environment.setTheme(pillarId, force);
 
     // Update parallax background with theme config
-    const theme = themeManager.getThemeForPillar(pillarId);
-    this.parallax.setTheme(theme.parallax);
+    if (this.parallax) {
+      const theme = themeManager.getThemeForPillar(pillarId);
+      this.parallax.setTheme(theme.parallax);
+    }
   }
 
   /**
@@ -328,6 +356,67 @@ export class GameScene {
 
     // Render heroes
     this.heroSystem.update(hubGameState, this.width, this.height);
+  }
+
+  /**
+   * Configure preview mode for viewing another player's hub.
+   * Sets fortress appearance and theme without running game logic.
+   */
+  public setPreviewMode(
+    enabled: boolean,
+    fortressClass?: FortressClass,
+    fortressTier?: 1 | 2 | 3
+  ): void {
+    this.isPreviewMode = enabled;
+    this.previewStaticTerrain = enabled;
+    this.environment.setPreviewMode(enabled);
+
+    if (enabled && fortressClass) {
+      // Set fortress visual based on class and tier
+      this.environment.setFortressState(fortressClass, fortressTier || 1);
+
+      // Use streets theme as default for previews
+      this.environment.setTheme('streets', true);
+      if (this.parallax) {
+        const theme = themeManager.getThemeForPillar('streets');
+        this.parallax.setTheme(theme.parallax);
+      }
+    }
+  }
+
+  /**
+   * Render a hub state for preview mode (static, no game loop).
+   * Used for viewing other players' hub configurations.
+   */
+  public renderPreview(hubState: HubState, deltaMs: number = 16): void {
+    if (this.width === 0 || this.height === 0) return;
+
+    // Disable interactions in preview mode
+    this.inputController.disableInteraction();
+
+    const terrainDeltaMs = this.previewStaticTerrain ? 0 : deltaMs;
+
+    // Update environment animations
+    this.environment.update(terrainDeltaMs, false);
+
+    // Render the hub state
+    this.updateHub(hubState);
+
+    // Clear any combat visuals
+    this.clearCombatVisuals();
+
+    // Update parallax
+    this.parallax?.update(terrainDeltaMs);
+
+    // Update effects (for environment animations)
+    this.effects.update(terrainDeltaMs);
+  }
+
+  /**
+   * Check if scene is in preview mode.
+   */
+  public getIsPreviewMode(): boolean {
+    return this.isPreviewMode;
   }
 
   private clearCombatVisuals() {

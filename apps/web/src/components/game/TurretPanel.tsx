@@ -12,9 +12,10 @@ import {
   turretPlacementModalVisible,
   turretPlacementSlotIndex,
   baseLevel,
+  purchasedTurretSlots,
 } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
-import { getMaxTurretSlots } from '@arcade/sim-core';
+import { getMaxTurretSlots, TURRET_SLOT_UNLOCKS } from '@arcade/sim-core';
 import { Tooltip } from '../shared/Tooltip.js';
 import styles from './TurretPanel.module.css';
 
@@ -55,8 +56,11 @@ const CLASS_COLORS: Record<FortressClass, string> = {
   plasma: '#00ffff',
 };
 
-// Turret slot unlock levels (slot index -> required fortress level)
-const SLOT_UNLOCK_LEVELS = [1, 1, 10, 20, 30, 40];
+// Get unlock level for a slot (for display when slot is locked)
+function getSlotUnlockLevel(slotIndex: number): number {
+  const slotConfig = TURRET_SLOT_UNLOCKS[slotIndex];
+  return slotConfig?.levelRequired ?? 50;
+}
 
 interface TurretPanelProps {
   compact?: boolean;
@@ -69,7 +73,7 @@ export function TurretPanel({ compact = false }: TurretPanelProps) {
   const turrets = gamePhase.value === 'idle' ? hubTurrets.value : activeTurrets.value;
   const fortressClass = selectedFortressClass.value;
   const fortressLevel = baseLevel.value;
-  const maxSlots = getMaxTurretSlots(fortressLevel);
+  const maxSlots = getMaxTurretSlots(fortressLevel, purchasedTurretSlots.value);
 
   const handleSlotClick = (slot: TurretSlot, turret: ActiveTurret | undefined) => {
     selectedTurretSlot.value = slot.index;
@@ -92,7 +96,7 @@ export function TurretPanel({ compact = false }: TurretPanelProps) {
     const turret = turrets.find(t => t.slotIndex === slot.index);
     const isOccupied = turret !== undefined;
     const isUnlocked = slot.index < maxSlots;
-    const unlockLevel = SLOT_UNLOCK_LEVELS[slot.index] ?? 50;
+    const unlockLevel = getSlotUnlockLevel(slot.index);
 
     // Locked slot - show lock icon with unlock level
     if (!isUnlocked) {

@@ -3,12 +3,16 @@ import { useMemo } from 'preact/hooks';
 import type { ActiveHero } from '@arcade/sim-core';
 import { HEROES } from '@arcade/sim-core';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { updateBuildPresets } from '../../api/client.js';
 import {
   heroPlacementModalVisible,
   heroPlacementSlotIndex,
   hubHeroes,
   unlockedHeroIds,
-  showErrorToast,
+  purchasedHeroSlots,
+  buildPresets,
+  activePresetId,
+  selectedFortressClass,
 } from '../../state/index.js';
 import { Modal } from '../shared/Modal.js';
 import { HeroAvatar } from '../shared/HeroAvatar.js';
@@ -40,6 +44,53 @@ function createHubHero(heroId: string, x: number, y: number): ActiveHero {
   };
 }
 
+// Formation position helper - same as in actions.ts
+function getFormationPosition(index: number, totalCount: number): { xOffset: number; yOffset: number } {
+  const centerY = 7.5;
+  const SLOT_X = [4, 7, 10]; // Same as turret offsetX values
+
+  switch (totalCount) {
+    case 1:
+      return { xOffset: SLOT_X[0], yOffset: centerY };
+    case 2:
+      return [
+        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+    case 3:
+      return [
+        { xOffset: SLOT_X[1], yOffset: centerY },
+        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+    case 4:
+      return [
+        { xOffset: SLOT_X[1], yOffset: centerY },
+        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+        { xOffset: SLOT_X[0], yOffset: centerY },
+      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+    case 5:
+      return [
+        { xOffset: SLOT_X[2], yOffset: centerY },
+        { xOffset: SLOT_X[1], yOffset: centerY - 2 },
+        { xOffset: SLOT_X[1], yOffset: centerY + 2 },
+        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+    default: {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      const ySpread = 2.5;
+      const yPositions = [centerY - ySpread, centerY, centerY + ySpread];
+      return {
+        xOffset: SLOT_X[Math.min(row, 2)],
+        yOffset: yPositions[col] || centerY
+      };
+    }
+  }
+}
+
 export function HeroPlacementModal() {
   const { t } = useTranslation('common');
   const slotIndex = heroPlacementSlotIndex.value;
@@ -47,10 +98,10 @@ export function HeroPlacementModal() {
 
   const currentHero = slotIndex !== null ? heroes[slotIndex] : null;
   const usedHeroIds = useMemo(() => {
-    if (slotIndex === null) return heroes.map((hero) => hero.definitionId);
+    if (slotIndex === null) return heroes.filter(h => h !== null).map((hero) => hero!.definitionId);
     return heroes
-      .filter((_, index) => index !== slotIndex)
-      .map((hero) => hero.definitionId);
+      .filter((hero, index) => hero !== null && index !== slotIndex)
+      .map((hero) => hero!.definitionId);
   }, [heroes, slotIndex]);
 
   const availableHeroes = useMemo(() => {
@@ -66,22 +117,81 @@ export function HeroPlacementModal() {
     }
   };
 
-  const handleSelect = (heroId: string) => {
+  const handleSelect = async (heroId: string) => {
     if (slotIndex === null) return;
-    const existingHero = heroes[slotIndex];
-    if (!existingHero) {
-      showErrorToast(t('heroPlacement.slotMissing'));
-      return;
-    }
 
-    const updatedHero = createHubHero(heroId, existingHero.x, existingHero.y);
-    const nextHeroes = heroes.map((hero, index) =>
-      index === slotIndex ? updatedHero : hero
-    );
+    const existingHero = heroes[slotIndex];
+    const maxSlots = purchasedHeroSlots.value;
+
+    // Get formation position for this slot
+    const formation = getFormationPosition(slotIndex, maxSlots);
+    const heroX = 2 + formation.xOffset;
+    const heroY = formation.yOffset;
+
+    // Use existing hero position if available, otherwise use formation position
+    const x = existingHero ? existingHero.x : Math.round(heroX * FP_SCALE);
+    const y = existingHero ? existingHero.y : Math.round(heroY * FP_SCALE);
+
+    const updatedHero = createHubHero(heroId, x, y);
+
+    // If slot was empty, need to ensure array is long enough
+    const nextHeroes = [...heroes];
+    while (nextHeroes.length <= slotIndex) {
+      nextHeroes.push(null);
+    }
+    nextHeroes[slotIndex] = updatedHero;
 
     hubHeroes.value = nextHeroes;
     heroPlacementModalVisible.value = false;
     heroPlacementSlotIndex.value = null;
+
+    // Save to server - update active preset's startingHeroes
+    const presets = buildPresets.value;
+    const activeId = activePresetId.value;
+    const fortressClass = selectedFortressClass.value;
+
+    // Get hero IDs from updated hubHeroes
+    const heroIds = nextHeroes
+      .filter((h): h is ActiveHero => h !== null)
+      .map(h => h.definitionId);
+
+    if (activeId) {
+      // Update existing active preset
+      const updatedPresets = presets.map(preset =>
+        preset.id === activeId
+          ? { ...preset, startingHeroes: heroIds }
+          : preset
+      );
+      try {
+        const response = await updateBuildPresets({
+          buildPresets: updatedPresets,
+          activePresetId: activeId,
+        });
+        buildPresets.value = response.buildPresets;
+        activePresetId.value = response.activePresetId;
+      } catch (error) {
+        console.error('Failed to save hero changes:', error);
+      }
+    } else if (fortressClass) {
+      // Create a new default preset if none exists
+      const newPreset = {
+        id: `default-${Date.now()}`,
+        name: 'Default',
+        fortressClass,
+        startingHeroes: heroIds,
+        startingTurrets: presets[0]?.startingTurrets || [],
+      };
+      try {
+        const response = await updateBuildPresets({
+          buildPresets: [...presets, newPreset],
+          activePresetId: newPreset.id,
+        });
+        buildPresets.value = response.buildPresets;
+        activePresetId.value = response.activePresetId;
+      } catch (error) {
+        console.error('Failed to create preset:', error);
+      }
+    }
   };
 
   return (

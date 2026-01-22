@@ -6,6 +6,7 @@ import { placeWall, removeWall, isValidWallPosition } from './systems/walls.js';
 import { spawnMilitia, spawnMilitiaSquad } from './systems/militia.js';
 import { activateTurretOvercharge, setTurretTargetingMode } from './systems/turret.js';
 import { getWallDefinition } from './data/walls.js';
+import { getMilitiaDefinition } from './data/militia.js';
 import { FP } from './fixed.js';
 
 /**
@@ -574,6 +575,14 @@ function validateSpawnMilitia(
   }
 
   const type = event.militiaType as MilitiaType;
+  const def = getMilitiaDefinition(type);
+
+  // Check gold cost
+  const count = event.count ?? 1;
+  const totalCost = def.goldCost * count;
+  if (state.gold < totalCost) {
+    return { valid: false, reason: 'Not enough gold' };
+  }
 
   // Check if at max militia count
   if (state.militia.length >= state.maxMilitiaCount) {
@@ -594,8 +603,13 @@ function applySpawnMilitia(
 ): boolean {
   const count = event.count ?? 1;
   const type = event.militiaType as MilitiaType;
+  const def = getMilitiaDefinition(type);
   const x = FP.toFloat(event.x);
   const y = FP.toFloat(event.y);
+
+  // Deduct gold cost
+  const totalCost = def.goldCost * count;
+  state.gold -= totalCost;
 
   if (count === 1) {
     const militia = spawnMilitia(state, type, x, y);

@@ -52,10 +52,12 @@ import type {
   IdleRewardsConfigResponse,
   BulkReward,
   ClaimBulkRewardResponse,
+  ReferralStatusResponse,
 } from "@arcade/protocol";
-import { setAuthData, clearTokens } from "./auth.js";
+import { setAuthData, clearTokens, setGuestModeStorage, clearGuestModeStorage } from "./auth.js";
 import { ApiError, request } from "./base.js";
 import { resetAllState } from "../state/index.js";
+import { getReferralCode, clearReferralCode } from "../utils/referral.js";
 
 // Re-export ApiError for backwards compatibility
 export { ApiError } from "./base.js";
@@ -64,13 +66,19 @@ export { ApiError } from "./base.js";
 export async function register(
   data: AuthRegisterRequest,
 ): Promise<AuthRegisterResponse> {
+  const storedReferralCode = getReferralCode();
+  const referralCode = data.referralCode ?? storedReferralCode ?? undefined;
+  const payload = referralCode ? { ...data, referralCode } : data;
   const response = await request<AuthRegisterResponse>("/v1/auth/register", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
     skipAuth: true,
     skipAuthRefresh: true,
   });
   setAuthData(response.accessToken, response.userId, response.displayName);
+  if (storedReferralCode && referralCode === storedReferralCode) {
+    clearReferralCode();
+  }
   return response;
 }
 
@@ -83,6 +91,60 @@ export async function forgotPassword(
     skipAuth: true,
     skipAuthRefresh: true,
   });
+}
+
+// Guest session - creates a temporary account for playing without registration
+export interface GuestSessionResponse {
+  accessToken: string;
+  userId: string;
+  displayName: string;
+  expiresAt: number;
+  isGuest: boolean;
+}
+
+export async function createGuestSession(): Promise<GuestSessionResponse> {
+  const response = await request<GuestSessionResponse>("/v1/auth/guest", {
+    method: "POST",
+    skipAuth: true,
+    skipAuthRefresh: true,
+  });
+  setAuthData(response.accessToken, response.userId, response.displayName);
+  setGuestModeStorage(true);
+  return response;
+}
+
+// Convert guest to registered user
+export interface ConvertGuestRequest {
+  username: string;
+  password: string;
+  email?: string;
+  referralCode?: string;
+}
+
+export interface ConvertGuestResponse {
+  accessToken: string;
+  userId: string;
+  displayName: string;
+  expiresAt: number;
+  isGuest: boolean;
+}
+
+export async function convertGuestToUser(
+  data: ConvertGuestRequest,
+): Promise<ConvertGuestResponse> {
+  const storedReferralCode = getReferralCode();
+  const referralCode = data.referralCode ?? storedReferralCode ?? undefined;
+  const payload = referralCode ? { ...data, referralCode } : data;
+  const response = await request<ConvertGuestResponse>("/v1/auth/convert-guest", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  setAuthData(response.accessToken, response.userId, response.displayName);
+  clearGuestModeStorage();
+  if (storedReferralCode && referralCode === storedReferralCode) {
+    clearReferralCode();
+  }
+  return response;
 }
 
 export async function resetPassword(
@@ -129,6 +191,10 @@ export async function refreshTokensApi(): Promise<AuthRefreshResponse | null> {
 
 export async function getProfile(): Promise<ProfileResponse> {
   return request<ProfileResponse>("/v1/profile");
+}
+
+export async function getReferralStatus(): Promise<ReferralStatusResponse> {
+  return request<ReferralStatusResponse>("/v1/referrals");
 }
 
 export async function updatePreferredCurrency(

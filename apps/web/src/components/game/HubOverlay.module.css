@@ -8,6 +8,18 @@
   z-index: 10;
 }
 
+/* Guest registration banner container */
+.guestBannerContainer {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 500px;
+  pointer-events: auto;
+  z-index: 100;
+}
+
 /* Fortress upgrade button */
 .fortressButton {
   position: absolute;
@@ -81,6 +93,26 @@
   border: var(--border-primary);
   background: var(--color-primary-10);
   box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+/* Empty hero slot */
+.heroArea.empty {
+  border: 2px dashed var(--color-primary-50);
+  background: var(--color-primary-10);
+  box-shadow: var(--shadow-sm);
+}
+
+.heroArea.empty:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-20);
+  box-shadow: var(--shadow-sm), var(--glow-primary);
+}
+
+.heroArea.empty .addIcon {
+  display: block;
+  font-size: 24px;
+  color: var(--color-primary);
+  font-weight: bold;
 }
 
 .heroArea:hover {

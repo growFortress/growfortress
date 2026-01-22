@@ -4,7 +4,7 @@ import type {
   BossRushStartResponse,
   BossRushFinishResponse,
 } from "@arcade/protocol";
-import type { FortressClass, Enemy, GameState, ActiveHero } from "@arcade/sim-core";
+import type { FortressClass, Enemy, GameState, ActiveHero, PillarId } from "@arcade/sim-core";
 import {
   Simulation,
   getDefaultConfig,
@@ -69,6 +69,7 @@ export interface SessionStartOptions {
   fortressClass?: FortressClass;
   startingHeroes?: string[];
   startingTurrets?: string[];
+  pillarId?: PillarId;
 }
 
 /** Save session snapshot every N ticks (10 seconds at 30Hz) */
@@ -167,10 +168,11 @@ export class Game {
       fortressClass = "natural",
       startingHeroes = [],
       startingTurrets = [],
+      pillarId,
     } = options;
 
     // Store options for session persistence
-    this.sessionOptions = { fortressClass, startingHeroes, startingTurrets };
+    this.sessionOptions = { fortressClass, startingHeroes, startingTurrets, pillarId };
 
     try {
       // Request new session from server
@@ -178,6 +180,7 @@ export class Game {
         fortressClass,
         startingHeroes,
         startingTurrets,
+        pillarId,
       });
       this.sessionInfo = sessionInfo;
 
@@ -199,6 +202,8 @@ export class Game {
       config.fortressBaseHp = sessionInfo.fortressBaseHp;
       config.fortressBaseDamage = sessionInfo.fortressBaseDamage;
       config.waveIntervalTicks = sessionInfo.waveIntervalTicks;
+      config.currentPillar = sessionInfo.currentPillar;
+      config.pillarRotation = sessionInfo.pillarRotation;
 
       // Set fortress class and heroes
       config.fortressClass = fortressClass;
@@ -293,6 +298,8 @@ export class Game {
           turretTiers: snapshot.powerData.turretTiers || {},
         }
       : undefined;
+    config.currentPillar = snapshot.currentPillar ?? snapshot.simulationState.currentPillar;
+    config.pillarRotation = snapshot.pillarRotation ?? false;
 
     analytics.reset();
     this.simulation = new Simulation(snapshot.seed, config);
@@ -314,6 +321,8 @@ export class Game {
       fortressBaseHp: snapshot.fortressBaseHp,
       fortressBaseDamage: snapshot.fortressBaseDamage,
       waveIntervalTicks: snapshot.waveIntervalTicks,
+      currentPillar: snapshot.currentPillar ?? snapshot.simulationState.currentPillar,
+      pillarRotation: snapshot.pillarRotation ?? false,
       powerData: snapshot.powerData
         ? {
             ...snapshot.powerData,
@@ -357,6 +366,7 @@ export class Game {
       fortressClass,
       startingHeroes: snapshot.startingHeroes,
       startingTurrets: snapshot.startingTurrets,
+      pillarId: snapshot.currentPillar ?? snapshot.simulationState.currentPillar,
     };
 
     this.phase =
@@ -1066,6 +1076,8 @@ export class Game {
       fortressBaseHp: this.sessionInfo.fortressBaseHp,
       fortressBaseDamage: this.sessionInfo.fortressBaseDamage,
       waveIntervalTicks: this.sessionInfo.waveIntervalTicks,
+      currentPillar: this.simulation.state.currentPillar,
+      pillarRotation: this.simulation.config.pillarRotation ?? false,
       powerData: this.sessionInfo.powerData,
       simulationState: this.simulation.state,
       events: this.events,

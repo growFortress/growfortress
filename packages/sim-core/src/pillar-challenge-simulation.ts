@@ -215,6 +215,7 @@ export function getDefaultPillarChallengeConfig(
     })),
 
     currentPillar: pillarId,
+    pillarRotation: false,
 
     // Challenge-specific
     pillarId,

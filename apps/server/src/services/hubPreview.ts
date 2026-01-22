@@ -11,10 +11,28 @@ import type {
   HubPreviewTurret,
   HubPreviewArtifact,
 } from '@arcade/protocol';
+import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from '@arcade/protocol';
 
 // Cache configuration
 const CACHE_KEY_PREFIX = 'hub:preview:';
 const CACHE_TTL = 300; // 5 minutes
+
+function parseJsonArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
 
 // Types for parsing JSON fields
 interface HeroUpgradeData {
@@ -49,9 +67,19 @@ interface TurretUpgradeData {
 export async function getHubPreview(userId: string): Promise<HubPreviewResponse | null> {
   // Check cache first
   const cacheKey = `${CACHE_KEY_PREFIX}${userId}`;
-  const cached = await redis.get(cacheKey);
+  let cached: string | null = null;
+  try {
+    cached = await redis.get(cacheKey);
+  } catch (error) {
+    console.warn('Failed to read hub preview cache', { userId, error });
+  }
   if (cached) {
-    return JSON.parse(cached) as HubPreviewResponse;
+    try {
+      return JSON.parse(cached) as HubPreviewResponse;
+    } catch (error) {
+      console.warn('Invalid hub preview cache payload', { userId, error });
+      await redis.del(cacheKey).catch(() => {});
+    }
   }
 
   // Fetch user with all related data in a single query
@@ -105,11 +133,21 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
   }
 
   // Parse power upgrades JSON
-  const heroUpgradesData = (user.powerUpgrades?.heroUpgrades as HeroUpgradeData[] | null) ?? [];
-  const turretUpgradesData = (user.powerUpgrades?.turretUpgrades as TurretUpgradeData[] | null) ?? [];
+  const heroUpgradesData = parseJsonArray<HeroUpgradeData>(
+    user.powerUpgrades?.heroUpgrades
+  );
+  const turretUpgradesData = parseJsonArray<TurretUpgradeData>(
+    user.powerUpgrades?.turretUpgrades
+  );
+  const unlockedHeroIds = parseJsonArray<string>(user.inventory?.unlockedHeroIds);
+  const unlockedTurretIds = parseJsonArray<string>(user.inventory?.unlockedTurretIds);
 
-  // Build heroes array from unlocked heroes
-  const heroIds = user.inventory?.unlockedHeroIds ?? [];
+  // Build heroes array from unlocked heroes + starter heroes
+  const heroSet = new Set<string>([
+    ...FREE_STARTER_HEROES,
+    ...unlockedHeroIds,
+  ]);
+  const heroIds = Array.from(heroSet);
   const heroes: HubPreviewHero[] = heroIds.map((heroId) => {
     // Find upgrade data for this hero
     const upgrades = heroUpgradesData.find((h) => h.heroId === heroId);
@@ -135,8 +173,12 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
     };
   });
 
-  // Build turrets array from unlocked turrets
-  const turretIds = user.inventory?.unlockedTurretIds ?? [];
+  // Build turrets array from unlocked turrets + starter turrets
+  const turretSet = new Set<string>([
+    ...FREE_STARTER_TURRETS,
+    ...unlockedTurretIds,
+  ]);
+  const turretIds = Array.from(turretSet);
   const turrets: HubPreviewTurret[] = turretIds.map((turretType, index) => {
     // Find upgrade data for this turret
     const upgrades = turretUpgradesData.find((t) => t.turretType === turretType);
@@ -159,18 +201,22 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
     displayName: user.displayName,
     description: user.description ?? null,
     guildId: user.guildMembership?.guildId ?? null,
-    guildTag: user.guildMembership?.guild.tag ?? null,
+    guildTag: user.guildMembership?.guild?.tag ?? null,
     level: user.progression?.level ?? 1,
     highestWave: user.highestWave,
     totalPower: user.powerUpgrades?.cachedTotalPower ?? 0,
     fortressClass: user.defaultFortressClass ?? 'natural',
-    exclusiveItems: user.exclusiveItems ?? [],
+    exclusiveItems: parseJsonArray<string>(user.exclusiveItems),
     heroes,
     turrets,
   };
 
   // Cache the result
-  await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(response));
+  try {
+    await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(response));
+  } catch (error) {
+    console.warn('Failed to write hub preview cache', { userId, error });
+  }
 
   return response;
 }

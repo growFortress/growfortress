@@ -11,6 +11,7 @@ import type {
   GuildInvitation,
   GuildApplication,
   GuildStructureInfo,
+  GuildChatMessage,
 } from '@arcade/protocol';
 
 // ============================================================================
@@ -21,7 +22,7 @@ import type {
 export const showGuildPanel = signal(false);
 
 /** Current active tab in guild panel */
-export const guildPanelTab = signal<'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications' | 'medals' | 'trophies'>('info');
+export const guildPanelTab = signal<'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-race' | 'boss' | 'applications' | 'medals' | 'trophies' | 'chat'>('info');
 
 /** Whether guild search modal is visible */
 export const showGuildSearch = signal(false);
@@ -212,6 +213,19 @@ export const readyMembersCount = computed(() => {
 });
 
 // ============================================================================
+// GUILD CHAT
+// ============================================================================
+
+/** Guild chat messages */
+export const guildChatMessages = signal<GuildChatMessage[]>([]);
+
+/** Total chat messages count */
+export const guildChatTotal = signal(0);
+
+/** Whether there are more chat messages to load */
+export const guildChatHasMore = signal(false);
+
+// ============================================================================
 // SHIELD STATE
 // ============================================================================
 
@@ -236,6 +250,7 @@ export const invitationsLoading = signal(false);
 export const applicationsLoading = signal(false);
 export const searchLoading = signal(false);
 export const leaderboardLoading = signal(false);
+export const guildChatLoading = signal(false);
 
 // ============================================================================
 // ERROR STATES
@@ -310,6 +325,9 @@ export function resetGuildState() {
   guildApplicationsTotal.value = 0;
   myApplications.value = [];
   myApplicationsTotal.value = 0;
+  guildChatMessages.value = [];
+  guildChatTotal.value = 0;
+  guildChatHasMore.value = false;
   guildError.value = null;
 }
 

@@ -116,8 +116,8 @@ export const pvpAcceptingChallenge = signal(false);
 /** Show PvP main panel */
 export const showPvpPanel = signal(false);
 
-/** Current PvP tab ('opponents' | 'challenges' | 'history') */
-export const pvpActiveTab = signal<'opponents' | 'challenges' | 'history'>('opponents');
+/** Current PvP tab ('opponents' | 'history') */
+export const pvpActiveTab = signal<'opponents' | 'history'>('opponents');
 
 /** Show challenge confirmation modal */
 export const showChallengeConfirm = signal(false);
@@ -264,7 +264,7 @@ export function closePvpPanel(): void {
 }
 
 /** Set active tab */
-export function setActivePvpTab(tab: 'opponents' | 'challenges' | 'history'): void {
+export function setActivePvpTab(tab: 'opponents' | 'history'): void {
   pvpActiveTab.value = tab;
 }
 

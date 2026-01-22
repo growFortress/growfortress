@@ -21,8 +21,12 @@ export const HERO_COLORS: Record<string, HeroColors> = {
   rift: { primary: 0xff4500, secondary: 0xff8c00, accent: 0xffd700 }, // Termiczna - orange/gold
   frost_unit: { primary: 0x00bfff, secondary: 0xe0ffff, accent: 0x87ceeb }, // Kriogeniczna - blue
   // Exclusive heroes
-  spectre: { primary: 0x00ffff, secondary: 0xff00ff, accent: 0xffffff }, // Plasma - cyan/magenta/white
-  omega: { primary: 0xffd700, secondary: 0x1a1a2a, accent: 0xffaa00 }, // Legendary - gold/black/orange
+  spectre: { primary: 0x00ffff, secondary: 0xff00ff, accent: 0x00ffff }, // Tech DPS - cyan/magenta
+  omega: { primary: 0xffd700, secondary: 0x1a1a2a, accent: 0xffd700 }, // Void Assassin - gold/black
+  // Starter heroes
+  medic: { primary: 0x00ff7f, secondary: 0x98fb98, accent: 0x00ff00 }, // Tech Support - spring green
+  pyro: { primary: 0xff4500, secondary: 0xff6347, accent: 0xffa500 }, // Fire DPS - orange/tomato
+  scout: { primary: 0x228b22, secondary: 0x90ee90, accent: 0x32cd32 }, // Natural DPS - forest green
   // Legacy IDs for backwards compatibility
   thunderlord: { primary: 0x9932cc, secondary: 0xdda0dd, accent: 0xffff00 },
   iron_sentinel: { primary: 0x00f0ff, secondary: 0xff00aa, accent: 0xccff00 },
@@ -77,10 +81,16 @@ const HERO_SHAPES: Record<string, HeroShapeType> = {
   frost_unit: 'frost',
   frost_archer: 'frost',
   frost_giant: 'frost',
-  // Plasma classes - Phantom/Ghost shape
+  // Tech DPS - Phantom/Ghost shape (phase shifting)
   spectre: 'phantom',
   // Void Assassin - Void Star shape
   omega: 'voidStar',
+  // Tech Support - Octagon gear
+  medic: 'octagonGear',
+  // Fire DPS - Flame shape
+  pyro: 'flame',
+  // Natural DPS - Circle (agile scout)
+  scout: 'circle',
 };
 
 export const getHeroShapeType = (heroId: string): HeroShapeType =>

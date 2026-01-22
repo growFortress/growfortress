@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect, lazy, Suspense } from 'preact/compat';
-import type { FortressClass } from '@arcade/sim-core';
+import type { FortressClass, ActiveHero } from '@arcade/sim-core';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { useTutorialTriggers } from '../../tutorial/useTutorialTriggers.js';
@@ -54,6 +54,9 @@ import {
   heroPlacementModalVisible,
   showBossRushSetup,
   showBossRushEndScreen,
+  isGuestMode,
+  showOnboardingModal,
+  onboardingCompleted,
 } from '../../state/index.js';
 import {
   colonySceneVisible,
@@ -62,7 +65,7 @@ import {
 } from '../../state/idle.signals.js';
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
 import { ApiError } from '../../api/base.js';
-import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub } from '../../state/index.js';
+import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar } from '../../state/index.js';
 import { fetchEnergy, hasEnergy } from '../../state/energy.signals.js';
 
 interface GameContainerProps {
@@ -143,6 +146,34 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       reset();
     }
   }, [forceResetToHub.value, reset]);
+
+  // Auto-start game for new guests
+  useEffect(() => {
+    if (
+      isGuestMode.value &&
+      gamePhase.value === 'idle' &&
+      !onboardingCompleted.value &&
+      canvasReady &&
+      !sessionStarting &&
+      !sessionRecoveryVisible
+    ) {
+      console.log('[GameContainer] Auto-starting game for guest...');
+      // Set natural fortress class as default for guests
+      selectedFortressClass.value = 'natural';
+      // Start the session
+      handleStartSession();
+
+      // Show onboarding after a delay (7 seconds into gameplay)
+      const onboardingTimer = setTimeout(() => {
+        if (gamePhase.value === 'playing') {
+          showOnboardingModal.value = true;
+        }
+      }, 7000);
+
+      return () => clearTimeout(onboardingTimer);
+    }
+    return undefined;
+  }, [isGuestMode.value, gamePhase.value, onboardingCompleted.value, canvasReady, sessionStarting, sessionRecoveryVisible]);
 
   const updateUiScale = useCallback((width: number, height: number) => {
     const baseWidth = 1920;
@@ -232,12 +263,14 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       activePreset?.fortressClass || selectedFortressClass.value || 'natural';
     const startingHeroes = activePreset?.startingHeroes || unlockedHeroIds.value;
     const startingTurrets = activePreset?.startingTurrets || unlockedTurretIds.value;
+    const pillarId = currentPillar.value;
 
     try {
       const sessionInfo = await startSession({
         fortressClass,
         startingHeroes,
         startingTurrets,
+        pillarId,
       });
 
       if (!sessionInfo) {
@@ -260,7 +293,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       if (target.type === 'hero') {
         // Find the hero and get current tier
         const isIdle = gamePhase.value === 'idle';
-        const heroes = isIdle ? hubHeroes.value : activeHeroes.value;
+        const heroes = isIdle ? hubHeroes.value.filter((h): h is ActiveHero => h !== null) : activeHeroes.value;
         const hero = heroes.find(h => h.definitionId === target.id);
         if (!hero) return;
 
@@ -275,13 +308,18 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
           baseDust.value = result.newInventory.dust;
 
           // Update hero tier in local state
-          const updateHeroes = (list: typeof heroes) =>
-            list.map(h => h.definitionId === target.id ? { ...h, tier: result.newTier as 1 | 2 | 3 } : h);
-
           if (isIdle) {
-            hubHeroes.value = updateHeroes(hubHeroes.value);
+            hubHeroes.value = hubHeroes.value.map(h => 
+              h !== null && h.definitionId === target.id 
+                ? { ...h, tier: result.newTier as 1 | 2 | 3 } 
+                : h
+            );
           } else {
-            activeHeroes.value = updateHeroes(activeHeroes.value);
+            activeHeroes.value = activeHeroes.value.map(h => 
+              h.definitionId === target.id 
+                ? { ...h, tier: result.newTier as 1 | 2 | 3 } 
+                : h
+            );
           }
         }
       } else if (target.type === 'turret') {

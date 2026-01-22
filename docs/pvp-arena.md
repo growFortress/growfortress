@@ -28,8 +28,8 @@ System Async PvP Arena umożliwia graczom wyzywanie się nawzajem do walk międz
 
 | Element | Zachowanie |
 |---------|------------|
-| **Bohaterowie** | Idą w stronę wrogiej twierdzy, atakują ją (priorytet) lub wrogich bohaterów |
-| **Wieżyczki** | Atakują wrogich bohaterów (priorytet) lub wrogą twierdzę |
+| **Bohaterowie** | Idą w stronę wrogiej twierdzy, atakują ją (priorytet) lub wrogich bohaterów; mogą ginąć |
+| **Wieżyczki** | Brak w arenie (tylko twierdza + bohaterowie) |
 | **Warunek wygranej** | Zniszczenie wrogiej twierdzy |
 | **Remis** | Obie twierdze zniszczone jednocześnie LUB timeout (10 min) |
 | **Timeout** | Po 18000 ticków (10 min) wygrywa strona z większym HP twierdzy |
@@ -37,26 +37,10 @@ System Async PvP Arena umożliwia graczom wyzywanie się nawzajem do walk międz
 ## Flow wyzwania
 
 ```
-ATAKUJĄCY (Challenger)              OBROŃCA (Challenged)
-        │                                   │
-        ▼                                   │
-1. Wybiera przeciwnika ─────────────────────│
-   (lista power-filtered)                   │
-        │                                   │
-        ▼                                   │
-2. Wysyła wyzwanie ─────────────────► Otrzymuje wyzwanie
-        │                                   │
-        │                                   ▼
-        │                            3. Akceptuje/Odrzuca
-        │                                   │
-        │                                   ▼
-        │                            4. Serwer uruchamia symulację
-        │                                   │
-        ▼                                   ▼
-5. Otrzymuje powiadomienie ◄──────── Wynik + dane replay
-        │                                   │
-        ▼                                   ▼
-6. Może obejrzeć REPLAY ◄────────── Może obejrzeć REPLAY
+CHALLENGER                         CHALLENGED
+1. Wybiera przeciwnika
+2. Wysyla wyzwanie -> serwer natychmiast uruchamia symulacje
+3. Wynik + replay dostepne w historii dla obu graczy
 ```
 
 ## Stałe konfiguracyjne
@@ -76,7 +60,7 @@ export const PVP_CONSTANTS = {
 ### Opponents
 
 ```
-GET /v1/pvp/opponents?limit=20&offset=0
+GET /v1/pvp/opponents?limit=8&offset=0
 ```
 
 Zwraca listę przeciwników w zakresie mocy gracza (±20%).
@@ -107,10 +91,10 @@ POST /v1/pvp/challenges
 Body: { "challengedId": "user-id" }
 ```
 
-Tworzy nowe wyzwanie.
+Tworzy nowe wyzwanie i natychmiast uruchamia symulacjÄ™ (status RESOLVED).
 
 ```
-GET /v1/pvp/challenges?type=sent|received|all&status=PENDING&limit=20&offset=0
+GET /v1/pvp/challenges?type=sent|received|all&status=RESOLVED&limit=20&offset=0
 ```
 
 Pobiera listę wyzwań.
@@ -125,7 +109,7 @@ Pobiera szczegóły wyzwania wraz z wynikiem.
 POST /v1/pvp/challenges/:id/accept
 ```
 
-Akceptuje wyzwanie i uruchamia symulację. Zwraca wynik walki.
+Legacy: endpoint z poprzedniego flow. W async PvP wyzwanie rozwiazuje sie przy create.
 
 **Response:**
 ```json
@@ -391,3 +375,5 @@ export const PVP_ERROR_CODES = {
 - [ ] Drużyny/Gildie
 - [ ] Sezonowe nagrody
 - [ ] Spectator mode (oglądanie walk na żywo)
+
+

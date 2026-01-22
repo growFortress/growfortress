@@ -31,7 +31,7 @@ export class PvpApiError extends ApiError {
  * Get list of opponents within power range
  */
 export async function getOpponents(
-  limit = 20,
+  limit = 8,
   offset = 0
 ): Promise<PvpOpponentsResponse> {
   const params = new URLSearchParams();

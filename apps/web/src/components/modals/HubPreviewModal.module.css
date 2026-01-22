@@ -8,13 +8,192 @@
   overflow: hidden !important;
 }
 
+/* Custom size for player profile - 75% of screen */
+.modalLarge {
+  width: 75vw !important;
+  max-width: 1200px !important;
+  height: auto;
+  max-height: 85vh !important;
+}
+
 .container {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  max-height: 70vh;
+  max-height: 80vh;
   overflow-y: auto;
+}
+
+/* Visual Preview Layout */
+.previewLayout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+  min-height: 400px;
+}
+
+@media (max-width: 900px) {
+  .previewLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .statsPanel {
+    max-height: 200px;
+  }
+}
+
+/* Canvas Container */
+.canvasContainer {
+  position: relative;
+  background: var(--color-bg-deep);
+  border-radius: var(--radius-md);
+  border: var(--border-neutral);
+  overflow: hidden;
+  min-height: 350px;
+  aspect-ratio: 16 / 9;
+}
+
+.previewCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.canvasLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-deep);
+}
+
+/* Stats Panel */
+.statsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+.compactStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.compactStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: var(--border-neutral);
+}
+
+.compactStatValue {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.compactStatLabel {
+  font-size: 9px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Compact Section */
+.compactSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compactSectionTitle {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+/* Compact Hero/Turret Lists */
+.compactList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compactItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: var(--border-neutral);
+}
+
+.compactItemIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.compactItemInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.compactItemName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compactItemMeta {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--color-text-60);
+}
+
+.compactItemTier {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Compact Fortress Class */
+.compactFortressClass {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--class-color, var(--color-primary));
+}
+
+.compactFortressIcon {
+  font-size: 20px;
+}
+
+.compactClassName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: capitalize;
 }
 
 /* Loading State */

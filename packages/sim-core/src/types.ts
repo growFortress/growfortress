@@ -822,6 +822,7 @@ export interface SimConfig {
 
   // NEW: Pillar/Chapter system
   currentPillar: PillarId;          // Current game pillar/chapter
+  pillarRotation: boolean;          // Whether pillars rotate by wave (legacy)
 
   // NEW: Player's already-owned artifacts (for duplicate detection)
   playerOwnedArtifacts?: string[];
@@ -1060,6 +1061,10 @@ export interface ActiveProjectile {
   isChained?: boolean;    // True if this is a chain projectile (prevents infinite chaining)
   pierceCount?: number;   // How many additional enemies this projectile can pierce through
   hitEnemyIds?: number[]; // Track which enemies have already been hit (for pierce)
+  // Arena-specific target metadata
+  arenaTargetType?: 'fortress' | 'hero';
+  arenaTargetIndex?: number;
+  arenaSide?: 'left' | 'right';
 }
 
 // Wave spawn configuration

@@ -8,8 +8,8 @@ import {
   formatPower,
   showErrorToast,
   openHubPreview,
-  showBattleResult,
   userPower,
+  startArenaBattle,
 } from '../../state/index.js';
 import { createChallenge, PvpApiError } from '../../api/pvp.js';
 import type { PvpOpponent } from '@arcade/protocol';
@@ -30,28 +30,24 @@ export function OpponentsList({ onRefresh }: OpponentsListProps) {
     setChallengingId(opponent.userId);
     try {
       const response = await createChallenge(opponent.userId);
-      addSentChallenge(response.challenge);
 
-      // Show battle result immediately (auto-accept mode)
-      if (response.result && response.rewards) {
-        showBattleResult(
-          response.challenge,
-          {
-            id: response.challenge.id,
-            challengeId: response.challenge.id,
-            winnerId: response.result.winnerId,
-            winReason: response.result.winReason as 'fortress_destroyed' | 'timeout' | 'draw',
-            challengerStats: response.result.challengerStats,
-            challengedStats: response.result.challengedStats,
-            duration: response.result.duration,
-            resolvedAt: new Date().toISOString(),
-          },
-          response.rewards
-        );
+      // Transition to arena battle scene if battleData is available
+      if (response.battleData && response.result) {
+        startArenaBattle({
+          seed: response.battleData.seed as number,
+          challengerBuild: response.battleData.challengerBuild as import('@arcade/sim-core').ArenaBuildConfig,
+          challengedBuild: response.battleData.challengedBuild as import('@arcade/sim-core').ArenaBuildConfig,
+          result: response.result,
+          rewards: response.rewards,
+          challenge: response.challenge,
+          opponent,
+        });
+      } else {
+        // Fallback: add to history directly
+        addSentChallenge(response.challenge);
+        showErrorToast('Wyzwanie wysłane', 'info');
+        await onRefresh();
       }
-
-      // Refresh to update cooldown status
-      await onRefresh();
     } catch (error) {
       if (error instanceof PvpApiError) {
         if (error.code === 'COOLDOWN_ACTIVE') {
@@ -209,3 +205,4 @@ function formatCooldown(isoDate?: string): string {
   }
   return `${minutes}m`;
 }
+

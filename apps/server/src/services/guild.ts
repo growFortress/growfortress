@@ -10,6 +10,8 @@ import {
   getMemberCapacity,
   getGuildBonusesFromStructures,
 } from './guildStructures.js';
+import { invalidateGuildPreviewCache } from './guildPreview.js';
+import { GUILD_CONSTANTS } from '@arcade/protocol';
 import type { Guild, GuildMember, Prisma } from '@prisma/client';
 
 // ============================================================================
@@ -736,4 +738,119 @@ export async function getGuildPower(guildId: string): Promise<number> {
   return members.reduce((sum, member) => {
     return sum + (member.user.powerUpgrades?.cachedTotalPower || 0);
   }, 0);
+}
+
+/**
+ * Update guild description (public, visible to everyone)
+ * Requires Leader or Officer role
+ */
+export async function updateGuildDescription(
+  guildId: string,
+  userId: string,
+  description: string | null
+): Promise<Guild> {
+  // Check permissions
+  const membership = await prisma.guildMember.findUnique({
+    where: { userId },
+  });
+
+  if (!membership || membership.guildId !== guildId) {
+    throw new Error(GUILD_ERROR_CODES.NOT_IN_GUILD);
+  }
+
+  if (!hasPermission(membership.role as GuildRole, 'manage') && membership.role !== 'OFFICER') {
+    throw new Error(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
+  }
+
+  // Validate length
+  if (description && description.length > GUILD_CONSTANTS.MAX_DESCRIPTION_LENGTH) {
+    throw new Error('Description too long');
+  }
+
+  // Update and invalidate cache
+  const updated = await prisma.guild.update({
+    where: { id: guildId },
+    data: { description },
+  });
+
+  await invalidateGuildPreviewCache(guildId);
+
+  return updated;
+}
+
+/**
+ * Update guild internal notes (private, visible only to members)
+ * Requires Leader or Officer role
+ */
+export async function updateGuildNotes(
+  guildId: string,
+  userId: string,
+  notes: string | null
+): Promise<Guild> {
+  // Check permissions
+  const membership = await prisma.guildMember.findUnique({
+    where: { userId },
+  });
+
+  if (!membership || membership.guildId !== guildId) {
+    throw new Error(GUILD_ERROR_CODES.NOT_IN_GUILD);
+  }
+
+  if (!hasPermission(membership.role as GuildRole, 'manage') && membership.role !== 'OFFICER') {
+    throw new Error(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
+  }
+
+  // Validate length
+  if (notes && notes.length > GUILD_CONSTANTS.MAX_NOTES_LENGTH) {
+    throw new Error('Notes too long');
+  }
+
+  // Update
+  return prisma.guild.update({
+    where: { id: guildId },
+    data: { internalNotes: notes },
+  });
+}
+
+/**
+ * Update guild emblem URL
+ * Requires Leader or Officer role
+ */
+export async function updateGuildEmblem(
+  guildId: string,
+  userId: string,
+  emblemUrl: string | null
+): Promise<Guild> {
+  // Check permissions
+  const membership = await prisma.guildMember.findUnique({
+    where: { userId },
+  });
+
+  if (!membership || membership.guildId !== guildId) {
+    throw new Error(GUILD_ERROR_CODES.NOT_IN_GUILD);
+  }
+
+  if (!hasPermission(membership.role as GuildRole, 'manage') && membership.role !== 'OFFICER') {
+    throw new Error(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
+  }
+
+  // Validate length
+  if (emblemUrl && emblemUrl.length > GUILD_CONSTANTS.MAX_EMBLEM_URL_LENGTH) {
+    throw new Error('Emblem URL too long');
+  }
+
+  // Validate URL format (basic check)
+  if (emblemUrl && !emblemUrl.match(/^(https?:\/\/|data:image\/)/)) {
+    throw new Error('Invalid emblem URL format');
+  }
+
+  // Update and invalidate cache
+  const updated = await prisma.guild.update({
+    where: { id: guildId },
+    data: { emblemUrl },
+  });
+
+  await invalidateGuildPreviewCache(guildId);
+
+  return updated;
 }

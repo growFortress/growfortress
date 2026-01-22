@@ -19,9 +19,9 @@ const UNIT_STORM: HeroDefinition = {
   role: 'dps',
   rarity: 'starter',
   baseStats: {
-    hp: 280,
-    damage: 25,
-    attackSpeed: 1.2,
+    hp: 320,      // Buffed: było 280 (+14%)
+    damage: 32,   // Buffed: było 25 (+28%)
+    attackSpeed: 1.3, // Buffed: było 1.2 (+8%)
     range: FP.fromInt(6),
     moveSpeed: FP.fromFloat(0.14),
     deployCooldown: 300
@@ -49,18 +49,20 @@ const UNIT_STORM: HeroDefinition = {
           cooldownTicks: 180,
           isPassive: false,
           isUltimate: false,
-          unlockedAtLevel: 5,
+          unlockedAtLevel: 1,
           effects: [{ type: 'damage', amount: 40, target: 'single' }]
         },
         {
           id: 'storm_passive',
           name: 'Protokół Burzowy',
-          description: 'Ataki łańcuchują do 2 dodatkowych celów (70% DMG per skok)',
+          description: 'Ataki łańcuchują do 3 dodatkowych celów (75% DMG per skok). Łańcuchy nakładają Szok: -15% move speed na 2s',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
           unlockedAtLevel: 1,
-          effects: []
+          effects: [
+            { type: 'slow', percent: 15, duration: 60 }
+          ]
         }
       ],
       visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.3, particleEffects: [] },
@@ -113,14 +115,14 @@ const UNIT_STORM: HeroDefinition = {
         {
           id: 'emp_storm',
           name: 'Burza EMP',
-          description: 'ULTIMATE: Masywna eksplozja elektromagnetyczna',
-          cooldownTicks: 900,
+          description: 'ULTIMATE: Masywna eksplozja elektromagnetyczna. Wrogowie z Szokiem otrzymują podwójne obrażenia.',
+          cooldownTicks: 840,  // Buffed: było 900 (-7%)
           isPassive: false,
           isUltimate: true,
           unlockedAtLevel: 25,
           effects: [
-            { type: 'damage', amount: 200, target: 'all' },
-            { type: 'stun', duration: 90 }
+            { type: 'damage', amount: 250, target: 'all' },  // Buffed: było 200 (+25%)
+            { type: 'stun', duration: 120 }  // Buffed: było 90 (+33%)
           ]
         }
       ],
@@ -176,7 +178,7 @@ const UNIT_FORGE: HeroDefinition = {
           cooldownTicks: 90,
           isPassive: false,
           isUltimate: false,
-          unlockedAtLevel: 5,
+          unlockedAtLevel: 1,
           effects: [{ type: 'damage', amount: 25, target: 'single' }]
         },
         {
@@ -243,12 +245,16 @@ const UNIT_FORGE: HeroDefinition = {
         {
           id: 'orbital_strike',
           name: 'Uderzenie Orbitalne',
-          description: 'ULTIMATE: Ogromny promień energii z orbity',
+          description: 'ULTIMATE: 300 DMG + strefa "Spalona Ziemia" (50 DMG/s przez 5s, -50% armor wrogów w strefie)',
           cooldownTicks: 720,
           isPassive: false,
           isUltimate: true,
           unlockedAtLevel: 25,
-          effects: [{ type: 'damage', amount: 300, target: 'area' }]
+          effects: [
+            { type: 'damage', amount: 300, target: 'area' },
+            { type: 'burn', damagePerTick: 50, duration: 150 }
+            // -50% armor debuff - wymaga osobnej implementacji w systemie walki
+          ]
         }
       ],
       visualChanges: {
@@ -258,6 +264,134 @@ const UNIT_FORGE: HeroDefinition = {
         colorShift: 0x00ffff
       },
       unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'extremis' }
+    }
+  ]
+};
+
+// ============================================================================
+// UNIT 2: SCOUT (Unit-2 "Scout" - Natural/DPS) - EARLY GAME HERO
+// ============================================================================
+
+const UNIT_SCOUT: HeroDefinition = {
+  id: 'scout',
+  name: 'Unit-2 "Scout"',
+  class: 'natural',
+  role: 'dps',
+  rarity: 'common',
+  baseStats: {
+    hp: 180,
+    damage: 28,
+    attackSpeed: 1.4,
+    range: FP.fromInt(8),
+    moveSpeed: FP.fromFloat(0.16),
+    deployCooldown: 240
+  },
+  colors: { primary: 0x228b22, secondary: 0x90ee90, glow: 0x32cd32 },
+  shape: 'hexagon',
+  weaknesses: [
+    {
+      id: 'light_armor',
+      name: 'Lekka Zbroja',
+      description: '+25% otrzymywanych obrażeń od Fire',
+      effect: { type: 'damage_vulnerability', damageClass: 'fire', multiplier: 1.25 }
+    }
+  ],
+  tiers: [
+    {
+      tier: 1,
+      name: 'Unit-2 "Scout"',
+      statMultiplier: 1.0,
+      skills: [
+        {
+          id: 'rapid_shot',
+          name: 'Szybki Strzał',
+          description: 'Szybki atak zadający obrażenia pojedynczemu celowi',
+          cooldownTicks: 120,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: [{ type: 'damage', amount: 45, target: 'single' }]
+        },
+        {
+          id: 'keen_eye',
+          name: 'Bystre Oko',
+          description: '+15% szansa na trafienie krytyczne',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.3, particleEffects: [] },
+      unlockRequirements: { level: 1, gold: 0, dust: 0 }
+    },
+    {
+      tier: 2,
+      name: 'Unit-2 "Scout" Mk.II',
+      statMultiplier: 1.5,
+      skills: [
+        {
+          id: 'double_shot',
+          name: 'Podwójny Strzał',
+          description: 'Wystrzeliwuje dwa pociski jednocześnie',
+          cooldownTicks: 150,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: [{ type: 'damage', amount: 35, target: 'single' }, { type: 'damage', amount: 35, target: 'single' }]
+        },
+        {
+          id: 'marksman',
+          name: 'Strzelec Wyborowy',
+          description: '+25% crit chance, +30% crit damage',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.15, glowIntensity: 0.5, particleEffects: ['energy_trail'] },
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
+    },
+    {
+      tier: 3,
+      name: 'Unit-2 "Scout" APEX',
+      statMultiplier: 2.0,
+      skills: [
+        {
+          id: 'sniper_shot',
+          name: 'Strzał Snajperski',
+          description: 'Potężny precyzyjny strzał z wysokim crit',
+          cooldownTicks: 180,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 20,
+          effects: [{ type: 'damage', amount: 120, target: 'single' }]
+        },
+        {
+          id: 'perfect_aim',
+          name: 'Idealne Celowanie',
+          description: 'ULTIMATE: Tryb "Zone" na 8s - 100% crit, +100% crit DMG. Każde zabójstwo wydłuża czas o 2s (max 20s).',
+          cooldownTicks: 600,
+          isPassive: false,
+          isUltimate: true,
+          unlockedAtLevel: 25,
+          effects: [
+            { type: 'buff', stat: 'critChance', amount: 1.0, duration: 240 },
+            { type: 'buff', stat: 'critDamageBonus', amount: 1.0, duration: 240 }
+            // Kill extension mechanic - wymaga osobnej implementacji w systemie walki
+          ]
+        }
+      ],
+      visualChanges: {
+        sizeMultiplier: 1.3,
+        glowIntensity: 0.8,
+        particleEffects: ['energy_trail', 'sniper_glow'],
+        colorShift: 0x32cd32
+      },
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'vibranium' }
     }
   ]
 };
@@ -303,7 +437,7 @@ const UNIT_TITAN: HeroDefinition = {
           cooldownTicks: 240,
           isPassive: false,
           isUltimate: false,
-          unlockedAtLevel: 5,
+          unlockedAtLevel: 1,
           effects: [
             { type: 'damage', amount: 50, target: 'area' },
             { type: 'stun', duration: 45 }
@@ -406,8 +540,8 @@ const UNIT_VANGUARD: HeroDefinition = {
   role: 'tank',
   rarity: 'starter',
   baseStats: {
-    hp: 380,
-    damage: 18,
+    hp: 450,      // Buffed: było 380 (+18%)
+    damage: 24,   // Buffed: było 18 (+33%)
     attackSpeed: 1.0,
     range: FP.fromInt(5),
     moveSpeed: FP.fromFloat(0.15),
@@ -436,18 +570,21 @@ const UNIT_VANGUARD: HeroDefinition = {
           cooldownTicks: 150,
           isPassive: false,
           isUltimate: false,
-          unlockedAtLevel: 5,
+          unlockedAtLevel: 1,
           effects: [{ type: 'damage', amount: 30, target: 'area' }]
         },
         {
           id: 'command_aura',
           name: 'Aura Dowodzenia',
-          description: '+10% damage dla sojuszników, taunts wrogów w zasięgu 4',
+          description: '+15% damage dla sojuszników w zasięgu 5, taunts wrogów w zasięgu 4, +10% DMG reduction dla siebie',
           cooldownTicks: 0,
           isPassive: true,
           isUltimate: false,
           unlockedAtLevel: 1,
-          effects: []
+          effects: [
+            { type: 'buff', stat: 'damageBonus', amount: 0.15, duration: 0 },
+            { type: 'buff', stat: 'incomingDamageReduction', amount: 0.10, duration: 0 }
+          ]
         }
       ],
       visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.3, particleEffects: [] },
@@ -507,13 +644,18 @@ const UNIT_VANGUARD: HeroDefinition = {
         },
         {
           id: 'rally_command',
-          name: 'Rozkaz Rajdu',
-          description: 'ULTIMATE: Znacząco wzmacnia wszystkie jednostki',
-          cooldownTicks: 900,
+          name: 'Rozkaz Natarcia',
+          description: 'ULTIMATE: Wszystkie jednostki zyskują +50% DMG, +30% AS i 100 HP tarczy na 10s. Vanguard staje się nietykalny na 3s.',
+          cooldownTicks: 840,  // Buffed: było 900 (-7%)
           isPassive: false,
           isUltimate: true,
           unlockedAtLevel: 25,
-          effects: [{ type: 'buff', stat: 'damageBonus', amount: 0.5, duration: 300 }]
+          effects: [
+            { type: 'buff', stat: 'damageBonus', amount: 0.5, duration: 300 },
+            { type: 'buff', stat: 'attackSpeedBonus', amount: 0.3, duration: 300 },
+            { type: 'shield', amount: 100, duration: 300 }
+            // Vanguard 3s invulnerability - wymaga osobnej implementacji w systemie walki
+          ]
         }
       ],
       visualChanges: {
@@ -568,7 +710,7 @@ const UNIT_RIFT: HeroDefinition = {
           cooldownTicks: 120,
           isPassive: false,
           isUltimate: false,
-          unlockedAtLevel: 5,
+          unlockedAtLevel: 1,
           effects: [{ type: 'damage', amount: 40, target: 'single' }]
         },
         {
@@ -692,7 +834,7 @@ const UNIT_FROST: HeroDefinition = {
           cooldownTicks: 120,
           isPassive: false,
           isUltimate: false,
-          unlockedAtLevel: 5,
+          unlockedAtLevel: 1,
           effects: [
             { type: 'damage', amount: 25, target: 'single' },
             { type: 'slow', percent: 40, duration: 90 }
@@ -771,7 +913,7 @@ const UNIT_FROST: HeroDefinition = {
         }
       ],
       visualChanges: { sizeMultiplier: 1.2, glowIntensity: 0.9, particleEffects: ['frost_trail', 'ice_shards'], colorShift: 0x87ceeb },
-      unlockRequirements: { level: 20, gold: 2000, dust: 140 }
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'vibranium' }
     }
   ]
 };
@@ -783,7 +925,7 @@ const UNIT_FROST: HeroDefinition = {
 const UNIT_SPECTRE: HeroDefinition = {
   id: 'spectre',
   name: 'Unit-4 "Spectre"',
-  class: 'plasma',
+  class: 'tech',  // Zmieniono z 'plasma' - brak twierdzy plasma, synergia z Kwantową
   role: 'dps',
   rarity: 'rare', // Exclusive rare - costs only gold
   baseStats: {
@@ -1305,11 +1447,277 @@ const UNIT_GLACIER: HeroDefinition = {
 };
 
 // ============================================================================
-// ALL UNITS EXPORT (10 Units)
+// UNIT 11: MEDIC (Unit-M "Medic" - Tech/Support) - NEW STARTER HEALER
+// ============================================================================
+
+const UNIT_MEDIC: HeroDefinition = {
+  id: 'medic',
+  name: 'Unit-M "Medic"',
+  class: 'tech',
+  role: 'support',
+  rarity: 'starter',
+  baseStats: {
+    hp: 220,
+    damage: 15,
+    attackSpeed: 0.8,
+    range: FP.fromInt(8),
+    moveSpeed: FP.fromFloat(0.14),
+    deployCooldown: 240
+  },
+  colors: { primary: 0x00ff7f, secondary: 0x98fb98, glow: 0x00ff00 },
+  shape: 'circle',
+  weaknesses: [
+    {
+      id: 'fragile_frame',
+      name: 'Delikatna Konstrukcja',
+      description: 'Fire zadaje +25% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'fire', multiplier: 1.25 }
+    }
+  ],
+  tiers: [
+    {
+      tier: 1,
+      name: 'Unit-M "Medic"',
+      statMultiplier: 1.0,
+      skills: [
+        {
+          id: 'healing_pulse',
+          name: 'Impuls Leczniczy',
+          description: 'Leczy najniższego HP sojusznika za 50 HP',
+          cooldownTicks: 180,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: [{ type: 'heal', amount: 50, target: 'single' }]
+        },
+        {
+          id: 'triage_protocol',
+          name: 'Protokół Triażu',
+          description: 'Automatycznie leczy sojuszników poniżej 50% HP za 5 HP/s',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.4, particleEffects: ['heal_particles'] },
+      unlockRequirements: { level: 1, gold: 0, dust: 0 }
+    },
+    {
+      tier: 2,
+      name: 'Unit-M "Medic" Mk.II',
+      statMultiplier: 1.5,
+      skills: [
+        {
+          id: 'nanite_swarm',
+          name: 'Rój Nanitów',
+          description: 'Leczy wszystkich sojuszników za 40 HP',
+          cooldownTicks: 240,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: [{ type: 'heal', amount: 40, target: 'all' }]
+        },
+        {
+          id: 'enhanced_triage',
+          name: 'Rozszerzony Triaż',
+          description: 'Auto-heal teraz +10 HP/s, zakres +3 jednostki',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.1, glowIntensity: 0.6, particleEffects: ['heal_particles', 'nanite_swarm'] },
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
+    },
+    {
+      tier: 3,
+      name: 'Unit-M "Medic" APEX',
+      statMultiplier: 2.0,
+      skills: [
+        {
+          id: 'resurrection_field',
+          name: 'Pole Reanimacyjne',
+          description: 'Tworzy strefę leczącą 20 HP/s przez 10s w obszarze',
+          cooldownTicks: 300,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 20,
+          effects: [
+            { type: 'heal', amount: 20, target: 'area' }
+          ]
+        },
+        {
+          id: 'emergency_protocol',
+          name: 'Protokół Awaryjny',
+          description: 'ULTIMATE: Natychmiast leczy wszystkich sojuszników do pełnego HP i daje 5s nietykalności najniższemu HP',
+          cooldownTicks: 900,
+          isPassive: false,
+          isUltimate: true,
+          unlockedAtLevel: 25,
+          effects: [
+            { type: 'heal', amount: 9999, target: 'all' }
+            // + invulnerability for lowest HP ally - wymaga osobnej implementacji
+          ]
+        }
+      ],
+      visualChanges: {
+        sizeMultiplier: 1.2,
+        glowIntensity: 0.9,
+        particleEffects: ['heal_particles', 'nanite_swarm', 'resurrection_glow'],
+        colorShift: 0x00ff7f
+      },
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'extremis' }
+    }
+  ]
+};
+
+// ============================================================================
+// UNIT 12: PYRO (Unit-P "Pyro" - Fire/DPS) - NEW STARTER FIRE DPS
+// ============================================================================
+
+const UNIT_PYRO: HeroDefinition = {
+  id: 'pyro',
+  name: 'Unit-P "Pyro"',
+  class: 'fire',
+  role: 'dps',
+  rarity: 'starter',
+  baseStats: {
+    hp: 260,
+    damage: 28,
+    attackSpeed: 1.0,
+    range: FP.fromInt(6),
+    moveSpeed: FP.fromFloat(0.13),
+    deployCooldown: 300
+  },
+  colors: { primary: 0xff4500, secondary: 0xff6347, glow: 0xffa500 },
+  shape: 'triangle',
+  weaknesses: [
+    {
+      id: 'ice_vulnerability',
+      name: 'Wrażliwość na Lód',
+      description: 'Ice zadaje +30% DMG',
+      effect: { type: 'damage_vulnerability', damageClass: 'ice', multiplier: 1.30 }
+    }
+  ],
+  tiers: [
+    {
+      tier: 1,
+      name: 'Unit-P "Pyro"',
+      statMultiplier: 1.0,
+      skills: [
+        {
+          id: 'flame_burst',
+          name: 'Wybuch Płomieni',
+          description: 'Obszarowy atak zadający 35 DMG + podpalenie (10 DMG/s przez 3s)',
+          cooldownTicks: 150,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: [
+            { type: 'damage', amount: 35, target: 'area' },
+            { type: 'burn', damagePerTick: 10, duration: 90 }
+          ]
+        },
+        {
+          id: 'burning_touch',
+          name: 'Płonący Dotyk',
+          description: 'Podstawowe ataki podpalają cele na 2s (5 DMG/s)',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 1,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.0, glowIntensity: 0.5, particleEffects: ['fire_sparks'] },
+      unlockRequirements: { level: 1, gold: 0, dust: 0 }
+    },
+    {
+      tier: 2,
+      name: 'Unit-P "Pyro" Mk.II',
+      statMultiplier: 1.5,
+      skills: [
+        {
+          id: 'inferno_wave',
+          name: 'Fala Inferno',
+          description: 'Obszarowa fala ognia zadająca 60 DMG + podpalenie (15 DMG/s przez 4s)',
+          cooldownTicks: 210,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: [
+            { type: 'damage', amount: 60, target: 'area' },
+            { type: 'burn', damagePerTick: 15, duration: 120 }
+          ]
+        },
+        {
+          id: 'fire_mastery',
+          name: 'Mistrzostwo Ognia',
+          description: '+25% obrażeń od ognia, +10% szansa na kryt',
+          cooldownTicks: 0,
+          isPassive: true,
+          isUltimate: false,
+          unlockedAtLevel: 10,
+          effects: []
+        }
+      ],
+      visualChanges: { sizeMultiplier: 1.2, glowIntensity: 0.7, particleEffects: ['fire_sparks', 'flame_trail'] },
+      unlockRequirements: { level: 10, gold: 500, dust: 35 }
+    },
+    {
+      tier: 3,
+      name: 'Unit-P "Pyro" APEX',
+      statMultiplier: 2.0,
+      skills: [
+        {
+          id: 'hellfire',
+          name: 'Piekielny Ogień',
+          description: 'Potężny atak obszarowy zadający 100 DMG + intensywne podpalenie (25 DMG/s przez 5s)',
+          cooldownTicks: 270,
+          isPassive: false,
+          isUltimate: false,
+          unlockedAtLevel: 20,
+          effects: [
+            { type: 'damage', amount: 100, target: 'area' },
+            { type: 'burn', damagePerTick: 25, duration: 150 }
+          ]
+        },
+        {
+          id: 'combustion',
+          name: 'Samozapłon',
+          description: 'ULTIMATE: Detonuje wszystkie podpalenia - 200 DMG + natychmiastowe obrażenia równe pozostałemu burn DMG',
+          cooldownTicks: 720,
+          isPassive: false,
+          isUltimate: true,
+          unlockedAtLevel: 25,
+          effects: [
+            { type: 'damage', amount: 200, target: 'all' }
+            // + instant burn damage - wymaga osobnej implementacji
+          ]
+        }
+      ],
+      visualChanges: {
+        sizeMultiplier: 1.3,
+        glowIntensity: 1.0,
+        particleEffects: ['fire_sparks', 'flame_trail', 'inferno_aura'],
+        colorShift: 0xff4500
+      },
+      unlockRequirements: { level: 20, gold: 2000, dust: 140, material: 'extremis' }
+    }
+  ]
+};
+
+// ============================================================================
+// ALL UNITS EXPORT (13 Units)
 // ============================================================================
 
 export const HEROES: HeroDefinition[] = [
   UNIT_STORM,
+  UNIT_SCOUT,
   UNIT_FORGE,
   UNIT_TITAN,
   UNIT_VANGUARD,
@@ -1318,7 +1726,9 @@ export const HEROES: HeroDefinition[] = [
   UNIT_SPECTRE,
   UNIT_OMEGA,
   UNIT_INFERNO,
-  UNIT_GLACIER
+  UNIT_GLACIER,
+  UNIT_MEDIC,
+  UNIT_PYRO
 ];
 
 // Legacy aliases for migration
@@ -1379,6 +1789,9 @@ export function getHeroUnlockCost(heroId: string): { gold: number; dust: number 
   }
   if (heroId === 'omega') {
     return { gold: 50000, dust: 50 }; // Legendary exclusive - expensive
+  }
+  if (heroId === 'scout') {
+    return { gold: 7500, dust: 0 }; // Early game hero - available from level 1, gold only
   }
 
   switch (hero.rarity) {

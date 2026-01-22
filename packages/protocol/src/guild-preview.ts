@@ -3,7 +3,7 @@
  * Types for viewing other guilds' public information
  */
 import { z } from 'zod';
-import { GuildRoleSchema, GuildStructureLevelsSchema } from './guild.js';
+import { GuildRoleSchema, GuildStructureLevelsSchema, GuildAccessModeSchema } from './guild.js';
 
 // ============================================================================
 // GUILD PREVIEW MEMBER
@@ -42,6 +42,8 @@ export const GuildPreviewResponseSchema = z.object({
   name: z.string(),
   tag: z.string(),
   description: z.string().nullable(),
+  emblemUrl: z.string().nullable().optional(), // Guild emblem/logo URL
+  accessMode: GuildAccessModeSchema, // How to join this guild
   honor: z.number().int().min(0),
   memberCount: z.number().int().min(0),
   maxMembers: z.number().int().min(10).max(30),

@@ -25,6 +25,7 @@ let _runTokenSecret: Uint8Array | null = null;
 export interface AccessTokenPayload {
   sub: string; // userId
   type: "access";
+  isGuest?: boolean; // Guest mode flag
 }
 
 export interface RefreshTokenPayload {
@@ -47,9 +48,13 @@ export interface AdminRefreshTokenPayload {
 /**
  * Create access token
  */
-export async function createAccessToken(userId: string): Promise<string> {
+export async function createAccessToken(
+  userId: string,
+  isGuest?: boolean,
+): Promise<string> {
   const token = await new jose.SignJWT({
     type: "access",
+    ...(isGuest && { isGuest: true }),
   } as unknown as jose.JWTPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
@@ -128,6 +133,7 @@ export async function verifyAccessToken(
     return {
       sub: payload.sub as string,
       type: "access",
+      isGuest: payload.isGuest === true ? true : undefined,
     };
   } catch {
     return null;
@@ -214,6 +220,8 @@ export type SimConfigSnapshot = Pick<
   | "equippedArtifacts"
   | "guildStatBoost"
   | "unlockedPillars"
+  | "currentPillar"
+  | "pillarRotation"
   | "startingRelics"
 >;
 

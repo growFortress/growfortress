@@ -4,24 +4,8 @@ import {
   getMaxTurretSlots,
   isClassUnlockedAtLevel,
 } from '@arcade/sim-core';
+import { normalizeHeroId } from '@arcade/protocol';
 import type { SimConfigSnapshot } from '../lib/tokens.js';
-
-// Map legacy hero IDs to new canonical IDs
-const LEGACY_HERO_ID_MAP: Record<string, string> = {
-  shield_captain: 'vanguard',
-  thunderlord: 'storm',
-  scarlet_mage: 'rift',
-  iron_sentinel: 'forge',
-  jade_titan: 'titan',
-  frost_archer: 'frost_unit',
-};
-
-/**
- * Normalize a hero ID, mapping legacy IDs to their canonical versions
- */
-function normalizeHeroId(heroId: string): string {
-  return LEGACY_HERO_ID_MAP[heroId] ?? heroId;
-}
 
 export interface LoadoutDefaults {
   fortressClass: string | null;
@@ -56,6 +40,8 @@ export interface BuildSimConfigParams {
   };
   guildStatBoost?: number; // Guild stat boost (0-0.20 = 0-20% HP/damage bonus)
   unlockedPillars?: PillarId[]; // Dust-gated pillar unlocks (if undefined, all pillars available)
+  currentPillar?: PillarId; // Selected pillar for the session
+  pillarRotation?: boolean; // Legacy pillar rotation toggle
   startingRelics?: string[]; // Relics to grant at session start (for first-run synergy showcase)
 }
 
@@ -126,6 +112,8 @@ export function buildSimConfigSnapshot(
     waveIntervalTicks: params.remoteConfig?.waveIntervalTicks ?? 90,
     guildStatBoost: params.guildStatBoost,
     unlockedPillars: params.unlockedPillars,
+    currentPillar: params.currentPillar ?? 'streets',
+    pillarRotation: params.pillarRotation ?? false,
     startingRelics: params.startingRelics,
   };
 
@@ -159,6 +147,8 @@ export function applySimConfigSnapshot(
   config.waveIntervalTicks = snapshot.waveIntervalTicks;
   config.guildStatBoost = snapshot.guildStatBoost;
   config.unlockedPillars = snapshot.unlockedPillars ? [...snapshot.unlockedPillars] : undefined;
+  config.currentPillar = snapshot.currentPillar ?? config.currentPillar;
+  config.pillarRotation = snapshot.pillarRotation ?? config.pillarRotation;
   config.startingRelics = snapshot.startingRelics ? [...snapshot.startingRelics] : undefined;
   return config;
 }

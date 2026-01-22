@@ -1,6 +1,7 @@
 import { signal, computed } from '@preact/signals';
 import type { FortressClass, ActiveHero, ActiveTurret, TurretSlot } from '@arcade/sim-core';
-import { getHeroById } from '@arcade/sim-core';
+import { getHeroById, getMaxTurretSlots } from '@arcade/sim-core';
+import { baseLevel } from './profile.signals.js';
 
 // --- FORTRESS CLASS ---
 
@@ -107,8 +108,19 @@ export const DEFAULT_TURRET_SLOTS: TurretSlot[] = [
 
 /**
  * Turret slots configuration
+ * Automatically updated based on purchasedTurretSlots and baseLevel
  */
-export const turretSlots = signal<TurretSlot[]>([...DEFAULT_TURRET_SLOTS]);
+export const turretSlots = computed<TurretSlot[]>(() => {
+  const purchased = purchasedTurretSlots.value;
+  const level = baseLevel.value;
+  const maxSlots = getMaxTurretSlots(level, purchased);
+  
+  // Update isUnlocked for each slot based on purchased slots
+  return DEFAULT_TURRET_SLOTS.map(slot => ({
+    ...slot,
+    isUnlocked: slot.index <= maxSlots
+  }));
+});
 
 /**
  * Active turrets in slots
@@ -233,8 +245,9 @@ export const upgradePanelVisible = signal(false);
 /**
  * Hub heroes - heroes to display in the hub before session starts
  * These are initialized from defaultLoadout
+ * null indicates an empty slot that can be filled
  */
-export const hubHeroes = signal<ActiveHero[]>([]);
+export const hubHeroes = signal<(ActiveHero | null)[]>([]);
 
 /**
  * Hub turrets - turrets to display in the hub before session starts

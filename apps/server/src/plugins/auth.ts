@@ -7,6 +7,7 @@ declare module "fastify" {
   interface FastifyRequest {
     userId?: string;
     isAdmin?: boolean;
+    isGuest?: boolean;
   }
   interface FastifyContextConfig {
     public?: boolean;
@@ -16,6 +17,7 @@ declare module "fastify" {
 const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest("userId", undefined);
   fastify.decorateRequest("isAdmin", false);
+  fastify.decorateRequest("isGuest", false);
 
   fastify.addHook(
     "onRequest",
@@ -49,9 +51,14 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
 
       request.userId = payload.sub;
 
+      // Set isGuest from token payload (for non-admin routes only)
+      if (!isAdminRoute && "isGuest" in payload) {
+        request.isGuest = payload.isGuest === true;
+      }
+
       const user = await prisma.user.findUnique({
         where: { id: payload.sub },
-        select: { role: true, banned: true },
+        select: { role: true, banned: true, isGuest: true },
       });
 
       if (!user) {
@@ -63,6 +70,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       }
 
       request.isAdmin = user.role === "ADMIN";
+
+      // Set isGuest from database (more authoritative than token)
+      request.isGuest = user.isGuest === true;
 
       if (isAdminRoute && !request.isAdmin) {
         return reply

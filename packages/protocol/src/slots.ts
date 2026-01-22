@@ -10,7 +10,7 @@ import { z } from 'zod';
 // CONSTANTS
 // ============================================================================
 
-export const MAX_HERO_SLOTS = 6;
+export const MAX_HERO_SLOTS = 8;
 export const MAX_TURRET_SLOTS = 6;
 
 // ============================================================================
@@ -21,7 +21,7 @@ export const MAX_TURRET_SLOTS = 6;
  * Information about a single slot unlock
  */
 export const SlotUnlockInfoSchema = z.object({
-  slot: z.number().int().min(1).max(6),
+  slot: z.number().int().min(1).max(8), // Max 8 dla bohaterów, ale walidacja jest w kontekście
   levelRequired: z.number().int().min(1),
   goldCost: z.number().int().min(0),
   isFree: z.boolean(),
@@ -33,7 +33,7 @@ export type SlotUnlockInfo = z.infer<typeof SlotUnlockInfoSchema>;
  * Next purchasable slot info for UI display
  */
 export const NextSlotInfoSchema = z.object({
-  slot: z.number().int().min(1).max(6),
+  slot: z.number().int().min(1).max(8), // Max 8 dla bohaterów, ale walidacja jest w kontekście
   levelRequired: z.number().int().min(1),
   goldCost: z.number().int().min(0),
   canPurchase: z.boolean(),

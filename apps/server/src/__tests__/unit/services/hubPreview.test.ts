@@ -154,7 +154,7 @@ describe('HubPreview Service', () => {
 
       const result = await getHubPreview(userId);
 
-      expect(result?.heroes).toHaveLength(3);
+      expect(result?.heroes).toHaveLength(5);
 
       const stormHero = result?.heroes.find(h => h.heroId === 'storm');
       expect(stormHero).toBeDefined();
@@ -292,8 +292,13 @@ describe('HubPreview Service', () => {
       expect(result?.totalPower).toBe(0); // Default power
       expect(result?.fortressClass).toBe('natural'); // Default class
       expect(result?.exclusiveItems).toEqual([]); // Empty array
-      expect(result?.heroes).toEqual([]); // No heroes
-      expect(result?.turrets).toEqual([]); // No turrets
+      expect(result?.heroes.map((hero) => hero.heroId)).toEqual([
+        'vanguard',
+        'storm',
+        'medic',
+        'pyro',
+      ]);
+      expect(result?.turrets.map((turret) => turret.turretType)).toEqual(['railgun']);
     });
 
     it('should cache the result after fetching from database', async () => {

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js';
 import { HERO_UPGRADE_COSTS, TURRET_UPGRADE_COSTS } from '@arcade/protocol';
+import { refreshBattleHeroPower } from './guildBattleHero.js';
 
 /**
  * Get hero tiers from power upgrades
@@ -99,6 +100,13 @@ export async function upgradeHero(
       },
     }),
   ]);
+
+  // Auto-refresh Battle Hero power if this hero is set as Battle Hero
+  // Use fire-and-forget to avoid blocking the response
+  refreshBattleHeroPower(userId).catch((err) => {
+    // Log error but don't fail the upgrade
+    console.error(`Failed to refresh Battle Hero power for user ${userId}:`, err);
+  });
 
   return {
     success: true,

@@ -318,10 +318,10 @@ export class ArenaSimulation {
       class: fortressClass,
     };
 
-    // Store target type for processing
-    (projectile as unknown as Record<string, unknown>)._targetType = targetType;
-    (projectile as unknown as Record<string, unknown>)._targetIndex = targetIndex;
-    (projectile as unknown as Record<string, unknown>)._side = side;
+    // Store target type for processing (typed fields)
+    projectile.arenaTargetType = targetType;
+    projectile.arenaTargetIndex = targetIndex;
+    projectile.arenaSide = side;
 
     ownSide.projectiles.push(projectile);
 
@@ -357,8 +357,8 @@ export class ArenaSimulation {
 
       if (distSq <= FP.mul(projectile.speed, projectile.speed)) {
         // Reached target - apply damage
-        const targetType = (projectile as unknown as Record<string, unknown>)._targetType as string;
-        const targetIndex = (projectile as unknown as Record<string, unknown>)._targetIndex as number | undefined;
+        const targetType = projectile.arenaTargetType;
+        const targetIndex = projectile.arenaTargetIndex;
 
         if (targetType === 'fortress') {
           this.damageFortress(enemySide, projectile.damage, side, ownSide);
@@ -412,13 +412,33 @@ export class ArenaSimulation {
   }
 
   private damageHero(
-    _targetHero: ActiveHero,
-    _damage: number,
-    _attackerSide: 'left' | 'right',
-    _attackerData: ArenaSide,
-    _targetSide: ArenaSide
+    targetHero: ActiveHero,
+    damage: number,
+    attackerSide: 'left' | 'right',
+    attackerData: ArenaSide,
+    targetSide: ArenaSide
   ): void {
-    // Heroes are immortal in arena - they only attack, fortress HP determines winner
+    if (targetHero.currentHp <= 0) return;
+    const prevHp = targetHero.currentHp;
+    targetHero.currentHp = Math.max(0, targetHero.currentHp - damage);
+    targetSide.stats.damageReceived += damage;
+    const killed = targetHero.currentHp <= 0;
+    if (killed) {
+      targetSide.stats.heroesLost += 1;
+      attackerData.stats.heroesKilled += 1;
+      this.replayEvents.push({
+        tick: this.state.tick,
+        type: 'hero_death',
+        side: attackerSide === 'left' ? 'right' : 'left',
+        data: {
+          heroId: targetHero.definitionId,
+          damage,
+          prevHp,
+          remainingHp: 0,
+        },
+      });
+    }
+    attackerData.stats.damageDealt += damage;
   }
 
   // ============================================================================

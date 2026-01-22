@@ -4,7 +4,11 @@
  */
 import { signal, computed } from '@preact/signals';
 import type { HubPreviewResponse } from '@arcade/protocol';
+import type { FortressClass } from '@arcade/sim-core';
 import { fetchHubPreview } from '../api/hubPreview.js';
+import { transformHubPreviewToHubState, getFortressTierFromLevel } from '../utils/hubPreviewTransform.js';
+import type { HubState } from '../renderer/scenes/GameScene.js';
+import { closeLeaderboardModal } from './leaderboard.signals.js';
 
 // ============================================================================
 // MODAL STATE
@@ -37,6 +41,27 @@ export const isHubPreviewReady = computed(
   () => !hubPreviewLoading.value && hubPreviewData.value !== null && !hubPreviewError.value
 );
 
+/** Transformed hub state for rendering */
+export const hubPreviewHubState = computed<HubState | null>(() => {
+  const data = hubPreviewData.value;
+  if (!data) return null;
+  return transformHubPreviewToHubState(data);
+});
+
+/** Fortress class for preview */
+export const hubPreviewFortressClass = computed<FortressClass | null>(() => {
+  const data = hubPreviewData.value;
+  if (!data) return null;
+  return data.fortressClass as FortressClass;
+});
+
+/** Fortress tier based on level */
+export const hubPreviewFortressTier = computed<1 | 2 | 3>(() => {
+  const data = hubPreviewData.value;
+  if (!data) return 1;
+  return getFortressTierFromLevel(data.level);
+});
+
 // ============================================================================
 // ACTIONS
 // ============================================================================
@@ -46,6 +71,9 @@ export const isHubPreviewReady = computed(
  * @param userId - The user ID to preview
  */
 export async function openHubPreview(userId: string): Promise<void> {
+  // Close leaderboard modal if open (so profile appears on clean background)
+  closeLeaderboardModal();
+
   // Set modal state
   hubPreviewUserId.value = userId;
   hubPreviewModalOpen.value = true;

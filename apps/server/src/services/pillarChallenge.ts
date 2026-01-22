@@ -8,6 +8,7 @@
  * - Verification via replay
  */
 
+import { randomInt } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import type {
@@ -295,19 +296,7 @@ export async function startPillarChallenge(
           error: 'Wykorzystałeś już wszystkie płatne próby na dziś.',
         };
       }
-
-      // Check gold
-      const inventory = await prisma.inventory.findUnique({
-        where: { userId },
-        select: { gold: true },
-      });
-
-      if (!inventory || inventory.gold < config.paidAttemptCost) {
-        return {
-          success: false,
-          error: `Potrzebujesz ${config.paidAttemptCost} złota na płatną próbę.`,
-        };
-      }
+      // Gold check is done inside transaction below to prevent race condition
     } else {
       if (freeRemaining <= 0) {
         if (paidRemaining > 0) {
@@ -334,42 +323,70 @@ export async function startPillarChallenge(
       };
     }
 
-    // Generate seed
-    const seed = Math.floor(Math.random() * 2147483647);
+    // Generate cryptographically secure seed
+    const seed = randomInt(2147483647);
 
-    // Create session
+    // Create session and deduct gold in a transaction to prevent race conditions
     const tierNum = TIER_MAP[tier];
-    const session = await prisma.pillarChallengeSession.create({
-      data: {
-        userId,
-        pillarId,
-        tier: tierNum,
-        seed,
-        loadoutJson: loadout,
-      },
+
+    const result = await prisma.$transaction(async (tx) => {
+      // For paid attempts, check and deduct gold atomically
+      if (usePaidAttempt) {
+        const inventory = await tx.inventory.findUnique({
+          where: { userId },
+          select: { gold: true },
+        });
+
+        if (!inventory || inventory.gold < config.paidAttemptCost) {
+          return {
+            success: false as const,
+            error: `Potrzebujesz ${config.paidAttemptCost} złota na płatną próbę.`,
+          };
+        }
+
+        // Deduct gold atomically within same transaction
+        await tx.inventory.update({
+          where: { userId },
+          data: { gold: { decrement: config.paidAttemptCost } },
+        });
+      }
+
+      // Create session
+      const session = await tx.pillarChallengeSession.create({
+        data: {
+          userId,
+          pillarId,
+          tier: tierNum,
+          seed,
+          loadoutJson: loadout,
+        },
+      });
+
+      // Update limits
+      const updateData: { dailyAttempts?: number; dailyPaidAttempts?: number; lastAttemptAt: Date } = {
+        lastAttemptAt: new Date(),
+      };
+
+      if (usePaidAttempt) {
+        updateData.dailyPaidAttempts = limits.dailyPaidAttempts + 1;
+      } else {
+        updateData.dailyAttempts = limits.dailyAttempts + 1;
+      }
+
+      await tx.pillarChallengeLimits.update({
+        where: { userId },
+        data: updateData,
+      });
+
+      return { success: true as const, session };
     });
 
-    // Update limits
-    const updateData: { dailyAttempts?: number; dailyPaidAttempts?: number; lastAttemptAt: Date } = {
-      lastAttemptAt: new Date(),
-    };
-
-    if (usePaidAttempt) {
-      updateData.dailyPaidAttempts = limits.dailyPaidAttempts + 1;
-
-      // Deduct gold
-      await prisma.inventory.update({
-        where: { userId },
-        data: { gold: { decrement: config.paidAttemptCost } },
-      });
-    } else {
-      updateData.dailyAttempts = limits.dailyAttempts + 1;
+    // Handle transaction result
+    if (!result.success) {
+      return result;
     }
 
-    await prisma.pillarChallengeLimits.update({
-      where: { userId },
-      data: updateData,
-    });
+    const session = result.session;
 
     const tierConfig = TIER_CONFIGS[tier];
     const crystalReward = PILLAR_CRYSTAL_REWARDS[pillarId];

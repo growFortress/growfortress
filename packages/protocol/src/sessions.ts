@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FortressClassSchema, InventorySchema } from './auth.js';
+import { PillarIdSchema } from './pillar-challenge.js';
 import { CheckpointSchema } from './events.js';
 
 // Session start request
@@ -7,6 +8,7 @@ export const SessionStartRequestSchema = z.object({
   fortressClass: FortressClassSchema.optional(),
   startingHeroes: z.array(z.string()).optional(),
   startingTurrets: z.array(z.string()).optional(),
+  pillarId: PillarIdSchema.optional(),
 });
 
 export type SessionStartRequest = z.infer<typeof SessionStartRequestSchema>;
@@ -101,6 +103,9 @@ export const SessionStartResponseSchema = z.object({
   powerData: PowerDataSchema,
   // Starting relics for first-run synergy showcase (optional)
   startingRelics: z.array(z.string()).optional(),
+  // Pillar selection for this session
+  currentPillar: PillarIdSchema,
+  pillarRotation: z.boolean(),
 });
 
 export type SessionStartResponse = z.infer<typeof SessionStartResponseSchema>;

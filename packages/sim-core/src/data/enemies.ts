@@ -1,6 +1,6 @@
 import { EnemyType, PillarId } from '../types.js';
 import { FP } from '../fixed.js';
-import { getPillarForWave } from './pillars.js';
+import { getPillarById, getPillarForWave } from './pillars.js';
 
 /**
  * Enemy archetype definitions
@@ -566,7 +566,8 @@ const PILLAR_ENEMIES: Record<PillarId, {
 export function getWaveComposition(
   wave: number,
   tickHz: number,
-  unlockedPillars?: PillarId[]
+  unlockedPillars?: PillarId[],
+  currentPillar?: PillarId
 ): WaveComposition {
   // Endless mode: calculate cycle and effective wave
   const cycle = Math.floor((wave - 1) / 100);
@@ -591,7 +592,12 @@ export function getWaveComposition(
   const enemies: Array<{ type: EnemyType; count: number }> = [];
 
   // Get current pillar for this wave (handles cycles automatically, filtered by unlocks)
-  const pillar = getPillarForWave(wave, unlockedPillars);
+  const canUseOverride =
+    currentPillar !== undefined &&
+    (unlockedPillars === undefined || unlockedPillars.includes(currentPillar));
+  const pillar = canUseOverride
+    ? getPillarById(currentPillar)
+    : getPillarForWave(wave, unlockedPillars);
 
   if (pillar) {
     // Use pillar-specific enemies

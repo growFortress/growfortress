@@ -15,8 +15,8 @@ import { calculateHeroStoneCooldownReduction } from '../../systems.js';
 // ============================================================================
 
 describe('Hero Base Stats', () => {
-  it('all 10 heroes should be defined', () => {
-    expect(HEROES.length).toBe(10);
+  it('all 13 heroes should be defined', () => {
+    expect(HEROES.length).toBe(13);
   });
 
   it.each(HEROES.map(h => h.id))('hero %s should have valid base stats', (heroId) => {
@@ -58,10 +58,10 @@ describe('Hero Base Stats', () => {
   describe('Unit Storm stats', () => {
     const hero = getHeroById('storm')!;
 
-    it('has correct base stats', () => {
-      expect(hero.baseStats.hp).toBe(280);
-      expect(hero.baseStats.damage).toBe(25);
-      expect(hero.baseStats.attackSpeed).toBe(1.2);
+    it('has correct base stats (buffed)', () => {
+      expect(hero.baseStats.hp).toBe(320);       // Buffed: było 280
+      expect(hero.baseStats.damage).toBe(32);    // Buffed: było 25
+      expect(hero.baseStats.attackSpeed).toBe(1.3); // Buffed: było 1.2
     });
 
     it('is lightning class and dps role', () => {
@@ -106,64 +106,64 @@ describe('calculateHeroStats', () => {
   describe('tier multipliers', () => {
     it('tier 1 has 1.0x multiplier', () => {
       const stats = calculateHeroStats(storm, 1, 1);
-      expect(stats.hp).toBe(280); // 280 * 1.0 * 1.0
-      expect(stats.damage).toBe(25); // 25 * 1.0 * 1.0
+      expect(stats.hp).toBe(320); // 320 * 1.0 * 1.0 (buffed)
+      expect(stats.damage).toBe(32); // 32 * 1.0 * 1.0 (buffed)
     });
 
     it('tier 2 has 1.5x multiplier', () => {
       const stats = calculateHeroStats(storm, 2, 1);
-      expect(stats.hp).toBe(420); // 280 * 1.5 * 1.0
-      expect(stats.damage).toBe(37); // floor(25 * 1.5 * 1.0) = 37
+      expect(stats.hp).toBe(480); // 320 * 1.5 * 1.0 (buffed)
+      expect(stats.damage).toBe(48); // floor(32 * 1.5 * 1.0) = 48 (buffed)
     });
 
     it('tier 3 has 2.0x multiplier', () => {
       const stats = calculateHeroStats(storm, 3, 1);
-      expect(stats.hp).toBe(560); // 280 * 2.0 * 1.0
-      expect(stats.damage).toBe(50); // 25 * 2.0 * 1.0
+      expect(stats.hp).toBe(640); // 320 * 2.0 * 1.0 (buffed)
+      expect(stats.damage).toBe(64); // 32 * 2.0 * 1.0 (buffed)
     });
   });
 
   describe('level bonuses (+2% per level)', () => {
     it('level 1 has no bonus', () => {
       const stats = calculateHeroStats(storm, 1, 1);
-      expect(stats.hp).toBe(280);
+      expect(stats.hp).toBe(320); // buffed base HP
     });
 
     it('level 2 has +2% bonus', () => {
       const stats = calculateHeroStats(storm, 1, 2);
-      // 280 * 1.0 * 1.02 = 285.6 -> 285
-      expect(stats.hp).toBe(285);
+      // 320 * 1.0 * 1.02 = 326.4 -> 326 (buffed)
+      expect(stats.hp).toBe(326);
     });
 
     it('level 10 has +18% bonus', () => {
       const stats = calculateHeroStats(storm, 1, 10);
-      // 280 * 1.0 * 1.18 = 330.4 -> 330
-      expect(stats.hp).toBe(330);
+      // 320 * 1.0 * 1.18 = 377.6 -> 377 (buffed)
+      expect(stats.hp).toBe(377);
     });
 
     it('level 20 has +38% bonus', () => {
       const stats = calculateHeroStats(storm, 1, 20);
-      // 280 * 1.0 * 1.38 = 386.4 (may be 386 or 387 due to floating point)
-      expect(stats.hp).toBeGreaterThanOrEqual(386);
-      expect(stats.hp).toBeLessThanOrEqual(387);
+      // 320 * 1.0 * 1.38 = 441.6 (buffed) -> ~441-442
+      expect(stats.hp).toBeGreaterThanOrEqual(441);
+      expect(stats.hp).toBeLessThanOrEqual(442);
     });
   });
 
   describe('combined tier and level', () => {
     it('tier 2 level 10 combines multipliers', () => {
       const stats = calculateHeroStats(storm, 2, 10);
-      // HP: 280 * 1.5 * 1.18 = 495.6 -> 495
-      expect(stats.hp).toBe(495);
-      // Damage: 25 * 1.5 * 1.18 = 44.25 -> 44
-      expect(stats.damage).toBe(44);
+      // HP: 320 * 1.5 * 1.18 = 566.4 -> 566 (buffed)
+      expect(stats.hp).toBe(566);
+      // Damage: 32 * 1.5 * 1.18 = 56.64 -> 56 (buffed)
+      expect(stats.damage).toBe(56);
     });
 
     it('tier 3 level 25 combines multipliers', () => {
       const stats = calculateHeroStats(storm, 3, 25);
-      // HP: 280 * 2.0 * 1.48 = 828.8 -> 828
-      expect(stats.hp).toBe(828);
-      // Damage: 25 * 2.0 * 1.48 = 74
-      expect(stats.damage).toBe(74);
+      // HP: 320 * 2.0 * 1.48 = 947.2 -> 947 (buffed)
+      expect(stats.hp).toBe(947);
+      // Damage: 32 * 2.0 * 1.48 = 94.72 -> 94 (buffed)
+      expect(stats.damage).toBe(94);
     });
   });
 
@@ -173,9 +173,9 @@ describe('calculateHeroStats', () => {
       const stats2 = calculateHeroStats(storm, 2, 1);
       const stats3 = calculateHeroStats(storm, 3, 1);
 
-      expect(stats1.attackSpeed).toBeCloseTo(1.2, 2);
-      expect(stats2.attackSpeed).toBeCloseTo(1.8, 2); // 1.2 * 1.5
-      expect(stats3.attackSpeed).toBeCloseTo(2.4, 2); // 1.2 * 2.0
+      expect(stats1.attackSpeed).toBeCloseTo(1.3, 2); // buffed: było 1.2
+      expect(stats2.attackSpeed).toBeCloseTo(1.95, 2); // 1.3 * 1.5 (buffed)
+      expect(stats3.attackSpeed).toBeCloseTo(2.6, 2); // 1.3 * 2.0 (buffed)
     });
 
     it('level does NOT affect attack speed', () => {
@@ -352,7 +352,7 @@ describe('Skill Definitions', () => {
 
       expect(empStorm).toBeDefined();
       expect(empStorm!.isUltimate).toBe(true);
-      expect(empStorm!.cooldownTicks).toBe(900); // 30 seconds
+      expect(empStorm!.cooldownTicks).toBe(840); // 28 seconds (buffed: było 900)
       expect(empStorm!.effects.length).toBe(2); // damage + stun
     });
   });
@@ -670,11 +670,11 @@ describe('Skill Level Requirements', () => {
     }
   });
 
-  it('arc_strike unlocks at level 5', () => {
+  it('arc_strike unlocks at level 1 (T1 skill)', () => {
     const heroDef = getHeroById('storm')!;
     const arcStrike = heroDef.tiers[0].skills.find(s => s.id === 'arc_strike');
 
-    expect(arcStrike!.unlockedAtLevel).toBe(5);
+    expect(arcStrike!.unlockedAtLevel).toBe(1);
   });
 
   it('emp_storm ultimate unlocks at level 25', () => {

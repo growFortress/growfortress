@@ -130,29 +130,33 @@ export const LEVEL_UP_GOLD_REWARD = 50;
 /**
  * Konfiguracja odblokowywania slotów bohaterów
  * Gracz zaczyna z 2 darmowymi slotami, kolejne kupuje za złoto
+ * Slot 3 dostępny po pierwszej sesji (poziom 2), slot 4 szybko dostępny
  */
 export const HERO_SLOT_UNLOCKS: SlotUnlockConfig[] = [
   { slot: 1, levelRequired: 1, goldCost: 0, isFree: true },
   { slot: 2, levelRequired: 1, goldCost: 0, isFree: true },
-  { slot: 3, levelRequired: 15, goldCost: 3000, isFree: false },
-  { slot: 4, levelRequired: 25, goldCost: 8000, isFree: false },
-  { slot: 5, levelRequired: 35, goldCost: 20000, isFree: false },
-  { slot: 6, levelRequired: 50, goldCost: 50000, isFree: false },
+  { slot: 3, levelRequired: 2, goldCost: 500, isFree: false },   // Dostępny po pierwszej sesji
+  { slot: 4, levelRequired: 5, goldCost: 1000, isFree: false },  // Szybko dostępny
+  { slot: 5, levelRequired: 8, goldCost: 2000, isFree: false },  // Wczesna mid-game
+  { slot: 6, levelRequired: 12, goldCost: 4000, isFree: false }, // Mid-game
+  { slot: 7, levelRequired: 18, goldCost: 7000, isFree: false }, // Późna mid-game
+  { slot: 8, levelRequired: 25, goldCost: 12000, isFree: false }, // Pełny skład
 ];
 
-export const MAX_HERO_SLOTS = 6;
+export const MAX_HERO_SLOTS = 8;
 
 /**
  * Konfiguracja odblokowywania slotów wieżyczek
  * Gracz zaczyna z 1 darmowym slotem, kolejne kupuje za złoto
+ * Sloty 2-3 szybko dostępne
  */
 export const TURRET_SLOT_UNLOCKS: SlotUnlockConfig[] = [
   { slot: 1, levelRequired: 1, goldCost: 0, isFree: true },
-  { slot: 2, levelRequired: 5, goldCost: 1000, isFree: false },
-  { slot: 3, levelRequired: 15, goldCost: 3000, isFree: false },
-  { slot: 4, levelRequired: 25, goldCost: 8000, isFree: false },
-  { slot: 5, levelRequired: 35, goldCost: 15000, isFree: false },
-  { slot: 6, levelRequired: 40, goldCost: 25000, isFree: false },
+  { slot: 2, levelRequired: 3, goldCost: 500, isFree: false },   // Wczesna gra
+  { slot: 3, levelRequired: 5, goldCost: 1000, isFree: false },  // Szybko dostępny
+  { slot: 4, levelRequired: 8, goldCost: 2000, isFree: false },  // Wczesna mid-game
+  { slot: 5, levelRequired: 12, goldCost: 4000, isFree: false }, // Mid-game
+  { slot: 6, levelRequired: 18, goldCost: 7000, isFree: false }, // Pełny skład
 ];
 
 export const MAX_TURRET_SLOTS = 6;
@@ -312,13 +316,8 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 5: Drugi slot wieży + CRYO turret
+    // Level 5: CRYO turret + Skill 2
     case 5:
-      rewards.push({
-        type: 'turret_slot',
-        value: 2,
-        description: 'Odblokowano 2. slot wieży',
-      });
       rewards.push({
         type: 'turret_unlock',
         turretType: 'cryo',
@@ -331,13 +330,8 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 10: Drugi slot jednostki + Forge
+    // Level 10: Forge + Skill 3
     case 10:
-      rewards.push({
-        type: 'hero_slot',
-        value: 2,
-        description: 'Odblokowano 2. slot jednostki',
-      });
       rewards.push({
         type: 'hero_unlock',
         heroId: 'forge',
@@ -350,17 +344,12 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 15: Trzeci slot wieży + ARTILLERY turret + Science pillar
+    // Level 15: ARTILLERY turret + Science pillar + Damage bonus
     case 15:
       rewards.push({
         type: 'pillar_unlock',
         pillarId: 'science',
         description: 'Odblokowano Sektor: Nauka i Technologia',
-      });
-      rewards.push({
-        type: 'turret_slot',
-        value: 3,
-        description: 'Odblokowano 3. slot wieży',
       });
       rewards.push({
         type: 'turret_unlock',
@@ -393,26 +382,21 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 25: slot wieży
+    // Level 25: Bonus HP (mały bonus co 5 poziomów)
     case 25:
       rewards.push({
-        type: 'turret_slot',
-        value: 4,
-        description: 'Odblokowano 4. slot wieży',
+        type: 'hp_bonus',
+        value: 8192 as FP, // +5%
+        description: '+5% HP twierdzy',
       });
       break;
 
-    // Level 30: Trzeci slot jednostki + Rift + Mutants pillar
+    // Level 30: Rift + Mutants pillar + Arc turret
     case 30:
       rewards.push({
         type: 'pillar_unlock',
         pillarId: 'mutants',
         description: 'Odblokowano Sektor: Mutanci',
-      });
-      rewards.push({
-        type: 'hero_slot',
-        value: 3,
-        description: 'Odblokowano 3. slot jednostki',
       });
       rewards.push({
         type: 'hero_unlock',
@@ -426,16 +410,16 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       break;
 
-    // Level 35: Nowy slot wieżyczki
+    // Level 35: Bonus HP (mały bonus co 5 poziomów)
     case 35:
       rewards.push({
-        type: 'turret_slot',
-        value: 5,
-        description: 'Odblokowano 5. slot wieżyczki',
+        type: 'hp_bonus',
+        value: 8192 as FP, // +5%
+        description: '+5% HP twierdzy',
       });
       break;
 
-    // Level 40: Titan + Fire class + slot wieżyczki
+    // Level 40: Titan + Fire class
     case 40:
       rewards.push({
         type: 'hero_unlock',
@@ -447,24 +431,14 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
         classId: 'fire',
         description: 'Odblokowano Konfigurację Termiczną',
       });
-      rewards.push({
-        type: 'turret_slot',
-        value: 6,
-        description: 'Odblokowano 6. slot wieżyczki',
-      });
       break;
 
-    // Level 45: Czwarty slot jednostki + Cosmos pillar
+    // Level 45: Cosmos pillar + Laser turret
     case 45:
       rewards.push({
         type: 'pillar_unlock',
         pillarId: 'cosmos',
         description: 'Odblokowano Sektor: Kosmos',
-      });
-      rewards.push({
-        type: 'hero_slot',
-        value: 4,
-        description: 'Odblokowano 4. slot jednostki (max)',
       });
       rewards.push({
         type: 'turret_unlock',
@@ -628,10 +602,14 @@ export function getMaxHeroSlots(fortressLevel: number, purchasedSlots?: number):
     return Math.min(purchasedSlots, MAX_HERO_SLOTS);
   }
   // Legacy fallback (dla starych zapisów bez purchasedSlots)
-  if (fortressLevel >= 45) return 4;
-  if (fortressLevel >= 30) return 3;
-  if (fortressLevel >= 10) return 2;
-  return 2; // Zmienione z 1 na 2 - nowi gracze zaczynają z 2 slotami
+  // Uwaga: Nowy system używa zakupu za złoto, ale dla kompatybilności wstecznej
+  if (fortressLevel >= 50) return 8;
+  if (fortressLevel >= 35) return 7;
+  if (fortressLevel >= 25) return 6;
+  if (fortressLevel >= 15) return 5;
+  if (fortressLevel >= 5) return 4;
+  if (fortressLevel >= 2) return 3;
+  return 2; // Nowi gracze zaczynają z 2 slotami
 }
 
 /**
@@ -645,11 +623,12 @@ export function getMaxTurretSlots(fortressLevel: number, purchasedSlots?: number
     return Math.min(purchasedSlots, MAX_TURRET_SLOTS);
   }
   // Legacy fallback
-  if (fortressLevel >= 40) return 6;
-  if (fortressLevel >= 35) return 5;
-  if (fortressLevel >= 25) return 4;
-  if (fortressLevel >= 15) return 3;
-  if (fortressLevel >= 5) return 2;
+  // Uwaga: Nowy system używa zakupu za złoto, ale dla kompatybilności wstecznej
+  if (fortressLevel >= 30) return 6;
+  if (fortressLevel >= 20) return 5;
+  if (fortressLevel >= 10) return 4;
+  if (fortressLevel >= 5) return 3;
+  if (fortressLevel >= 3) return 2;
   return 1; // Base: 1 slot
 }
 
@@ -747,11 +726,12 @@ export function getTurretUnlockLevel(turretType: string): number {
  * spectre i omega są ekskluzywne - dostępne od poziomu 1 ale za premium koszt
  */
 export function getUnlockedHeroes(fortressLevel: number): string[] {
-  const heroes: string[] = ['vanguard', 'storm']; // Starter Kit
+  const heroes: string[] = ['vanguard', 'storm', 'medic', 'pyro']; // Starter Kit (4 bohaterów)
 
   // Exclusive heroes - available from level 1 (premium cost)
   heroes.push('spectre'); // Rare exclusive - 25,000 gold
-  heroes.push('omega');   // Legendary exclusive - 5,000 dust
+  heroes.push('omega');   // Legendary exclusive - 50,000 gold + 50 dust
+  heroes.push('scout');   // Early game hero - 7,500 gold (available from level 1)
 
   if (fortressLevel >= 10) heroes.push('forge');
   if (fortressLevel >= 20) heroes.push('frost');
@@ -775,8 +755,11 @@ export function getHeroUnlockLevel(heroId: string): number {
   switch (heroId) {
     case 'vanguard': return 1;  // Starter
     case 'storm': return 1;     // Starter
+    case 'medic': return 1;     // Starter (healer)
+    case 'pyro': return 1;      // Starter (fire DPS)
     case 'spectre': return 1;   // Exclusive rare - available from level 1
     case 'omega': return 1;     // Exclusive legendary - available from level 1
+    case 'scout': return 1;     // Early game hero - available from level 1
     case 'forge': return 10;
     case 'frost': return 20;
     case 'rift': return 30;

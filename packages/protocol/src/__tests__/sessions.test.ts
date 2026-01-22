@@ -78,6 +78,8 @@ describe('Sessions Schemas', () => {
           heroTiers: {},
           turretTiers: {},
         },
+        currentPillar: 'streets',
+        pillarRotation: false,
       });
 
       expect(result.success).toBe(true);
@@ -115,6 +117,8 @@ describe('Sessions Schemas', () => {
           turretTiers: {},
         },
         startingRelics: ['team-spirit'],
+        currentPillar: 'streets',
+        pillarRotation: false,
       });
 
       expect(result.success).toBe(true);

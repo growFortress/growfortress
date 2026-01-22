@@ -19,6 +19,7 @@ export const AuthRegisterRequestSchema = z.object({
   username: usernameSchema,
   password: passwordSchema,
   email: z.string().email("Nieprawidłowy adres email").optional(),
+  referralCode: z.string().min(4).max(16).regex(/^[a-zA-Z0-9]+$/).optional(),
 });
 
 export type AuthRegisterRequest = z.infer<typeof AuthRegisterRequestSchema>;
@@ -78,7 +79,7 @@ export const ProgressionSchema = z.object({
   xp: z.number().int().min(0),
   totalXp: z.number().int().min(0),
   xpToNextLevel: z.number().int().min(0),
-  purchasedHeroSlots: z.number().int().min(1).max(6).default(2),
+  purchasedHeroSlots: z.number().int().min(1).max(8).default(2),
   purchasedTurretSlots: z.number().int().min(1).max(6).default(1),
 });
 
@@ -193,6 +194,8 @@ export const ProfileResponseSchema = z.object({
   unlockedTurrets: z.array(TurretTypeSchema),
   // Game config
   gameConfig: GameConfigSchema,
+  // Guest mode flag
+  isGuest: z.boolean().optional(),
 });
 
 export type ProfileResponse = z.infer<typeof ProfileResponseSchema>;
@@ -243,3 +246,4 @@ export const ResetPasswordRequestSchema = z.object({
 });
 
 export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>;
+

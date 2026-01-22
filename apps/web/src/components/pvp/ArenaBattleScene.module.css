@@ -1,0 +1,649 @@
+.scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%);
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header with fortress HP bars */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.playerPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.playerPanel.right {
+  align-items: flex-end;
+}
+
+.playerName {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fortressClassIcon {
+  font-size: 1.2rem;
+}
+
+.youBadge {
+  font-size: 0.7rem;
+  background: var(--color-primary);
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+}
+
+.fortressHpBar {
+  width: 100%;
+  max-width: 300px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fortressHpFill {
+  height: 100%;
+  transition: width 0.15s ease-out;
+  border-radius: 4px;
+}
+
+.fortressHpText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.vsSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 80px;
+}
+
+.vsText {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--color-text-40);
+}
+
+.tickDisplay {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-40);
+}
+
+/* Progress bar */
+.progressBar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.1s linear;
+}
+
+/* 2D Battlefield */
+.battlefield2D {
+  flex: 1;
+  position: relative;
+  background:
+    radial-gradient(ellipse at center, rgba(30, 30, 60, 0.8) 0%, transparent 70%),
+    linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%);
+  overflow: hidden;
+  min-height: 350px;
+}
+
+/* Center divider line */
+.centerLine {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  width: 2px;
+  height: 80%;
+  background: linear-gradient(180deg, transparent 0%, var(--color-text-20) 20%, var(--color-text-20) 80%, transparent 100%);
+  transform: translateX(-50%);
+}
+
+/* Battle hero on field */
+.battleHero {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: left 0.1s linear, top 0.1s linear;
+  z-index: 10;
+}
+
+.deadHero {
+  opacity: 0.3;
+  filter: grayscale(1);
+  z-index: 5;
+}
+
+.heroAvatarWrapper {
+  position: relative;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.heroHpBarSmall {
+  width: 50px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.heroHpFillSmall {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.1s ease-out;
+}
+
+.heroHpFillSmall.low {
+  background: var(--color-warning);
+}
+
+.heroHpFillSmall.critical {
+  background: var(--color-danger);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.heroNameSmall {
+  font-size: 0.6rem;
+  color: var(--color-text-60);
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Projectile */
+.projectile {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  z-index: 15;
+  animation: projectileGlow 0.2s ease-in-out infinite alternate;
+}
+
+@keyframes projectileGlow {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.3); }
+}
+
+/* Battle fortress */
+.battleFortress {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 3px solid;
+  border-radius: var(--radius-lg);
+  z-index: 5;
+  transition: opacity 0.3s, filter 0.3s;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.destroyedFortress {
+  opacity: 0.4;
+  filter: grayscale(1);
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-50%, -50%) rotate(-5deg); }
+  75% { transform: translate(-50%, -50%) rotate(5deg); }
+}
+
+.fortressIconLarge {
+  font-size: 3.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+.fortressHpBarBattle {
+  width: 100px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fortressHpFillBattle {
+  height: 100%;
+  transition: width 0.15s ease-out;
+  border-radius: 3px;
+}
+
+/* Stats panel */
+.statsPanel {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 2rem;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.statsSide {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.statLabel {
+  color: var(--color-text-40);
+}
+
+.statValue {
+  font-family: var(--font-mono);
+}
+
+/* Loadout panel - shows all heroes from both sides */
+.loadoutPanel {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.5rem;
+}
+
+.loadoutSide {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 45%;
+}
+
+.loadoutSideRight {
+  justify-content: flex-end;
+}
+
+.loadoutHero {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+.loadoutHeroDead {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+}
+
+.loadoutHeroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 70px;
+}
+
+.loadoutHeroName {
+  font-size: 0.7rem;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.loadoutHeroHp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loadoutHpBar {
+  width: 50px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loadoutHpFill {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.15s ease-out;
+}
+
+.loadoutHpText {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-60);
+}
+
+.loadoutDivider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0 0.5rem;
+  min-width: 80px;
+}
+
+.loadoutVs {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--color-text-40);
+}
+
+.loadoutEmpty {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+  font-style: italic;
+  padding: 0.5rem;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.controlBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.controlBtn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
+}
+
+.controlBtn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.controlBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.speedBtn {
+  min-width: 60px;
+}
+
+.skipBtn {
+  background: var(--color-bg-hover);
+}
+
+.skipBtn:hover:not(:disabled) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+/* Result modal overlay */
+.resultOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.resultModal {
+  background: var(--color-bg-panel);
+  border: var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resultBanner {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.resultBanner.victory {
+  color: var(--color-success);
+}
+
+.resultBanner.defeat {
+  color: var(--color-danger);
+}
+
+.resultBanner.draw {
+  color: var(--color-warning);
+}
+
+.resultIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.resultReason {
+  font-size: 0.9rem;
+  color: var(--color-text-60);
+  margin-bottom: 1.5rem;
+}
+
+.rewardsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.rewardsTitle {
+  font-size: 0.8rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rewardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.rewardLabel {
+  color: var(--color-text-60);
+}
+
+.rewardValue {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.rewardValue.positive {
+  color: var(--color-success);
+}
+
+.rewardValue.negative {
+  color: var(--color-danger);
+}
+
+.resultActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.actionBtn {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.continueBtn {
+  background: var(--color-primary);
+  border: none;
+  color: white;
+}
+
+.continueBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+.watchAgainBtn {
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+}
+
+.watchAgainBtn:hover {
+  border-color: var(--color-primary);
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  color: var(--color-text-60);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .playerPanel {
+    width: 100%;
+    align-items: center !important;
+  }
+
+  .fortressHpBar {
+    max-width: 100%;
+  }
+
+  .vsSection {
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .battlefield2D {
+    min-height: 250px;
+  }
+
+  .battleHero {
+    /* Scale handled in JS to preserve positioning */
+  }
+
+  .battleFortress {
+    /* Scale handled in JS to preserve positioning */
+    padding: 10px 14px;
+  }
+
+  .statsPanel {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .statsSide {
+    justify-content: center;
+  }
+
+  .controls {
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+  }
+}

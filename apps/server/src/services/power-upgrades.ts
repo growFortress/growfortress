@@ -9,6 +9,7 @@
  */
 
 import { prisma } from '../lib/prisma.js';
+import { refreshBattleHeroPower } from './guildBattleHero.js';
 import type {
   PowerUpgradeResponse,
   PowerSummaryResponse,
@@ -338,6 +339,13 @@ export async function upgradeHeroStat(
       },
     }),
   ]);
+
+  // Auto-refresh Battle Hero power if this hero is set as Battle Hero
+  // Use fire-and-forget to avoid blocking the response
+  refreshBattleHeroPower(userId).catch((err) => {
+    // Log error but don't fail the upgrade
+    console.error(`Failed to refresh Battle Hero power for user ${userId}:`, err);
+  });
 
   return {
     success: true,

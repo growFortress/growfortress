@@ -6,6 +6,9 @@ import {
   hideEndScreen,
   isAuthenticated,
   getUserRankForCategory,
+  isGuestMode,
+  guestAutoTransitionCountdown,
+  promptGuestRegistration,
 } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
@@ -42,6 +45,36 @@ export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
         });
     }
   }, [showEndScreen.value, isAuthenticated.value]);
+
+  // Auto-transition to hub for guests with countdown
+  useEffect(() => {
+    if (showEndScreen.value && isGuestMode.value) {
+      // Start countdown from 5 seconds
+      guestAutoTransitionCountdown.value = 5;
+
+      const countdownInterval = setInterval(() => {
+        if (guestAutoTransitionCountdown.value !== null && guestAutoTransitionCountdown.value > 0) {
+          guestAutoTransitionCountdown.value -= 1;
+        }
+      }, 1000);
+
+      const transitionTimer = setTimeout(() => {
+        hideEndScreen();
+        onReturnToHub();
+        // Show registration prompt after short delay
+        setTimeout(() => {
+          promptGuestRegistration();
+        }, 500);
+      }, 5000);
+
+      return () => {
+        clearInterval(countdownInterval);
+        clearTimeout(transitionTimer);
+        guestAutoTransitionCountdown.value = null;
+      };
+    }
+    return undefined;
+  }, [showEndScreen.value, isGuestMode.value, onReturnToHub]);
 
   const weeklyRank = getUserRankForCategory('weeklyWaves');
   const totalRank = getUserRankForCategory('totalWaves');
@@ -162,6 +195,11 @@ export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
 
       {/* Actions */}
       <div class={styles.actions}>
+        {isGuestMode.value && guestAutoTransitionCountdown.value !== null && (
+          <div class={styles.guestCountdown}>
+            {t('endScreen.autoTransition', { seconds: guestAutoTransitionCountdown.value })}
+          </div>
+        )}
         <Button variant="secondary" size="lg" onClick={handleReturnToHub}>
           {t('endScreen.returnToHub')}
         </Button>

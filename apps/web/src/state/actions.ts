@@ -225,7 +225,8 @@ export function syncGameState(gameInstance: Game): void {
 
       // Sync turrets
       fortress.activeTurrets.value = state.turrets || [];
-      fortress.turretSlots.value = state.turretSlots || [];
+      // Note: turretSlots is now a computed signal based on purchasedTurretSlots
+      // During game, we use state.turretSlots from simulation, but in hub we use computed
 
       // Process pending artifact drops for UI notifications
       if (state.pendingArtifactDrops && state.pendingArtifactDrops.length > 0) {
@@ -339,8 +340,8 @@ export function resetGameState(): void {
     fortress.selectedHeroId.value = null;
     fortress.selectedTurretSlot.value = null;
 
-    // Reset turret slots to default configuration
-    fortress.turretSlots.value = [...fortress.DEFAULT_TURRET_SLOTS];
+    // Note: turretSlots is now a computed signal based on purchasedTurretSlots
+    // It automatically updates when purchasedTurretSlots changes
   });
 }
 
@@ -357,9 +358,9 @@ export function resetFortressSelection(): void {
 }
 
 /**
- * Initialize hub state from default loadout.
+ * Initialize hub state from active preset or default loadout.
  * Creates hero and turret objects for display in the idle phase.
- * Shows all unlocked heroes and turrets (same as during a run).
+ * Uses active preset's startingHeroes if available, otherwise falls back to unlocked heroes.
  */
 export function initializeHubFromLoadout(): void {
   const loadout = profile.defaultLoadout.value;
@@ -367,19 +368,25 @@ export function initializeHubFromLoadout(): void {
   const unlockedHeroes = fortress.unlockedHeroIds.value;
   const unlockedTurrets = fortress.unlockedTurretIds.value;
 
+  // Get active preset's heroes if available
+  const presets = profile.buildPresets.value;
+  const activeId = profile.activePresetId.value;
+  const activePreset = activeId ? presets.find(p => p.id === activeId) : null;
+
   if (!loadout.turretType || !fortressClass) {
     fortress.hubInitialized.value = false;
     return;
   }
 
-  // Need at least one hero to initialize
-  if (unlockedHeroes.length === 0 && !loadout.heroId) {
+  // Need at least one slot to initialize (can have empty slots)
+  const maxSlots = fortress.purchasedHeroSlots.value;
+  if (maxSlots === 0) {
     fortress.hubInitialized.value = false;
     return;
   }
 
   batch(() => {
-    // Create hub heroes from all unlocked heroes
+    // Create hub heroes from active preset or unlocked heroes
     // Position heroes in formation like in the game
     const FP_SCALE = 1 << 16; // 65536 - Q16.16 fixed point format
 
@@ -438,41 +445,54 @@ export function initializeHubFromLoadout(): void {
       }
     };
 
-    const heroIds = unlockedHeroes.length > 0 ? unlockedHeroes : [loadout.heroId!];
-    const heroCount = heroIds.length;
-    const hubHeroes: ActiveHero[] = [];
+    // Use purchased slots to determine how many slots to create
+    const maxSlots = fortress.purchasedHeroSlots.value;
+    // Prefer active preset's heroes, fall back to unlocked heroes or default loadout
+    const heroIds = activePreset?.startingHeroes && activePreset.startingHeroes.length > 0
+      ? activePreset.startingHeroes
+      : unlockedHeroes.length > 0
+        ? unlockedHeroes
+        : (loadout.heroId ? [loadout.heroId] : []);
+    const hubHeroes: (ActiveHero | null)[] = [];
 
-    for (let i = 0; i < heroCount; i++) {
-      const heroId = heroIds[i];
+    // Create slots for all purchased slots
+    for (let i = 0; i < maxSlots; i++) {
+      const heroId = heroIds[i]; // May be undefined for empty slots
 
-      // Get formation position for this hero
-      const formation = getFormationPosition(i, heroCount);
+      // Get formation position for this slot
+      const formation = getFormationPosition(i, maxSlots);
       // fortressX is 2, add formation offset
       const heroX = 2 + formation.xOffset;
       const heroY = formation.yOffset;
 
-      const hubHero: ActiveHero = {
-        definitionId: heroId,
-        tier: 1,
-        state: 'idle',
-        x: Math.round(heroX * FP_SCALE), // Fixed point: formation X position
-        y: Math.round(heroY * FP_SCALE), // Fixed point: formation Y position
-        vx: 0,
-        vy: 0,
-        radius: Math.round(1.0 * FP_SCALE),
-        mass: Math.round(1.0 * FP_SCALE),
-        movementModifiers: [],
-        currentHp: 100,
-        maxHp: 100,
-        level: 1,
-        xp: 0,
-        lastAttackTick: 0,
-        lastDeployTick: 0,
-        skillCooldowns: {},
-        buffs: [],
-        equippedItems: [],
-      };
-      hubHeroes.push(hubHero);
+      if (heroId) {
+        // Create hero for this slot
+        const hubHero: ActiveHero = {
+          definitionId: heroId,
+          tier: 1,
+          state: 'idle',
+          x: Math.round(heroX * FP_SCALE), // Fixed point: formation X position
+          y: Math.round(heroY * FP_SCALE), // Fixed point: formation Y position
+          vx: 0,
+          vy: 0,
+          radius: Math.round(1.0 * FP_SCALE),
+          mass: Math.round(1.0 * FP_SCALE),
+          movementModifiers: [],
+          currentHp: 100,
+          maxHp: 100,
+          level: 1,
+          xp: 0,
+          lastAttackTick: 0,
+          lastDeployTick: 0,
+          skillCooldowns: {},
+          buffs: [],
+          equippedItems: [],
+        };
+        hubHeroes.push(hubHero);
+      } else {
+        // Empty slot - push null
+        hubHeroes.push(null);
+      }
     }
     fortress.hubHeroes.value = hubHeroes;
 

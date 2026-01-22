@@ -273,6 +273,10 @@ export async function canAttackGuild(
   attackerGuildId: string,
   defenderGuildId: string
 ): Promise<{ canAttack: boolean; cooldownEndsAt?: Date }> {
+  if (attackerGuildId === defenderGuildId) {
+    return { canAttack: false };
+  }
+
   const cooldownHours = GUILD_CONSTANTS.ATTACK_COOLDOWN_SAME_GUILD_HOURS;
   const cooldownStart = new Date(Date.now() - cooldownHours * 60 * 60 * 1000);
 
@@ -308,6 +312,10 @@ export async function instantAttack(
   attackerUserId: string,
   selectedMemberIds: string[]
 ): Promise<{ success: boolean; result?: InstantAttackResult; error?: string }> {
+  if (attackerGuildId === defenderGuildId) {
+    return { success: false, error: GUILD_ERROR_CODES.CANNOT_ATTACK_SELF };
+  }
+
   // Validate 5 members selected
   if (selectedMemberIds.length !== GUILD_CONSTANTS.ARENA_PARTICIPANTS) {
     return { success: false, error: GUILD_ERROR_CODES.INVALID_MEMBER_SELECTION };

@@ -167,6 +167,8 @@ export class HeroSystem {
   ) {
     const currentIds = new Set<string>();
     const { now, deltaMs, time } = this.getFrameTiming();
+    // Hub mode (no VFX) = instant removal, combat mode = death animation
+    const isHubMode = !vfx;
 
     for (const hero of state.heroes) {
       currentIds.add(hero.definitionId);
@@ -196,8 +198,8 @@ export class HeroSystem {
       this.updateStormForgeBond(state, viewWidth, viewHeight, now, vfx);
     }
 
-    // Remove dead/removed heroes with death animation
-    this.cleanupMissingHeroes(currentIds);
+    // Remove dead/removed heroes (instant in hub, animated in combat)
+    this.cleanupMissingHeroes(currentIds, deltaMs, isHubMode);
   }
 
   private getFrameTiming(): { now: number; deltaMs: number; time: number } {
@@ -308,12 +310,25 @@ export class HeroSystem {
     );
   }
 
-  private cleanupMissingHeroes(currentIds: Set<string>): void {
+  private cleanupMissingHeroes(currentIds: Set<string>, deltaMs: number, instant: boolean): void {
     for (const [id, visual] of this.visuals) {
       if (!currentIds.has(id)) {
+        // In hub mode, remove instantly without animation
+        if (instant) {
+          this.container.removeChild(visual.container);
+          visual.container.destroy({ children: true });
+          this.visuals.delete(id);
+          continue;
+        }
+
+        // In combat mode, play death animation
         if (!visual.animation.isDying) {
           this.startDeathAnimation(visual);
-        } else if (visual.animation.deathProgress >= 1) {
+        }
+        // Update tweens for dying heroes so death animation can complete
+        visual.tweenManager.update(deltaMs);
+
+        if (visual.animation.deathProgress >= 1) {
           this.container.removeChild(visual.container);
           visual.container.destroy({ children: true });
           this.visuals.delete(id);

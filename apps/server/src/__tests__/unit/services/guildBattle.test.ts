@@ -312,6 +312,13 @@ describe('Guild Battle Service', () => {
     });
 
     describe('canAttackGuild', () => {
+      it('blocks attacking same guild', async () => {
+        const result = await canAttackGuild('guild-123', 'guild-123');
+
+        expect(result.canAttack).toBe(false);
+        expect(result.cooldownEndsAt).toBeUndefined();
+      });
+
       it('allows attack if no recent battle', async () => {
         mockPrisma.guildBattle.findFirst.mockResolvedValue(null);
 
@@ -381,6 +388,18 @@ describe('Guild Battle Service', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('INVALID_MEMBER_SELECTION');
+    });
+
+    it('blocks attacking own guild', async () => {
+      const result = await instantAttack(
+        'guild-123',
+        'guild-123',
+        'user-123',
+        selectedMemberIds
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('CANNOT_ATTACK_SELF');
     });
 
     it('requires attacker guild membership', async () => {

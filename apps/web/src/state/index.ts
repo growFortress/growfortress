@@ -25,6 +25,17 @@ export {
   type GameConfig,
 } from './profile.signals.js';
 
+// Guest mode signals
+export {
+  isGuestMode,
+  showGuestRegistrationPrompt,
+  guestAutoTransitionCountdown,
+  setGuestMode,
+  clearGuestMode,
+  promptGuestRegistration,
+  dismissGuestRegistrationPrompt,
+} from './guest.signals.js';
+
 // Game signals
 export {
   gamePhase,
@@ -351,6 +362,23 @@ export {
   setManualControlHero,
   setManualMoveInput,
 } from './command.signals.js';
+
+// Arena Battle Scene signals (live PvP visualization)
+export {
+  arenaBattleActive,
+  arenaBattleData,
+  arenaBattlePhase,
+  arenaBattleSpeed,
+  arenaBattlePaused,
+  startArenaBattle,
+  setArenaBattlePhase,
+  setArenaBattleSpeed,
+  toggleArenaBattlePause,
+  endArenaBattle,
+  resetArenaBattleState,
+  type ArenaBattleData,
+  type ArenaBattlePhase,
+} from './arenaBattle.signals.js';
 
 // PvP Arena signals
 export {
@@ -815,6 +843,7 @@ export {
   getPillarInfo,
   // Actions
   fetchPillarUnlocks,
+  selectPillar,
   resetPillarUnlocksState,
 } from './pillarUnlocks.signals.js';
 

@@ -2,6 +2,7 @@ import type { JSX } from 'preact';
 import type { ActiveHero } from '@arcade/sim-core';
 import {
   activeHeroes,
+  hubHeroes,
   maxHeroSlots,
   selectedHeroId,
   upgradePanelVisible,
@@ -10,6 +11,8 @@ import {
   commandSelectedHeroId,
   selectHeroForCommand,
   cancelCommand,
+  heroPlacementModalVisible,
+  heroPlacementSlotIndex,
 } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Tooltip } from '../shared/Tooltip.js';
@@ -18,6 +21,7 @@ import styles from './HeroPanel.module.css';
 // Unit display names
 const HERO_NAMES: Record<string, string> = {
   storm: 'Unit-7 "Storm"',
+  scout: 'Unit-2 "Scout"',
   forge: 'Unit-3 "Forge"',
   titan: 'Unit-1 "Titan"',
   vanguard: 'Unit-0 "Vanguard"',
@@ -41,6 +45,7 @@ const HERO_NAMES: Record<string, string> = {
 // Unit icons (emoji placeholders)
 const HERO_ICONS: Record<string, string> = {
   storm: '⚡',
+  scout: '🎯',
   forge: '🤖',
   titan: '💪',
   vanguard: '🛡️',
@@ -64,6 +69,7 @@ const HERO_ICONS: Record<string, string> = {
 // Unit colors
 const HERO_COLORS: Record<string, string> = {
   storm: '#9932cc',
+  scout: '#32cd32',
   forge: '#00f0ff',
   titan: '#228b22',
   vanguard: '#228b22',
@@ -122,7 +128,10 @@ interface HeroPanelProps {
 
 export function HeroPanel({ compact = false }: HeroPanelProps) {
   const { t } = useTranslation('game');
-  const heroes = activeHeroes.value;
+  const isIdle = gamePhase.value === 'idle';
+  const heroes = isIdle 
+    ? hubHeroes.value.filter((h): h is ActiveHero => h !== null)
+    : activeHeroes.value;
   const slots = maxHeroSlots.value;
 
   const handleHeroClick = (hero: ActiveHero) => {
@@ -150,19 +159,27 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
   };
 
   const renderHeroSlot = (index: number) => {
-    const hero = heroes[index];
+    // In idle mode, check hubHeroes; in playing mode, check activeHeroes
+    const hero = isIdle ? hubHeroes.value[index] : heroes[index];
 
     if (!hero) {
       return (
-        <div
+        <button
           key={index}
           class={`${styles.heroSlot} ${styles.empty}`}
+          onClick={() => {
+            if (isIdle) {
+              heroPlacementSlotIndex.value = index;
+              heroPlacementModalVisible.value = true;
+            }
+          }}
+          disabled={!isIdle}
           role="listitem"
           aria-label={t('heroPanel.slotEmpty', { index: index + 1 })}
         >
           <div class={styles.emptyIcon} aria-hidden="true">+</div>
           <span class={styles.emptyText}>{t('heroPanel.empty')}</span>
-        </div>
+        </button>
       );
     }
 
@@ -234,8 +251,6 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
     );
   };
 
-  const isIdle = gamePhase.value === 'idle';
-
   return (
     <div
       class={`${styles.heroPanel} ${compact ? styles.compact : ''}`}
@@ -244,8 +259,15 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
     >
       <div class={styles.header}>
         <span class={styles.title} id="heroes-title">{t('heroPanel.units')}</span>
-        <span class={styles.count} aria-label={t('heroPanel.slotsOccupied', { count: heroes.length, total: slots })}>
-          {heroes.length}/{slots}
+        <span class={styles.count} aria-label={t('heroPanel.slotsOccupied', { 
+          count: isIdle 
+            ? hubHeroes.value.filter(h => h !== null).length 
+            : heroes.length, 
+          total: slots 
+        })}>
+          {isIdle 
+            ? `${hubHeroes.value.filter(h => h !== null).length}/${slots}`
+            : `${heroes.length}/${slots}`}
         </span>
       </div>
       <div
@@ -254,9 +276,11 @@ export function HeroPanel({ compact = false }: HeroPanelProps) {
         aria-labelledby="heroes-title"
       >
         {getSlotIndices(slots).map((i) => {
+          // In idle mode, check hubHeroes for slot state
+          const hero = isIdle ? hubHeroes.value[i] : heroes[i];
           const slot = renderHeroSlot(i);
           // In idle mode, wrap occupied slots with tooltip
-          if (isIdle && heroes[i]) {
+          if (isIdle && hero) {
             return (
               <Tooltip key={i} content={t('heroPanel.clickToManage')} position="top">
                 {slot}

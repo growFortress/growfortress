@@ -132,7 +132,7 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
   {
     id: 'first_blood',
     name: 'First Blood',
-    description: 'Complete 1 run (win or lose)',
+    description: 'Complete your first run today',
     target: 1,
     dustReward: 5,
     bonusType: 'gold',
@@ -141,8 +141,8 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
   {
     id: 'dedicated',
     name: 'Dedicated',
-    description: 'Complete 3 runs',
-    target: 3,
+    description: 'Complete 5 runs',
+    target: 5,
     dustReward: 8,
     bonusType: 'gold',
     bonusValue: 100,
@@ -150,8 +150,8 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
   {
     id: 'wave_hunter',
     name: 'Wave Hunter',
-    description: 'Defeat 500 enemies',
-    target: 500,
+    description: 'Defeat 300 enemies',
+    target: 300,
     dustReward: 7,
     bonusType: 'gold',
     bonusValue: 150,
@@ -168,8 +168,8 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
   {
     id: 'boss_slayer',
     name: 'Boss Slayer',
-    description: 'Defeat 3 bosses',
-    target: 3,
+    description: 'Defeat 2 bosses',
+    target: 2,
     dustReward: 5,
     bonusType: 'gold',
     bonusValue: 300,
@@ -178,6 +178,7 @@ export const DAILY_QUEST_DEFINITIONS: DailyQuestDefinition[] = [
 
 // Total dust from all daily quests: 5 + 8 + 7 + 5 + 5 = 30 (rebalanced for premium economy)
 // Total gold from all daily quests: 50 + 100 + 150 + 200 + 300 = 800
+// Updated targets: dedicated (3→5), wave_hunter (500→300), boss_slayer (3→2)
 export const TOTAL_DAILY_DUST = DAILY_QUEST_DEFINITIONS.reduce(
   (sum, q) => sum + q.dustReward,
   0

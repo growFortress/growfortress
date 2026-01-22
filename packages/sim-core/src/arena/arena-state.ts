@@ -2,7 +2,7 @@
  * Arena PvP State Types and Initialization
  *
  * Defines the state structure for 1v1 arena battles where two fortresses
- * fight each other with their heroes and turrets.
+ * fight each other with their heroes. No turrets in arena.
  */
 
 import { Xorshift32 } from '../rng.js';
@@ -20,6 +20,13 @@ import {
   calculateTotalDamageBonus,
   getMaxHeroSlots,
 } from '../data/fortress-progression.js';
+import {
+  createDefaultPlayerPowerData,
+  createDefaultStatUpgrades,
+  type PlayerPowerData,
+  type StatUpgrades,
+  type HeroUpgrades,
+} from '../data/power-upgrades.js';
 
 // ============================================================================
 // TYPES
@@ -93,7 +100,19 @@ export interface ArenaState {
 }
 
 /**
- * Configuration for one player's build
+ * Per-hero config for arena (aligns with matchmaking power: tier, upgrades, artifacts).
+ * Omitting = tier 1, no upgrades, no artifact.
+ */
+export interface ArenaHeroConfig {
+  heroId: string;
+  tier?: 1 | 2 | 3;
+  statUpgrades?: StatUpgrades;
+  equippedArtifactId?: string | null;
+}
+
+/**
+ * Configuration for one player's build.
+ * Arena uses heroes + fortress only; no turrets.
  */
 export interface ArenaBuildConfig {
   ownerId: string;
@@ -105,6 +124,8 @@ export interface ArenaBuildConfig {
   /** Power upgrade bonuses (additive bonuses, e.g., 0.2 = +20%) */
   damageBonus?: number;
   hpBonus?: number;
+  /** Per-hero config (tier, upgrades, artifacts). When set, used for init; else defaults. */
+  heroConfigs?: ArenaHeroConfig[];
 }
 
 /**
@@ -168,7 +189,43 @@ function createArenaSide(
     : FP.sub(fortressX, FP.fromInt(3)); // 3 units left of right fortress
 
   const maxHeroSlots = getMaxHeroSlots(build.commanderLevel);
-  const heroes = initializeHeroes(build.heroIds.slice(0, maxHeroSlots), heroSpawnX);
+  const heroIds = build.heroIds.slice(0, maxHeroSlots);
+
+  let powerData: PlayerPowerData | undefined;
+  let heroTiers: Record<string, number> | undefined;
+  let equippedArtifacts: Record<string, string> | undefined;
+
+  if (build.heroConfigs?.length) {
+    const configMap = new Map(build.heroConfigs.map((c) => [c.heroId, c]));
+    heroTiers = {};
+    equippedArtifacts = {};
+    const heroUpgrades: HeroUpgrades[] = [];
+
+    for (const heroId of heroIds) {
+      const c = configMap.get(heroId);
+      if (c) {
+        if (c.tier) heroTiers![heroId] = c.tier;
+        if (c.equippedArtifactId) equippedArtifacts![heroId] = c.equippedArtifactId;
+        heroUpgrades.push({
+          heroId,
+          statUpgrades: c.statUpgrades ?? createDefaultStatUpgrades(),
+        });
+      }
+    }
+
+    powerData = {
+      ...createDefaultPlayerPowerData(),
+      heroUpgrades,
+    };
+  }
+
+  const heroes = initializeHeroes(
+    heroIds,
+    heroSpawnX,
+    powerData,
+    heroTiers,
+    equippedArtifacts
+  );
 
   // Flip hero positions and facing direction for right side
   if (side === 'right') {

@@ -131,12 +131,15 @@ function generateIdleDrops(
 
   // Level affects legendary chance
   const legendaryBonus = commanderLevel * IDLE_CONFIG.legendaryLevelBonus;
+  const legendaryWeight = Math.min(0.40, IDLE_CONFIG.rarityWeights.legendary + legendaryBonus);
+  const epicWeight = IDLE_CONFIG.rarityWeights.epic;
+  // Ensure rare weight is non-negative (defensive validation)
+  const rareWeight = Math.max(0, 1 - legendaryWeight - epicWeight);
   const adjustedWeights = {
-    legendary: Math.min(0.40, IDLE_CONFIG.rarityWeights.legendary + legendaryBonus),
-    epic: IDLE_CONFIG.rarityWeights.epic,
-    rare: 0, // Calculated as remainder
+    legendary: legendaryWeight,
+    epic: epicWeight,
+    rare: rareWeight,
   };
-  adjustedWeights.rare = 1 - adjustedWeights.legendary - adjustedWeights.epic;
 
   for (let i = 0; i < expectedMaterials; i++) {
     const roll = secureRandomFloat();

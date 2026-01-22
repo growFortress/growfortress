@@ -546,7 +546,7 @@ export class ProjectileSystem {
     }
   }
 
-  // Fire: Compact flickering fireball
+  // Fire: Dramatic blazing fireball with intense flames
   private drawFireProjectile(
     g: Graphics,
     x: number,
@@ -556,40 +556,85 @@ export class ProjectileSystem {
     trail: { x: number; y: number }[],
     visual: ProjectileVisual
   ) {
-    const flicker = Math.sin(visual.pulsePhase) * 0.12 + 1;
+    const flicker = Math.sin(visual.pulsePhase * 8) * 0.15 + 1;
+    const flicker2 = Math.sin(visual.pulsePhase * 12 + 1.5) * 0.1 + 1;
     const pulse = visual.energyIntensity;
+    const time = visual.pulsePhase;
 
-    // Single heat glow
-    g.circle(x, y, size * 1.4 * flicker * pulse)
+    // Outer heat distortion glow (large, subtle)
+    g.circle(x, y, size * 2.2 * flicker * pulse)
+      .fill({ color: colors.glow, alpha: 0.08 * pulse });
+
+    // Middle heat glow layer
+    g.circle(x, y, size * 1.6 * flicker2 * pulse)
       .fill({ color: colors.glow, alpha: 0.15 * pulse });
 
-    // Mid flame
-    g.circle(x, y, size * 1.1 * flicker)
-      .fill({ color: colors.secondary, alpha: 0.6 * pulse });
+    // Flame tendrils reaching outward (4 directions)
+    for (let i = 0; i < 4; i++) {
+      const tendrilAngle = time * 3 + (Math.PI * 2 * i) / 4;
+      const tendrilLen = size * (0.6 + Math.sin(time * 6 + i) * 0.3);
+      const tx = x + Math.cos(tendrilAngle) * tendrilLen;
+      const ty = y + Math.sin(tendrilAngle) * tendrilLen;
+      g.circle(tx, ty, size * 0.35 * flicker)
+        .fill({ color: colors.secondary, alpha: 0.5 * pulse });
+    }
 
-    // Core flame
-    const wobbleX = Math.sin(visual.pulsePhase * 3) * size * 0.05;
-    g.circle(x + wobbleX, y, size * 0.85 * flicker)
+    // Secondary flame layer (orange)
+    const wobbleX = Math.sin(time * 5) * size * 0.15;
+    const wobbleY = Math.cos(time * 4) * size * 0.1;
+    g.circle(x + wobbleX, y + wobbleY, size * 1.1 * flicker)
+      .fill({ color: colors.secondary, alpha: 0.7 * pulse });
+
+    // Primary flame core (red-orange)
+    g.circle(x - wobbleX * 0.5, y - wobbleY * 0.5, size * 0.85 * flicker2)
       .fill({ color: colors.primary });
 
-    // Hot center
-    g.circle(x, y, size * 0.4)
+    // Inner hot core (yellow)
+    g.circle(x, y, size * 0.5 * flicker)
       .fill({ color: colors.core });
 
-    // White hot core
-    g.circle(x, y, size * 0.18)
+    // White hot center
+    g.circle(x, y, size * 0.25)
       .fill({ color: 0xffffff });
 
-    // Minimal ember particles (only 3)
-    if (trail.length > 2) {
-      for (let i = 1; i < Math.min(4, trail.length); i++) {
-        const emberSize = size * 0.2 * (1 - i / 5);
-        const emberAlpha = 0.5 * (1 - i / 5) * pulse;
-        const emberPhase = visual.pulsePhase + i * 0.8;
-        const emberOffsetY = Math.cos(emberPhase * 0.7) * 2 - i * 1.5;
+    // Bright white spark at center (pulsing)
+    const sparkSize = size * 0.12 * (1 + Math.sin(time * 15) * 0.3);
+    g.circle(x, y, sparkSize)
+      .fill({ color: 0xffffff, alpha: 0.9 });
 
-        g.circle(trail[i].x, trail[i].y + emberOffsetY, emberSize)
-          .fill({ color: colors.primary, alpha: emberAlpha });
+    // Flame trail with embers rising
+    if (trail.length > 2) {
+      for (let i = 1; i < Math.min(8, trail.length); i++) {
+        const progress = i / 8;
+        const emberSize = size * 0.4 * (1 - progress * 0.8);
+        const emberAlpha = 0.7 * (1 - progress * 0.9) * pulse;
+        const emberPhase = time + i * 0.6;
+
+        // Embers rise and drift
+        const emberOffsetX = Math.sin(emberPhase * 2) * (3 + i * 0.5);
+        const emberOffsetY = Math.cos(emberPhase * 1.5) * 2 - i * 2;
+
+        // Main ember
+        g.circle(trail[i].x + emberOffsetX, trail[i].y + emberOffsetY, emberSize)
+          .fill({ color: i % 2 === 0 ? colors.primary : colors.secondary, alpha: emberAlpha });
+
+        // Small spark alongside ember
+        if (i % 2 === 0) {
+          const sparkOff = Math.sin(emberPhase * 4) * 4;
+          g.circle(trail[i].x + sparkOff, trail[i].y + emberOffsetY - 2, emberSize * 0.4)
+            .fill({ color: colors.glow, alpha: emberAlpha * 0.6 });
+        }
+      }
+
+      // Smoke wisps at trail end
+      if (trail.length > 4) {
+        for (let i = 4; i < Math.min(7, trail.length); i++) {
+          const smokeAlpha = 0.15 * (1 - (i - 4) / 3);
+          const smokeSize = size * 0.5 * (1 + (i - 4) * 0.3);
+          const smokeY = trail[i].y - (i - 4) * 3;
+          g.circle(trail[i].x, smokeY, smokeSize)
+            .fill({ color: 0x444444, alpha: smokeAlpha });
+        }
       }
     }
   }

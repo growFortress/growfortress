@@ -10,7 +10,10 @@ export const GUILD_CONSTANTS = {
   MAX_NAME_LENGTH: 30, // Increased from 24 to 30
   TAG_MIN_LENGTH: 2,   // Decreased from 3 to 2
   TAG_MAX_LENGTH: 5,
-  MAX_DESCRIPTION_LENGTH: 500, // Increased from 200 to 500
+  MAX_DESCRIPTION_LENGTH: 1000, // Public description visible to everyone
+  MAX_NOTES_LENGTH: 5000, // Internal notes visible only to members
+  MAX_EMBLEM_URL_LENGTH: 500, // Emblem/logo URL
+  MAX_CHAT_MESSAGE_LENGTH: 500, // Guild chat message max length
 
   // Member limits (based on Kwatera structure level)
   MEMBER_BASE_CAPACITY: 10,
@@ -248,6 +251,8 @@ export const GuildSchema = z.object({
   name: z.string(),
   tag: z.string(),
   description: z.string().nullable(),
+  internalNotes: z.string().nullable().optional(), // Private notes visible only to members
+  emblemUrl: z.string().nullable().optional(), // Guild emblem/logo URL
   // Structure levels (0-20 each)
   structures: GuildStructureLevelsSchema,
   honor: z.number().int().min(0),
@@ -289,6 +294,24 @@ export const UpdateGuildRequestSchema = z.object({
   settings: GuildSettingsSchema.partial().optional(),
 });
 export type UpdateGuildRequest = z.infer<typeof UpdateGuildRequestSchema>;
+
+// Update description request
+export const UpdateGuildDescriptionRequestSchema = z.object({
+  description: z.string().max(GUILD_CONSTANTS.MAX_DESCRIPTION_LENGTH).nullable(),
+});
+export type UpdateGuildDescriptionRequest = z.infer<typeof UpdateGuildDescriptionRequestSchema>;
+
+// Update notes request
+export const UpdateGuildNotesRequestSchema = z.object({
+  notes: z.string().max(GUILD_CONSTANTS.MAX_NOTES_LENGTH).nullable(),
+});
+export type UpdateGuildNotesRequest = z.infer<typeof UpdateGuildNotesRequestSchema>;
+
+// Update emblem request
+export const UpdateGuildEmblemRequestSchema = z.object({
+  emblemUrl: z.string().max(GUILD_CONSTANTS.MAX_EMBLEM_URL_LENGTH).nullable(),
+});
+export type UpdateGuildEmblemRequest = z.infer<typeof UpdateGuildEmblemRequestSchema>;
 
 export const GuildSearchQuerySchema = z.object({
   search: z.string().min(1).max(50).optional(),
@@ -822,6 +845,37 @@ export const GuildBossAttackResponseSchema = z.object({
 export type GuildBossAttackResponse = z.infer<typeof GuildBossAttackResponseSchema>;
 
 // ============================================================================
+// GUILD CHAT
+// ============================================================================
+
+export const GuildChatMessageSchema = z.object({
+  id: z.string(),
+  senderId: z.string(),
+  senderName: z.string(),
+  content: z.string(),
+  createdAt: z.string().datetime(),
+});
+export type GuildChatMessage = z.infer<typeof GuildChatMessageSchema>;
+
+export const SendGuildMessageRequestSchema = z.object({
+  content: z.string().min(1).max(GUILD_CONSTANTS.MAX_CHAT_MESSAGE_LENGTH),
+});
+export type SendGuildMessageRequest = z.infer<typeof SendGuildMessageRequestSchema>;
+
+export const GuildChatMessagesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+export type GuildChatMessagesQuery = z.infer<typeof GuildChatMessagesQuerySchema>;
+
+export const GuildChatMessagesResponseSchema = z.object({
+  messages: z.array(GuildChatMessageSchema),
+  total: z.number().int().min(0),
+  hasMore: z.boolean(),
+});
+export type GuildChatMessagesResponse = z.infer<typeof GuildChatMessagesResponseSchema>;
+
+// ============================================================================
 // ERROR CODES
 // ============================================================================
 
@@ -898,6 +952,10 @@ export const GUILD_ERROR_CODES = {
   // Structure upgrade errors
   STRUCTURE_MAX_LEVEL: 'STRUCTURE_MAX_LEVEL',
   STRUCTURE_INVALID: 'STRUCTURE_INVALID',
+
+  // Chat errors
+  CHAT_MESSAGE_TOO_LONG: 'CHAT_MESSAGE_TOO_LONG',
+  CHAT_RATE_LIMIT: 'CHAT_RATE_LIMIT',
 } as const;
 
 export type GuildErrorCode = keyof typeof GUILD_ERROR_CODES;

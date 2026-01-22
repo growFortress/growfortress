@@ -551,19 +551,60 @@ export class VFXSystem {
 
   private spawnFireAura(x: number, y: number, intensity: number): void {
     const colors = CLASS_VFX_COLORS.fire;
-    for (let i = 0; i < 2; i++) {
+
+    // Main flame particles (more numerous and varied)
+    for (let i = 0; i < 4; i++) {
       const p = this.pool.acquire();
-      p.x = x + (Math.random() - 0.5) * 15;
-      p.y = y + (Math.random() - 0.5) * 10;
-      p.vx = (Math.random() - 0.5) * 20;
-      p.vy = -30 - Math.random() * 30;
-      p.life = 0.2 + Math.random() * 0.2;
+      p.x = x + (Math.random() - 0.5) * 20;
+      p.y = y + (Math.random() - 0.5) * 12;
+      p.vx = (Math.random() - 0.5) * 25;
+      p.vy = -40 - Math.random() * 50;
+      p.life = 0.25 + Math.random() * 0.25;
       p.maxLife = p.life;
-      p.size = (3 + Math.random() * 3) * intensity;
-      p.color = Math.random() > 0.3 ? colors.primary : colors.glow;
+      p.startSize = (3 + Math.random() * 3) * intensity;
+      p.endSize = (8 + Math.random() * 5) * intensity;
+      p.size = p.startSize;
+      p.color = Math.random() > 0.4 ? colors.primary : (Math.random() > 0.5 ? colors.glow : colors.secondary);
       p.shape = 'circle';
-      p.gravity = -50;
+      p.gravity = -70;
+      p.startAlpha = 0.8;
+      p.endAlpha = 0;
       this.particles.push(p);
+    }
+
+    // Rising embers/sparks
+    if (Math.random() > 0.5) {
+      const ember = this.pool.acquire();
+      ember.x = x + (Math.random() - 0.5) * 15;
+      ember.y = y;
+      ember.vx = (Math.random() - 0.5) * 35;
+      ember.vy = -60 - Math.random() * 40;
+      ember.life = 0.4 + Math.random() * 0.3;
+      ember.maxLife = ember.life;
+      ember.size = 2 + Math.random() * 2;
+      ember.color = colors.glow;
+      ember.shape = 'spark';
+      ember.gravity = -40;
+      this.particles.push(ember);
+    }
+
+    // Occasional heat shimmer
+    if (Math.random() > 0.7) {
+      const shimmer = this.pool.acquire();
+      shimmer.x = x;
+      shimmer.y = y - 5;
+      shimmer.vx = 0;
+      shimmer.vy = -20;
+      shimmer.life = 0.2;
+      shimmer.maxLife = 0.2;
+      shimmer.startSize = 10 * intensity;
+      shimmer.endSize = 20 * intensity;
+      shimmer.size = shimmer.startSize;
+      shimmer.color = colors.glow;
+      shimmer.shape = 'circle';
+      shimmer.startAlpha = 0.15;
+      shimmer.endAlpha = 0;
+      this.particles.push(shimmer);
     }
   }
 

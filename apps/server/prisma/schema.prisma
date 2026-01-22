@@ -18,12 +18,20 @@ model User {
   email               String?  @unique
   passwordHash        String
   displayName         String
+  referralCode        String?  @unique
+  referredById        String?
+  referredBy          User?    @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals           User[]   @relation("UserReferrals")
   role                Role     @default(USER)
   banned              Boolean  @default(false)
   createdAt           DateTime @default(now())
   currentWave         Int      @default(0)
   highestWave         Int      @default(0)
   activeGameSessionId String?  @unique
+
+  // Guest mode - temporary users before registration
+  isGuest        Boolean   @default(false)
+  guestExpiresAt DateTime? // Optional cleanup timestamp (30 days after creation)
 
   // Idle rewards tracking
   lastIdleClaimAt DateTime @default(now())
@@ -145,6 +153,8 @@ model User {
 
   // Support Tickets
   supportTickets SupportTicket[]
+
+  @@index([referredById])
 }
 
 model PasswordResetToken {
@@ -739,6 +749,8 @@ model Guild {
   name        String  @unique
   tag         String  @unique // 3-5 uppercase chars, e.g., "APEX"
   description String? @default("")
+  internalNotes String? @db.Text // Private notes visible only to members (max 5000 chars)
+  emblemUrl   String? // Guild emblem/logo URL (max 500 chars)
 
   // Structure levels (0-20 each)
   structureKwatera    Int @default(0) // Barracks: +1 member capacity per level (base 10, max 30)

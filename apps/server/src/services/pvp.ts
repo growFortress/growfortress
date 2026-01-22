@@ -5,7 +5,6 @@ import {
   runArenaBattle,
   getProgressionBonuses,
   getMaxHeroSlots,
-  getMaxTurretSlots,
   isClassUnlockedAtLevel,
   calculateArenaPower,
   createDefaultStatUpgrades,
@@ -42,15 +41,22 @@ interface UserBuildData {
   commanderLevel: number;
   fortressClass: FortressClass;
   heroIds: string[];
-  turretConfigs: Array<{
-    definitionId: string;
-    slotIndex: number;
-    class: FortressClass;
-  }>;
+  heroConfigs: ArenaHeroBuildConfig[];
   damageMultiplier: number;
   hpMultiplier: number;
   power: number;
 }
+
+type ArenaPowerHeroConfig = ArenaHeroConfig;
+type ArenaHeroBuildConfig = NonNullable<ArenaBuildConfig["heroConfigs"]>[number];
+type ArenaUserRecord = Prisma.UserGetPayload<{
+  include: {
+    progression: true;
+    powerUpgrades: true;
+    inventory: true;
+    artifacts: { where: { equippedToHeroId: { not: null } } };
+  };
+}>;
 
 // ============================================================================
 // HONOR CALCULATION (Hybrid system - based on power difference)
@@ -94,6 +100,119 @@ function calculateHonorChange(
 // HELPERS
 // ============================================================================
 
+function normalizeHeroTier(value: unknown): 1 | 2 | 3 {
+  if (value === 2 || value === 3) {
+    return value;
+  }
+  return 1;
+}
+
+function getHeroUpgradesData(
+  rawHeroUpgrades: unknown,
+): Array<{ heroId: string; statUpgrades: StatUpgrades }> {
+  return Array.isArray(rawHeroUpgrades)
+    ? (rawHeroUpgrades as Array<{ heroId: string; statUpgrades: StatUpgrades }>)
+    : [];
+}
+
+function buildArenaHeroConfigs(
+  heroIds: string[],
+  heroUpgradesData: Array<{ heroId: string; statUpgrades: StatUpgrades }>,
+  heroTiers: Record<string, number>,
+  artifactMap: Map<string, string>,
+): {
+  powerHeroes: ArenaPowerHeroConfig[];
+  buildHeroes: ArenaHeroBuildConfig[];
+} {
+  const powerHeroes: ArenaPowerHeroConfig[] = [];
+  const buildHeroes: ArenaHeroBuildConfig[] = [];
+
+  for (const heroId of heroIds) {
+    const heroUpgrade = heroUpgradesData.find((h) => h.heroId === heroId);
+    const statUpgrades =
+      heroUpgrade?.statUpgrades ?? createDefaultStatUpgrades();
+    const tier = normalizeHeroTier(heroTiers[heroId]);
+    const equippedArtifactId = artifactMap.get(heroId);
+
+    powerHeroes.push({
+      heroId,
+      tier,
+      upgrades: statUpgrades,
+      equippedArtifactId,
+    });
+
+    buildHeroes.push({
+      heroId,
+      tier,
+      statUpgrades,
+      equippedArtifactId,
+    });
+  }
+
+  return { powerHeroes, buildHeroes };
+}
+
+function extractArenaDataFromUser(user: ArenaUserRecord): {
+  commanderLevel: number;
+  heroIds: string[];
+  fortressUpgrades: StatUpgrades;
+  powerHeroes: ArenaPowerHeroConfig[];
+  buildHeroes: ArenaHeroBuildConfig[];
+} {
+  const commanderLevel = user.progression?.level ?? 1;
+
+  const maxHeroSlots = getMaxHeroSlots(commanderLevel);
+  const unlockedHeroes = user.inventory?.unlockedHeroIds ?? [];
+  const defaultHero = user.defaultHeroId ?? "vanguard";
+  const heroIds =
+    unlockedHeroes.length > 0
+      ? unlockedHeroes.slice(0, maxHeroSlots)
+      : [defaultHero];
+
+  const powerUpgrades = user.powerUpgrades;
+  const fortressUpgrades =
+    (
+      powerUpgrades?.fortressUpgrades as unknown as {
+        statUpgrades?: StatUpgrades;
+      } | null
+    )?.statUpgrades ?? createDefaultStatUpgrades();
+
+  const heroUpgradesData = getHeroUpgradesData(powerUpgrades?.heroUpgrades);
+  const heroTiers =
+    (powerUpgrades?.heroTiers as Record<string, number> | null) ?? {};
+
+  const artifactMap = new Map(
+    (user.artifacts ?? []).map((a) => [
+      a.equippedToHeroId as string,
+      a.artifactId,
+    ]),
+  );
+
+  const { powerHeroes, buildHeroes } = buildArenaHeroConfigs(
+    heroIds,
+    heroUpgradesData,
+    heroTiers,
+    artifactMap,
+  );
+
+  return {
+    commanderLevel,
+    heroIds,
+    fortressUpgrades,
+    powerHeroes,
+    buildHeroes,
+  };
+}
+
+function calculateArenaPowerFromUser(user: ArenaUserRecord): number {
+  if (!user.progression) {
+    return 0;
+  }
+  const { commanderLevel, fortressUpgrades, powerHeroes } =
+    extractArenaDataFromUser(user);
+  return calculateArenaPower(fortressUpgrades, commanderLevel, powerHeroes);
+}
+
 /**
  * Calculate user's arena-specific power
  * Arena power = fortress + active heroes (with equipped artifacts)
@@ -116,50 +235,7 @@ async function getUserArenaPower(userId: string): Promise<number> {
     return 0;
   }
 
-  const commanderLevel = user.progression.level;
-
-  // Get hero IDs (active loadout)
-  const maxHeroSlots = getMaxHeroSlots(commanderLevel);
-  const unlockedHeroes = user.inventory?.unlockedHeroIds ?? [];
-  const defaultHero = user.defaultHeroId ?? "vanguard";
-  const heroIds =
-    unlockedHeroes.length > 0
-      ? unlockedHeroes.slice(0, maxHeroSlots)
-      : [defaultHero];
-
-  // Parse power upgrades
-  const powerUpgrades = user.powerUpgrades;
-  const fortressUpgrades =
-    (
-      powerUpgrades?.fortressUpgrades as unknown as {
-        statUpgrades?: StatUpgrades;
-      } | null
-    )?.statUpgrades ?? createDefaultStatUpgrades();
-
-  // heroUpgrades might be an object or array depending on schema version
-  const rawHeroUpgrades = powerUpgrades?.heroUpgrades;
-  const heroUpgradesData: Array<{ heroId: string; statUpgrades: StatUpgrades }> =
-    Array.isArray(rawHeroUpgrades)
-      ? (rawHeroUpgrades as unknown as Array<{ heroId: string; statUpgrades: StatUpgrades }>)
-      : [];
-
-  // Build hero configs with their upgrades and equipped artifacts
-  const artifactMap = new Map(
-    user.artifacts.map((a) => [a.equippedToHeroId, a.artifactId]),
-  );
-
-  // Hero tiers default to 1 (tier progression not implemented in this schema)
-  const activeHeroes: ArenaHeroConfig[] = heroIds.map((heroId) => {
-    const heroUpgrade = heroUpgradesData.find((h) => h.heroId === heroId);
-    return {
-      heroId,
-      tier: 1 as const,
-      upgrades: heroUpgrade?.statUpgrades ?? createDefaultStatUpgrades(),
-      equippedArtifactId: artifactMap.get(heroId),
-    };
-  });
-
-  return calculateArenaPower(fortressUpgrades, commanderLevel, activeHeroes);
+  return calculateArenaPowerFromUser(user);
 }
 
 /**
@@ -172,6 +248,9 @@ async function getUserBuildData(userId: string): Promise<UserBuildData | null> {
       progression: true,
       powerUpgrades: true,
       inventory: true,
+      artifacts: {
+        where: { equippedToHeroId: { not: null } },
+      },
     },
   });
 
@@ -179,7 +258,8 @@ async function getUserBuildData(userId: string): Promise<UserBuildData | null> {
     return null;
   }
 
-  const commanderLevel = user.progression?.level ?? 1;
+  const { commanderLevel, heroIds, fortressUpgrades, powerHeroes, buildHeroes } =
+    extractArenaDataFromUser(user);
   const progressionBonuses = getProgressionBonuses(commanderLevel);
 
   // Get fortress class
@@ -188,51 +268,21 @@ async function getUserBuildData(userId: string): Promise<UserBuildData | null> {
     ? (requestedClass as FortressClass)
     : "natural";
 
-  // Get hero IDs (use default hero if no specific loadout)
-  const maxHeroSlots =
-    progressionBonuses.maxHeroSlots || getMaxHeroSlots(commanderLevel);
-  const unlockedHeroes = user.inventory?.unlockedHeroIds ?? [];
-  const defaultHero = user.defaultHeroId ?? "vanguard";
-  const heroIds =
-    unlockedHeroes.length > 0
-      ? unlockedHeroes.slice(0, maxHeroSlots)
-      : [defaultHero];
-
-  // Get turret configs
-  const maxTurretSlots =
-    progressionBonuses.maxTurretSlots || getMaxTurretSlots(commanderLevel);
-  const unlockedTurrets = user.inventory?.unlockedTurretIds ?? [];
-  const defaultTurret = user.defaultTurretType ?? "railgun";
-  const turretTypes =
-    unlockedTurrets.length > 0
-      ? unlockedTurrets.slice(0, maxTurretSlots)
-      : [defaultTurret];
-
-  const turretConfigs = turretTypes.map((definitionId, index) => ({
-    definitionId,
-    slotIndex: index,
-    class: fortressClass,
-  }));
-
   // Get power multipliers from upgrades
-  const powerUpgrades = user.powerUpgrades;
   let damageMultiplier = progressionBonuses.damageMultiplier;
   let hpMultiplier = 1.0;
 
-  if (powerUpgrades) {
-    // Parse fortress upgrades for HP/damage bonuses
-    const fortressUpgrades = powerUpgrades.fortressUpgrades as {
-      statUpgrades?: { hp?: number; damage?: number };
-    } | null;
+  // Each upgrade level adds ~2% (0.02 per level)
+  const hpLevels = fortressUpgrades?.hp ?? 0;
+  const damageLevels = fortressUpgrades?.damage ?? 0;
+  hpMultiplier += hpLevels * 0.02;
+  damageMultiplier += damageLevels * 0.02;
 
-    if (fortressUpgrades?.statUpgrades) {
-      // Each upgrade level adds ~2% (0.02 per level)
-      const hpLevels = fortressUpgrades.statUpgrades.hp ?? 0;
-      const damageLevels = fortressUpgrades.statUpgrades.damage ?? 0;
-      hpMultiplier += hpLevels * 0.02;
-      damageMultiplier += damageLevels * 0.02;
-    }
-  }
+  const power = calculateArenaPower(
+    fortressUpgrades,
+    commanderLevel,
+    powerHeroes,
+  );
 
   return {
     userId,
@@ -240,10 +290,10 @@ async function getUserBuildData(userId: string): Promise<UserBuildData | null> {
     commanderLevel,
     fortressClass,
     heroIds,
-    turretConfigs,
+    heroConfigs: buildHeroes,
     damageMultiplier,
     hpMultiplier,
-    power: powerUpgrades?.cachedTotalPower ?? 0,
+    power,
   };
 }
 
@@ -257,6 +307,7 @@ function toBuildConfig(data: UserBuildData): ArenaBuildConfig {
     fortressClass: data.fortressClass,
     commanderLevel: data.commanderLevel,
     heroIds: data.heroIds,
+    heroConfigs: data.heroConfigs,
     // Convert multipliers to additive bonuses (1.2 multiplier → 0.2 bonus)
     damageBonus: data.damageMultiplier - 1,
     hpBonus: data.hpMultiplier - 1,
@@ -277,7 +328,7 @@ async function canChallengeUser(
     Date.now() - PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000,
   );
 
-  const recentChallenges = (await prisma.pvpChallenge.findMany({
+  const recentChallenges = await prisma.pvpChallenge.findMany({
     where: {
       challengerId,
       challengedId,
@@ -285,14 +336,18 @@ async function canChallengeUser(
     },
     orderBy: { createdAt: "desc" },
     take: PVP_CONSTANTS.MAX_CHALLENGES_PER_OPPONENT,
-  })) ?? [];
+  });
 
   if (recentChallenges.length < PVP_CONSTANTS.MAX_CHALLENGES_PER_OPPONENT) {
     return { canChallenge: true };
   }
 
   // Calculate when cooldown ends (oldest challenge + 24h)
+  // Safe access - we know length >= MAX_CHALLENGES_PER_OPPONENT from above check
   const oldestChallenge = recentChallenges[recentChallenges.length - 1];
+  if (!oldestChallenge) {
+    return { canChallenge: true };
+  }
   const cooldownEndsAt = new Date(
     oldestChallenge.createdAt.getTime() +
       PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000,
@@ -310,11 +365,22 @@ async function canChallengeUser(
 
 // Minimum power range for matchmaking (ensures new players can find opponents)
 const MIN_POWER_RANGE = 1000;
-const ARENA_OPPONENTS_COUNT = 6;
+const ARENA_OPPONENTS_MAX = 8;
+const OPPONENTS_POOL_SIZE = 50;
+
+/** Fisher–Yates shuffle */
+function shuffle<T>(arr: T[]): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 /**
- * Get list of random opponents for PVP arena
- * Always returns up to 6 random opponents within power range (minimum 0-1000)
+ * Get list of random opponents for PVP arena.
+ * Returns up to 8 random opponents within power range (shuffled from pool).
  */
 export async function getOpponents(
   userId: string,
@@ -328,95 +394,82 @@ export async function getOpponents(
     pvpLosses: number;
     canChallenge: boolean;
     challengeCooldownEndsAt?: string;
+    isOnline?: boolean;
   }>;
   total: number;
   myPower: number;
 }> {
-  // Get user's arena power (fortress + active heroes with artifacts)
   const myPower = await getUserArenaPower(userId);
-
-  // Use cached total power for opponent matching (indexed, performant)
-  const userPower = await prisma.powerUpgrades.findUnique({
-    where: { userId },
-    select: { cachedTotalPower: true },
-  });
-
-  // Calculate power range with minimum floor of 0-1000
-  const matchingPower = userPower?.cachedTotalPower || myPower;
   const percentMin = Math.floor(
-    matchingPower * (1 - PVP_CONSTANTS.POWER_RANGE_PERCENT),
+    myPower * (1 - PVP_CONSTANTS.POWER_RANGE_PERCENT),
   );
   const percentMax = Math.ceil(
-    matchingPower * (1 + PVP_CONSTANTS.POWER_RANGE_PERCENT),
+    myPower * (1 + PVP_CONSTANTS.POWER_RANGE_PERCENT),
   );
 
-  // Ensure minimum range of 0-1000 for new/low power players
-  const minPower = Math.min(percentMin, 0);
+  const minPower = Math.max(percentMin, 0);
   const maxPower = Math.max(percentMax, MIN_POWER_RANGE);
 
-  // Find all eligible opponents (including those without powerUpgrades record)
-  const totalEligible = await prisma.user.count({
-    where: {
-      id: { not: userId },
-      banned: false,
-      OR: [
-        // Players with powerUpgrades in range
-        {
-          powerUpgrades: {
-            cachedTotalPower: {
-              gte: minPower,
-              lte: maxPower,
-            },
-          },
+  const where: Prisma.UserWhereInput = {
+    id: { not: userId },
+    banned: false,
+    OR: [
+      {
+        powerUpgrades: {
+          cachedTotalPower: { gte: minPower, lte: maxPower },
         },
-        // Players without powerUpgrades record (new players, power = 0)
-        {
-          powerUpgrades: null,
-        },
-      ],
-    },
-  });
+      },
+      { powerUpgrades: null },
+    ],
+  };
 
-  const take = options?.limit ?? ARENA_OPPONENTS_COUNT;
-  const skip = options?.offset ?? 0;
+  const totalEligible = await prisma.user.count({ where });
+  const poolSize = Math.min(OPPONENTS_POOL_SIZE, totalEligible, 500);
+  const maxOffset = Math.max(0, totalEligible - poolSize);
+  const requestedOffset = options?.offset;
+  const offset = Number.isFinite(requestedOffset)
+    ? Math.min(Math.max(requestedOffset ?? 0, 0), maxOffset)
+    : maxOffset > 0
+      ? randomInt(maxOffset + 1)
+      : 0;
 
-  const users = await prisma.user.findMany({
-    where: {
-      id: { not: userId },
-      banned: false,
-      OR: [
-        {
-          powerUpgrades: {
-            cachedTotalPower: {
-              gte: minPower,
-              lte: maxPower,
-            },
-          },
-        },
-        {
-          powerUpgrades: null,
-        },
-      ],
-    },
+  const pool = (await prisma.user.findMany({
+    where,
     include: {
-      powerUpgrades: {
-        select: { cachedTotalPower: true },
+      progression: true,
+      powerUpgrades: true,
+      inventory: true,
+      artifacts: {
+        where: { equippedToHeroId: { not: null } },
       },
     },
-    take,
-    skip,
-  });
+    orderBy: { id: "asc" },
+    skip: offset,
+    take: poolSize,
+  })) as ArenaUserRecord[];
 
-  const limitedUsers = users.slice(0, take);
+  const candidates = pool
+    .map((user) => ({
+      user,
+      power: calculateArenaPowerFromUser(user),
+    }))
+    .filter((entry) => entry.power >= minPower && entry.power <= maxPower);
 
-  // Check cooldowns for each opponent
+  const shuffled = shuffle(candidates);
+  const take = Math.min(
+    ARENA_OPPONENTS_MAX,
+    options?.limit ?? ARENA_OPPONENTS_MAX,
+    shuffled.length,
+  );
+  const limited = shuffled.slice(0, take);
+
   const opponents = await Promise.all(
-    limitedUsers.map(async (user) => {
+    limited.map(async ({ user, power }) => {
       const cooldownInfo = await canChallengeUser(userId, user.id);
       return {
         userId: user.id,
         displayName: user.displayName,
-        power: user.powerUpgrades?.cachedTotalPower ?? 0,
+        power,
         pvpWins: user.pvpWins,
         pvpLosses: user.pvpLosses,
         canChallenge: cooldownInfo.canChallenge,
@@ -426,27 +479,56 @@ export async function getOpponents(
     }),
   );
 
-  return { opponents, total: totalEligible, myPower };
+  return { opponents, total: candidates.length, myPower };
 }
 
 /**
- * Create a new challenge and immediately run the battle (auto-accept)
+ * Create a new challenge and immediately run the battle (instant execute).
+ * No PENDING — seed is generated, battle runs, result stored and returned.
  */
 export async function createChallenge(
   challengerId: string,
   challengedId: string,
   options?: { enforcePowerRange?: boolean }
 ): Promise<{
-  id: string;
-  challengerId: string;
-  challengerName: string;
-  challengerPower: number;
-  challengedId: string;
-  challengedName: string;
-  challengedPower: number;
-  status: PvpChallengeStatus;
-  createdAt: string;
-  expiresAt: string;
+  challenge: {
+    id: string;
+    challengerId: string;
+    challengerName: string;
+    challengerPower: number;
+    challengedId: string;
+    challengedName: string;
+    challengedPower: number;
+    status: PvpChallengeStatus;
+    createdAt: string;
+    expiresAt: string;
+    acceptedAt?: string;
+    resolvedAt?: string;
+    winnerId?: string;
+  };
+  battleData: {
+    seed: number;
+    challengerBuild: ArenaBuildConfig;
+    challengedBuild: ArenaBuildConfig;
+  };
+  result: {
+    winnerId: string | null;
+    winReason: string;
+    challengerStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    challengedStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    duration: number;
+  };
+  rewards?: {
+    honorChange: number;
+  };
 }> {
   // Validate not challenging self
   if (challengerId === challengedId) {
@@ -492,28 +574,154 @@ export async function createChallenge(
     Date.now() + PVP_CONSTANTS.CHALLENGE_EXPIRY_HOURS * 60 * 60 * 1000,
   );
 
-  const challenge = await prisma.pvpChallenge.create({
-    data: {
-      challengerId,
-      challengedId,
-      challengerPower: challengerBuild.power,
-      challengedPower: challengedBuild.power,
-      status: "PENDING",
-      expiresAt,
-    },
+  const seed = randomInt(2147483647);
+  const challengerConfig = toBuildConfig(challengerBuild);
+  const challengedConfig = toBuildConfig(challengedBuild);
+  const battleResult = runArenaBattle(seed, challengerConfig, challengedConfig);
+
+  let winnerId: string | null = null;
+  if (battleResult.winner === "left") {
+    winnerId = challengerId;
+  } else if (battleResult.winner === "right") {
+    winnerId = challengedId;
+  }
+
+  const challengerHeroesAlive = battleResult.leftStats.heroesAlive ?? 0;
+  const challengedHeroesAlive = battleResult.rightStats.heroesAlive ?? 0;
+
+  let challengerHonorChange = 0;
+  let challengedHonorChange = 0;
+
+  if (winnerId) {
+    const winnerPower =
+      winnerId === challengerId ? challengerBuild.power : challengedBuild.power;
+    const loserPower =
+      winnerId === challengerId ? challengedBuild.power : challengerBuild.power;
+    const winnerHonorGain = calculateHonorChange(winnerPower, loserPower, true);
+    const loserHonorLoss = calculateHonorChange(loserPower, winnerPower, false);
+
+    if (winnerId === challengerId) {
+      challengerHonorChange = winnerHonorGain;
+      challengedHonorChange = loserHonorLoss;
+    } else {
+      challengerHonorChange = loserHonorLoss;
+      challengedHonorChange = winnerHonorGain;
+    }
+  }
+
+  const now = new Date();
+
+  const challengeRecord = await prisma.$transaction(async (tx) => {
+    const created = await tx.pvpChallenge.create({
+      data: {
+        challengerId,
+        challengedId,
+        challengerPower: challengerBuild.power,
+        challengedPower: challengedBuild.power,
+        status: "RESOLVED",
+        seed,
+        expiresAt,
+        acceptedAt: now,
+        resolvedAt: now,
+        winnerId,
+      },
+    });
+
+    await tx.pvpResult.create({
+      data: {
+        challengeId: created.id,
+        winnerId,
+        winReason: battleResult.winReason,
+        challengerFinalHp: battleResult.leftStats.finalHp,
+        challengerDamageDealt: battleResult.leftStats.damageDealt,
+        challengerHeroesAlive,
+        challengedFinalHp: battleResult.rightStats.finalHp,
+        challengedDamageDealt: battleResult.rightStats.damageDealt,
+        challengedHeroesAlive,
+        duration: battleResult.duration,
+        challengerBuild: challengerConfig as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["challengerBuild"],
+        challengedBuild: challengedConfig as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["challengedBuild"],
+        replayEvents: battleResult.replayEvents as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["replayEvents"],
+      },
+    });
+
+    await tx.user.update({
+      where: { id: challengerId },
+      data: {
+        ...(winnerId === challengerId
+          ? { pvpWins: { increment: 1 } }
+          : winnerId
+            ? { pvpLosses: { increment: 1 } }
+            : {}),
+        honor: { increment: challengerHonorChange },
+      },
+    });
+
+    await tx.user.update({
+      where: { id: challengedId },
+      data: {
+        ...(winnerId === challengedId
+          ? { pvpWins: { increment: 1 } }
+          : winnerId
+            ? { pvpLosses: { increment: 1 } }
+            : {}),
+        honor: { increment: challengedHonorChange },
+      },
+    });
+
+    return created;
   });
 
+  if (challengerHonorChange > 0) {
+    recordWeeklyHonorGain(challengerId, challengerHonorChange).catch(() => {});
+  }
+  if (challengedHonorChange > 0) {
+    recordWeeklyHonorGain(challengedId, challengedHonorChange).catch(() => {});
+  }
+
   return {
-    id: challenge.id,
-    challengerId,
-    challengerName: challengerBuild.displayName,
-    challengerPower: challenge.challengerPower,
-    challengedId,
-    challengedName: challengedBuild.displayName,
-    challengedPower: challenge.challengedPower,
-    status: "PENDING",
-    createdAt: challenge.createdAt.toISOString(),
-    expiresAt: challenge.expiresAt.toISOString(),
+    challenge: {
+      id: challengeRecord.id,
+      challengerId,
+      challengerName: challengerBuild.displayName,
+      challengerPower: challengeRecord.challengerPower,
+      challengedId,
+      challengedName: challengedBuild.displayName,
+      challengedPower: challengeRecord.challengedPower,
+      status: "RESOLVED" as PvpChallengeStatus,
+      createdAt: challengeRecord.createdAt.toISOString(),
+      expiresAt: challengeRecord.expiresAt.toISOString(),
+      acceptedAt: now.toISOString(),
+      resolvedAt: now.toISOString(),
+      winnerId: winnerId ?? undefined,
+    },
+    battleData: {
+      seed,
+      challengerBuild: challengerConfig,
+      challengedBuild: challengedConfig,
+    },
+    result: {
+      winnerId,
+      winReason: battleResult.winReason,
+      challengerStats: {
+        finalHp: battleResult.leftStats.finalHp,
+        damageDealt: battleResult.leftStats.damageDealt,
+        heroesAlive: challengerHeroesAlive,
+      },
+      challengedStats: {
+        finalHp: battleResult.rightStats.finalHp,
+        damageDealt: battleResult.rightStats.damageDealt,
+        heroesAlive: challengedHeroesAlive,
+      },
+      duration: battleResult.duration,
+    },
+    rewards: { honorChange: challengerHonorChange },
   };
 }
 
@@ -1024,15 +1232,15 @@ export async function getReplayData(
     );
   }
 
-  if (challenge.status !== "RESOLVED" || !challenge.result) {
+  if (challenge.status !== "RESOLVED" || !challenge.result || challenge.seed === null) {
     throw new PvpError(
       "Challenge is not resolved yet",
-      "CHALLENGE_NOT_PENDING",
+      "CHALLENGE_NOT_RESOLVED",
     );
   }
 
   return {
-    seed: challenge.seed!,
+    seed: challenge.seed,
     challengerBuild: challenge.result
       .challengerBuild as unknown as ArenaBuildConfig,
     challengedBuild: challenge.result

@@ -107,6 +107,24 @@ describe('Guild Treasury Service', () => {
       expect(result.nextAllowedAt).toBeDefined();
     });
 
+    it('applies cooldown for any withdrawal in the guild', async () => {
+      mockPrisma.guildMember.findUnique.mockResolvedValue(
+        createMockGuildMember({ role: 'LEADER' })
+      );
+      // Recent withdrawal by a different user
+      mockPrisma.guildTreasuryLog.findFirst.mockResolvedValue({
+        createdAt: new Date(Date.now() - 60 * 60 * 1000),
+        userId: 'other-user',
+      });
+
+      const result = await canWithdraw('guild-123', 'user-123');
+
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toBe(GUILD_ERROR_CODES.WITHDRAWAL_COOLDOWN);
+      const callArgs = mockPrisma.guildTreasuryLog.findFirst.mock.calls[0]?.[0];
+      expect(callArgs?.where).not.toHaveProperty('userId');
+    });
+
     it('allows withdrawal after cooldown period', async () => {
       mockPrisma.guildMember.findUnique.mockResolvedValue(
         createMockGuildMember({ role: 'LEADER' })

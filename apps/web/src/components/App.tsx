@@ -14,7 +14,7 @@ import { SessionRecoveryModal } from "./modals/SessionRecoveryModal.js";
 import { RewardsModal } from "./modals/RewardsModal.js";
 import { SettingsMenu } from "./modals/SettingsMenu.js";
 import { BuildPresetsModal } from "./modals/BuildPresetsModal.js";
-import { PvpPanel, PvpBattleResult, PvpReplayViewer } from "./pvp/index.js";
+import { PvpPanel, PvpBattleResult, PvpReplayViewer, ArenaBattleScene } from "./pvp/index.js";
 import {
   GuildPanel,
   GuildCreateModal,
@@ -32,6 +32,7 @@ import { SupportPage } from "./support/SupportPage.js";
 import { ArtifactsModal } from "./modals/ArtifactsModal.js";
 import { IdleRewardsModal } from "./modals/IdleRewardsModal.js";
 import { PillarUnlockModal } from "./modals/PillarUnlockModal.js";
+import { GuestRegistrationModal } from "./modals/GuestRegistrationModal.js";
 import { AdminBroadcastPanel, AdminModerationPanel } from "./admin/index.js";
 import { ErrorBoundary } from "./shared/ErrorBoundary.js";
 import { LoadingScreen } from "./shared/LoadingScreen.js";
@@ -55,6 +56,7 @@ import {
   refreshTokensApi,
   getArtifacts,
   logout,
+  createGuestSession,
 } from "../api/client.js";
 import {
   isAuthenticated as checkAuth,
@@ -62,6 +64,7 @@ import {
   setDisplayName,
   onAuthInvalidated,
   getUserId,
+  isGuestUser,
 } from "../api/auth.js";
 import { useTranslation } from "../i18n/useTranslation.js";
 import {
@@ -88,9 +91,13 @@ import {
   updateLeaderboard,
   pillarUnlockModalVisible,
   closePillarUnlockModal,
+  isGuestMode,
+  setGuestMode,
+  clearGuestMode,
 } from "../state/index.js";
 import { fetchEnergy } from "../state/energy.signals.js";
 import { fetchPillarUnlocks } from "../state/pillarUnlocks.signals.js";
+import { captureReferralCodeFromUrl } from "../utils/referral.js";
 
 import {
   useQuery,
@@ -136,6 +143,10 @@ function AppContent() {
   const [savedSession, setSavedSession] =
     useState<ActiveSessionSnapshot | null>(null);
 
+  useEffect(() => {
+    captureReferralCodeFromUrl();
+  }, []);
+
   // Core Authentication State
   const [internalAuth, setInternalAuth] = useState(checkAuth());
   const { t } = useTranslation(["auth", "common"]);
@@ -178,6 +189,9 @@ function AppContent() {
       updateFromProfile(profile);
       setDisplayName(profile.displayName);
       isAuthSignal.value = true;
+
+      // Sync guest mode from profile
+      setGuestMode(profile.isGuest ?? false);
 
       if (!profile.onboardingCompleted) {
         showOnboardingModal.value = true;
@@ -271,6 +285,7 @@ function AppContent() {
       showSessionRecoveryModal.value = false;
       pendingSessionSnapshot.value = null;
       setSavedSession(null);
+      clearGuestMode();
       clearActiveSession().catch((err) =>
         console.error("Failed to clear session:", err),
       );
@@ -289,7 +304,12 @@ function AppContent() {
 
     const init = async () => {
       try {
+        // Check for existing valid auth
         if (checkAuth()) {
+          // Restore guest mode from storage if applicable
+          if (isGuestUser()) {
+            isGuestMode.value = true;
+          }
           setLoadingStage("loading_profile");
           return;
         }
@@ -298,18 +318,35 @@ function AppContent() {
         const refreshed = await refreshTokensApi();
 
         if (refreshed) {
+          // Restore guest mode from storage if applicable
+          if (isGuestUser()) {
+            isGuestMode.value = true;
+          }
           setInternalAuth(true);
           setLoadingStage("loading_profile");
         } else {
+          // No valid session - create guest session automatically
           await clearActiveSession();
           setSavedSession(null);
           pendingSessionSnapshot.value = null;
-          setLoadingStage("ready");
+
+          try {
+            console.log("[App] Creating guest session...");
+            await createGuestSession();
+            isGuestMode.value = true;
+            setInternalAuth(true);
+            setLoadingStage("loading_profile");
+          } catch (guestError) {
+            console.error("[App] Failed to create guest session:", guestError);
+            // Fall back to showing AuthScreen on error
+            setLoadingStage("ready");
+          }
         }
       } catch {
         clearTokens();
         isAuthSignal.value = false;
         setInternalAuth(false);
+        clearGuestMode();
         setLoadingStage("ready");
       }
     };
@@ -379,10 +416,27 @@ function AppContent() {
     }
   };
 
+  const handleGuestLogin = async () => {
+    authLoading.value = true;
+    authError.value = null;
+
+    try {
+      await createGuestSession();
+      setGuestMode(true);
+      setInternalAuth(true);
+      setLoadingStage("loading_profile");
+      await refetchProfile();
+    } catch (error) {
+      authError.value = t("errors.connectionFailed");
+      authLoading.value = false;
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     isAuthSignal.value = false;
     setInternalAuth(false);
+    clearGuestMode();
   };
 
   const loadProfile = async () => {
@@ -429,14 +483,14 @@ function AppContent() {
     // Pokaż AuthScreen gdy nie ma uwierzytelnienia i zakończyliśmy sprawdzanie
     if (loadingStage !== "checking_session" && !internalAuth) {
       content = (
-        <AuthScreen onLogin={handleLogin} onRegister={handleRegister} />
+        <AuthScreen onLogin={handleLogin} onRegister={handleRegister} onGuestLogin={handleGuestLogin} />
       );
     } else {
       // Jeden spójny ekran ładowania - identyczny jak HTML loader
       content = <LoadingScreen message={LOADING_MESSAGE} />;
     }
   } else if (!isAuthSignal.value) {
-    content = <AuthScreen onLogin={handleLogin} onRegister={handleRegister} />;
+    content = <AuthScreen onLogin={handleLogin} onRegister={handleRegister} onGuestLogin={handleGuestLogin} />;
   } else {
     content = (
       <ErrorBoundary>
@@ -507,6 +561,7 @@ function AppContent() {
         <PvpPanel />
         <PvpBattleResult />
         <PvpReplayViewer />
+        <ArenaBattleScene />
         <GuildPanel />
         <GuildCreateModal onSuccess={() => {}} />
         <GuildSearchModal onSuccess={() => {}} />
@@ -523,6 +578,7 @@ function AppContent() {
           visible={pillarUnlockModalVisible.value}
           onClose={closePillarUnlockModal}
         />
+        <GuestRegistrationModal />
         <AdminBroadcastPanel />
         <AdminModerationPanel />
       </ErrorBoundary>

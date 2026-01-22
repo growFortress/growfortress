@@ -5,9 +5,11 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
+    "prebuild": "prisma generate",
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
+    "pretypecheck": "prisma generate",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "test": "vitest run",

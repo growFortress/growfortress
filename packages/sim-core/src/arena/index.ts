@@ -16,6 +16,7 @@ export {
   type ArenaStats,
   type ArenaConfig,
   type ArenaBuildConfig,
+  type ArenaHeroConfig,
   type ArenaWinReason,
 } from './arena-state.js';
 

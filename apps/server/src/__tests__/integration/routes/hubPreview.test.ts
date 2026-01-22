@@ -122,7 +122,7 @@ describe('Hub Preview Routes', () => {
       expect(body.exclusiveItems).toEqual(['mythic_crown']);
 
       // Check heroes
-      expect(body.heroes).toHaveLength(2);
+      expect(body.heroes).toHaveLength(5);
       const stormHero = body.heroes.find((h: any) => h.heroId === 'storm');
       expect(stormHero).toBeDefined();
       expect(stormHero.level).toBe(18); // hp(10) + damage(8)
@@ -198,8 +198,13 @@ describe('Hub Preview Routes', () => {
       expect(body.totalPower).toBe(0); // Default
       expect(body.fortressClass).toBe('natural'); // Default
       expect(body.exclusiveItems).toEqual([]);
-      expect(body.heroes).toEqual([]);
-      expect(body.turrets).toEqual([]);
+      expect(body.heroes.map((hero: any) => hero.heroId)).toEqual([
+        'vanguard',
+        'storm',
+        'medic',
+        'pyro',
+      ]);
+      expect(body.turrets.map((turret: any) => turret.turretType)).toEqual(['railgun']);
       expect(body.guildTag).toBeNull();
     });
 

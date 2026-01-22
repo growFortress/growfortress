@@ -2,6 +2,7 @@
  * SimConfig service tests
  */
 import { describe, it, expect, vi } from 'vitest';
+import type { PillarId } from '@arcade/sim-core';
 import {
   buildSimConfigSnapshot,
   applySimConfigSnapshot,
@@ -259,6 +260,8 @@ describe('SimConfig Service', () => {
         fortressBaseHp: 150,
         fortressBaseDamage: 20,
         waveIntervalTicks: 100,
+        currentPillar: 'streets' as PillarId,
+        pillarRotation: false,
       };
 
       const result = applySimConfigSnapshot(config, snapshot);
@@ -305,6 +308,8 @@ describe('SimConfig Service', () => {
         fortressBaseHp: 100,
         fortressBaseDamage: 10,
         waveIntervalTicks: 90,
+        currentPillar: 'streets' as PillarId,
+        pillarRotation: false,
       };
 
       const result = applySimConfigSnapshot(config, snapshot);
@@ -334,6 +339,8 @@ describe('SimConfig Service', () => {
         fortressBaseHp: 100,
         fortressBaseDamage: 10,
         waveIntervalTicks: 90,
+        currentPillar: 'streets' as PillarId,
+        pillarRotation: false,
       };
 
       const result = applySimConfigSnapshot(config, snapshot);

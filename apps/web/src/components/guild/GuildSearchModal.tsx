@@ -336,13 +336,29 @@ function GuildCard({ guild, onClick, t }: GuildCardProps) {
   return (
     <div class={styles.guildCard} onClick={onClick}>
       <div class={styles.guildInfo}>
-        <span class={styles.guildName}>
-          <AccessModeIcon mode={accessMode} />
-          {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
-        </span>
-        <div class={styles.guildMeta}>
-          <span>{t('guild.honor')}: {guild.honor.toLocaleString()}</span>
-          {guild._count && <span>{guild._count.members} {t('leaderboard.members')}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {guild.emblemUrl && (
+            <img
+              src={guild.emblemUrl}
+              alt="Guild emblem"
+              style={{ width: '40px', height: '40px', borderRadius: '6px', border: '1px solid var(--color-border)' }}
+            />
+          )}
+          <div style={{ flex: 1 }}>
+            <span class={styles.guildName}>
+              <AccessModeIcon mode={accessMode} />
+              {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
+            </span>
+            {guild.description && (
+              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '0.25rem', maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {guild.description}
+              </div>
+            )}
+            <div class={styles.guildMeta}>
+              <span>{t('guild.honor')}: {guild.honor.toLocaleString()}</span>
+              {guild._count && <span>{guild._count.members} {t('leaderboard.members')}</span>}
+            </div>
+          </div>
         </div>
       </div>
       <span class={styles.guildArrow}>→</span>
@@ -409,10 +425,19 @@ function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProp
       </button>
 
       <div class={styles.detailsHeader}>
-        <h3 class={styles.detailsName}>
-          <AccessModeIcon mode={accessMode} />
-          {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
-        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {guild.emblemUrl && (
+            <img
+              src={guild.emblemUrl}
+              alt="Guild emblem"
+              style={{ width: '48px', height: '48px', borderRadius: '8px', border: '1px solid var(--color-border)' }}
+            />
+          )}
+          <h3 class={styles.detailsName}>
+            <AccessModeIcon mode={accessMode} />
+            {guild.name} <GuildTag guildId={guild.id} tag={guild.tag} />
+          </h3>
+        </div>
       </div>
 
       {guild.description && (

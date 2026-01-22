@@ -263,7 +263,7 @@ export const TIER_CONFIGS: Record<PillarChallengeTier, TierConfig> = {
     enemyHpMultiplier: 24576 as FP, // 1.5x
     enemyDmgMultiplier: 20480 as FP, // 1.25x
     enemySpeedMultiplier: 18022 as FP, // 1.1x
-    baseFragments: 2,
+    baseFragments: 3, // Zwiększone z 2 (dla Streets/Mutants: 2 fragmenty po mnożniku 50%)
     maxBonusFragments: 3,
     canEarnFullCrystal: true, // Tylko za pierwszy Perfect Clear
     unlockRequirement: {
@@ -278,12 +278,12 @@ export const TIER_CONFIGS: Record<PillarChallengeTier, TierConfig> = {
     enemyHpMultiplier: 32768 as FP, // 2.0x
     enemyDmgMultiplier: 26214 as FP, // 1.6x
     enemySpeedMultiplier: 19661 as FP, // 1.2x
-    baseFragments: 3,
+    baseFragments: 4, // Zwiększone z 3 (dla Streets/Mutants: 2 fragmenty po mnożniku 50%)
     maxBonusFragments: 5,
     canEarnFullCrystal: true, // Każdy Perfect Clear
     unlockRequirement: {
-      previousTierClears: 5,
-      previousTierPerfect: true,
+      previousTierClears: 3, // Uproszczone z 5
+      previousTierPerfect: false, // Usunięte wymaganie Perfect Clear
     },
   },
 };
@@ -301,10 +301,10 @@ export const PERFORMANCE_BONUSES: PerformanceBonus[] = [
   {
     id: 'speed_clear',
     name: 'Błyskawiczne Zwycięstwo',
-    description: 'Ukończ wyzwanie w mniej niż 2 minuty',
+    description: 'Ukończ wyzwanie w wyznaczonym czasie (Normal: 2 min, Hard: 3 min, Mythic: 4 min)',
     fragmentReward: 1,
     grantsFullCrystal: false,
-    condition: { type: 'time_under', seconds: 120 },
+    condition: { type: 'time_under', seconds: 120 }, // Domyślny limit, sprawdzany dynamicznie w checkPerformanceBonus
   },
   {
     id: 'fortress_intact',
@@ -429,6 +429,17 @@ export function checkPerformanceBonus(
       const elapsed = state.endedAt
         ? (state.endedAt - state.startedAt) / 1000
         : Infinity;
+      
+      // Dynamiczny limit czasu dla Speed Clear w zależności od tieru
+      if (bonus.id === 'speed_clear') {
+        const tierTimeLimits: Record<PillarChallengeTier, number> = {
+          normal: 120,  // 2 minuty
+          hard: 180,    // 3 minuty
+          mythic: 240,  // 4 minuty
+        };
+        return elapsed < tierTimeLimits[state.tier];
+      }
+      
       return elapsed < condition.seconds;
     }
     case 'fortress_hp_above': {

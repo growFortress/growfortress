@@ -11,7 +11,13 @@ import {
   turretPlacementModalVisible,
   turretPlacementSlotIndex,
   baseLevel,
+  purchasedHeroSlots,
+  purchasedTurretSlots,
+  heroPlacementModalVisible,
+  heroPlacementSlotIndex,
+  isGuestMode,
 } from "../../state/index.js";
+import { GuestRegistrationBanner } from "../shared/GuestRegistrationBanner.js";
 import { colonySceneVisible } from "../../state/idle.signals.js";
 import { getMaxTurretSlots } from "@arcade/sim-core";
 import { audioManager } from "../../game/AudioManager.js";
@@ -89,7 +95,55 @@ export function HubOverlay() {
   const heroes = hubHeroes.value;
   const slots = turretSlots.value;
   const fortressLevel = baseLevel.value;
-  const maxUnlockedSlots = getMaxTurretSlots(fortressLevel);
+  const maxUnlockedSlots = getMaxTurretSlots(fortressLevel, purchasedTurretSlots.value);
+  const maxHeroSlots = purchasedHeroSlots.value;
+
+  // Formation position helper - same as in actions.ts
+  const getFormationPosition = (index: number, totalCount: number): { xOffset: number; yOffset: number } => {
+    const centerY = 7.5;
+    const SLOT_X = [4, 7, 10];
+
+    switch (totalCount) {
+      case 1:
+        return { xOffset: SLOT_X[0], yOffset: centerY };
+      case 2:
+        return [
+          { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+          { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+        ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+      case 3:
+        return [
+          { xOffset: SLOT_X[1], yOffset: centerY },
+          { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+          { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+        ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+      case 4:
+        return [
+          { xOffset: SLOT_X[1], yOffset: centerY },
+          { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+          { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+          { xOffset: SLOT_X[0], yOffset: centerY },
+        ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+      case 5:
+        return [
+          { xOffset: SLOT_X[2], yOffset: centerY },
+          { xOffset: SLOT_X[1], yOffset: centerY - 2 },
+          { xOffset: SLOT_X[1], yOffset: centerY + 2 },
+          { xOffset: SLOT_X[0], yOffset: centerY - 2 },
+          { xOffset: SLOT_X[0], yOffset: centerY + 2 },
+        ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+      default: {
+        const row = Math.floor(index / 3);
+        const col = index % 3;
+        const ySpread = 2.5;
+        const yPositions = [centerY - ySpread, centerY, centerY + ySpread];
+        return {
+          xOffset: SLOT_X[Math.min(row, 2)],
+          yOffset: yPositions[col] || centerY
+        };
+      }
+    }
+  };
 
   const handleTurretClick = (slotIndex: number) => {
     audioManager.playSfx("ui_click");
@@ -109,27 +163,78 @@ export function HubOverlay() {
     }
   };
 
+  const handleHeroSlotClick = (slotIndex: number) => {
+    audioManager.playSfx("ui_click");
+    const hero = heroes[slotIndex];
+    if (hero) {
+      // Open upgrade panel for existing hero
+      upgradeTarget.value = { type: "hero", heroId: hero.definitionId };
+      upgradePanelVisible.value = true;
+    } else {
+      // Open placement modal for empty slot
+      heroPlacementSlotIndex.value = slotIndex;
+      heroPlacementModalVisible.value = true;
+    }
+  };
+
   return (
     <div class={styles.overlay}>
-      {/* Hero click areas */}
-      {heroes.map((hero, index) => (
-        <button
-          key={`${hero.definitionId}-${index}`}
-          class={`${styles.heroArea} ${styles.heroHitbox}`}
-          onClick={() => {
-            audioManager.playSfx("ui_click");
-            upgradeTarget.value = { type: "hero", heroId: hero.definitionId };
-            upgradePanelVisible.value = true;
-          }}
-          style={
-            {
-              left: `${toScreenX(hero.x)}px`,
-              top: `${fpYToScreen(hero.y, canvasSize.height)}px`,
-            } as JSX.CSSProperties
-          }
-          title={t("hubOverlay.clickToManageHero")}
-        />
-      ))}
+      {/* Guest registration banner */}
+      {isGuestMode.value && (
+        <div class={styles.guestBannerContainer}>
+          <GuestRegistrationBanner />
+        </div>
+      )}
+
+      {/* Hero click areas - existing heroes */}
+      {heroes.map((hero, index) => {
+        if (!hero) return null;
+        return (
+          <button
+            key={`${hero.definitionId}-${index}`}
+            class={`${styles.heroArea} ${styles.heroHitbox}`}
+            onClick={() => {
+              audioManager.playSfx("ui_click");
+              upgradeTarget.value = { type: "hero", heroId: hero.definitionId };
+              upgradePanelVisible.value = true;
+            }}
+            style={
+              {
+                left: `${toScreenX(hero.x)}px`,
+                top: `${fpYToScreen(hero.y, canvasSize.height)}px`,
+              } as JSX.CSSProperties
+            }
+            title={t("hubOverlay.clickToManageHero")}
+          />
+        );
+      })}
+
+      {/* Hero click areas - empty slots */}
+      {Array.from({ length: maxHeroSlots }, (_, index) => {
+        if (heroes[index]) return null; // Skip if slot is filled
+        
+        const formation = getFormationPosition(index, maxHeroSlots);
+        const heroX = 2 + formation.xOffset;
+        const heroY = formation.yOffset;
+        const FP_SCALE = 1 << 16;
+        
+        return (
+          <button
+            key={`empty-hero-${index}`}
+            class={`${styles.heroArea} ${styles.empty}`}
+            onClick={() => handleHeroSlotClick(index)}
+            style={
+              {
+                left: `${toScreenX(Math.round(heroX * FP_SCALE))}px`,
+                top: `${fpYToScreen(Math.round(heroY * FP_SCALE), canvasSize.height)}px`,
+              } as JSX.CSSProperties
+            }
+            title={t("hubOverlay.clickToAddHero", { defaultValue: "Kliknij aby dodać bohatera" })}
+          >
+            <span class={styles.addIcon}>+</span>
+          </button>
+        );
+      })}
 
       {/* Turret slot click areas */}
       {slots.map((slot) => {

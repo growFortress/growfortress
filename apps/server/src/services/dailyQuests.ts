@@ -50,7 +50,10 @@ function getRandomMaterial(rarity: 'rare' | 'epic' | 'legendary' = 'rare'): stri
   if (materials.length === 0) {
     // Fallback to any rare material
     const rareMaterials = MATERIAL_DEFINITIONS.filter(m => m.rarity === 'rare');
-    return rareMaterials[Math.floor(Math.random() * rareMaterials.length)]?.id ?? 'cosmic_dust';
+    if (rareMaterials.length === 0) {
+      return 'cosmic_dust'; // Ultimate fallback if no materials defined
+    }
+    return rareMaterials[Math.floor(Math.random() * rareMaterials.length)].id;
   }
   return materials[Math.floor(Math.random() * materials.length)].id;
 }

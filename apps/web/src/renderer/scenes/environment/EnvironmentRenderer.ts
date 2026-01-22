@@ -116,6 +116,9 @@ export class EnvironmentRenderer {
   // Animation time for tier 3 effects
   private animTime = 0;
 
+  // Preview mode (static terrain, no dynamic effects)
+  private previewMode = false;
+
   // Dynamic effects
   private cracks: GroundCrack[] = [];
   private lightFlicker: LightFlicker | null = null;
@@ -142,9 +145,10 @@ export class EnvironmentRenderer {
   /**
    * Set the environment theme based on pillar.
    * Returns true if theme changed (and marks dirty).
+   * If force is true, always updates even if pillarId is the same.
    */
-  public setTheme(pillarId: PillarId): boolean {
-    if (pillarId === this.currentPillarId) {
+  public setTheme(pillarId: PillarId, force: boolean = false): boolean {
+    if (!force && pillarId === this.currentPillarId) {
       return false;
     }
     this.currentPillarId = pillarId;
@@ -240,11 +244,23 @@ export class EnvironmentRenderer {
   }
 
   /**
+   * Toggle preview mode to disable dynamic environment effects.
+   */
+  public setPreviewMode(enabled: boolean): void {
+    this.previewMode = enabled;
+    if (enabled) {
+      this.clearDynamicLayers();
+    }
+  }
+
+  /**
    * Update environment rendering. Redraws static layer only if dirty.
    */
   public update(deltaMs: number, hasActiveEnemies: boolean): void {
     // Update animation time
-    this.animTime += deltaMs / 1000;
+    if (!this.previewMode) {
+      this.animTime += deltaMs / 1000;
+    }
 
     // Redraw static layer if dirty
     if (this.dirty) {
@@ -252,11 +268,27 @@ export class EnvironmentRenderer {
       this.dirty = false;
     }
 
+    if (this.previewMode) {
+      this.clearDynamicLayers();
+      return;
+    }
+
     // Update and draw dynamic effects (cracks, flicker)
     this.updateEffectsLayer(deltaMs);
 
     // Always update dynamic elements (spawn portal)
     this.updateDynamicLayer(hasActiveEnemies);
+  }
+
+  private clearDynamicLayers(): void {
+    if (this.effectsGraphics && !this.effectsGraphics.destroyed) {
+      this.effectsGraphics.clear();
+    }
+    if (this.dynamicGraphics && !this.dynamicGraphics.destroyed) {
+      this.dynamicGraphics.clear();
+    }
+    this.cracks = [];
+    this.lightFlicker = null;
   }
 
   // ============================================================================

@@ -3,7 +3,7 @@
  * Shows guild stats, structures with bonuses, trophies, and top 5 members
  */
 import { Modal } from '../shared/Modal.js';
-import type { GuildPreviewMember, GuildStructureLevels } from '@arcade/protocol';
+import type { GuildPreviewMember, GuildStructureLevels, GuildAccessMode } from '@arcade/protocol';
 import { getTrophyById } from '@arcade/protocol';
 import {
   guildPreviewData,
@@ -60,13 +60,25 @@ export function GuildPreviewModal() {
             {/* Guild Info Header */}
             <div class={styles.header}>
               <div class={styles.guildInfo}>
-                <h2 class={styles.guildName}>
-                  {data.name}
-                  <span class={styles.guildTag}>[{data.tag}]</span>
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                  {data.emblemUrl && (
+                    <img
+                      src={data.emblemUrl}
+                      alt="Guild emblem"
+                      style={{ width: '64px', height: '64px', borderRadius: '8px', border: '1px solid var(--color-border)' }}
+                    />
+                  )}
+                  <h2 class={styles.guildName}>
+                    {data.name}
+                    <span class={styles.guildTag}>[{data.tag}]</span>
+                  </h2>
+                </div>
                 {data.description && (
                   <p class={styles.description}>{data.description}</p>
                 )}
+                <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: 'var(--color-bg-secondary)', borderRadius: '4px' }}>
+                  <AccessModeInfo accessMode={data.accessMode} />
+                </div>
               </div>
             </div>
 
@@ -249,6 +261,28 @@ function formatDate(isoString: string): string {
     month: 'long',
     day: 'numeric',
   });
+}
+
+interface AccessModeInfoProps {
+  accessMode: GuildAccessMode;
+}
+
+function AccessModeInfo({ accessMode }: AccessModeInfoProps) {
+  const accessModeInfo: Record<GuildAccessMode, { icon: string; text: string }> = {
+    OPEN: { icon: '🚪', text: 'Możesz dołączyć bezpośrednio' },
+    APPLY: { icon: '📨', text: 'Złóż podanie, aby dołączyć' },
+    INVITE_ONLY: { icon: '🔒', text: 'Tylko przez zaproszenie' },
+    CLOSED: { icon: '🚫', text: 'Nie przyjmuje nowych członków' },
+  };
+
+  const info = accessModeInfo[accessMode];
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}>
+      <span>{info.icon}</span>
+      <span>{info.text}</span>
+    </div>
+  );
 }
 
 export default GuildPreviewModal;

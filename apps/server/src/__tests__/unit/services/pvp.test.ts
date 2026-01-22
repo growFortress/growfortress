@@ -320,11 +320,11 @@ describe('PvP Service', () => {
 
       const result = await createChallenge('user-123', 'user-456');
 
-      expect(result.challengerId).toBe('user-123');
-      expect(result.challengedId).toBe('user-456');
-      expect(result.status).toBe('PENDING');
-      expect(result.challengerPower).toBe(1000);
-      expect(result.challengedPower).toBe(950);
+      expect(result.challenge.challengerId).toBe('user-123');
+      expect(result.challenge.challengedId).toBe('user-456');
+      expect(result.challenge.status).toBe('RESOLVED');
+      expect(result.challenge.challengerPower).toBe(1000);
+      expect(result.challenge.challengedPower).toBe(950);
     });
 
     it('throws CANNOT_CHALLENGE_SELF for self-challenge', async () => {
@@ -395,7 +395,7 @@ describe('PvP Service', () => {
 
       const result = await createChallenge('user-123', 'user-456');
 
-      expect(result.challengedPower).toBe(2000);
+      expect(result.challenge.challengedPower).toBe(2000);
     });
 
     it('allows challenge with lower power opponent', async () => {
@@ -418,7 +418,7 @@ describe('PvP Service', () => {
 
       const result = await createChallenge('user-123', 'user-456');
 
-      expect(result.challengedPower).toBe(800);
+      expect(result.challenge.challengedPower).toBe(800);
     });
 
     it('calculates correct expiry time (24h)', async () => {

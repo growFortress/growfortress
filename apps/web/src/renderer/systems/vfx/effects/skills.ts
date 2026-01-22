@@ -910,6 +910,468 @@ export class SkillEffects {
   }
 
   // ============================================================
+  // FIRE CLASS SKILLS
+  // ============================================================
+
+  /**
+   * Flame Burst - Pyro Tier 1 skill: Area fire explosion with burn
+   */
+  spawnFlameBurst(x: number, y: number, intensity: number = 1): void {
+    const colors = CLASS_VFX_COLORS.fire;
+
+    this.triggerScreenShake(4 * intensity, 150);
+
+    // Central flash
+    this.factory.flash({ x, y, color: 0xffffff, size: 30 * intensity });
+    this.factory.flash({ x, y, color: colors.glow, size: 50 * intensity });
+
+    // Fire rings expanding
+    for (let i = 0; i < 3; i++) {
+      this.factory.ring({
+        x, y,
+        color: i === 0 ? colors.glow : colors.primary,
+        startSize: 10 + i * 8,
+        endSize: 80 + i * 25,
+        life: 0.35 + i * 0.1,
+        alpha: 0.7 - i * 0.15,
+      });
+    }
+
+    // Flame particles radiating outward
+    for (let i = 0; i < 24 * intensity; i++) {
+      const angle = (Math.PI * 2 * i) / 24;
+      const speed = 100 + Math.random() * 80;
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 30;
+      p.life = 0.4 + Math.random() * 0.2;
+      p.maxLife = p.life;
+      p.size = 5 + Math.random() * 4;
+      p.color = Math.random() > 0.4 ? colors.primary : colors.glow;
+      p.shape = 'circle';
+      p.drag = 0.92;
+      p.gravity = -40; // Flames rise
+      this.particles.push(p);
+    }
+
+    // Rising embers
+    for (let i = 0; i < 15 * intensity; i++) {
+      const ember = this.pool.acquire();
+      ember.x = x + (Math.random() - 0.5) * 40;
+      ember.y = y + (Math.random() - 0.5) * 20;
+      ember.vx = (Math.random() - 0.5) * 40;
+      ember.vy = -60 - Math.random() * 80;
+      ember.life = 0.6 + Math.random() * 0.4;
+      ember.maxLife = ember.life;
+      ember.size = 2 + Math.random() * 3;
+      ember.color = Math.random() > 0.5 ? colors.glow : 0xffff00;
+      ember.shape = 'spark';
+      ember.gravity = -30;
+      this.particles.push(ember);
+    }
+
+    // Ground fire patches (burning effect)
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI * 2 * i) / 8;
+      const dist = 30 + Math.random() * 20;
+      const fireX = x + Math.cos(angle) * dist;
+      const fireY = y + Math.sin(angle) * dist * 0.4;
+
+      for (let j = 0; j < 3; j++) {
+        const flame = this.pool.acquire();
+        flame.x = fireX + (Math.random() - 0.5) * 10;
+        flame.y = fireY;
+        flame.vx = (Math.random() - 0.5) * 15;
+        flame.vy = -40 - Math.random() * 30;
+        flame.life = 0.5 + Math.random() * 0.3;
+        flame.maxLife = flame.life;
+        flame.startSize = 4;
+        flame.endSize = 10;
+        flame.size = 4;
+        flame.color = colors.secondary;
+        flame.shape = 'circle';
+        flame.startAlpha = 0.8;
+        flame.endAlpha = 0;
+        flame.gravity = -50;
+        this.particles.push(flame);
+      }
+    }
+  }
+
+  /**
+   * Inferno Wave - Pyro Tier 2 skill: Sweeping wave of fire
+   */
+  spawnInfernoWave(x: number, y: number, angle: number, intensity: number = 1): void {
+    const colors = CLASS_VFX_COLORS.fire;
+    const waveWidth = 120 * intensity;
+
+    this.triggerScreenShake(6 * intensity, 200);
+
+    // Central flash
+    this.factory.flash({ x, y, color: colors.glow, size: 40 * intensity });
+
+    // Fire wave particles moving in direction
+    for (let i = 0; i < 40 * intensity; i++) {
+      const spread = (Math.random() - 0.5) * Math.PI * 0.6;
+      const waveAngle = angle + spread;
+      const speed = 150 + Math.random() * 100;
+      const p = this.pool.acquire();
+      p.x = x + (Math.random() - 0.5) * 30;
+      p.y = y + (Math.random() - 0.5) * 15;
+      p.vx = Math.cos(waveAngle) * speed;
+      p.vy = Math.sin(waveAngle) * speed - 20;
+      p.life = 0.5 + Math.random() * 0.3;
+      p.maxLife = p.life;
+      p.startSize = 6 + Math.random() * 4;
+      p.endSize = 12 + Math.random() * 6;
+      p.size = p.startSize;
+      p.color = Math.random() > 0.3 ? colors.primary : colors.glow;
+      p.shape = 'circle';
+      p.drag = 0.94;
+      p.gravity = -60;
+      p.startAlpha = 0.9;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+
+    // Heat distortion rings along wave
+    for (let i = 0; i < 5; i++) {
+      const ringDist = i * 30;
+      const ringX = x + Math.cos(angle) * ringDist;
+      const ringY = y + Math.sin(angle) * ringDist;
+
+      this.factory.ring({
+        x: ringX,
+        y: ringY,
+        color: colors.glow,
+        startSize: 10,
+        endSize: 50 + i * 10,
+        life: 0.3 + i * 0.05,
+        alpha: 0.5 - i * 0.08,
+      });
+    }
+
+    // Intense embers and sparks
+    for (let i = 0; i < 30 * intensity; i++) {
+      const ember = this.pool.acquire();
+      ember.x = x + (Math.random() - 0.5) * waveWidth;
+      ember.y = y + (Math.random() - 0.5) * 20;
+      ember.vx = Math.cos(angle) * (80 + Math.random() * 60) + (Math.random() - 0.5) * 50;
+      ember.vy = -50 - Math.random() * 60;
+      ember.life = 0.7 + Math.random() * 0.5;
+      ember.maxLife = ember.life;
+      ember.size = 2 + Math.random() * 3;
+      ember.color = Math.random() > 0.3 ? colors.glow : 0xffff00;
+      ember.shape = 'spark';
+      ember.gravity = -20;
+      this.particles.push(ember);
+    }
+
+    // Smoke trail
+    for (let i = 0; i < 12; i++) {
+      const smoke = this.pool.acquire();
+      smoke.x = x + (Math.random() - 0.5) * waveWidth * 0.5;
+      smoke.y = y + (Math.random() - 0.5) * 15;
+      smoke.vx = Math.cos(angle) * 30 + (Math.random() - 0.5) * 20;
+      smoke.vy = -30 - Math.random() * 40;
+      smoke.life = 0.8 + Math.random() * 0.4;
+      smoke.maxLife = smoke.life;
+      smoke.startSize = 8;
+      smoke.endSize = 25;
+      smoke.size = 8;
+      smoke.color = 0x333333;
+      smoke.shape = 'smoke';
+      smoke.startAlpha = 0.4;
+      smoke.endAlpha = 0;
+      smoke.gravity = -15;
+      this.particles.push(smoke);
+    }
+  }
+
+  /**
+   * Hellfire - Pyro Tier 3 skill: Massive fire explosion
+   */
+  spawnHellfire(x: number, y: number, intensity: number = 1): void {
+    const colors = CLASS_VFX_COLORS.fire;
+
+    this.triggerScreenShake(10 * intensity, 350);
+
+    // Massive central flash
+    this.factory.flash({ x, y, color: 0xffffff, size: 60 * intensity });
+    this.factory.flash({ x, y, color: colors.glow, size: 100 * intensity });
+
+    // Multiple expanding fire rings
+    for (let i = 0; i < 5; i++) {
+      this.factory.ring({
+        x, y,
+        color: i % 2 === 0 ? colors.glow : colors.primary,
+        startSize: 15 + i * 12,
+        endSize: 150 + i * 40,
+        life: 0.5 + i * 0.12,
+        alpha: 0.8 - i * 0.12,
+      });
+    }
+
+    // Massive flame eruption
+    for (let i = 0; i < 60 * intensity; i++) {
+      const angle = (Math.PI * 2 * i) / 60;
+      const speed = 120 + Math.random() * 150;
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 50;
+      p.life = 0.6 + Math.random() * 0.4;
+      p.maxLife = p.life;
+      p.startSize = 8 + Math.random() * 6;
+      p.endSize = 20 + Math.random() * 10;
+      p.size = p.startSize;
+      p.color = Math.random() > 0.3 ? colors.primary : (Math.random() > 0.5 ? colors.glow : colors.secondary);
+      p.shape = 'circle';
+      p.drag = 0.93;
+      p.gravity = -80;
+      p.startAlpha = 1.0;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+
+    // Fire pillars shooting upward
+    for (let i = 0; i < 8; i++) {
+      const pillarAngle = (Math.PI * 2 * i) / 8;
+      const pillarDist = 40 + Math.random() * 30;
+      const pillarX = x + Math.cos(pillarAngle) * pillarDist;
+      const pillarY = y + Math.sin(pillarAngle) * pillarDist * 0.4;
+
+      for (let j = 0; j < 8; j++) {
+        const flame = this.pool.acquire();
+        flame.x = pillarX + (Math.random() - 0.5) * 15;
+        flame.y = pillarY;
+        flame.vx = (Math.random() - 0.5) * 30;
+        flame.vy = -100 - Math.random() * 100 - j * 15;
+        flame.life = 0.5 + Math.random() * 0.3 + j * 0.05;
+        flame.maxLife = flame.life;
+        flame.startSize = 6 + Math.random() * 4;
+        flame.endSize = 15 + Math.random() * 8;
+        flame.size = flame.startSize;
+        flame.color = j < 4 ? colors.glow : colors.primary;
+        flame.shape = 'circle';
+        flame.startAlpha = 0.9;
+        flame.endAlpha = 0;
+        flame.gravity = -100;
+        this.particles.push(flame);
+      }
+    }
+
+    // Intense ember storm
+    for (let i = 0; i < 50 * intensity; i++) {
+      const ember = this.pool.acquire();
+      ember.x = x + (Math.random() - 0.5) * 80;
+      ember.y = y + (Math.random() - 0.5) * 40;
+      ember.vx = (Math.random() - 0.5) * 100;
+      ember.vy = -80 - Math.random() * 120;
+      ember.life = 1.0 + Math.random() * 0.6;
+      ember.maxLife = ember.life;
+      ember.size = 2 + Math.random() * 4;
+      ember.color = Math.random() > 0.3 ? colors.glow : 0xffff00;
+      ember.shape = 'spark';
+      ember.gravity = -40;
+      this.particles.push(ember);
+    }
+
+    // Dark smoke clouds
+    for (let i = 0; i < 20; i++) {
+      const smoke = this.pool.acquire();
+      smoke.x = x + (Math.random() - 0.5) * 100;
+      smoke.y = y + (Math.random() - 0.5) * 50;
+      smoke.vx = (Math.random() - 0.5) * 40;
+      smoke.vy = -40 - Math.random() * 60;
+      smoke.life = 1.2 + Math.random() * 0.6;
+      smoke.maxLife = smoke.life;
+      smoke.startSize = 15;
+      smoke.endSize = 40;
+      smoke.size = 15;
+      smoke.color = 0x222222;
+      smoke.shape = 'smoke';
+      smoke.startAlpha = 0.5;
+      smoke.endAlpha = 0;
+      smoke.gravity = -20;
+      this.particles.push(smoke);
+    }
+  }
+
+  /**
+   * Combustion - Pyro Tier 3 Ultimate: Devastating explosion that detonates burn effects
+   */
+  spawnCombustion(x: number, y: number, targets: { x: number; y: number }[] = []): void {
+    const colors = CLASS_VFX_COLORS.fire;
+
+    this.triggerScreenShake(15, 500);
+
+    // Initial charge-up effect - fire converging to center
+    for (let i = 0; i < 30; i++) {
+      const chargeAngle = (Math.PI * 2 * i) / 30;
+      const chargeDist = 60 + Math.random() * 40;
+      const charge = this.pool.acquire();
+      charge.x = x + Math.cos(chargeAngle) * chargeDist;
+      charge.y = y + Math.sin(chargeAngle) * chargeDist;
+      charge.vx = -Math.cos(chargeAngle) * 150;
+      charge.vy = -Math.sin(chargeAngle) * 150;
+      charge.life = 0.3;
+      charge.maxLife = 0.3;
+      charge.size = 5 + Math.random() * 3;
+      charge.color = colors.glow;
+      charge.shape = 'circle';
+      this.particles.push(charge);
+    }
+
+    // Massive white-hot flash
+    this.factory.flash({ x, y, color: 0xffffff, size: 100 });
+    this.factory.flash({ x, y, color: colors.glow, size: 150 });
+
+    // Enormous expanding fire rings
+    for (let i = 0; i < 6; i++) {
+      this.factory.ring({
+        x, y,
+        color: i === 0 ? 0xffffff : (i % 2 === 0 ? colors.glow : colors.primary),
+        startSize: 20 + i * 15,
+        endSize: 200 + i * 50,
+        life: 0.6 + i * 0.15,
+        alpha: 0.9 - i * 0.1,
+      });
+    }
+
+    // Main explosion particles
+    for (let i = 0; i < 80; i++) {
+      const angle = (Math.PI * 2 * i) / 80;
+      const speed = 180 + Math.random() * 200;
+      const p = this.pool.acquire();
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 60;
+      p.life = 0.8 + Math.random() * 0.5;
+      p.maxLife = p.life;
+      p.startSize = 10 + Math.random() * 8;
+      p.endSize = 25 + Math.random() * 15;
+      p.size = p.startSize;
+      p.color = Math.random() > 0.2 ? colors.primary : (Math.random() > 0.5 ? colors.glow : 0xffffff);
+      p.shape = 'circle';
+      p.drag = 0.92;
+      p.gravity = -100;
+      p.startAlpha = 1.0;
+      p.endAlpha = 0;
+      this.particles.push(p);
+    }
+
+    // Secondary explosions at burn targets
+    for (const target of targets) {
+      setTimeout(() => {
+        this.factory.flash({ x: target.x, y: target.y, color: colors.glow, size: 40 });
+
+        // Small explosion at each target
+        for (let i = 0; i < 15; i++) {
+          const angle = (Math.PI * 2 * i) / 15;
+          const speed = 60 + Math.random() * 50;
+          const p = this.pool.acquire();
+          p.x = target.x;
+          p.y = target.y;
+          p.vx = Math.cos(angle) * speed;
+          p.vy = Math.sin(angle) * speed - 30;
+          p.life = 0.4 + Math.random() * 0.2;
+          p.maxLife = p.life;
+          p.size = 5 + Math.random() * 4;
+          p.color = colors.primary;
+          p.shape = 'circle';
+          p.drag = 0.9;
+          p.gravity = -50;
+          this.particles.push(p);
+        }
+      }, Math.random() * 200);
+    }
+
+    // Firestorm - massive ember cloud
+    for (let i = 0; i < 100; i++) {
+      const ember = this.pool.acquire();
+      ember.x = x + (Math.random() - 0.5) * 120;
+      ember.y = y + (Math.random() - 0.5) * 60;
+      ember.vx = (Math.random() - 0.5) * 150;
+      ember.vy = -100 - Math.random() * 150;
+      ember.life = 1.5 + Math.random() * 1.0;
+      ember.maxLife = ember.life;
+      ember.size = 2 + Math.random() * 5;
+      ember.color = Math.random() > 0.2 ? colors.glow : 0xffff00;
+      ember.shape = 'spark';
+      ember.gravity = -60;
+      this.particles.push(ember);
+    }
+
+    // Massive smoke mushroom cloud
+    for (let i = 0; i < 30; i++) {
+      const smoke = this.pool.acquire();
+      smoke.x = x + (Math.random() - 0.5) * 80;
+      smoke.y = y + (Math.random() - 0.5) * 40;
+      smoke.vx = (Math.random() - 0.5) * 50;
+      smoke.vy = -60 - Math.random() * 80;
+      smoke.life = 1.5 + Math.random() * 0.8;
+      smoke.maxLife = smoke.life;
+      smoke.startSize = 20 + Math.random() * 10;
+      smoke.endSize = 60 + Math.random() * 30;
+      smoke.size = smoke.startSize;
+      smoke.color = 0x111111;
+      smoke.shape = 'smoke';
+      smoke.startAlpha = 0.6;
+      smoke.endAlpha = 0;
+      smoke.gravity = -30;
+      this.particles.push(smoke);
+    }
+  }
+
+  /**
+   * Fire Aura burst - enhanced burn visual effect
+   */
+  spawnFireAuraBurst(x: number, y: number, intensity: number = 1): void {
+    const colors = CLASS_VFX_COLORS.fire;
+
+    // Flame particles rising
+    for (let i = 0; i < 8 * intensity; i++) {
+      const p = this.pool.acquire();
+      p.x = x + (Math.random() - 0.5) * 20;
+      p.y = y + (Math.random() - 0.5) * 10;
+      p.vx = (Math.random() - 0.5) * 30;
+      p.vy = -50 - Math.random() * 50;
+      p.life = 0.3 + Math.random() * 0.2;
+      p.maxLife = p.life;
+      p.startSize = 4;
+      p.endSize = 10;
+      p.size = 4;
+      p.color = Math.random() > 0.4 ? colors.primary : colors.glow;
+      p.shape = 'circle';
+      p.startAlpha = 0.8;
+      p.endAlpha = 0;
+      p.gravity = -80;
+      this.particles.push(p);
+    }
+
+    // Small embers
+    for (let i = 0; i < 5 * intensity; i++) {
+      const ember = this.pool.acquire();
+      ember.x = x + (Math.random() - 0.5) * 15;
+      ember.y = y;
+      ember.vx = (Math.random() - 0.5) * 40;
+      ember.vy = -70 - Math.random() * 40;
+      ember.life = 0.5 + Math.random() * 0.3;
+      ember.maxLife = ember.life;
+      ember.size = 2 + Math.random() * 2;
+      ember.color = colors.glow;
+      ember.shape = 'spark';
+      ember.gravity = -40;
+      this.particles.push(ember);
+    }
+  }
+
+  // ============================================================
   // ICE CLASS SKILLS
   // ============================================================
 

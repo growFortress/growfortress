@@ -128,12 +128,12 @@ const THEME_SCIENCE: EnvironmentTheme = {
     cloudAlpha: 0.15,
   },
   deck: {
-    plate: 0xe8e8f0,     // Clean white panels
-    plateDark: 0xd0d0e0, // Slightly darker white
-    line: 0x00f0ff,      // Cyan grid lines
-    edge: 0xc0c0d0,      // Panel edges
-    warning: 0x64ffda,   // Cyan warning
-    warningDark: 0x1a3a3a,
+    plate: 0x4a4a5a,     // Dark tech panels (reduced brightness)
+    plateDark: 0x3a3a4a, // Darker tech panels
+    line: 0x00e0f0,      // Bright cyan grid lines (better contrast on dark)
+    edge: 0x5a5a6a,      // Panel edges
+    warning: 0x00d0e0,   // Brighter cyan warning (better visibility)
+    warningDark: 0x1a2a3a, // Darker base for stripes
     railing: 0x88ccff,   // Holographic barriers
     accent: 0x00f0ff,    // Cyan hologram
     accentGlow: 0x88ffff,

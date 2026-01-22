@@ -29,22 +29,23 @@ export class ApiError extends Error {
 // TOKEN REFRESH - SINGLETON PATTERN
 // ============================================================================
 
-let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
 
 /**
  * Attempts to refresh the authentication token.
  * Uses singleton pattern to prevent multiple simultaneous refresh requests.
+ * The refreshPromise variable alone guards against concurrent refreshes -
+ * checking and assignment are synchronous, ensuring no race condition.
  *
  * @returns Promise<boolean> - true if refresh succeeded, false otherwise
  */
 export async function tryRefreshToken(): Promise<boolean> {
   // If already refreshing, return the existing promise
-  if (isRefreshing && refreshPromise) {
+  if (refreshPromise) {
     return refreshPromise;
   }
 
-  isRefreshing = true;
+  // Create and store promise synchronously before any await point
   refreshPromise = (async () => {
     try {
       const response = await fetch(`${CONFIG.API_URL}/v1/auth/refresh`, {
@@ -64,7 +65,7 @@ export async function tryRefreshToken(): Promise<boolean> {
       clearTokens();
       return false;
     } finally {
-      isRefreshing = false;
+      // Clear after promise settles - callers already have reference to resolved promise
       refreshPromise = null;
     }
   })();

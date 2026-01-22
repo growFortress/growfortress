@@ -28,7 +28,29 @@ export const TURRET_UNLOCK_COST = { gold: 3000, dust: 0 } as const;
 export const FREE_STARTER_HEROES = [
   'vanguard',
   'storm',
+  'medic',
+  'pyro',
 ] as const;
+
+/**
+ * Map legacy hero IDs to new canonical IDs
+ * Used for backwards compatibility with old client data
+ */
+export const LEGACY_HERO_ID_MAP: Record<string, string> = {
+  shield_captain: 'vanguard',
+  thunderlord: 'storm',
+  scarlet_mage: 'rift',
+  iron_sentinel: 'forge',
+  jade_titan: 'titan',
+  frost_archer: 'frost_unit',
+} as const;
+
+/**
+ * Normalize a hero ID, mapping legacy IDs to their canonical versions
+ */
+export function normalizeHeroId(heroId: string): string {
+  return LEGACY_HERO_ID_MAP[heroId] ?? heroId;
+}
 
 /**
  * Free starter turrets (automatically available at level 1)

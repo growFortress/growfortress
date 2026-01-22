@@ -8,6 +8,8 @@
 
 import { signal, computed } from '@preact/signals';
 import { getPillarUnlocks } from '../api/pillarUnlocks.js';
+import { getSetting, setSetting } from '../storage/idb.js';
+import { currentPillar, gamePhase } from './game.signals.js';
 import type {
   GetPillarUnlocksResponse,
   PillarUnlockId,
@@ -17,6 +19,9 @@ import type {
 // ============================================================================
 // SIGNALS
 // ============================================================================
+
+const SELECTED_PILLAR_KEY = 'selectedPillar';
+const SELECTED_PILLAR_LOCK_KEY = 'selectedPillarLocked';
 
 export const pillarUnlocksState = signal<GetPillarUnlocksResponse | null>(null);
 export const pillarUnlocksLoading = signal(false);
@@ -99,6 +104,24 @@ export function getPillarInfo(pillarId: PillarUnlockId): PillarUnlockInfo | unde
 // ACTIONS
 // ============================================================================
 
+async function syncSelectedPillar(unlocked: PillarUnlockId[]): Promise<void> {
+  const latestUnlocked = unlocked[unlocked.length - 1] ?? 'streets';
+  const storedPillar = await getSetting<PillarUnlockId>(SELECTED_PILLAR_KEY);
+  const storedLocked = await getSetting<boolean>(SELECTED_PILLAR_LOCK_KEY);
+  const isLocked = storedLocked ?? false;
+
+  const hasStored = storedPillar && unlocked.includes(storedPillar);
+  const nextPillar = isLocked && hasStored ? storedPillar : latestUnlocked;
+  const nextLocked = isLocked && hasStored;
+
+  await setSetting(SELECTED_PILLAR_KEY, nextPillar);
+  await setSetting(SELECTED_PILLAR_LOCK_KEY, nextLocked);
+
+  if (gamePhase.value === 'idle') {
+    currentPillar.value = nextPillar;
+  }
+}
+
 /**
  * Fetch pillar unlock status from server
  */
@@ -109,12 +132,25 @@ export async function fetchPillarUnlocks(): Promise<void> {
   try {
     const response = await getPillarUnlocks();
     pillarUnlocksState.value = response;
+    await syncSelectedPillar(response.unlockedPillars);
   } catch (error) {
     pillarUnlocksError.value = error instanceof Error ? error.message : 'Failed to fetch pillar unlocks';
     pillarUnlocksState.value = null;
   } finally {
     pillarUnlocksLoading.value = false;
   }
+}
+
+/**
+ * Manually select an unlocked pillar (hub only).
+ */
+export async function selectPillar(pillarId: PillarUnlockId): Promise<void> {
+  if (gamePhase.value !== 'idle') return;
+  if (!unlockedPillarSet.value.has(pillarId)) return;
+
+  currentPillar.value = pillarId;
+  await setSetting(SELECTED_PILLAR_KEY, pillarId);
+  await setSetting(SELECTED_PILLAR_LOCK_KEY, true);
 }
 
 /**

@@ -241,41 +241,71 @@ describe('XP Earning Functions', () => {
 
 describe('Level-Based Unlocks', () => {
   describe('getMaxHeroSlots', () => {
-    it('returns 2 slots for levels 1-9 (base)', () => {
+    // Nowy system slotów - legacy fallback (bez purchasedSlots)
+    it('returns 2 slots for level 1 (base)', () => {
       expect(getMaxHeroSlots(1)).toBe(2);
-      expect(getMaxHeroSlots(9)).toBe(2);
     });
 
-    it('returns 2 slots for levels 10-29', () => {
-      expect(getMaxHeroSlots(10)).toBe(2);
-      expect(getMaxHeroSlots(29)).toBe(2);
+    it('returns 3 slots for levels 2-4', () => {
+      expect(getMaxHeroSlots(2)).toBe(3);
+      expect(getMaxHeroSlots(4)).toBe(3);
     });
 
-    it('returns 3 slots for levels 30-44', () => {
-      expect(getMaxHeroSlots(30)).toBe(3);
-      expect(getMaxHeroSlots(44)).toBe(3);
+    it('returns 4 slots for levels 5-14', () => {
+      expect(getMaxHeroSlots(5)).toBe(4);
+      expect(getMaxHeroSlots(14)).toBe(4);
     });
 
-    it('returns 4 slots for level 45+ (max)', () => {
-      expect(getMaxHeroSlots(45)).toBe(4);
-      expect(getMaxHeroSlots(50)).toBe(4);
-      expect(getMaxHeroSlots(100)).toBe(4);
+    it('returns 5 slots for levels 15-24', () => {
+      expect(getMaxHeroSlots(15)).toBe(5);
+      expect(getMaxHeroSlots(24)).toBe(5);
+    });
+
+    it('returns 6 slots for levels 25-34', () => {
+      expect(getMaxHeroSlots(25)).toBe(6);
+      expect(getMaxHeroSlots(34)).toBe(6);
+    });
+
+    it('returns 7 slots for levels 35-49', () => {
+      expect(getMaxHeroSlots(35)).toBe(7);
+      expect(getMaxHeroSlots(49)).toBe(7);
+    });
+
+    it('returns 8 slots for level 50+', () => {
+      expect(getMaxHeroSlots(50)).toBe(8);
+      expect(getMaxHeroSlots(100)).toBe(8);
     });
   });
 
   describe('getMaxTurretSlots', () => {
-    it('returns 1 slot for levels 1-4 (base)', () => {
+    // Nowy system slotów - legacy fallback (bez purchasedSlots)
+    it('returns 1 slot for levels 1-2 (base)', () => {
       expect(getMaxTurretSlots(1)).toBe(1);
-      expect(getMaxTurretSlots(4)).toBe(1);
+      expect(getMaxTurretSlots(2)).toBe(1);
     });
 
-    it('returns 2 slots for levels 5-14', () => {
-      expect(getMaxTurretSlots(5)).toBe(2);
-      expect(getMaxTurretSlots(14)).toBe(2);
+    it('returns 2 slots for levels 3-4', () => {
+      expect(getMaxTurretSlots(3)).toBe(2);
+      expect(getMaxTurretSlots(4)).toBe(2);
     });
 
-    it('returns 6 slots for level 40+', () => {
-      expect(getMaxTurretSlots(40)).toBe(6);
+    it('returns 3 slots for levels 5-9', () => {
+      expect(getMaxTurretSlots(5)).toBe(3);
+      expect(getMaxTurretSlots(9)).toBe(3);
+    });
+
+    it('returns 4 slots for levels 10-19', () => {
+      expect(getMaxTurretSlots(10)).toBe(4);
+      expect(getMaxTurretSlots(19)).toBe(4);
+    });
+
+    it('returns 5 slots for levels 20-29', () => {
+      expect(getMaxTurretSlots(20)).toBe(5);
+      expect(getMaxTurretSlots(29)).toBe(5);
+    });
+
+    it('returns 6 slots for level 30+', () => {
+      expect(getMaxTurretSlots(30)).toBe(6);
       expect(getMaxTurretSlots(50)).toBe(6);
     });
   });
@@ -459,8 +489,8 @@ describe('Progression Bonuses', () => {
       expect(bonuses.damageMultiplier).toBe(1);
       expect(bonuses.goldMultiplier).toBe(1);
       expect(bonuses.startingGold).toBe(0);
-      expect(bonuses.maxHeroSlots).toBe(2); // 2 slots at start
-      expect(bonuses.maxTurretSlots).toBe(1); // 1 slot at start, 2nd at level 5
+      expect(bonuses.maxHeroSlots).toBe(2); // 2 slots at start (legacy fallback)
+      expect(bonuses.maxTurretSlots).toBe(1); // 1 slot at start (legacy fallback)
     });
 
     it('includes starting gold bonus at level 5', () => {
@@ -545,9 +575,9 @@ describe('FORTRESS_LEVELS data', () => {
     expect(level5?.rewards.some(r => r.type === 'skill_unlock')).toBe(true);
   });
 
-  it('level 10 has hero slot unlock', () => {
+  it('level 10 has hero unlock (forge)', () => {
     const level10 = FORTRESS_LEVELS.find(l => l.level === 10);
-    expect(level10?.rewards.some(r => r.type === 'hero_slot')).toBe(true);
+    expect(level10?.rewards.some(r => r.type === 'hero_unlock' && r.heroId === 'forge')).toBe(true);
   });
 
   it('level 15 has pillar unlock (science)', () => {
@@ -697,11 +727,16 @@ describe('Hero Unlocks', () => {
   describe('getUnlockedHeroes', () => {
     it('returns starters and exclusive heroes at level 1', () => {
       const heroes = getUnlockedHeroes(1);
+      // 4 starters
       expect(heroes).toContain('vanguard');
       expect(heroes).toContain('storm');
+      expect(heroes).toContain('medic');
+      expect(heroes).toContain('pyro');
+      // 3 exclusive (available from level 1 at premium cost)
       expect(heroes).toContain('spectre'); // Exclusive rare
       expect(heroes).toContain('omega');   // Exclusive legendary
-      expect(heroes).toHaveLength(4);
+      expect(heroes).toContain('scout');   // Early game hero
+      expect(heroes).toHaveLength(7);
     });
 
     it('includes forge at level 10', () => {
@@ -724,13 +759,19 @@ describe('Hero Unlocks', () => {
       expect(getUnlockedHeroes(40)).toContain('titan');
     });
 
-    it('returns all 8 heroes at level 50', () => {
+    it('returns all 11 heroes at level 50', () => {
       const heroes = getUnlockedHeroes(50);
-      expect(heroes).toHaveLength(8);
+      expect(heroes).toHaveLength(11);
+      // 4 starters
       expect(heroes).toContain('vanguard');
       expect(heroes).toContain('storm');
+      expect(heroes).toContain('medic');
+      expect(heroes).toContain('pyro');
+      // 3 exclusive
       expect(heroes).toContain('spectre');
       expect(heroes).toContain('omega');
+      expect(heroes).toContain('scout');
+      // 4 level-gated
       expect(heroes).toContain('forge');
       expect(heroes).toContain('frost');
       expect(heroes).toContain('rift');
@@ -754,6 +795,16 @@ describe('Hero Unlocks', () => {
       expect(isHeroUnlockedAtLevel('storm', 100)).toBe(true);
     });
 
+    it('returns true for medic at any level (starter hero)', () => {
+      expect(isHeroUnlockedAtLevel('medic', 1)).toBe(true);
+      expect(isHeroUnlockedAtLevel('medic', 100)).toBe(true);
+    });
+
+    it('returns true for pyro at any level (starter hero)', () => {
+      expect(isHeroUnlockedAtLevel('pyro', 1)).toBe(true);
+      expect(isHeroUnlockedAtLevel('pyro', 100)).toBe(true);
+    });
+
     it('returns false for unknown hero', () => {
       expect(isHeroUnlockedAtLevel('unknown_hero', 100)).toBe(false);
     });
@@ -766,6 +817,14 @@ describe('Hero Unlocks', () => {
 
     it('returns 1 for storm (starter hero)', () => {
       expect(getHeroUnlockLevel('storm')).toBe(1);
+    });
+
+    it('returns 1 for medic (starter hero)', () => {
+      expect(getHeroUnlockLevel('medic')).toBe(1);
+    });
+
+    it('returns 1 for pyro (starter hero)', () => {
+      expect(getHeroUnlockLevel('pyro')).toBe(1);
     });
 
     it('returns 10 for forge', () => {
@@ -889,28 +948,32 @@ describe('Turret Unlocks', () => {
 
 describe('Slot Edge Cases', () => {
   describe('getMaxHeroSlots - Edge Cases', () => {
-    it('returns 2 slots at level 9 (before threshold)', () => {
-      expect(getMaxHeroSlots(9)).toBe(2);
+    it('returns 2 slots at level 1 (base)', () => {
+      expect(getMaxHeroSlots(1)).toBe(2);
     });
 
-    it('returns 2 slots at level 10 (exact threshold)', () => {
-      expect(getMaxHeroSlots(10)).toBe(2);
+    it('returns 3 slots at level 2 (first upgrade)', () => {
+      expect(getMaxHeroSlots(2)).toBe(3);
     });
 
-    it('returns 2 slots at level 11 (just after threshold)', () => {
-      expect(getMaxHeroSlots(11)).toBe(2);
+    it('returns 4 slots at level 5', () => {
+      expect(getMaxHeroSlots(5)).toBe(4);
     });
 
-    it('returns 3 slots at level 30', () => {
-      expect(getMaxHeroSlots(30)).toBe(3);
+    it('returns 6 slots at level 25', () => {
+      expect(getMaxHeroSlots(25)).toBe(6);
     });
 
-    it('returns 4 slots at level 45 (MAX)', () => {
-      expect(getMaxHeroSlots(45)).toBe(4);
+    it('returns 7 slots at level 35', () => {
+      expect(getMaxHeroSlots(35)).toBe(7);
     });
 
-    it('returns 4 slots at level 100 (caps at MAX)', () => {
-      expect(getMaxHeroSlots(100)).toBe(4);
+    it('returns 8 slots at level 50 (MAX)', () => {
+      expect(getMaxHeroSlots(50)).toBe(8);
+    });
+
+    it('returns 8 slots at level 100 (caps at MAX)', () => {
+      expect(getMaxHeroSlots(100)).toBe(8);
     });
 
     it('slot count never decreases with level', () => {
@@ -928,24 +991,24 @@ describe('Slot Edge Cases', () => {
       expect(getMaxTurretSlots(1)).toBe(1);
     });
 
-    it('returns 1 slot at level 4', () => {
-      expect(getMaxTurretSlots(4)).toBe(1);
+    it('returns 2 slots at level 3', () => {
+      expect(getMaxTurretSlots(3)).toBe(2);
     });
 
-    it('returns 2 slots at level 5', () => {
-      expect(getMaxTurretSlots(5)).toBe(2);
+    it('returns 3 slots at level 5', () => {
+      expect(getMaxTurretSlots(5)).toBe(3);
     });
 
-    it('returns 3 slots at level 15', () => {
-      expect(getMaxTurretSlots(15)).toBe(3);
+    it('returns 4 slots at level 10', () => {
+      expect(getMaxTurretSlots(10)).toBe(4);
     });
 
-    it('returns 4 slots at level 25', () => {
-      expect(getMaxTurretSlots(25)).toBe(4);
+    it('returns 5 slots at level 20', () => {
+      expect(getMaxTurretSlots(20)).toBe(5);
     });
 
-    it('returns 6 slots at level 40 (MAX)', () => {
-      expect(getMaxTurretSlots(40)).toBe(6);
+    it('returns 6 slots at level 30 (MAX)', () => {
+      expect(getMaxTurretSlots(30)).toBe(6);
     });
 
     it('returns 6 slots at level 100 (caps at MAX)', () => {

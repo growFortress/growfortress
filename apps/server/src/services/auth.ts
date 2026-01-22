@@ -19,6 +19,7 @@ import {
 import {
   FREE_STARTER_HEROES,
   FREE_STARTER_TURRETS,
+  normalizeHeroId,
   type BuildPreset,
   type Currency,
 } from "@arcade/protocol";
@@ -27,25 +28,9 @@ import { createSystemMessage } from "./messages.js";
 import { recalculateCachedPower } from "./power-upgrades.js";
 import { DEFAULT_REMOTE_CONFIG } from "./gameConfig.js";
 import { getDefaultCurrencyForCountry } from "./geoip.js";
+import { applyReferralCode, createReferralCode } from "./referrals.js";
 
 const SALT_ROUNDS = 12;
-
-// Map legacy hero IDs to new canonical IDs
-const LEGACY_HERO_ID_MAP: Record<string, string> = {
-  shield_captain: "vanguard",
-  thunderlord: "storm",
-  scarlet_mage: "rift",
-  iron_sentinel: "forge",
-  jade_titan: "titan",
-  frost_archer: "frost_unit",
-};
-
-/**
- * Normalize a hero ID, mapping legacy IDs to their canonical versions
- */
-function normalizeHeroId(heroId: string): string {
-  return LEGACY_HERO_ID_MAP[heroId] ?? heroId;
-}
 
 function hashResetToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -67,6 +52,7 @@ export async function registerUser(
   password: string,
   email?: string,
   locale?: { country?: string | null; preferredCurrency?: Currency },
+  referralCode?: string,
 ): Promise<AuthResult> {
   // Check if username already exists
   const existingUsername = await prisma.user.findUnique({
@@ -93,6 +79,7 @@ export async function registerUser(
   const country = locale?.country ?? null;
   const preferredCurrency =
     locale?.preferredCurrency ?? getDefaultCurrencyForCountry(country);
+  const referralCodeValue = await createReferralCode();
 
   // Starter pack for new players
   const STARTER_PACK = {
@@ -107,6 +94,7 @@ export async function registerUser(
       email: email?.toLowerCase(),
       passwordHash,
       displayName: username,
+      referralCode: referralCodeValue,
       country,
       preferredCurrency,
       inventory: {
@@ -154,6 +142,14 @@ export async function registerUser(
     await recalculateCachedPower(user.id);
   } catch (error) {
     console.error(`[Auth] Failed to calculate initial power for user ${user.id}:`, error);
+  }
+
+  if (referralCode) {
+    try {
+      await applyReferralCode(user.id, referralCode);
+    } catch (error) {
+      console.warn(`[Auth] Failed to apply referral code for user ${user.id}:`, error);
+    }
   }
 
   // =========================================================================
@@ -477,6 +473,7 @@ export async function getUserProfile(userId: string): Promise<{
     fortressBaseHp: number;
     fortressBaseDamage: number;
   };
+  isGuest: boolean;
 } | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -575,6 +572,7 @@ export async function getUserProfile(userId: string): Promise<{
       fortressBaseHp: DEFAULT_REMOTE_CONFIG.fortressBaseHp,
       fortressBaseDamage: DEFAULT_REMOTE_CONFIG.fortressBaseDamage,
     },
+    isGuest: user.isGuest,
   };
 }
 
@@ -996,6 +994,286 @@ export async function resetPassword(
   ]);
 
   return true;
+}
+
+// ============================================================================
+// GUEST MODE
+// ============================================================================
+
+interface GuestAuthResult extends AuthResult {
+  isGuest: boolean;
+}
+
+/**
+ * Create a guest user - temporary account for playing without registration
+ */
+export async function createGuestUser(
+  locale?: { country?: string | null; preferredCurrency?: Currency },
+): Promise<GuestAuthResult> {
+  // Generate a random guest username
+  const guestId = randomBytes(5).toString("hex"); // 10 chars
+  const username = `guest_${guestId}`;
+  const displayName = `Guest_${guestId.slice(0, 6).toUpperCase()}`;
+
+  // Generate a random password hash (guest can't login with password)
+  const randomPassword = randomBytes(32).toString("hex");
+  const passwordHash = await bcrypt.hash(randomPassword, SALT_ROUNDS);
+
+  const country = locale?.country ?? null;
+  const preferredCurrency =
+    locale?.preferredCurrency ?? getDefaultCurrencyForCountry(country);
+
+  const referralCodeValue = await createReferralCode();
+
+  // Guest starter pack - same as regular users
+  const STARTER_PACK = {
+    gold: 1000,
+    dust: 100,
+  };
+
+  // Set expiration date (30 days from now)
+  const guestExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+  // Create guest user with initial inventory and progression
+  const user = await prisma.user.create({
+    data: {
+      username: username.toLowerCase(),
+      passwordHash,
+      displayName,
+      country,
+      preferredCurrency,
+      isGuest: true,
+      referralCode: referralCodeValue,
+      guestExpiresAt,
+      inventory: {
+        create: {
+          gold: STARTER_PACK.gold,
+          dust: STARTER_PACK.dust,
+        },
+      },
+      progression: {
+        create: {
+          level: 1,
+          xp: 0,
+          totalXp: 0,
+        },
+      },
+      powerUpgrades: {
+        create: {
+          fortressUpgrades: JSON.stringify(
+            createDefaultPlayerPowerData().fortressUpgrades,
+          ),
+          heroUpgrades: "[]",
+          turretUpgrades: "[]",
+          itemTiers: "[]",
+          cachedTotalPower: 0,
+          fortressPrestige: { level: 0, xp: 0 },
+          turretPrestige: [],
+        },
+      },
+    },
+  });
+
+  // Create session
+  const session = await prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshToken: randomBytes(32).toString("hex"),
+      expiresAt: new Date(
+        Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY),
+      ),
+    },
+  });
+
+  // Calculate initial power for PvP matching
+  try {
+    await recalculateCachedPower(user.id);
+  } catch (error) {
+    console.error(
+      `[Auth] Failed to calculate initial power for guest ${user.id}:`,
+      error,
+    );
+  }
+
+  // Generate tokens (include isGuest flag in access token)
+  const accessToken = await createAccessToken(user.id, true);
+  const refreshToken = await createRefreshToken(user.id, session.id);
+  const expiresAt = Date.now() + parseDuration(config.JWT_ACCESS_EXPIRY);
+
+  console.log(`[Auth] Created guest user: ${user.id} (${displayName})`);
+
+  return {
+    userId: user.id,
+    displayName: user.displayName,
+    accessToken,
+    refreshToken,
+    expiresAt,
+    isGuest: true,
+  };
+}
+
+/**
+ * Convert a guest user to a full registered user
+ */
+export async function convertGuestToUser(
+  userId: string,
+  username: string,
+  password: string,
+  email?: string,
+  referralCode?: string,
+): Promise<AuthResult> {
+  // Verify user exists and is a guest
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  if (!user.isGuest) {
+    throw new Error("NOT_A_GUEST");
+  }
+
+  // Check if username already exists
+  const existingUsername = await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+  });
+
+  if (existingUsername && existingUsername.id !== userId) {
+    throw new Error("USERNAME_TAKEN");
+  }
+
+  // Check if email already exists (if provided)
+  if (email) {
+    const existingEmail = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (existingEmail && existingEmail.id !== userId) {
+      throw new Error("EMAIL_TAKEN");
+    }
+  }
+
+  // Hash password
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+  // Update user to full account
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      username: username.toLowerCase(),
+      email: email?.toLowerCase(),
+      passwordHash,
+      displayName: username, // Use username as displayName
+      isGuest: false,
+      guestExpiresAt: null,
+    },
+  });
+
+  // Revoke old sessions
+  await prisma.session.updateMany({
+    where: { userId, revoked: false },
+    data: { revoked: true },
+  });
+
+  // Create new session
+  const session = await prisma.session.create({
+    data: {
+      userId: updatedUser.id,
+      refreshToken: randomBytes(32).toString("hex"),
+      expiresAt: new Date(
+        Date.now() + parseDuration(config.JWT_REFRESH_EXPIRY),
+      ),
+    },
+  });
+
+  // Grant Founders Medal artifact (like regular registration)
+  try {
+    // Check if they already have it (shouldn't, but just in case)
+    const existingArtifact = await prisma.playerArtifact.findUnique({
+      where: {
+        userId_artifactId: {
+          userId: updatedUser.id,
+          artifactId: "founders_medal",
+        },
+      },
+    });
+
+    if (!existingArtifact) {
+      await prisma.playerArtifact.create({
+        data: {
+          userId: updatedUser.id,
+          artifactId: "founders_medal",
+          level: 1,
+        },
+      });
+      console.log(
+        `[Auth] Granted founders_medal to converted user ${updatedUser.id}`,
+      );
+    }
+  } catch (error) {
+    console.error(
+      `[Auth] Failed to grant founders_medal to converted user ${updatedUser.id}:`,
+      error,
+    );
+  }
+
+  // Send welcome message
+  const welcomeMessage = `🎉 Witaj, ${username}!
+
+Gratulacje za utworzenie konta! Twój postęp z gry jako gość został zachowany.
+
+🎁 **Bonus za rejestrację:**
+• 🏅 **Medal Założyciela** - ekskluzywny legendarny artefakt!
+
+Teraz możesz:
+• Dołączyć do gildii i grać z innymi graczami
+• Uczestniczyć w trybie PvP Arena
+• Pojawiać się na tablicach wyników
+• Odblokowywać osiągnięcia
+
+Powodzenia w obronie Fortecy! 🏰⚔️
+
+— Zespół Grow Fortress`;
+
+  try {
+    await createSystemMessage(
+      updatedUser.id,
+      "🎉 Konto utworzone!",
+      welcomeMessage,
+    );
+  } catch {
+    // Ignore if message creation fails
+  }
+
+  if (referralCode) {
+    try {
+      await applyReferralCode(updatedUser.id, referralCode);
+    } catch (error) {
+      console.warn(
+        `[Auth] Failed to apply referral code for converted user ${updatedUser.id}:`,
+        error,
+      );
+    }
+  }
+
+  // Generate new tokens (without isGuest flag)
+  const accessToken = await createAccessToken(updatedUser.id);
+  const refreshToken = await createRefreshToken(updatedUser.id, session.id);
+  const expiresAt = Date.now() + parseDuration(config.JWT_ACCESS_EXPIRY);
+
+  console.log(
+    `[Auth] Converted guest ${userId} to full user: ${updatedUser.username}`,
+  );
+
+  return {
+    userId: updatedUser.id,
+    displayName: updatedUser.displayName,
+    accessToken,
+    refreshToken,
+    expiresAt,
+  };
 }
 
 // Re-export progression functions from sim-core for convenience

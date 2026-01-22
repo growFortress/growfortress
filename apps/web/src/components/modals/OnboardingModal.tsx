@@ -240,6 +240,15 @@ export function OnboardingModal() {
                   {t("onboarding.steps.ready.cards.upgrades.description")}
                 </div>
               </div>
+              <div class={styles.card}>
+                <div class={styles.cardIcon}>➕</div>
+                <div class={styles.cardTitle}>
+                  {t("onboarding.steps.ready.cards.slots.title")}
+                </div>
+                <div class={styles.cardDescription}>
+                  {t("onboarding.steps.ready.cards.slots.description")}
+                </div>
+              </div>
             </div>
 
             <div class={styles.starterKit}>

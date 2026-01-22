@@ -10,6 +10,8 @@ import {
   type GuildPreviewBonuses,
   type GuildPreviewMember,
   type GuildRole,
+  type GuildAccessMode,
+  type GuildSettings,
 } from '@arcade/protocol';
 import {
   getMemberCapacity,
@@ -42,6 +44,8 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
       name: true,
       tag: true,
       description: true,
+      emblemUrl: true,
+      settings: true,
       honor: true,
       structureKwatera: true,
       structureSkarbiec: true,
@@ -111,12 +115,18 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
 
   const topMembers: GuildPreviewMember[] = sortedMembers;
 
+  // Get access mode from settings
+  const guildSettings = guild.settings as GuildSettings | null;
+  const accessMode: GuildAccessMode = (guildSettings?.accessMode ?? 'INVITE_ONLY') as GuildAccessMode;
+
   // Build response
   const response: GuildPreviewResponse = {
     guildId: guild.id,
     name: guild.name,
     tag: guild.tag,
     description: guild.description,
+    emblemUrl: guild.emblemUrl ?? null,
+    accessMode,
     honor: guild.honor,
     memberCount: guild._count.members,
     maxMembers,

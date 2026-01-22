@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import type { FortressClass, HeroDefinition } from '@arcade/sim-core';
+import type { FortressClass, HeroDefinition, ActiveHero } from '@arcade/sim-core';
 import { useState } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import {
@@ -330,7 +330,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
   if (!visible || target?.type !== 'hero') return null;
 
   // Get hero data
-  const heroes = gamePhase.value === 'idle' ? hubHeroes.value : activeHeroes.value;
+  const heroes = gamePhase.value === 'idle' ? hubHeroes.value.filter((h): h is ActiveHero => h !== null) : activeHeroes.value;
   const hero = heroes.find(h => h.definitionId === target.heroId);
   if (!hero) return null;
 
@@ -511,7 +511,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
     });
 
   const heroSlotIndex = gamePhase.value === 'idle'
-    ? hubHeroes.value.findIndex((h) => h.definitionId === hero.definitionId)
+    ? hubHeroes.value.findIndex((h) => h !== null && h.definitionId === hero.definitionId)
     : -1;
 
   const handleChangeHero = () => {

@@ -10,7 +10,7 @@
 import type { GameState, ModifierSet, ActiveHero } from '../types.js';
 import { FP } from '../fixed.js';
 import { getHeroById } from '../data/heroes.js';
-import { getPillarForWave, calculatePillarDamageMultiplier } from '../data/pillars.js';
+import { calculatePillarDamageMultiplier } from '../data/pillars.js';
 import { getRelicById, type ExtendedRelicDef } from '../data/relics.js';
 import type { MasterySynergyAmplifier } from '../data/mastery.js';
 
@@ -161,10 +161,7 @@ export function calculateSynergyBonuses(
  * Returns additive damage bonus based on pillar-class interaction
  */
 export function calculatePillarModifiers(state: GameState): Partial<ModifierSet> {
-  const pillar = getPillarForWave(state.wave);
-  if (!pillar) return {};
-
-  const damageMultiplier = calculatePillarDamageMultiplier(pillar.id, state.fortressClass);
+  const damageMultiplier = calculatePillarDamageMultiplier(state.currentPillar, state.fortressClass);
 
   // Convert from fixed-point (16384 = 1.0) to additive bonus
   // If multiplier is 1.5x (24576), bonus should be 0.5
@@ -307,4 +304,156 @@ export function getStormForgeAttackSpeedBonus(state: GameState, hero: ActiveHero
   }
 
   return getStormForgeSynergyPair(state) ? STORM_FORGE_ATTACK_SPEED_BONUS : 0;
+}
+
+// ============================================================================
+// HERO PAIR SYNERGIES (New synergies added in hero development update)
+// ============================================================================
+
+// MEDIC + VANGUARD: "Frontline Support"
+// Medic heals Vanguard 50% faster, Vanguard gets +20% damage reduction
+export const MEDIC_VANGUARD_SYNERGY_RANGE = FP.fromFloat(5.0);
+export const MEDIC_VANGUARD_HEAL_BONUS = 0.50; // +50% heal speed to Vanguard
+export const VANGUARD_DAMAGE_REDUCTION_BONUS = 0.20; // +20% DR when near Medic
+
+function getMedicVanguardHeroes(state: GameState): { medic: ActiveHero; vanguard: ActiveHero } | null {
+  let medic: ActiveHero | undefined;
+  let vanguard: ActiveHero | undefined;
+
+  for (const hero of state.heroes) {
+    if (hero.definitionId === 'medic') medic = hero;
+    if (hero.definitionId === 'vanguard') vanguard = hero;
+    if (medic && vanguard) break;
+  }
+
+  if (!medic || !vanguard) return null;
+  return { medic, vanguard };
+}
+
+export function getMedicVanguardSynergyPair(state: GameState): { medic: ActiveHero; vanguard: ActiveHero } | null {
+  const heroes = getMedicVanguardHeroes(state);
+  if (!heroes) return null;
+
+  const distSq = FP.distSq(heroes.medic.x, heroes.medic.y, heroes.vanguard.x, heroes.vanguard.y);
+  const rangeSq = FP.mul(MEDIC_VANGUARD_SYNERGY_RANGE, MEDIC_VANGUARD_SYNERGY_RANGE);
+
+  if (distSq > rangeSq) return null;
+  return heroes;
+}
+
+export function getVanguardDamageReductionBonus(state: GameState, hero: ActiveHero): number {
+  if (hero.definitionId !== 'vanguard') return 0;
+  return getMedicVanguardSynergyPair(state) ? VANGUARD_DAMAGE_REDUCTION_BONUS : 0;
+}
+
+export function getMedicHealBonusToVanguard(state: GameState, targetHero: ActiveHero): number {
+  if (targetHero.definitionId !== 'vanguard') return 0;
+  return getMedicVanguardSynergyPair(state) ? MEDIC_VANGUARD_HEAL_BONUS : 0;
+}
+
+// PYRO + FROST: "Thermal Shock"
+// Enemies that are both burned AND frozen/slowed take +100% damage
+export const THERMAL_SHOCK_DAMAGE_BONUS = 1.0; // +100% damage to burned+frozen enemies
+
+export function hasPyroFrostSynergy(state: GameState): boolean {
+  let hasPyro = false;
+  let hasFrost = false;
+
+  for (const hero of state.heroes) {
+    if (hero.definitionId === 'pyro') hasPyro = true;
+    if (hero.definitionId === 'frost') hasFrost = true;
+    if (hasPyro && hasFrost) return true;
+  }
+
+  return false;
+}
+
+// STORM + FROST: "Superconductor"
+// Storm's chain lightning gains +2 extra targets when Frost is present
+export const SUPERCONDUCTOR_CHAIN_BONUS = 2; // +2 chain targets
+
+export function hasStormFrostSynergy(state: GameState): boolean {
+  let hasStorm = false;
+  let hasFrost = false;
+
+  for (const hero of state.heroes) {
+    if (hero.definitionId === 'storm') hasStorm = true;
+    if (hero.definitionId === 'frost') hasFrost = true;
+    if (hasStorm && hasFrost) return true;
+  }
+
+  return false;
+}
+
+export function getStormChainBonus(state: GameState): number {
+  return hasStormFrostSynergy(state) ? SUPERCONDUCTOR_CHAIN_BONUS : 0;
+}
+
+// OMEGA + TITAN: "Void Resonance"
+// Both get +25% damage, Omega execute threshold +5%
+export const VOID_RESONANCE_DAMAGE_BONUS = 0.25; // +25% damage
+export const OMEGA_EXECUTE_THRESHOLD_BONUS = 0.05; // +5% execute threshold
+
+export function hasOmegaTitanSynergy(state: GameState): boolean {
+  let hasOmega = false;
+  let hasTitan = false;
+
+  for (const hero of state.heroes) {
+    if (hero.definitionId === 'omega') hasOmega = true;
+    if (hero.definitionId === 'titan') hasTitan = true;
+    if (hasOmega && hasTitan) return true;
+  }
+
+  return false;
+}
+
+export function getVoidResonanceDamageBonus(state: GameState, hero: ActiveHero): number {
+  if (hero.definitionId !== 'omega' && hero.definitionId !== 'titan') return 0;
+  return hasOmegaTitanSynergy(state) ? VOID_RESONANCE_DAMAGE_BONUS : 0;
+}
+
+export function getOmegaExecuteThresholdBonus(state: GameState): number {
+  return hasOmegaTitanSynergy(state) ? OMEGA_EXECUTE_THRESHOLD_BONUS : 0;
+}
+
+// ============================================================================
+// HERO TRIO SYNERGIES
+// ============================================================================
+
+// MEDIC + PYRO + VANGUARD: "Balanced Squad"
+// All three get +20% damage, +20% heal effectiveness, +15% damage reduction
+export const BALANCED_SQUAD_DAMAGE_BONUS = 0.20;
+export const BALANCED_SQUAD_HEAL_BONUS = 0.20;
+export const BALANCED_SQUAD_DR_BONUS = 0.15;
+
+export function hasBalancedSquadSynergy(state: GameState): boolean {
+  let hasMedic = false;
+  let hasPyro = false;
+  let hasVanguard = false;
+
+  for (const hero of state.heroes) {
+    if (hero.definitionId === 'medic') hasMedic = true;
+    if (hero.definitionId === 'pyro') hasPyro = true;
+    if (hero.definitionId === 'vanguard') hasVanguard = true;
+    if (hasMedic && hasPyro && hasVanguard) return true;
+  }
+
+  return false;
+}
+
+export function getBalancedSquadBonus(state: GameState, hero: ActiveHero): { damage: number; heal: number; dr: number } {
+  if (!hasBalancedSquadSynergy(state)) {
+    return { damage: 0, heal: 0, dr: 0 };
+  }
+
+  // Only applies to squad members
+  if (hero.definitionId === 'medic' || hero.definitionId === 'pyro' || hero.definitionId === 'vanguard') {
+    return {
+      damage: BALANCED_SQUAD_DAMAGE_BONUS,
+      heal: BALANCED_SQUAD_HEAL_BONUS,
+      dr: BALANCED_SQUAD_DR_BONUS
+    };
+  }
+
+  return { damage: 0, heal: 0, dr: 0 };
 }

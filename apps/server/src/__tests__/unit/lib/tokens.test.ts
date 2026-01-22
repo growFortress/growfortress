@@ -25,6 +25,8 @@ const baseSimConfig = {
   fortressBaseHp: 100,
   fortressBaseDamage: 10,
   waveIntervalTicks: 90,
+  currentPillar: 'streets' as const,
+  pillarRotation: false,
 };
 
 describe('Token Library', () => {

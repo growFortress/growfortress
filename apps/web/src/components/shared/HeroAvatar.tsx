@@ -30,6 +30,13 @@ const HERO_COLORS: Record<string, { primary: string; secondary: string; accent: 
   arcane_sorcerer: { primary: '#4b0082', secondary: '#ff4500', accent: '#00ff00' },
   frost_giant: { primary: '#00ced1', secondary: '#228b22', accent: '#ffd700' },
   cosmic_guardian: { primary: '#8b4513', secondary: '#ff4500', accent: '#ffd700' },
+  // Exclusive heroes
+  spectre: { primary: '#00ffff', secondary: '#ff00ff', accent: '#00ffff' },
+  omega: { primary: '#ffd700', secondary: '#1a1a2a', accent: '#ffd700' },
+  // Starter heroes
+  medic: { primary: '#00ff7f', secondary: '#98fb98', accent: '#00ff00' },
+  pyro: { primary: '#ff4500', secondary: '#ff6347', accent: '#ffa500' },
+  scout: { primary: '#228b22', secondary: '#90ee90', accent: '#32cd32' },
 };
 
 interface HeroAvatarProps {

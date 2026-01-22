@@ -318,11 +318,19 @@
   color: var(--color-text-60);
 }
 
+.slotNextInfo {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text-40);
+  margin-top: 2px;
+}
+
 .slotPurchase {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 6px;
+  min-width: 140px;
 }
 
 .slotCost {
@@ -345,11 +353,37 @@
   color: var(--color-text-40);
 }
 
-.slotReason {
+.slotRequirements {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.slotRequirement {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.slotRequirementLabel {
   font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--color-text-60);
+  flex: 1;
+}
+
+.slotRequirementValue {
+  font-family: var(--font-display);
   font-size: 10px;
+  font-weight: 700;
   color: var(--color-warning);
-  max-width: 120px;
   text-align: right;
 }
 

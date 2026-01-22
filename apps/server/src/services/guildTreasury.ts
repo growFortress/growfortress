@@ -61,11 +61,10 @@ export async function canWithdraw(
     return { allowed: false, reason: GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS };
   }
 
-  // Check cooldown - find last withdrawal
+  // Check cooldown - find last withdrawal for guild (global cooldown)
   const lastWithdrawal = await prisma.guildTreasuryLog.findFirst({
     where: {
       guildId,
-      userId,
       transactionType: { in: ['WITHDRAW_GOLD', 'WITHDRAW_DUST'] },
     },
     orderBy: { createdAt: 'desc' },

@@ -17,7 +17,7 @@ import {
   fetchPillarUnlocks,
   currentFortressLevel,
 } from '../../state/pillarUnlocks.signals.js';
-import { PILLAR_INFO } from '../../state/index.js';
+import { PILLAR_INFO, currentPillar, gamePhase, selectPillar } from '../../state/index.js';
 import type { PillarUnlockInfo } from '@arcade/protocol';
 import styles from './PillarUnlockModal.module.css';
 import { useEffect } from 'preact/hooks';
@@ -106,6 +106,8 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
   const { t } = useTranslation('modals');
   const info = PILLAR_INFO[pillar.pillarId];
   const levelMet = fortressLevel >= pillar.requiredLevel;
+  const isActive = currentPillar.value === pillar.pillarId;
+  const canSelect = pillar.isUnlocked && gamePhase.value === 'idle';
 
   const cardClasses = [
     styles.pillarCard,
@@ -118,7 +120,7 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
     <div class={cardClasses}>
       {/* Pillar icon */}
       <div class={styles.pillarIcon}>
-        {info?.icon || '🎮'}
+        {info?.icon || 'P'}
       </div>
 
       {/* Pillar info */}
@@ -134,12 +136,23 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
       {/* Requirements / Status */}
       <div class={styles.requirements}>
         {pillar.isUnlocked ? (
-          <span class={styles.unlockedBadge}>
-            {t('pillarUnlock.unlockedBadge')}
-          </span>
+          isActive ? (
+            <span class={styles.activeBadge}>
+              {t('pillarUnlock.activeBadge')}
+            </span>
+          ) : (
+            <button
+              class={styles.selectButton}
+              type="button"
+              onClick={() => selectPillar(pillar.pillarId)}
+              disabled={!canSelect}
+            >
+              {t('pillarUnlock.select')}
+            </button>
+          )
         ) : (
           <div class={`${styles.requirement} ${levelMet ? styles.met : styles.notMet}`}>
-            <span class={styles.requirementIcon}>{levelMet ? '✓' : '✗'}</span>
+            <span class={styles.requirementIcon}>{levelMet ? 'OK' : 'X'}</span>
             <span>{t('pillarUnlock.levelValue', { level: pillar.requiredLevel })}</span>
           </div>
         )}

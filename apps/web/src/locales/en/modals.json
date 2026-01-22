@@ -66,6 +66,17 @@
       "add": "Add",
       "save": "Save",
       "saving": "Saving...",
+      "referralTitle": "Invite Friends",
+      "referralDescription": "Share your link. When a friend creates an account, you both get rewards.",
+      "referralLoading": "Loading invite details...",
+      "referralUnavailable": "Referral info unavailable right now.",
+      "referralCopy": "Copy link",
+      "referralCopied": "Copied",
+      "referralCopyFailed": "Failed to copy link",
+      "referralInvites": "Successful invites",
+      "referralRewardsTitle": "Rewards per friend",
+      "referralRewardYou": "You",
+      "referralRewardFriend": "Friend",
       "bonusCode": "Bonus Code",
       "codePlaceholder": "Enter code",
       "redeem": "Redeem",
@@ -222,11 +233,22 @@
           "upgrades": {
             "title": "After Run: Upgrade",
             "description": "Spend earned gold on permanent stat bonuses."
+          },
+          "slots": {
+            "title": "Unlock More Slots",
+            "description": "Purchase additional slots for heroes and turrets with gold. More slots = stronger build!"
           }
         },
         "starterKit": "Your starter kit:"
       }
     }
+  },
+  "slotUnlock": {
+    "heroTitle": "Unlocked Hero Slot {{slot}}!",
+    "heroDescription": "You can now use {{slot}} heroes at once!",
+    "turretTitle": "Unlocked Turret Slot {{slot}}!",
+    "turretDescription": "You can now use {{slot}} turrets at once!",
+    "close": "Close"
   },
   "classSelection": {
     "title": "Choose Fortress Class",
@@ -322,7 +344,67 @@
   },
   "tierEvolution": {
     "title": "Tier Evolution",
-    "upcomingUnlocks": "Upcoming unlocks"
+    "upcomingUnlocks": "Upcoming unlocks",
+    "tierNames": {
+      "1": "Tower",
+      "2": "Stronghold",
+      "3": "Citadel"
+    },
+    "tierDescriptions": {
+      "1": "Basic defensive structure. First step on the path to greatness.",
+      "2": "Reinforced fortification with battlements and watchtowers.",
+      "3": "Maximum evolution - powerful citadel with elemental power!"
+    },
+    "levelLabel": "Lvl",
+    "levelRange": "Lvl {{min}}{{max}}",
+    "currentLevel": "Level {{level}}",
+    "tierBadge": "Tier {{tier}}/3",
+    "availableSlots": "Available Slots",
+    "heroSlots": "Hero Slots",
+    "turretSlots": "Turret Slots",
+    "slotCount": "{{current}} / {{max}}",
+    "nextSlot": "Next: Slot {{slot}}",
+    "costGold": "🪙 {{amount}}",
+    "costLevel": "Lvl {{level}}",
+    "missingLevels": "Missing levels:",
+    "missingGold": "Missing gold:",
+    "purchase": "Purchase",
+    "unavailable": "Unavailable",
+    "maxed": "MAX",
+    "purchasing": "...",
+    "purchaseHeroSlot": "Purchase hero slot for {{amount}} gold",
+    "purchaseTurretSlot": "Purchase turret slot for {{amount}} gold",
+    "maxLevelMessage": "You've reached the maximum fortress level!",
+    "purchaseError": "Failed to purchase slot",
+    "connectionError": "Connection to server failed",
+    "rewards": {
+      "skill1": "Unlocked basic configuration skill",
+      "turretCryo": "Unlocked Cryo Tower",
+      "skill2": "Unlocked second configuration skill",
+      "heroForge": "Unlocked Unit-3 \"Forge\"",
+      "skill3": "Unlocked third configuration skill",
+      "pillarScience": "Unlocked Sector: Science and Technology",
+      "turretArtillery": "Unlocked Artillery Tower",
+      "damageBonus10": "+10% Fortress DMG",
+      "classIce": "Unlocked Cryogenic Configuration",
+      "heroFrost": "Unlocked Unit-5 \"Frost\"",
+      "skillUltimate": "Unlocked Ultimate configuration",
+      "hpBonus5": "+5% Fortress HP",
+      "pillarMutants": "Unlocked Sector: Mutants",
+      "heroRift": "Unlocked Unit-9 \"Rift\"",
+      "turretArc": "Unlocked Arc Tower",
+      "heroTitan": "Unlocked Unit-1 \"Titan\"",
+      "classFire": "Unlocked Thermal Configuration",
+      "pillarCosmos": "Unlocked Sector: Cosmos",
+      "turretLaser": "Unlocked Photon Tower",
+      "featureCrystalMatrix": "Unlocked Crystal Matrix",
+      "featureTrueEnding": "Unlocked Annihilation Protocol",
+      "pillarMagic": "Unlocked Sector: Magic and Dimensions",
+      "classLightning": "Unlocked Electric Configuration",
+      "pillarGods": "Unlocked Sector: Gods",
+      "classVoid": "Unlocked Void Configuration",
+      "classTech": "Unlocked Quantum Configuration"
+    }
   },
   "pillarUnlock": {
     "title": "Pillar Unlocks",
@@ -332,7 +414,9 @@
     "levelValue": "Level {{level}}",
     "unlockedDescription": "Unlocked",
     "requiredLevel": "Requires level {{level}}",
-    "unlockedBadge": "Unlocked"
+    "unlockedBadge": "Unlocked",
+    "activeBadge": "Active",
+    "select": "Select"
   },
   "artifacts": {
     "title": "Artifacts",

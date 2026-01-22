@@ -66,6 +66,17 @@
       "add": "Dodaj",
       "save": "Zapisz",
       "saving": "Zapisywanie...",
+      "referralTitle": "Poleć znajomym",
+      "referralDescription": "Udostępnij swój link. Gdy znajomy utworzy konto, oboje dostaniecie nagrody.",
+      "referralLoading": "Ładowanie danych zaproszeń...",
+      "referralUnavailable": "Nie można teraz pobrać informacji o poleceniach.",
+      "referralCopy": "Skopiuj link",
+      "referralCopied": "Skopiowano",
+      "referralCopyFailed": "Nie udało się skopiować linku",
+      "referralInvites": "Skuteczne zaproszenia",
+      "referralRewardsTitle": "Nagrody za znajomego",
+      "referralRewardYou": "Ty",
+      "referralRewardFriend": "Znajomy",
       "bonusCode": "Kod bonusowy",
       "codePlaceholder": "Wpisz kod",
       "redeem": "Odbierz",
@@ -121,6 +132,17 @@
     "save": "Zapisz",
     "cancel": "Anuluj",
     "saving": "Zapisywanie...",
+      "referralTitle": "Poleć znajomym",
+      "referralDescription": "Udostępnij swój link. Gdy znajomy utworzy konto, oboje dostaniecie nagrody.",
+      "referralLoading": "Ładowanie danych zaproszeń...",
+      "referralUnavailable": "Nie można teraz pobrać informacji o poleceniach.",
+      "referralCopy": "Skopiuj link",
+      "referralCopied": "Skopiowano",
+      "referralCopyFailed": "Nie udało się skopiować linku",
+      "referralInvites": "Skuteczne zaproszenia",
+      "referralRewardsTitle": "Nagrody za znajomego",
+      "referralRewardYou": "Ty",
+      "referralRewardFriend": "Znajomy",
     "noHeroes": "Brak odblokowanych bohaterów.",
     "noTurrets": "Brak odblokowanych wież.",
     "errors": {
@@ -222,11 +244,22 @@
           "upgrades": {
             "title": "Po sesji: ulepszaj",
             "description": "Za zdobyte złoto kupuj permanentne bonusy do statystyk."
+          },
+          "slots": {
+            "title": "Odblokuj więcej slotów",
+            "description": "Kupuj dodatkowe sloty dla bohaterów i wieżyczek za złoto. Więcej slotów = silniejszy build!"
           }
         },
         "starterKit": "Twój starter kit:"
       }
     }
+  },
+  "slotUnlock": {
+    "heroTitle": "Odblokowano Slot {{slot}} dla Bohaterów!",
+    "heroDescription": "Możesz teraz używać {{slot}} bohaterów jednocześnie!",
+    "turretTitle": "Odblokowano Slot {{slot}} dla Wieżyczek!",
+    "turretDescription": "Możesz teraz używać {{slot}} wieżyczek jednocześnie!",
+    "close": "Zamknij"
   },
   "classSelection": {
     "title": "Wybierz Klasę Twierdzy",
@@ -322,7 +355,67 @@
   },
   "tierEvolution": {
     "title": "Ewolucja Tieru",
-    "upcomingUnlocks": "Nadchodzące odblokowania"
+    "upcomingUnlocks": "Nadchodzące odblokowania",
+    "tierNames": {
+      "1": "Wieża",
+      "2": "Warownia",
+      "3": "Cytadela"
+    },
+    "tierDescriptions": {
+      "1": "Podstawowa struktura obronna. Pierwszy krok na drodze do wielkości.",
+      "2": "Wzmocniona fortyfikacja z blankami i wieżami strażniczymi.",
+      "3": "Maksymalna ewolucja - potężna cytadela z elementalną mocą!"
+    },
+    "levelLabel": "Poz.",
+    "levelRange": "Poz. {{min}}{{max}}",
+    "currentLevel": "Poziom {{level}}",
+    "tierBadge": "Tier {{tier}}/3",
+    "availableSlots": "Dostępne Sloty",
+    "heroSlots": "Sloty Bohaterów",
+    "turretSlots": "Sloty Wież",
+    "slotCount": "{{current}} / {{max}}",
+    "nextSlot": "Następny: Slot {{slot}}",
+    "costGold": "🪙 {{amount}}",
+    "costLevel": "Poz. {{level}}",
+    "missingLevels": "Brakuje poziomów:",
+    "missingGold": "Brakuje złota:",
+    "purchase": "Kup",
+    "unavailable": "Niedostępny",
+    "maxed": "MAX",
+    "purchasing": "...",
+    "purchaseHeroSlot": "Kup slot bohatera za {{amount}} złota",
+    "purchaseTurretSlot": "Kup slot wieży za {{amount}} złota",
+    "maxLevelMessage": "Osiągnąłeś maksymalny poziom twierdzy!",
+    "purchaseError": "Nie udało się kupić slotu",
+    "connectionError": "Błąd połączenia z serwerem",
+    "rewards": {
+      "skill1": "Odblokowano podstawową umiejętność konfiguracji",
+      "turretCryo": "Odblokowano Wieżę Kriogeniczną",
+      "skill2": "Odblokowano drugą umiejętność konfiguracji",
+      "heroForge": "Odblokowano Unit-3 \"Forge\"",
+      "skill3": "Odblokowano trzecią umiejętność konfiguracji",
+      "pillarScience": "Odblokowano Sektor: Nauka i Technologia",
+      "turretArtillery": "Odblokowano Wieżę Artyleryjską",
+      "damageBonus10": "+10% DMG twierdzy",
+      "classIce": "Odblokowano Konfigurację Kriogeniczną",
+      "heroFrost": "Odblokowano Unit-5 \"Frost\"",
+      "skillUltimate": "Odblokowano Ultimate konfiguracji",
+      "hpBonus5": "+5% HP twierdzy",
+      "pillarMutants": "Odblokowano Sektor: Mutanci",
+      "heroRift": "Odblokowano Unit-9 \"Rift\"",
+      "turretArc": "Odblokowano Wieżę Łukową",
+      "heroTitan": "Odblokowano Unit-1 \"Titan\"",
+      "classFire": "Odblokowano Konfigurację Termiczną",
+      "pillarCosmos": "Odblokowano Sektor: Kosmos",
+      "turretLaser": "Odblokowano Wieżę Fotonową",
+      "featureCrystalMatrix": "Odblokowano Matrycę Kryształów",
+      "featureTrueEnding": "Odblokowano Protokół Anihilacji",
+      "pillarMagic": "Odblokowano Sektor: Magia i Wymiary",
+      "classLightning": "Odblokowano Konfigurację Elektryczną",
+      "pillarGods": "Odblokowano Sektor: Bogowie",
+      "classVoid": "Odblokowano Konfigurację Próżniową",
+      "classTech": "Odblokowano Konfigurację Kwantową"
+    }
   },
   "pillarUnlock": {
     "title": "Odblokowanie Filarów",
@@ -332,7 +425,9 @@
     "levelValue": "Poziom {{level}}",
     "unlockedDescription": "Odblokowano",
     "requiredLevel": "Wymaga poziomu {{level}}",
-    "unlockedBadge": "Odblokowano"
+    "unlockedBadge": "Odblokowano",
+    "activeBadge": "Aktywny",
+    "select": "Wybierz"
   },
   "artifacts": {
     "title": "Artefakty",
@@ -391,3 +486,5 @@
     "noAttribution": "Brak szczegółowego podziału"
   }
 }
+
+

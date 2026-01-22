@@ -84,10 +84,16 @@ export type PvpChallenge = z.infer<typeof PvpChallengeSchema>;
 
 export const PvpCreateChallengeResponseSchema = z.object({
   challenge: PvpChallengeSchema,
+  // Battle data for live visualization
+  battleData: z.object({
+    seed: z.number().int(),
+    challengerBuild: z.unknown(), // ArenaBuildConfig
+    challengedBuild: z.unknown(), // ArenaBuildConfig
+  }).optional(),
   // Auto-accept: battle runs immediately, include result
   result: z.object({
     winnerId: z.string().nullable(),
-    winReason: z.string(),
+    winReason: PvpWinReasonSchema,
     challengerStats: PvpBattleStatsSchema,
     challengedStats: PvpBattleStatsSchema,
     duration: z.number().int().min(0),
@@ -150,7 +156,7 @@ export const PvpAcceptResponseSchema = z.object({
   }),
   result: z.object({
     winnerId: z.string().nullable(),
-    winReason: z.string(),
+    winReason: PvpWinReasonSchema,
     challengerStats: PvpBattleStatsSchema,
     challengedStats: PvpBattleStatsSchema,
     duration: z.number().int().min(0),
@@ -187,7 +193,7 @@ export type PvpChallengeWithResult = z.infer<typeof PvpChallengeWithResultSchema
 // ============================================================================
 
 export const PvpOpponentsQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(8).default(8),
   offset: z.coerce.number().int().min(0).default(0),
 });
 
@@ -273,6 +279,7 @@ export const PVP_ERROR_CODES = {
   CHALLENGE_EXPIRED: 'CHALLENGE_EXPIRED',
   CHALLENGE_ALREADY_RESOLVED: 'CHALLENGE_ALREADY_RESOLVED',
   CHALLENGE_NOT_PENDING: 'CHALLENGE_NOT_PENDING',
+  CHALLENGE_NOT_RESOLVED: 'CHALLENGE_NOT_RESOLVED',
   CANNOT_CHALLENGE_SELF: 'CANNOT_CHALLENGE_SELF',
   COOLDOWN_ACTIVE: 'COOLDOWN_ACTIVE',
   OPPONENT_NOT_FOUND: 'OPPONENT_NOT_FOUND',

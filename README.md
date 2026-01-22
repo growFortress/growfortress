@@ -243,8 +243,8 @@ When updating simulation logic:
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/v1/pvp/opponents` | Yes | List matchable opponents |
-| POST | `/v1/pvp/challenges` | Yes | Create challenge |
-| POST | `/v1/pvp/challenges/:id/accept` | Yes | Accept and fight |
+| POST | `/v1/pvp/challenges` | Yes | Create and resolve challenge immediately |
+| POST | `/v1/pvp/challenges/:id/accept` | Yes | Legacy accept (not used in async flow) |
 | GET | `/v1/pvp/replay/:id` | Yes | Get battle replay |
 
 ### Other

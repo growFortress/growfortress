@@ -26,6 +26,12 @@ export const RATE_LIMITS = {
   leaderboard: { max: 120, timeWindow: 60000 }, // 120 req/min
   profile: { max: 120, timeWindow: 60000 },     // 120 req/min
 
+  // PvP Arena - limit challenges per user
+  pvpChallenges: { max: 20, timeWindow: 60000 },    // 20 req/min (create challenge = instant battle)
+
+  // Slot purchases - strict limits to prevent spam
+  slotPurchase: { max: 10, timeWindow: 60000 },     // 10 req/min (slot purchases)
+
   // Guild operations - strict limits to prevent abuse
   guildCreate: { max: 3, timeWindow: 3600000 },     // 3 req/hour (guild creation)
   guildBattle: { max: 20, timeWindow: 60000 },      // 20 req/min (battles)
@@ -34,6 +40,7 @@ export const RATE_LIMITS = {
   guildApply: { max: 10, timeWindow: 60000 },       // 10 req/min (applications)
   guildManage: { max: 30, timeWindow: 60000 },      // 30 req/min (management actions)
   guildRead: { max: 120, timeWindow: 60000 },       // 120 req/min (read operations)
+  guildChat: { max: 60, timeWindow: 60000 },        // 60 req/min (chat messages)
 
   // Default for other endpoints
   default: { max: 200, timeWindow: 60000 },

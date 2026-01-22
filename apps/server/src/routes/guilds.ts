@@ -3,6 +3,11 @@ import { withRateLimit } from '../plugins/rateLimit.js';
 import {
   CreateGuildRequestSchema,
   UpdateGuildRequestSchema,
+  UpdateGuildDescriptionRequestSchema,
+  UpdateGuildNotesRequestSchema,
+  UpdateGuildEmblemRequestSchema,
+  SendGuildMessageRequestSchema,
+  GuildChatMessagesQuerySchema,
   GuildSearchQuerySchema,
   UpdateMemberRoleRequestSchema,
   TransferLeadershipRequestSchema,
@@ -31,6 +36,9 @@ import {
   updateMemberRole,
   transferLeadership,
   joinGuildDirect,
+  updateGuildDescription,
+  updateGuildNotes,
+  updateGuildEmblem,
 } from '../services/guild.js';
 import {
   getMemberCapacity,
@@ -98,6 +106,7 @@ import {
 } from '../services/guildBoss.js';
 import { getGuildMedalCollection, getActiveWaveBonus } from '../services/guildMedals.js';
 import { getGuildTrophies } from '../services/guildBattleTrophies.js';
+import { sendGuildMessage, getGuildMessages } from '../services/guildChat.js';
 import { getCurrentWeekKey } from '../lib/queue.js';
 import {
   requireGuildMembership,
@@ -107,6 +116,19 @@ import {
 import { isUserConnected } from '../services/websocket.js';
 
 const guildRoutes: FastifyPluginAsync = async (fastify) => {
+  // Helper to check if guest user is trying to access guild features
+  const requireRegistration = (request: any, reply: any): boolean => {
+    if (request.isGuest) {
+      reply.status(403).send({
+        error: 'Registration required',
+        code: 'REGISTRATION_REQUIRED',
+        message: 'Create an account to access guild features'
+      });
+      return false;
+    }
+    return true;
+  };
+
   // ============================================================================
   // GUILD MANAGEMENT
   // ============================================================================
@@ -116,6 +138,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
+    if (!requireRegistration(request, reply)) return;
 
     try {
       const body = CreateGuildRequestSchema.parse(request.body);
@@ -200,6 +223,63 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
       const { guildId } = request.params as { guildId: string };
       const body = UpdateGuildRequestSchema.parse(request.body);
       const guild = await updateGuild(guildId, request.userId, body);
+      return reply.send({ guild });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Update guild description
+  fastify.patch('/v1/guilds/:guildId/description', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId } = request.params as { guildId: string };
+      const body = UpdateGuildDescriptionRequestSchema.parse(request.body);
+      const guild = await updateGuildDescription(guildId, request.userId, body.description);
+      return reply.send({ guild });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Update guild notes
+  fastify.patch('/v1/guilds/:guildId/notes', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId } = request.params as { guildId: string };
+      const body = UpdateGuildNotesRequestSchema.parse(request.body);
+      const guild = await updateGuildNotes(guildId, request.userId, body.notes);
+      return reply.send({ guild });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Update guild emblem
+  fastify.patch('/v1/guilds/:guildId/emblem', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId } = request.params as { guildId: string };
+      const body = UpdateGuildEmblemRequestSchema.parse(request.body);
+      const guild = await updateGuildEmblem(guildId, request.userId, body.emblemUrl);
       return reply.send({ guild });
     } catch (error: any) {
       if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
@@ -508,6 +588,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
+    if (!requireRegistration(request, reply)) return;
 
     try {
       const { invitationId } = request.params as { invitationId: string };
@@ -566,6 +647,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
+    if (!requireRegistration(request, reply)) return;
 
     try {
       const { guildId } = request.params as { guildId: string };
@@ -584,6 +666,7 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
+    if (!requireRegistration(request, reply)) return;
 
     try {
       const { guildId } = request.params as { guildId: string };
@@ -1481,6 +1564,48 @@ const guildRoutes: FastifyPluginAsync = async (fastify) => {
         isActive: activeBonus.isActive,
       },
     });
+  });
+
+  // ============================================================================
+  // GUILD CHAT
+  // ============================================================================
+
+  // Send guild chat message
+  fastify.post('/v1/guilds/:guildId/chat/messages', withRateLimit('guildChat'), async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId } = request.params as { guildId: string };
+      const body = SendGuildMessageRequestSchema.parse(request.body);
+      const message = await sendGuildMessage(guildId, request.userId, body.content);
+      return reply.send({ message });
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
+  });
+
+  // Get guild chat messages
+  fastify.get('/v1/guilds/:guildId/chat/messages', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { guildId } = request.params as { guildId: string };
+      const query = GuildChatMessagesQuerySchema.parse(request.query);
+      const result = await getGuildMessages(guildId, request.userId, query.limit, query.offset);
+      return reply.send(result);
+    } catch (error: any) {
+      if (Object.values(GUILD_ERROR_CODES).includes(error.message)) {
+        return reply.status(400).send({ error: error.message });
+      }
+      throw error;
+    }
   });
 
   // ============================================================================

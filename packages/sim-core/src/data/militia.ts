@@ -31,6 +31,8 @@ export interface MilitiaDefinition {
   duration: number;
   /** Collision radius in game units */
   radius: number;
+  /** Gold cost to spawn */
+  goldCost: number;
   /** Visual color */
   color: number;
   /** Secondary visual color */
@@ -54,6 +56,7 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     attackInterval: 45,  // 1.5 seconds
     duration: 300,       // 10 seconds
     radius: 0.5,
+    goldCost: 10,
     color: 0x00ccff,     // Cyan
     secondaryColor: 0x0088cc,
   },
@@ -69,6 +72,7 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     attackInterval: 60,  // 2 seconds
     duration: 300,       // 10 seconds
     radius: 0.4,
+    goldCost: 15,
     color: 0xff6600,     // Orange
     secondaryColor: 0xffcc00,
   },
@@ -84,6 +88,7 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     attackInterval: 90,  // 3 seconds
     duration: 450,       // 15 seconds
     radius: 0.6,
+    goldCost: 20,
     color: 0x8800ff,     // Purple
     secondaryColor: 0xcc88ff,
   },

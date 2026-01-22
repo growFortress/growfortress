@@ -44,8 +44,8 @@ Deterministic crystal farming mode. Complete pillar-specific challenges for guar
 | Tier | Waves | Time Limit | Fragment Rewards | Unlock Requirement |
 |------|-------|------------|------------------|-------------------|
 | Normal | 10 | 5 min | 1 base + 2 bonus | Pillar unlocked |
-| Hard | 15 | 7 min | 2 base + 3 bonus | 3× Normal clears |
-| Mythic | 20 | 10 min | 3 base + 5 bonus | Perfect Hard clear |
+| Hard | 15 | 7 min | 3 base + 3 bonus | 3× Normal clears |
+| Mythic | 20 | 10 min | 4 base + 5 bonus | 3× Hard clears |
 
 **Crystal Mapping by Pillar:**
 
@@ -62,7 +62,7 @@ Deterministic crystal farming mode. Complete pillar-specific challenges for guar
 
 | Bonus | Condition | Reward |
 |-------|-----------|--------|
-| Speed Clear | Complete in < 2 min | +1 fragment |
+| Speed Clear | Complete in tier time limit (Normal: 2 min, Hard: 3 min, Mythic: 4 min) | +1 fragment |
 | Fortress Intact | Fortress HP > 75% | +1 fragment |
 | Perfect Clear | Zero fortress damage | +2 fragments |
 | Heroes Triumphant | Zero hero deaths | +1 fragment |
