@@ -76,6 +76,7 @@ model User {
   // Messaging system
   messageParticipations MessageParticipant[]
   sentMessages          Message[]            @relation("SentMessages")
+  chatMessages          ChatMessage[]
 
   // Moderation system
   reportsMade     MessageReport[] @relation("ReportsMade")
@@ -769,6 +770,7 @@ model Guild {
   treasuryLogs       GuildTreasuryLog[]
   upgrades           GuildUpgrade[]
   leaderboardEntries GuildLeaderboardEntry[]
+  chatMessages        ChatMessage[]
 
   // Battle relations
   battlesSent     GuildBattle[] @relation("guildBattleChallenger")
@@ -1273,6 +1275,11 @@ enum MessageType {
   GUILD_KICK // Guild kick notification
 }
 
+enum ChatScope {
+  GLOBAL
+  GUILD
+}
+
 model MessageThread {
   id      String      @id @default(cuid())
   subject String
@@ -1335,6 +1342,23 @@ model Message {
   reports MessageReport[]
 
   @@index([threadId, createdAt])
+  @@index([senderId])
+}
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  scope     ChatScope @default(GLOBAL)
+  guildId   String?
+  senderId  String
+  content   String    @db.Text
+  createdAt DateTime  @default(now())
+
+  // Relations
+  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  guild  Guild? @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([scope, createdAt(sort: Desc)])
+  @@index([guildId, createdAt(sort: Desc)])
   @@index([senderId])
 }
 

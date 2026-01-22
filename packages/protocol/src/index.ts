@@ -1,5 +1,5 @@
 // Version
-export { SCHEMA_VERSION } from './version.js';
+export { SCHEMA_VERSION } from "./version.js";
 
 // Auth
 export {
@@ -49,7 +49,7 @@ export {
   type GameConfig,
   type UpdateCurrencyRequest,
   type UpdateCurrencyResponse,
-} from './auth.js';
+} from "./auth.js";
 
 // Events
 export {
@@ -63,7 +63,7 @@ export {
   type ActivateSnapEvent,
   type GameEvent,
   type Checkpoint,
-} from './events.js';
+} from "./events.js";
 
 // Leaderboard
 export {
@@ -106,7 +106,7 @@ export {
   type ExclusiveItemCategory,
   type ExclusiveItem,
   type ExclusiveItemsResponse,
-} from './leaderboard.js';
+} from "./leaderboard.js";
 
 // Telemetry
 export {
@@ -118,7 +118,7 @@ export {
   type TelemetryBatchRequest,
   type TelemetryBatchResponse,
   type TelemetryEventType,
-} from './telemetry.js';
+} from "./telemetry.js";
 
 // Sessions
 export {
@@ -144,7 +144,7 @@ export {
   type PartialRewards,
   type SessionEndResponse,
   type ActiveSessionResponse,
-} from './sessions.js';
+} from "./sessions.js";
 
 // Upgrades
 export {
@@ -158,7 +158,7 @@ export {
   type UpgradeHeroResponse,
   type UpgradeTurretRequest,
   type UpgradeTurretResponse,
-} from './upgrades.js';
+} from "./upgrades.js";
 
 // Slots (hero/turret slot purchase)
 export {
@@ -178,7 +178,7 @@ export {
   type PurchaseTurretSlotRequest,
   type PurchaseTurretSlotResponse,
   type SlotStatus,
-} from './slots.js';
+} from "./slots.js";
 
 // Artifacts
 export {
@@ -232,7 +232,7 @@ export {
   type DismantleArtifactResponse,
   type GetUpgradeCostRequest,
   type GetUpgradeCostResponse,
-} from './artifacts.js';
+} from "./artifacts.js";
 
 // Heroes (unlock/recruit)
 export {
@@ -250,7 +250,7 @@ export {
   type UnlockHeroResponse,
   type UnlockTurretRequest,
   type UnlockTurretResponse,
-} from './heroes.js';
+} from "./heroes.js";
 
 // Boss Rush
 export {
@@ -280,7 +280,7 @@ export {
   type BossRushHistoryQuery,
   type BossRushHistoryResponse,
   type BossRushRejectionReason,
-} from './boss-rush.js';
+} from "./boss-rush.js";
 
 // Power Upgrades
 export {
@@ -332,7 +332,7 @@ export {
   type PowerSummaryResponse,
   type UpgradeCostInfo,
   type AvailableUpgradesResponse,
-} from './power-upgrades.js';
+} from "./power-upgrades.js";
 
 // PvP Arena
 export {
@@ -375,7 +375,7 @@ export {
   type PvpReplayResponse,
   type PvpUserStats,
   type PvpErrorCode,
-} from './pvp.js';
+} from "./pvp.js";
 
 // Guild System
 export {
@@ -555,7 +555,7 @@ export {
   type GuildBossLeaderboardResponse,
   type GuildBossAttackResponse,
   type GuildErrorCode,
-} from './guild.js';
+} from "./guild.js";
 
 // Messaging System
 export {
@@ -628,7 +628,23 @@ export {
   type BroadcastRequest,
   type BroadcastHistoryItem,
   type BroadcastHistoryResponse,
-} from './messages.js';
+} from "./messages.js";
+
+// Chat
+export {
+  ChatScopeSchema,
+  ChatMessageSchema,
+  ChatHistoryQuerySchema,
+  ChatSendRequestSchema,
+  ChatHistoryResponseSchema,
+  ChatSendResponseSchema,
+  type ChatScope,
+  type ChatMessage,
+  type ChatHistoryQuery,
+  type ChatSendRequest,
+  type ChatHistoryResponse,
+  type ChatSendResponse,
+} from "./chat.js";
 
 // Idle Rewards & Colonies
 export {
@@ -646,7 +662,7 @@ export {
   type UpgradeColonyRequest,
   type UpgradeColonyResponse,
   type IdleRewardsConfigResponse,
-} from './idle.js';
+} from "./idle.js";
 
 // Materials
 export {
@@ -660,7 +676,7 @@ export {
   type AddMaterialsResponse,
   type RemoveMaterialsRequest,
   type RemoveMaterialsResponse,
-} from './materials.js';
+} from "./materials.js";
 
 // Bulk Rewards
 export {
@@ -670,7 +686,7 @@ export {
   type BulkReward,
   type BulkRewardsResponse,
   type ClaimBulkRewardResponse,
-} from './rewards.js';
+} from "./rewards.js";
 
 // IAP (In-App Purchases)
 export {
@@ -689,7 +705,7 @@ export {
   type GrantDustResponse,
   type IAPTransaction,
   type GetTransactionsResponse,
-} from './iap.js';
+} from "./iap.js";
 
 // WebSocket
 export {
@@ -739,7 +755,7 @@ export {
   type UnsubscribeEvent,
   type ClientEvent,
   type WebSocketConnectQuery,
-} from './websocket.js';
+} from "./websocket.js";
 
 // Pillar Challenge (Deterministic Crystal Acquisition)
 export {
@@ -807,7 +823,7 @@ export {
   type CraftCrystalRequest,
   type CraftCrystalResponse,
   type AssembleMatrixResponse,
-} from './pillar-challenge.js';
+} from "./pillar-challenge.js";
 
 // Daily Quests
 export {
@@ -836,7 +852,7 @@ export {
   type ClaimQuestRewardResponse,
   type ClaimAllQuestsResponse,
   type DailyQuestErrorCode,
-} from './daily-quests.js';
+} from "./daily-quests.js";
 
 // Energy System (Premium economy - limits free play)
 export {
@@ -847,7 +863,7 @@ export {
   type EnergyStatus,
   type RefillEnergyResponse,
   type EnergyErrorCode,
-} from './energy.js';
+} from "./energy.js";
 
 // Pillar Unlock System (Level-gated world progression)
 export {
@@ -857,7 +873,7 @@ export {
   type PillarUnlockId,
   type PillarUnlockInfo,
   type GetPillarUnlocksResponse,
-} from './pillar-unlocks.js';
+} from "./pillar-unlocks.js";
 
 // Mastery System (Class Skill Trees)
 export {
@@ -910,7 +926,7 @@ export {
   type AwardMasteryPointsResponse,
   type ClassProgressSummary,
   type GetClassProgressSummariesResponse,
-} from './mastery.js';
+} from "./mastery.js";
 
 // Hub Preview (View other players' hubs)
 export {
@@ -924,7 +940,7 @@ export {
   type HubPreviewTurret,
   type HubPreviewResponse,
   type HubPreviewRequest,
-} from './hub-preview.js';
+} from "./hub-preview.js";
 
 // Guild Preview (View other guilds' public info)
 export {
@@ -934,7 +950,7 @@ export {
   type GuildPreviewMember,
   type GuildPreviewBonuses,
   type GuildPreviewResponse,
-} from './guild-preview.js';
+} from "./guild-preview.js";
 
 // Guild Medals (Tower Race weekly rewards)
 export {
@@ -957,7 +973,7 @@ export {
   type GuildMedalStats,
   type GuildMedalCollectionResponse,
   type GuildActiveBonusResponse,
-} from './guild-medals.js';
+} from "./guild-medals.js";
 
 // Guild Battle Trophies (Arena 5v5 achievements)
 export {
@@ -987,7 +1003,7 @@ export {
   type GuildTrophyProgress,
   type GuildTrophiesResponse,
   type BattleReward,
-} from './guild-trophies.js';
+} from "./guild-trophies.js";
 
 // Shop (Microtransactions)
 export {
@@ -1056,7 +1072,7 @@ export {
   type PremiumHeroProduct,
   type BundleProduct,
   type BattlePassProduct,
-} from './shop.js';
+} from "./shop.js";
 
 // Gacha System
 export {
@@ -1113,7 +1129,7 @@ export {
   type GachaBanner,
   type GetActiveBannersResponse,
   type GachaErrorCode,
-} from './gacha.js';
+} from "./gacha.js";
 
 // Battle Pass
 export {
@@ -1156,4 +1172,4 @@ export {
   type BuyBattlePassTiersResponse,
   type BattlePassPointSource,
   type BattlePassErrorCode,
-} from './battlepass.js';
+} from "./battlepass.js";
