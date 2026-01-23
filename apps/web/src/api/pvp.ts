@@ -7,6 +7,8 @@ import type {
   PvpChallengesResponse,
   PvpChallengeWithResult,
   PvpAcceptResponse,
+  PvpResolveResponse,
+  PvpResolveRequest,
   PvpReplayResponse,
   PvpUserStats,
   PvpChallengeStatus,
@@ -20,6 +22,17 @@ export class PvpApiError extends ApiError {
   constructor(status: number, message: string, code?: string, data?: unknown) {
     super(status, message, code, data);
     this.name = 'PvpApiError';
+  }
+}
+
+async function pvpRequest<T>(path: string, options?: Parameters<typeof request>[1]): Promise<T> {
+  try {
+    return await request<T>(path, options);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new PvpApiError(error.status, error.message, error.code, error.data);
+    }
+    throw error;
   }
 }
 
@@ -38,7 +51,7 @@ export async function getOpponents(
   params.set('limit', limit.toString());
   params.set('offset', offset.toString());
 
-  return request<PvpOpponentsResponse>(`/v1/pvp/opponents?${params}`);
+  return pvpRequest<PvpOpponentsResponse>(`/v1/pvp/opponents?${params}`);
 }
 
 // ============================================================================
@@ -51,7 +64,7 @@ export async function getOpponents(
 export async function createChallenge(
   challengedId: string
 ): Promise<PvpCreateChallengeResponse> {
-  return request<PvpCreateChallengeResponse>('/v1/pvp/challenges', {
+  return pvpRequest<PvpCreateChallengeResponse>('/v1/pvp/challenges', {
     method: 'POST',
     body: JSON.stringify({ challengedId }),
   });
@@ -87,7 +100,7 @@ export async function getChallenges(
   params.set('limit', validLimit.toString());
   params.set('offset', validOffset.toString());
 
-  return request<PvpChallengesResponse>(`/v1/pvp/challenges?${params}`);
+  return pvpRequest<PvpChallengesResponse>(`/v1/pvp/challenges?${params}`);
 }
 
 /**
@@ -97,7 +110,7 @@ export async function getChallenge(
   challengeId: string
 ): Promise<PvpChallengeWithResult | null> {
   try {
-    return await request<PvpChallengeWithResult>(
+    return await pvpRequest<PvpChallengeWithResult>(
       `/v1/pvp/challenges/${encodeURIComponent(challengeId)}`
     );
   } catch (error) {
@@ -114,7 +127,7 @@ export async function getChallenge(
 export async function acceptChallenge(
   challengeId: string
 ): Promise<PvpAcceptResponse> {
-  return request<PvpAcceptResponse>(
+  return pvpRequest<PvpAcceptResponse>(
     `/v1/pvp/challenges/${encodeURIComponent(challengeId)}/accept`,
     { method: 'POST' }
   );
@@ -126,7 +139,7 @@ export async function acceptChallenge(
 export async function declineChallenge(
   challengeId: string
 ): Promise<{ id: string; status: PvpChallengeStatus }> {
-  return request<{ id: string; status: PvpChallengeStatus }>(
+  return pvpRequest<{ id: string; status: PvpChallengeStatus }>(
     `/v1/pvp/challenges/${encodeURIComponent(challengeId)}/decline`,
     { method: 'POST' }
   );
@@ -138,9 +151,22 @@ export async function declineChallenge(
 export async function cancelChallenge(
   challengeId: string
 ): Promise<{ id: string; status: PvpChallengeStatus }> {
-  return request<{ id: string; status: PvpChallengeStatus }>(
+  return pvpRequest<{ id: string; status: PvpChallengeStatus }>(
     `/v1/pvp/challenges/${encodeURIComponent(challengeId)}/cancel`,
     { method: 'POST' }
+  );
+}
+
+/**
+ * Resolve a challenge (client-simulated result verification)
+ */
+export async function resolveChallenge(
+  challengeId: string,
+  result: PvpResolveRequest['result']
+): Promise<PvpResolveResponse> {
+  return pvpRequest<PvpResolveResponse>(
+    `/v1/pvp/challenges/${encodeURIComponent(challengeId)}/resolve`,
+    { method: 'POST', body: JSON.stringify({ result }) }
   );
 }
 
@@ -155,7 +181,7 @@ export async function getReplayData(
   challengeId: string
 ): Promise<PvpReplayResponse | null> {
   try {
-    return await request<PvpReplayResponse>(
+    return await pvpRequest<PvpReplayResponse>(
       `/v1/pvp/replay/${encodeURIComponent(challengeId)}`
     );
   } catch (error) {
@@ -174,7 +200,7 @@ export async function getReplayData(
  * Get user's PvP stats
  */
 export async function getPvpStats(): Promise<PvpUserStats> {
-  return request<PvpUserStats>('/v1/pvp/stats');
+  return pvpRequest<PvpUserStats>('/v1/pvp/stats');
 }
 
 // Re-export types for convenience
@@ -186,6 +212,7 @@ export type {
   PvpChallengesResponse,
   PvpChallengeWithResult,
   PvpAcceptResponse,
+  PvpResolveResponse,
   PvpBattleStats,
   PvpResult,
   PvpReplayResponse,

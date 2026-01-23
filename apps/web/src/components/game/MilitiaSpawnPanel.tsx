@@ -1,6 +1,7 @@
-import { signal } from '@preact/signals';
 import { gamePhase, displayGold, gameState } from '../../state/index.js';
+import { spawnMilitiaFn } from '../../state/gameActions.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { FP } from '@arcade/sim-core';
 import styles from './MilitiaSpawnPanel.module.css';
 
 // Militia type definitions (sci-fi themed)
@@ -36,23 +37,14 @@ const MILITIA_TYPES = {
 
 type MilitiaType = keyof typeof MILITIA_TYPES;
 
-// Selected militia type for spawning (null = not spawning)
-export const selectedMilitiaType = signal<MilitiaType | null>(null);
-
-// Toggle militia spawn mode
-export function selectMilitiaForSpawn(type: MilitiaType | null): void {
-  selectedMilitiaType.value = type;
-}
-
-export function clearMilitiaSelection(): void {
-  selectedMilitiaType.value = null;
-}
+// Fortress spawn position
+const FORTRESS_SPAWN_X = FP.fromInt(3);
+const FORTRESS_SPAWN_Y = FP.fromFloat(7.5);
 
 export function MilitiaSpawnPanel() {
   const { t } = useTranslation('game');
   const phase = gamePhase.value;
   const gold = displayGold.value;
-  const selected = selectedMilitiaType.value;
   const state = gameState.value;
 
   // Only show during gameplay
@@ -84,11 +76,10 @@ export function MilitiaSpawnPanel() {
       return;
     }
 
-    // Toggle selection
-    if (selected === type) {
-      clearMilitiaSelection();
-    } else {
-      selectMilitiaForSpawn(type);
+    // Spawn militia immediately at fortress position
+    const fn = spawnMilitiaFn.value;
+    if (fn) {
+      fn(type, FORTRESS_SPAWN_X, FORTRESS_SPAWN_Y);
     }
   };
 
@@ -108,7 +99,6 @@ export function MilitiaSpawnPanel() {
         {(Object.keys(MILITIA_TYPES) as MilitiaType[]).map((type) => {
           const militia = MILITIA_TYPES[type];
           const canAfford = gold >= militia.cost;
-          const isSelected = selected === type;
           const cooldown = militiaSpawnCooldowns[type] ?? 0;
           const onCooldown = cooldown > currentTick;
           const cooldownRemaining = onCooldown ? Math.ceil((cooldown - currentTick) / 30) : 0;
@@ -117,7 +107,7 @@ export function MilitiaSpawnPanel() {
           return (
             <button
               key={type}
-              class={`${styles.militiaButton} ${isSelected ? styles.selected : ''} ${isDisabled ? styles.disabled : ''}`}
+              class={`${styles.militiaButton} ${isDisabled ? styles.disabled : ''}`}
               onClick={() => handleMilitiaClick(type)}
               disabled={isDisabled}
               title={t(militia.descriptionKey)}
@@ -143,18 +133,11 @@ export function MilitiaSpawnPanel() {
                   </span>
                 )}
               </div>
-              {isSelected && <span class={styles.selectedBadge}>✓</span>}
             </button>
           );
         })}
       </div>
 
-      {selected && !atMaxCount && (
-        <div class={styles.hint}>
-          <span class={styles.hintIcon}>👆</span>
-          {t('militia.clickMapHint')}
-        </div>
-      )}
       {atMaxCount && (
         <div class={styles.hint}>
           <span class={styles.hintIcon}>⚠️</span>

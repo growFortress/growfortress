@@ -30,6 +30,7 @@ import { StatUpgradeRow } from '../shared/StatUpgradeRow.js';
 import { Modal } from '../shared/Modal.js';
 import { getAccessToken } from '../../api/auth.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './UpgradeModal.module.css';
 
 // Timeout for async operations (10 seconds)
@@ -286,7 +287,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
                       {upgradeCost.gold.toLocaleString()}
                     </span>
                     <span class={`${styles.costItem} ${dust < upgradeCost.dust ? styles.insufficient : ''}`}>
-                      <span class={styles.costIcon}>🌫️</span>
+                      <DustIcon size={14} className={styles.costIcon} />
                       {upgradeCost.dust}
                     </span>
                   </div>

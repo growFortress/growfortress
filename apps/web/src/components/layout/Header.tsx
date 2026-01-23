@@ -30,7 +30,7 @@ import { colonySceneVisible } from '../../state/idle.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { EnergyBar } from '../game/EnergyBar.js';
-import { Icon } from '../icons/Icon.js';
+import { Icon, DustIcon } from '../icons/index.js';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -67,7 +67,7 @@ export function Header(_props: HeaderProps) {
                   <span class={`${styles.resourceValue} ${styles.gold}`}>{displayGold.value}</span>
                 </div>
                 <div class={styles.resource} aria-label={t('header.resourceDust', { amount: displayDust.value })}>
-                  <span class={styles.resourceIcon} aria-hidden="true">🌫️</span>
+                  <DustIcon size={22} className={styles.resourceIcon} />
                   <span class={`${styles.resourceValue} ${styles.dust}`}>{displayDust.value}</span>
                 </div>
                 {/* Energy bar */}

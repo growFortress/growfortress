@@ -19,6 +19,7 @@ import {
   refillEnergyAction,
 } from '../../state/energy.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './EnergyBar.module.css';
 
 interface EnergyBarProps {
@@ -84,7 +85,7 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
             title={t('energy.refillTitle', { cost: refillCost.value })}
           >
             <span class={styles.refillCost}>
-              <span class={styles.dustIcon}>🌫️</span>
+              <DustIcon size={14} className={styles.dustIcon} />
               {refillCost.value}
             </span>
           </button>

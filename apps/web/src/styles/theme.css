@@ -41,15 +41,16 @@
 
   /* 4. TEXT: White with opacity variants (improved for contrast) */
   --color-text: #ffffff;
-  --color-text-80: rgba(255, 255, 255, 0.85);
-  --color-text-60: rgba(255, 255, 255, 0.7);
-  --color-text-50: rgba(255, 255, 255, 0.6);
-  --color-text-40: rgba(255, 255, 255, 0.55);
+  --color-text-80: rgba(255, 255, 255, 0.9);
+  --color-text-60: rgba(255, 255, 255, 0.75);
+  --color-text-50: rgba(255, 255, 255, 0.65);
+  --color-text-40: rgba(255, 255, 255, 0.6);
 
   /* 5. NEUTRAL: Cyan-tinted gray */
-  --color-neutral: #3a4a5a;
-  --color-neutral-light: #5a6a7a;
+  --color-neutral: #4a5a6a;
+  --color-neutral-light: #6a7a8a;
   --color-neutral-dark: #2a3a4a;
+  --color-bg-hover: rgba(255, 255, 255, 0.08);
 
   /* 6. SKILL/GAME MODE: Orange/Gold - For game actions */
   --color-skill: #f59e0b;
@@ -224,11 +225,11 @@
      GLASSMORPHISM
      Modern frosted glass effects
      ========================= */
-  --glass-bg: rgba(18, 18, 31, 0.75);
-  --glass-bg-light: rgba(26, 26, 42, 0.6);
-  --glass-bg-dark: rgba(10, 10, 18, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-light: rgba(255, 255, 255, 0.15);
+  --glass-bg: rgba(18, 18, 31, 0.85);
+  --glass-bg-light: rgba(26, 26, 42, 0.75);
+  --glass-bg-dark: rgba(10, 10, 18, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-light: rgba(255, 255, 255, 0.2);
   --glass-blur-sm: 8px;
   --glass-blur-md: 16px;
   --glass-blur-lg: 24px;

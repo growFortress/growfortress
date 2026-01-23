@@ -37,7 +37,7 @@ export async function getGuildPreview(guildId: string): Promise<GuildPreviewResp
   }
 
   // Fetch guild with members (top 5 by role priority and power)
-  const guild = await prisma.guild.findUnique({
+  const guild = await prisma.guild.findFirst({
     where: { id: guildId, disbanded: false },
     select: {
       id: true,

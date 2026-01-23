@@ -27,6 +27,8 @@ import {
   createArenaState,
   DEFAULT_ARENA_CONFIG,
   getEnemySide,
+  FORTRESS_EXCLUSION_RADIUS,
+  ARENA_DAMAGE_MULTIPLIER,
 } from './arena-state.js';
 import {
   selectHeroTarget,
@@ -75,7 +77,37 @@ export interface ArenaResult {
 
 const FORTRESS_ATTACK_RANGE = FP.fromInt(15); // Fortress can attack heroes within this range
 const PROJECTILE_SPEED = FP.fromFloat(8); // Units per tick
-const HERO_MAX_SPEED = FP.fromFloat(3); // Max hero speed in arena
+const HERO_MAX_SPEED = FP.fromFloat(0.25); // Max hero speed in arena (slower for better visuals)
+
+// ============================================================================
+// DAMAGE MITIGATION
+// ============================================================================
+
+/** Maximum armor cap - prevents any unit from being unkillable */
+const MAX_ARMOR_CAP = 60; // Max 37.5% damage reduction
+
+/**
+ * Calculate damage after armor mitigation
+ * Uses diminishing returns formula: final = base * (100 / (100 + armor))
+ *
+ * With MAX_ARMOR_CAP = 60:
+ * - 0 armor: 0% reduction
+ * - 30 armor: 23% reduction
+ * - 60 armor: 37.5% reduction (MAX)
+ */
+function applyArmorMitigation(baseDamage: number, armor: number): number {
+  if (armor <= 0) return baseDamage;
+  const cappedArmor = Math.min(armor, MAX_ARMOR_CAP);
+  const reduction = 100 / (100 + cappedArmor);
+  return Math.max(1, Math.floor(baseDamage * reduction)); // Minimum 1 damage
+}
+
+/**
+ * Apply arena damage multiplier to reduce overall damage output
+ */
+function applyArenaDamageMultiplier(damage: number): number {
+  return Math.max(1, Math.floor(damage * ARENA_DAMAGE_MULTIPLIER));
+}
 
 // ============================================================================
 // SIMULATION CLASS
@@ -179,18 +211,49 @@ export class ArenaSimulation {
         this.heroAttack(hero, target, side, ownSide);
       }
 
-      // Always move towards enemy fortress (even while attacking)
-      // This ensures heroes don't get stuck fighting in the middle
-      const moveTarget: ArenaTarget = {
-        type: 'move',
-        x: enemySide.fortress.x,
-        y: enemySide.fortress.y,
-      };
-      this.moveHero(hero, moveTarget);
+      // Move towards enemy fortress if not attacking fortress
+      if (target.type !== 'fortress') {
+        const moveTarget: ArenaTarget = {
+          type: 'move',
+          x: enemySide.fortress.x,
+          y: enemySide.fortress.y,
+        };
+        this.moveHero(hero, moveTarget);
+      }
 
       // Clamp hero position to field
       hero.x = FP.clamp(hero.x, FP.fromInt(0), this.config.fieldWidth);
       hero.y = FP.clamp(hero.y, FP.fromInt(0), this.config.fieldHeight);
+
+      // Enforce fortress exclusion zones - prevent heroes from entering fortress areas
+      this.enforceExclusionZone(hero, this.state.left.fortress);
+      this.enforceExclusionZone(hero, this.state.right.fortress);
+    }
+  }
+
+  /**
+   * Push hero out of fortress exclusion zone
+   */
+  private enforceExclusionZone(hero: ActiveHero, fortress: { x: number; y: number }): void {
+    const dx = FP.sub(hero.x, fortress.x);
+    const dy = FP.sub(hero.y, fortress.y);
+    const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+    const exclusionRadiusSq = FP.mul(FORTRESS_EXCLUSION_RADIUS, FORTRESS_EXCLUSION_RADIUS);
+
+    if (distSq < exclusionRadiusSq && distSq > 0) {
+      // Hero is inside exclusion zone, push them out
+      const dist = FP.sqrt(distSq);
+      if (dist > 0) {
+        // Normalize direction away from fortress
+        const normX = FP.div(dx, dist);
+        const normY = FP.div(dy, dist);
+        // Place hero just outside exclusion radius
+        hero.x = FP.add(fortress.x, FP.mul(normX, FORTRESS_EXCLUSION_RADIUS));
+        hero.y = FP.add(fortress.y, FP.mul(normY, FORTRESS_EXCLUSION_RADIUS));
+        // Stop velocity
+        hero.vx = 0;
+        hero.vy = 0;
+      }
     }
   }
 
@@ -216,7 +279,11 @@ export class ArenaSimulation {
     if (!def) return;
 
     const stats = calculateHeroStats(def, hero.tier, hero.level);
-    const attackInterval = Math.floor(30 / stats.attackSpeed); // Convert attacks/sec to ticks
+    const attackSpeedMultiplier =
+      (hero.arenaAttackSpeedMultiplier ?? 1) *
+      (1 + ownSide.modifiers.attackSpeedBonus);
+    const effectiveAttackSpeed = stats.attackSpeed * attackSpeedMultiplier;
+    const attackInterval = Math.max(1, Math.floor(30 / effectiveAttackSpeed)); // Convert attacks/sec to ticks
 
     if (this.state.tick - hero.lastAttackTick < attackInterval) return;
 
@@ -225,9 +292,17 @@ export class ArenaSimulation {
     // Calculate damage (additive bonus system)
     const isCrit = shouldCrit(ownSide.modifiers.critChance, this.rng.nextFloat());
     const baseDamage = Math.floor(stats.damage * (1 + ownSide.modifiers.damageBonus));
-    const damage = isCrit
-      ? Math.floor(baseDamage * (1 + ownSide.modifiers.critDamageBonus))
-      : baseDamage;
+    const heroDamageMultiplier = hero.arenaDamageMultiplier ?? 1;
+    const rawDamage = isCrit
+      ? Math.floor(
+          baseDamage *
+            heroDamageMultiplier *
+            (1 + ownSide.modifiers.critDamageBonus)
+        )
+      : Math.floor(baseDamage * heroDamageMultiplier);
+
+    // Apply arena damage reduction for longer battles
+    const damage = applyArenaDamageMultiplier(rawDamage);
 
     // Apply damage
     const enemySide = getEnemySide(this.state, side);
@@ -252,19 +327,22 @@ export class ArenaSimulation {
     const attackInterval = this.config.fortressAttackInterval;
     if (this.state.tick - fortress.lastAttackTick < attackInterval) return;
 
-    // Get target (fortress attacks enemy heroes)
+    // Get target (fortress attacks enemy heroes or enemy fortress if no heroes)
     const target = selectFortressTarget(fortress, side, this.state, FORTRESS_ATTACK_RANGE);
 
-    if (target.type !== 'hero') return; // Fortress only targets heroes
+    if (target.type !== 'hero' && target.type !== 'fortress') return;
 
     fortress.lastAttackTick = this.state.tick;
 
     // Calculate damage (additive bonus system)
     const isCrit = shouldCrit(ownSide.modifiers.critChance, this.rng.nextFloat());
     const baseDamage = Math.floor(fortress.damage * (1 + ownSide.modifiers.damageBonus));
-    const damage = isCrit
+    const rawDamage = isCrit
       ? Math.floor(baseDamage * (1 + ownSide.modifiers.critDamageBonus))
       : baseDamage;
+
+    // Apply arena damage reduction for longer battles
+    const damage = applyArenaDamageMultiplier(rawDamage);
 
     // Create projectile
     this.createProjectile(
@@ -277,7 +355,7 @@ export class ArenaSimulation {
       fortress.class,
       side,
       ownSide,
-      'hero',
+      target.type, // 'hero' or 'fortress'
       target.targetIndex
     );
   }
@@ -394,16 +472,19 @@ export class ArenaSimulation {
     attackerSide: 'left' | 'right',
     attackerData: ArenaSide
   ): void {
-    targetSide.fortress.hp -= damage;
-    targetSide.stats.damageReceived += damage;
-    attackerData.stats.damageDealt += damage;
+    // Apply armor mitigation
+    const mitigatedDamage = applyArmorMitigation(damage, targetSide.fortress.armor);
+
+    targetSide.fortress.hp -= mitigatedDamage;
+    targetSide.stats.damageReceived += mitigatedDamage;
+    attackerData.stats.damageDealt += mitigatedDamage;
 
     // Record replay event
     this.replayEvents.push({
       tick: this.state.tick,
       type: 'fortress_damage',
       side: attackerSide === 'left' ? 'right' : 'left', // Target side
-      data: { damage, remainingHp: targetSide.fortress.hp },
+      data: { damage: mitigatedDamage, remainingHp: targetSide.fortress.hp },
     });
 
     if (targetSide.fortress.hp <= 0) {
@@ -419,9 +500,14 @@ export class ArenaSimulation {
     targetSide: ArenaSide
   ): void {
     if (targetHero.currentHp <= 0) return;
+
+    // Apply armor mitigation
+    const heroArmor = targetHero.arenaArmor ?? 0;
+    const mitigatedDamage = applyArmorMitigation(damage, heroArmor);
+
     const prevHp = targetHero.currentHp;
-    targetHero.currentHp = Math.max(0, targetHero.currentHp - damage);
-    targetSide.stats.damageReceived += damage;
+    targetHero.currentHp = Math.max(0, targetHero.currentHp - mitigatedDamage);
+    targetSide.stats.damageReceived += mitigatedDamage;
     const killed = targetHero.currentHp <= 0;
     if (killed) {
       targetSide.stats.heroesLost += 1;
@@ -432,13 +518,13 @@ export class ArenaSimulation {
         side: attackerSide === 'left' ? 'right' : 'left',
         data: {
           heroId: targetHero.definitionId,
-          damage,
+          damage: mitigatedDamage,
           prevHp,
           remainingHp: 0,
         },
       });
     }
-    attackerData.stats.damageDealt += damage;
+    attackerData.stats.damageDealt += mitigatedDamage;
   }
 
   // ============================================================================

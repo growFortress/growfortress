@@ -14,6 +14,7 @@ import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
 import { fetchUserRanks } from '../../api/leaderboard.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './EndScreen.module.css';
 
 interface EndScreenProps {
@@ -182,7 +183,7 @@ export function EndScreen({ onPlayAgain, onReturnToHub }: EndScreenProps) {
               <span>+{stats.goldEarned}</span>
             </div>
             <div class={`${styles.rewardItem} ${styles.dust}`}>
-              <span class={styles.rewardIcon}>🌫️</span>
+              <DustIcon size={16} className={styles.rewardIcon} />
               <span>+{stats.dustEarned}</span>
             </div>
             <div class={`${styles.rewardItem} ${styles.xp}`}>

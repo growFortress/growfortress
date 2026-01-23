@@ -7,6 +7,7 @@ import { HeroAvatar } from '../../shared/HeroAvatar.js';
 import { Button } from '../../shared/Button.js';
 import { SkillCard } from './SkillCard.js';
 import { useTranslation } from '../../../i18n/useTranslation.js';
+import { DustIcon } from '../../icons/index.js';
 import styles from './TierPreviewModal.module.css';
 
 // Class colors
@@ -245,7 +246,7 @@ export function TierPreviewModal({
               🪙 {upgradeCost.gold}
             </span>
             <span class={`${styles.costItem} ${canAffordDust ? styles.canAfford : styles.cantAfford}`}>
-              🌫️ {upgradeCost.dust}
+              <DustIcon size={14} /> {upgradeCost.dust}
             </span>
           </div>
           <Button

@@ -22,6 +22,7 @@ import {
 import { Modal } from '../shared/Modal.js';
 import { ProgressBar } from '../shared/ProgressBar.js';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './DailyQuestsModal.module.css';
 import { useEffect } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
@@ -202,7 +203,7 @@ export function DailyQuestsModal() {
               <div class={styles.questRight}>
                 <div class={styles.rewardsList}>
                   <div class={`${styles.rewardItem} ${styles.dustReward}`}>
-                    <span class={styles.rewardIcon}>🌫️</span>
+                    <DustIcon size={14} className={styles.rewardIcon} />
                     <span>{quest.dustReward}</span>
                   </div>
                   {quest.bonusType && (

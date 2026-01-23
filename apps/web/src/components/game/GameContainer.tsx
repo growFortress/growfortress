@@ -43,6 +43,7 @@ import {
   activePresetId,
   unlockedHeroIds,
   unlockedTurretIds,
+  purchasedHeroSlots,
   showSessionRecoveryModal,
   showEndSessionConfirm,
   upgradeTarget,
@@ -261,7 +262,10 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       : null;
     const fortressClass =
       activePreset?.fortressClass || selectedFortressClass.value || 'natural';
-    const startingHeroes = activePreset?.startingHeroes || unlockedHeroIds.value;
+    // Use preset heroes or fall back to unlocked heroes, but limit to purchased slots
+    const maxSlots = purchasedHeroSlots.value;
+    const allHeroes = activePreset?.startingHeroes || unlockedHeroIds.value;
+    const startingHeroes = allHeroes.slice(0, maxSlots);
     const startingTurrets = activePreset?.startingTurrets || unlockedTurretIds.value;
     const pillarId = currentPillar.value;
 
@@ -397,7 +401,10 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       : null;
     const fortressClass =
       activePreset?.fortressClass || selectedFortressClass.value || 'natural';
-    const startingHeroes = activePreset?.startingHeroes || unlockedHeroIds.value;
+    // Use preset heroes or fall back to unlocked heroes, but limit to purchased slots
+    const maxSlots = purchasedHeroSlots.value;
+    const allHeroes = activePreset?.startingHeroes || unlockedHeroIds.value;
+    const startingHeroes = allHeroes.slice(0, maxSlots);
     const startingTurrets = activePreset?.startingTurrets || unlockedTurretIds.value;
 
     const sessionInfo = await startBossRush({

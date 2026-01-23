@@ -131,6 +131,13 @@ export function PvpPanel() {
             <span class={styles.tabText}>Przeciwnicy</span>
           </button>
           <button
+            class={`${styles.tab} ${pvpActiveTab.value === 'pending' ? styles.tabActive : ''}`}
+            onClick={() => setActivePvpTab('pending')}
+          >
+            <span class={styles.tabIcon}>⏳</span>
+            <span class={styles.tabText}>Wyzwania</span>
+          </button>
+          <button
             class={`${styles.tab} ${pvpActiveTab.value === 'history' ? styles.tabActive : ''}`}
             onClick={() => setActivePvpTab('history')}
           >
@@ -154,6 +161,9 @@ export function PvpPanel() {
         <div class={styles.content}>
           {pvpActiveTab.value === 'opponents' && (
             <OpponentsList onRefresh={refreshData} />
+          )}
+          {pvpActiveTab.value === 'pending' && (
+            <ChallengesList filter="pending" onRefresh={refreshData} />
           )}
           {pvpActiveTab.value === 'history' && (
             <ChallengesList filter="resolved" onRefresh={refreshData} />

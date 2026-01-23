@@ -423,6 +423,7 @@ export {
   setPvpOpponents,
   setPvpChallenges,
   addSentChallenge,
+  addReceivedChallenge,
   updateChallengeStatus,
   setPvpBattleData,
   setPvpBattleResult,

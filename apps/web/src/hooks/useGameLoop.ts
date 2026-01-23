@@ -58,7 +58,6 @@ import {
 } from '../state/gameActions.signals.js';
 import { consumeEnergyLocal } from '../state/energy.signals.js';
 import { selectedWallType, clearWallSelection } from '../components/game/WallPlacementPanel.js';
-import { selectedMilitiaType, clearMilitiaSelection } from '../components/game/MilitiaSpawnPanel.js';
 import { FP, getRelicById, analytics } from '@arcade/sim-core';
 import { gameSettings } from '../state/settings.signals.js';
 import { logger } from '../utils/logger.js';
@@ -616,19 +615,7 @@ export function useGameLoop(
             return;
           }
 
-          // Priority 3: Handle militia spawning (always from fortress position)
-          if (selectedMilitiaType.value) {
-            if (game) {
-              // Spawn militia at fortress position (X=2, Y=7 center of path)
-              const fortressSpawnX = FP.fromInt(3); // Slightly in front of fortress
-              const fortressSpawnY = FP.fromFloat(7.5); // Center of path
-              game.spawnMilitia(selectedMilitiaType.value, fortressSpawnX, fortressSpawnY);
-            }
-            clearMilitiaSelection();
-            return;
-          }
-
-          // Priority 4: Handle hero tactical command
+          // Priority 3: Handle hero tactical command
           if (commandSelectedHeroId.value) {
             // Set the target position
             setCommandTarget(fpX, fpY);

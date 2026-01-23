@@ -23,6 +23,7 @@ import {
   setBattleHero,
   clearBattleHero,
 } from '../../api/guild.js';
+import { showSuccessToast } from '../../state/ui.signals.js';
 import { Button } from '../shared/Button.js';
 import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './GuildPanel.module.css';
@@ -74,6 +75,8 @@ export function GuildMembersTab({ onRefresh }: GuildMembersTabProps) {
     try {
       const result = await setBattleHero(guild.id, selectedHeroId);
       setMyBattleHero(result.battleHero);
+      const hero = getHeroById(selectedHeroId);
+      showSuccessToast(`Battle Hero: ${hero?.name || selectedHeroId}`);
     } catch (error: any) {
       setBattleHeroError(error.message || 'Nie udalo sie ustawic Battle Hero');
     } finally {
@@ -91,6 +94,7 @@ export function GuildMembersTab({ onRefresh }: GuildMembersTabProps) {
       await clearBattleHero(guild.id);
       setMyBattleHero(null);
       setSelectedHeroId('');
+      showSuccessToast('Usunieto Battle Hero');
     } catch (error: any) {
       setBattleHeroError(error.message || 'Nie udalo sie usunac Battle Hero');
     } finally {
@@ -116,6 +120,7 @@ export function GuildMembersTab({ onRefresh }: GuildMembersTabProps) {
       // Note: The API expects userId, but we're using username here
       // In a real implementation, we'd need to look up the user first
       await sendInvitation(guild.id, { userId: inviteUsername.trim() });
+      showSuccessToast(`Zaproszenie wyslane do ${inviteUsername.trim()}`);
       setInviteUsername('');
       onRefresh();
     } catch (error: any) {
@@ -224,8 +229,9 @@ export function GuildMembersTab({ onRefresh }: GuildMembersTabProps) {
                 size="sm"
                 onClick={handleInvite}
                 disabled={inviting || !inviteUsername.trim()}
+                loading={inviting}
               >
-                {inviting ? 'Wysylanie...' : 'Zapros'}
+                Zapros
               </Button>
             </div>
             {inviteError && (
@@ -289,6 +295,7 @@ function MemberCard({ member, currentMembership, guildId, onRefresh }: MemberCar
     setActionLoading(true);
     try {
       await kickMember(guildId, member.userId);
+      showSuccessToast(`Wyrzucono ${member.user?.displayName || 'gracza'}`);
       onRefresh();
     } catch (error) {
       console.error('Failed to kick member:', error);
@@ -302,6 +309,8 @@ function MemberCard({ member, currentMembership, guildId, onRefresh }: MemberCar
     setActionLoading(true);
     try {
       await updateMemberRole(guildId, member.userId, { role: newRole });
+      const roleLabel = newRole === 'OFFICER' ? 'Oficer' : 'Czlonek';
+      showSuccessToast(`${member.user?.displayName || 'Gracz'} jest teraz ${roleLabel}`);
       onRefresh();
     } catch (error) {
       console.error('Failed to update role:', error);
@@ -319,6 +328,7 @@ function MemberCard({ member, currentMembership, guildId, onRefresh }: MemberCar
     setActionLoading(true);
     try {
       await transferLeadership(guildId, { newLeaderId: member.userId });
+      showSuccessToast(`Liderstwo przekazane do ${member.user?.displayName || 'gracza'}`);
       onRefresh();
     } catch (error) {
       console.error('Failed to transfer leadership:', error);

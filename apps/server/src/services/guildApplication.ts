@@ -9,6 +9,7 @@ import {
 } from '@arcade/protocol';
 import { hasPermission } from './guild.js';
 import { getMemberCapacity } from './guildStructures.js';
+import { invalidateGuildPreviewCache } from './guildPreview.js';
 import type { GuildApplication } from '@prisma/client';
 
 // ============================================================================
@@ -377,6 +378,9 @@ export async function acceptApplication(
       data: { status: 'CANCELLED' },
     }),
   ]);
+
+  // Invalidate cache - member count changed
+  await invalidateGuildPreviewCache(application.guildId);
 }
 
 /**

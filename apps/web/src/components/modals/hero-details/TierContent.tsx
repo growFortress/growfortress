@@ -2,6 +2,7 @@ import type { JSX } from 'preact';
 import type { HeroTier } from '@arcade/sim-core';
 import { useTranslation } from '../../../i18n/useTranslation.js';
 import { SkillCard } from './SkillCard.js';
+import { DustIcon } from '../../icons/index.js';
 import styles from './TierContent.module.css';
 import cardStyles from './cards.module.css';
 
@@ -133,7 +134,7 @@ export function TierContent({ tier, isCurrentTier, isLocked, classColor }: TierC
             </div>
             <div class={cardStyles.reqItem}>
               <span class={cardStyles.reqLabel}>{t('resources.dust')}</span>
-              <span class={cardStyles.reqValue}>🌫️ {tier.unlockRequirements.dust}</span>
+              <span class={cardStyles.reqValue}><DustIcon size={14} /> {tier.unlockRequirements.dust}</span>
             </div>
             {tier.unlockRequirements.material && (
               <div class={cardStyles.reqItem}>

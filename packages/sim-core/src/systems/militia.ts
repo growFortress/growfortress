@@ -13,8 +13,10 @@ import { HIT_FLASH_TICKS } from './constants.js';
 // CONSTANTS
 // ============================================================================
 
-const MILITIA_SEPARATION_FORCE = 0.02; // Force to separate overlapping militia
+const MILITIA_SEPARATION_FORCE = 0.015; // Force to separate overlapping militia
 const MILITIA_SEPARATION_RADIUS = FP.fromFloat(1.5); // Radius for separation check
+const MILITIA_ACCELERATION = 0.08; // Steering acceleration for smooth movement
+const MILITIA_FRICTION = 0.92; // Lower friction for smoother movement (was 0.9)
 
 // ============================================================================
 // MILITIA SPAWNING
@@ -45,16 +47,16 @@ export function spawnMilitia(
   const militia: Militia = {
     id: state.nextMilitiaId++,
     type,
-    x: x as any,
-    y: y as any,
-    vx: 0 as any,
-    vy: 0 as any,
-    radius: FP.fromFloat(def.radius) as any,
-    mass: FP.fromFloat(1.0) as any,
+    x,
+    y,
+    vx: 0,
+    vy: 0,
+    radius: FP.fromFloat(def.radius),
+    mass: FP.fromFloat(1.0),
     currentHp: def.baseHp,
     maxHp: def.baseHp,
     damage: def.baseDamage,
-    attackRange: FP.fromFloat(def.attackRange) as any,
+    attackRange: FP.fromFloat(def.attackRange),
     attackInterval: def.attackInterval,
     lastAttackTick: 0,
     spawnTick: state.tick,
@@ -122,13 +124,13 @@ function findNearestEnemy(
 }
 
 /**
- * Move militia towards target position
+ * Steer militia towards target position (acceleration-based for smooth movement)
  */
-function moveTowards(
+function steerTowards(
   militia: Militia,
   targetX: number,
   targetY: number,
-  speed: number
+  maxSpeed: number
 ): void {
   const dx = FP.sub(targetX, militia.x);
   const dy = FP.sub(targetY, militia.y);
@@ -137,10 +139,36 @@ function moveTowards(
   if (distSq < FP.fromFloat(0.01)) return; // Already at target
 
   const dist = Math.sqrt(FP.toFloat(distSq));
-  const speedFp = FP.fromFloat(speed);
 
-  militia.vx = FP.mul(FP.div(dx, FP.fromFloat(dist)), speedFp) as any;
-  militia.vy = FP.mul(FP.div(dy, FP.fromFloat(dist)), speedFp) as any;
+  // Calculate desired velocity direction
+  const dirX = FP.toFloat(dx) / dist;
+  const dirY = FP.toFloat(dy) / dist;
+
+  // Calculate desired velocity
+  const desiredVx = dirX * maxSpeed;
+  const desiredVy = dirY * maxSpeed;
+
+  // Calculate steering force (difference between desired and current velocity)
+  const currentVx = FP.toFloat(militia.vx);
+  const currentVy = FP.toFloat(militia.vy);
+
+  const steerX = (desiredVx - currentVx) * MILITIA_ACCELERATION;
+  const steerY = (desiredVy - currentVy) * MILITIA_ACCELERATION;
+
+  // Apply steering force to velocity
+  militia.vx = FP.add(militia.vx, FP.fromFloat(steerX));
+  militia.vy = FP.add(militia.vy, FP.fromFloat(steerY));
+
+  // Clamp to max speed
+  const newVx = FP.toFloat(militia.vx);
+  const newVy = FP.toFloat(militia.vy);
+  const currentSpeed = Math.sqrt(newVx * newVx + newVy * newVy);
+
+  if (currentSpeed > maxSpeed) {
+    const scale = maxSpeed / currentSpeed;
+    militia.vx = FP.fromFloat(newVx * scale);
+    militia.vy = FP.fromFloat(newVy * scale);
+  }
 }
 
 /**
@@ -163,8 +191,8 @@ function applySeparation(
       const pushX = FP.mul(FP.div(dx, FP.fromFloat(dist)), FP.fromFloat(MILITIA_SEPARATION_FORCE));
       const pushY = FP.mul(FP.div(dy, FP.fromFloat(dist)), FP.fromFloat(MILITIA_SEPARATION_FORCE));
 
-      militia.vx = FP.add(militia.vx, pushX) as any;
-      militia.vy = FP.add(militia.vy, pushY) as any;
+      militia.vx = FP.add(militia.vx, pushX);
+      militia.vy = FP.add(militia.vy, pushY);
     }
   }
 }
@@ -208,8 +236,8 @@ export function updateMilitia(
       if (dist <= attackRange) {
         // In attack range - attack
         militia.state = 'attacking';
-        militia.vx = 0 as any;
-        militia.vy = 0 as any;
+        militia.vx = 0;
+        militia.vy = 0;
 
         if (state.tick - militia.lastAttackTick >= militia.attackInterval) {
           militia.lastAttackTick = state.tick;
@@ -217,28 +245,28 @@ export function updateMilitia(
           target.hitFlashTicks = HIT_FLASH_TICKS;
         }
       } else {
-        // Move towards target
+        // Move towards target with smooth steering
         militia.state = 'moving';
-        moveTowards(militia, target.x, target.y, def.baseSpeed);
+        steerTowards(militia, target.x, target.y, def.baseSpeed);
       }
     } else {
       // No targets - hold position or patrol
       militia.state = 'blocking';
-      militia.vx = 0 as any;
-      militia.vy = 0 as any;
+      militia.vx = 0;
+      militia.vy = 0;
     }
 
     // Apply separation force
     applySeparation(militia, state.militia);
 
-    // Apply friction
-    const friction = FP.fromFloat(0.9);
-    militia.vx = FP.mul(militia.vx, friction) as any;
-    militia.vy = FP.mul(militia.vy, friction) as any;
+    // Apply friction (smoother movement)
+    const friction = FP.fromFloat(MILITIA_FRICTION);
+    militia.vx = FP.mul(militia.vx, friction);
+    militia.vy = FP.mul(militia.vy, friction);
 
     // Integrate position
-    militia.x = FP.add(militia.x, militia.vx) as any;
-    militia.y = FP.add(militia.y, militia.vy) as any;
+    militia.x = FP.add(militia.x, militia.vx);
+    militia.y = FP.add(militia.y, militia.vy);
   }
 
   // Remove dead militia

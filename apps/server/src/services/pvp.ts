@@ -7,15 +7,22 @@ import {
   getMaxHeroSlots,
   isClassUnlockedAtLevel,
   calculateArenaPower,
+  ARTIFACT_DEFINITIONS,
   createDefaultStatUpgrades,
   type ArenaBuildConfig,
   type FortressClass,
   type StatUpgrades,
   type ArenaHeroConfig,
 } from "@arcade/sim-core";
-import { PVP_CONSTANTS, PVP_ERROR_CODES } from "@arcade/protocol";
+import {
+  PVP_CONSTANTS,
+  PVP_ERROR_CODES,
+  normalizeHeroId,
+  type BuildPreset,
+} from "@arcade/protocol";
 import { recordWeeklyHonorGain } from "./playerLeaderboard.js";
 import { isUserConnected } from "./websocket.js";
+import { addArtifact } from "./artifacts.js";
 
 // ============================================================================
 // ERROR CLASS
@@ -69,6 +76,27 @@ const HONOR_MAX_GAIN = 100;
 const HONOR_MIN_LOSS = 5;
 const HONOR_MAX_LOSS = 50;
 
+const PVP_REWARDS = {
+  goldWin: 50,
+  goldLoss: 25,
+  goldDraw: 35,
+  dust: 1,
+  artifactChanceWin: 0.05,
+  artifactChanceLoss: 0.02,
+  artifactChanceDraw: 0.03,
+} as const;
+
+const ARENA_ARTIFACT_POOL = ARTIFACT_DEFINITIONS.filter(
+  (artifact) => artifact.source?.type === "drop"
+);
+
+function rollArtifactDrop(chance: number): string | undefined {
+  if (ARENA_ARTIFACT_POOL.length === 0) return undefined;
+  if (Math.random() >= chance) return undefined;
+  const index = randomInt(ARENA_ARTIFACT_POOL.length);
+  return ARENA_ARTIFACT_POOL[index]?.id;
+}
+
 /**
  * Calculate honor change for a PvP battle based on power difference.
  * Winners gain more honor for beating stronger opponents.
@@ -105,6 +133,37 @@ function normalizeHeroTier(value: unknown): 1 | 2 | 3 {
     return value;
   }
   return 1;
+}
+
+function getActivePreset(user: ArenaUserRecord): BuildPreset | null {
+  const presets = Array.isArray(user.buildPresets)
+    ? (user.buildPresets as BuildPreset[])
+    : [];
+  if (!user.activePresetId) return null;
+  return presets.find((preset) => preset.id === user.activePresetId) ?? null;
+}
+
+function getArenaHeroIds(user: ArenaUserRecord, commanderLevel: number): string[] {
+  const preset = getActivePreset(user);
+  const presetHeroes = preset?.startingHeroes?.map(normalizeHeroId) ?? [];
+  const fallbackHero = user.defaultHeroId
+    ? normalizeHeroId(user.defaultHeroId)
+    : "vanguard";
+  const heroIds = presetHeroes.length > 0 ? presetHeroes : [fallbackHero];
+  const maxHeroSlots = getMaxHeroSlots(commanderLevel);
+  return heroIds.slice(0, maxHeroSlots);
+}
+
+function getArenaFortressClass(
+  user: ArenaUserRecord,
+  commanderLevel: number
+): FortressClass {
+  const preset = getActivePreset(user);
+  const requestedClass =
+    preset?.fortressClass ?? user.defaultFortressClass ?? "natural";
+  return isClassUnlockedAtLevel(requestedClass, commanderLevel)
+    ? (requestedClass as FortressClass)
+    : "natural";
 }
 
 function getHeroUpgradesData(
@@ -161,13 +220,7 @@ function extractArenaDataFromUser(user: ArenaUserRecord): {
 } {
   const commanderLevel = user.progression?.level ?? 1;
 
-  const maxHeroSlots = getMaxHeroSlots(commanderLevel);
-  const unlockedHeroes = user.inventory?.unlockedHeroIds ?? [];
-  const defaultHero = user.defaultHeroId ?? "vanguard";
-  const heroIds =
-    unlockedHeroes.length > 0
-      ? unlockedHeroes.slice(0, maxHeroSlots)
-      : [defaultHero];
+  const heroIds = getArenaHeroIds(user, commanderLevel);
 
   const powerUpgrades = user.powerUpgrades;
   const fortressUpgrades =
@@ -262,21 +315,18 @@ async function getUserBuildData(userId: string): Promise<UserBuildData | null> {
     extractArenaDataFromUser(user);
   const progressionBonuses = getProgressionBonuses(commanderLevel);
 
-  // Get fortress class
-  const requestedClass = user.defaultFortressClass ?? "natural";
-  const fortressClass = isClassUnlockedAtLevel(requestedClass, commanderLevel)
-    ? (requestedClass as FortressClass)
-    : "natural";
+  const fortressClass = getArenaFortressClass(user, commanderLevel);
 
   // Get power multipliers from upgrades
   let damageMultiplier = progressionBonuses.damageMultiplier;
   let hpMultiplier = 1.0;
 
-  // Each upgrade level adds ~2% (0.02 per level)
+  // Use same bonus values as main game (from FORTRESS_STAT_UPGRADES)
+  // HP: 5% per level, Damage: 4% per level
   const hpLevels = fortressUpgrades?.hp ?? 0;
   const damageLevels = fortressUpgrades?.damage ?? 0;
-  hpMultiplier += hpLevels * 0.02;
-  damageMultiplier += damageLevels * 0.02;
+  hpMultiplier += hpLevels * 0.05; // 5% per level (matches FORTRESS_STAT_UPGRADES)
+  damageMultiplier += damageLevels * 0.04; // 4% per level (matches FORTRESS_STAT_UPGRADES)
 
   const power = calculateArenaPower(
     fortressUpgrades,
@@ -308,7 +358,7 @@ function toBuildConfig(data: UserBuildData): ArenaBuildConfig {
     commanderLevel: data.commanderLevel,
     heroIds: data.heroIds,
     heroConfigs: data.heroConfigs,
-    // Convert multipliers to additive bonuses (1.2 multiplier → 0.2 bonus)
+    // Convert multipliers to additive bonuses (1.2 multiplier â†’ 0.2 bonus)
     damageBonus: data.damageMultiplier - 1,
     hpBonus: data.hpMultiplier - 1,
   };
@@ -359,6 +409,68 @@ async function canChallengeUser(
   };
 }
 
+type ClientBattleResult = {
+  winnerId: string | null;
+  winReason: string;
+  challengerStats: {
+    finalHp: number;
+    damageDealt: number;
+    heroesAlive: number;
+  };
+  challengedStats: {
+    finalHp: number;
+    damageDealt: number;
+    heroesAlive: number;
+  };
+  duration: number;
+};
+
+function mapArenaResult(
+  battleResult: ReturnType<typeof runArenaBattle>,
+  challengerId: string,
+  challengedId: string
+): ClientBattleResult {
+  let winnerId: string | null = null;
+  if (battleResult.winner === "left") {
+    winnerId = challengerId;
+  } else if (battleResult.winner === "right") {
+    winnerId = challengedId;
+  }
+
+  return {
+    winnerId,
+    winReason: battleResult.winReason,
+    challengerStats: {
+      finalHp: battleResult.leftStats.finalHp,
+      damageDealt: battleResult.leftStats.damageDealt,
+      heroesAlive: battleResult.leftStats.heroesAlive ?? 0,
+    },
+    challengedStats: {
+      finalHp: battleResult.rightStats.finalHp,
+      damageDealt: battleResult.rightStats.damageDealt,
+      heroesAlive: battleResult.rightStats.heroesAlive ?? 0,
+    },
+    duration: battleResult.duration,
+  };
+}
+
+function isResultMatch(
+  client: ClientBattleResult,
+  server: ClientBattleResult
+): boolean {
+  return (
+    client.winnerId === server.winnerId &&
+    client.winReason === server.winReason &&
+    client.duration === server.duration &&
+    client.challengerStats.finalHp === server.challengerStats.finalHp &&
+    client.challengerStats.damageDealt === server.challengerStats.damageDealt &&
+    client.challengerStats.heroesAlive === server.challengerStats.heroesAlive &&
+    client.challengedStats.finalHp === server.challengedStats.finalHp &&
+    client.challengedStats.damageDealt === server.challengedStats.damageDealt &&
+    client.challengedStats.heroesAlive === server.challengedStats.heroesAlive
+  );
+}
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -368,7 +480,7 @@ const MIN_POWER_RANGE = 1000;
 const ARENA_OPPONENTS_MAX = 8;
 const OPPONENTS_POOL_SIZE = 50;
 
-/** Fisher–Yates shuffle */
+/** Fisherâ€“Yates shuffle */
 function shuffle<T>(arr: T[]): T[] {
   const out = [...arr];
   for (let i = out.length - 1; i > 0; i--) {
@@ -483,8 +595,8 @@ export async function getOpponents(
 }
 
 /**
- * Create a new challenge and immediately run the battle (instant execute).
- * No PENDING — seed is generated, battle runs, result stored and returned.
+ * Create a new challenge with deterministic seed + build snapshots.
+ * Battle is simulated client-side and resolved via /resolve.
  */
 export async function createChallenge(
   challengerId: string,
@@ -510,24 +622,6 @@ export async function createChallenge(
     seed: number;
     challengerBuild: ArenaBuildConfig;
     challengedBuild: ArenaBuildConfig;
-  };
-  result: {
-    winnerId: string | null;
-    winReason: string;
-    challengerStats: {
-      finalHp: number;
-      damageDealt: number;
-      heroesAlive: number;
-    };
-    challengedStats: {
-      finalHp: number;
-      damageDealt: number;
-      heroesAlive: number;
-    };
-    duration: number;
-  };
-  rewards?: {
-    honorChange: number;
   };
 }> {
   // Validate not challenging self
@@ -577,113 +671,21 @@ export async function createChallenge(
   const seed = randomInt(2147483647);
   const challengerConfig = toBuildConfig(challengerBuild);
   const challengedConfig = toBuildConfig(challengedBuild);
-  const battleResult = runArenaBattle(seed, challengerConfig, challengedConfig);
-
-  let winnerId: string | null = null;
-  if (battleResult.winner === "left") {
-    winnerId = challengerId;
-  } else if (battleResult.winner === "right") {
-    winnerId = challengedId;
-  }
-
-  const challengerHeroesAlive = battleResult.leftStats.heroesAlive ?? 0;
-  const challengedHeroesAlive = battleResult.rightStats.heroesAlive ?? 0;
-
-  let challengerHonorChange = 0;
-  let challengedHonorChange = 0;
-
-  if (winnerId) {
-    const winnerPower =
-      winnerId === challengerId ? challengerBuild.power : challengedBuild.power;
-    const loserPower =
-      winnerId === challengerId ? challengedBuild.power : challengerBuild.power;
-    const winnerHonorGain = calculateHonorChange(winnerPower, loserPower, true);
-    const loserHonorLoss = calculateHonorChange(loserPower, winnerPower, false);
-
-    if (winnerId === challengerId) {
-      challengerHonorChange = winnerHonorGain;
-      challengedHonorChange = loserHonorLoss;
-    } else {
-      challengerHonorChange = loserHonorLoss;
-      challengedHonorChange = winnerHonorGain;
-    }
-  }
-
-  const now = new Date();
-
-  const challengeRecord = await prisma.$transaction(async (tx) => {
-    const created = await tx.pvpChallenge.create({
-      data: {
-        challengerId,
-        challengedId,
-        challengerPower: challengerBuild.power,
-        challengedPower: challengedBuild.power,
-        status: "RESOLVED",
-        seed,
-        expiresAt,
-        acceptedAt: now,
-        resolvedAt: now,
-        winnerId,
-      },
-    });
-
-    await tx.pvpResult.create({
-      data: {
-        challengeId: created.id,
-        winnerId,
-        winReason: battleResult.winReason,
-        challengerFinalHp: battleResult.leftStats.finalHp,
-        challengerDamageDealt: battleResult.leftStats.damageDealt,
-        challengerHeroesAlive,
-        challengedFinalHp: battleResult.rightStats.finalHp,
-        challengedDamageDealt: battleResult.rightStats.damageDealt,
-        challengedHeroesAlive,
-        duration: battleResult.duration,
-        challengerBuild: challengerConfig as unknown as Parameters<
-          typeof prisma.pvpResult.create
-        >[0]["data"]["challengerBuild"],
-        challengedBuild: challengedConfig as unknown as Parameters<
-          typeof prisma.pvpResult.create
-        >[0]["data"]["challengedBuild"],
-        replayEvents: battleResult.replayEvents as unknown as Parameters<
-          typeof prisma.pvpResult.create
-        >[0]["data"]["replayEvents"],
-      },
-    });
-
-    await tx.user.update({
-      where: { id: challengerId },
-      data: {
-        ...(winnerId === challengerId
-          ? { pvpWins: { increment: 1 } }
-          : winnerId
-            ? { pvpLosses: { increment: 1 } }
-            : {}),
-        honor: { increment: challengerHonorChange },
-      },
-    });
-
-    await tx.user.update({
-      where: { id: challengedId },
-      data: {
-        ...(winnerId === challengedId
-          ? { pvpWins: { increment: 1 } }
-          : winnerId
-            ? { pvpLosses: { increment: 1 } }
-            : {}),
-        honor: { increment: challengedHonorChange },
-      },
-    });
-
-    return created;
+  const challengeRecord = await prisma.pvpChallenge.create({
+    data: {
+      challengerId,
+      challengedId,
+      challengerPower: challengerBuild.power,
+      challengedPower: challengedBuild.power,
+      status: "PENDING",
+      seed,
+      expiresAt,
+      challengerBuild:
+        challengerConfig as unknown as Parameters<typeof prisma.pvpChallenge.create>[0]["data"]["challengerBuild"],
+      challengedBuild:
+        challengedConfig as unknown as Parameters<typeof prisma.pvpChallenge.create>[0]["data"]["challengedBuild"],
+    },
   });
-
-  if (challengerHonorChange > 0) {
-    recordWeeklyHonorGain(challengerId, challengerHonorChange).catch(() => {});
-  }
-  if (challengedHonorChange > 0) {
-    recordWeeklyHonorGain(challengedId, challengedHonorChange).catch(() => {});
-  }
 
   return {
     challenge: {
@@ -694,34 +696,15 @@ export async function createChallenge(
       challengedId,
       challengedName: challengedBuild.displayName,
       challengedPower: challengeRecord.challengedPower,
-      status: "RESOLVED" as PvpChallengeStatus,
+      status: "PENDING" as PvpChallengeStatus,
       createdAt: challengeRecord.createdAt.toISOString(),
       expiresAt: challengeRecord.expiresAt.toISOString(),
-      acceptedAt: now.toISOString(),
-      resolvedAt: now.toISOString(),
-      winnerId: winnerId ?? undefined,
     },
     battleData: {
       seed,
       challengerBuild: challengerConfig,
       challengedBuild: challengedConfig,
     },
-    result: {
-      winnerId,
-      winReason: battleResult.winReason,
-      challengerStats: {
-        finalHp: battleResult.leftStats.finalHp,
-        damageDealt: battleResult.leftStats.damageDealt,
-        heroesAlive: challengerHeroesAlive,
-      },
-      challengedStats: {
-        finalHp: battleResult.rightStats.finalHp,
-        damageDealt: battleResult.rightStats.damageDealt,
-        heroesAlive: challengedHeroesAlive,
-      },
-      duration: battleResult.duration,
-    },
-    rewards: { honorChange: challengerHonorChange },
   };
 }
 
@@ -822,6 +805,17 @@ export async function getChallenge(
   acceptedAt?: string;
   resolvedAt?: string;
   winnerId?: string;
+  battleData?: {
+    seed: number;
+    challengerBuild: ArenaBuildConfig;
+    challengedBuild: ArenaBuildConfig;
+  };
+  rewards?: {
+    gold: number;
+    dust: number;
+    honorChange: number;
+    artifactId?: string;
+  };
   result?: {
     id: string;
     winnerId: string | null;
@@ -861,6 +855,46 @@ export async function getChallenge(
     );
   }
 
+  // For PENDING challenges, fetch FRESH builds to reflect current upgrades
+  let battleData: {
+    seed: number;
+    challengerBuild: ArenaBuildConfig;
+    challengedBuild: ArenaBuildConfig;
+  } | undefined;
+
+  if (challenge.status === "PENDING" && challenge.seed !== null) {
+    const [challengerBuild, challengedBuild] = await Promise.all([
+      getUserBuildData(challenge.challengerId),
+      getUserBuildData(challenge.challengedId),
+    ]);
+
+    if (challengerBuild && challengedBuild) {
+      battleData = {
+        seed: challenge.seed,
+        challengerBuild: toBuildConfig(challengerBuild),
+        challengedBuild: toBuildConfig(challengedBuild),
+      };
+    }
+  }
+  const rewards =
+    challenge.result && challenge.result
+      ? (challenge.challengerId === userId
+          ? (challenge.result
+              .challengerRewards as unknown as {
+                gold: number;
+                dust: number;
+                honorChange: number;
+                artifactId?: string;
+              } | null)
+          : (challenge.result
+              .challengedRewards as unknown as {
+                gold: number;
+                dust: number;
+                honorChange: number;
+                artifactId?: string;
+              } | null)) ?? undefined
+      : undefined;
+
   return {
     id: challenge.id,
     challengerId: challenge.challengerId,
@@ -875,6 +909,8 @@ export async function getChallenge(
     acceptedAt: challenge.acceptedAt?.toISOString(),
     resolvedAt: challenge.resolvedAt?.toISOString(),
     winnerId: challenge.winnerId ?? undefined,
+    battleData,
+    rewards,
     result: challenge.result
       ? {
           id: challenge.result.id,
@@ -894,6 +930,337 @@ export async function getChallenge(
           resolvedAt: challenge.result.resolvedAt.toISOString(),
         }
       : undefined,
+  };
+}
+
+/**
+ * Resolve a challenge (client-simulated) with server verification
+ */
+export async function resolveChallenge(
+  challengeId: string,
+  userId: string,
+  clientResult: ClientBattleResult,
+): Promise<{
+  challenge: {
+    id: string;
+    status: PvpChallengeStatus;
+    winnerId?: string;
+  };
+  result: {
+    id: string;
+    challengeId: string;
+    winnerId: string | null;
+    winReason: string;
+    challengerStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    challengedStats: {
+      finalHp: number;
+      damageDealt: number;
+      heroesAlive: number;
+    };
+    duration: number;
+    resolvedAt: string;
+  };
+  rewards?: {
+    gold: number;
+    dust: number;
+    honorChange: number;
+    artifactId?: string;
+  };
+}> {
+  const challenge = await prisma.pvpChallenge.findUnique({
+    where: { id: challengeId },
+  });
+
+  if (!challenge) {
+    throw new PvpError("Challenge not found", "CHALLENGE_NOT_FOUND");
+  }
+
+  if (challenge.challengerId !== userId && challenge.challengedId !== userId) {
+    throw new PvpError(
+      "Not authorized to resolve this challenge",
+      "CHALLENGE_FORBIDDEN",
+    );
+  }
+
+  if (challenge.status === "RESOLVED") {
+    throw new PvpError(
+      "Challenge already resolved",
+      "CHALLENGE_ALREADY_RESOLVED",
+    );
+  }
+
+  if (challenge.status !== "PENDING") {
+    throw new PvpError("Challenge is not pending", "CHALLENGE_NOT_PENDING");
+  }
+
+  if (challenge.expiresAt < new Date()) {
+    await prisma.pvpChallenge.update({
+      where: { id: challengeId },
+      data: { status: "EXPIRED" },
+    });
+    throw new PvpError("Challenge has expired", "CHALLENGE_EXPIRED");
+  }
+
+  if (!challenge.seed) {
+    throw new PvpError("Challenge seed missing", "CHALLENGE_NOT_PENDING");
+  }
+
+  // ALWAYS fetch fresh build data at battle time to reflect current upgrades
+  const [challengerBuild, challengedBuild] = await Promise.all([
+    getUserBuildData(challenge.challengerId),
+    getUserBuildData(challenge.challengedId),
+  ]);
+
+  if (!challengerBuild || !challengedBuild) {
+    throw new PvpError("Could not load player builds", "USER_NOT_FOUND");
+  }
+
+  const challengerConfig = toBuildConfig(challengerBuild);
+  const challengedConfig = toBuildConfig(challengedBuild);
+
+  const battleResult = runArenaBattle(
+    challenge.seed,
+    challengerConfig,
+    challengedConfig,
+  );
+  const serverResult = mapArenaResult(
+    battleResult,
+    challenge.challengerId,
+    challenge.challengedId,
+  );
+
+  if (!isResultMatch(clientResult, serverResult)) {
+    throw new PvpError("Result mismatch", "RESULT_MISMATCH");
+  }
+
+  const challengerWon = serverResult.winnerId === challenge.challengerId;
+  const isDraw = !serverResult.winnerId;
+
+  let challengerHonorChange = 0;
+  let challengedHonorChange = 0;
+
+  if (serverResult.winnerId) {
+    const winnerPower =
+      serverResult.winnerId === challenge.challengerId
+        ? challenge.challengerPower
+        : challenge.challengedPower;
+    const loserPower =
+      serverResult.winnerId === challenge.challengerId
+        ? challenge.challengedPower
+        : challenge.challengerPower;
+    const winnerHonorGain = calculateHonorChange(winnerPower, loserPower, true);
+    const loserHonorLoss = calculateHonorChange(loserPower, winnerPower, false);
+
+    if (challengerWon) {
+      challengerHonorChange = winnerHonorGain;
+      challengedHonorChange = loserHonorLoss;
+    } else {
+      challengerHonorChange = loserHonorLoss;
+      challengedHonorChange = winnerHonorGain;
+    }
+  }
+
+  const challengerGold = isDraw
+    ? PVP_REWARDS.goldDraw
+    : challengerWon
+      ? PVP_REWARDS.goldWin
+      : PVP_REWARDS.goldLoss;
+  const challengedGold = isDraw
+    ? PVP_REWARDS.goldDraw
+    : challengerWon
+      ? PVP_REWARDS.goldLoss
+      : PVP_REWARDS.goldWin;
+
+  const challengerArtifactId = rollArtifactDrop(
+    isDraw
+      ? PVP_REWARDS.artifactChanceDraw
+      : challengerWon
+        ? PVP_REWARDS.artifactChanceWin
+        : PVP_REWARDS.artifactChanceLoss,
+  );
+  const challengedArtifactId = rollArtifactDrop(
+    isDraw
+      ? PVP_REWARDS.artifactChanceDraw
+      : challengerWon
+        ? PVP_REWARDS.artifactChanceLoss
+        : PVP_REWARDS.artifactChanceWin,
+  );
+
+  const now = new Date();
+
+  const [updatedChallenge, createdResult] = await prisma.$transaction([
+    prisma.pvpChallenge.update({
+      where: { id: challengeId },
+      data: {
+        status: "RESOLVED",
+        seed: challenge.seed,
+        acceptedAt: now,
+        resolvedAt: now,
+        winnerId: serverResult.winnerId ?? undefined,
+        challengerBuild:
+          challengerConfig as unknown as Parameters<
+            typeof prisma.pvpChallenge.update
+          >[0]["data"]["challengerBuild"],
+        challengedBuild:
+          challengedConfig as unknown as Parameters<
+            typeof prisma.pvpChallenge.update
+          >[0]["data"]["challengedBuild"],
+      },
+    }),
+    prisma.pvpResult.create({
+      data: {
+        challengeId,
+        winnerId: serverResult.winnerId,
+        winReason: serverResult.winReason,
+        challengerFinalHp: serverResult.challengerStats.finalHp,
+        challengerDamageDealt: serverResult.challengerStats.damageDealt,
+        challengerHeroesAlive: serverResult.challengerStats.heroesAlive,
+        challengedFinalHp: serverResult.challengedStats.finalHp,
+        challengedDamageDealt: serverResult.challengedStats.damageDealt,
+        challengedHeroesAlive: serverResult.challengedStats.heroesAlive,
+        duration: serverResult.duration,
+        challengerBuild: challengerConfig as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["challengerBuild"],
+        challengedBuild: challengedConfig as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["challengedBuild"],
+        replayEvents: battleResult.replayEvents as unknown as Parameters<
+          typeof prisma.pvpResult.create
+        >[0]["data"]["replayEvents"],
+        resolvedAt: now,
+      },
+    }),
+    prisma.user.update({
+      where: { id: challenge.challengerId },
+      data: {
+        ...(serverResult.winnerId === challenge.challengerId
+          ? { pvpWins: { increment: 1 } }
+          : serverResult.winnerId
+            ? { pvpLosses: { increment: 1 } }
+            : {}),
+        honor: { increment: challengerHonorChange },
+      },
+    }),
+    prisma.user.update({
+      where: { id: challenge.challengedId },
+      data: {
+        ...(serverResult.winnerId === challenge.challengedId
+          ? { pvpWins: { increment: 1 } }
+          : serverResult.winnerId
+            ? { pvpLosses: { increment: 1 } }
+            : {}),
+        honor: { increment: challengedHonorChange },
+      },
+    }),
+    prisma.inventory.update({
+      where: { userId: challenge.challengerId },
+      data: {
+        gold: { increment: challengerGold },
+        dust: { increment: PVP_REWARDS.dust },
+      },
+    }),
+    prisma.inventory.update({
+      where: { userId: challenge.challengedId },
+      data: {
+        gold: { increment: challengedGold },
+        dust: { increment: PVP_REWARDS.dust },
+      },
+    }),
+  ]);
+
+  if (challengerHonorChange > 0) {
+    recordWeeklyHonorGain(challenge.challengerId, challengerHonorChange).catch(
+      () => {},
+    );
+  }
+  if (challengedHonorChange > 0) {
+    recordWeeklyHonorGain(challenge.challengedId, challengedHonorChange).catch(
+      () => {},
+    );
+  }
+
+  let challengerRewardArtifactId = challengerArtifactId;
+  if (challengerArtifactId) {
+    const result = await addArtifact(challenge.challengerId, challengerArtifactId);
+    if (!result.success) {
+      challengerRewardArtifactId = undefined;
+    }
+  }
+
+  let challengedRewardArtifactId = challengedArtifactId;
+  if (challengedArtifactId) {
+    const result = await addArtifact(challenge.challengedId, challengedArtifactId);
+    if (!result.success) {
+      challengedRewardArtifactId = undefined;
+    }
+  }
+
+  const challengerRewards = {
+    gold: challengerGold,
+    dust: PVP_REWARDS.dust,
+    honorChange: challengerHonorChange,
+    ...(challengerRewardArtifactId
+      ? { artifactId: challengerRewardArtifactId }
+      : {}),
+  };
+  const challengedRewards = {
+    gold: challengedGold,
+    dust: PVP_REWARDS.dust,
+    honorChange: challengedHonorChange,
+    ...(challengedRewardArtifactId
+      ? { artifactId: challengedRewardArtifactId }
+      : {}),
+  };
+
+  await prisma.pvpResult.update({
+    where: { id: createdResult.id },
+    data: {
+      challengerRewards:
+        challengerRewards as unknown as Parameters<
+          typeof prisma.pvpResult.update
+        >[0]["data"]["challengerRewards"],
+      challengedRewards:
+        challengedRewards as unknown as Parameters<
+          typeof prisma.pvpResult.update
+        >[0]["data"]["challengedRewards"],
+    },
+  });
+
+  const rewards =
+    userId === challenge.challengerId
+      ? challengerRewards
+      : challengedRewards;
+
+  return {
+    challenge: {
+      id: updatedChallenge.id,
+      status: updatedChallenge.status,
+      winnerId: updatedChallenge.winnerId ?? undefined,
+    },
+    result: {
+      id: createdResult.id,
+      challengeId: createdResult.challengeId,
+      winnerId: createdResult.winnerId,
+      winReason: createdResult.winReason,
+      challengerStats: {
+        finalHp: createdResult.challengerFinalHp,
+        damageDealt: createdResult.challengerDamageDealt,
+        heroesAlive: createdResult.challengerHeroesAlive,
+      },
+      challengedStats: {
+        finalHp: createdResult.challengedFinalHp,
+        damageDealt: createdResult.challengedDamageDealt,
+        heroesAlive: createdResult.challengedHeroesAlive,
+      },
+      duration: createdResult.duration,
+      resolvedAt: createdResult.resolvedAt.toISOString(),
+    },
+    rewards,
   };
 }
 

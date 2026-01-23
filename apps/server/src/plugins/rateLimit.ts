@@ -25,6 +25,7 @@ export const RATE_LIMITS = {
   // Read-heavy operations - more permissive
   leaderboard: { max: 120, timeWindow: 60000 }, // 120 req/min
   profile: { max: 120, timeWindow: 60000 },     // 120 req/min
+  hubPreview: { max: 60, timeWindow: 60000 },   // 60 req/min (viewing other players' hubs)
 
   // PvP Arena - limit challenges per user
   pvpChallenges: { max: 20, timeWindow: 60000 },    // 20 req/min (create challenge = instant battle)

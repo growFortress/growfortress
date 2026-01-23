@@ -356,7 +356,10 @@ export {
   PvpChallengesQuerySchema,
   PvpChallengesResponseSchema,
   PvpAcceptResponseSchema,
+  PvpResolveRequestSchema,
+  PvpResolveResponseSchema,
   PvpBattleStatsSchema,
+  PvpBattleDataSchema,
   PvpRewardsSchema,
   PvpResultSchema,
   PvpChallengeWithResultSchema,
@@ -376,7 +379,10 @@ export {
   type PvpChallengesQuery,
   type PvpChallengesResponse,
   type PvpAcceptResponse,
+  type PvpResolveRequest,
+  type PvpResolveResponse,
   type PvpBattleStats,
+  type PvpBattleData,
   type PvpRewards,
   type PvpResult,
   type PvpChallengeWithResult,
@@ -1138,6 +1144,8 @@ export {
   // Banners
   GachaBannerSchema,
   GetActiveBannersResponseSchema,
+  CreateBannerRequestSchema,
+  UpdateBannerRequestSchema,
   // Error codes
   GACHA_ERROR_CODES,
   // Types
@@ -1161,6 +1169,8 @@ export {
   type GetGachaHistoryResponse,
   type GachaBanner,
   type GetActiveBannersResponse,
+  type CreateBannerRequest,
+  type UpdateBannerRequest,
   type GachaErrorCode,
 } from "./gacha.js";
 

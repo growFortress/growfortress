@@ -1,0 +1,440 @@
+.modal {
+  max-width: 1100px;
+  max-height: 90vh;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 200px 1fr 240px;
+  gap: 1.5rem;
+  min-height: 500px;
+}
+
+/* Banner List */
+.bannerList {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.bannerItem {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  text-align: left;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bannerItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bannerItem.selected {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.bannerName {
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.bannerMeta {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+/* Main Content */
+.mainContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.bannerHeader {
+  margin-bottom: 1.5rem;
+}
+
+.bannerTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.bannerDescription {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+}
+
+/* Featured Section */
+.featuredSection {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.featuredTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fbbf24;
+  margin-bottom: 1rem;
+}
+
+.featuredGrid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.featuredHero {
+  text-align: center;
+  width: 80px;
+}
+
+.heroName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heroRarity {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* Pull Section */
+.pullSection {
+  margin-top: auto;
+}
+
+.dustBalance {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #10b981;
+}
+
+.pullButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.pullButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem !important;
+  min-height: 80px;
+}
+
+.pullButton.tenPull {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  position: relative;
+}
+
+.pullCost {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin-top: 0.25rem;
+}
+
+.discount {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.pullingIndicator {
+  text-align: center;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+.error {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 0.875rem;
+}
+
+.noBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+/* Progress Panel */
+.progressPanel {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.progressItem {
+  margin-bottom: 1.5rem;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.progressBar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.sparkFill {
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.progressHint {
+  font-size: 0.625rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.25rem;
+}
+
+.redeemButton {
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.shardsInfo {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.shardsLabel {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.shardsValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+.shardsHint {
+  font-size: 0.625rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.25rem;
+}
+
+.ratesInfo {
+  font-size: 0.75rem;
+}
+
+.ratesInfo h4 {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+}
+
+.ratesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ratesList div {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Results Overlay */
+.resultsOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.resultsContainer {
+  text-align: center;
+  max-width: 800px;
+  padding: 2rem;
+}
+
+.resultsTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.resultsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.resultCard {
+  width: 120px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid;
+  border-radius: 8px;
+  text-align: center;
+  animation: popIn 0.3s ease backwards;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.resultCard.newHero {
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+.resultName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resultRarity {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.newBadge {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: black;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.shardsBadge {
+  margin-top: 0.5rem;
+  font-size: 0.625rem;
+  color: #a855f7;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .bannerList {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .bannerItem {
+    flex-shrink: 0;
+    width: auto;
+    margin-bottom: 0;
+  }
+
+  .progressPanel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .progressItem {
+    margin-bottom: 0;
+  }
+}

@@ -25,6 +25,12 @@ export const guildPreviewModalOpen = signal(false);
 /** Guild ID currently being previewed */
 export const guildPreviewGuildId = signal<string | null>(null);
 
+/** Current request ID to prevent race conditions */
+let currentRequestId = 0;
+
+/** AbortController for cancelling in-flight requests */
+let abortController: AbortController | null = null;
+
 // ============================================================================
 // COMPUTED VALUES
 // ============================================================================
@@ -46,6 +52,20 @@ export const isGuildPreviewReady = computed(
  * @param guildId - The guild ID to preview
  */
 export async function openGuildPreview(guildId: string): Promise<void> {
+  // Validate guildId format (basic sanitization)
+  if (!guildId || typeof guildId !== 'string' || guildId.length > 100) {
+    return;
+  }
+
+  // Cancel any in-flight request
+  if (abortController) {
+    abortController.abort();
+  }
+  abortController = new AbortController();
+
+  // Increment request ID to track this specific request
+  const requestId = ++currentRequestId;
+
   // Set modal state
   guildPreviewGuildId.value = guildId;
   guildPreviewModalOpen.value = true;
@@ -54,17 +74,36 @@ export async function openGuildPreview(guildId: string): Promise<void> {
   guildPreviewData.value = null;
 
   try {
-    const data = await fetchGuildPreview(guildId);
+    const data = await fetchGuildPreview(guildId, abortController.signal);
+
+    // Check if this request is still the current one (race condition prevention)
+    if (requestId !== currentRequestId) {
+      return; // A newer request was made, discard this result
+    }
+
     if (data) {
       guildPreviewData.value = data;
     } else {
       guildPreviewError.value = 'Nie znaleziono gildii';
     }
   } catch (error) {
+    // Ignore abort errors
+    if (error instanceof Error && error.name === 'AbortError') {
+      return;
+    }
+
+    // Check if this request is still the current one
+    if (requestId !== currentRequestId) {
+      return;
+    }
+
     console.error('Failed to fetch guild preview:', error);
     guildPreviewError.value = 'Nie udalo sie zaladowac danych';
   } finally {
-    guildPreviewLoading.value = false;
+    // Only update loading state if this is still the current request
+    if (requestId === currentRequestId) {
+      guildPreviewLoading.value = false;
+    }
   }
 }
 
@@ -72,6 +111,12 @@ export async function openGuildPreview(guildId: string): Promise<void> {
  * Close the guild preview modal and reset state
  */
 export function closeGuildPreview(): void {
+  // Cancel any in-flight request
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+  }
+
   guildPreviewModalOpen.value = false;
   guildPreviewGuildId.value = null;
   guildPreviewData.value = null;

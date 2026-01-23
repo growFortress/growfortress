@@ -27,6 +27,13 @@ import {
   type StatUpgrades,
   type HeroUpgrades,
 } from '../data/power-upgrades.js';
+import { getHeroPowerMultipliers } from '../systems/apply-power-upgrades.js';
+import {
+  calculateHeroArtifactDamageBonus,
+  calculateHeroArtifactClassDamageBonus,
+  calculateHeroArtifactAttackSpeedBonus,
+} from '../systems/artifacts.js';
+import { getHeroById } from '../data/heroes.js';
 
 // ============================================================================
 // TYPES
@@ -44,6 +51,8 @@ export interface ArenaFortress {
   /** Position on the field (fixed-point) */
   x: number;
   y: number;
+  /** Armor for damage reduction (diminishing returns formula) */
+  armor: number;
 }
 
 /**
@@ -147,21 +156,80 @@ export interface ArenaConfig {
 // CONSTANTS
 // ============================================================================
 
+/** Fortress exclusion zone radius - heroes cannot enter this area */
+export const FORTRESS_EXCLUSION_RADIUS = FP.fromInt(3);
+
+// ============================================================================
+// ARMOR SYSTEM CONSTANTS
+// ============================================================================
+
+/** Base armor for tier 1 heroes */
+const HERO_BASE_ARMOR = 5;
+
+/** Armor bonus per tier (tier 2 = +5, tier 3 = +10) - reduced from 15 */
+const HERO_ARMOR_PER_TIER = 5;
+
+/** Base armor for fortress */
+const FORTRESS_BASE_ARMOR = 15;
+
+/** Fortress armor bonus per 10 commander levels - reduced from 10 */
+const FORTRESS_ARMOR_PER_10_LEVELS = 5;
+
+/** Arena damage reduction multiplier - heroes deal less damage in arena */
+export const ARENA_DAMAGE_MULTIPLIER = 0.45; // 45% of normal damage for longer battles
+
 /** Default arena configuration */
 export const DEFAULT_ARENA_CONFIG: ArenaConfig = {
   tickHz: 30,
-  maxTicks: 18000, // 10 minutes at 30Hz
-  fieldWidth: FP.fromInt(20), // Compact arena
+  maxTicks: 9000, // 5 minutes at 30Hz
+  fieldWidth: FP.fromInt(50), // Large arena for tactical movement
   fieldHeight: FP.fromInt(15),
-  fortressBaseHp: 1000, // High HP for longer battles
-  fortressBaseDamage: 15,
-  fortressAttackInterval: 15, // 0.5 seconds at 30Hz
-  fortressDistanceFromCenter: FP.fromInt(6), // 6 units from center, 12 total distance
+  fortressBaseHp: 2500, // High base HP for longer, strategic battles
+  fortressBaseDamage: 30, // Fortress damage
+  fortressAttackInterval: 12, // Faster fortress attacks (2.5/sec)
+  fortressDistanceFromCenter: FP.fromInt(18), // 18 units from center, 36 total distance
 };
 
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
+
+function applyArenaHeroMultipliers(
+  heroes: ActiveHero[],
+  powerData: PlayerPowerData | undefined,
+  armorBonus: number = 0
+): void {
+  for (const hero of heroes) {
+    const heroDef = getHeroById(hero.definitionId);
+    const powerMultipliers = powerData
+      ? getHeroPowerMultipliers(powerData, hero.definitionId)
+      : {
+          damageMultiplier: 1,
+          attackSpeedMultiplier: 1,
+          hpMultiplier: 1,
+          critChanceBonus: 0,
+          critDamageBonus: 0,
+        };
+
+    const artifactDamageMultiplier = heroDef
+      ? calculateHeroArtifactDamageBonus(hero.equippedArtifact) *
+        calculateHeroArtifactClassDamageBonus(hero.equippedArtifact, heroDef.class)
+      : 1;
+    const artifactAttackSpeedMultiplier = calculateHeroArtifactAttackSpeedBonus(
+      hero.equippedArtifact
+    );
+
+    hero.arenaDamageMultiplier =
+      powerMultipliers.damageMultiplier * artifactDamageMultiplier;
+    hero.arenaAttackSpeedMultiplier =
+      powerMultipliers.attackSpeedMultiplier * artifactAttackSpeedMultiplier;
+
+    // Calculate hero armor based on tier
+    // Tier 1: 10, Tier 2: 25, Tier 3: 40, plus bonuses from build
+    const tierBonus = (hero.tier - 1) * HERO_ARMOR_PER_TIER;
+    hero.arenaArmor = Math.floor((HERO_BASE_ARMOR + tierBonus) * (1 + armorBonus));
+  }
+}
 
 /**
  * Create initial state for one side of the arena
@@ -183,10 +251,11 @@ function createArenaSide(
   const damageBonus = calculateTotalDamageBonus(build.commanderLevel);
   const baseDamage = Math.floor((config.fortressBaseDamage * damageBonus) / 16384);
 
-  // Initialize heroes - position them near their fortress
+  // Initialize heroes - position them in front of their fortress
+  // Spawn 6 units from fortress - heroes need to march to engage
   const heroSpawnX = side === 'left'
-    ? FP.add(fortressX, FP.fromInt(3)) // 3 units right of left fortress
-    : FP.sub(fortressX, FP.fromInt(3)); // 3 units left of right fortress
+    ? FP.add(fortressX, FP.fromInt(6)) // 6 units right of left fortress
+    : FP.sub(fortressX, FP.fromInt(6)); // 6 units left of right fortress
 
   const maxHeroSlots = getMaxHeroSlots(build.commanderLevel);
   const heroIds = build.heroIds.slice(0, maxHeroSlots);
@@ -240,11 +309,20 @@ function createArenaSide(
     }
   }
 
+  // Apply hero multipliers including armor bonus from build
+  const armorBonus = build.hpBonus ?? 0; // Armor scales with HP bonus
+  applyArenaHeroMultipliers(heroes, powerData, armorBonus);
+
   // Build modifiers
   const modifiers: ModifierSet = { ...DEFAULT_MODIFIERS };
   if (build.damageBonus) {
     modifiers.damageBonus += build.damageBonus;
   }
+
+  // Calculate fortress armor based on commander level
+  // Base 20 + 10 per 10 levels + bonus from build
+  const fortressLevelBonus = Math.floor(build.commanderLevel / 10) * FORTRESS_ARMOR_PER_10_LEVELS;
+  const fortressArmor = Math.floor((FORTRESS_BASE_ARMOR + fortressLevelBonus) * (1 + armorBonus));
 
   return {
     ownerId: build.ownerId,
@@ -257,6 +335,7 @@ function createArenaSide(
       lastAttackTick: 0,
       x: fortressX,
       y: FP.fromInt(7), // Center Y
+      armor: fortressArmor,
     },
     heroes,
     projectiles: [],

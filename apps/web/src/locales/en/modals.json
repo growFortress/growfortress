@@ -449,6 +449,45 @@
     "emptyNoMaterials": "No materials yet.",
     "emptyNoFiltered": "No {{filter}} materials."
   },
+  "hubPreview": {
+    "title": "Player Profile",
+    "ariaLabel": "Player profile preview",
+    "loading": "Loading...",
+    "loadingRenderer": "Loading renderer...",
+    "rendererError": "Failed to load preview",
+    "retryRenderer": "Retry",
+    "playerNotFound": "Player not found",
+    "loadFailed": "Failed to load data",
+    "canvasAriaLabel": "Visual preview of {{name}}'s fortress with heroes and turrets",
+    "level": "Level",
+    "wave": "Wave",
+    "power": "Power",
+    "heroes": "Heroes",
+    "heroesCount": "Heroes ({{count}})",
+    "turrets": "Turrets",
+    "turretsCount": "Turrets ({{count}})",
+    "items": "Items",
+    "slot": "Slot",
+    "tier": "T",
+    "artifacts": "art.",
+    "challengePvp": "⚔️ Challenge to PvP",
+    "sending": "Sending...",
+    "errors": {
+      "battlePrepareFailed": "Failed to prepare battle",
+      "cooldownActive": "You must wait before challenging this player again",
+      "powerOutOfRange": "Opponent power out of range",
+      "challengeFailed": "Failed to send challenge"
+    },
+    "fortressClasses": {
+      "natural": "Nature",
+      "ice": "Ice",
+      "fire": "Fire",
+      "lightning": "Lightning",
+      "poison": "Poison",
+      "magic": "Magic",
+      "tech": "Technology"
+    }
+  },
   "statistics": {
     "title": "Statistics Dashboard",
     "ariaLabel": "Statistics Dashboard",

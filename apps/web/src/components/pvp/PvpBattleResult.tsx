@@ -9,6 +9,8 @@ import {
   formatPower,
 } from '../../state/index.js';
 import { getArtifactById } from '@arcade/sim-core';
+import { getUserId } from '../../api/auth.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './PvpBattleResult.module.css';
 
 export function PvpBattleResult() {
@@ -20,8 +22,12 @@ export function PvpBattleResult() {
   const result = pvpBattleResult.value;
   const rewards = pvpBattleRewards.value;
 
-  const isWinner = result.winnerId === challenge.challengerId;
+  const currentUserId = getUserId();
   const isDraw = !result.winnerId;
+  const challengerWon = result.winnerId === challenge.challengerId;
+  const isUserWinner = currentUserId
+    ? result.winnerId === currentUserId
+    : challengerWon;
 
   const durationSeconds = Math.floor(result.duration / 30); // 30 ticks per second
   const durationMinutes = Math.floor(durationSeconds / 60);
@@ -46,13 +52,13 @@ export function PvpBattleResult() {
         {/* Result Header */}
         <div class={`${styles.resultHeader} ${
           isDraw ? styles.resultDraw :
-          isWinner ? styles.resultWin : styles.resultLoss
+          isUserWinner ? styles.resultWin : styles.resultLoss
         }`}>
           <div class={styles.resultIcon}>
-            {isDraw ? '🤝' : isWinner ? '🏆' : '💀'}
+            {isDraw ? '🤝' : isUserWinner ? '🏆' : '💀'}
           </div>
           <div class={styles.resultText}>
-            {isDraw ? 'REMIS' : isWinner ? 'ZWYCIĘSTWO!' : 'PORAŻKA'}
+            {isDraw ? 'REMIS' : isUserWinner ? 'ZWYCIĘSTWO!' : 'PORAŻKA'}
           </div>
           <div class={styles.resultReason}>
             {winReasonText}
@@ -62,7 +68,7 @@ export function PvpBattleResult() {
         {/* Battle Summary */}
         <div class={styles.battleSummary}>
           {/* Challenger Side */}
-          <div class={`${styles.side} ${isWinner ? styles.sideWinner : ''}`}>
+          <div class={`${styles.side} ${challengerWon ? styles.sideWinner : ''}`}>
             <div class={styles.sideName}>{challenge.challengerName}</div>
             <div class={styles.sidePower}>💪 {formatPower(challenge.challengerPower)}</div>
             <div class={styles.sideStats}>
@@ -87,7 +93,7 @@ export function PvpBattleResult() {
           </div>
 
           {/* Challenged Side */}
-          <div class={`${styles.side} ${!isWinner && !isDraw ? styles.sideWinner : ''}`}>
+          <div class={`${styles.side} ${!challengerWon && !isDraw ? styles.sideWinner : ''}`}>
             <div class={styles.sideName}>{challenge.challengedName}</div>
             <div class={styles.sidePower}>💪 {formatPower(challenge.challengedPower)}</div>
             <div class={styles.sideStats}>
@@ -121,7 +127,7 @@ export function PvpBattleResult() {
             <div class={styles.rewardsTitle}>Nagrody</div>
             <div class={styles.rewardsList}>
               <div class={styles.rewardItem}>
-                <span class={styles.rewardIcon}>🌫️</span>
+                <DustIcon size={16} className={styles.rewardIcon} />
                 <span class={styles.rewardLabel}>Dust:</span>
                 <span class={styles.rewardValue}>+{rewards.dust}</span>
               </div>

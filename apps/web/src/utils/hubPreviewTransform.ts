@@ -4,71 +4,104 @@
  */
 import type { HubPreviewResponse, HubPreviewHero, HubPreviewTurret } from '@arcade/protocol';
 import type { ActiveHero, ActiveTurret, TurretSlot, FortressClass } from '@arcade/sim-core';
+import { FP } from '@arcade/sim-core';
 import type { HubState } from '../renderer/scenes/GameScene.js';
 
-// Fixed point scale (Q16.16 format)
-const FP_SCALE = 1 << 16; // 65536
-// Shift heroes away from the fortress for the smaller preview canvas.
-const PREVIEW_HERO_X_OFFSET = 2.5;
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Fixed point scale for positions (Q16.16 format) - use canonical value from sim-core */
+const FP_SCALE = FP.ONE; // 65536
+
+/** Shift heroes away from the fortress for the smaller preview canvas */
+const PREVIEW_HERO_X_OFFSET = 5.0;
+
+/** Base X offset for hero positioning */
+const HERO_BASE_X = 2;
+
+/** Center Y position for hero formations */
+const FORMATION_CENTER_Y = 7.5;
+
+/** Y spread for multi-row formations (increased for preview canvas) */
+const FORMATION_Y_SPREAD = 3.0;
+
+/** X positions for hero slots (front to back) */
+const HERO_SLOT_X = [4, 7, 10] as const;
+
+/** Number of turret slots */
+const MAX_TURRET_SLOTS = 6;
+
+/** Fortress tier thresholds */
+const TIER_2_LEVEL = 10;
+const TIER_3_LEVEL = 25;
 
 /**
  * Default turret slot positions (matching fortress.signals.ts)
+ * Slots are 1-indexed (1-6), matching the renderer expectations.
+ * Top row: slots 1-3 at y=2
+ * Bottom row: slots 4-6 at y=13
  */
 const TURRET_SLOT_POSITIONS: Record<number, { x: number; y: number }> = {
-  0: { x: 6, y: 2 },
-  1: { x: 6, y: 2 },
-  2: { x: 11, y: 2 },
-  3: { x: 16, y: 2 },
-  4: { x: 6, y: 13 },
-  5: { x: 11, y: 13 },
-  6: { x: 16, y: 13 },
+  1: { x: 6, y: 2 },   // Top-left (starter slot)
+  2: { x: 11, y: 2 },  // Top-center
+  3: { x: 16, y: 2 },  // Top-right
+  4: { x: 6, y: 13 },  // Bottom-left
+  5: { x: 11, y: 13 }, // Bottom-center
+  6: { x: 16, y: 13 }, // Bottom-right
 };
 
 /**
  * Get hero formation position based on index and total count.
  * Copied from HubOverlay.tsx to maintain consistency.
+ * @param index - Hero index in the formation (0-based)
+ * @param totalCount - Total number of heroes
+ * @returns Position offsets for the hero
  */
 function getFormationPosition(index: number, totalCount: number): { xOffset: number; yOffset: number } {
-  const centerY = 7.5;
-  const SLOT_X = [4, 7, 10];
+  const defaultPos = { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y };
 
   switch (totalCount) {
     case 1:
-      return { xOffset: SLOT_X[0], yOffset: centerY };
+      return defaultPos;
     case 2:
       return [
-        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
-        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
-      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y - 2 },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y + 2 },
+      ][index] ?? defaultPos;
     case 3:
       return [
-        { xOffset: SLOT_X[1], yOffset: centerY },
-        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
-        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
-      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        { xOffset: HERO_SLOT_X[1], yOffset: FORMATION_CENTER_Y },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y - 2 },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y + 2 },
+      ][index] ?? defaultPos;
     case 4:
       return [
-        { xOffset: SLOT_X[1], yOffset: centerY },
-        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
-        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
-        { xOffset: SLOT_X[0], yOffset: centerY },
-      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        { xOffset: HERO_SLOT_X[1], yOffset: FORMATION_CENTER_Y },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y - 2 },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y + 2 },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y },
+      ][index] ?? defaultPos;
     case 5:
       return [
-        { xOffset: SLOT_X[2], yOffset: centerY },
-        { xOffset: SLOT_X[1], yOffset: centerY - 2 },
-        { xOffset: SLOT_X[1], yOffset: centerY + 2 },
-        { xOffset: SLOT_X[0], yOffset: centerY - 2 },
-        { xOffset: SLOT_X[0], yOffset: centerY + 2 },
-      ][index] || { xOffset: SLOT_X[0], yOffset: centerY };
+        { xOffset: HERO_SLOT_X[2], yOffset: FORMATION_CENTER_Y },
+        { xOffset: HERO_SLOT_X[1], yOffset: FORMATION_CENTER_Y - 2 },
+        { xOffset: HERO_SLOT_X[1], yOffset: FORMATION_CENTER_Y + 2 },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y - 2 },
+        { xOffset: HERO_SLOT_X[0], yOffset: FORMATION_CENTER_Y + 2 },
+      ][index] ?? defaultPos;
     default: {
+      // Grid layout for 6+ heroes
       const row = Math.floor(index / 3);
       const col = index % 3;
-      const ySpread = 2.5;
-      const yPositions = [centerY - ySpread, centerY, centerY + ySpread];
+      const yPositions = [
+        FORMATION_CENTER_Y - FORMATION_Y_SPREAD,
+        FORMATION_CENTER_Y,
+        FORMATION_CENTER_Y + FORMATION_Y_SPREAD,
+      ];
       return {
-        xOffset: SLOT_X[Math.min(row, 2)],
-        yOffset: yPositions[col] || centerY
+        xOffset: HERO_SLOT_X[Math.min(row, 2)],
+        yOffset: yPositions[col] ?? FORMATION_CENTER_Y,
       };
     }
   }
@@ -76,10 +109,14 @@ function getFormationPosition(index: number, totalCount: number): { xOffset: num
 
 /**
  * Transform a HubPreviewHero to ActiveHero format for rendering.
+ * @param hero - Hero data from the API
+ * @param index - Hero index in the formation
+ * @param totalCount - Total number of heroes
+ * @returns ActiveHero object ready for rendering
  */
 function transformHero(hero: HubPreviewHero, index: number, totalCount: number): ActiveHero {
   const formation = getFormationPosition(index, totalCount);
-  const heroX = 2 + formation.xOffset + PREVIEW_HERO_X_OFFSET;
+  const heroX = HERO_BASE_X + formation.xOffset + PREVIEW_HERO_X_OFFSET;
   const heroY = formation.yOffset;
 
   return {
@@ -125,19 +162,23 @@ function transformTurret(turret: HubPreviewTurret, fortressClass: FortressClass)
 
 /**
  * Generate turret slots array based on turrets present.
+ * API sends 0-indexed slotIndex, but renderer uses 1-indexed slots.
  */
 function generateTurretSlots(turrets: HubPreviewTurret[]): TurretSlot[] {
-  // Always return all 6 slots, marking ones with turrets as unlocked
-  const occupiedSlots = new Set(turrets.map(t => t.slotIndex));
+  // Convert API's 0-based slotIndex to renderer's 1-based slot indices
+  const occupiedSlots = new Set(turrets.map(t => t.slotIndex + 1));
+  const maxOccupiedSlot = turrets.length > 0
+    ? Math.max(...turrets.map(t => t.slotIndex + 1))
+    : 1;
 
-  return [1, 2, 3, 4, 5, 6]
+  return Array.from({ length: MAX_TURRET_SLOTS }, (_, i) => i + 1)
     .map(index => {
-      const pos = TURRET_SLOT_POSITIONS[index] || TURRET_SLOT_POSITIONS[1];
+      const pos = TURRET_SLOT_POSITIONS[index];
       return {
         index,
         x: pos.x * FP_SCALE,
         y: pos.y * FP_SCALE,
-        isUnlocked: occupiedSlots.has(index) || index <= Math.max(...occupiedSlots, 1),
+        isUnlocked: occupiedSlots.has(index) || index <= maxOccupiedSlot,
       };
     })
     .filter(slot => slot.isUnlocked);
@@ -161,7 +202,7 @@ export function transformHubPreviewToHubState(preview: HubPreviewResponse): HubS
  * Get fortress tier based on level (matching GameScene logic).
  */
 export function getFortressTierFromLevel(level: number): 1 | 2 | 3 {
-  if (level < 10) return 1;
-  if (level < 25) return 2;
+  if (level < TIER_2_LEVEL) return 1;
+  if (level < TIER_3_LEVEL) return 2;
   return 3;
 }

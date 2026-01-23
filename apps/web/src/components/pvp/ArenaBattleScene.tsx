@@ -12,6 +12,8 @@ import {
   toggleArenaBattlePause,
   endArenaBattle,
   addSentChallenge,
+  addReceivedChallenge,
+  showErrorToast,
 } from '../../state/index.js';
 import {
   ArenaSimulation,
@@ -23,6 +25,9 @@ import {
   type FortressClass,
 } from '@arcade/sim-core';
 import { HEROES } from '@arcade/sim-core';
+import { resolveChallenge } from '../../api/pvp.js';
+import { getUserId } from '../../api/auth.js';
+import type { PvpResolveRequest } from '@arcade/protocol';
 import styles from './ArenaBattleScene.module.css';
 
 const TICKS_PER_SECOND = 30;
@@ -32,7 +37,7 @@ const ARENA_WIDTH = 20;
 const ARENA_HEIGHT = 15;
 
 // Debug flag
-const DEBUG_BATTLE = true;
+const DEBUG_BATTLE = false;
 
 // Convert fixed-point position to percentage of viewport
 function fpToPercent(fpValue: number, maxUnits: number): number {
@@ -87,15 +92,52 @@ export function ArenaBattleScene() {
 
   const animationFrameRef = useRef<number | null>(null);
   const lastTickTimeRef = useRef<number>(0);
+  const resolveSentRef = useRef(false);
+  const clientResultRef = useRef<PvpResolveRequest['result'] | null>(null);
 
   const data = arenaBattleData.value;
   const phase = arenaBattlePhase.value;
   const speed = arenaBattleSpeed.value;
   const paused = arenaBattlePaused.value;
 
+  const buildClientResult = (
+    result: ReturnType<ArenaSimulation['run']>
+  ): PvpResolveRequest['result'] | null => {
+    if (!data?.challenge) return null;
+    const winnerId =
+      result.winner === 'left'
+        ? data.challenge.challengerId
+        : result.winner === 'right'
+          ? data.challenge.challengedId
+          : null;
+    return {
+      winnerId,
+      winReason: result.winReason,
+      challengerStats: {
+        finalHp: result.leftStats.finalHp,
+        damageDealt: result.leftStats.damageDealt,
+        heroesAlive: result.leftStats.heroesAlive,
+      },
+      challengedStats: {
+        finalHp: result.rightStats.finalHp,
+        damageDealt: result.rightStats.damageDealt,
+        heroesAlive: result.rightStats.heroesAlive,
+      },
+      duration: result.duration,
+    };
+  };
+
+  // Track initialization to prevent double-run
+  const initializedRef = useRef<string | null>(null);
+
   // Initialize simulation when data is available
   useEffect(() => {
     if (!data) return;
+
+    // Prevent re-initialization with same data (React StrictMode or double render)
+    const dataKey = `${data.seed}-${data.challenge.id}`;
+    if (initializedRef.current === dataKey) return;
+    initializedRef.current = dataKey;
 
     const { seed, challengerBuild, challengedBuild } = data;
 
@@ -120,6 +162,9 @@ export function ArenaBattleScene() {
       });
     }
 
+    // Reset tick time reference
+    lastTickTimeRef.current = 0;
+
     // Run simulation to completion to get max ticks
     const sim = new ArenaSimulation(
       seed,
@@ -128,9 +173,19 @@ export function ArenaBattleScene() {
     );
     const result = sim.run();
     setMaxTicks(result.duration);
+    const clientResult = buildClientResult(result);
+    if (clientResult) {
+      clientResultRef.current = clientResult;
+      if (!data.result) {
+        arenaBattleData.value = { ...data, result: clientResult };
+      }
+    }
+    resolveSentRef.current = false;
 
     // DEBUG: Log result
-    console.log('[ArenaBattleScene] Simulation result:', result);
+    if (DEBUG_BATTLE) {
+      console.log('[ArenaBattleScene] Simulation result:', result);
+    }
 
     // Create fresh simulation for playback
     const playbackSim = new ArenaSimulation(
@@ -182,8 +237,8 @@ export function ArenaBattleScene() {
       });
     }
 
-    // Auto-start playback
-    setArenaBattlePhase('fighting');
+    // Phase is already set to 'fighting' by startArenaBattle() in signals
+    // No need to set it again here
 
     return () => {
       if (animationFrameRef.current) {
@@ -218,6 +273,7 @@ export function ArenaBattleScene() {
 
         if (newState.ended) {
           setArenaBattlePhase('ended');
+          resolveBattle();
           return;
         }
       }
@@ -234,6 +290,40 @@ export function ArenaBattleScene() {
     };
   }, [phase, paused, simulation, speed]);
 
+  const resolveBattle = async () => {
+    if (!data?.challenge || resolveSentRef.current) return;
+    if (data.challenge.status === 'RESOLVED') return;
+    if (!clientResultRef.current) return;
+
+    resolveSentRef.current = true;
+    try {
+      const response = await resolveChallenge(
+        data.challenge.id,
+        clientResultRef.current
+      );
+      arenaBattleData.value = {
+        ...data,
+        result: {
+          winnerId: response.result.winnerId,
+          winReason: response.result.winReason as 'fortress_destroyed' | 'timeout' | 'draw',
+          challengerStats: response.result.challengerStats,
+          challengedStats: response.result.challengedStats,
+          duration: response.result.duration,
+        },
+        rewards: response.rewards,
+        challenge: {
+          ...data.challenge,
+          status: response.challenge.status,
+          winnerId: response.challenge.winnerId,
+          resolvedAt: response.result.resolvedAt,
+        },
+      };
+    } catch (error) {
+      resolveSentRef.current = false;
+      showErrorToast('Nie udało się zapisać wyniku walki');
+    }
+  };
+
   const handleSpeedChange = () => {
     const speeds: (1 | 2 | 4)[] = [1, 2, 4];
     const currentIndex = speeds.indexOf(speed);
@@ -248,6 +338,7 @@ export function ArenaBattleScene() {
       }
       setCurrentState({ ...simulation.getState() });
       setArenaBattlePhase('ended');
+      resolveBattle();
     }
   };
 
@@ -264,12 +355,25 @@ export function ArenaBattleScene() {
       setArenaBattlePhase('fighting');
       lastTickTimeRef.current = 0;
       arenaBattlePaused.value = false;
+      // Reset HP tracking for hit animations
+      setLeftFortressLastHp(null);
+      setRightFortressLastHp(null);
     }
   };
 
   const handleContinue = () => {
-    if (data?.challenge) {
-      addSentChallenge(data.challenge);
+    if (data?.challenge && data.result && data.challenge.status === 'RESOLVED') {
+      const resolvedChallenge = {
+        ...data.challenge,
+        status: 'RESOLVED' as const,
+        winnerId: data.result.winnerId ?? undefined,
+        resolvedAt: data.challenge.resolvedAt ?? new Date().toISOString(),
+      };
+      if (currentUserId && currentUserId === data.challenge.challengedId) {
+        addReceivedChallenge(resolvedChallenge);
+      } else {
+        addSentChallenge(resolvedChallenge);
+      }
     }
     endArenaBattle();
   };
@@ -290,7 +394,8 @@ export function ArenaBattleScene() {
     return hero?.name ?? heroId;
   };
 
-  const isUserChallenger = true;
+  const currentUserId = getUserId();
+  const isUserChallenger = !!currentUserId && data?.challenge?.challengerId === currentUserId;
 
   const getResultText = (): { text: string; type: 'victory' | 'defeat' | 'draw'; icon: string } => {
     if (!data.result) return { text: 'Zakończono', type: 'draw', icon: '🤝' };
@@ -301,7 +406,9 @@ export function ArenaBattleScene() {
       return { text: 'Remis!', type: 'draw', icon: '🤝' };
     }
 
-    const userWon = winnerId === data.challenge.challengerId;
+    const userWon = currentUserId
+      ? winnerId === currentUserId
+      : winnerId === data.challenge.challengerId;
     return userWon
       ? { text: 'Zwycięstwo!', type: 'victory', icon: '🏆' }
       : { text: 'Porażka', type: 'defeat', icon: '💀' };
@@ -383,13 +490,38 @@ export function ArenaBattleScene() {
     );
   };
 
-  // Render fortress
-  const renderFortress = (side: 'left' | 'right', fortressClass: FortressClass, hp: number, maxHp: number, x: number, y: number) => {
+  // Track fortress damage for attack animations
+  const [leftFortressLastHp, setLeftFortressLastHp] = useState<number | null>(null);
+  const [rightFortressLastHp, setRightFortressLastHp] = useState<number | null>(null);
+  const [leftFortressHit, setLeftFortressHit] = useState(false);
+  const [rightFortressHit, setRightFortressHit] = useState(false);
+
+  // Update hit detection when state changes
+  useEffect(() => {
+    if (!currentState) return;
+
+    // Detect hits on left fortress
+    if (leftFortressLastHp !== null && currentState.left.fortress.hp < leftFortressLastHp) {
+      setLeftFortressHit(true);
+      setTimeout(() => setLeftFortressHit(false), 150);
+    }
+    setLeftFortressLastHp(currentState.left.fortress.hp);
+
+    // Detect hits on right fortress
+    if (rightFortressLastHp !== null && currentState.right.fortress.hp < rightFortressLastHp) {
+      setRightFortressHit(true);
+      setTimeout(() => setRightFortressHit(false), 150);
+    }
+    setRightFortressLastHp(currentState.right.fortress.hp);
+  }, [currentState?.left.fortress.hp, currentState?.right.fortress.hp]);
+
+  // Render fortress (without HP bar - shown in header)
+  const renderFortress = (side: 'left' | 'right', fortressClass: FortressClass, hp: number, _maxHp: number, x: number, y: number) => {
     const xPercent = fpToPercent(x, ARENA_WIDTH);
     const yPercent = fpToPercent(y, ARENA_HEIGHT);
-    const hpPercent = (hp / maxHp) * 100;
     const isDestroyed = hp <= 0;
     const color = getFortressColor(fortressClass);
+    const isHit = side === 'left' ? leftFortressHit : rightFortressHit;
 
     if (DEBUG_BATTLE) {
       console.log(`[Fortress ${side}] FP: (${x}, ${y}) -> Percent: (${xPercent.toFixed(1)}%, ${yPercent.toFixed(1)}%)`);
@@ -398,7 +530,7 @@ export function ArenaBattleScene() {
     return (
       <div
         key={`fortress-${side}`}
-        class={`${styles.battleFortress} ${isDestroyed ? styles.destroyedFortress : ''}`}
+        class={`${styles.battleFortress} ${isDestroyed ? styles.destroyedFortress : ''} ${isHit ? styles.fortressHit : ''}`}
         style={{
           position: 'absolute',
           left: `${xPercent}%`,
@@ -411,15 +543,8 @@ export function ArenaBattleScene() {
         <div class={styles.fortressIconLarge} style={{ textShadow: `0 0 20px ${color}` }}>
           {getFortressIcon(fortressClass)}
         </div>
-        <div class={styles.fortressHpBarBattle}>
-          <div
-            class={styles.fortressHpFillBattle}
-            style={{
-              width: `${Math.max(0, hpPercent)}%`,
-              backgroundColor: color,
-            }}
-          />
-        </div>
+        {/* Damage flash effect */}
+        {isHit && <div class={styles.fortressDamageFlash} style={{ backgroundColor: color }} />}
       </div>
     );
   };

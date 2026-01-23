@@ -23,7 +23,9 @@ import {
   upgradeStructure,
 } from '../../api/guild.js';
 import { resizeImageToBase64 } from '../../utils/image.js';
+import { showSuccessToast } from '../../state/ui.signals.js';
 import { Button } from '../shared/Button.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './GuildPanel.module.css';
 
 const ACCESS_MODES: { value: GuildAccessMode; label: string; description: string }[] = [
@@ -109,6 +111,8 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
     setUpgradingStructure(structureType);
     try {
       await upgradeStructure(guild.id, structureType);
+      const info = STRUCTURE_INFO[structureType];
+      showSuccessToast(`Ulepszono ${info.name}`);
       await loadStructures();
       onRefresh(); // Refresh treasury
     } catch (error) {
@@ -131,6 +135,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
     try {
       await updateGuildDescription(guild.id, description || null);
       setEditing(false);
+      showSuccessToast('Zapisano opis');
       onRefresh();
     } catch (error) {
       console.error('Failed to update description:', error);
@@ -150,6 +155,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
     try {
       await updateGuildNotes(guild.id, notes || null);
       setEditingNotes(false);
+      showSuccessToast('Zapisano notatki');
       onRefresh();
     } catch (error) {
       console.error('Failed to update notes:', error);
@@ -183,6 +189,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
       await updateGuildEmblem(guild.id, emblemUrl || null);
       setEditingEmblem(false);
       setEmblemUrl('');
+      showSuccessToast('Zapisano herb');
       onRefresh();
     } catch (error) {
       console.error('Failed to update emblem:', error);
@@ -260,6 +267,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
         },
       });
       setEditingSettings(false);
+      showSuccessToast('Zapisano ustawienia');
       onRefresh();
     } catch (err: any) {
       setSettingsError(err.message || 'Nie udalo sie zapisac ustawien');
@@ -487,7 +495,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
                   <div class={styles.structureCost}>
                     <span>Koszt: </span>
                     <span class={styles.goldCost}>{structure.upgradeCost.gold.toLocaleString()} 🪙</span>
-                    <span class={styles.dustCost}>{structure.upgradeCost.dust.toLocaleString()} 🌫️</span>
+                    <span class={styles.dustCost}>{structure.upgradeCost.dust.toLocaleString()} <DustIcon size={14} /></span>
                   </div>
                 )}
                 {isGuildLeader.value && (
@@ -678,8 +686,9 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
                   size="sm"
                   onClick={handleSaveSettings}
                   disabled={settingsLoading}
+                  loading={settingsLoading}
                 >
-                  {settingsLoading ? 'Zapisywanie...' : 'Zapisz'}
+                  Zapisz
                 </Button>
                 <Button
                   variant="ghost"

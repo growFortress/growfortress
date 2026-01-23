@@ -14,6 +14,7 @@ import {
   type GuildStructureInfo,
   type UpgradeStructureResponse,
 } from '@arcade/protocol';
+import { invalidateGuildPreviewCache } from './guildPreview.js';
 
 // ============================================================================
 // COST CALCULATIONS
@@ -187,7 +188,7 @@ export async function upgradeStructure(
   userId: string,
   structure: GuildStructureType
 ): Promise<{ success: boolean; error?: string; result?: UpgradeStructureResponse }> {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // Get guild with treasury
     const guild = await tx.guild.findUnique({
       where: { id: guildId },
@@ -267,4 +268,11 @@ export async function upgradeStructure(
       },
     };
   });
+
+  // Invalidate cache after successful structure upgrade (affects bonuses in preview)
+  if (result.success) {
+    await invalidateGuildPreviewCache(guildId);
+  }
+
+  return result;
 }

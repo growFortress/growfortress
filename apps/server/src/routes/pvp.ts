@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import {
   PvpCreateChallengeRequestSchema,
   PvpChallengesQuerySchema,
+  PvpResolveRequestSchema,
 } from '@arcade/protocol';
 import { withRateLimit } from '../plugins/rateLimit.js';
 import {
@@ -9,7 +10,7 @@ import {
   createChallenge,
   getChallenges,
   getChallenge,
-  acceptChallenge,
+  resolveChallenge,
   declineChallenge,
   cancelChallenge,
   getReplayData,
@@ -57,7 +58,7 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
   // CHALLENGES
   // ============================================================================
 
-  // Create a new challenge (instant battle; rate limited)
+  // Create a new challenge (client-simulated; rate limited)
   fastify.post('/v1/pvp/challenges', withRateLimit('pvpChallenges'), async (request, reply) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
@@ -147,16 +148,27 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 
-  // Accept a challenge
+  // Resolve a challenge (client-simulated)
   fastify.post<{
     Params: { id: string };
-  }>('/v1/pvp/challenges/:id/accept', async (request, reply) => {
+  }>('/v1/pvp/challenges/:id/resolve', async (request, reply) => {
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
 
     try {
-      const result = await acceptChallenge(request.params.id, request.userId);
+      let body;
+      try {
+        body = PvpResolveRequestSchema.parse(request.body);
+      } catch (error) {
+        return reply.status(400).send({ error: 'Invalid request body' });
+      }
+
+      const result = await resolveChallenge(
+        request.params.id,
+        request.userId,
+        body.result
+      );
       return reply.send(result);
     } catch (error) {
       if (error instanceof PvpError) {
@@ -165,6 +177,8 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
           CHALLENGE_FORBIDDEN: 403,
           CHALLENGE_NOT_PENDING: 400,
           CHALLENGE_EXPIRED: 410,
+          CHALLENGE_ALREADY_RESOLVED: 409,
+          RESULT_MISMATCH: 409,
           USER_NOT_FOUND: 500,
         };
         const status = statusMap[error.code] ?? 400;
@@ -244,7 +258,7 @@ const pvpRoutes: FastifyPluginAsync = async (fastify) => {
         const statusMap: Record<string, number> = {
           CHALLENGE_NOT_FOUND: 404,
           CHALLENGE_FORBIDDEN: 403,
-          CHALLENGE_NOT_PENDING: 400,
+          CHALLENGE_NOT_RESOLVED: 400,
         };
         const status = statusMap[error.code] ?? 400;
         return reply.status(status).send({ error: error.message, code: error.code });

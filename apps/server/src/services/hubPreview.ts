@@ -10,12 +10,14 @@ import type {
   HubPreviewHero,
   HubPreviewTurret,
   HubPreviewArtifact,
+  BuildPreset,
 } from '@arcade/protocol';
-import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from '@arcade/protocol';
+import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS, normalizeHeroId } from '@arcade/protocol';
+import { getMaxHeroSlots, getMaxTurretSlots, isClassUnlockedAtLevel } from '@arcade/sim-core';
 
 // Cache configuration
 const CACHE_KEY_PREFIX = 'hub:preview:';
-const CACHE_TTL = 300; // 5 minutes
+const CACHE_TTL = 120; // 2 minutes
 
 function parseJsonArray<T>(value: unknown): T[] {
   if (Array.isArray(value)) {
@@ -91,7 +93,11 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
       description: true,
       highestWave: true,
       defaultFortressClass: true,
+      defaultHeroId: true,
+      defaultTurretType: true,
       exclusiveItems: true,
+      buildPresets: true,
+      activePresetId: true,
       progression: {
         select: { level: true },
       },
@@ -99,6 +105,8 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
         select: {
           heroUpgrades: true,
           turretUpgrades: true,
+          heroTiers: true,
+          turretTiers: true,
           cachedTotalPower: true,
         },
       },
@@ -139,15 +147,77 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
   const turretUpgradesData = parseJsonArray<TurretUpgradeData>(
     user.powerUpgrades?.turretUpgrades
   );
+  
+  // Parse tier data
+  let heroTiers: Record<string, number> = {};
+  let turretTiers: Record<string, number> = {};
+  try {
+    if (user.powerUpgrades?.heroTiers) {
+      heroTiers = typeof user.powerUpgrades.heroTiers === 'string'
+        ? JSON.parse(user.powerUpgrades.heroTiers)
+        : (user.powerUpgrades.heroTiers as Record<string, number>);
+    }
+  } catch (error) {
+    console.warn('Failed to parse heroTiers', { userId, error });
+  }
+  try {
+    if (user.powerUpgrades?.turretTiers) {
+      turretTiers = typeof user.powerUpgrades.turretTiers === 'string'
+        ? JSON.parse(user.powerUpgrades.turretTiers)
+        : (user.powerUpgrades.turretTiers as Record<string, number>);
+    }
+  } catch (error) {
+    console.warn('Failed to parse turretTiers', { userId, error });
+  }
+  
   const unlockedHeroIds = parseJsonArray<string>(user.inventory?.unlockedHeroIds);
   const unlockedTurretIds = parseJsonArray<string>(user.inventory?.unlockedTurretIds);
+  const commanderLevel = user.progression?.level ?? 1;
 
-  // Build heroes array from unlocked heroes + starter heroes
-  const heroSet = new Set<string>([
-    ...FREE_STARTER_HEROES,
-    ...unlockedHeroIds,
-  ]);
-  const heroIds = Array.from(heroSet);
+  // Get active preset loadout
+  const buildPresets = Array.isArray(user.buildPresets)
+    ? (user.buildPresets as BuildPreset[])
+    : [];
+  const activePreset = user.activePresetId
+    ? buildPresets.find((p) => p.id === user.activePresetId)
+    : null;
+
+  // Determine which heroes and turrets to show based on active preset or defaults
+  const allUnlockedHeroes = new Set<string>([...FREE_STARTER_HEROES, ...unlockedHeroIds]);
+  const allUnlockedTurrets = new Set<string>([...FREE_STARTER_TURRETS, ...unlockedTurretIds]);
+
+  // Get heroes from active preset, or fall back to default hero
+  let heroIds: string[];
+  if (activePreset?.startingHeroes && activePreset.startingHeroes.length > 0) {
+    heroIds = activePreset.startingHeroes
+      .map(normalizeHeroId)
+      .filter((id) => allUnlockedHeroes.has(id))
+      .slice(0, getMaxHeroSlots(commanderLevel));
+  } else {
+    // Fall back to default hero or first starter
+    const defaultHero = user.defaultHeroId
+      ? normalizeHeroId(user.defaultHeroId)
+      : FREE_STARTER_HEROES[0];
+    heroIds = defaultHero && allUnlockedHeroes.has(defaultHero) ? [defaultHero] : [];
+  }
+
+  // Get turrets from active preset, or fall back to default turret
+  let turretIds: string[];
+  if (activePreset?.startingTurrets && activePreset.startingTurrets.length > 0) {
+    turretIds = activePreset.startingTurrets
+      .filter((id) => allUnlockedTurrets.has(id))
+      .slice(0, getMaxTurretSlots(commanderLevel));
+  } else {
+    // Fall back to default turret or first starter
+    const defaultTurret = user.defaultTurretType ?? FREE_STARTER_TURRETS[0];
+    turretIds = defaultTurret && allUnlockedTurrets.has(defaultTurret) ? [defaultTurret] : [];
+  }
+
+  // Get fortress class from active preset or default
+  const requestedClass = activePreset?.fortressClass ?? user.defaultFortressClass ?? 'natural';
+  const fortressClass = isClassUnlockedAtLevel(requestedClass, commanderLevel)
+    ? requestedClass
+    : 'natural';
   const heroes: HubPreviewHero[] = heroIds.map((heroId) => {
     // Find upgrade data for this hero
     const upgrades = heroUpgradesData.find((h) => h.heroId === heroId);
@@ -165,20 +235,18 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
         level: a.level,
       }));
 
+    // Get tier from heroTiers, default to 1 if not found
+    const tier = (heroTiers[heroId] ?? 1) as 1 | 2 | 3;
+    
     return {
       heroId,
-      tier: 1, // Default tier (tier progression would need additional tracking)
+      tier,
       level,
       equippedArtifacts,
     };
   });
 
-  // Build turrets array from unlocked turrets + starter turrets
-  const turretSet = new Set<string>([
-    ...FREE_STARTER_TURRETS,
-    ...unlockedTurretIds,
-  ]);
-  const turretIds = Array.from(turretSet);
+  // Build turrets array from active loadout
   const turrets: HubPreviewTurret[] = turretIds.map((turretType, index) => {
     // Find upgrade data for this turret
     const upgrades = turretUpgradesData.find((t) => t.turretType === turretType);
@@ -187,11 +255,16 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
     // Calculate total level as sum of stat upgrades
     const level = (statUpgrades.damage ?? 0) + (statUpgrades.attackSpeed ?? 0);
 
+    // Get tier from turretTiers, default to 1 if not found
+    const tier = (turretTiers[turretType] ?? 1) as 1 | 2 | 3;
+
     return {
       turretType,
-      tier: 1, // Default tier
+      tier,
       level,
-      slotIndex: index, // Sequential slot assignment
+      // Slot index is 0-based in the API response (matches protocol schema)
+      // Frontend will convert to 1-based for rendering
+      slotIndex: index,
     };
   });
 
@@ -205,7 +278,7 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
     level: user.progression?.level ?? 1,
     highestWave: user.highestWave,
     totalPower: user.powerUpgrades?.cachedTotalPower ?? 0,
-    fortressClass: user.defaultFortressClass ?? 'natural',
+    fortressClass,
     exclusiveItems: parseJsonArray<string>(user.exclusiveItems),
     heroes,
     turrets,

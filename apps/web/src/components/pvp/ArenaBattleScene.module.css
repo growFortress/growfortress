@@ -235,25 +235,38 @@
   75% { transform: translate(-50%, -50%) rotate(5deg); }
 }
 
+/* Fortress hit effect */
+.fortressHit {
+  animation: fortressHit 0.15s ease-out;
+}
+
+@keyframes fortressHit {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); filter: brightness(1.5); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.fortressDamageFlash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  opacity: 0.4;
+  animation: damageFlash 0.15s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes damageFlash {
+  0% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
 .fortressIconLarge {
   font-size: 3.5rem;
   line-height: 1;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-}
-
-.fortressHpBarBattle {
-  width: 100px;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.fortressHpFillBattle {
-  height: 100%;
-  transition: width 0.15s ease-out;
-  border-radius: 3px;
 }
 
 /* Stats panel */

@@ -10,6 +10,8 @@ export {
   getEnemySide,
   getOwnSide,
   DEFAULT_ARENA_CONFIG,
+  FORTRESS_EXCLUSION_RADIUS,
+  ARENA_DAMAGE_MULTIPLIER,
   type ArenaState,
   type ArenaSide,
   type ArenaFortress,

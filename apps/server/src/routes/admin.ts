@@ -6,6 +6,7 @@ import { createAuditLog } from '../services/adminAudit.js';
 import { getGameConfig, updateConfig } from '../services/gameConfig.js';
 import { getCurrentMetrics } from '../services/metrics.js';
 import { listAllEvents, createScheduledEvent, updateScheduledEvent, deleteScheduledEvent } from '../services/events.js';
+import { listAllBanners, createBanner, updateBanner, deleteBanner } from '../services/banners.js';
 import { createBulkReward } from '../services/bulkRewards.js';
 import { listBugReports, getBugReport } from '../services/bugReports.js';
 import {
@@ -82,6 +83,34 @@ const UpdateEventBodySchema = z.object({
   endsAt: z.string().datetime().optional(),
   description: z.string().max(500).optional(),
   active: z.boolean().optional(),
+});
+
+// Banner schemas
+const GachaTypeSchema = z.enum(['HERO', 'ARTIFACT']);
+
+const CreateBannerBodySchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  gachaType: GachaTypeSchema,
+  featuredItems: z.array(z.string()).min(1),
+  rateUpMultiplier: z.coerce.number().min(1).max(10).default(2.0),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  priority: z.coerce.number().int().min(0).max(100).default(0),
+  imageUrl: z.string().url().optional(),
+});
+
+const UpdateBannerBodySchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  gachaType: GachaTypeSchema.optional(),
+  featuredItems: z.array(z.string()).min(1).optional(),
+  rateUpMultiplier: z.coerce.number().min(1).max(10).optional(),
+  startsAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+  isActive: z.boolean().optional(),
+  priority: z.coerce.number().int().min(0).max(100).optional(),
+  imageUrl: z.string().url().nullable().optional(),
 });
 
 // Bulk reward schemas
@@ -570,6 +599,81 @@ export async function adminRoutes(fastify: FastifyInstance) {
 
     await deleteScheduledEvent(id);
     await createAuditLog(request.userId!, 'DELETE_EVENT', id);
+    return { success: true };
+  });
+
+  // ============================================================================
+  // BANNER MANAGEMENT
+  // ============================================================================
+
+  // GET /admin/banners - List all gacha banners
+  fastify.get('/banners', async (_request, _reply) => {
+    return listAllBanners();
+  });
+
+  // POST /admin/banners - Create new banner
+  fastify.post('/banners', async (request, reply) => {
+    const parseResult = CreateBannerBodySchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return reply.code(400).send({ error: 'Invalid request body', details: parseResult.error.flatten() });
+    }
+    const data = parseResult.data;
+
+    const banner = await createBanner({
+      name: data.name,
+      description: data.description,
+      gachaType: data.gachaType,
+      featuredItems: data.featuredItems,
+      rateUpMultiplier: data.rateUpMultiplier,
+      startsAt: new Date(data.startsAt),
+      endsAt: new Date(data.endsAt),
+      priority: data.priority,
+      imageUrl: data.imageUrl,
+    });
+    await createAuditLog(request.userId!, 'CREATE_BANNER', banner.id, data);
+    return banner;
+  });
+
+  // PATCH /admin/banners/:id - Update banner
+  fastify.patch('/banners/:id', async (request, reply) => {
+    const paramsResult = IdParamSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return reply.code(400).send({ error: 'Invalid banner ID', details: paramsResult.error.flatten() });
+    }
+    const bodyResult = UpdateBannerBodySchema.safeParse(request.body);
+    if (!bodyResult.success) {
+      return reply.code(400).send({ error: 'Invalid request body', details: bodyResult.error.flatten() });
+    }
+    const { id } = paramsResult.data;
+    const data = bodyResult.data;
+
+    const updateData: Record<string, unknown> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.gachaType !== undefined) updateData.gachaType = data.gachaType;
+    if (data.featuredItems !== undefined) updateData.featuredItems = data.featuredItems;
+    if (data.rateUpMultiplier !== undefined) updateData.rateUpMultiplier = data.rateUpMultiplier;
+    if (data.startsAt !== undefined) updateData.startsAt = new Date(data.startsAt);
+    if (data.endsAt !== undefined) updateData.endsAt = new Date(data.endsAt);
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.priority !== undefined) updateData.priority = data.priority;
+    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
+
+    const banner = await updateBanner(id, updateData);
+    await createAuditLog(request.userId!, 'UPDATE_BANNER', id, data);
+    return banner;
+  });
+
+  // DELETE /admin/banners/:id - Delete banner
+  fastify.delete('/banners/:id', async (request, reply) => {
+    const parseResult = IdParamSchema.safeParse(request.params);
+    if (!parseResult.success) {
+      return reply.code(400).send({ error: 'Invalid banner ID', details: parseResult.error.flatten() });
+    }
+    const { id } = parseResult.data;
+
+    await deleteBanner(id);
+    await createAuditLog(request.userId!, 'DELETE_BANNER', id);
     return { success: true };
   });
 

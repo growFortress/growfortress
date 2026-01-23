@@ -616,8 +616,8 @@ model TicketResponse {
 // ============================================================================
 
 enum PvpChallengeStatus {
-  PENDING // Waiting for acceptance
-  ACCEPTED // Accepted, ready to resolve
+  PENDING // Awaiting client resolution
+  ACCEPTED // Legacy (unused)
   RESOLVED // Battle completed, result known
   DECLINED // Declined by challenged player
   EXPIRED // Challenge expired (24h)
@@ -640,8 +640,11 @@ model PvpChallenge {
   // Status
   status PvpChallengeStatus @default(PENDING)
 
-  // Seed for deterministic simulation (generated on accept)
+  // Seed for deterministic simulation (generated on create)
   seed Int?
+  // Build snapshots (for deterministic resolution/replay)
+  challengerBuild Json?
+  challengedBuild Json?
 
   // Timestamps
   createdAt  DateTime  @default(now())
@@ -685,6 +688,10 @@ model PvpResult {
   // Build snapshots (for replay)
   challengerBuild Json // { fortressClass, heroes, turrets, powerUpgrades }
   challengedBuild Json
+
+  // Rewards (stored for both players for history)
+  challengerRewards Json?
+  challengedRewards Json?
 
   // Replay events (optional, for detailed replay)
   replayEvents Json? // ArenaReplayEvent[]
@@ -1805,6 +1812,25 @@ model GachaProgress {
   updatedAt      DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GachaBanner {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  gachaType        GachaType
+  featuredItems    String[] // Array of hero/artifact IDs with rate-up
+  rateUpMultiplier Float    @default(2.0)
+  startsAt         DateTime
+  endsAt           DateTime
+  isActive         Boolean  @default(true)
+  priority         Int      @default(0) // Higher = shows first
+  imageUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([startsAt, endsAt])
+  @@index([gachaType, isActive])
 }
 
 // ============================================================================

@@ -246,6 +246,11 @@ export interface ActiveHero {
 
   // Damage tracking for passives (Heart of Winter)
   lastDamagedTick?: number;    // When hero was last damaged
+
+  // Arena-specific modifiers (precomputed for deterministic PvP)
+  arenaDamageMultiplier?: number;
+  arenaAttackSpeedMultiplier?: number;
+  arenaArmor?: number;  // Armor for damage reduction in arena battles
 }
 
 export interface ActiveBuff {

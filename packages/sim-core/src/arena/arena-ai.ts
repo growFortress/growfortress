@@ -66,6 +66,9 @@ function getAliveHeroes(side: ArenaSide): ActiveHero[] {
 // HERO AI
 // ============================================================================
 
+/** Fixed attack range for heroes attacking fortress (units from fortress center) */
+const FORTRESS_ATTACK_DISTANCE = FP.fromInt(4);
+
 /**
  * Select target for a hero in arena battle
  *
@@ -81,6 +84,10 @@ export function selectHeroTarget(
 ): ArenaTarget {
   const enemySide = ownSide === 'left' ? state.right : state.left;
   const heroRange = getHeroRange(hero);
+  const heroRangeSq = FP.mul(heroRange, heroRange);
+
+  // Use fixed distance for fortress attacks
+  const fortressAttackRangeSq = FP.mul(FORTRESS_ATTACK_DISTANCE, FORTRESS_ATTACK_DISTANCE);
 
   // Priority 1: Attack enemy fortress if in range
   const fortressDist = distanceSquared(
@@ -89,9 +96,8 @@ export function selectHeroTarget(
     enemySide.fortress.x,
     enemySide.fortress.y
   );
-  const fortressRangeSq = FP.mul(heroRange, heroRange);
 
-  if (fortressDist <= fortressRangeSq) {
+  if (fortressDist <= fortressAttackRangeSq) {
     return {
       type: 'fortress',
       x: enemySide.fortress.x,
@@ -108,7 +114,7 @@ export function selectHeroTarget(
     const enemyHero = aliveEnemyHeroes[i];
     const distSq = distanceSquared(hero.x, hero.y, enemyHero.x, enemyHero.y);
 
-    if (distSq <= fortressRangeSq && distSq < closestDistSq) {
+    if (distSq <= heroRangeSq && distSq < closestDistSq) {
       closestHero = enemyHero;
       closestDistSq = distSq;
     }
@@ -222,8 +228,8 @@ export function getHeroMovementDirection(
  * Select target for fortress attack in arena battle
  *
  * Priority:
- * 1. Closest enemy hero
- * 2. No target (fortress doesn't attack enemy fortress directly)
+ * 1. Closest enemy hero in range
+ * 2. Enemy fortress (when no heroes available)
  */
 export function selectFortressTarget(
   fortress: ArenaFortress,
@@ -259,6 +265,10 @@ export function selectFortressTarget(
     };
   }
 
-  // No valid target
-  return { type: 'none', x: 0, y: 0 };
+  // No heroes available - attack enemy fortress directly
+  return {
+    type: 'fortress',
+    x: enemySide.fortress.x,
+    y: enemySide.fortress.y,
+  };
 }

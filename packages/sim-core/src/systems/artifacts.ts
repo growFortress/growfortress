@@ -60,6 +60,29 @@ export function calculateHeroArtifactHealthBonus(artifactId: string | undefined)
 }
 
 /**
+ * Calculate attack speed bonus from an equipped Artifact
+ * @returns Multiplier (1.0 = no bonus, 1.2 = +20% attack speed)
+ */
+export function calculateHeroArtifactAttackSpeedBonus(artifactId: string | undefined): number {
+  if (!artifactId) return 1.0;
+
+  const artifact = getArtifactById(artifactId);
+  if (!artifact) return 1.0;
+
+  for (const effect of artifact.effects) {
+    if (effect.type === 'stat_boost' && effect.stat === 'attackSpeed' && effect.value) {
+      return effect.value / FP_BASE;
+    }
+    // Handle 'allStats' which boosts everything including attack speed
+    if (effect.type === 'stat_boost' && effect.stat === 'allStats' && effect.value) {
+      return effect.value / FP_BASE;
+    }
+  }
+
+  return 1.0;
+}
+
+/**
  * Calculate class-specific damage bonus from Artifact (iceDamage, chaosMagic, etc.)
  */
 export function calculateHeroArtifactClassDamageBonus(

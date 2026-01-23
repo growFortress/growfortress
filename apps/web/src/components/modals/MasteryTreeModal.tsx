@@ -26,6 +26,7 @@ import {
   unlockNodeAndRefresh,
   respecClassAndRefresh,
 } from '../../api/mastery.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './MasteryTreeModal.module.css';
 
 // ============================================================================
@@ -240,7 +241,7 @@ export function MasteryTreeModal() {
           <div class={styles.pointsDisplay}>
             <span class={styles.pointsLabel}>{t('masteryTree.availablePoints')}</span>
             <span class={styles.pointsValue}>{availablePoints}</span>
-            <span class={styles.pointsIcon}>🌫️</span>
+            <DustIcon size={16} className={styles.pointsIcon} />
           </div>
         </div>
       </div>

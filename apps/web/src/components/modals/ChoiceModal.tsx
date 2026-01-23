@@ -56,10 +56,11 @@ export function ChoiceModal({ onSelect }: ChoiceModalProps) {
     <Modal
       visible={showChoiceModal.value}
       title={modalTitle}
-      onClose={hideChoice}
       size="xlarge"
       class="choice-modal"
       ariaLabel={modalTitle}
+      closeOnBackdropClick={false}
+      showCloseButton={false}
     >
       <div class="choice-options">
         {choiceOptions.value.map((relicId, index) => {

@@ -39,6 +39,16 @@
   background: var(--color-bg-panel);
 }
 
+.toast.success {
+  border-color: var(--color-success);
+  background: var(--color-bg-panel);
+}
+
+.toast.success .icon {
+  color: var(--color-success);
+  font-weight: bold;
+}
+
 .icon {
   font-size: 18px;
   flex-shrink: 0;

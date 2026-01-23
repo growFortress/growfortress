@@ -460,6 +460,45 @@
     "emptyNoMaterials": "Brak materiałów.",
     "emptyNoFiltered": "Brak materiałów: {{filter}}."
   },
+  "hubPreview": {
+    "title": "Profil Gracza",
+    "ariaLabel": "Podgląd profilu gracza",
+    "loading": "Ładowanie...",
+    "loadingRenderer": "Ładowanie renderera...",
+    "rendererError": "Nie udało się załadować podglądu",
+    "retryRenderer": "Spróbuj ponownie",
+    "playerNotFound": "Nie znaleziono gracza",
+    "loadFailed": "Nie udało się załadować danych",
+    "canvasAriaLabel": "Wizualny podgląd twierdzy gracza {{name}} z bohaterami i wieżyczkami",
+    "level": "Poziom",
+    "wave": "Fala",
+    "power": "Moc",
+    "heroes": "Bohaterowie",
+    "heroesCount": "Bohaterowie ({{count}})",
+    "turrets": "Wieżyczki",
+    "turretsCount": "Wieżyczki ({{count}})",
+    "items": "Przedmioty",
+    "slot": "Slot",
+    "tier": "T",
+    "artifacts": "art.",
+    "challengePvp": "⚔️ Wyzwij do PvP",
+    "sending": "Wysyłanie...",
+    "errors": {
+      "battlePrepareFailed": "Nie udało się przygotować walki",
+      "cooldownActive": "Musisz poczekać przed kolejnym wyzwaniem tego gracza",
+      "powerOutOfRange": "Moc przeciwnika poza zakresem",
+      "challengeFailed": "Nie udało się wysłać wyzwania"
+    },
+    "fortressClasses": {
+      "natural": "Natura",
+      "ice": "Lód",
+      "fire": "Ogień",
+      "lightning": "Błyskawica",
+      "poison": "Trucizna",
+      "magic": "Magia",
+      "tech": "Technologia"
+    }
+  },
   "statistics": {
     "title": "Panel Statystyk",
     "ariaLabel": "Panel Statystyk",

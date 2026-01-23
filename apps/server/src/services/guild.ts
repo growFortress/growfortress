@@ -341,6 +341,9 @@ export async function disbandGuild(guildId: string, userId: string): Promise<voi
 
     // NOTE: Battles are now instant (no pending state) - no need to cancel
   });
+
+  // Invalidate cache - guild is now disbanded
+  await invalidateGuildPreviewCache(guildId);
 }
 
 /**
@@ -433,7 +436,7 @@ export async function joinGuild(
   }
 
   // Create membership
-  return prisma.$transaction(async (tx) => {
+  const member = await prisma.$transaction(async (tx) => {
     // Update invitation if provided
     if (invitationId) {
       await tx.guildInvitation.update({
@@ -453,6 +456,11 @@ export async function joinGuild(
       },
     });
   });
+
+  // Invalidate cache - member count changed
+  await invalidateGuildPreviewCache(guildId);
+
+  return member;
 }
 
 /**
@@ -517,7 +525,7 @@ export async function joinGuildDirect(
   }
 
   // Create membership and cancel pending applications/invitations
-  return prisma.$transaction(async (tx) => {
+  const member = await prisma.$transaction(async (tx) => {
     // Cancel pending applications for this user
     await tx.guildApplication.updateMany({
       where: {
@@ -544,6 +552,11 @@ export async function joinGuildDirect(
       },
     });
   });
+
+  // Invalidate cache - member count changed
+  await invalidateGuildPreviewCache(guildId);
+
+  return member;
 }
 
 /**
@@ -565,6 +578,9 @@ export async function leaveGuild(guildId: string, userId: string): Promise<void>
   await prisma.guildMember.delete({
     where: { userId },
   });
+
+  // Invalidate cache - member count changed
+  await invalidateGuildPreviewCache(guildId);
 }
 
 /**
@@ -622,6 +638,9 @@ export async function kickMember(
     where: { userId: targetUserId },
   });
 
+  // Invalidate cache - member count and top 5 may change
+  await invalidateGuildPreviewCache(guildId);
+
   // Send kick notification
   if (guild && actor) {
     await createGuildKickNotification(
@@ -669,10 +688,15 @@ export async function updateMemberRole(
     throw new Error(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
   }
 
-  return prisma.guildMember.update({
+  const updated = await prisma.guildMember.update({
     where: { userId: targetUserId },
     data: { role: newRole },
   });
+
+  // Invalidate cache - role change affects top 5 member display order
+  await invalidateGuildPreviewCache(guildId);
+
+  return updated;
 }
 
 /**
@@ -716,6 +740,9 @@ export async function transferLeadership(
       data: { role: 'LEADER' },
     }),
   ]);
+
+  // Invalidate cache - leader change affects top 5 member display
+  await invalidateGuildPreviewCache(guildId);
 }
 
 /**

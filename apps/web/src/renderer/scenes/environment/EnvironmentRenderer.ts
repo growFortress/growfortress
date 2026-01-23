@@ -590,6 +590,7 @@ export class EnvironmentRenderer {
     });
 
     // Gwiazdy - deterministycznie rozmieszczone (seed oparty na pozycji)
+    // Pozycje zaokrąglone do pełnych pikseli, żeby uniknąć migotania z powodu antyaliasingu
     const starCount = sky.starCount;
     for (let i = 0; i < starCount; i++) {
       // Pseudo-losowe pozycje oparte na indeksie
@@ -598,9 +599,11 @@ export class EnvironmentRenderer {
       const seedSize = ((i * 3571) % 100) / 100;
       const seedAlpha = ((i * 2341) % 100) / 100;
 
-      const x = seedX * width;
-      const y = seedY * height * 0.7; // Gwiazdy tylko w górnej części
-      const size = 0.5 + seedSize * 1.5;
+      // Zaokrąglamy pozycje do pełnych pikseli, żeby uniknąć sub-pikselowego renderowania
+      const x = Math.round(seedX * width);
+      const y = Math.round(seedY * height * 0.7); // Gwiazdy tylko w górnej części
+      // Minimalny rozmiar 1px, żeby uniknąć migotania przy bardzo małych kółkach
+      const size = 1 + seedSize * 1.5;
       const alpha = 0.3 + seedAlpha * 0.7;
 
       g.circle(x, y, size).fill({ color: sky.stars, alpha });

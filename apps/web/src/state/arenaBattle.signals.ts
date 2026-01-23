@@ -10,7 +10,7 @@ export interface ArenaBattleData {
   seed: number;
   challengerBuild: ArenaBuildConfig;
   challengedBuild: ArenaBuildConfig;
-  result: {
+  result?: {
     winnerId: string | null;
     winReason: 'fortress_destroyed' | 'timeout' | 'draw';
     challengerStats: {
@@ -27,7 +27,7 @@ export interface ArenaBattleData {
   };
   rewards?: PvpRewards;
   challenge: PvpChallenge;
-  opponent: PvpOpponent;
+  opponent?: PvpOpponent;
 }
 
 export type ArenaBattlePhase = 'loading' | 'fighting' | 'ended';

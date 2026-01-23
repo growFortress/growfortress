@@ -7,6 +7,7 @@ import {
 } from '@arcade/protocol';
 import { hasPermission } from './guild.js';
 import { getMemberCapacity } from './guildStructures.js';
+import { invalidateGuildPreviewCache } from './guildPreview.js';
 import { createGuildInviteNotification } from './messages.js';
 import { broadcastToUser } from './websocket.js';
 import type { GuildInvitation } from '@prisma/client';
@@ -329,6 +330,9 @@ export async function acceptInvitation(
       data: { status: 'CANCELLED' },
     }),
   ]);
+
+  // Invalidate cache - member count changed
+  await invalidateGuildPreviewCache(invitation.guildId);
 
   // Broadcast invitation status change so thread views update
   broadcastToUser(userId, {

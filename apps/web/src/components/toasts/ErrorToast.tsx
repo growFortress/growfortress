@@ -18,6 +18,7 @@ export function ErrorToast() {
             {toast.type === 'error' && '❌'}
             {toast.type === 'warning' && '⚠️'}
             {toast.type === 'info' && 'ℹ️'}
+            {toast.type === 'success' && '✓'}
           </span>
           <span class={styles.message}>{toast.message}</span>
           <button class={styles.dismiss} onClick={() => dismissErrorToast(toast.id)}>

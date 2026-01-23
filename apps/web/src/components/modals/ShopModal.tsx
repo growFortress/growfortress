@@ -38,7 +38,7 @@ import {
 import { displayDust, displayGold } from '../../state/game.signals.js';
 import { unlockedHeroIds } from '../../state/fortress.signals.js';
 import { Button } from '../shared/Button.js';
-import { Icon, type IconName } from '../icons/Icon.js';
+import { Icon, type IconName, DustIcon } from '../icons/index.js';
 import styles from './ShopModal.module.css';
 
 // Session storage key for interstitial offer
@@ -227,7 +227,7 @@ export function ShopModal() {
 
           <div class={styles.contentBar}>
             <div class={styles.contentItem}>
-              <span class={styles.resourceEmoji}>🌫️</span>
+              <DustIcon size={18} className={styles.resourceEmoji} />
               <span class={styles.contentValue}>600</span>
             </div>
             <div class={styles.contentItem}>
@@ -290,7 +290,7 @@ export function ShopModal() {
                 <h4>{t('shop.youReceived')}</h4>
                 {lastPurchase.value.dustGranted && lastPurchase.value.dustGranted > 0 && (
                   <div class={styles.rewardItem}>
-                    <span class={styles.rewardEmoji}>🌫️</span>
+                    <DustIcon size={16} className={styles.rewardEmoji} />
                     <span>+{lastPurchase.value.dustGranted} {t('shop.dust')}</span>
                   </div>
                 )}
@@ -376,7 +376,7 @@ export function ShopModal() {
           {/* Product illustration */}
           <div class={styles.productDetailIllustration}>
             {selectedProduct.type === 'dust' && (
-              <span class={styles.productDetailEmoji}>🌫️</span>
+              <DustIcon size={64} className={styles.productDetailEmoji} />
             )}
             {selectedProduct.type === 'hero' && (
               <div
@@ -428,7 +428,7 @@ export function ShopModal() {
             <div class={styles.productDetailContentsList}>
               {selectedProduct.dustAmount && selectedProduct.dustAmount > 0 && (
                 <div class={styles.productDetailContentItem}>
-                  <span class={styles.resourceEmoji}>🌫️</span>
+                  <DustIcon size={16} className={styles.resourceEmoji} />
                   <span class={styles.productDetailContentValue}>
                     {selectedProduct.dustAmount.toLocaleString()} {t('shop.dust')}
                   </span>
@@ -559,7 +559,7 @@ export function ShopModal() {
 
                   <div class={styles.contentBar}>
                     <div class={styles.contentItem}>
-                      <span class={styles.resourceEmoji}>🌫️</span>
+                      <DustIcon size={16} className={styles.resourceEmoji} />
                       <span>600</span>
                     </div>
                     <div class={styles.contentItem}>
@@ -721,7 +721,7 @@ export function ShopModal() {
               )}
 
               <div class={styles.productIllustration}>
-                <span class={styles.productEmoji}>🌫️</span>
+                <DustIcon size={48} className={styles.productEmoji} />
               </div>
 
               <h3 class={styles.productTitle}>
@@ -787,7 +787,7 @@ export function ShopModal() {
 
               <div class={styles.contentBar}>
                 <div class={styles.contentItem}>
-                  <span class={styles.resourceEmoji}>🌫️</span>
+                  <DustIcon size={16} className={styles.resourceEmoji} />
                   <span>{product.dustAmount}</span>
                 </div>
                 <div class={styles.contentItem}>
@@ -847,7 +847,7 @@ export function ShopModal() {
 
         <div class={styles.headerBalance}>
           <div class={styles.balance}>
-            <span class={styles.balanceIcon}>🌫️</span>
+            <DustIcon size={24} className={styles.balanceIcon} />
             <span class={styles.balanceValue}>{dust}</span>
             <span class={styles.balanceLabel}>{t('shop.dust')}</span>
           </div>

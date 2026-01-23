@@ -6,6 +6,23 @@ import { Application } from 'pixi.js';
 import { GameScene, type HubState } from './scenes/GameScene.js';
 import type { FortressClass } from '@arcade/sim-core';
 import { logger } from '../utils/logger.js';
+import { getFortressTierFromLevel } from '../utils/hubPreviewTransform.js';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Minimum canvas dimension in pixels */
+const MIN_CANVAS_SIZE = 100;
+
+/** Target framerate for preview animation (lower to save resources) */
+const PREVIEW_FPS = 15;
+
+/** Maximum delta time to prevent large jumps on tab focus */
+const MAX_DELTA_MS = 50;
+
+/** Default delta time for first frame */
+const DEFAULT_DELTA_MS = 16;
 
 export class HubPreviewRenderer {
   private app: Application;
@@ -29,8 +46,8 @@ export class HubPreviewRenderer {
 
     try {
       const rect = this.canvas.getBoundingClientRect();
-      const width = Math.max(rect.width, 100);
-      const height = Math.max(rect.height, 100);
+      const width = Math.max(rect.width, MIN_CANVAS_SIZE);
+      const height = Math.max(rect.height, MIN_CANVAS_SIZE);
 
       await this.app.init({
         canvas: this.canvas,
@@ -60,22 +77,27 @@ export class HubPreviewRenderer {
 
   /**
    * Configure the preview with fortress class and tier.
+   * @param fortressClass - The fortress class to display
+   * @param level - Commander level (used to calculate fortress tier)
    */
   configure(fortressClass: FortressClass, level: number): void {
     if (!this.gameScene || !this.isInitialized) return;
 
-    const tier = level < 10 ? 1 : level < 25 ? 2 : 3;
+    const tier = getFortressTierFromLevel(level);
     this.gameScene.setPreviewMode(true, fortressClass, tier);
   }
 
   /**
    * Render a hub state (single frame).
+   * @param hubState - The hub state to render (heroes, turrets, slots)
    */
   renderFrame(hubState: HubState): void {
     if (!this.gameScene || !this.isInitialized || this.isDestroyed) return;
 
     const now = performance.now();
-    const deltaMs = this.lastTime > 0 ? Math.min(50, now - this.lastTime) : 16;
+    const deltaMs = this.lastTime > 0
+      ? Math.min(MAX_DELTA_MS, now - this.lastTime)
+      : DEFAULT_DELTA_MS;
     this.lastTime = now;
 
     this.gameScene.renderPreview(hubState, deltaMs);
@@ -83,12 +105,16 @@ export class HubPreviewRenderer {
 
   /**
    * Start animation loop for continuous preview updates.
-   * Runs at reduced framerate (15fps) since preview is mostly static.
+   * Runs at reduced framerate since preview is mostly static.
+   * @param hubState - The hub state to animate
    */
   startAnimation(hubState: HubState): void {
-    if (this.animationFrameId !== null || this.isDestroyed) return;
+    if (this.isDestroyed) return;
 
-    const targetFrameTime = 1000 / 15; // 15 FPS
+    // Stop any existing animation to prevent leaks
+    this.stopAnimation();
+
+    const targetFrameTime = 1000 / PREVIEW_FPS;
     let lastFrameTime = 0;
 
     const animate = (currentTime: number) => {
@@ -117,14 +143,14 @@ export class HubPreviewRenderer {
   }
 
   /**
-   * Handle canvas resize.
+   * Handle canvas resize. Updates renderer and scene dimensions.
    */
   resize(): void {
     if (!this.gameScene || !this.isInitialized || this.isDestroyed) return;
 
     const rect = this.canvas.getBoundingClientRect();
-    const width = Math.max(rect.width, 100);
-    const height = Math.max(rect.height, 100);
+    const width = Math.max(rect.width, MIN_CANVAS_SIZE);
+    const height = Math.max(rect.height, MIN_CANVAS_SIZE);
 
     this.app.renderer.resize(width, height);
     this.gameScene.onResize(width, height);

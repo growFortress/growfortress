@@ -7,6 +7,7 @@ import { ConfigPage } from "./pages/ConfigPage.js";
 import { ReplayPage } from "./pages/ReplayPage.js";
 import { DashboardPage } from "./pages/DashboardPage.js";
 import { EventsPage } from "./pages/EventsPage.js";
+import { BannersPage } from "./pages/BannersPage.js";
 import { BulkRewardsPage } from "./pages/BulkRewardsPage.js";
 import { BugReportsPage } from "./pages/BugReportsPage.js";
 import { SupportTicketsPage } from "./pages/SupportTicketsPage.js";
@@ -51,6 +52,7 @@ export function App() {
           <DashboardPage path="/" />
           <PlayersPage path="/players" />
           <EventsPage path="/events" />
+          <BannersPage path="/banners" />
           <BulkRewardsPage path="/rewards" />
           <BugReportsPage path="/bug-reports" />
           <SupportTicketsPage path="/support-tickets" />

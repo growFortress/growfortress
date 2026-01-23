@@ -1,7 +1,7 @@
 /**
  * Guild Search Modal - Search and browse guilds to join
  */
-import { useState, useEffect, useCallback } from 'preact/hooks';
+import { useState, useEffect, useCallback, useRef } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import type { Guild, GuildAccessMode, GuildApplication } from '@arcade/protocol';
 import {
@@ -25,6 +25,7 @@ import {
   getMyApplications,
   cancelApplication,
 } from '../../api/guild.js';
+import { showSuccessToast } from '../../state/ui.signals.js';
 import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
 import { Spinner } from '../shared/Spinner.js';
@@ -45,6 +46,10 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
   const [viewMode, setViewMode] = useState<'search' | 'invitations' | 'applications'>('search');
   const [applicationsLoading, setApplicationsLoading] = useState(false);
 
+  // Refs for race condition prevention
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
+  const searchRequestIdRef = useRef(0);
+
   const invitations = receivedInvitations.value;
   const applications = myApplications.value;
   const activeApplicationsCount = myActiveApplicationsCount.value;
@@ -56,6 +61,14 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
       // Load my applications
       loadMyApplications();
     }
+
+    // Cleanup: abort pending search request when modal closes
+    return () => {
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+        searchAbortControllerRef.current = null;
+      }
+    };
   }, [showGuildSearch.value]);
 
   const loadMyApplications = useCallback(async () => {
@@ -72,19 +85,49 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
   }, []);
 
   const handleSearch = useCallback(async (searchQuery: string) => {
+    // Abort previous request if any
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+    }
+    searchAbortControllerRef.current = new AbortController();
+
+    // Track request ID to discard stale responses
+    const requestId = ++searchRequestIdRef.current;
+
     searchLoading.value = true;
     try {
-      const data = await searchGuilds({
-        search: searchQuery || undefined,
-        limit: 20,
-        offset: 0,
-      });
+      const data = await searchGuilds(
+        {
+          search: searchQuery || undefined,
+          limit: 20,
+          offset: 0,
+        },
+        searchAbortControllerRef.current.signal
+      );
+
+      // Discard stale responses
+      if (requestId !== searchRequestIdRef.current) {
+        return;
+      }
+
       guildSearchResults.value = data.guilds;
       guildSearchTotal.value = data.total;
     } catch (error) {
+      // Ignore abort errors
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+
+      // Discard stale error responses
+      if (requestId !== searchRequestIdRef.current) {
+        return;
+      }
+
       console.error('Failed to search guilds:', error);
     } finally {
-      searchLoading.value = false;
+      if (requestId === searchRequestIdRef.current) {
+        searchLoading.value = false;
+      }
     }
   }, []);
 
@@ -109,6 +152,7 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
     setActionLoading(true);
     try {
       await acceptInvitation(invitationId);
+      showSuccessToast('Dolaczyles do gildii!');
       closeGuildSearch();
       onSuccess?.();
     } catch (error) {
@@ -122,6 +166,7 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
     setActionLoading(true);
     try {
       await declineInvitation(invitationId);
+      showSuccessToast('Zaproszenie odrzucone');
       // Remove from local state
       receivedInvitations.value = invitations.filter((i) => i.id !== invitationId);
     } catch (error) {
@@ -135,6 +180,7 @@ export function GuildSearchModal({ onSuccess }: GuildSearchModalProps) {
     setActionLoading(true);
     try {
       await cancelApplication(applicationId);
+      showSuccessToast('Podanie anulowane');
       // Remove from local state
       myApplications.value = applications.filter((a) => a.id !== applicationId);
     } catch (error) {
@@ -396,6 +442,7 @@ function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProp
     try {
       await joinGuildDirect(guild.id);
       setActionSuccess('Dolaczyles do gildii!');
+      showSuccessToast('Dolaczyles do gildii!');
       closeGuildSearch();
       onSuccess?.();
     } catch (err: any) {
@@ -411,6 +458,7 @@ function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProp
     try {
       await submitApplication(guild.id, applicationMessage || undefined);
       setActionSuccess('Podanie zostalo wyslane!');
+      showSuccessToast('Podanie wyslane');
     } catch (err: any) {
       setActionError(err.message || 'Nie udalo sie wyslac podania');
     } finally {

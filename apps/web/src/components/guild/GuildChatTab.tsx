@@ -107,11 +107,9 @@ export function GuildChatTab() {
     setError(null);
 
     try {
-      const result = await sendGuildMessage(guild.id, message.trim());
-      // Message will be added via WebSocket, but add it immediately for instant feedback
-      guildChatMessages.value = [...guildChatMessages.value, result.message];
+      await sendGuildMessage(guild.id, message.trim());
+      // Message will be added via WebSocket event
       setMessage('');
-      scrollToBottom();
     } catch (err: any) {
       setError(err.message || 'Nie udało się wysłać wiadomości');
     } finally {

@@ -102,9 +102,11 @@ export function closeBuildPresetsModal(): void {
 }
 
 // Error toast
+export type ToastType = 'error' | 'warning' | 'info' | 'success';
+
 export interface ErrorToastData {
   message: string;
-  type: 'error' | 'warning' | 'info';
+  type: ToastType;
   id: number;
 }
 
@@ -112,7 +114,7 @@ export const errorToasts = signal<ErrorToastData[]>([]);
 
 let errorToastId = 0;
 
-export function showErrorToast(message: string, type: 'error' | 'warning' | 'info' = 'error'): void {
+export function showErrorToast(message: string, type: ToastType = 'error'): void {
   const id = ++errorToastId;
   errorToasts.value = [...errorToasts.value, { message, type, id }];
 
@@ -124,6 +126,27 @@ export function showErrorToast(message: string, type: 'error' | 'warning' | 'inf
 
 export function dismissErrorToast(id: number): void {
   errorToasts.value = errorToasts.value.filter((t) => t.id !== id);
+}
+
+/**
+ * Show a success toast notification
+ */
+export function showSuccessToast(message: string): void {
+  showErrorToast(message, 'success');
+}
+
+/**
+ * Show a warning toast notification
+ */
+export function showWarningToast(message: string): void {
+  showErrorToast(message, 'warning');
+}
+
+/**
+ * Show an info toast notification
+ */
+export function showInfoToast(message: string): void {
+  showErrorToast(message, 'info');
 }
 
 // ============================================================================

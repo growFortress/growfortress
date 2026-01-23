@@ -173,13 +173,16 @@ export async function disbandGuild(guildId: string): Promise<{ success: boolean 
   });
 }
 
-export async function searchGuilds(query?: GuildSearchQuery): Promise<GuildSearchResponse> {
+export async function searchGuilds(
+  query?: GuildSearchQuery,
+  signal?: AbortSignal
+): Promise<GuildSearchResponse> {
   const params = new URLSearchParams();
   if (query?.search) params.set('search', query.search);
   if (query?.limit) params.set('limit', query.limit.toString());
   if (query?.offset) params.set('offset', query.offset.toString());
   const qs = params.toString();
-  return guildRequest<GuildSearchResponse>(`/v1/guilds${qs ? '?' + qs : ''}`);
+  return guildRequest<GuildSearchResponse>(`/v1/guilds${qs ? '?' + qs : ''}`, { signal });
 }
 
 export async function leaveGuild(guildId: string): Promise<{ success: boolean }> {

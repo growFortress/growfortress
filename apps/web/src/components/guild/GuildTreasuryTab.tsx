@@ -12,6 +12,7 @@ import {
   treasuryLoading,
 } from '../../state/guild.signals.js';
 import { depositToTreasury, withdrawFromTreasury } from '../../api/guild.js';
+import { showSuccessToast } from '../../state/ui.signals.js';
 import { Button } from '../shared/Button.js';
 import { Spinner } from '../shared/Spinner.js';
 import styles from './GuildPanel.module.css';
@@ -61,6 +62,10 @@ export function GuildTreasuryTab({ onRefresh }: GuildTreasuryTabProps) {
       await depositToTreasury(guild.id, { gold, dust });
       setDepositGold('');
       setDepositDust('');
+      const parts = [];
+      if (gold > 0) parts.push(`${gold} gold`);
+      if (dust > 0) parts.push(`${dust} dust`);
+      showSuccessToast(`Wplacono ${parts.join(' i ')}`);
       onRefresh();
     } catch (err: any) {
       setError(err.message || 'Nie udalo sie wplacic');
@@ -85,6 +90,10 @@ export function GuildTreasuryTab({ onRefresh }: GuildTreasuryTabProps) {
       await withdrawFromTreasury(guild.id, { gold, dust, reason: 'Wyplata ze skarbca' });
       setWithdrawGold('');
       setWithdrawDust('');
+      const parts = [];
+      if (gold > 0) parts.push(`${gold} gold`);
+      if (dust > 0) parts.push(`${dust} dust`);
+      showSuccessToast(`Wyplacono ${parts.join(' i ')}`);
       onRefresh();
     } catch (err: any) {
       setError(err.message || 'Nie udalo sie wyplacic');
@@ -191,6 +200,7 @@ export function GuildTreasuryTab({ onRefresh }: GuildTreasuryTabProps) {
             size="sm"
             onClick={handleDeposit}
             disabled={actionLoading}
+            loading={actionLoading}
           >
             Wplac
           </Button>
@@ -231,6 +241,7 @@ export function GuildTreasuryTab({ onRefresh }: GuildTreasuryTabProps) {
                 size="sm"
                 onClick={handleWithdraw}
                 disabled={actionLoading || !canWithdrawNow}
+                loading={actionLoading}
               >
                 Wyplac
               </Button>

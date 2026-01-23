@@ -337,6 +337,41 @@ export const adminApi = {
     });
   },
 
+  // Banner management
+  async getBanners(): Promise<any[]> {
+    return fetchWithAuth(`${API_BASE}/banners`);
+  },
+
+  async createBanner(data: {
+    name: string;
+    description?: string;
+    gachaType: 'HERO' | 'ARTIFACT';
+    featuredItems: string[];
+    rateUpMultiplier: number;
+    startsAt: string;
+    endsAt: string;
+    priority?: number;
+    imageUrl?: string;
+  }): Promise<any> {
+    return fetchWithAuth(`${API_BASE}/banners`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateBanner(id: string, data: any): Promise<any> {
+    return fetchWithAuth(`${API_BASE}/banners/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteBanner(id: string): Promise<any> {
+    return fetchWithAuth(`${API_BASE}/banners/${id}`, {
+      method: "DELETE",
+    });
+  },
+
   async getBulkRewards(): Promise<any[]> {
     return fetchWithAuth(`${API_BASE}/bulk-rewards`);
   },

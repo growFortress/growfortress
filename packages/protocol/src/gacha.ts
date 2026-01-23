@@ -247,13 +247,17 @@ export type GetGachaHistoryResponse = z.infer<typeof GetGachaHistoryResponseSche
 export const GachaBannerSchema = z.object({
   id: z.string(),
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable(),
   gachaType: GachaTypeSchema,
   featuredItems: z.array(z.string()),     // Featured hero/artifact IDs
   rateUpMultiplier: z.number(),           // e.g., 2x for featured items
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime(),
   isActive: z.boolean(),
+  priority: z.number().int(),             // Higher = shows first
+  imageUrl: z.string().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 });
 export type GachaBanner = z.infer<typeof GachaBannerSchema>;
 
@@ -261,6 +265,34 @@ export const GetActiveBannersResponseSchema = z.object({
   banners: z.array(GachaBannerSchema),
 });
 export type GetActiveBannersResponse = z.infer<typeof GetActiveBannersResponseSchema>;
+
+// Admin banner management schemas
+export const CreateBannerRequestSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  gachaType: GachaTypeSchema,
+  featuredItems: z.array(z.string()).min(1),
+  rateUpMultiplier: z.number().min(1).max(10).default(2.0),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  priority: z.number().int().min(0).max(100).default(0),
+  imageUrl: z.string().url().optional(),
+});
+export type CreateBannerRequest = z.infer<typeof CreateBannerRequestSchema>;
+
+export const UpdateBannerRequestSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  gachaType: GachaTypeSchema.optional(),
+  featuredItems: z.array(z.string()).min(1).optional(),
+  rateUpMultiplier: z.number().min(1).max(10).optional(),
+  startsAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+  isActive: z.boolean().optional(),
+  priority: z.number().int().min(0).max(100).optional(),
+  imageUrl: z.string().url().nullable().optional(),
+});
+export type UpdateBannerRequest = z.infer<typeof UpdateBannerRequestSchema>;
 
 // ============================================================================
 // ERROR CODES

@@ -358,7 +358,7 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
       });
       rewards.push({
         type: 'damage_bonus',
-        value: 16384 as FP, // +10%
+        value: 18022 as FP, // +10% (16384 + 1638 = 18022)
         description: '+10% DMG twierdzy',
       });
       break;
@@ -386,7 +386,7 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
     case 25:
       rewards.push({
         type: 'hp_bonus',
-        value: 8192 as FP, // +5%
+        value: 17203 as FP, // +5% (16384 + 819 = 17203)
         description: '+5% HP twierdzy',
       });
       break;
@@ -414,7 +414,7 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
     case 35:
       rewards.push({
         type: 'hp_bonus',
-        value: 8192 as FP, // +5%
+        value: 17203 as FP, // +5% (16384 + 819 = 17203)
         description: '+5% HP twierdzy',
       });
       break;
@@ -503,7 +503,7 @@ function getFortressLevelRewards(level: number): FortressLevelReward[] {
   if (level > 0 && level % 5 === 0 && rewards.length === 0) {
     rewards.push({
       type: 'hp_bonus',
-      value: 8192 as FP, // +5%
+      value: 17203 as FP, // +5% (16384 + 819 = 17203)
       description: '+5% HP twierdzy',
     });
   }

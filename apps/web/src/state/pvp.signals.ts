@@ -116,8 +116,8 @@ export const pvpAcceptingChallenge = signal(false);
 /** Show PvP main panel */
 export const showPvpPanel = signal(false);
 
-/** Current PvP tab ('opponents' | 'history') */
-export const pvpActiveTab = signal<'opponents' | 'history'>('opponents');
+/** Current PvP tab ('opponents' | 'pending' | 'history') */
+export const pvpActiveTab = signal<'opponents' | 'pending' | 'history'>('opponents');
 
 /** Show challenge confirmation modal */
 export const showChallengeConfirm = signal(false);
@@ -207,7 +207,26 @@ export function setPvpChallenges(
 
 /** Add a new sent challenge */
 export function addSentChallenge(challenge: PvpChallenge): void {
+  const exists = pvpSentChallenges.value.some(c => c.id === challenge.id);
+  if (exists) {
+    pvpSentChallenges.value = pvpSentChallenges.value.map(c =>
+      c.id === challenge.id ? { ...c, ...challenge } : c
+    );
+    return;
+  }
   pvpSentChallenges.value = [challenge, ...pvpSentChallenges.value];
+}
+
+/** Add a new received challenge */
+export function addReceivedChallenge(challenge: PvpChallenge): void {
+  const exists = pvpReceivedChallenges.value.some(c => c.id === challenge.id);
+  if (exists) {
+    pvpReceivedChallenges.value = pvpReceivedChallenges.value.map(c =>
+      c.id === challenge.id ? { ...c, ...challenge } : c
+    );
+    return;
+  }
+  pvpReceivedChallenges.value = [challenge, ...pvpReceivedChallenges.value];
 }
 
 /** Update challenge status */
@@ -264,7 +283,7 @@ export function closePvpPanel(): void {
 }
 
 /** Set active tab */
-export function setActivePvpTab(tab: 'opponents' | 'history'): void {
+export function setActivePvpTab(tab: 'opponents' | 'pending' | 'history'): void {
   pvpActiveTab.value = tab;
 }
 

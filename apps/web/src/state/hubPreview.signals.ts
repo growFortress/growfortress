@@ -9,6 +9,7 @@ import { fetchHubPreview } from '../api/hubPreview.js';
 import { transformHubPreviewToHubState, getFortressTierFromLevel } from '../utils/hubPreviewTransform.js';
 import type { HubState } from '../renderer/scenes/GameScene.js';
 import { closeLeaderboardModal } from './leaderboard.signals.js';
+import { logger } from '../utils/logger.js';
 
 // ============================================================================
 // MODAL STATE
@@ -28,6 +29,12 @@ export const hubPreviewModalOpen = signal(false);
 
 /** User ID currently being previewed */
 export const hubPreviewUserId = signal<string | null>(null);
+
+/** Current request ID to prevent race conditions */
+let currentRequestId = 0;
+
+/** AbortController for cancelling in-flight requests */
+let abortController: AbortController | null = null;
 
 // ============================================================================
 // COMPUTED VALUES
@@ -71,6 +78,21 @@ export const hubPreviewFortressTier = computed<1 | 2 | 3>(() => {
  * @param userId - The user ID to preview
  */
 export async function openHubPreview(userId: string): Promise<void> {
+  // Validate userId format (basic sanitization)
+  if (!userId || typeof userId !== 'string' || userId.length > 100) {
+    logger.warn('[hubPreview] Invalid userId provided to openHubPreview');
+    return;
+  }
+
+  // Cancel any in-flight request
+  if (abortController) {
+    abortController.abort();
+  }
+  abortController = new AbortController();
+
+  // Increment request ID to track this specific request
+  const requestId = ++currentRequestId;
+
   // Close leaderboard modal if open (so profile appears on clean background)
   closeLeaderboardModal();
 
@@ -82,17 +104,38 @@ export async function openHubPreview(userId: string): Promise<void> {
   hubPreviewData.value = null;
 
   try {
-    const data = await fetchHubPreview(userId);
+    const data = await fetchHubPreview(userId, abortController.signal);
+
+    // Check if this request is still the current one (race condition prevention)
+    if (requestId !== currentRequestId) {
+      return; // A newer request was made, discard this result
+    }
+
     if (data) {
       hubPreviewData.value = data;
     } else {
-      hubPreviewError.value = 'Nie znaleziono gracza';
+      // Use i18n key - component will translate
+      hubPreviewError.value = 'PLAYER_NOT_FOUND';
     }
   } catch (error) {
-    console.error('Failed to fetch hub preview:', error);
-    hubPreviewError.value = 'Nie udalo sie zaladowac danych';
+    // Ignore abort errors
+    if (error instanceof Error && error.name === 'AbortError') {
+      return;
+    }
+
+    // Check if this request is still the current one
+    if (requestId !== currentRequestId) {
+      return;
+    }
+
+    logger.error('[hubPreview] Failed to fetch hub preview:', error);
+    // Use i18n key - component will translate
+    hubPreviewError.value = 'LOAD_FAILED';
   } finally {
-    hubPreviewLoading.value = false;
+    // Only update loading state if this is still the current request
+    if (requestId === currentRequestId) {
+      hubPreviewLoading.value = false;
+    }
   }
 }
 
@@ -100,6 +143,12 @@ export async function openHubPreview(userId: string): Promise<void> {
  * Close the hub preview modal and reset state
  */
 export function closeHubPreview(): void {
+  // Cancel any in-flight request
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+  }
+
   hubPreviewModalOpen.value = false;
   hubPreviewUserId.value = null;
   hubPreviewData.value = null;

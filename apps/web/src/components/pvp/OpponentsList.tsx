@@ -4,7 +4,6 @@ import {
   pvpOpponents,
   pvpOpponentsLoading,
   pvpOpponentsError,
-  addSentChallenge,
   formatPower,
   showErrorToast,
   openHubPreview,
@@ -20,7 +19,7 @@ interface OpponentsListProps {
   onRefresh: () => Promise<void>;
 }
 
-export function OpponentsList({ onRefresh }: OpponentsListProps) {
+export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
   const [challengingId, setChallengingId] = useState<string | null>(null);
   const myPower = userPower.value;
 
@@ -32,21 +31,16 @@ export function OpponentsList({ onRefresh }: OpponentsListProps) {
       const response = await createChallenge(opponent.userId);
 
       // Transition to arena battle scene if battleData is available
-      if (response.battleData && response.result) {
+      if (response.battleData) {
         startArenaBattle({
           seed: response.battleData.seed as number,
           challengerBuild: response.battleData.challengerBuild as import('@arcade/sim-core').ArenaBuildConfig,
           challengedBuild: response.battleData.challengedBuild as import('@arcade/sim-core').ArenaBuildConfig,
-          result: response.result,
-          rewards: response.rewards,
           challenge: response.challenge,
           opponent,
         });
       } else {
-        // Fallback: add to history directly
-        addSentChallenge(response.challenge);
-        showErrorToast('Wyzwanie wysłane', 'info');
-        await onRefresh();
+        showErrorToast('Nie udało się przygotować walki');
       }
     } catch (error) {
       if (error instanceof PvpApiError) {
@@ -205,4 +199,3 @@ function formatCooldown(isoDate?: string): string {
   }
   return `${minutes}m`;
 }
-

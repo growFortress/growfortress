@@ -1,4 +1,5 @@
 import { useTranslation } from '../../../i18n/useTranslation.js';
+import { DustIcon } from '../../icons/index.js';
 import styles from './HeroStatsCard.module.css';
 import cardStyles from './cards.module.css';
 
@@ -45,7 +46,7 @@ export function HeroStatsCard({ currentHp, maxHp, damage, attackSpeed, level, xp
 
         {/* XP */}
         <div class={cardStyles.statBox}>
-          <span class={cardStyles.statIcon}>🌫️</span>
+          <DustIcon size={16} className={cardStyles.statIcon} />
           <span class={cardStyles.statLabel}>{t('resources.xp')}</span>
           <span class={cardStyles.statValue}>{xp}</span>
         </div>

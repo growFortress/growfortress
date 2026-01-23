@@ -50,8 +50,8 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     description: 'Dron szturmowy blokujący natarcie wroga',
     role: 'melee',
     baseHp: 50,
-    baseDamage: 20,      // Increased from 15
-    baseSpeed: 0.35,     // Reduced from 0.5 (30% slower for balance)
+    baseDamage: 20,
+    baseSpeed: 0.28,     // Reduced by 20% from 0.35
     attackRange: 1.5,
     attackInterval: 45,  // 1.5 seconds
     duration: 300,       // 10 seconds
@@ -66,8 +66,8 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     description: 'Dron dalekiego zasięgu z laserem',
     role: 'ranged',
     baseHp: 30,
-    baseDamage: 28,      // Increased from 20
-    baseSpeed: 0.35,     // Reduced from 0.5 (30% slower for balance)
+    baseDamage: 28,
+    baseSpeed: 0.28,     // Reduced by 20% from 0.35
     attackRange: 8,
     attackInterval: 60,  // 2 seconds
     duration: 300,       // 10 seconds
@@ -82,8 +82,8 @@ export const MILITIA_DEFINITIONS: Record<MilitiaType, MilitiaDefinition> = {
     description: 'Opancerzony mech z tarczą energetyczną',
     role: 'tank',
     baseHp: 100,
-    baseDamage: 10,      // Increased from 5
-    baseSpeed: 0.35,     // Reduced from 0.5 (30% slower for balance)
+    baseDamage: 10,
+    baseSpeed: 0.28,     // Reduced by 20% from 0.35
     attackRange: 1.5,
     attackInterval: 90,  // 3 seconds
     duration: 450,       // 15 seconds

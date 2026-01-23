@@ -2,6 +2,7 @@ import { Button } from '../../shared/Button.js';
 import cardStyles from './cards.module.css';
 import { HERO_UPGRADE_COSTS } from '@arcade/protocol';
 import { useTranslation } from '../../../i18n/useTranslation.js';
+import { DustIcon } from '../../icons/index.js';
 
 interface UpgradeSectionProps {
   currentTier: 1 | 2 | 3;
@@ -38,7 +39,7 @@ export function UpgradeSection({ currentTier, playerGold, playerDust, onUpgrade,
             🪙 {upgradeCost.gold}
           </span>
           <span class={`${cardStyles.costItem} ${canAffordDust ? cardStyles.canAfford : cardStyles.cantAfford}`}>
-            🌫️ {upgradeCost.dust}
+            <DustIcon size={14} /> {upgradeCost.dust}
           </span>
         </div>
       </div>
