@@ -6,9 +6,6 @@ import { getCurrentWeekKey, LeaderboardSnapshotJob, createWorker } from '../lib/
 /** Redis key prefix for leaderboard snapshots */
 const SNAPSHOT_KEY_PREFIX = 'leaderboard:snapshot:';
 
-/** TTL for cached snapshots in seconds (1 hour) */
-const SNAPSHOT_TTL_SECONDS = 3600;
-
 /** Maximum number of top entries to include in snapshot */
 const TOP_ENTRIES_LIMIT = 100;
 
@@ -29,14 +26,22 @@ interface LeaderboardSnapshot {
 
 /**
  * Process leaderboard snapshot job
+ * Creates historical snapshots only (not for current week - that uses real-time sorted sets)
  */
 async function processLeaderboardSnapshot(job: Job<LeaderboardSnapshotJob>): Promise<void> {
   const weekKey = job.data.weekKey || getCurrentWeekKey();
+  const currentWeekKey = getCurrentWeekKey();
 
-  console.log(`[LeaderboardSnapshot] Processing snapshot for week ${weekKey}`);
+  // Skip snapshot for current week - it uses real-time sorted sets
+  if (weekKey === currentWeekKey) {
+    console.log(`[LeaderboardSnapshot] Skipping snapshot for current week ${weekKey} (using real-time sorted sets)`);
+    return;
+  }
+
+  console.log(`[LeaderboardSnapshot] Processing historical snapshot for week ${weekKey}`);
 
   try {
-    // Get top entries
+    // Get top entries from database (historical data)
     const entries = await prisma.leaderboardEntry.findMany({
       where: { weekKey },
       orderBy: { score: 'desc' },
@@ -50,6 +55,7 @@ async function processLeaderboardSnapshot(job: Job<LeaderboardSnapshotJob>): Pro
 
     if (entries.length === 0) {
       console.warn(`[LeaderboardSnapshot] No entries found for week ${weekKey}`);
+      return;
     }
 
     // Build typed snapshot object
@@ -64,14 +70,15 @@ async function processLeaderboardSnapshot(job: Job<LeaderboardSnapshotJob>): Pro
       })),
     };
 
-    // Store snapshot in Redis with TTL
+    // Store snapshot in Redis with longer TTL for historical data (7 days)
+    const historicalTtl = 7 * 24 * 3600; // 7 days
     await redis.setex(
       SNAPSHOT_KEY_PREFIX + weekKey,
-      SNAPSHOT_TTL_SECONDS,
+      historicalTtl,
       JSON.stringify(snapshot)
     );
 
-    console.log(`[LeaderboardSnapshot] Snapshot completed: ${entries.length} entries cached for ${SNAPSHOT_TTL_SECONDS}s`);
+    console.log(`[LeaderboardSnapshot] Historical snapshot completed: ${entries.length} entries cached for ${historicalTtl}s`);
   } catch (error) {
     console.error(`[LeaderboardSnapshot] Job failed for week ${weekKey}:`, error);
     throw error; // Re-throw so BullMQ knows job failed and can retry

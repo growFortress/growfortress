@@ -53,6 +53,7 @@ interface MockPrisma {
   bulkReward: MockPrismaOperations;
   playerRewardClaim: MockPrismaOperations;
   bossRushSession: MockPrismaOperations;
+  bossRushLeaderboard: MockPrismaOperations;
   bossRushLeaderboardEntry: MockPrismaOperations;
   powerUpgrades: MockPrismaOperations;
   scheduledEvent: MockPrismaOperations;
@@ -107,6 +108,37 @@ interface MockPrisma {
   userEnergy: MockPrismaOperations;
   // Pillar unlocks
   userPillarUnlocks: MockPrismaOperations;
+  // Support tickets
+  supportTicket: MockPrismaOperations;
+  ticketResponse: MockPrismaOperations;
+  // Gacha system
+  gachaProgress: MockPrismaOperations;
+  gachaPull: MockPrismaOperations;
+  gachaBanner: MockPrismaOperations;
+  // Bonus codes
+  bonusCode: MockPrismaOperations;
+  bonusCodeRedemption: MockPrismaOperations;
+  // Bug reports
+  bugReport: MockPrismaOperations;
+  // Metrics and alerts
+  systemError: MockPrismaOperations;
+  metricSnapshot: MockPrismaOperations;
+  // Shop
+  shopPurchase: MockPrismaOperations;
+  userPurchaseLimit: MockPrismaOperations;
+  activeBooster: MockPrismaOperations;
+  userCosmetic: MockPrismaOperations;
+  // Battle Pass
+  battlePassSeason: MockPrismaOperations;
+  battlePassProgress: MockPrismaOperations;
+  // Guild applications
+  guildApplication: MockPrismaOperations;
+  // Chat messages
+  chatMessage: MockPrismaOperations;
+  // Weekly player rewards
+  weeklyPlayerReward: MockPrismaOperations;
+  // Password reset
+  passwordResetToken: MockPrismaOperations;
   $transaction: ReturnType<typeof vi.fn>;
   $connect: ReturnType<typeof vi.fn>;
   $disconnect: ReturnType<typeof vi.fn>;
@@ -129,6 +161,7 @@ export const mockPrisma: MockPrisma = {
   bulkReward: createMockOperations(),
   playerRewardClaim: createMockOperations(),
   bossRushSession: createMockOperations(),
+  bossRushLeaderboard: createMockOperations(),
   bossRushLeaderboardEntry: createMockOperations(),
   powerUpgrades: createMockOperations(),
   scheduledEvent: createMockOperations(),
@@ -183,6 +216,37 @@ export const mockPrisma: MockPrisma = {
   userEnergy: createMockOperations(),
   // Pillar unlocks
   userPillarUnlocks: createMockOperations(),
+  // Support tickets
+  supportTicket: createMockOperations(),
+  ticketResponse: createMockOperations(),
+  // Gacha system
+  gachaProgress: createMockOperations(),
+  gachaPull: createMockOperations(),
+  gachaBanner: createMockOperations(),
+  // Bonus codes
+  bonusCode: createMockOperations(),
+  bonusCodeRedemption: createMockOperations(),
+  // Bug reports
+  bugReport: createMockOperations(),
+  // Metrics and alerts
+  systemError: createMockOperations(),
+  metricSnapshot: createMockOperations(),
+  // Shop
+  shopPurchase: createMockOperations(),
+  userPurchaseLimit: createMockOperations(),
+  activeBooster: createMockOperations(),
+  userCosmetic: createMockOperations(),
+  // Battle Pass
+  battlePassSeason: createMockOperations(),
+  battlePassProgress: createMockOperations(),
+  // Guild applications
+  guildApplication: createMockOperations(),
+  // Chat messages
+  chatMessage: createMockOperations(),
+  // Weekly player rewards
+  weeklyPlayerReward: createMockOperations(),
+  // Password reset
+  passwordResetToken: createMockOperations(),
   $transaction: vi.fn(async (input: unknown): Promise<unknown> => {
     if (typeof input === 'function') {
       return input(mockPrisma);
@@ -869,6 +933,154 @@ export function createMockPlayerMilestones(overrides: Record<string, unknown> = 
     bonusHeroSlots: 0,
     unlockedFeatures: [] as string[],
     updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// BATTLE PASS MOCKS
+// ============================================================================
+
+/**
+ * Helper to create mock battle pass season data
+ */
+export function createMockBattlePassSeason(overrides: Record<string, unknown> = {}) {
+  const now = new Date();
+  const endsAt = new Date(now);
+  endsAt.setMonth(endsAt.getMonth() + 2);
+
+  return {
+    id: 'season-123',
+    name: 'Season 1',
+    description: 'First season of the battle pass',
+    seasonNumber: 1,
+    startsAt: now,
+    endsAt,
+    isActive: true,
+    featuredReward: 'Exclusive Season 1 Hero Skin',
+    createdAt: now,
+    ...overrides,
+  };
+}
+
+/**
+ * Helper to create mock battle pass progress data
+ */
+export function createMockBattlePassProgress(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'bp-progress-123',
+    userId: 'user-123',
+    seasonId: 'season-123',
+    currentTier: 0,
+    currentPoints: 0,
+    isPremium: false,
+    claimedFreeTiers: [] as number[],
+    claimedPremiumTiers: [] as number[],
+    purchasedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// GUILD APPLICATION MOCKS
+// ============================================================================
+
+/**
+ * Helper to create mock guild application data
+ */
+export function createMockGuildApplication(overrides: Record<string, unknown> = {}) {
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 72);
+
+  return {
+    id: 'application-123',
+    guildId: 'guild-123',
+    applicantId: 'user-456',
+    message: 'I would like to join your guild!',
+    status: 'PENDING' as const,
+    expiresAt,
+    respondedAt: null,
+    respondedBy: null,
+    createdAt: new Date(),
+    guild: { name: 'Test Guild', tag: 'TEST' },
+    applicant: {
+      displayName: 'Applicant',
+      highestWave: 50,
+      powerUpgrades: { cachedTotalPower: 2000 },
+    },
+    responder: null,
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// CHAT MESSAGE MOCKS
+// ============================================================================
+
+/**
+ * Helper to create mock chat message data
+ */
+export function createMockChatMessage(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'msg-123',
+    scope: 'GUILD' as const,
+    guildId: 'guild-123',
+    senderId: 'user-123',
+    content: 'Hello, guild!',
+    createdAt: new Date(),
+    sender: { displayName: 'TestUser' },
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// WEEKLY PLAYER REWARD MOCKS
+// ============================================================================
+
+/**
+ * Helper to create mock weekly player reward data
+ */
+export function createMockWeeklyPlayerReward(overrides: Record<string, unknown> = {}) {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  return {
+    id: 'reward-123',
+    weekKey: '2026-W03',
+    userId: 'user-123',
+    category: 'waves' as const,
+    rank: 1,
+    goldAmount: 1000,
+    dustAmount: 100,
+    itemIds: ['exclusive_badge_top1'],
+    claimed: false,
+    claimedAt: null,
+    expiresAt,
+    createdAt: new Date(),
+    ...overrides,
+  };
+}
+
+// ============================================================================
+// PASSWORD RESET MOCKS
+// ============================================================================
+
+/**
+ * Helper to create mock password reset token data
+ */
+export function createMockPasswordResetToken(overrides: Record<string, unknown> = {}) {
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 1);
+
+  return {
+    id: 'token-123',
+    token: 'hashed-token-abc123',
+    userId: 'user-123',
+    expiresAt,
+    createdAt: new Date(),
+    user: createMockUser(),
     ...overrides,
   };
 }

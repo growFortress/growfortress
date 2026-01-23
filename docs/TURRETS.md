@@ -1,22 +1,21 @@
 # Defense Towers (Wieżyczki)
 
-The game features 5 defense tower types: 4 core turrets + 1 late-game unlock. Each tower has 3 tiers.
+The game features 4 defense tower types. Each tower has 3 tiers and can be assigned to fortress class for bonuses.
 
 ## Overview
 
-| Tower | Role | Base Cost | Unlock Level | Description |
-|-------|------|-----------|--------------|-------------|
-| Wieża Railgun | DPS | 3,000g | 1 (Starter) | Fast, single-target damage |
-| Wieża Kriogeniczna | Crowd Control | 3,500g | 5 | Slow enemies and freeze groups |
-| Wieża Artyleryjska | AOE | 8,000g | 15 | Slow but powerful splash damage |
-| Wieża Łukowa | AOE | 7,000g | 30 | Chain lightning between enemies |
-| Wieża Fotonowa | DPS | 10,000g | 45 | Advanced laser technology |
+| Tower | Role | Base Cost | Description |
+|-------|------|-----------|-------------|
+| Wieża Railgun | DPS | 3,000g | Fast, single-target damage |
+| Wieża Kriogeniczna | Crowd Control | 3,500g | Slow enemies and freeze groups |
+| Wieża Artyleryjska | AOE | 8,000g | Slow but powerful splash damage |
+| Wieża Łukowa | AOE | 7,000g | Chain lightning between enemies |
 
 ---
 
 ## Wieża Railgun
 
-**Role**: DPS (Single-Target) | **Unlock**: Level 1 (Starter)
+**Role**: DPS (Single-Target)
 
 ### Description
 Fast electromagnetic rail turret. Ideal for eliminating single high-priority targets.
@@ -34,11 +33,11 @@ Fast electromagnetic rail turret. Ideal for eliminating single high-priority tar
 ### Costs
 - Base Cost: 3,000g
 - Tier Cost Multiplier: 2.0x per tier
-- Class Change: 150g + 20 dust
+- Class Change: 150g + 15 dust
 
 ### Ability: Rapid Fire
 - **Effect**: Doubles attack speed for 5 seconds
-- **Cooldown**: 30 seconds
+- **Cooldown**: 30 seconds (900 ticks)
 
 ### Projectile Type
 Arrow (energy bolt)
@@ -48,11 +47,14 @@ Arrow (energy bolt)
 - Secondary: Gray-blue (#718096)
 - Projectile: Deep Sky Blue (#00BFFF)
 
+### Legacy ID
+`arrow`
+
 ---
 
 ## Wieża Kriogeniczna
 
-**Role**: Crowd Control | **Unlock**: Level 5
+**Role**: Crowd Control
 
 ### Description
 Cryogenic tower that slows and freezes enemies in place.
@@ -69,16 +71,16 @@ Cryogenic tower that slows and freezes enemies in place.
 
 ### Special Effects
 - Slow Amount: 50%
-- Slow Duration: 2 seconds
+- Slow Duration: 2 seconds (60 ticks)
 
 ### Costs
 - Base Cost: 3,500g
 - Tier Cost Multiplier: 2.0x per tier
-- Class Change: 150g + 20 dust
+- Class Change: 150g + 15 dust
 
 ### Ability: Flash Freeze
 - **Effect**: Freezes all enemies in range for 3 seconds
-- **Cooldown**: 30 seconds
+- **Cooldown**: 30 seconds (900 ticks)
 
 ### Projectile Type
 Ice Shard
@@ -88,11 +90,14 @@ Ice Shard
 - Secondary: Sky Blue (#87CEEB)
 - Projectile: Light Blue (#ADD8E6)
 
+### Legacy ID
+`frost`
+
 ---
 
 ## Wieża Artyleryjska
 
-**Role**: AOE | **Unlock**: Level 15
+**Role**: AOE
 
 ### Description
 Slow but powerful artillery with area damage.
@@ -114,12 +119,12 @@ Slow but powerful artillery with area damage.
 ### Costs
 - Base Cost: 8,000g
 - Tier Cost Multiplier: 2.0x per tier
-- Class Change: 150g + 20 dust
+- Class Change: 150g + 15 dust
 
 ### Ability: Explosive Shell
 - **Effect**: Next shot deals 200% damage with larger splash
 - **Splash Radius**: 3 units
-- **Cooldown**: 20 seconds
+- **Cooldown**: 20 seconds (600 ticks)
 
 ### Projectile Type
 Cannonball
@@ -129,11 +134,14 @@ Cannonball
 - Secondary: Dim Gray (#696969)
 - Projectile: Dark (#1C1C1C)
 
+### Legacy ID
+`cannon`
+
 ---
 
 ## Wieża Łukowa
 
-**Role**: AOE (Chain) | **Unlock**: Level 30
+**Role**: AOE (Chain)
 
 ### Description
 Electric tower with arc energy that chains between enemies.
@@ -155,11 +163,11 @@ Electric tower with arc energy that chains between enemies.
 ### Costs
 - Base Cost: 7,000g
 - Tier Cost Multiplier: 2.0x per tier
-- Class Change: 150g + 20 dust
+- Class Change: 150g + 15 dust
 
 ### Ability: Overload
 - **Effect**: Next attack hits ALL enemies in range
-- **Cooldown**: 25 seconds
+- **Cooldown**: 25 seconds (750 ticks)
 
 ### Projectile Type
 Lightning
@@ -169,64 +177,16 @@ Lightning
 - Secondary: Dark Orchid (#9932CC)
 - Projectile: Cyan (#00FFFF)
 
----
-
-## Wieża Fotonowa
-
-**Role**: DPS (Advanced) | **Unlock**: Level 45
-
-### Description
-Advanced photon laser technology with piercing beams.
-
-### Base Stats
-| Stat | Value |
-|------|-------|
-| Damage | 20.0 |
-| Attack Speed | 2.0/s |
-| Range | 12 units |
-| Crit Chance | 15% |
-| Crit Multiplier | 1.75x |
-| HP | 160 |
-
-### Special Effects
-- Pierce: Hits through multiple enemies
-- Pierce Count: 2
-
-### Costs
-- Base Cost: 10,000g
-- Tier Cost Multiplier: 2.0x per tier
-- Class Change: 200g + 25 dust
-
-### Ability: Photon Surge
-- **Effect**: Continuous beam dealing damage over time for 4 seconds
-- **DPS**: 30 damage/second
-- **Cooldown**: 25 seconds
-
-### Projectile Type
-Laser
-
-### Colors
-- Primary: Cyan (#00F0FF)
-- Secondary: Magenta (#FF00FF)
-- Projectile: White (#FFFFFF)
+### Legacy ID
+`tesla`
 
 ---
 
 ## Tower Slots
 
 ### Standard Slots (6)
-Always available, unlocked by fortress level:
+Always available:
 
-| Level | Slots Available |
-|-------|-----------------|
-| 1 | 1 |
-| 5 | 2 |
-| 15 | 3 |
-| 25 | 4 |
-| 35 | 5 |
-| 40 | 6 |
-
-### Layout
 ```
     [SLOT 1]    [SLOT 2]    [SLOT 3]
         \_________|_________/
@@ -235,16 +195,27 @@ Always available, unlocked by fortress level:
     [SLOT 4]    [SLOT 5]    [SLOT 6]
 ```
 
+### Slot Positions (relative to fortress)
+
+| Slot | Position | X Offset | Y Offset |
+|------|----------|----------|----------|
+| 1 | Top | 4 | -3 |
+| 2 | Top | 7 | -3.5 |
+| 3 | Top | 10 | -3 |
+| 4 | Bottom | 4 | 3 |
+| 5 | Bottom | 7 | 3.5 |
+| 6 | Bottom | 10 | 3 |
+
 ### Extra Slots (7-8)
 Can be unlocked with dust:
-- Slot 7: 1,000 dust
-- Slot 8: 1,000 dust
+- Slot 7: 700 dust (position: x=13, y=-2.5)
+- Slot 8: 700 dust (position: x=13, y=2.5)
 
 ---
 
 ## Class Modifiers
 
-When a tower matches the fortress configuration class, it receives bonuses:
+When a tower is assigned to a fortress configuration class, it receives bonuses:
 
 | Class | Damage | Attack Speed | Range | Special |
 |-------|--------|--------------|-------|---------|
@@ -260,20 +231,20 @@ When a tower matches the fortress configuration class, it receives bonuses:
 
 Towers can be upgraded to increase their stats:
 
-| Tier | Stat Multiplier | Cost Multiplier |
-|------|-----------------|-----------------|
-| 1 | 1.0x | 1.0x (base) |
-| 2 | 1.25x | 2.0x |
-| 3 | 1.5x | 4.0x |
+| Tier | Stat Multiplier | HP Multiplier | Cost Multiplier |
+|------|-----------------|---------------|-----------------|
+| 1 | 1.0x | 1.0x | 1.0x (base) |
+| 2 | 1.25x | 1.25x | 2.0x |
+| 3 | 1.5x | 1.5x | 4.0x |
 
-HP scales the same: Tier 1 = 1.0x, Tier 2 = 1.25x, Tier 3 = 1.5x
+### Example Costs
 
-### Example Costs (Railgun)
-| Tier | Gold Cost |
-|------|-----------|
-| 1 | 3,000g |
-| 2 | 6,000g |
-| 3 | 12,000g |
+| Tower | Tier 1 | Tier 2 | Tier 3 |
+|-------|--------|--------|--------|
+| Railgun | 3,000g | 6,000g | 12,000g |
+| Kriogeniczna | 3,500g | 7,000g | 14,000g |
+| Artyleryjska | 8,000g | 16,000g | 32,000g |
+| Łukowa | 7,000g | 14,000g | 28,000g |
 
 ---
 
@@ -289,22 +260,35 @@ All towers can use these targeting priorities:
 
 ## Recommended Loadouts
 
-### Early Game (Level 1-15)
-- 1-2x Railgun (reliable damage)
+### Early Game
+- 1-2x Railgun (reliable single-target damage)
 
-### Mid Game (Level 15-30)
+### Mid Game
 - 1x Railgun (single-target)
 - 1x Kriogeniczna (crowd control)
 - 1x Artyleryjska (AOE damage)
 
-### Late Game (Level 30-45)
+### Late Game
 - 1x Railgun
 - 1x Kriogeniczna
-- 1x Artyleryjska
+- 1-2x Artyleryjska
 - 1x Łukowa (chain damage)
 
-### End Game (Level 45+)
-- 2x Fotonowa (DPS)
-- 1x Kriogeniczna (CC)
-- 1x Łukowa (AOE)
+### End Game (Full 6 slots)
 - 2x Artyleryjska (AOE)
+- 2x Łukowa (chain)
+- 1x Kriogeniczna (CC)
+- 1x Railgun (priority targets)
+
+---
+
+## Tower ID Migration
+
+The game uses new tower IDs but maintains backwards compatibility with legacy IDs:
+
+| New ID | Legacy ID |
+|--------|-----------|
+| railgun | arrow |
+| cryo | frost |
+| artillery | cannon |
+| arc | tesla |

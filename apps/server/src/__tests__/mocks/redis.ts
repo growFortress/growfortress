@@ -139,12 +139,45 @@ export const mockRedis = {
     return options?.REV ? result.reverse().map(([_, m]) => m) : result.map(([_, m]) => m);
   }),
 
+  zrevrange: vi.fn(async (key: string, start: number, stop: number, withScores?: string): Promise<string[]> => {
+    const existing = store.get(key);
+    if (!existing) return [];
+    const zset: [number, string][] = JSON.parse(existing);
+    // zset is already sorted descending, so just slice
+    const result = zset.slice(start, stop === -1 ? undefined : stop + 1);
+    if (withScores === 'WITHSCORES') {
+      // Return [member1, score1, member2, score2, ...]
+      const flat: string[] = [];
+      for (const [score, member] of result) {
+        flat.push(member, String(score));
+      }
+      return flat;
+    }
+    return result.map(([_, m]) => m);
+  }),
+
   zrank: vi.fn(async (key: string, member: string): Promise<number | null> => {
     const existing = store.get(key);
     if (!existing) return null;
     const zset: [number, string][] = JSON.parse(existing);
     const idx = zset.findIndex(([_, m]) => m === member);
     return idx === -1 ? null : idx;
+  }),
+
+  zrevrank: vi.fn(async (key: string, member: string): Promise<number | null> => {
+    const existing = store.get(key);
+    if (!existing) return null;
+    const zset: [number, string][] = JSON.parse(existing);
+    // zset is already sorted descending, so zrevrank is same as zrank
+    const idx = zset.findIndex(([_, m]) => m === member);
+    return idx === -1 ? null : idx;
+  }),
+
+  zcard: vi.fn(async (key: string): Promise<number> => {
+    const existing = store.get(key);
+    if (!existing) return 0;
+    const zset: [number, string][] = JSON.parse(existing);
+    return zset.length;
   }),
 
   zscore: vi.fn(async (key: string, member: string): Promise<string | null> => {
@@ -158,14 +191,27 @@ export const mockRedis = {
   // Event handlers (for connection events)
   on: vi.fn(),
 
-  // Pipeline support
-  pipeline: vi.fn(() => ({
-    get: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    setex: vi.fn().mockReturnThis(),
-    del: vi.fn().mockReturnThis(),
-    exec: vi.fn(async () => []),
-  })),
+  // Pipeline support - tracks calls through main mock functions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pipeline: vi.fn((): any => {
+    const commands: Array<{ method: string; args: unknown[] }> = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pipelineObj: any = {
+      get: vi.fn((...args: unknown[]) => { commands.push({ method: 'get', args }); return pipelineObj; }),
+      set: vi.fn((...args: unknown[]) => { commands.push({ method: 'set', args }); return pipelineObj; }),
+      setex: vi.fn((...args: unknown[]) => { commands.push({ method: 'setex', args }); return pipelineObj; }),
+      del: vi.fn((...args: unknown[]) => { commands.push({ method: 'del', args }); return pipelineObj; }),
+      zadd: vi.fn((...args: unknown[]) => {
+        commands.push({ method: 'zadd', args });
+        // Also call the main zadd mock to track in tests
+        mockRedis.zadd(...(args as [string, ...Array<string | number>]));
+        return pipelineObj;
+      }),
+      zrevrange: vi.fn((...args: unknown[]) => { commands.push({ method: 'zrevrange', args }); return pipelineObj; }),
+      exec: vi.fn(async () => commands.map(() => [null, 'OK'])),
+    };
+    return pipelineObj;
+  }),
 
   // Connection
   quit: vi.fn(async () => 'OK'),
@@ -193,7 +239,10 @@ export function resetRedisMock(): void {
   mockRedis.hdel.mockClear();
   mockRedis.zadd.mockClear();
   mockRedis.zrange.mockClear();
+  mockRedis.zrevrange.mockClear();
   mockRedis.zrank.mockClear();
+  mockRedis.zrevrank.mockClear();
+  mockRedis.zcard.mockClear();
   mockRedis.zscore.mockClear();
   mockRedis.on.mockClear();
   mockRedis.pipeline.mockClear();

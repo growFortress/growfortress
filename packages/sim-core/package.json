@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:wasm": "cd wasm/fixed-math && powershell -ExecutionPolicy Bypass -File build.ps1",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",

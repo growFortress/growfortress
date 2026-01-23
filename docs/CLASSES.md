@@ -202,12 +202,12 @@ The game features 6 fortress configurations, each with unique playstyles and bon
 
 | Configuration | Best Units | Best Towers | Best Relics |
 |---------------|------------|-------------|-------------|
-| Standardowa | Vanguard, Titan | Any | Iron Hide, Natural Growth |
-| Kriogeniczna | Frost | Wieża Kriogeniczna | Ice Mastery, Critical Eye |
-| Termiczna | Rift | Wieża Artyleryjska | Fire Fury, Splash Master |
+| Standardowa | Vanguard, Scout | Any | Iron Hide, Natural Growth |
+| Kriogeniczna | Frost, Glacier | Wieża Kriogeniczna | Ice Mastery, Critical Eye |
+| Termiczna | Rift, Inferno, Pyro | Wieża Artyleryjska | Fire Fury, Splash Master |
 | Elektryczna | Storm | Wieża Łukowa | Lightning Surge, Chain Lightning |
 | Próżniowa | Titan, Omega | Any | Executioner |
-| Kwantowa | Forge, Spectre | Wieża Railgun, Wieża Fotonowa | Tech Precision, Gold Rush |
+| Kwantowa | Forge, Spectre, Medic | Wieża Railgun | Tech Precision, Gold Rush |
 
 ## Unlock Progression
 

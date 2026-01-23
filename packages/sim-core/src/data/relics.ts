@@ -16,7 +16,8 @@ export type RelicCategory =
   | 'pillar'
   | 'synergy'
   | 'economy'
-  | 'cursed';
+  | 'cursed'
+  | 'support';
 
 export type RelicRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
@@ -101,7 +102,7 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
     name: 'Splash Master',
     description: 'Attacks deal 35% damage to nearby enemies',
     category: 'build_defining',
-    rarity: 'epic',
+    rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
@@ -111,17 +112,77 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
     synergies: [],
   },
   {
+    id: 'splash-burst',
+    name: 'Splash Burst',
+    description: 'Critical hits deal 50% splash damage (+1 radius)',
+    category: 'build_defining',
+    rarity: 'epic',
+    isBuildDefining: true,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      splashRadiusBonus: 1,
+      splashDamagePercent: 0.5,
+      // Note: Only triggers on crit - handled in simulation logic
+    },
+    synergies: [],
+  },
+  {
+    id: 'splash-wave',
+    name: 'Splash Wave',
+    description: 'Splash damage increases with each enemy hit (+5 radius, stacks)',
+    category: 'build_defining',
+    rarity: 'epic',
+    isBuildDefining: true,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      splashRadiusBonus: 5,
+      splashDamagePercent: 0.25,
+      // Note: Stacking logic handled in simulation
+    },
+    synergies: [],
+  },
+  {
     id: 'chain-lightning',
     name: 'Chain Lightning',
     description: '+40% chain chance, +2 chains',
     category: 'build_defining',
-    rarity: 'epic',
+    rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
       chainChance: 0.4,
       chainCount: 2,
       chainDamagePercent: 0.6,
+    },
+    synergies: [],
+  },
+  {
+    id: 'chain-focus',
+    name: 'Chain Focus',
+    description: '+60% chain chance, +1 chain, +80% chain damage',
+    category: 'build_defining',
+    rarity: 'epic',
+    isBuildDefining: true,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      chainChance: 0.6,
+      chainCount: 1,
+      chainDamagePercent: 0.8,
+    },
+    synergies: [],
+  },
+  {
+    id: 'chain-cascade',
+    name: 'Chain Cascade',
+    description: '+20% chain chance, +4 chains, 40% chain damage',
+    category: 'build_defining',
+    rarity: 'epic',
+    isBuildDefining: true,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      chainChance: 0.2,
+      chainCount: 4,
+      chainDamagePercent: 0.4,
     },
     synergies: [],
   },
@@ -362,7 +423,7 @@ const PILLAR_RELICS: ExtendedRelicDef[] = [
 ];
 
 // ============================================================================
-// SYNERGY RELICS (2)
+// SYNERGY RELICS (3)
 // ============================================================================
 
 const SYNERGY_RELICS: ExtendedRelicDef[] = [
@@ -391,6 +452,19 @@ const SYNERGY_RELICS: ExtendedRelicDef[] = [
       ...DEFAULT_MODIFIERS,
       damageBonus: 0.15,
       maxHpBonus: 0.05,
+    },
+    synergies: [],
+  },
+  {
+    id: 'unity-crystal',
+    name: 'Unity Crystal',
+    description: '+50% to all synergy bonuses (additive)',
+    category: 'synergy',
+    rarity: 'legendary',
+    isBuildDefining: true,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      // No direct modifiers - effect is applied in synergy calculation
     },
     synergies: [],
   },
@@ -542,6 +616,98 @@ const PHYSICS_DEFENSE_RELICS: ExtendedRelicDef[] = [
 ];
 
 // ============================================================================
+// SUPPORT RELICS (6) - Build-enhancing relics
+// ============================================================================
+
+const SUPPORT_RELICS: ExtendedRelicDef[] = [
+  // Splash Support
+  {
+    id: 'splash-amplifier',
+    name: 'Splash Amplifier',
+    description: '+15% splash damage, +1 splash radius',
+    category: 'support',
+    rarity: 'rare',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      splashRadiusBonus: 1,
+      splashDamagePercent: 0.15,
+    },
+    synergies: ['splash'],
+  },
+  {
+    id: 'area-dominance',
+    name: 'Area Dominance',
+    description: '+10% damage vs grouped enemies (3+ in radius 5)',
+    category: 'support',
+    rarity: 'rare',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      // Note: Conditional logic handled in simulation
+      damageBonus: 0.1,
+    },
+    synergies: ['splash'],
+  },
+  {
+    id: 'explosive-impact',
+    name: 'Explosive Impact',
+    description: 'First hit on grouped enemy deals +30% damage',
+    category: 'support',
+    rarity: 'epic',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      // Note: Conditional logic handled in simulation
+      damageBonus: 0.3,
+    },
+    synergies: ['splash'],
+  },
+  // Chain Support
+  {
+    id: 'chain-resonance',
+    name: 'Chain Resonance',
+    description: '+10% chain chance, +20% chain damage',
+    category: 'support',
+    rarity: 'rare',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      chainChance: 0.1,
+      chainDamagePercent: 0.2,
+    },
+    synergies: ['chain'],
+  },
+  {
+    id: 'lightning-rod',
+    name: 'Lightning Rod',
+    description: 'Chains prefer low HP enemies',
+    category: 'support',
+    rarity: 'rare',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      // Note: Targeting logic handled in simulation
+    },
+    synergies: ['chain'],
+  },
+  {
+    id: 'voltage-surge',
+    name: 'Voltage Surge',
+    description: 'Each chain increases next chain damage by +10% (stacks)',
+    category: 'support',
+    rarity: 'epic',
+    isBuildDefining: false,
+    modifiers: {
+      ...DEFAULT_MODIFIERS,
+      // Note: Stacking logic handled in simulation
+      chainDamagePercent: 0.1,
+    },
+    synergies: ['chain'],
+  },
+];
+
+// ============================================================================
 // COMBINED RELICS ARRAY
 // ============================================================================
 
@@ -554,6 +720,7 @@ export const RELICS: ExtendedRelicDef[] = [
   ...ECONOMY_RELICS,
   ...CURSED_RELICS,
   ...PHYSICS_DEFENSE_RELICS,
+  ...SUPPORT_RELICS,
 ];
 
 // ============================================================================
@@ -624,20 +791,58 @@ export interface ExtendedRelicSelectionContext {
   wave?: number;
   ownedRelicIds?: string[];
   gold?: number;
-  detectedBuildType?: string;
+  detectedBuildType?: BuildType;
   fortressHpPercent?: number;
 }
 
 export type BuildType = 'splash' | 'chain' | 'execute' | 'crit' | 'tank' | 'economy' | 'balanced';
 
 export function detectBuildType(ownedRelicIds: string[]): BuildType {
-  if (ownedRelicIds.includes('splash-master')) return 'splash';
-  if (ownedRelicIds.includes('chain-lightning')) return 'chain';
+  // Check for build-defining relics (including variants)
+  if (ownedRelicIds.includes('splash-master') || 
+      ownedRelicIds.includes('splash-burst') || 
+      ownedRelicIds.includes('splash-wave')) return 'splash';
+  if (ownedRelicIds.includes('chain-lightning') || 
+      ownedRelicIds.includes('chain-focus') || 
+      ownedRelicIds.includes('chain-cascade')) return 'chain';
   if (ownedRelicIds.includes('executioner')) return 'execute';
   if (ownedRelicIds.includes('critical-eye')) return 'crit';
   if (ownedRelicIds.includes('iron-hide')) return 'tank';
   if (ownedRelicIds.includes('gold-rush') || ownedRelicIds.includes('dust-collector')) return 'economy';
   return 'balanced';
+}
+
+/**
+ * Check if player has a build-defining relic
+ */
+export function hasBuildDefiningRelic(ownedRelicIds: string[]): boolean {
+  const buildDefiningIds = [
+    'splash-master', 'splash-burst', 'splash-wave',
+    'chain-lightning', 'chain-focus', 'chain-cascade',
+    'executioner', 'glass-cannon',
+    'harmonic-resonance', 'unity-crystal',
+    'berserkers-rage', 'desperate-measures',
+  ];
+  return ownedRelicIds.some(id => buildDefiningIds.includes(id));
+}
+
+/**
+ * Get support relics for a specific build type
+ */
+export function getSupportRelicsForBuild(buildType: BuildType): ExtendedRelicDef[] {
+  if (buildType === 'splash') {
+    return RELICS.filter(r => 
+      r.category === 'support' && 
+      (r.id === 'splash-amplifier' || r.id === 'area-dominance' || r.id === 'explosive-impact')
+    );
+  }
+  if (buildType === 'chain') {
+    return RELICS.filter(r => 
+      r.category === 'support' && 
+      (r.id === 'chain-resonance' || r.id === 'lightning-rod' || r.id === 'voltage-surge')
+    );
+  }
+  return [];
 }
 
 interface RelicRng {
@@ -662,11 +867,30 @@ export function getRelicChoicesV2(
     return [];
   }
 
-  // Calculate weights based on rarity
-  const weighted: { relic: ExtendedRelicDef; weight: number }[] = available.map(relic => ({
-    relic,
-    weight: RELIC_RARITY_CONFIG[relic.rarity].baseWeight,
-  }));
+  const ownedRelicIds = context.ownedRelicIds || [];
+  const hasBuildDefining = hasBuildDefiningRelic(ownedRelicIds);
+  const detectedBuildType = context.detectedBuildType || detectBuildType(ownedRelicIds);
+  const supportRelicsForBuild = getSupportRelicsForBuild(detectedBuildType);
+
+  // Calculate weights based on rarity and context
+  const weighted: { relic: ExtendedRelicDef; weight: number }[] = available.map(relic => {
+    let weight = RELIC_RARITY_CONFIG[relic.rarity].baseWeight;
+
+    // Reduce weight for build-defining relics if player doesn't have one yet
+    if (relic.isBuildDefining && !hasBuildDefining) {
+      weight *= 0.5; // 50% less likely
+    }
+
+    // Increase weight for support relics if player has matching build-defining
+    if (relic.category === 'support' && hasBuildDefining) {
+      const isMatchingSupport = supportRelicsForBuild.some(sr => sr.id === relic.id);
+      if (isMatchingSupport) {
+        weight *= 1.5; // 50% more likely
+      }
+    }
+
+    return { relic, weight };
+  });
 
   // Select relics using weighted random
   const selected: ExtendedRelicDef[] = [];

@@ -647,7 +647,9 @@ export type EnemyType = 'runner' | 'bruiser' | 'leech' |
                         'demon' | 'sorcerer' | 'dimensional_being' |  // Magic
                         'einherjar' | 'titan' | 'god' |                // Gods
                         // Special ability enemies
-                        'catapult' | 'sapper' | 'healer' | 'shielder' | 'teleporter';
+                        'catapult' | 'sapper' | 'healer' | 'shielder' | 'teleporter' |
+                        // Counterplay enemies
+                        'scatterer' | 'lone_wolf';
 
 // Status effect types that can be applied to enemies
 export type StatusEffectType = 'slow' | 'freeze' | 'burn' | 'poison' | 'stun';

@@ -9,6 +9,7 @@ import { createCleanupWorker } from './jobs/cleanupExpiredRuns.js';
 import { createMetricsWorker } from './jobs/metricsJob.js';
 import { createWeeklyPlayerResetWorker } from './jobs/weeklyPlayerReset.js';
 import { createWeeklyGuildResetWorker } from './jobs/weeklyGuildReset.js';
+import { initializeLeaderboardCache } from './services/leaderboard.js';
 
 async function main() {
   console.log('Starting Arcade TD Server...');
@@ -25,6 +26,9 @@ async function main() {
 
   // Initialize recurring jobs
   await initializeJobs();
+
+  // Initialize leaderboard sorted sets (sync current week from DB)
+  await initializeLeaderboardCache();
 
   // Graceful shutdown
   const shutdown = async () => {

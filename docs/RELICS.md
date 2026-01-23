@@ -4,35 +4,66 @@ Relics are powerful items obtained after each wave. Choose 1 of 3 offered relics
 
 ## Overview
 
-27 relics across 7 categories:
+33 relics across 8 categories:
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| Build-Defining | 4 | Shapes entire playstyle |
+| Build-Defining | 8 | Shapes entire playstyle (rare, includes variants) |
 | Standard | 7 | Basic stat bonuses (incl. physics defense) |
 | Class | 5 | Class-specific bonuses |
 | Pillar | 3 | Sector-specific bonuses |
 | Synergy | 2 | Multi-system bonuses |
 | Economy | 3 | Gold/dust bonuses |
 | Cursed | 3 | High risk, high reward |
+| Support | 6 | Build-enhancing relics (for splash/chain builds) |
 
 ---
 
 ## Build-Defining Relics
 
-These relics fundamentally change your build strategy.
+These relics fundamentally change your build strategy. **Build-defining relics are now rarer** (Legendary for main variants) to encourage meaningful decisions and prevent "auto-win" builds.
 
-### Splash Master
-- **Rarity**: Epic
+### Splash Build-Defining Relics
+
+#### Splash Master
+- **Rarity**: Legendary (was Epic)
 - **Effect**: Attacks deal 35% damage to nearby enemies (+3 splash radius)
 - **Synergy**: Konfiguracja Termiczna, Wieża Artyleryjska
 - **Build Type**: Splash
+- **Note**: Main variant - balanced splash damage and radius
 
-### Chain Lightning
+#### Splash Burst
 - **Rarity**: Epic
+- **Effect**: Critical hits deal 50% splash damage (+1 radius)
+- **Build Type**: Splash
+- **Note**: High damage variant - requires crit build to maximize effectiveness
+
+#### Splash Wave
+- **Rarity**: Epic
+- **Effect**: Splash damage increases with each enemy hit (+5 radius, stacks)
+- **Build Type**: Splash
+- **Note**: Scaling variant - gets stronger with grouped enemies
+
+### Chain Build-Defining Relics
+
+#### Chain Lightning
+- **Rarity**: Legendary (was Epic)
 - **Effect**: +40% chain chance, +2 chain targets, 60% chain damage
 - **Synergy**: Konfiguracja Elektryczna, Wieża Łukowa
 - **Build Type**: Chain
+- **Note**: Main variant - balanced chain chance and damage
+
+#### Chain Focus
+- **Rarity**: Epic
+- **Effect**: +60% chain chance, +1 chain target, +80% chain damage
+- **Build Type**: Chain
+- **Note**: High damage variant - fewer chains but more reliable and powerful
+
+#### Chain Cascade
+- **Rarity**: Epic
+- **Effect**: +20% chain chance, +4 chain targets, 40% chain damage
+- **Build Type**: Chain
+- **Note**: Wide spread variant - many chains but lower individual damage
 
 ### Executioner
 - **Rarity**: Legendary
@@ -42,7 +73,7 @@ These relics fundamentally change your build strategy.
 
 ### Glass Cannon
 - **Rarity**: Legendary
-- **Effect**: +100% damage, -40% max HP
+- **Effect**: +60% damage, -50% max HP
 - **Synergy**: High DPS builds
 - **Build Type**: Pure damage
 
@@ -86,6 +117,52 @@ Basic stat improvements available to all builds.
 - **Rarity**: Rare
 - **Effect**: +40% CC resistance, +20% mass
 - **Synergy**: Units that need to avoid stuns/freezes
+
+---
+
+## Support Relics
+
+Support relics enhance specific build types without being build-defining themselves. They appear more frequently when you already have a matching build-defining relic.
+
+### Splash Support Relics
+
+#### Splash Amplifier
+- **Rarity**: Rare
+- **Effect**: +15% splash damage, +1 splash radius
+- **Synergy**: Splash builds
+- **Note**: Basic splash enhancement
+
+#### Area Dominance
+- **Rarity**: Rare
+- **Effect**: +10% damage vs grouped enemies (3+ in radius 5)
+- **Synergy**: Splash builds
+- **Note**: Rewards targeting grouped enemies
+
+#### Explosive Impact
+- **Rarity**: Epic
+- **Effect**: First hit on grouped enemy deals +30% damage
+- **Synergy**: Splash builds
+- **Note**: Strong opener for grouped enemies
+
+### Chain Support Relics
+
+#### Chain Resonance
+- **Rarity**: Rare
+- **Effect**: +10% chain chance, +20% chain damage
+- **Synergy**: Chain builds
+- **Note**: Basic chain enhancement
+
+#### Lightning Rod
+- **Rarity**: Rare
+- **Effect**: Chains prefer low HP enemies
+- **Synergy**: Chain builds
+- **Note**: Improves chain targeting for finishing kills
+
+#### Voltage Surge
+- **Rarity**: Epic
+- **Effect**: Each chain increases next chain damage by +10% (stacks)
+- **Synergy**: Chain builds
+- **Note**: Scaling damage for long chains
 
 ---
 
@@ -246,7 +323,37 @@ When offered relics:
 1. Relics are filtered by your current class, pillar, and fortress level
 2. Already-owned relics are excluded
 3. Selection is weighted by rarity
-4. 3 relics are offered per wave (unless fewer available)
+4. **Build-defining relics have 50% reduced weight if you don't have one yet** (encourages commitment)
+5. **Support relics have 50% increased weight if you have a matching build-defining relic**
+6. 3 relics are offered per wave (unless fewer available)
+
+---
+
+## Counterplay System
+
+Build-defining relics now have counterplay to prevent them from being "auto-win" buttons.
+
+### Enemy Counterplay
+
+Some enemies resist splash and chain builds:
+
+- **Scatterer** (Rare enemy): Spreads out from others, -50% splash damage, -30% chain chance
+- **Lone Wolf** (Elite enemy): +100% HP, -75% splash damage, immune to chains
+
+### Wave Modifier Counterplay
+
+Special wave modifiers can counter specific builds:
+
+- **Scattered Formation**: Enemies spawn spread out, -30% splash effectiveness
+- **Chain Breaker**: Enemies have -50% chain chance, +20% HP
+- **Splash Dampener**: Splash damage reduced by 40%, but +25% gold reward
+
+### Strategy
+
+- **Splash builds** struggle against scattered enemies and Lone Wolves
+- **Chain builds** struggle against Chain Breaker waves and chain-immune enemies
+- **Adaptation**: Consider picking defensive or single-target relics when facing counterplay
+- **Support relics** help mitigate counterplay by enhancing your build's strengths
 
 ---
 
@@ -254,12 +361,14 @@ When offered relics:
 
 The game detects your build type based on owned relics:
 
-| Build Type | Key Relic |
-|------------|-----------|
-| Splash | Splash Master |
-| Chain | Chain Lightning |
+| Build Type | Key Relic(s) |
+|------------|--------------|
+| Splash | Splash Master, Splash Burst, or Splash Wave |
+| Chain | Chain Lightning, Chain Focus, or Chain Cascade |
 | Execute | Executioner |
 | Crit | Critical Eye |
 | Tank | Iron Hide |
 | Economy | Gold Rush or Dust Collector |
 | Balanced | No specific defining relic |
+
+**Note**: Support relics don't change your detected build type, but enhance it.

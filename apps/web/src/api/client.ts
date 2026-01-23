@@ -285,6 +285,19 @@ export async function submitSegment(
   );
 }
 
+export async function refreshSessionToken(
+  sessionId: string,
+  sessionToken: string,
+): Promise<{ sessionToken: string }> {
+  return request<{ sessionToken: string }>(
+    `/v1/sessions/${encodeURIComponent(sessionId)}/refresh-token`,
+    {
+      method: "POST",
+      body: JSON.stringify({ sessionToken }),
+    },
+  );
+}
+
 export async function endSession(
   sessionId: string,
   reason?: string,

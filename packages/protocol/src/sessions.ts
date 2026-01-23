@@ -140,6 +140,7 @@ export const SegmentSubmitResponseSchema = z.object({
   xpEarned: z.number(),
   materialsEarned: z.record(z.string(), z.number().int().min(0)).optional(),
   nextSegmentAuditTicks: z.array(z.number()),
+  sessionToken: z.string().optional(), // New session token for continued gameplay
   newInventory: SessionInventorySchema,
   newProgression: z.object({
     level: z.number().int().min(1),

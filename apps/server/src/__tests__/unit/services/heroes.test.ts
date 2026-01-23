@@ -194,10 +194,12 @@ describe('Heroes Service', () => {
 
       const result = await getUnlockedHeroes(userId);
 
-      // Should include free starter heroes (vanguard and storm only)
-      expect(result).toContain('storm');
+      // Should include all free starter heroes
       expect(result).toContain('vanguard');
-      expect(result).toHaveLength(2);
+      expect(result).toContain('storm');
+      expect(result).toContain('medic');
+      expect(result).toContain('pyro');
+      expect(result).toHaveLength(4);
     });
 
     it('should include both starter and unlocked heroes', async () => {

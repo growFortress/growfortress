@@ -497,4 +497,202 @@ describe('FP (Q16.16 Fixed-Point Math)', () => {
       expect(FP.toInt(product)).toBe(30);
     });
   });
+
+  describe('Overflow Protection (64-bit intermediate)', () => {
+    // Note: Q16.16 format can only represent values from -32768 to ~32767
+    // Tests use values within this range to avoid overflow
+    describe('mul overflow cases', () => {
+      it('handles multiplications that fit within Q16.16 range', () => {
+        // 100 * 100 = 10000 (within Q16.16 range)
+        const a = FP.fromInt(100);
+        const b = FP.fromInt(100);
+        const result = FP.mul(a, b);
+        expect(FP.toInt(result)).toBe(10000);
+      });
+
+      it('handles large fixed-point values in mul', () => {
+        // Test near maximum range values
+        const a = FP.fromInt(30000); // Large value
+        const b = FP.fromFloat(0.5); // 0.5
+        const result = FP.mul(a, b);
+        expect(FP.toInt(result)).toBe(15000);
+      });
+
+      it('handles negative values in mul', () => {
+        // -100 * 150 = -15000 (within Q16.16 range)
+        const a = FP.fromInt(-100);
+        const b = FP.fromInt(150);
+        const result = FP.mul(a, b);
+        expect(FP.toInt(result)).toBe(-15000);
+      });
+    });
+
+    describe('div overflow cases', () => {
+      it('handles large values in division without overflow', () => {
+        // Large value that would overflow when shifted: a * 65536
+        const largeA = FP.fromInt(30000);
+        const b = FP.fromInt(2);
+        const result = FP.div(largeA, b);
+        // Should be 30000 / 2 = 15000
+        expect(FP.toInt(result)).toBe(15000);
+      });
+
+      it('handles division with result within Q16.16 range', () => {
+        const a = FP.fromInt(10000);
+        const b = FP.fromFloat(0.5); // 0.5 in fixed-point
+        const result = FP.div(a, b);
+        // 10000 / 0.5 = 20000 (within Q16.16 range)
+        expect(FP.toInt(result)).toBe(20000);
+      });
+
+      it('handles small divisors correctly within range', () => {
+        const a = FP.fromInt(10);
+        const b = FP.fromFloat(0.01); // Small divisor with better precision
+        const result = FP.div(a, b);
+        // 10 / 0.01 = 1000 (within Q16.16 range)
+        expect(FP.toInt(result)).toBe(1000);
+      });
+    });
+
+    describe('sqrt edge cases', () => {
+      it('handles large fixed-point values in sqrt', () => {
+        const large = FP.fromInt(10000); // 10000 in fixed-point
+        const result = FP.sqrt(large);
+        // sqrt(10000) = 100, but in Q16.16 format
+        expect(FP.toInt(result)).toBe(100);
+      });
+
+      it('handles very small fixed-point values in sqrt', () => {
+        const small = FP.fromFloat(0.0001);
+        const result = FP.sqrt(small);
+        // Should be very small but non-zero
+        expect(result).toBeGreaterThanOrEqual(0);
+      });
+
+      it('handles perfect squares in sqrt', () => {
+        const perfectSquare = FP.fromInt(144); // 12^2
+        const result = FP.sqrt(perfectSquare);
+        expect(FP.toInt(result)).toBe(12);
+      });
+
+      it('handles zero and negative in sqrt', () => {
+        expect(FP.sqrt(0)).toBe(0);
+        expect(FP.sqrt(-100)).toBe(0);
+        expect(FP.sqrt(FP.fromInt(-50))).toBe(0);
+      });
+    });
+  });
+
+  describe('Determinism', () => {
+    it('produces identical results for same inputs (mul)', () => {
+      const a = FP.fromFloat(123.456);
+      const b = FP.fromFloat(789.012);
+      
+      const result1 = FP.mul(a, b);
+      const result2 = FP.mul(a, b);
+      const result3 = FP.mul(a, b);
+      
+      // All results must be identical
+      expect(result1).toBe(result2);
+      expect(result2).toBe(result3);
+    });
+
+    it('produces identical results for same inputs (div)', () => {
+      const a = FP.fromFloat(123.456);
+      const b = FP.fromFloat(789.012);
+      
+      const result1 = FP.div(a, b);
+      const result2 = FP.div(a, b);
+      const result3 = FP.div(a, b);
+      
+      // All results must be identical
+      expect(result1).toBe(result2);
+      expect(result2).toBe(result3);
+    });
+
+    it('produces identical results for same inputs (sqrt)', () => {
+      const a = FP.fromFloat(123.456);
+      
+      const result1 = FP.sqrt(a);
+      const result2 = FP.sqrt(a);
+      const result3 = FP.sqrt(a);
+      
+      // All results must be identical
+      expect(result1).toBe(result2);
+      expect(result2).toBe(result3);
+    });
+
+    it('maintains determinism through complex operations', () => {
+      const x1 = FP.fromFloat(10.5);
+      const y1 = FP.fromFloat(20.3);
+      const x2 = FP.fromFloat(15.7);
+      const y2 = FP.fromFloat(25.9);
+      
+      // Complex calculation: normalize vector, then scale
+      const dx = FP.sub(x2, x1);
+      const dy = FP.sub(y2, y1);
+      const dist = FP.sqrt(FP.add(FP.mul(dx, dx), FP.mul(dy, dy)));
+      const normalized = { x: FP.div(dx, dist), y: FP.div(dy, dist) };
+      const scaled = { x: FP.mul(normalized.x, FP.fromInt(100)), y: FP.mul(normalized.y, FP.fromInt(100)) };
+      
+      // Run same calculation again
+      const dx2 = FP.sub(x2, x1);
+      const dy2 = FP.sub(y2, y1);
+      const dist2 = FP.sqrt(FP.add(FP.mul(dx2, dx2), FP.mul(dy2, dy2)));
+      const normalized2 = { x: FP.div(dx2, dist2), y: FP.div(dy2, dist2) };
+      const scaled2 = { x: FP.mul(normalized2.x, FP.fromInt(100)), y: FP.mul(normalized2.y, FP.fromInt(100)) };
+      
+      // Results must be identical
+      expect(scaled.x).toBe(scaled2.x);
+      expect(scaled.y).toBe(scaled2.y);
+    });
+  });
+
+  describe('Standardized Truncation', () => {
+    it('always truncates mul result to 32-bit integer', () => {
+      const a = FP.fromFloat(123.456);
+      const b = FP.fromFloat(789.012);
+      const result = FP.mul(a, b);
+      
+      // Result must be a 32-bit integer (truncated)
+      expect(result).toBe(result | 0);
+      expect(Number.isInteger(result)).toBe(true);
+    });
+
+    it('always truncates div result to 32-bit integer', () => {
+      const a = FP.fromFloat(123.456);
+      const b = FP.fromFloat(789.012);
+      const result = FP.div(a, b);
+      
+      // Result must be a 32-bit integer (truncated)
+      expect(result).toBe(result | 0);
+      expect(Number.isInteger(result)).toBe(true);
+    });
+
+    it('always truncates sqrt result to 32-bit integer', () => {
+      const a = FP.fromFloat(123.456);
+      const result = FP.sqrt(a);
+      
+      // Result must be a 32-bit integer (truncated)
+      expect(result).toBe(result | 0);
+      expect(Number.isInteger(result)).toBe(true);
+    });
+
+    it('ensures no float64 intermediate values leak through', () => {
+      // Chain multiple operations to ensure truncation happens at each step
+      const a = FP.fromFloat(10.5);
+      const b = FP.fromFloat(2.3);
+      const c = FP.fromFloat(1.7);
+      
+      // Each operation should truncate immediately
+      const step1 = FP.mul(a, b);
+      expect(step1).toBe(step1 | 0);
+      
+      const step2 = FP.mul(step1, c);
+      expect(step2).toBe(step2 | 0);
+      
+      const step3 = FP.div(step2, FP.fromInt(2));
+      expect(step3).toBe(step3 | 0);
+    });
+  });
 });

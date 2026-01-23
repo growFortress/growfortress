@@ -20,6 +20,10 @@ import { ALL_EXCLUSIVE_ITEMS } from '@arcade/sim-core';
 import { isUserConnected } from '../services/websocket.js';
 
 const leaderboardRoutes: FastifyPluginAsync = async (fastify) => {
+  // NOTE: Leaderboards are intentionally public (including for guests) as they contain
+  // public ranking data. This allows scraping but is acceptable for leaderboard data.
+  // If rate limiting is needed, consider adding it via withRateLimit middleware.
+
   // Get weekly leaderboard (public endpoint)
   fastify.get('/v1/leaderboards/weekly', { config: { public: true } }, async (request, reply) => {
     const query = LeaderboardQuerySchema.parse(request.query);

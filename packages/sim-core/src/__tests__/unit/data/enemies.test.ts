@@ -143,7 +143,8 @@ describe('getEnemyStats', () => {
 describe('getEnemyRewards', () => {
   // Note: Economy balance multiplier is 1.0 (no penalty)
   // Elite multiplier is 2.5x (reduced from 3.5x for balance)
-  // Wave scaling: +3% per 10 waves (reduced from 5% for balance)
+  // Wave scaling: +5% per wave (effective wave within cycle)
+  // Cycle scaling: exponential 1.4^cycle
   describe('base rewards (no economy penalty)', () => {
     it('returns correct base rewards for runner', () => {
       const rewards = getEnemyRewards('runner', false, 1.0, 1.0, 1);
@@ -217,6 +218,98 @@ describe('getEnemyRewards', () => {
       const rewards = getEnemyRewards('runner', false, 1.0, 1.3, 1);
       // Dust is always 0 regardless of multiplier
       expect(rewards.dust).toBe(0);
+    });
+  });
+
+  describe('wave scaling (5% per wave)', () => {
+    it('wave 2 has 5% increase (1.05x)', () => {
+      const wave1 = getEnemyRewards('runner', false, 1.0, 1.0, 1);
+      const wave2 = getEnemyRewards('runner', false, 1.0, 1.0, 2);
+      // Wave 2: 1 + (2-1) * 0.05 = 1.05
+      // Base: 1 * 1.05 = 1.05, floored to 1
+      expect(wave2.gold).toBeGreaterThanOrEqual(wave1.gold);
+    });
+
+    it('wave 11 has 50% increase (1.50x)', () => {
+      // Wave 11: 1 + (11-1) * 0.05 = 1.50
+      // Base: 1 * 1.50 = 1.50, floored to 1
+      // Use bruiser for better precision: 5 * 1.50 = 7.5, floored to 7
+      const wave11Bruiser = getEnemyRewards('bruiser', false, 1.0, 1.0, 11);
+      expect(wave11Bruiser.gold).toBe(7); // 5 * 1.50 = 7.5 → 7
+    });
+
+    it('wave 100 has 495% increase (5.95x)', () => {
+      const wave1 = getEnemyRewards('bruiser', false, 1.0, 1.0, 1);
+      const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100);
+      // Wave 100: 1 + (100-1) * 0.05 = 1 + 4.95 = 5.95
+      // Base: 5 * 5.95 = 29.75, floored to 29
+      expect(wave100.gold).toBe(29);
+      expect(wave100.gold).toBeGreaterThan(wave1.gold * 5);
+    });
+  });
+
+  describe('cycle scaling (exponential 1.4^cycle)', () => {
+    it('cycle 0 (wave 1-100) has no cycle multiplier', () => {
+      const wave1 = getEnemyRewards('bruiser', false, 1.0, 1.0, 1);
+      const wave50 = getEnemyRewards('bruiser', false, 1.0, 1.0, 50);
+      const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100);
+      
+      // All in cycle 0, so cycle multiplier = 1.4^0 = 1
+      // Only wave scaling applies
+      expect(wave50.gold).toBeGreaterThan(wave1.gold);
+      expect(wave100.gold).toBeGreaterThan(wave50.gold);
+    });
+
+    it('cycle 1 (wave 101-200) applies 1.4x multiplier', () => {
+      const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100);
+      const wave200 = getEnemyRewards('bruiser', false, 1.0, 1.0, 200);
+
+      // Wave 100: effectiveWave=100, cycle=0 → 5 * 5.95 * 1.0 = 29
+      // Wave 200: effectiveWave=100, cycle=1 → 5 * 5.95 * 1.4 = 41.65 → 41
+      expect(wave200.gold).toBe(41); // 5 * 5.95 * 1.4 = 41.65 → 41
+      expect(wave200.gold).toBeGreaterThan(wave100.gold);
+    });
+
+    it('cycle 2 (wave 201-300) applies 1.96x multiplier', () => {
+      const wave200 = getEnemyRewards('bruiser', false, 1.0, 1.0, 200);
+      const wave300 = getEnemyRewards('bruiser', false, 1.0, 1.0, 300);
+
+      // Wave 200: effectiveWave=100, cycle=1 → 5 * 5.95 * 1.4 = 41
+      // Wave 300: effectiveWave=100, cycle=2 → 5 * 5.95 * 1.96 = 58.31 → 58
+      expect(wave300.gold).toBe(58); // 5 * 5.95 * 1.96 = 58.31 → 58
+      expect(wave300.gold).toBeGreaterThan(wave200.gold);
+    });
+
+    it('cycle scaling is exponential', () => {
+      const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100); // cycle 0
+      const wave200 = getEnemyRewards('bruiser', false, 1.0, 1.0, 200); // cycle 1
+      const wave300 = getEnemyRewards('bruiser', false, 1.0, 1.0, 300); // cycle 2
+      
+      // All have same effectiveWave=100, so ratio should match cycle multipliers
+      const ratio1to0 = wave200.gold / wave100.gold;
+      const ratio2to1 = wave300.gold / wave200.gold;
+      
+      // Cycle 1/0: 1.4/1.0 = 1.4
+      // Cycle 2/1: 1.96/1.4 = 1.4
+      expect(ratio1to0).toBeCloseTo(1.4, 0.1);
+      expect(ratio2to1).toBeCloseTo(1.4, 0.1);
+    });
+  });
+
+  describe('combined wave and cycle scaling', () => {
+    it('combines wave and cycle multipliers correctly', () => {
+      const wave50 = getEnemyRewards('bruiser', false, 1.0, 1.0, 50);
+      const wave101 = getEnemyRewards('bruiser', false, 1.0, 1.0, 101);
+      const wave150 = getEnemyRewards('bruiser', false, 1.0, 1.0, 150);
+      
+      // Wave 1: effectiveWave=1, cycle=0 → 5 * 1.0 * 1.0 = 5
+      // Wave 50: effectiveWave=50, cycle=0 → 5 * 3.45 * 1.0 = 17.25 → 17
+      // Wave 101: effectiveWave=1, cycle=1 → 5 * 1.0 * 1.4 = 7
+      // Wave 150: effectiveWave=50, cycle=1 → 5 * 3.45 * 1.4 = 24.15 → 24
+      
+      expect(wave50.gold).toBe(17); // 5 * 3.45 = 17.25 → 17
+      expect(wave101.gold).toBe(7); // 5 * 1.0 * 1.4 = 7
+      expect(wave150.gold).toBe(24); // 5 * 3.45 * 1.4 = 24.15 → 24
     });
   });
 });

@@ -63,6 +63,8 @@ const ENEMY_COLORS: Record<EnemyType, number> = {
   healer: 0x00ff7f,      // Spring green - healing
   shielder: 0x4169e1,    // Royal blue - protective
   teleporter: 0x9400d3,  // Dark violet - magical
+  scatterer: 0xff69b4,   // Hot pink - scatter pattern
+  lone_wolf: 0x808080,   // Gray - solo fighter
 };
 
 // Pre-computed color lookup using Map for O(1) access (faster than object property access)
@@ -122,6 +124,8 @@ const ENEMY_SIZES: Record<EnemyType, number> = {
   healer: 18,      // Small support
   shielder: 28,    // Bulky defender
   teleporter: 16,  // Small nimble
+  scatterer: 22,   // Medium scatter unit
+  lone_wolf: 24,   // Solo fighter
 };
 
 const SIZES = {

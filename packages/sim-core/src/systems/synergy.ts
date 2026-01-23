@@ -80,8 +80,10 @@ export function calculateSynergyBonuses(
     addBonus('damageBonus', 0.15 * turretMatches * turretAmp);
   }
 
-  // Full synergy bonus (minimum set size) - amplified by mastery
-  const hasFullSynergy = heroMatches >= 2 && turretMatches >= 3;
+  // Full synergy bonus (tighter requirements to prevent meta dominance)
+  // Requires 3+ heroes AND 4+ turrets matching fortress class
+  // This makes full synergy harder to achieve, increasing build diversity
+  const hasFullSynergy = heroMatches >= 3 && turretMatches >= 4;
   if (hasFullSynergy) {
     // +50% DMG, +15% crit, +20% CDR (all amplified)
     addBonus('damageBonus', 0.50 * fullAmp);
@@ -133,24 +135,21 @@ export function calculateSynergyBonuses(
 
   const hasUnityCrystal = !!getSynergyRelic('unity-crystal');
   if (hasUnityCrystal) {
-    // Unity crystal amplifies all synergy bonuses by 50%
-    const effectiveness = 1.5;
+    // Unity crystal adds +50% to synergy bonuses (additive, not multiplicative)
+    // This prevents multiplicative power creep while still being powerful
+    // Calculate base synergy bonuses before Unity Crystal
+    const baseSynergyDamage = bonuses.damageBonus ?? 0;
+    const baseSynergyAttackSpeed = bonuses.attackSpeedBonus ?? 0;
+    const baseSynergyCDR = bonuses.cooldownReduction ?? 0;
+    const baseSynergyMaxHp = bonuses.maxHpBonus ?? 0;
+    const baseSynergyCrit = bonuses.critChance ?? 0;
 
-    if (bonuses.damageBonus !== undefined) {
-      bonuses.damageBonus *= effectiveness;
-    }
-    if (bonuses.attackSpeedBonus !== undefined) {
-      bonuses.attackSpeedBonus *= effectiveness;
-    }
-    if (bonuses.cooldownReduction !== undefined) {
-      bonuses.cooldownReduction *= effectiveness;
-    }
-    if (bonuses.maxHpBonus !== undefined) {
-      bonuses.maxHpBonus *= effectiveness;
-    }
-    if (bonuses.critChance !== undefined) {
-      bonuses.critChance *= effectiveness;
-    }
+    // Add +50% of base synergy bonuses (additive)
+    addBonus('damageBonus', baseSynergyDamage * 0.5);
+    addBonus('attackSpeedBonus', baseSynergyAttackSpeed * 0.5);
+    addBonus('cooldownReduction', baseSynergyCDR * 0.5);
+    addBonus('maxHpBonus', baseSynergyMaxHp * 0.5);
+    addBonus('critChance', baseSynergyCrit * 0.5);
   }
 
   return bonuses;

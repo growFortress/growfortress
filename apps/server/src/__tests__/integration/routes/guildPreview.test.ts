@@ -26,7 +26,7 @@ describe('Guild Preview Routes', () => {
     it('should not require auth token (public endpoint)', async () => {
       // This is a public endpoint, so it should work without auth
       // It returns 404 because we haven't mocked the guild
-      mockPrisma.guild.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findFirst.mockResolvedValue(null);
 
       const response = await app.inject({
         method: 'GET',
@@ -38,7 +38,7 @@ describe('Guild Preview Routes', () => {
     });
 
     it('should return 404 for non-existent guild', async () => {
-      mockPrisma.guild.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findFirst.mockResolvedValue(null);
 
       const response = await app.inject({
         method: 'GET',
@@ -54,7 +54,7 @@ describe('Guild Preview Routes', () => {
 
     it('should return 404 for disbanded guild', async () => {
       // The query has disbanded: false filter, so disbanded guilds return null
-      mockPrisma.guild.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findFirst.mockResolvedValue(null);
 
       const response = await app.inject({
         method: 'GET',
@@ -113,7 +113,7 @@ describe('Guild Preview Routes', () => {
         _count: { members: 3 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const response = await app.inject({
         method: 'GET',
@@ -179,7 +179,7 @@ describe('Guild Preview Routes', () => {
         _count: { members: 15 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const response = await app.inject({
         method: 'GET',
@@ -214,7 +214,7 @@ describe('Guild Preview Routes', () => {
         _count: { members: 0 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const response = await app.inject({
         method: 'GET',
@@ -283,7 +283,7 @@ describe('Guild Preview Routes', () => {
         _count: { members: 1 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const response = await app.inject({
         method: 'GET',

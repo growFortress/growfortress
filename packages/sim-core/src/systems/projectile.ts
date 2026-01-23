@@ -50,7 +50,62 @@ export function popComboTriggers(): ComboTrigger[] {
 }
 
 /**
+ * Deterministic ray-circle intersection test
+ * Checks if a ray from p0 to p1 intersects a circle at center c with radius r
+ * Returns true if the ray intersects the circle
+ * 
+ * Algorithm: Find closest point on ray to circle center, check if within radius
+ */
+function rayIntersectsCircle(
+  p0x: number, p0y: number,  // Ray start (fixed-point)
+  p1x: number, p1y: number,  // Ray end (fixed-point)
+  cx: number, cy: number,    // Circle center (fixed-point)
+  r: number                   // Circle radius (fixed-point)
+): boolean {
+  // Ray direction vector
+  const rayDx = FP.sub(p1x, p0x);
+  const rayDy = FP.sub(p1y, p0y);
+  const rayLenSq = FP.lengthSq2D(rayDx, rayDy);
+  
+  // If ray has zero length, check if start point is in circle
+  if (rayLenSq === 0) {
+    const distSq = FP.lengthSq2D(FP.sub(cx, p0x), FP.sub(cy, p0y));
+    const rSq = FP.mul(r, r);
+    return distSq <= rSq;
+  }
+  
+  // Vector from ray start to circle center
+  const toCenterDx = FP.sub(cx, p0x);
+  const toCenterDy = FP.sub(cy, p0y);
+  
+  // Project toCenter onto ray direction to find closest point
+  // t = dot(toCenter, rayDir) / length(rayDir)^2
+  const dot = FP.dot2D(toCenterDx, toCenterDy, rayDx, rayDy);
+  const t = FP.div(dot, rayLenSq);
+  
+  // Clamp t to [0, 1] to stay on ray segment
+  const tClamped = FP.clamp(t, 0, FP.ONE);
+  
+  // Closest point on ray to circle center
+  const closestX = FP.add(p0x, FP.mul(rayDx, tClamped));
+  const closestY = FP.add(p0y, FP.mul(rayDy, tClamped));
+  
+  // Distance from closest point to circle center
+  const distToCenterDx = FP.sub(cx, closestX);
+  const distToCenterDy = FP.sub(cy, closestY);
+  const distSq = FP.lengthSq2D(distToCenterDx, distToCenterDy);
+  const rSq = FP.mul(r, r);
+  
+  return distSq <= rSq;
+}
+
+/**
  * Update all projectiles - movement and collision
+ * 
+ * Uses deterministic ray marching instead of distance checks:
+ * - Moves projectile by speed units along direction vector
+ * - Checks if ray from old position to new position intersects target's hit circle
+ * - This avoids non-deterministic behavior from float rounding in distance calculations
  */
 export function updateProjectiles(
   state: GameState,
@@ -60,6 +115,8 @@ export function updateProjectiles(
 
   for (const projectile of state.projectiles) {
     // Find target enemy and update tracking position
+    // IMPORTANT: This reads target position AFTER enemies have moved (in updateEnemies)
+    //            This ensures deterministic behavior - target position is from current tick
     const targetEnemy = state.enemies.find(e => e.id === projectile.targetEnemyId);
 
     if (targetEnemy && targetEnemy.hp > 0) {
@@ -68,6 +125,10 @@ export function updateProjectiles(
       projectile.targetY = targetEnemy.y;
     }
     // If target is dead, projectile continues to last known position (targetX/targetY already set)
+
+    // Store previous position for ray marching
+    const prevX = projectile.x;
+    const prevY = projectile.y;
 
     const dx = FP.sub(projectile.targetX, projectile.x);
     const dy = FP.sub(projectile.targetY, projectile.y);
@@ -81,16 +142,34 @@ export function updateProjectiles(
       continue;
     }
 
-    const dist = FP.sqrt(distSq);
-    if (dist <= projectile.speed) {
-      // Reached target - apply damage
+    // Normalize direction vector
+    const direction = FP.normalize2D(dx, dy);
+    
+    // Move projectile by speed units along direction (deterministic ray march)
+    const newX = FP.add(projectile.x, FP.mul(direction.x, projectile.speed));
+    const newY = FP.add(projectile.y, FP.mul(direction.y, projectile.speed));
+    
+    // Check if ray from previous position to new position intersects target
+    // Use enemy radius + small hit tolerance for hit detection
+    const hitRadius = targetEnemy && targetEnemy.hp > 0
+      ? FP.add(targetEnemy.radius, FP.fromFloat(0.1))  // Small tolerance for hit detection
+      : FP.fromFloat(0.1);  // Fallback if target is dead
+    
+    const hitTarget = rayIntersectsCircle(
+      prevX, prevY,  // Ray start (previous position)
+      newX, newY,    // Ray end (new position)
+      projectile.targetX, projectile.targetY,  // Circle center (target position)
+      hitRadius      // Circle radius
+    );
+    
+    if (hitTarget) {
+      // Ray intersected target - apply damage
       applyProjectileDamage(projectile, state);
       toRemove.push(projectile.id);
     } else {
-      // Move towards target
-      const direction = FP.normalize2D(dx, dy);
-      projectile.x = FP.add(projectile.x, FP.mul(direction.x, projectile.speed));
-      projectile.y = FP.add(projectile.y, FP.mul(direction.y, projectile.speed));
+      // Update position
+      projectile.x = newX;
+      projectile.y = newY;
 
       // Pierce mechanic: check collision with other enemies along the path
       if (projectile.pierceCount !== undefined && projectile.pierceCount > 0) {

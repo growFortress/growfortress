@@ -23,6 +23,7 @@ import guildRoutes from "../../routes/guilds.js";
 import pvpRoutes from "../../routes/pvp.js";
 import hubPreviewRoutes from "../../routes/hubPreview.js";
 import guildPreviewRoutes from "../../routes/guildPreview.js";
+import shopRoutes from "../../routes/shop.js";
 
 /**
  * Build a test app with mocked dependencies
@@ -59,6 +60,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await fastify.register(pvpRoutes);
   await fastify.register(hubPreviewRoutes);
   await fastify.register(guildPreviewRoutes);
+  await fastify.register(shopRoutes);
 
   return fastify;
 }

@@ -4,6 +4,11 @@ import { config } from "../config.js";
 
 // JWT for access/refresh tokens - lazy initialized for test mocking compatibility
 let _jwtSecret: Uint8Array | null = null;
+let _jwtSecretPrevious: Uint8Array | null = null;
+
+/**
+ * Get current JWT secret (for signing new tokens)
+ */
 function getJwtSecret(): Uint8Array {
   if (!_jwtSecret) {
     _jwtSecret = new TextEncoder().encode(config.JWT_SECRET);
@@ -12,10 +17,29 @@ function getJwtSecret(): Uint8Array {
 }
 
 /**
+ * Get all JWT secrets (current + previous) for verification
+ * This enables secret rotation: new tokens are signed with current secret,
+ * but old tokens signed with previous secret can still be verified.
+ */
+function getJwtSecrets(): Uint8Array[] {
+  const secrets: Uint8Array[] = [getJwtSecret()];
+  
+  if (config.JWT_SECRET_PREVIOUS) {
+    if (!_jwtSecretPrevious) {
+      _jwtSecretPrevious = new TextEncoder().encode(config.JWT_SECRET_PREVIOUS);
+    }
+    secrets.push(_jwtSecretPrevious);
+  }
+  
+  return secrets;
+}
+
+/**
  * Reset cached secrets - used for testing to ensure mocks are picked up
  */
 export function resetTokenSecrets(): void {
   _jwtSecret = null;
+  _jwtSecretPrevious = null;
   _runTokenSecret = null;
 }
 
@@ -123,77 +147,109 @@ export async function createAdminRefreshToken(
 
 /**
  * Verify access token
+ * Supports secret rotation by trying both current and previous secrets
  */
 export async function verifyAccessToken(
   token: string,
 ): Promise<AccessTokenPayload | null> {
-  try {
-    const { payload } = await jose.jwtVerify(token, getJwtSecret());
-    if (payload.type !== "access") return null;
-    return {
-      sub: payload.sub as string,
-      type: "access",
-      isGuest: payload.isGuest === true ? true : undefined,
-    };
-  } catch {
-    return null;
+  const secrets = getJwtSecrets();
+  
+  for (const secret of secrets) {
+    try {
+      const { payload } = await jose.jwtVerify(token, secret);
+      if (payload.type !== "access") continue;
+      return {
+        sub: payload.sub as string,
+        type: "access",
+        isGuest: payload.isGuest === true ? true : undefined,
+      };
+    } catch {
+      // Try next secret
+      continue;
+    }
   }
+  
+  return null;
 }
 
 /**
  * Verify refresh token
+ * Supports secret rotation by trying both current and previous secrets
  */
 export async function verifyRefreshToken(
   token: string,
 ): Promise<RefreshTokenPayload | null> {
-  try {
-    const { payload } = await jose.jwtVerify(token, getJwtSecret());
-    if (payload.type !== "refresh") return null;
-    return {
-      sub: payload.sub as string,
-      sessionId: payload.sessionId as string,
-      type: "refresh",
-    };
-  } catch {
-    return null;
+  const secrets = getJwtSecrets();
+  
+  for (const secret of secrets) {
+    try {
+      const { payload } = await jose.jwtVerify(token, secret);
+      if (payload.type !== "refresh") continue;
+      return {
+        sub: payload.sub as string,
+        sessionId: payload.sessionId as string,
+        type: "refresh",
+      };
+    } catch {
+      // Try next secret
+      continue;
+    }
   }
+  
+  return null;
 }
 
 /**
  * Verify admin access token
+ * Supports secret rotation by trying both current and previous secrets
  */
 export async function verifyAdminAccessToken(
   token: string,
 ): Promise<AdminAccessTokenPayload | null> {
-  try {
-    const { payload } = await jose.jwtVerify(token, getJwtSecret());
-    if (payload.type !== "admin_access") return null;
-    return {
-      sub: payload.sub as string,
-      type: "admin_access",
-    };
-  } catch {
-    return null;
+  const secrets = getJwtSecrets();
+  
+  for (const secret of secrets) {
+    try {
+      const { payload } = await jose.jwtVerify(token, secret);
+      if (payload.type !== "admin_access") continue;
+      return {
+        sub: payload.sub as string,
+        type: "admin_access",
+      };
+    } catch {
+      // Try next secret
+      continue;
+    }
   }
+  
+  return null;
 }
 
 /**
  * Verify admin refresh token
+ * Supports secret rotation by trying both current and previous secrets
  */
 export async function verifyAdminRefreshToken(
   token: string,
 ): Promise<AdminRefreshTokenPayload | null> {
-  try {
-    const { payload } = await jose.jwtVerify(token, getJwtSecret());
-    if (payload.type !== "admin_refresh") return null;
-    return {
-      sub: payload.sub as string,
-      sessionId: payload.sessionId as string,
-      type: "admin_refresh",
-    };
-  } catch {
-    return null;
+  const secrets = getJwtSecrets();
+  
+  for (const secret of secrets) {
+    try {
+      const { payload } = await jose.jwtVerify(token, secret);
+      if (payload.type !== "admin_refresh") continue;
+      return {
+        sub: payload.sub as string,
+        sessionId: payload.sessionId as string,
+        type: "admin_refresh",
+      };
+    } catch {
+      // Try next secret
+      continue;
+    }
   }
+  
+  return null;
 }
 
 // Run Token (HMAC for run verification) - lazy initialized for test mocking compatibility

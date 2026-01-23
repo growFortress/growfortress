@@ -160,10 +160,15 @@ export function getHeroMovementDirection(
     return { vx: 0, vy: 0 };
   }
 
-  const dist = FP.sqrt(distSq);
-  if (dist === 0) {
+  // Check if distance is very small (below epsilon threshold)
+  // Use squared comparison to avoid sqrt for the check
+  const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+  if (distSq <= epsilonSq) {
+    // Very small distance, return zero velocity to prevent desync
     return { vx: 0, vy: 0 };
   }
+
+  const dist = FP.sqrt(distSq);
 
   // If attacking a target (fortress or hero) and in range, maintain preferred distance
   let targetX = target.x;
@@ -179,7 +184,9 @@ export function getHeroMovementDirection(
       const awayFromEnemyDy = FP.sub(hero.y, target.y);
       const awayDistSq = FP.add(FP.mul(awayFromEnemyDx, awayFromEnemyDx), FP.mul(awayFromEnemyDy, awayFromEnemyDy));
       
-      if (awayDistSq > 0) {
+      // Check if away distance is very small (below epsilon threshold)
+      const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+      if (awayDistSq > epsilonSq) {
         const normalized = FP.normalize2D(awayFromEnemyDx, awayFromEnemyDy);
         const offsetX = FP.mul(normalized.x, preferredDistance);
         const offsetY = FP.mul(normalized.y, preferredDistance);
@@ -193,18 +200,16 @@ export function getHeroMovementDirection(
         const newDy = FP.sub(targetY, hero.y);
         const newDistSq = FP.add(FP.mul(newDx, newDx), FP.mul(newDy, newDy));
         
-        if (newDistSq > 0) {
+        if (newDistSq > epsilonSq) {
           const newDist = FP.sqrt(newDistSq);
-          if (newDist > 0) {
-            // Get hero speed from definition (moveSpeed is already in FP format!)
-            const def = getHeroById(hero.definitionId);
-            const baseSpeed = def ? def.baseStats.moveSpeed : FP.fromFloat(0.1);
+          // Get hero speed from definition (moveSpeed is already in FP format!)
+          const def = getHeroById(hero.definitionId);
+          const baseSpeed = def ? def.baseStats.moveSpeed : FP.fromFloat(0.1);
 
-            const vx = FP.div(FP.mul(newDx, baseSpeed), newDist);
-            const vy = FP.div(FP.mul(newDy, baseSpeed), newDist);
+          const vx = FP.div(FP.mul(newDx, baseSpeed), newDist);
+          const vy = FP.div(FP.mul(newDy, baseSpeed), newDist);
 
-            return { vx, vy };
-          }
+          return { vx, vy };
         }
       }
     }

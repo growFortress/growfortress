@@ -1,0 +1,1404 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       ARENA PVP TOURNAMENT REPORT                            ║
+║                         6 BOTS - 15 MATCHES                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ BOT CONFIGURATIONS                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+  Noob_Base_1:
+    Commander Lv1, Tier 1 heroes, zero upgrades, natural fortress
+    Heroes: vanguard, storm
+    Fortress: natural
+    Bonuses: +0% DMG, +0% HP
+
+  Noob_Base_2:
+    Commander Lv1, Tier 1 heroes, zero upgrades, fire fortress
+    Heroes: pyro, scout
+    Fortress: fire
+    Bonuses: +0% DMG, +0% HP
+
+  Mid_Level:
+    Commander Lv10, Tier 2 heroes, low upgrades (+10%), lightning fortress
+    Heroes: storm, frost, vanguard
+    Fortress: lightning
+    Bonuses: +10% DMG, +10% HP
+
+  Advanced:
+    Commander Lv20, Tier 2-3 heroes, medium upgrades (+20%), ice fortress
+    Heroes: glacier, frost, omega, medic
+    Fortress: ice
+    Bonuses: +20% DMG, +20% HP
+
+  Expert_Fire:
+    Commander Lv30, Tier 3 heroes, high upgrades (+35%), fire fortress
+    Heroes: inferno, pyro, rift, titan
+    Fortress: fire
+    Bonuses: +35% DMG, +35% HP
+
+  Expert_Tech:
+    Commander Lv30, Tier 3 heroes, max upgrades (+50%), tech fortress
+    Heroes: forge, spectre, storm, vanguard
+    Fortress: tech
+    Bonuses: +50% DMG, +50% HP
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FINAL STANDINGS                                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+  Rank  Bot                  W    L    D    Points
+  ────  ───────────────────  ──   ──   ──   ──────
+   1    Expert_Tech          5    0    0     15
+   2    Expert_Fire          4    1    0     12
+   3    Advanced             3    2    0      9
+   4    Mid_Level            2    3    0      6
+   5    Noob_Base_1          1    4    0      3
+   6    Noob_Base_2          0    5    0      0
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ MATCH RESULTS SUMMARY                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+  Noob_Base_1      vs Noob_Base_2      → Noob_Base_1      (17.6s, fortress_destroyed)
+    DMG: 1467 vs 1071, Heroes killed: 2 vs 2
+  Noob_Base_1      vs Mid_Level        → Mid_Level        (4.8s, fortress_destroyed)
+    DMG: 407 vs 1704, Heroes killed: 0 vs 0
+  Noob_Base_1      vs Advanced         → Advanced         (2.5s, fortress_destroyed)
+    DMG: 104 vs 1973, Heroes killed: 0 vs 2
+  Noob_Base_1      vs Expert_Fire      → Expert_Fire      (1.7s, fortress_destroyed)
+    DMG: 83 vs 2071, Heroes killed: 0 vs 2
+  Noob_Base_1      vs Expert_Tech      → Expert_Tech      (1.8s, fortress_destroyed)
+    DMG: 80 vs 2257, Heroes killed: 0 vs 2
+  Noob_Base_2      vs Mid_Level        → Mid_Level        (4.3s, fortress_destroyed)
+    DMG: 240 vs 1481, Heroes killed: 0 vs 2
+  Noob_Base_2      vs Advanced         → Advanced         (2.5s, fortress_destroyed)
+    DMG: 103 vs 1813, Heroes killed: 0 vs 2
+  Noob_Base_2      vs Expert_Fire      → Expert_Fire      (1.7s, fortress_destroyed)
+    DMG: 84 vs 1630, Heroes killed: 0 vs 2
+  Noob_Base_2      vs Expert_Tech      → Expert_Tech      (1.8s, fortress_destroyed)
+    DMG: 79 vs 1664, Heroes killed: 0 vs 2
+  Mid_Level        vs Advanced         → Advanced         (2.7s, fortress_destroyed)
+    DMG: 578 vs 2438, Heroes killed: 0 vs 1
+  Mid_Level        vs Expert_Fire      → Expert_Fire      (2.1s, fortress_destroyed)
+    DMG: 335 vs 2887, Heroes killed: 0 vs 2
+  Mid_Level        vs Expert_Tech      → Expert_Tech      (2.0s, fortress_destroyed)
+    DMG: 233 vs 3273, Heroes killed: 0 vs 3
+  Advanced         vs Expert_Fire      → Expert_Fire      (2.3s, fortress_destroyed)
+    DMG: 1286 vs 3009, Heroes killed: 0 vs 2
+  Advanced         vs Expert_Tech      → Expert_Tech      (2.0s, fortress_destroyed)
+    DMG: 781 vs 3511, Heroes killed: 0 vs 3
+  Expert_Fire      vs Expert_Tech      → Expert_Tech      (2.3s, fortress_destroyed)
+    DMG: 2025 vs 3855, Heroes killed: 0 vs 2
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ DETAILED BATTLE REPORTS                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_1 vs Noob_Base_2
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60725
+Duration: 528 ticks (17.6s)
+Winner: Noob_Base_1
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_1
+────────────────────────────────────────
+Fortress: NATURAL
+  HP: 1000 → 733 (took 267 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 35
+
+Heroes:
+  [vanguard] Tier 1, Armor: 10 (9% DR)
+    HP: 450 → 0 (DEAD at tick 285)
+    DMG received: 450
+  [storm] Tier 1, Armor: 10 (9% DR)
+    HP: 320 → 0 (DEAD at tick 480)
+    DMG received: 320
+
+Total DMG Dealt: 1467
+Total DMG Received: 1071
+Heroes Alive: 0
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Noob_Base_2
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 35
+  DESTROYED at tick 527
+
+Heroes:
+  [pyro] Tier 1, Armor: 10 (9% DR)
+    HP: 260 → 0 (DEAD at tick 255)
+    DMG received: 260
+  [scout] Tier 1, Armor: 10 (9% DR)
+    HP: 180 → 0 (DEAD at tick 90)
+    DMG received: 180
+
+Total DMG Dealt: 1071
+Total DMG Received: 1467
+Heroes Alive: 0
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 70
+  Fortress Damage Events: 57
+  Hero Deaths: 4
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [51] LEFT fortress took 23 DMG (977/1000 HP)
+  [53] RIGHT fortress took 20 DMG (980/1000 HP)
+  [58] RIGHT fortress took 26 DMG (954/1000 HP)
+  [61] LEFT fortress took 23 DMG (954/1000 HP)
+  [72] LEFT fortress took 23 DMG (931/1000 HP)
+  [81] RIGHT fortress took 26 DMG (928/1000 HP)
+  [83] RIGHT fortress took 20 DMG (908/1000 HP)
+  [90] RIGHT hero scout KILLED
+  [91] LEFT fortress took 23 DMG (908/1000 HP)
+  [104] RIGHT fortress took 26 DMG (882/1000 HP)
+  [113] RIGHT fortress took 20 DMG (862/1000 HP)
+  [121] LEFT fortress took 23 DMG (885/1000 HP)
+  [127] RIGHT fortress took 26 DMG (836/1000 HP)
+  [143] RIGHT fortress took 20 DMG (816/1000 HP)
+  [150] RIGHT fortress took 26 DMG (790/1000 HP)
+  [151] LEFT fortress took 23 DMG (862/1000 HP)
+  [173] RIGHT fortress took 46 DMG (744/1000 HP)
+  [181] LEFT fortress took 23 DMG (839/1000 HP)
+  [196] RIGHT fortress took 26 DMG (718/1000 HP)
+  [203] RIGHT fortress took 20 DMG (698/1000 HP)
+  [211] LEFT fortress took 23 DMG (816/1000 HP)
+  [219] RIGHT fortress took 26 DMG (672/1000 HP)
+  [233] RIGHT fortress took 20 DMG (652/1000 HP)
+  [241] LEFT fortress took 23 DMG (793/1000 HP)
+  [242] RIGHT fortress took 26 DMG (626/1000 HP)
+  [255] RIGHT hero pyro KILLED
+  [263] RIGHT fortress took 20 DMG (606/1000 HP)
+  [265] RIGHT fortress took 26 DMG (580/1000 HP)
+  [272] RIGHT fortress took 20 DMG (560/1000 HP)
+  [285] LEFT hero vanguard KILLED
+  ... and 31 more events
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_1 vs Mid_Level
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60726
+Duration: 144 ticks (4.8s)
+Winner: Mid_Level
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_1
+────────────────────────────────────────
+Fortress: NATURAL
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 9
+  DESTROYED at tick 143
+
+Heroes:
+  [vanguard] Tier 1, Armor: 10 (9% DR)
+    HP: 450 → 34 (ALIVE)
+    DMG received: 416
+  [storm] Tier 1, Armor: 10 (9% DR)
+    HP: 320 → 68 (ALIVE)
+    DMG received: 252
+
+Total DMG Dealt: 407
+Total DMG Received: 1704
+Heroes Alive: 2
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Mid_Level
+────────────────────────────────────────
+Fortress: LIGHTNING
+  HP: 1100 → 932 (took 168 DMG)
+  Armor: 33 (25% damage reduction)
+  Projectiles Fired: 9
+
+Heroes:
+  [storm] Tier 2, Armor: 27 (21% DR)
+    HP: 638 → 581 (ALIVE)
+    DMG received: 57
+  [frost] Tier 2, Armor: 27 (21% DR)
+    HP: 215 → 83 (ALIVE)
+    DMG received: 132
+  [vanguard] Tier 2, Armor: 27 (21% DR)
+    HP: 922 → 872 (ALIVE)
+    DMG received: 50
+
+Total DMG Dealt: 1704
+Total DMG Received: 407
+Heroes Alive: 3
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 18
+  Fortress Damage Events: 30
+  Hero Deaths: 0
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [32] LEFT fortress took 57 DMG (943/1000 HP)
+  [47] LEFT fortress took 57 DMG (886/1000 HP)
+  [53] RIGHT fortress took 18 DMG (1082/1100 HP)
+  [54] LEFT fortress took 35 DMG (851/1000 HP)
+  [55] LEFT fortress took 45 DMG (806/1000 HP)
+  [58] RIGHT fortress took 24 DMG (1058/1100 HP)
+  [62] LEFT fortress took 57 DMG (749/1000 HP)
+  [66] LEFT fortress took 45 DMG (704/1000 HP)
+  [75] LEFT fortress took 35 DMG (669/1000 HP)
+  [77] LEFT fortress took 102 DMG (567/1000 HP)
+  [81] RIGHT fortress took 24 DMG (1034/1100 HP)
+  [83] RIGHT fortress took 18 DMG (1016/1100 HP)
+  [88] LEFT fortress took 45 DMG (522/1000 HP)
+  [92] LEFT fortress took 57 DMG (465/1000 HP)
+  [96] LEFT fortress took 35 DMG (430/1000 HP)
+  [99] LEFT fortress took 45 DMG (385/1000 HP)
+  [104] RIGHT fortress took 24 DMG (992/1100 HP)
+  [107] LEFT fortress took 57 DMG (328/1000 HP)
+  [110] LEFT fortress took 45 DMG (283/1000 HP)
+  [113] RIGHT fortress took 18 DMG (974/1100 HP)
+  [117] LEFT fortress took 35 DMG (248/1000 HP)
+  [121] LEFT fortress took 45 DMG (203/1000 HP)
+  [122] LEFT fortress took 57 DMG (146/1000 HP)
+  [127] RIGHT fortress took 24 DMG (950/1100 HP)
+  [132] LEFT fortress took 45 DMG (101/1000 HP)
+  [137] LEFT fortress took 57 DMG (44/1000 HP)
+  [138] LEFT fortress took 35 DMG (9/1000 HP)
+  [143] LEFT fortress took 9 DMG (0/1000 HP)
+  [143] RIGHT fortress took 18 DMG (932/1100 HP)
+  [143] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_1 vs Advanced
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60727
+Duration: 74 ticks (2.5s)
+Winner: Advanced
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_1
+────────────────────────────────────────
+Fortress: NATURAL
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 4
+  DESTROYED at tick 73
+
+Heroes:
+  [vanguard] Tier 1, Armor: 10 (9% DR)
+    HP: 450 → 0 (DEAD at tick 16)
+    DMG received: 450
+  [storm] Tier 1, Armor: 10 (9% DR)
+    HP: 320 → 0 (DEAD at tick 0)
+    DMG received: 320
+
+Total DMG Dealt: 104
+Total DMG Received: 1973
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Advanced
+────────────────────────────────────────
+Fortress: ICE
+  HP: 1200 → 1200 (took 0 DMG)
+  Armor: 48 (32% damage reduction)
+  Projectiles Fired: 4
+
+Heroes:
+  [glacier] Tier 3, Armor: 48 (32% DR)
+    HP: 2120 → 2072 (ALIVE)
+    DMG received: 48
+  [frost] Tier 3, Armor: 48 (32% DR)
+    HP: 316 → 284 (ALIVE)
+    DMG received: 32
+  [omega] Tier 2, Armor: 30 (23% DR)
+    HP: 547 → 523 (ALIVE)
+    DMG received: 24
+  [medic] Tier 2, Armor: 30 (23% DR)
+    HP: 531 → 531 (ALIVE)
+    DMG received: 0
+
+Total DMG Dealt: 1973
+Total DMG Received: 104
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 8
+  Fortress Damage Events: 12
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [0] LEFT hero storm KILLED
+  [16] LEFT hero vanguard KILLED
+  [32] LEFT fortress took 26 DMG (974/1000 HP)
+  [39] LEFT fortress took 150 DMG (824/1000 HP)
+  [47] LEFT fortress took 26 DMG (798/1000 HP)
+  [48] LEFT fortress took 147 DMG (651/1000 HP)
+  [50] LEFT fortress took 98 DMG (553/1000 HP)
+  [56] LEFT fortress took 175 DMG (378/1000 HP)
+  [58] LEFT fortress took 98 DMG (280/1000 HP)
+  [62] LEFT fortress took 26 DMG (254/1000 HP)
+  [64] LEFT fortress took 147 DMG (107/1000 HP)
+  [66] LEFT fortress took 98 DMG (9/1000 HP)
+  [73] LEFT fortress took 9 DMG (0/1000 HP)
+  [73] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_1 vs Expert_Fire
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60728
+Duration: 51 ticks (1.7s)
+Winner: Expert_Fire
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_1
+────────────────────────────────────────
+Fortress: NATURAL
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 3
+  DESTROYED at tick 50
+
+Heroes:
+  [vanguard] Tier 1, Armor: 10 (9% DR)
+    HP: 450 → 0 (DEAD at tick 10)
+    DMG received: 450
+  [storm] Tier 1, Armor: 10 (9% DR)
+    HP: 320 → 0 (DEAD at tick 0)
+    DMG received: 320
+
+Total DMG Dealt: 83
+Total DMG Received: 2071
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Fire
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1416 → 1416 (took 0 DMG)
+  Armor: 67 (40% damage reduction)
+  Projectiles Fired: 3
+
+Heroes:
+  [inferno] Tier 3, Armor: 54 (35% DR)
+    HP: 935 → 887 (ALIVE)
+    DMG received: 48
+  [pyro] Tier 3, Armor: 54 (35% DR)
+    HP: 837 → 822 (ALIVE)
+    DMG received: 15
+  [rift] Tier 3, Armor: 54 (35% DR)
+    HP: 527 → 507 (ALIVE)
+    DMG received: 20
+  [titan] Tier 3, Armor: 54 (35% DR)
+    HP: 2853 → 2853 (ALIVE)
+    DMG received: 0
+
+Total DMG Dealt: 2071
+Total DMG Received: 83
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 6
+  Fortress Damage Events: 7
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [0] LEFT hero storm KILLED
+  [10] LEFT hero vanguard KILLED
+  [17] LEFT fortress took 30 DMG (970/1000 HP)
+  [30] LEFT fortress took 267 DMG (703/1000 HP)
+  [32] LEFT fortress took 30 DMG (673/1000 HP)
+  [40] LEFT fortress took 267 DMG (406/1000 HP)
+  [46] LEFT fortress took 137 DMG (269/1000 HP)
+  [47] LEFT fortress took 30 DMG (239/1000 HP)
+  [50] LEFT fortress took 239 DMG (0/1000 HP)
+  [50] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_1 vs Expert_Tech
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60729
+Duration: 54 ticks (1.8s)
+Winner: Expert_Tech
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_1
+────────────────────────────────────────
+Fortress: NATURAL
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 3
+  DESTROYED at tick 53
+
+Heroes:
+  [vanguard] Tier 1, Armor: 10 (9% DR)
+    HP: 450 → 0 (DEAD at tick 8)
+    DMG received: 450
+  [storm] Tier 1, Armor: 10 (9% DR)
+    HP: 320 → 0 (DEAD at tick 0)
+    DMG received: 320
+
+Total DMG Dealt: 80
+Total DMG Received: 2257
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Tech
+────────────────────────────────────────
+Fortress: TECH
+  HP: 1573 → 1573 (took 0 DMG)
+  Armor: 75 (43% damage reduction)
+  Projectiles Fired: 3
+
+Heroes:
+  [forge] Tier 3, Armor: 60 (38% DR)
+    HP: 943 → 898 (ALIVE)
+    DMG received: 45
+  [spectre] Tier 3, Armor: 60 (38% DR)
+    HP: 1063 → 1048 (ALIVE)
+    DMG received: 15
+  [storm] Tier 3, Armor: 60 (38% DR)
+    HP: 1133 → 1113 (ALIVE)
+    DMG received: 20
+  [vanguard] Tier 3, Armor: 60 (38% DR)
+    HP: 2542 → 2542 (ALIVE)
+    DMG received: 0
+
+Total DMG Dealt: 2257
+Total DMG Received: 80
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 6
+  Fortress Damage Events: 8
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [0] LEFT hero storm KILLED
+  [8] LEFT hero vanguard KILLED
+  [17] LEFT fortress took 33 DMG (967/1000 HP)
+  [28] LEFT fortress took 235 DMG (732/1000 HP)
+  [32] LEFT fortress took 33 DMG (699/1000 HP)
+  [38] LEFT fortress took 235 DMG (464/1000 HP)
+  [47] LEFT fortress took 33 DMG (431/1000 HP)
+  [48] LEFT fortress took 235 DMG (196/1000 HP)
+  [52] LEFT fortress took 94 DMG (102/1000 HP)
+  [53] LEFT fortress took 102 DMG (0/1000 HP)
+  [53] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_2 vs Mid_Level
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60730
+Duration: 128 ticks (4.3s)
+Winner: Mid_Level
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_2
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 8
+  DESTROYED at tick 127
+
+Heroes:
+  [pyro] Tier 1, Armor: 10 (9% DR)
+    HP: 260 → 0 (DEAD at tick 33)
+    DMG received: 260
+  [scout] Tier 1, Armor: 10 (9% DR)
+    HP: 180 → 0 (DEAD at tick 30)
+    DMG received: 180
+
+Total DMG Dealt: 240
+Total DMG Received: 1481
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Mid_Level
+────────────────────────────────────────
+Fortress: LIGHTNING
+  HP: 1100 → 1100 (took 0 DMG)
+  Armor: 33 (25% damage reduction)
+  Projectiles Fired: 8
+
+Heroes:
+  [storm] Tier 2, Armor: 27 (21% DR)
+    HP: 638 → 581 (ALIVE)
+    DMG received: 57
+  [frost] Tier 2, Armor: 27 (21% DR)
+    HP: 215 → 76 (ALIVE)
+    DMG received: 139
+  [vanguard] Tier 2, Armor: 27 (21% DR)
+    HP: 922 → 878 (ALIVE)
+    DMG received: 44
+
+Total DMG Dealt: 1481
+Total DMG Received: 240
+Heroes Alive: 3
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 16
+  Fortress Damage Events: 25
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [30] LEFT hero scout KILLED
+  [32] LEFT fortress took 57 DMG (943/1000 HP)
+  [33] LEFT hero pyro KILLED
+  [47] LEFT fortress took 79 DMG (864/1000 HP)
+  [50] LEFT fortress took 45 DMG (819/1000 HP)
+  [54] LEFT fortress took 35 DMG (784/1000 HP)
+  [61] LEFT fortress took 45 DMG (739/1000 HP)
+  [62] LEFT fortress took 79 DMG (660/1000 HP)
+  [72] LEFT fortress took 45 DMG (615/1000 HP)
+  [75] LEFT fortress took 35 DMG (580/1000 HP)
+  [77] LEFT fortress took 79 DMG (501/1000 HP)
+  [83] LEFT fortress took 45 DMG (456/1000 HP)
+  [92] LEFT fortress took 79 DMG (377/1000 HP)
+  [94] LEFT fortress took 45 DMG (332/1000 HP)
+  [96] LEFT fortress took 35 DMG (297/1000 HP)
+  [105] LEFT fortress took 45 DMG (252/1000 HP)
+  [107] LEFT fortress took 79 DMG (173/1000 HP)
+  [116] LEFT fortress took 45 DMG (128/1000 HP)
+  [117] LEFT fortress took 35 DMG (93/1000 HP)
+  [122] LEFT fortress took 79 DMG (14/1000 HP)
+  [127] LEFT fortress took 14 DMG (0/1000 HP)
+  [127] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_2 vs Advanced
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60731
+Duration: 74 ticks (2.5s)
+Winner: Advanced
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_2
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 4
+  DESTROYED at tick 73
+
+Heroes:
+  [pyro] Tier 1, Armor: 10 (9% DR)
+    HP: 260 → 0 (DEAD at tick 16)
+    DMG received: 260
+  [scout] Tier 1, Armor: 10 (9% DR)
+    HP: 180 → 0 (DEAD at tick 0)
+    DMG received: 180
+
+Total DMG Dealt: 103
+Total DMG Received: 1813
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Advanced
+────────────────────────────────────────
+Fortress: ICE
+  HP: 1200 → 1200 (took 0 DMG)
+  Armor: 48 (32% damage reduction)
+  Projectiles Fired: 4
+
+Heroes:
+  [glacier] Tier 3, Armor: 48 (32% DR)
+    HP: 2120 → 2072 (ALIVE)
+    DMG received: 48
+  [frost] Tier 3, Armor: 48 (32% DR)
+    HP: 316 → 282 (ALIVE)
+    DMG received: 34
+  [omega] Tier 2, Armor: 30 (23% DR)
+    HP: 547 → 526 (ALIVE)
+    DMG received: 21
+  [medic] Tier 2, Armor: 30 (23% DR)
+    HP: 531 → 531 (ALIVE)
+    DMG received: 0
+
+Total DMG Dealt: 1813
+Total DMG Received: 103
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 8
+  Fortress Damage Events: 12
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [0] LEFT hero scout KILLED
+  [16] LEFT hero pyro KILLED
+  [32] LEFT fortress took 26 DMG (974/1000 HP)
+  [39] LEFT fortress took 150 DMG (824/1000 HP)
+  [47] LEFT fortress took 26 DMG (798/1000 HP)
+  [48] LEFT fortress took 147 DMG (651/1000 HP)
+  [50] LEFT fortress took 98 DMG (553/1000 HP)
+  [56] LEFT fortress took 175 DMG (378/1000 HP)
+  [58] LEFT fortress took 98 DMG (280/1000 HP)
+  [62] LEFT fortress took 26 DMG (254/1000 HP)
+  [64] LEFT fortress took 147 DMG (107/1000 HP)
+  [66] LEFT fortress took 98 DMG (9/1000 HP)
+  [73] LEFT fortress took 9 DMG (0/1000 HP)
+  [73] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_2 vs Expert_Fire
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60732
+Duration: 51 ticks (1.7s)
+Winner: Expert_Fire
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_2
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 3
+  DESTROYED at tick 50
+
+Heroes:
+  [pyro] Tier 1, Armor: 10 (9% DR)
+    HP: 260 → 0 (DEAD at tick 0)
+    DMG received: 260
+  [scout] Tier 1, Armor: 10 (9% DR)
+    HP: 180 → 0 (DEAD at tick 0)
+    DMG received: 180
+
+Total DMG Dealt: 84
+Total DMG Received: 1630
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Fire
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1416 → 1416 (took 0 DMG)
+  Armor: 67 (40% damage reduction)
+  Projectiles Fired: 3
+
+Heroes:
+  [inferno] Tier 3, Armor: 54 (35% DR)
+    HP: 935 → 887 (ALIVE)
+    DMG received: 48
+  [pyro] Tier 3, Armor: 54 (35% DR)
+    HP: 837 → 819 (ALIVE)
+    DMG received: 18
+  [rift] Tier 3, Armor: 54 (35% DR)
+    HP: 527 → 509 (ALIVE)
+    DMG received: 18
+  [titan] Tier 3, Armor: 54 (35% DR)
+    HP: 2853 → 2853 (ALIVE)
+    DMG received: 0
+
+Total DMG Dealt: 1630
+Total DMG Received: 84
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 6
+  Fortress Damage Events: 7
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [0] LEFT hero pyro KILLED
+  [0] LEFT hero scout KILLED
+  [17] LEFT fortress took 30 DMG (970/1000 HP)
+  [30] LEFT fortress took 267 DMG (703/1000 HP)
+  [32] LEFT fortress took 30 DMG (673/1000 HP)
+  [40] LEFT fortress took 267 DMG (406/1000 HP)
+  [46] LEFT fortress took 137 DMG (269/1000 HP)
+  [47] LEFT fortress took 30 DMG (239/1000 HP)
+  [50] LEFT fortress took 239 DMG (0/1000 HP)
+  [50] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Noob_Base_2 vs Expert_Tech
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60733
+Duration: 54 ticks (1.8s)
+Winner: Expert_Tech
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Noob_Base_2
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1000 → 0 (took 1000 DMG)
+  Armor: 20 (17% damage reduction)
+  Projectiles Fired: 3
+  DESTROYED at tick 53
+
+Heroes:
+  [pyro] Tier 1, Armor: 10 (9% DR)
+    HP: 260 → 0 (DEAD at tick 0)
+    DMG received: 260
+  [scout] Tier 1, Armor: 10 (9% DR)
+    HP: 180 → 0 (DEAD at tick 0)
+    DMG received: 180
+
+Total DMG Dealt: 79
+Total DMG Received: 1664
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Tech
+────────────────────────────────────────
+Fortress: TECH
+  HP: 1573 → 1573 (took 0 DMG)
+  Armor: 75 (43% damage reduction)
+  Projectiles Fired: 3
+
+Heroes:
+  [forge] Tier 3, Armor: 60 (38% DR)
+    HP: 943 → 898 (ALIVE)
+    DMG received: 45
+  [spectre] Tier 3, Armor: 60 (38% DR)
+    HP: 1063 → 1046 (ALIVE)
+    DMG received: 17
+  [storm] Tier 3, Armor: 60 (38% DR)
+    HP: 1133 → 1116 (ALIVE)
+    DMG received: 17
+  [vanguard] Tier 3, Armor: 60 (38% DR)
+    HP: 2542 → 2542 (ALIVE)
+    DMG received: 0
+
+Total DMG Dealt: 1664
+Total DMG Received: 79
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 6
+  Fortress Damage Events: 8
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [0] LEFT hero pyro KILLED
+  [0] LEFT hero scout KILLED
+  [17] LEFT fortress took 33 DMG (967/1000 HP)
+  [28] LEFT fortress took 235 DMG (732/1000 HP)
+  [32] LEFT fortress took 33 DMG (699/1000 HP)
+  [38] LEFT fortress took 235 DMG (464/1000 HP)
+  [47] LEFT fortress took 33 DMG (431/1000 HP)
+  [48] LEFT fortress took 235 DMG (196/1000 HP)
+  [52] LEFT fortress took 94 DMG (102/1000 HP)
+  [53] LEFT fortress took 102 DMG (0/1000 HP)
+  [53] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Mid_Level vs Advanced
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60734
+Duration: 81 ticks (2.7s)
+Winner: Advanced
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Mid_Level
+────────────────────────────────────────
+Fortress: LIGHTNING
+  HP: 1100 → 0 (took 1100 DMG)
+  Armor: 33 (25% damage reduction)
+  Projectiles Fired: 5
+  DESTROYED at tick 80
+
+Heroes:
+  [storm] Tier 2, Armor: 27 (21% DR)
+    HP: 638 → 489 (ALIVE)
+    DMG received: 149
+  [frost] Tier 2, Armor: 27 (21% DR)
+    HP: 215 → 0 (DEAD at tick 16)
+    DMG received: 215
+  [vanguard] Tier 2, Armor: 27 (21% DR)
+    HP: 922 → 111 (ALIVE)
+    DMG received: 811
+
+Total DMG Dealt: 578
+Total DMG Received: 2438
+Heroes Alive: 2
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Advanced
+────────────────────────────────────────
+Fortress: ICE
+  HP: 1200 → 958 (took 242 DMG)
+  Armor: 48 (32% damage reduction)
+  Projectiles Fired: 5
+
+Heroes:
+  [glacier] Tier 3, Armor: 48 (32% DR)
+    HP: 2120 → 2066 (ALIVE)
+    DMG received: 54
+  [frost] Tier 3, Armor: 48 (32% DR)
+    HP: 316 → 206 (ALIVE)
+    DMG received: 110
+  [omega] Tier 2, Armor: 30 (23% DR)
+    HP: 547 → 514 (ALIVE)
+    DMG received: 33
+  [medic] Tier 2, Armor: 30 (23% DR)
+    HP: 531 → 392 (ALIVE)
+    DMG received: 139
+
+Total DMG Dealt: 2438
+Total DMG Received: 578
+Heroes Alive: 4
+Heroes Killed: 1 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 10
+  Fortress Damage Events: 18
+  Hero Deaths: 1
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [16] LEFT hero frost KILLED
+  [32] RIGHT fortress took 46 DMG (1154/1200 HP)
+  [39] LEFT fortress took 135 DMG (965/1100 HP)
+  [47] RIGHT fortress took 46 DMG (1108/1200 HP)
+  [48] LEFT fortress took 133 DMG (832/1100 HP)
+  [54] RIGHT fortress took 29 DMG (1079/1200 HP)
+  [56] LEFT fortress took 246 DMG (586/1100 HP)
+  [62] RIGHT fortress took 46 DMG (1033/1200 HP)
+  [64] LEFT fortress took 221 DMG (365/1100 HP)
+  [72] LEFT fortress took 88 DMG (277/1100 HP)
+  [73] LEFT fortress took 135 DMG (142/1100 HP)
+  [75] RIGHT fortress took 29 DMG (1004/1200 HP)
+  [77] RIGHT fortress took 46 DMG (958/1200 HP)
+  [80] LEFT fortress took 142 DMG (0/1100 HP)
+  [80] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Mid_Level vs Expert_Fire
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60735
+Duration: 62 ticks (2.1s)
+Winner: Expert_Fire
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Mid_Level
+────────────────────────────────────────
+Fortress: LIGHTNING
+  HP: 1100 → 0 (took 1100 DMG)
+  Armor: 33 (25% damage reduction)
+  Projectiles Fired: 4
+  DESTROYED at tick 61
+
+Heroes:
+  [storm] Tier 2, Armor: 27 (21% DR)
+    HP: 638 → 253 (ALIVE)
+    DMG received: 385
+  [frost] Tier 2, Armor: 27 (21% DR)
+    HP: 215 → 0 (DEAD at tick 15)
+    DMG received: 215
+  [vanguard] Tier 2, Armor: 27 (21% DR)
+    HP: 922 → 0 (DEAD at tick 20)
+    DMG received: 922
+
+Total DMG Dealt: 335
+Total DMG Received: 2887
+Heroes Alive: 1
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Fire
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1416 → 1334 (took 82 DMG)
+  Armor: 67 (40% damage reduction)
+  Projectiles Fired: 4
+
+Heroes:
+  [inferno] Tier 3, Armor: 54 (35% DR)
+    HP: 935 → 867 (ALIVE)
+    DMG received: 68
+  [pyro] Tier 3, Armor: 54 (35% DR)
+    HP: 837 → 767 (ALIVE)
+    DMG received: 70
+  [rift] Tier 3, Armor: 54 (35% DR)
+    HP: 527 → 456 (ALIVE)
+    DMG received: 71
+  [titan] Tier 3, Armor: 54 (35% DR)
+    HP: 2853 → 2809 (ALIVE)
+    DMG received: 44
+
+Total DMG Dealt: 2887
+Total DMG Received: 335
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 8
+  Fortress Damage Events: 8
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [15] LEFT hero frost KILLED
+  [20] LEFT hero vanguard KILLED
+  [30] LEFT fortress took 241 DMG (859/1100 HP)
+  [32] RIGHT fortress took 41 DMG (1375/1416 HP)
+  [40] LEFT fortress took 241 DMG (618/1100 HP)
+  [46] LEFT fortress took 124 DMG (494/1100 HP)
+  [47] RIGHT fortress took 41 DMG (1334/1416 HP)
+  [50] LEFT fortress took 241 DMG (253/1100 HP)
+  [60] LEFT fortress took 241 DMG (12/1100 HP)
+  [61] LEFT fortress took 12 DMG (0/1100 HP)
+  [61] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Mid_Level vs Expert_Tech
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60736
+Duration: 59 ticks (2.0s)
+Winner: Expert_Tech
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Mid_Level
+────────────────────────────────────────
+Fortress: LIGHTNING
+  HP: 1100 → 0 (took 1100 DMG)
+  Armor: 33 (25% damage reduction)
+  Projectiles Fired: 3
+  DESTROYED at tick 58
+
+Heroes:
+  [storm] Tier 2, Armor: 27 (21% DR)
+    HP: 638 → 0 (DEAD at tick 45)
+    DMG received: 638
+  [frost] Tier 2, Armor: 27 (21% DR)
+    HP: 215 → 0 (DEAD at tick 0)
+    DMG received: 215
+  [vanguard] Tier 2, Armor: 27 (21% DR)
+    HP: 922 → 0 (DEAD at tick 11)
+    DMG received: 922
+
+Total DMG Dealt: 233
+Total DMG Received: 3273
+Heroes Alive: 0
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Tech
+────────────────────────────────────────
+Fortress: TECH
+  HP: 1573 → 1534 (took 39 DMG)
+  Armor: 75 (43% damage reduction)
+  Projectiles Fired: 3
+
+Heroes:
+  [forge] Tier 3, Armor: 60 (38% DR)
+    HP: 943 → 895 (ALIVE)
+    DMG received: 48
+  [spectre] Tier 3, Armor: 60 (38% DR)
+    HP: 1063 → 1029 (ALIVE)
+    DMG received: 34
+  [storm] Tier 3, Armor: 60 (38% DR)
+    HP: 1133 → 1107 (ALIVE)
+    DMG received: 26
+  [vanguard] Tier 3, Armor: 60 (38% DR)
+    HP: 2542 → 2456 (ALIVE)
+    DMG received: 86
+
+Total DMG Dealt: 3273
+Total DMG Received: 233
+Heroes Alive: 4
+Heroes Killed: 3 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 6
+  Fortress Damage Events: 8
+  Hero Deaths: 3
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [0] LEFT hero frost KILLED
+  [11] LEFT hero vanguard KILLED
+  [28] LEFT fortress took 212 DMG (888/1100 HP)
+  [32] RIGHT fortress took 39 DMG (1534/1573 HP)
+  [38] LEFT fortress took 212 DMG (676/1100 HP)
+  [45] LEFT hero storm KILLED
+  [48] LEFT fortress took 212 DMG (464/1100 HP)
+  [52] LEFT fortress took 84 DMG (380/1100 HP)
+  [53] LEFT fortress took 220 DMG (160/1100 HP)
+  [58] LEFT fortress took 160 DMG (0/1100 HP)
+  [58] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Advanced vs Expert_Fire
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60737
+Duration: 69 ticks (2.3s)
+Winner: Expert_Fire
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Advanced
+────────────────────────────────────────
+Fortress: ICE
+  HP: 1200 → 0 (took 1200 DMG)
+  Armor: 48 (32% damage reduction)
+  Projectiles Fired: 4
+  DESTROYED at tick 68
+
+Heroes:
+  [glacier] Tier 3, Armor: 48 (32% DR)
+    HP: 2120 → 1937 (ALIVE)
+    DMG received: 183
+  [frost] Tier 3, Armor: 48 (32% DR)
+    HP: 316 → 0 (DEAD at tick 30)
+    DMG received: 316
+  [omega] Tier 2, Armor: 30 (23% DR)
+    HP: 547 → 100 (ALIVE)
+    DMG received: 447
+  [medic] Tier 2, Armor: 30 (23% DR)
+    HP: 531 → 0 (DEAD at tick 20)
+    DMG received: 531
+
+Total DMG Dealt: 1286
+Total DMG Received: 3009
+Heroes Alive: 2
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Fire
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1416 → 992 (took 424 DMG)
+  Armor: 67 (40% damage reduction)
+  Projectiles Fired: 4
+
+Heroes:
+  [inferno] Tier 3, Armor: 54 (35% DR)
+    HP: 935 → 835 (ALIVE)
+    DMG received: 100
+  [pyro] Tier 3, Armor: 54 (35% DR)
+    HP: 837 → 533 (ALIVE)
+    DMG received: 304
+  [rift] Tier 3, Armor: 54 (35% DR)
+    HP: 527 → 185 (ALIVE)
+    DMG received: 342
+  [titan] Tier 3, Armor: 54 (35% DR)
+    HP: 2853 → 2737 (ALIVE)
+    DMG received: 116
+
+Total DMG Dealt: 3009
+Total DMG Received: 1286
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 8
+  Fortress Damage Events: 12
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [20] LEFT hero medic KILLED
+  [30] LEFT fortress took 216 DMG (984/1200 HP)
+  [30] LEFT hero frost KILLED
+  [39] RIGHT fortress took 107 DMG (1309/1416 HP)
+  [40] LEFT fortress took 216 DMG (768/1200 HP)
+  [46] LEFT fortress took 111 DMG (657/1200 HP)
+  [48] RIGHT fortress took 105 DMG (1204/1416 HP)
+  [50] LEFT fortress took 216 DMG (441/1200 HP)
+  [56] RIGHT fortress took 107 DMG (1097/1416 HP)
+  [60] LEFT fortress took 216 DMG (225/1200 HP)
+  [61] LEFT fortress took 108 DMG (117/1200 HP)
+  [64] RIGHT fortress took 105 DMG (992/1416 HP)
+  [65] LEFT fortress took 111 DMG (6/1200 HP)
+  [68] LEFT fortress took 6 DMG (0/1200 HP)
+  [68] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Advanced vs Expert_Tech
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60738
+Duration: 61 ticks (2.0s)
+Winner: Expert_Tech
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Advanced
+────────────────────────────────────────
+Fortress: ICE
+  HP: 1200 → 0 (took 1200 DMG)
+  Armor: 48 (32% damage reduction)
+  Projectiles Fired: 4
+  DESTROYED at tick 60
+
+Heroes:
+  [glacier] Tier 3, Armor: 48 (32% DR)
+    HP: 2120 → 1542 (ALIVE)
+    DMG received: 578
+  [frost] Tier 3, Armor: 48 (32% DR)
+    HP: 316 → 0 (DEAD at tick 8)
+    DMG received: 316
+  [omega] Tier 2, Armor: 30 (23% DR)
+    HP: 547 → 0 (DEAD at tick 20)
+    DMG received: 547
+  [medic] Tier 2, Armor: 30 (23% DR)
+    HP: 531 → 0 (DEAD at tick 16)
+    DMG received: 531
+
+Total DMG Dealt: 781
+Total DMG Received: 3511
+Heroes Alive: 1
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Tech
+────────────────────────────────────────
+Fortress: TECH
+  HP: 1573 → 1369 (took 204 DMG)
+  Armor: 75 (43% damage reduction)
+  Projectiles Fired: 4
+
+Heroes:
+  [forge] Tier 3, Armor: 60 (38% DR)
+    HP: 943 → 864 (ALIVE)
+    DMG received: 79
+  [spectre] Tier 3, Armor: 60 (38% DR)
+    HP: 1063 → 897 (ALIVE)
+    DMG received: 166
+  [storm] Tier 3, Armor: 60 (38% DR)
+    HP: 1133 → 913 (ALIVE)
+    DMG received: 220
+  [vanguard] Tier 3, Armor: 60 (38% DR)
+    HP: 2542 → 2430 (ALIVE)
+    DMG received: 112
+
+Total DMG Dealt: 3511
+Total DMG Received: 781
+Heroes Alive: 4
+Heroes Killed: 3 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 8
+  Fortress Damage Events: 9
+  Hero Deaths: 3
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [8] LEFT hero frost KILLED
+  [16] LEFT hero medic KILLED
+  [20] LEFT hero omega KILLED
+  [30] LEFT fortress took 190 DMG (1010/1200 HP)
+  [39] RIGHT fortress took 102 DMG (1471/1573 HP)
+  [40] LEFT fortress took 190 DMG (820/1200 HP)
+  [50] LEFT fortress took 190 DMG (630/1200 HP)
+  [52] LEFT fortress took 76 DMG (554/1200 HP)
+  [53] LEFT fortress took 197 DMG (357/1200 HP)
+  [56] RIGHT fortress took 102 DMG (1369/1573 HP)
+  [58] LEFT fortress took 167 DMG (190/1200 HP)
+  [60] LEFT fortress took 190 DMG (0/1200 HP)
+  [60] LEFT fortress DESTROYED!
+
+
+════════════════════════════════════════════════════════════════════════════════
+BATTLE: Expert_Fire vs Expert_Tech
+════════════════════════════════════════════════════════════════════════════════
+
+Seed: 60739
+Duration: 70 ticks (2.3s)
+Winner: Expert_Tech
+Win Reason: fortress_destroyed
+
+────────────────────────────────────────
+LEFT: Expert_Fire
+────────────────────────────────────────
+Fortress: FIRE
+  HP: 1416 → 0 (took 1416 DMG)
+  Armor: 67 (40% damage reduction)
+  Projectiles Fired: 4
+  DESTROYED at tick 69
+
+Heroes:
+  [inferno] Tier 3, Armor: 54 (35% DR)
+    HP: 935 → 762 (ALIVE)
+    DMG received: 173
+  [pyro] Tier 3, Armor: 54 (35% DR)
+    HP: 837 → 0 (DEAD at tick 24)
+    DMG received: 837
+  [rift] Tier 3, Armor: 54 (35% DR)
+    HP: 527 → 0 (DEAD at tick 16)
+    DMG received: 527
+  [titan] Tier 3, Armor: 54 (35% DR)
+    HP: 2853 → 2319 (ALIVE)
+    DMG received: 534
+
+Total DMG Dealt: 2025
+Total DMG Received: 3855
+Heroes Alive: 2
+Heroes Killed: 0 enemy heroes
+
+────────────────────────────────────────
+RIGHT: Expert_Tech
+────────────────────────────────────────
+Fortress: TECH
+  HP: 1573 → 653 (took 920 DMG)
+  Armor: 75 (43% damage reduction)
+  Projectiles Fired: 4
+
+Heroes:
+  [forge] Tier 3, Armor: 60 (38% DR)
+    HP: 943 → 774 (ALIVE)
+    DMG received: 169
+  [spectre] Tier 3, Armor: 60 (38% DR)
+    HP: 1063 → 841 (ALIVE)
+    DMG received: 222
+  [storm] Tier 3, Armor: 60 (38% DR)
+    HP: 1133 → 819 (ALIVE)
+    DMG received: 314
+  [vanguard] Tier 3, Armor: 60 (38% DR)
+    HP: 2542 → 2142 (ALIVE)
+    DMG received: 400
+
+Total DMG Dealt: 3855
+Total DMG Received: 2025
+Heroes Alive: 4
+Heroes Killed: 2 enemy heroes
+
+────────────────────────────────────────
+REPLAY EVENTS SUMMARY
+────────────────────────────────────────
+  Projectiles: 8
+  Fortress Damage Events: 17
+  Hero Deaths: 2
+
+────────────────────────────────────────
+KEY MOMENTS (from tick log)
+────────────────────────────────────────
+  [16] LEFT hero rift KILLED
+  [24] LEFT hero pyro KILLED
+  [30] LEFT fortress took 168 DMG (1248/1416 HP)
+  [30] RIGHT fortress took 183 DMG (1390/1573 HP)
+  [40] LEFT fortress took 168 DMG (1080/1416 HP)
+  [40] RIGHT fortress took 183 DMG (1207/1573 HP)
+  [46] RIGHT fortress took 94 DMG (1113/1573 HP)
+  [50] LEFT fortress took 168 DMG (912/1416 HP)
+  [50] RIGHT fortress took 183 DMG (930/1573 HP)
+  [52] LEFT fortress took 67 DMG (845/1416 HP)
+  [53] LEFT fortress took 175 DMG (670/1416 HP)
+  [58] LEFT fortress took 148 DMG (522/1416 HP)
+  [60] LEFT fortress took 168 DMG (354/1416 HP)
+  [60] RIGHT fortress took 183 DMG (747/1573 HP)
+  [61] LEFT fortress took 175 DMG (179/1416 HP)
+  [65] RIGHT fortress took 94 DMG (653/1573 HP)
+  [68] LEFT fortress took 67 DMG (112/1416 HP)
+  [69] LEFT fortress took 112 DMG (0/1416 HP)
+  [69] LEFT fortress DESTROYED!
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ STATISTICS ANALYSIS                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+  Average Battle Duration: 3.5 seconds
+  Average Total Damage: 2835
+  Fortress Destroyed Wins: 15/15
+  Timeout Wins: 0/15
+  Draws: 0/15

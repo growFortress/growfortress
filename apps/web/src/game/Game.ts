@@ -29,6 +29,7 @@ import {
   startSession,
   submitSegment,
   endSession,
+  refreshSessionToken,
   SessionStartResponse,
   SegmentSubmitResponse,
 } from "../api/client.js";
@@ -124,6 +125,10 @@ export class Game {
   // Session persistence state
   private lastSnapshotTick = 0;
   private sessionOptions: SessionStartOptions = {};
+
+  // Token refresh state
+  private tokenRefreshInterval: number | null = null;
+  private static readonly TOKEN_REFRESH_BEFORE_EXPIRY_MS = 2 * 60 * 1000; // Refresh 2 minutes before expiry
 
   // Boss Rush state
   private bossRushState: BossRushState | null = null;
@@ -248,6 +253,9 @@ export class Game {
 
       // Save initial session snapshot for recovery
       this.saveSessionSnapshot();
+
+      // Start proactive token refresh timer
+      this.startTokenRefreshTimer();
 
       return sessionInfo;
     } catch (error) {
@@ -374,6 +382,9 @@ export class Game {
         ? "playing"
         : snapshot.phase || "playing";
     this.callbacks.onStateChange();
+
+    // Start proactive token refresh timer for resumed session
+    this.startTokenRefreshTimer();
 
     return this.sessionInfo;
   }
@@ -593,6 +604,11 @@ export class Game {
         this.auditTickSet = new Set(result.nextSegmentAuditTicks);
         this.simulation.setAuditTicks(result.nextSegmentAuditTicks);
 
+        // Update session token if provided (for extended gameplay sessions)
+        if (result.sessionToken && this.sessionInfo) {
+          this.sessionInfo.sessionToken = result.sessionToken;
+        }
+
         // Reset segment tracking
         this.simulation.resetSegment();
         this.events = [];
@@ -671,6 +687,9 @@ export class Game {
   /** End the current endless session manually */
   async endCurrentSession(): Promise<void> {
     if (!this.sessionInfo) return;
+
+    // Stop token refresh timer
+    this.stopTokenRefreshTimer();
 
     // Clear saved session - user is ending manually
     clearActiveSession().catch((err) =>
@@ -1028,7 +1047,72 @@ export class Game {
         console.error("Failed to end session on death:", error);
       }
     }
+
+    // Stop token refresh timer
+    this.stopTokenRefreshTimer();
+
     this.callbacks.onGameEnd(false, newInventory, newProgression, finalWave);
+  }
+
+  /**
+   * Check if token is close to expiry and refresh proactively
+   */
+  private async refreshTokenIfNeeded(): Promise<void> {
+    if (!this.sessionInfo) return;
+
+    try {
+      // Decode JWT to check expiration
+      const parts = this.sessionInfo.sessionToken.split(".");
+      if (parts.length !== 3) return;
+
+      const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, "=");
+      const decoded = JSON.parse(atob(padded));
+
+      if (!decoded.exp) return;
+
+      const expirationTime = decoded.exp * 1000; // Convert to milliseconds
+      const currentTime = Date.now();
+      const timeUntilExpiry = expirationTime - currentTime;
+
+      // Refresh if token expires within the threshold
+      if (timeUntilExpiry <= Game.TOKEN_REFRESH_BEFORE_EXPIRY_MS) {
+        const result = await refreshSessionToken(
+          this.sessionInfo.sessionId,
+          this.sessionInfo.sessionToken,
+        );
+        if (result.sessionToken) {
+          this.sessionInfo.sessionToken = result.sessionToken;
+          this.saveSessionSnapshot(); // Update snapshot with new token
+          logger.debug("Session token refreshed proactively");
+        }
+      }
+    } catch (error) {
+      logger.warn("Failed to refresh token proactively:", error);
+    }
+  }
+
+  /**
+   * Start timer for proactive token refresh
+   */
+  private startTokenRefreshTimer(): void {
+    // Clear any existing timer
+    this.stopTokenRefreshTimer();
+
+    // Check every minute if token needs refresh
+    this.tokenRefreshInterval = window.setInterval(() => {
+      this.refreshTokenIfNeeded();
+    }, 60 * 1000); // Check every minute
+  }
+
+  /**
+   * Stop token refresh timer
+   */
+  private stopTokenRefreshTimer(): void {
+    if (this.tokenRefreshInterval !== null) {
+      clearInterval(this.tokenRefreshInterval);
+      this.tokenRefreshInterval = null;
+    }
   }
 
   /** Reset the game to initial state */
@@ -1037,6 +1121,9 @@ export class Game {
     clearActiveSession().catch((err) =>
       console.error("Failed to clear session:", err),
     );
+
+    // Stop token refresh timer
+    this.stopTokenRefreshTimer();
 
     this.simulation = null;
     this.sessionInfo = null;

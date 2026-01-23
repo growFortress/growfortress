@@ -299,10 +299,24 @@ export const Vec2 = {
 
   /**
    * Normalize vector (returns unit vector)
+   * 
+   * For very small distances (<= EPSILON), returns deterministic (1, 0) to prevent desync
+   * from division by near-zero values and micro-differences in sqrt precision.
    */
   normalize(v: Vec2FP): Vec2FP {
+    const lenSq = Vec2.lengthSq(v);
+    if (lenSq === 0) return { x: 0, y: 0 };
+    
+    // Check if distance is very small (below epsilon threshold)
+    // Use squared comparison to avoid sqrt for the check
+    const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+    if (lenSq <= epsilonSq) {
+      // Deterministic fallback: return (1, 0) for very small distances
+      // This prevents desync from micro-differences in sqrt precision
+      return { x: FP.ONE, y: 0 };
+    }
+    
     const len = Vec2.length(v);
-    if (len === 0) return { x: 0, y: 0 };
     return { x: FP.div(v.x, len), y: FP.div(v.y, len) };
   },
 
@@ -370,6 +384,14 @@ export function clampVelocity(body: PhysicsBody, maxSpeed: FPType): void {
   const maxSpeedSq = FP.mul(maxSpeed, maxSpeed);
 
   if (speedSq > maxSpeedSq) {
+    // Check if speed is very small (below epsilon threshold)
+    const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+    if (speedSq <= epsilonSq) {
+      // Very small speed, set to zero to prevent desync
+      body.vx = 0;
+      body.vy = 0;
+      return;
+    }
     const speed = FP.sqrt(speedSq);
     const scale = FP.div(maxSpeed, speed);
     body.vx = FP.mul(body.vx, scale);
@@ -419,9 +441,12 @@ export function detectCircleCollision(
     return null; // No collision
   }
 
-  const dist = FP.sqrt(distSq);
-  if (dist === 0) {
-    // Objects are exactly overlapping, push in arbitrary direction
+  // Check if distance is very small (below epsilon threshold)
+  // Use squared comparison to avoid sqrt for the check
+  const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+  if (distSq <= epsilonSq) {
+    // Objects are very close or overlapping
+    // Deterministic fallback: push in X direction and distribute overlap deterministically
     return {
       overlap: minDist,
       normalX: FP.ONE,
@@ -429,6 +454,7 @@ export function detectCircleCollision(
     };
   }
 
+  const dist = FP.sqrt(distSq);
   const overlap = FP.sub(minDist, dist);
   const normalX = FP.div(dx, dist);
   const normalY = FP.div(dy, dist);
@@ -520,7 +546,9 @@ function applySeparationForceSimple(
       const dy = FP.sub(b.y, a.y);
       const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
 
-      if (distSq > 0 && distSq < sepRadiusSq) {
+      // Check if distance is very small (below epsilon threshold)
+      const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+      if (distSq > epsilonSq && distSq < sepRadiusSq) {
         const dist = FP.sqrt(distSq);
 
         // Force decreases with distance (stronger when closer)
@@ -584,7 +612,9 @@ export function applySeparationForceOptimized(
       const dy = FP.sub(b.y, a.y);
       const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
 
-      if (distSq > 0 && distSq < sepRadiusSq) {
+      // Check if distance is very small (below epsilon threshold)
+      const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+      if (distSq > epsilonSq && distSq < sepRadiusSq) {
         const dist = FP.sqrt(distSq);
 
         // Force decreases with distance (stronger when closer)
@@ -659,6 +689,12 @@ export function steerTowards(
     return { ax: 0, ay: 0 };
   }
 
+  // Check if distance is very small (below epsilon threshold)
+  const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+  if (distSq <= epsilonSq) {
+    return { ax: 0, ay: 0 };
+  }
+
   const dist = FP.sqrt(distSq);
   const normalized = FP.normalize2D(dx, dy);
 
@@ -679,10 +715,17 @@ export function steerTowards(
   const steerY = FP.sub(desiredVy, body.vy);
 
   // Limit steering force
-  const steerMag = FP.sqrt(FP.add(FP.mul(steerX, steerX), FP.mul(steerY, steerY)));
+  const steerMagSq = FP.add(FP.mul(steerX, steerX), FP.mul(steerY, steerY));
   const maxSteer = HERO_PHYSICS.acceleration;
+  const maxSteerSq = FP.mul(maxSteer, maxSteer);
 
-  if (steerMag > maxSteer) {
+  if (steerMagSq > maxSteerSq) {
+    const steerMag = FP.sqrt(steerMagSq);
+    // Check if steering magnitude is very small (below epsilon threshold)
+    const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+    if (steerMagSq <= epsilonSq) {
+      return { ax: 0, ay: 0 };
+    }
     const scale = FP.div(maxSteer, steerMag);
     return {
       ax: FP.mul(steerX, scale),
@@ -712,8 +755,10 @@ export function steerAway(
     return { ax: 0, ay: 0 }; // Too far, don't flee
   }
 
-  if (distSq === 0) {
-    // Exactly on threat, flee in random-ish direction
+  // Check if distance is very small (below epsilon threshold)
+  const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+  if (distSq <= epsilonSq) {
+    // Very close to threat, flee in deterministic direction (X axis)
     return { ax: HERO_PHYSICS.acceleration, ay: 0 };
   }
 
@@ -896,7 +941,9 @@ function applySeparationForceWithMassSimple(
       const dy = FP.sub(b.y, a.y);
       const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
 
-      if (distSq > 0 && distSq < sepRadiusSq) {
+      // Check if distance is very small (below epsilon threshold)
+      const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+      if (distSq > epsilonSq && distSq < sepRadiusSq) {
         const dist = FP.sqrt(distSq);
 
         // Force decreases with distance (stronger when closer)
@@ -962,7 +1009,9 @@ function applySeparationForceWithMassOptimized(
       const dy = FP.sub(b.y, a.y);
       const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
 
-      if (distSq > 0 && distSq < sepRadiusSq) {
+      // Check if distance is very small (below epsilon threshold)
+      const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+      if (distSq > epsilonSq && distSq < sepRadiusSq) {
         const dist = FP.sqrt(distSq);
 
         // Force decreases with distance (stronger when closer)

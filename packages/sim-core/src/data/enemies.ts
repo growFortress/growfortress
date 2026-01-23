@@ -13,6 +13,10 @@ export interface EnemyArchetype {
   goldReward: number;
   dustReward: number;
   description: string;
+  // Counterplay properties
+  splashResistance?: number;  // Reduces splash damage (0.0-1.0, e.g., 0.5 = 50% reduction)
+  chainResistance?: number;   // Reduces chain chance (0.0-1.0, e.g., 0.3 = 30% reduction)
+  spreadBehavior?: boolean;   // Enemy avoids grouping (spreads out from others)
 }
 
 export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
@@ -259,6 +263,35 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
     dustReward: 2,
     description: 'Randomly teleports between lanes',
   },
+
+  // ============================================================================
+  // COUNTERPLAY ENEMIES - Resist splash/chain builds
+  // ============================================================================
+
+  scatterer: {
+    type: 'scatterer',
+    baseHp: 72,
+    baseSpeed: 1.48,
+    baseDamage: 14,
+    goldReward: 6,
+    dustReward: 2,
+    description: 'Spreads out, resists splash and chain damage',
+    splashResistance: 0.5,  // -50% splash damage
+    chainResistance: 0.3,   // -30% chain chance
+    spreadBehavior: true,   // Avoids grouping
+  },
+  lone_wolf: {
+    type: 'lone_wolf',
+    baseHp: 288,  // +100% HP (elite enemy)
+    baseSpeed: 1.06,
+    baseDamage: 28,
+    goldReward: 12,
+    dustReward: 4,
+    description: 'Elite loner - immune to chains, heavily resists splash',
+    splashResistance: 0.75, // -75% splash damage
+    chainResistance: 1.0,   // -100% chain chance (immune)
+    spreadBehavior: true,
+  },
 };
 
 // ============================================================================
@@ -491,12 +524,16 @@ export function getEnemyRewards(
   // Elite enemies give 2.5x rewards (balanced for economy)
   const eliteMult = isElite ? 2.5 : 1;
 
-  // Wave scaling: gold grows 3% per 10 waves (reduced from 5% for economy balance)
-  const waveMultiplier = 1 + Math.floor(wave / 10) * 0.03;
-
-  // Cycle bonus: +30% per cycle (reduced from 50% for economy balance)
+  // Endless mode: calculate cycle and effective wave
   const cycle = Math.floor((wave - 1) / 100);
-  const cycleMultiplier = 1 + cycle * 0.3;
+  const effectiveWave = ((wave - 1) % 100) + 1;
+
+  // Wave scaling: 5% per wave (vs 12% for difficulty - still conservative)
+  const waveMultiplier = 1 + (effectiveWave - 1) * 0.05;
+
+  // Cycle scaling: exponential 1.4^cycle (vs 1.6^cycle for difficulty)
+  // Cycle 0: 1x, Cycle 1: 1.4x, Cycle 2: 1.96x, Cycle 3: 2.74x
+  const cycleMultiplier = Math.pow(1.4, cycle);
 
   return {
     gold: Math.floor(archetype.goldReward * eliteMult * goldMult * waveMultiplier * cycleMultiplier),

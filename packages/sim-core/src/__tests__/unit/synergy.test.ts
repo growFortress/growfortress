@@ -27,17 +27,18 @@ describe('calculateSynergyBonuses', () => {
   it('applies full synergy when minimum units are present', () => {
     const state = createGameState({
       fortressClass: 'tech',
-      heroes: initializeHeroes(['forge', 'forge'], fortressX),
+      heroes: initializeHeroes(['forge', 'forge', 'forge'], fortressX),
       turrets: initializeTurrets([
         { definitionId: 'arrow', slotIndex: 1, class: 'tech' },
         { definitionId: 'cannon', slotIndex: 2, class: 'tech' },
         { definitionId: 'frost', slotIndex: 3, class: 'tech' },
+        { definitionId: 'arrow', slotIndex: 4, class: 'tech' },
       ]),
     });
 
     const bonuses = calculateSynergyBonuses(state);
 
-    // Full synergy (2+ heroes, 3+ turrets) adds +50% DMG, +15% crit
+    // Full synergy (3+ heroes, 4+ turrets) adds +50% DMG, +15% crit
     expect(bonuses.damageBonus).toBeGreaterThan(1.0);
     expect(bonuses.critChance).toBeCloseTo(0.15, 5);
   });
@@ -45,11 +46,12 @@ describe('calculateSynergyBonuses', () => {
   it('applies harmonic resonance bonuses with full synergy', () => {
     const state = createGameState({
       fortressClass: 'tech',
-      heroes: initializeHeroes(['forge', 'forge'], fortressX),
+      heroes: initializeHeroes(['forge', 'forge', 'forge'], fortressX),
       turrets: initializeTurrets([
         { definitionId: 'arrow', slotIndex: 1, class: 'tech' },
         { definitionId: 'cannon', slotIndex: 2, class: 'tech' },
         { definitionId: 'frost', slotIndex: 3, class: 'tech' },
+        { definitionId: 'arrow', slotIndex: 4, class: 'tech' },
       ]),
       relics: [createActiveRelic('harmonic-resonance')],
     });
@@ -92,5 +94,26 @@ describe('calculateSynergyBonuses', () => {
     // No heroes or turrets means no synergy bonuses
     expect(bonuses.damageBonus).toBeUndefined();
     expect(bonuses.attackSpeedBonus).toBeUndefined();
+  });
+
+  it('applies Unity Crystal additively (not multiplicatively)', () => {
+    const state = createGameState({
+      fortressClass: 'tech',
+      heroes: initializeHeroes(['forge'], fortressX),
+      turrets: initializeTurrets([
+        { definitionId: 'arrow', slotIndex: 1, class: 'tech' },
+      ]),
+      relics: [createActiveRelic('unity-crystal')],
+    });
+
+    const bonuses = calculateSynergyBonuses(state);
+
+    // Base synergy: 1 hero (+30% DMG, +15% AS) + 1 turret (+15% DMG, +25% AS)
+    // = 0.45 DMG, 0.40 AS
+    // Unity Crystal adds +50% of base synergy bonuses (additive)
+    // = 0.45 + (0.45 * 0.5) = 0.675 DMG
+    // = 0.40 + (0.40 * 0.5) = 0.60 AS
+    expect(bonuses.damageBonus).toBeCloseTo(0.675, 5); // 0.45 + 0.225
+    expect(bonuses.attackSpeedBonus).toBeCloseTo(0.60, 5); // 0.40 + 0.20
   });
 });

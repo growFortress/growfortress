@@ -12,8 +12,8 @@ import type {
   HubPreviewArtifact,
   BuildPreset,
 } from '@arcade/protocol';
-import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS, normalizeHeroId } from '@arcade/protocol';
-import { getMaxHeroSlots, getMaxTurretSlots, isClassUnlockedAtLevel } from '@arcade/sim-core';
+import { FREE_STARTER_HEROES, FREE_STARTER_TURRETS } from '@arcade/protocol';
+import { isClassUnlockedAtLevel } from '@arcade/sim-core';
 
 // Cache configuration
 const CACHE_KEY_PREFIX = 'hub:preview:';
@@ -182,36 +182,14 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
     ? buildPresets.find((p) => p.id === user.activePresetId)
     : null;
 
-  // Determine which heroes and turrets to show based on active preset or defaults
+  // Build list of all unlocked heroes (starters + purchased)
+  // Use Set to deduplicate since some heroes might be in both lists
   const allUnlockedHeroes = new Set<string>([...FREE_STARTER_HEROES, ...unlockedHeroIds]);
   const allUnlockedTurrets = new Set<string>([...FREE_STARTER_TURRETS, ...unlockedTurretIds]);
 
-  // Get heroes from active preset, or fall back to default hero
-  let heroIds: string[];
-  if (activePreset?.startingHeroes && activePreset.startingHeroes.length > 0) {
-    heroIds = activePreset.startingHeroes
-      .map(normalizeHeroId)
-      .filter((id) => allUnlockedHeroes.has(id))
-      .slice(0, getMaxHeroSlots(commanderLevel));
-  } else {
-    // Fall back to default hero or first starter
-    const defaultHero = user.defaultHeroId
-      ? normalizeHeroId(user.defaultHeroId)
-      : FREE_STARTER_HEROES[0];
-    heroIds = defaultHero && allUnlockedHeroes.has(defaultHero) ? [defaultHero] : [];
-  }
-
-  // Get turrets from active preset, or fall back to default turret
-  let turretIds: string[];
-  if (activePreset?.startingTurrets && activePreset.startingTurrets.length > 0) {
-    turretIds = activePreset.startingTurrets
-      .filter((id) => allUnlockedTurrets.has(id))
-      .slice(0, getMaxTurretSlots(commanderLevel));
-  } else {
-    // Fall back to default turret or first starter
-    const defaultTurret = user.defaultTurretType ?? FREE_STARTER_TURRETS[0];
-    turretIds = defaultTurret && allUnlockedTurrets.has(defaultTurret) ? [defaultTurret] : [];
-  }
+  // Show all unlocked heroes and turrets for hub preview
+  const heroIds = Array.from(allUnlockedHeroes);
+  const turretIds = Array.from(allUnlockedTurrets);
 
   // Get fortress class from active preset or default
   const requestedClass = activePreset?.fortressClass ?? user.defaultFortressClass ?? 'natural';
@@ -246,7 +224,7 @@ export async function getHubPreview(userId: string): Promise<HubPreviewResponse 
     };
   });
 
-  // Build turrets array from active loadout
+  // Build turrets array from all unlocked turrets
   const turrets: HubPreviewTurret[] = turretIds.map((turretType, index) => {
     // Find upgrade data for this turret
     const upgrades = turretUpgradesData.find((t) => t.turretType === turretType);

@@ -18,12 +18,12 @@ describe('GuildPreview Service', () => {
     const guildId = 'guild-123';
 
     it('should return null for non-existent guild', async () => {
-      mockPrisma.guild.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findFirst.mockResolvedValue(null);
 
       const result = await getGuildPreview(guildId);
 
       expect(result).toBeNull();
-      expect(mockPrisma.guild.findUnique).toHaveBeenCalledWith(
+      expect(mockPrisma.guild.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: guildId, disbanded: false },
         })
@@ -32,7 +32,7 @@ describe('GuildPreview Service', () => {
 
     it('should return null for disbanded guild', async () => {
       // The query has `disbanded: false` filter, so disbanded guilds won't be found
-      mockPrisma.guild.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findFirst.mockResolvedValue(null);
 
       const result = await getGuildPreview(guildId);
 
@@ -69,7 +69,7 @@ describe('GuildPreview Service', () => {
       const result = await getGuildPreview(guildId);
 
       expect(result).toEqual(cachedData);
-      expect(mockPrisma.guild.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.guild.findFirst).not.toHaveBeenCalled();
     });
 
     it('should fetch and return guild data from database', async () => {
@@ -108,7 +108,7 @@ describe('GuildPreview Service', () => {
         _count: { members: 2 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const result = await getGuildPreview(guildId);
 
@@ -145,7 +145,7 @@ describe('GuildPreview Service', () => {
         _count: { members: 0 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const result = await getGuildPreview(guildId);
 
@@ -173,7 +173,7 @@ describe('GuildPreview Service', () => {
         _count: { members: 0 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const result = await getGuildPreview(guildId);
 
@@ -211,7 +211,7 @@ describe('GuildPreview Service', () => {
         _count: { members: 10 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const result = await getGuildPreview(guildId);
 
@@ -235,7 +235,7 @@ describe('GuildPreview Service', () => {
         _count: { members: 0 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       const result = await getGuildPreview(guildId);
 
@@ -267,7 +267,7 @@ describe('GuildPreview Service', () => {
         _count: { members: 0 },
       };
 
-      mockPrisma.guild.findUnique.mockResolvedValue(mockGuild);
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
 
       await getGuildPreview(guildId);
 

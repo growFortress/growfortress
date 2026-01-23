@@ -42,3 +42,11 @@ temp/
 nul
 tmpclaude-*
 *.timestamp-*.mjs
+
+# Backups
+backups/
+*.dump
+*.dump.gz
+*.rdb
+*.aof
+*.tar.gz

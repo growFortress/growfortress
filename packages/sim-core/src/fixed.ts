@@ -31,8 +31,85 @@
  * - All physics and game state use FP for deterministic replay
  * - Some systems use a different scale (16384 = 1.0) for stats - see systems.ts
  * - Always use FP functions, never raw arithmetic on FP values
- * - Overflow can occur with large multiplications - use FP.mulSafe if needed
+ * - All operations use standardized truncation: always truncate to i32 immediately after operation
+ * - Critical operations (mul/div/sqrt) use WASM with 64-bit intermediate when available,
+ *   falling back to BigInt for maximum determinism and overflow safety
  */
+
+// Import WASM wrapper (lazy loading, fallback to BigInt if not available)
+import {
+  mulWasmSync,
+  divWasmSync,
+  sqrtWasmSync,
+  initWasm,
+} from './fixed-wasm.js';
+
+// Initialize WASM (non-blocking, will use fallback if WASM not available)
+initWasm();
+
+/**
+ * BigInt fallback for mul operation
+ * Uses 64-bit intermediate to avoid overflow
+ * Standardized truncation: always truncate immediately after operation
+ */
+function mulBigInt(a: number, b: number): number {
+  // Convert to BigInt for 64-bit arithmetic
+  const aBig = BigInt(a);
+  const bBig = BigInt(b);
+  
+  // Multiply in 64-bit, then shift right by 16 bits
+  const result = (aBig * bBig) >> 16n;
+  
+  // Truncate to i32 (standardized truncation moment)
+  return Number(result) | 0;
+}
+
+/**
+ * BigInt fallback for div operation
+ * Uses 64-bit intermediate to avoid overflow when shifting
+ * Standardized truncation: always truncate immediately after operation
+ */
+function divBigInt(a: number, b: number): number {
+  if (b === 0) return a >= 0 ? FP.MAX : FP.MIN;
+  
+  // Convert to BigInt for 64-bit arithmetic
+  const aBig = BigInt(a);
+  const bBig = BigInt(b);
+  
+  // Shift left by 16 bits in 64-bit, then divide
+  const result = (aBig << 16n) / bBig;
+  
+  // Truncate to i32 (standardized truncation moment)
+  return Number(result) | 0;
+}
+
+/**
+ * BigInt fallback for sqrt operation
+ * Uses 64-bit intermediate precision
+ * Standardized truncation: always truncate immediately after operation
+ */
+function sqrtBigInt(fp: number): number {
+  if (fp <= 0) return 0;
+  
+  // Convert to BigInt for 64-bit arithmetic
+  const fpBig = BigInt(fp);
+  
+  // Use integer square root with Newton's method
+  let x = fpBig;
+  let y = (x + 1n) >> 1n;
+  
+  // Newton's method iteration
+  while (y < x) {
+    x = y;
+    y = (x + (fpBig / x)) >> 1n;
+  }
+  
+  // Scale result to fixed-point: multiply by 2^8 (sqrt of 2^16)
+  const result = (x << 8n);
+  
+  // Truncate to i32 (standardized truncation moment)
+  return Number(result) | 0;
+}
 
 export const FP = {
   /** Number of fractional bits */
@@ -51,7 +128,16 @@ export const FP = {
   MIN: -0x80000000,
 
   /**
+   * Epsilon for distance comparisons and normalization
+   * Very small distances below this threshold are treated as zero
+   * Prevents division by near-zero values that cause desync
+   * Value: ~0.001 units (65536 / 65536 = 1.0, so 65 = ~0.001)
+   */
+  EPSILON: 65, // ~0.001 in fixed-point
+
+  /**
    * Convert integer to fixed-point
+   * Standardized truncation: always truncate immediately after operation
    */
   fromInt(n: number): number {
     return (n << 16) | 0;
@@ -59,6 +145,7 @@ export const FP = {
 
   /**
    * Convert float to fixed-point
+   * Standardized truncation: always truncate immediately after operation
    */
   fromFloat(n: number): number {
     return (n * (1 << 16)) | 0;
@@ -80,6 +167,7 @@ export const FP = {
 
   /**
    * Add two fixed-point numbers
+   * Standardized truncation: always truncate immediately after operation
    */
   add(a: number, b: number): number {
     return (a + b) | 0;
@@ -87,31 +175,58 @@ export const FP = {
 
   /**
    * Subtract fixed-point numbers (a - b)
+   * Standardized truncation: always truncate immediately after operation
    */
   sub(a: number, b: number): number {
     return (a - b) | 0;
   },
 
   /**
-   * Multiply two fixed-point numbers
+   * Multiply two fixed-point numbers (Q16.16)
+   * 
+   * Uses WASM with 64-bit intermediate when available, falls back to BigInt.
+   * Formula: (a * b) >> 16
+   * 
+   * Standardized truncation: always truncate to i32 immediately after operation.
+   * This ensures deterministic results across all platforms and prevents
+   * differences from implicit float64 conversions.
    */
   mul(a: number, b: number): number {
-    // Use 64-bit intermediate to avoid overflow
-    const result = (a * b) / (1 << 16);
-    return result | 0;
+    // Try WASM first (synchronous, already loaded if available)
+    const wasmResult = mulWasmSync(a, b);
+    if (wasmResult !== null) {
+      return wasmResult;
+    }
+    
+    // Fallback to BigInt for 64-bit precision
+    return mulBigInt(a, b);
   },
 
   /**
-   * Divide fixed-point numbers (a / b)
+   * Divide fixed-point numbers (a / b) (Q16.16)
+   * 
+   * Uses WASM with 64-bit intermediate when available, falls back to BigInt.
+   * Formula: (a << 16) / b
+   * 
+   * Standardized truncation: always truncate to i32 immediately after operation.
+   * This ensures deterministic results and prevents overflow when shifting large values.
    */
   div(a: number, b: number): number {
     if (b === 0) return a >= 0 ? FP.MAX : FP.MIN;
-    // Use multiplication instead of shift to avoid 32-bit overflow
-    return ((a * (1 << 16)) / b) | 0;
+    
+    // Try WASM first (synchronous, already loaded if available)
+    const wasmResult = divWasmSync(a, b);
+    if (wasmResult !== null) {
+      return wasmResult;
+    }
+    
+    // Fallback to BigInt for 64-bit precision
+    return divBigInt(a, b);
   },
 
   /**
    * Floor to nearest integer (in fixed-point)
+   * Standardized truncation: always truncate immediately after operation
    */
   floor(fp: number): number {
     return (fp & ~0xFFFF) | 0;
@@ -119,6 +234,7 @@ export const FP = {
 
   /**
    * Ceiling to nearest integer (in fixed-point)
+   * Standardized truncation: always truncate immediately after operation
    */
   ceil(fp: number): number {
     return ((fp + 0xFFFF) & ~0xFFFF) | 0;
@@ -126,6 +242,7 @@ export const FP = {
 
   /**
    * Round to nearest integer (in fixed-point)
+   * Standardized truncation: always truncate immediately after operation
    */
   round(fp: number): number {
     return ((fp + FP.HALF) & ~0xFFFF) | 0;
@@ -203,27 +320,25 @@ export const FP = {
   // ============================================================================
 
   /**
-   * Fixed-point square root using Newton's method
-   * Input and output are fixed-point
+   * Fixed-point square root (Q16.16)
+   * 
+   * Uses WASM with 64-bit intermediate when available, falls back to BigInt.
+   * Uses Newton's method for integer square root.
+   * 
+   * Input and output are fixed-point (Q16.16 format).
+   * Standardized truncation: always truncate to i32 immediately after operation.
    */
   sqrt(fp: number): number {
     if (fp <= 0) return 0;
-
-    // Scale up by FP.ONE to maintain precision after sqrt
-    // sqrt(x * 2^16) = sqrt(x) * 2^8, so we need to scale result
-    const scaled = fp;
-
-    // Use integer sqrt on the raw value, then adjust
-    let x = scaled;
-    let y = (x + 1) >> 1;
-
-    while (y < x) {
-      x = y;
-      y = (x + ((scaled / x) | 0)) >> 1;
+    
+    // Try WASM first (synchronous, already loaded if available)
+    const wasmResult = sqrtWasmSync(fp);
+    if (wasmResult !== null) {
+      return wasmResult;
     }
-
-    // Scale result to fixed-point: multiply by 2^8 (sqrt of 2^16)
-    return (x << 8) | 0;
+    
+    // Fallback to BigInt for 64-bit precision
+    return sqrtBigInt(fp);
   },
 
   /**
@@ -256,11 +371,24 @@ export const FP = {
   /**
    * Normalize a 2D vector (returns unit vector)
    * Inputs are fixed-point, outputs are fixed-point
-   * Returns {x: 0, y: 0} for zero-length vectors
+   * 
+   * For very small distances (<= EPSILON), returns deterministic (1, 0) to prevent desync
+   * from division by near-zero values and micro-differences in sqrt precision.
    */
   normalize2D(x: number, y: number): { x: number; y: number } {
-    const len = FP.length2D(x, y);
-    if (len === 0) return { x: 0, y: 0 };
+    const lenSq = FP.lengthSq2D(x, y);
+    if (lenSq === 0) return { x: 0, y: 0 };
+    
+    // Check if distance is very small (below epsilon threshold)
+    // Use squared comparison to avoid sqrt for the check
+    const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+    if (lenSq <= epsilonSq) {
+      // Deterministic fallback: return (1, 0) for very small distances
+      // This prevents desync from micro-differences in sqrt precision
+      return { x: FP.ONE, y: 0 };
+    }
+    
+    const len = FP.sqrt(lenSq);
     return {
       x: FP.div(x, len),
       y: FP.div(y, len),

@@ -70,8 +70,8 @@ Level 51+:   XP = 100,000 + (level - 50) × 8,000
 | 40 | 6 |
 
 **Extra Slots** (purchasable):
-- Slot 7: 1,000 dust
-- Slot 8: 1,000 dust
+- Slot 7: 700 dust
+- Slot 8: 700 dust
 
 ---
 
@@ -90,30 +90,36 @@ Level 51+:   XP = 100,000 + (level - 50) × 8,000
 
 ## Unit Unlocks
 
-| Unit | Unlock Level | Rarity | Unlock Cost |
-|------|--------------|--------|-------------|
-| Vanguard | 1 | Starter | Free |
-| Storm | 1 | Starter | Free |
-| Spectre | 1* | Rare (Exclusive) | 25,000g |
-| Omega | 1* | Legendary (Exclusive) | 5,000 dust |
-| Forge | 10 | Common | 3,000g + 500 dust |
-| Frost | 20 | Common | 3,000g + 500 dust |
-| Rift | 30 | Rare | 6,000g + 1,000 dust |
-| Titan | 40 | Epic | 12,000g + 2,000 dust |
+| Unit | Rarity | Unlock Cost |
+|------|--------|-------------|
+| Vanguard | Starter | Free |
+| Storm | Starter | Free |
+| Medic | Starter | Free |
+| Pyro | Starter | Free |
+| Scout | Common | 7,500g |
+| Forge | Common | 3,000g |
+| Frost | Common | 3,000g |
+| Rift | Rare | 6,000g |
+| Spectre | Rare (Exclusive) | 25,000g |
+| Titan | Epic | 12,000g |
+| Inferno | Epic (Premium) | Premium Shop (PLN) |
+| Glacier | Epic (Premium) | Premium Shop (PLN) |
+| Omega | Legendary (Exclusive) | 50,000g + 50 dust |
 
-*Exclusive units are available from level 1 but require premium purchase.
+*Exclusive units are available via purchase. Premium units (Inferno, Glacier) require real money.*
 
 ---
 
 ## Tower Unlocks
 
-| Tower | Unlock Level |
-|-------|--------------|
-| Wieża Railgun | 1 (Starter) |
-| Wieża Kriogeniczna | 5 |
-| Wieża Artyleryjska | 15 |
-| Wieża Łukowa | 30 |
-| Wieża Fotonowa | 45 |
+| Tower | Description |
+|-------|-------------|
+| Wieża Railgun | Fast single-target DPS (Starter) |
+| Wieża Kriogeniczna | Crowd control, slow enemies |
+| Wieża Artyleryjska | AOE splash damage |
+| Wieża Łukowa | Chain lightning AOE |
+
+*Note: The game has 4 tower types, all available. Tower slots unlock by fortress level.*
 
 ---
 
@@ -151,10 +157,16 @@ Permanent stat bonuses purchased with gold. Stored per-player.
 
 | Upgrade | Gold | Dust | Level Required |
 |---------|------|------|----------------|
-| Tier 1→2 | 500 | 50 | 10 |
-| Tier 2→3 | 2,000 | 200 | 20 |
+| Tier 1→2 | 500 | 35 | 10 |
+| Tier 2→3 | 2,000 | 140 | 20 |
 
-*Tier 3 may require special materials (Vibranium, Uru, Extremis, etc.)*
+*Tier 3 requires special materials depending on unit:*
+- Vibranium: Vanguard, Scout, Frost, Glacier
+- Uru: Storm
+- Extremis: Forge, Medic, Pyro, Inferno
+- Darkforce: Rift
+- Dark Matter: Titan, Omega
+- Cosmic Dust: Spectre
 
 ### Tower Tiers
 
@@ -195,7 +207,7 @@ Specific rewards at milestone levels:
 | 30 | 3rd Unit Slot, Unit "Rift", Konfiguracja Elektryczna, Wieża Łukowa |
 | 35 | 5th Tower Slot |
 | 40 | Unit "Titan", Konfiguracja Próżniowa, 6th Tower Slot, Magic Pillar |
-| 45 | 4th Unit Slot (max), Konfiguracja Kwantowa, Wieża Fotonowa |
+| 45 | 4th Unit Slot (max), Konfiguracja Kwantowa |
 | 50 | Nexus Sector unlock, Crystal Matrix eligibility, Annihilation Protocol |
 
 ---

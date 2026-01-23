@@ -68,13 +68,14 @@ export interface GuildWeeklyResetJob {
 
 // Initialize recurring jobs
 export async function initializeJobs(): Promise<void> {
-  // Leaderboard snapshot every hour
+  // Leaderboard snapshot for previous week (historical data only)
+  // Current week uses real-time sorted sets, so we only snapshot completed weeks
   await leaderboardQueue.add(
     'snapshot',
-    { type: 'snapshot', weekKey: getCurrentWeekKey() },
+    { type: 'snapshot', weekKey: getPreviousWeekKey() },
     {
       repeat: {
-        pattern: '0 * * * *', // Every hour
+        pattern: '0 * * * *', // Every hour - creates historical snapshots
       },
     }
   );
@@ -152,4 +153,57 @@ export function createWorker<T>(
   return new Worker<T>(queueName, processor, {
     connection: redis,
   });
+}
+
+/**
+ * Get queue metrics for all queues
+ */
+export async function getQueueMetrics() {
+  const queues = [
+    { name: 'leaderboard', queue: leaderboardQueue },
+    { name: 'cleanup', queue: cleanupQueue },
+    { name: 'metrics', queue: metricsQueue },
+    { name: 'player-leaderboard', queue: playerLeaderboardQueue },
+    { name: 'guild-weekly', queue: guildWeeklyQueue },
+  ];
+
+  const metrics = await Promise.all(
+    queues.map(async ({ name, queue }) => {
+      const [waiting, active, completed, failed, delayed] = await Promise.all([
+        queue.getWaitingCount(),
+        queue.getActiveCount(),
+        queue.getCompletedCount(),
+        queue.getFailedCount(),
+        queue.getDelayedCount(),
+      ]);
+
+      return {
+        name,
+        waiting,
+        active,
+        completed,
+        failed,
+        delayed,
+        total: waiting + active + delayed,
+      };
+    })
+  );
+
+  // Calculate totals
+  const totals = metrics.reduce(
+    (acc, m) => ({
+      waiting: acc.waiting + m.waiting,
+      active: acc.active + m.active,
+      completed: acc.completed + m.completed,
+      failed: acc.failed + m.failed,
+      delayed: acc.delayed + m.delayed,
+      total: acc.total + m.total,
+    }),
+    { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0, total: 0 }
+  );
+
+  return {
+    queues: metrics,
+    totals,
+  };
 }

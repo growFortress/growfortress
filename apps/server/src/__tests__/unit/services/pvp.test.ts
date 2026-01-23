@@ -54,6 +54,11 @@ vi.mock('@arcade/sim-core', () => ({
     hp: 0, damage: 0, attackSpeed: 0, range: 0,
     critChance: 0, critMultiplier: 0, armor: 0, dodge: 0,
   })),
+  // Mock artifact definitions with drop source for arena reward pool
+  ARTIFACT_DEFINITIONS: [
+    { id: 'test_artifact', source: { type: 'drop' } },
+    { id: 'non_drop_artifact', source: { type: 'shop' } },
+  ],
 }));
 
 // Default user data for getUserArenaPower mock
@@ -143,24 +148,36 @@ describe('PvP Service', () => {
 
   describe('getOpponents', () => {
     it('returns opponents within ±20% power range', async () => {
-      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({
-        cachedTotalPower: 1000,
+      // Mock user for getUserArenaPower (needs progression, powerUpgrades, inventory, artifacts)
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...defaultUserForArenaPower,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
       });
 
+      // Mock users need progression field for calculateArenaPowerFromUser to work
       const mockUsers = [
         {
           id: 'user-456',
           displayName: 'Opponent1',
           pvpWins: 5,
           pvpLosses: 3,
-          powerUpgrades: { cachedTotalPower: 950 },
+          progression: { level: 10 },
+          powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+          inventory: { unlockedHeroIds: ['vanguard'] },
+          artifacts: [],
         },
         {
           id: 'user-789',
           displayName: 'Opponent2',
           pvpWins: 10,
           pvpLosses: 2,
-          powerUpgrades: { cachedTotalPower: 1100 },
+          progression: { level: 10 },
+          powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+          inventory: { unlockedHeroIds: ['vanguard'] },
+          artifacts: [],
         },
       ];
 
@@ -213,8 +230,13 @@ describe('PvP Service', () => {
     });
 
     it('checks cooldown for each opponent', async () => {
-      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({
-        cachedTotalPower: 1000,
+      // Mock user for getUserArenaPower
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...defaultUserForArenaPower,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
       });
 
       mockPrisma.user.findMany.mockResolvedValue([
@@ -223,7 +245,10 @@ describe('PvP Service', () => {
           displayName: 'Opponent1',
           pvpWins: 5,
           pvpLosses: 3,
-          powerUpgrades: { cachedTotalPower: 950 },
+          progression: { level: 10 },
+          powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+          inventory: { unlockedHeroIds: ['vanguard'] },
+          artifacts: [],
         },
       ]);
       mockPrisma.user.count.mockResolvedValue(1);
@@ -242,17 +267,25 @@ describe('PvP Service', () => {
       expect(result.opponents[0].challengeCooldownEndsAt).toBeDefined();
     });
 
-    it('returns max 6 random opponents', async () => {
-      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({
-        cachedTotalPower: 1000,
+    it('returns max 8 random opponents (ARENA_OPPONENTS_MAX)', async () => {
+      // Mock user for getUserArenaPower
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...defaultUserForArenaPower,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
       });
-      // Mock 10 users but expect only 6 to be returned
+      // Mock 10 users but expect only 8 to be returned (ARENA_OPPONENTS_MAX = 8)
       const manyUsers = Array.from({ length: 10 }, (_, i) => ({
         id: `user-${i}`,
         displayName: `Opponent${i}`,
         pvpWins: 5,
         pvpLosses: 3,
-        powerUpgrades: { cachedTotalPower: 900 + i * 10 },
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
       }));
       mockPrisma.user.findMany.mockResolvedValue(manyUsers);
       mockPrisma.user.count.mockResolvedValue(10);
@@ -260,13 +293,19 @@ describe('PvP Service', () => {
 
       const result = await getOpponents('user-123');
 
-      expect(result.opponents.length).toBeLessThanOrEqual(6);
+      expect(result.opponents.length).toBeLessThanOrEqual(8);
+      // total is the count of candidates that pass the power filter, not user.count
       expect(result.total).toBe(10);
     });
 
     it('returns empty array when no matching opponents', async () => {
-      mockPrisma.powerUpgrades.findUnique.mockResolvedValue({
-        cachedTotalPower: 1000,
+      // Mock user for getUserArenaPower
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...defaultUserForArenaPower,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
       });
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
@@ -299,12 +338,23 @@ describe('PvP Service', () => {
 
   describe('createChallenge', () => {
     it('creates challenge with valid parameters', async () => {
-      const challenger = createMockUser({ id: 'user-123', displayName: 'Challenger' });
-      const challenged = createMockUser({ id: 'user-456', displayName: 'Challenged' });
+      const fullUserData = {
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {}, cachedTotalPower: 1000 },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
+      };
 
-      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
-        if (where.id === 'user-123') return { ...challenger, powerUpgrades: { cachedTotalPower: 1000 } };
-        if (where.id === 'user-456') return { ...challenged, powerUpgrades: { cachedTotalPower: 950 } };
+      mockPrisma.user.findUnique.mockImplementation(({ where }: { where: { id: string } }) => {
+        if (where.id === 'user-123') return {
+          ...createMockUser({ id: 'user-123', displayName: 'Challenger' }),
+          ...fullUserData,
+        };
+        if (where.id === 'user-456') return {
+          ...createMockUser({ id: 'user-456', displayName: 'Challenged' }),
+          ...fullUserData,
+          powerUpgrades: { ...fullUserData.powerUpgrades, cachedTotalPower: 950 },
+        };
         return null;
       });
 
@@ -315,6 +365,7 @@ describe('PvP Service', () => {
           challengedId: 'user-456',
           challengerPower: 1000,
           challengedPower: 950,
+          status: 'PENDING',
         })
       );
 
@@ -322,7 +373,7 @@ describe('PvP Service', () => {
 
       expect(result.challenge.challengerId).toBe('user-123');
       expect(result.challenge.challengedId).toBe('user-456');
-      expect(result.challenge.status).toBe('RESOLVED');
+      expect(result.challenge.status).toBe('PENDING'); // Challenges are created as PENDING
       expect(result.challenge.challengerPower).toBe(1000);
       expect(result.challenge.challengedPower).toBe(950);
     });
@@ -334,6 +385,7 @@ describe('PvP Service', () => {
     });
 
     it('throws USER_NOT_FOUND when challenger not found', async () => {
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(createChallenge('user-123', 'user-456')).rejects.toMatchObject({
@@ -342,8 +394,15 @@ describe('PvP Service', () => {
     });
 
     it('throws OPPONENT_NOT_FOUND when opponent not found', async () => {
-      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
-        if (where.id === 'user-123') return createMockUser({ id: 'user-123' });
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.user.findUnique.mockImplementation(({ where }: { where: { id: string } }) => {
+        if (where.id === 'user-123') return {
+          ...createMockUser({ id: 'user-123' }),
+          progression: { level: 10 },
+          powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+          inventory: { unlockedHeroIds: ['vanguard'] },
+          artifacts: [],
+        };
         return null;
       });
 
@@ -941,7 +1000,7 @@ describe('PvP Service', () => {
       });
     });
 
-    it('throws CHALLENGE_NOT_PENDING for unresolved challenge', async () => {
+    it('throws CHALLENGE_NOT_RESOLVED for unresolved challenge', async () => {
       const challenge = createMockPvpChallenge({
         challengerId: 'user-123',
         status: 'PENDING',
@@ -953,7 +1012,7 @@ describe('PvP Service', () => {
       });
 
       await expect(getReplayData('challenge-123', 'user-123')).rejects.toMatchObject({
-        code: 'CHALLENGE_NOT_PENDING',
+        code: 'CHALLENGE_NOT_RESOLVED',
       });
     });
 

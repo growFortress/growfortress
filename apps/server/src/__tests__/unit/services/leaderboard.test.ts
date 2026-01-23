@@ -74,7 +74,7 @@ describe('Leaderboard Service', () => {
       expect(mockPrisma.leaderboardEntry.upsert).not.toHaveBeenCalled();
     });
 
-    it('invalidates cache on update', async () => {
+    it('updates sorted set on update', async () => {
       mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(null);
       mockPrisma.leaderboardEntry.upsert.mockResolvedValue(
         createMockLeaderboardEntry({ score: 5000 })
@@ -82,7 +82,10 @@ describe('Leaderboard Service', () => {
 
       await upsertLeaderboardEntry('user-123', 'run-123', 5000, '2024-W01');
 
-      expect(mockRedis.del).toHaveBeenCalledWith('leaderboard:weekly:2024-W01:full');
+      // Should update sorted set in real-time
+      expect(mockRedis.zadd).toHaveBeenCalledWith('leaderboard:zset:2024-W01', 5000, 'user-123');
+      // Should invalidate metadata cache
+      expect(mockRedis.del).toHaveBeenCalledWith('leaderboard:weekly:2024-W01:metadata');
     });
 
     it('uses default week key if not provided', async () => {
@@ -105,39 +108,59 @@ describe('Leaderboard Service', () => {
   });
 
   describe('getWeeklyLeaderboard', () => {
-    it('returns cached result if available', async () => {
-      // New cache format: { entries: [...], total: number }
-      const cachedData = {
-        entries: [
-          { rank: 1, userId: 'user-1', score: 10000, wavesCleared: 15, createdAt: '2024-01-01' },
-        ],
-        total: 1,
+    it('returns entries from sorted set', async () => {
+      // Mock sorted set exists
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zcard.mockResolvedValue(1);
+      mockRedis.zrevrange.mockResolvedValue(['user-1', '10000']); // WITHSCORES format
+      
+      // Mock metadata cache
+      const metadata = {
+        'user-1': {
+          displayName: 'TestPlayer',
+          wavesCleared: 15,
+          createdAt: '2024-01-01T00:00:00.000Z',
+        },
       };
-      setMockRedisValue('leaderboard:weekly:2024-W01:full', JSON.stringify(cachedData));
+      setMockRedisValue('leaderboard:weekly:2024-W01:metadata', JSON.stringify(metadata));
 
       const result = await getWeeklyLeaderboard('2024-W01', 10, 0);
 
       expect(result.weekKey).toBe('2024-W01');
       expect(result.entries.length).toBe(1);
+      expect(result.entries[0].userId).toBe('user-1');
+      expect(result.entries[0].score).toBe(10000);
+      expect(result.entries[0].displayName).toBe('TestPlayer');
       expect(result.total).toBe(1);
-      expect(mockPrisma.leaderboardEntry.findMany).not.toHaveBeenCalled();
     });
 
-    it('fetches from database if not cached', async () => {
-      // New service uses separate queries for entries and runs
-      mockPrisma.leaderboardEntry.findMany.mockResolvedValue([
-        {
-          userId: 'user-123',
-          score: 5000,
-          createdAt: new Date('2024-01-01'),
-          runId: 'run-123',
-          user: { displayName: 'TestPlayer' },
-        },
-      ]);
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(1);
+    it('syncs from database if sorted set missing', async () => {
+      // Sorted set doesn't exist, will sync from DB
+      mockRedis.exists.mockResolvedValue(0);
+      mockPrisma.leaderboardEntry.findMany
+        .mockResolvedValueOnce([
+          // First call: sync sorted set
+          {
+            userId: 'user-123',
+            score: 5000,
+          },
+        ])
+        .mockResolvedValueOnce([
+          // Second call: get metadata
+          {
+            userId: 'user-123',
+            createdAt: new Date('2024-01-01'),
+            runId: 'run-123',
+            user: { displayName: 'TestPlayer' },
+          },
+        ]);
       mockPrisma.run.findMany.mockResolvedValue([
         { id: 'run-123', summaryJson: { wavesCleared: 10 } },
       ]);
+
+      // After sync, sorted set exists
+      mockRedis.zcard.mockResolvedValue(1);
+      mockRedis.zrevrange.mockResolvedValue(['user-123', '5000']);
 
       const result = await getWeeklyLeaderboard('2024-W01', 10, 0);
 
@@ -148,52 +171,87 @@ describe('Leaderboard Service', () => {
       expect(result.entries[0].displayName).toBe('TestPlayer');
       expect(result.entries[0].wavesCleared).toBe(10);
       expect(result.total).toBe(1);
+      // Should have synced sorted set
+      expect(mockRedis.zadd).toHaveBeenCalled();
     });
 
-    it('caches result after fetching', async () => {
-      mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
-      mockPrisma.run.findMany.mockResolvedValue([]);
+    it('caches metadata after fetching', async () => {
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zcard.mockResolvedValue(1);
+      mockRedis.zrevrange.mockResolvedValue(['user-123', '5000']);
+      mockRedis.get.mockResolvedValue(null); // No cached metadata
+
+      // Mock metadata fetch from database
+      mockPrisma.leaderboardEntry.findMany.mockResolvedValue([
+        {
+          userId: 'user-123',
+          createdAt: new Date('2024-01-01'),
+          runId: 'run-123',
+          user: { displayName: 'TestPlayer' },
+        },
+      ]);
+      mockPrisma.run.findMany.mockResolvedValue([
+        { id: 'run-123', summaryJson: { wavesCleared: 10 } },
+      ]);
 
       await getWeeklyLeaderboard('2024-W01', 10, 0);
 
+      // Metadata should be cached
       expect(mockRedis.setex).toHaveBeenCalledWith(
-        'leaderboard:weekly:2024-W01:full',
-        300, // 5 minutes TTL
+        'leaderboard:weekly:2024-W01:metadata',
+        3600, // 1 hour TTL
         expect.any(String)
       );
     });
 
     it('handles pagination correctly', async () => {
-      // Service now fetches MAX_CACHED_ENTRIES (100) and paginates in memory
-      mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(50);
-      mockPrisma.run.findMany.mockResolvedValue([]);
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zcard.mockResolvedValue(50);
+      // Return 30 entries (offset 20 + limit 10)
+      const entries = Array.from({ length: 30 }, (_, i) => [`user-${i}`, String(10000 - i * 100)]);
+      const flatEntries = entries.flat();
+      mockRedis.zrevrange.mockResolvedValue(flatEntries);
 
-      await getWeeklyLeaderboard('2024-W01', 10, 20);
+      // Mock metadata for all users
+      const metadata: Record<string, any> = {};
+      for (let i = 0; i < 30; i++) {
+        metadata[`user-${i}`] = {
+          displayName: `Player${i}`,
+          wavesCleared: 10,
+          createdAt: '2024-01-01T00:00:00.000Z',
+        };
+      }
+      setMockRedisValue('leaderboard:weekly:2024-W01:metadata', JSON.stringify(metadata));
 
-      // The service now uses take: MAX_CACHED_ENTRIES (100) instead of limit
-      expect(mockPrisma.leaderboardEntry.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { weekKey: '2024-W01' },
-          take: 100, // MAX_CACHED_ENTRIES
-        })
+      const result = await getWeeklyLeaderboard('2024-W01', 10, 20);
+
+      // Should fetch range 0-29 (offset 20 + limit 10 = 30 entries)
+      expect(mockRedis.zrevrange).toHaveBeenCalledWith(
+        'leaderboard:zset:2024-W01',
+        0,
+        29,
+        'WITHSCORES'
       );
+      expect(result.entries.length).toBe(10);
+      expect(result.entries[0].rank).toBe(21); // offset + 1
     });
 
     it('calculates rank based on offset', async () => {
-      // Create 25 entries to test pagination
-      const entries = Array.from({ length: 25 }, (_, i) => ({
-        userId: `user-${i}`,
-        score: 10000 - i * 100,
-        createdAt: new Date('2024-01-01'),
-        runId: `run-${i}`,
-        user: { displayName: `Player${i}` },
-      }));
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zcard.mockResolvedValue(25);
+      const entries = Array.from({ length: 25 }, (_, i) => [`user-${i}`, String(10000 - i * 100)]);
+      const flatEntries = entries.flat();
+      mockRedis.zrevrange.mockResolvedValue(flatEntries);
 
-      mockPrisma.leaderboardEntry.findMany.mockResolvedValue(entries);
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(25);
-      mockPrisma.run.findMany.mockResolvedValue([]);
+      const metadata: Record<string, any> = {};
+      for (let i = 0; i < 25; i++) {
+        metadata[`user-${i}`] = {
+          displayName: `Player${i}`,
+          wavesCleared: 10,
+          createdAt: '2024-01-01T00:00:00.000Z',
+        };
+      }
+      setMockRedisValue('leaderboard:weekly:2024-W01:metadata', JSON.stringify(metadata));
 
       const result = await getWeeklyLeaderboard('2024-W01', 10, 20);
 
@@ -201,16 +259,18 @@ describe('Leaderboard Service', () => {
     });
 
     it('defaults to 0 wavesCleared if no runs', async () => {
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zcard.mockResolvedValue(1);
+      mockRedis.zrevrange.mockResolvedValue(['user-123', '5000']);
+
       mockPrisma.leaderboardEntry.findMany.mockResolvedValue([
         {
           userId: 'user-123',
-          score: 5000,
           createdAt: new Date('2024-01-01'),
           runId: 'run-123',
           user: { displayName: 'TestPlayer' },
         },
       ]);
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(1);
       mockPrisma.run.findMany.mockResolvedValue([]); // No runs found
 
       const result = await getWeeklyLeaderboard('2024-W01');
@@ -219,23 +279,25 @@ describe('Leaderboard Service', () => {
     });
 
     it('uses default parameters', async () => {
-      mockPrisma.leaderboardEntry.findMany.mockResolvedValue([]);
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
-      mockPrisma.run.findMany.mockResolvedValue([]);
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zcard.mockResolvedValue(0);
+      mockRedis.zrevrange.mockResolvedValue([]);
 
       await getWeeklyLeaderboard();
 
-      expect(mockPrisma.leaderboardEntry.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { weekKey: '2024-W01' },
-          take: 100, // MAX_CACHED_ENTRIES
-        })
+      expect(mockRedis.zrevrange).toHaveBeenCalledWith(
+        'leaderboard:zset:2024-W01',
+        0,
+        9, // default limit 10
+        'WITHSCORES'
       );
     });
   });
 
   describe('getUserRank', () => {
     it('returns null if user has no entry', async () => {
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zscore.mockResolvedValue(null);
       mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(null);
 
       const result = await getUserRank('user-123', '2024-W01');
@@ -243,60 +305,67 @@ describe('Leaderboard Service', () => {
       expect(result).toBeNull();
     });
 
-    it('returns rank and score for existing entry', async () => {
-      mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(
-        createMockLeaderboardEntry({ score: 5000 })
-      );
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(3);
+    it('returns rank and score from sorted set', async () => {
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zscore.mockResolvedValue('5000');
+      mockRedis.zrevrank.mockResolvedValue(3); // 0-indexed, so rank 4
 
       const result = await getUserRank('user-123', '2024-W01');
 
       expect(result).not.toBeNull();
-      expect(result!.rank).toBe(4); // 3 higher scores + 1
+      expect(result!.rank).toBe(4); // zrevrank + 1
       expect(result!.score).toBe(5000);
     });
 
     it('returns rank 1 if highest score', async () => {
-      mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(
-        createMockLeaderboardEntry({ score: 10000 })
-      );
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(0);
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zscore.mockResolvedValue('10000');
+      mockRedis.zrevrank.mockResolvedValue(0); // Top of leaderboard
 
       const result = await getUserRank('user-123', '2024-W01');
 
       expect(result!.rank).toBe(1);
     });
 
-    it('counts only higher scores correctly', async () => {
+    it('syncs from DB and adds to sorted set if user not in sorted set', async () => {
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zscore.mockResolvedValue(null);
       mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(
         createMockLeaderboardEntry({ score: 5000 })
       );
-      mockPrisma.leaderboardEntry.count.mockResolvedValue(10);
+      mockRedis.zrevrank.mockResolvedValue(10);
 
       const result = await getUserRank('user-123', '2024-W01');
 
-      expect(mockPrisma.leaderboardEntry.count).toHaveBeenCalledWith({
-        where: {
-          weekKey: '2024-W01',
-          score: { gt: 5000 },
-        },
-      });
+      // Should add to sorted set
+      expect(mockRedis.zadd).toHaveBeenCalledWith('leaderboard:zset:2024-W01', 5000, 'user-123');
       expect(result!.rank).toBe(11);
+      expect(result!.score).toBe(5000);
+    });
+
+    it('syncs sorted set from DB if missing', async () => {
+      mockRedis.exists.mockResolvedValue(0);
+      mockPrisma.leaderboardEntry.findMany.mockResolvedValue([
+        { userId: 'user-123', score: 5000 },
+      ]);
+      mockRedis.zscore.mockResolvedValue('5000');
+      mockRedis.zrevrank.mockResolvedValue(0);
+
+      const result = await getUserRank('user-123', '2024-W01');
+
+      // Should sync sorted set
+      expect(mockPrisma.leaderboardEntry.findMany).toHaveBeenCalled();
+      expect(result!.rank).toBe(1);
     });
 
     it('uses default week key', async () => {
+      mockRedis.exists.mockResolvedValue(1);
+      mockRedis.zscore.mockResolvedValue(null);
       mockPrisma.leaderboardEntry.findUnique.mockResolvedValue(null);
 
       await getUserRank('user-123');
 
-      expect(mockPrisma.leaderboardEntry.findUnique).toHaveBeenCalledWith({
-        where: {
-          weekKey_userId: {
-            weekKey: '2024-W01',
-            userId: 'user-123',
-          },
-        },
-      });
+      expect(mockRedis.zscore).toHaveBeenCalledWith('leaderboard:zset:2024-W01', 'user-123');
     });
   });
 });

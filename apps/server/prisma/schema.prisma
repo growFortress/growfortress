@@ -155,6 +155,7 @@ model User {
   supportTickets SupportTicket[]
 
   @@index([referredById])
+  @@index([banned])
 }
 
 model PasswordResetToken {
@@ -491,6 +492,18 @@ model MetricSnapshot {
   ccu            Int
   activeSessions Int
   errorCount     Int
+  // Response time metrics (in milliseconds)
+  responseTimeAvg Float?
+  responseTimeP50 Float?
+  responseTimeP95 Float?
+  responseTimeP99 Float?
+  responseTimeMax Float?
+  // Queue metrics
+  queueWaitingTotal Int      @default(0)
+  queueActiveTotal  Int      @default(0)
+  queueDelayedTotal Int      @default(0)
+  queueFailedTotal  Int      @default(0)
+  queueMetricsJson  Json?    // Detailed per-queue metrics
 
   @@index([timestamp])
 }
@@ -796,6 +809,7 @@ model Guild {
   battlesReceived GuildBattle[] @relation("guildBattleChallenged")
 
   @@index([honor(sort: Desc)])
+  @@index([disbanded])
 }
 
 model GuildMember {
@@ -1346,6 +1360,7 @@ model MessageParticipant {
   @@unique([threadId, userId])
   @@index([userId])
   @@index([userId, unreadCount])
+  @@index([userId, deletedAt])
 }
 
 model Message {
@@ -1598,6 +1613,7 @@ model PillarChallengeSession {
   @@index([userId])
   @@index([pillarId])
   @@index([startedAt])
+  @@index([pillarId, tier, verified, wavesCleared, endedAt])
 }
 
 // Daily/weekly limits for Pillar Challenge

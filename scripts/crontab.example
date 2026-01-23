@@ -1,0 +1,23 @@
+# Example crontab entries for automated backups
+# Install: crontab -e
+# Or: crontab scripts/crontab.example
+#
+# Note: Update paths to match your project location
+
+# PostgreSQL daily backup at 02:00 UTC
+0 2 * * * cd /path/to/arcade && ./scripts/backup-postgres.sh full
+
+# PostgreSQL weekly backup (Sunday 01:00 UTC)
+0 1 * * 0 cd /path/to/arcade && ./scripts/backup-postgres.sh full
+
+# PostgreSQL WAL cleanup (daily at 03:00 UTC)
+0 3 * * * cd /path/to/arcade && ./scripts/backup-postgres.sh wal
+
+# Redis backup every 6 hours
+0 */6 * * * cd /path/to/arcade && ./scripts/backup-redis.sh
+
+# Verify PostgreSQL backup daily at 04:00 UTC
+0 4 * * * cd /path/to/arcade && ./scripts/verify-backup.sh postgres
+
+# Verify Redis backup daily at 05:00 UTC
+0 5 * * * cd /path/to/arcade && ./scripts/verify-backup.sh redis

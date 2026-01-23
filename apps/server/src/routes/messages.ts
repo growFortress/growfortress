@@ -25,6 +25,19 @@ const MESSAGE_ERRORS = {
 } as const;
 
 const messagesRoutes: FastifyPluginAsync = async (fastify) => {
+  // Helper to check if guest user is trying to send messages
+  const requireRegistration = (request: any, reply: any): boolean => {
+    if (request.isGuest) {
+      reply.status(403).send({
+        error: 'Registration required',
+        code: 'REGISTRATION_REQUIRED',
+        message: 'Create an account to send messages'
+      });
+      return false;
+    }
+    return true;
+  };
+
   // ============================================================================
   // THREADS
   // ============================================================================
@@ -61,6 +74,7 @@ const messagesRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.userId) {
       return reply.status(401).send({ error: MESSAGE_ERRORS.UNAUTHORIZED });
     }
+    if (!requireRegistration(request, reply)) return;
 
     try {
       const body = ComposeThreadRequestSchema.parse(request.body);
@@ -81,6 +95,7 @@ const messagesRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.userId) {
       return reply.status(401).send({ error: MESSAGE_ERRORS.UNAUTHORIZED });
     }
+    if (!requireRegistration(request, reply)) return;
 
     try {
       const { threadId } = request.params as { threadId: string };
@@ -97,6 +112,7 @@ const messagesRoutes: FastifyPluginAsync = async (fastify) => {
     if (!request.userId) {
       return reply.status(401).send({ error: MESSAGE_ERRORS.UNAUTHORIZED });
     }
+    if (!requireRegistration(request, reply)) return;
 
     try {
       const { threadId } = request.params as { threadId: string };

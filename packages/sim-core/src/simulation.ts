@@ -28,7 +28,7 @@ import {
   detectBuildType,
   type ExtendedRelicSelectionContext,
 } from './data/relics.js';
-import { getEnemyStats, getEnemyRewards, getWaveComposition } from './data/enemies.js';
+import { getEnemyStats, getEnemyRewards, getWaveComposition, ENEMY_ARCHETYPES } from './data/enemies.js';
 import { calculateDamage, shouldCrit, shouldChain } from './modifiers.js';
 import { applyEvent } from './events.js';
 import { createCheckpoint, computeFinalHash } from './checkpoints.js';
@@ -417,10 +417,53 @@ export class Simulation {
 
   /**
    * Advance simulation by one tick
+   * 
+   * DETERMINISTIC UPDATE ORDER CONTRACT:
+   * This order is critical for deterministic simulation and must be maintained.
+   * Changes to this order can cause non-deterministic behavior in replays.
+   * 
+   * Phase 1: Events & Setup
+   *   1. Sync RNG state
+   *   2. Apply events (spawns, triggers, etc.)
+   *   3. Create checkpoints (if needed)
+   *   4. Update modifiers (synergy, pillar)
+   * 
+   * Phase 2: AI Decisions & Forces
+   *   5. Update waves (spawn logic)
+   *   6. Update enemies (AI decisions, steering forces)
+   *   7. Update fortress attack (AI decision)
+   *   8. Update regeneration (passive effects)
+   *   9. Update heroes (AI decisions, steering forces)
+   *   10. Update turrets (AI decisions, target selection)
+   * 
+   * Phase 3: Physics Integration
+   *   11. Integrate velocities (apply forces to velocities)
+   *   12. Integrate positions (apply velocities to positions)
+   *   13. Resolve collisions (hero-hero, hero-enemy, enemy-wall)
+   * 
+   * Phase 4: Projectiles & Combat
+   *   14. Update projectiles (movement, ray-march hit detection)
+   *   15. Update fortress skills (active abilities)
+   *   16. Update walls (collision damage)
+   *   17. Update militia (movement, combat)
+   *   18. Update enemy abilities (active abilities)
+   *   19. Update fortress auras (buff application)
+   * 
+   * Phase 5: Damage & Status Effects
+   *   20. Apply damage/CC ticks (DOT, status effects)
+   * 
+   * Phase 6: Cleanup & State
+   *   21. Check win/lose conditions
+   *   22. Store RNG state
+   *   23. Advance tick counter
    */
   step(): void {
     if (this.state.ended) return;
 
+    // ========================================================================
+    // PHASE 1: Events & Setup
+    // ========================================================================
+    
     // Sync RNG state
     this.rng.setState(this.state.rngState);
 
@@ -440,22 +483,39 @@ export class Simulation {
       this.updatePillarModifiers();
     }
 
+    // ========================================================================
+    // PHASE 2: AI Decisions & Forces
+    // ========================================================================
+    
     // Update game state
     this.updateWaves();
-    this.updateEnemies();
+    this.updateEnemies();  // AI decisions, steering forces
     this.updateFortressAttack();
     this.updateRegeneration();
 
     // NEW: Analytics tick
     analytics.updateTick();
 
-    // NEW: Update heroes system
+    // NEW: Update heroes system (AI decisions, steering forces)
     updateHeroes(this.state, this.config, this.rng);
 
-    // NEW: Update turrets system
+    // NEW: Update turrets system (AI decisions, target selection)
     updateTurrets(this.state, this.config, this.rng);
 
-    // NEW: Update projectiles
+    // ========================================================================
+    // PHASE 3: Physics Integration
+    // Note: Heroes integrate positions in updateHeroes() (Phase 2)
+    //       Enemies integrate positions in updateEnemies() (Phase 2)
+    //       Collisions resolved in updateHeroes() and updateWalls()
+    // ========================================================================
+
+    // ========================================================================
+    // PHASE 4: Projectiles & Combat
+    // ========================================================================
+    
+    // NEW: Update projectiles (movement, ray-march hit detection)
+    // IMPORTANT: Projectiles read target positions AFTER enemies have moved
+    //            This ensures deterministic behavior
     updateProjectiles(this.state, this.config);
 
     // NEW: Update fortress class skills
@@ -473,6 +533,16 @@ export class Simulation {
     // NEW: Update fortress auras (buff nearby heroes/turrets)
     updateFortressAuras(this.state, this.config);
 
+    // ========================================================================
+    // PHASE 5: Damage & Status Effects
+    // Note: Most damage is applied immediately in projectiles/combat
+    //       DOT effects are handled in updateEnemyStatusEffects()
+    // ========================================================================
+
+    // ========================================================================
+    // PHASE 6: Cleanup & State
+    // ========================================================================
+    
     // Check win/lose conditions
     this.checkEndConditions();
 
@@ -1600,10 +1670,19 @@ export class Simulation {
    * Apply chain lightning damage to random enemies
    */
   private applyChainDamage(primary: Enemy, damage: number): void {
-    const shouldDoChain = shouldChain(
-      this.state.modifiers.chainChance,
-      this.rng.nextFloat()
-    );
+    let chainChance = this.state.modifiers.chainChance;
+    
+    // Apply wave modifier reductions (if any)
+    // Note: Wave modifiers would need to be stored in state for full implementation
+    // For now, we apply enemy-specific resistances
+    
+    // Check primary enemy resistance
+    const primaryArchetype = ENEMY_ARCHETYPES[primary.type];
+    if (primaryArchetype?.chainResistance) {
+      chainChance *= (1 - primaryArchetype.chainResistance);
+    }
+
+    const shouldDoChain = shouldChain(chainChance, this.rng.nextFloat());
 
     if (!shouldDoChain) return;
 
@@ -1621,7 +1700,20 @@ export class Simulation {
       mechanicId: 'chain',
     };
     for (const target of chainTargets) {
-      this.damageEnemy(target, chainDamage, attribution);
+      // Apply target-specific chain resistance
+      const targetArchetype = ENEMY_ARCHETYPES[target.type];
+      let finalChainDamage = chainDamage;
+      
+      if (targetArchetype?.chainResistance) {
+        // If enemy is immune (1.0), skip this target
+        if (targetArchetype.chainResistance >= 1.0) {
+          continue;
+        }
+        // Otherwise reduce damage
+        finalChainDamage = Math.floor(chainDamage * (1 - targetArchetype.chainResistance));
+      }
+      
+      this.damageEnemy(target, finalChainDamage, attribution);
     }
   }
 
@@ -1631,8 +1723,15 @@ export class Simulation {
   private applySplashDamage(primary: Enemy, damage: number): void {
     if (this.state.modifiers.splashRadiusBonus <= 0) return;
 
-    const splashDamage = Math.floor(damage * this.state.modifiers.splashDamagePercent);
-    const splashRadiusFP = FP.fromInt(this.state.modifiers.splashRadiusBonus);
+    let splashDamagePercent = this.state.modifiers.splashDamagePercent;
+    let splashRadius = this.state.modifiers.splashRadiusBonus;
+    
+    // Apply wave modifier reductions (if any)
+    // Note: Wave modifiers would need to be stored in state for full implementation
+    // For now, we apply enemy-specific resistances
+    
+    const splashDamage = Math.floor(damage * splashDamagePercent);
+    const splashRadiusFP = FP.fromInt(splashRadius);
 
     // Use squared distance for efficiency (avoids sqrt)
     const splashRadiusSq = FP.mul(splashRadiusFP, splashRadiusFP);
@@ -1652,7 +1751,15 @@ export class Simulation {
       const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
 
       if (distSq <= splashRadiusSq) {
-        this.damageEnemy(enemy, splashDamage, attribution);
+        // Apply enemy-specific splash resistance
+        const enemyArchetype = ENEMY_ARCHETYPES[enemy.type];
+        let finalSplashDamage = splashDamage;
+        
+        if (enemyArchetype?.splashResistance) {
+          finalSplashDamage = Math.floor(splashDamage * (1 - enemyArchetype.splashResistance));
+        }
+        
+        this.damageEnemy(enemy, finalSplashDamage, attribution);
       }
     }
   }

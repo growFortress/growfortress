@@ -108,6 +108,7 @@ describe('Guild Tower Race Service', () => {
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(mockRace);
       mockPrisma.guildTowerRaceEntry.findUnique.mockResolvedValue(mockEntry);
       mockPrisma.guildTowerRaceEntry.count.mockResolvedValue(2); // 2 guilds ahead
+      mockPrisma.guildMedalBonus.findUnique.mockResolvedValue(null); // No active bonus
 
       const result = await getRaceStatus('guild-123');
 
@@ -121,6 +122,7 @@ describe('Guild Tower Race Service', () => {
       const mockRace = createMockGuildTowerRace();
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(mockRace);
       mockPrisma.guildTowerRaceEntry.findUnique.mockResolvedValue(null);
+      mockPrisma.guildMedalBonus.findUnique.mockResolvedValue(null); // No active bonus
 
       const result = await getRaceStatus('guild-999');
 
@@ -133,6 +135,7 @@ describe('Guild Tower Race Service', () => {
       const mockRace = createMockGuildTowerRace({ endsAt: futureEnd });
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(mockRace);
       mockPrisma.guildTowerRaceEntry.findUnique.mockResolvedValue(null);
+      mockPrisma.guildMedalBonus.findUnique.mockResolvedValue(null); // No active bonus
 
       const result = await getRaceStatus('guild-123');
 
@@ -145,6 +148,7 @@ describe('Guild Tower Race Service', () => {
       const mockRace = createMockGuildTowerRace({ endsAt: pastEnd });
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(mockRace);
       mockPrisma.guildTowerRaceEntry.findUnique.mockResolvedValue(null);
+      mockPrisma.guildMedalBonus.findUnique.mockResolvedValue(null); // No active bonus
 
       const result = await getRaceStatus('guild-123');
 
@@ -157,6 +161,7 @@ describe('Guild Tower Race Service', () => {
       mockPrisma.guildTowerRace.findUnique.mockResolvedValue(mockRace);
       mockPrisma.guildTowerRaceEntry.findUnique.mockResolvedValue(mockEntry);
       mockPrisma.guildTowerRaceEntry.count.mockResolvedValue(0); // No guilds ahead
+      mockPrisma.guildMedalBonus.findUnique.mockResolvedValue(null); // No active bonus
 
       const result = await getRaceStatus('guild-123');
 

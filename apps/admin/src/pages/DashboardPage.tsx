@@ -72,6 +72,49 @@ export function DashboardPage(_: { path?: string }) {
         </div>
       </div>
 
+      {/* Performance Metrics */}
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div class="text-sm font-medium text-gray-500 mb-1">Response Time (P95)</div>
+          <div class="text-2xl font-bold text-amber-600">
+            {stats?.responseTime?.p95 ? `${Math.round(stats.responseTime.p95)}ms` : 'N/A'}
+          </div>
+          <div class="mt-2 text-xs text-gray-400">
+            Avg: {stats?.responseTime?.avg ? `${Math.round(stats.responseTime.avg)}ms` : 'N/A'}
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div class="text-sm font-medium text-gray-500 mb-1">Response Time (P99)</div>
+          <div class="text-2xl font-bold text-orange-600">
+            {stats?.responseTime?.p99 ? `${Math.round(stats.responseTime.p99)}ms` : 'N/A'}
+          </div>
+          <div class="mt-2 text-xs text-gray-400">
+            Max: {stats?.responseTime?.max ? `${Math.round(stats.responseTime.max)}ms` : 'N/A'}
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div class="text-sm font-medium text-gray-500 mb-1">Queue Backlog</div>
+          <div class="text-2xl font-bold text-purple-600">
+            {stats?.queueMetrics?.waiting || 0}
+          </div>
+          <div class="mt-2 text-xs text-gray-400">
+            Active: {stats?.queueMetrics?.active || 0}
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div class="text-sm font-medium text-gray-500 mb-1">Queue Failed</div>
+          <div class="text-2xl font-bold text-red-600">
+            {stats?.queueMetrics?.failed || 0}
+          </div>
+          <div class="mt-2 text-xs text-gray-400">
+            Delayed: {stats?.queueMetrics?.delayed || 0}
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 gap-6">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h2 class="text-lg font-semibold mb-4 text-gray-700">System Activity (24h)</h2>

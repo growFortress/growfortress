@@ -8,7 +8,9 @@ import { config } from "./config.js";
 import authPlugin from "./plugins/auth.js";
 import rateLimitPlugin from "./plugins/rateLimit.js";
 import errorHandlerPlugin from "./plugins/errorHandler.js";
+import responseTimePlugin from "./plugins/responseTime.js";
 import websocketPlugin from "./plugins/websocket.js";
+import deprecationPlugin from "./plugins/deprecation.js";
 
 // Services
 import { initWebSocketService } from "./services/websocket.js";
@@ -140,8 +142,10 @@ export async function buildApp() {
 
   // Register plugins
   await fastify.register(errorHandlerPlugin);
+  await fastify.register(responseTimePlugin);
   await fastify.register(authPlugin);
   await fastify.register(rateLimitPlugin);
+  await fastify.register(deprecationPlugin);
   await fastify.register(websocketPlugin);
 
   // Initialize WebSocket service with fastify instance

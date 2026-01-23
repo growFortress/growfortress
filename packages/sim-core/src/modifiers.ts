@@ -2,60 +2,84 @@ import { ActiveRelic, ModifierSet, Enemy, GameState } from './types.js';
 import { DEFAULT_MODIFIERS, getRelicById, ExtendedRelicDef } from './data/relics.js';
 
 /**
+ * Apply smooth diminishing returns using hyperbolic curve
+ * Linear below soft cap, smooth hyperbolic curve above
+ * 
+ * Formula above soft cap: effective = softCap + (cap - softCap) * ((x - softCap) / (x - softCap + k))
+ * This ensures:
+ * - Linear behavior below soft cap (no DR)
+ * - Smooth transition at soft cap
+ * - Approaches hard cap asymptotically
+ */
+function applySmoothDR(rawValue: number, softCap: number, hardCap: number, k: number): number {
+  if (rawValue <= 0) return 0;
+  if (rawValue <= softCap) {
+    // Linear below soft cap (no diminishing returns)
+    return rawValue;
+  }
+  
+  // Hyperbolic curve above soft cap
+  // effective = softCap + (hardCap - softCap) * ((x - softCap) / (x - softCap + k))
+  const excess = rawValue - softCap;
+  const range = hardCap - softCap;
+  const diminishedExcess = range * (excess / (excess + k));
+  
+  return Math.min(softCap + diminishedExcess, hardCap);
+}
+
+/**
  * Apply diminishing returns to crit chance
- * First 50% is linear, then soft cap with diminishing returns
+ * Linear below 50%, smooth hyperbolic curve above
  * Hard cap at 75%
+ * 
+ * - Below 50%: linear (no DR)
+ * - Above 50%: smooth hyperbolic curve
+ * - Hard cap at 75%
  */
 function applyCritDiminishingReturns(rawCritChance: number): number {
   const SOFT_CAP = 0.5;
   const HARD_CAP = 0.75;
-
-  if (rawCritChance <= SOFT_CAP) {
-    return rawCritChance;
-  }
-
-  const excessCrit = rawCritChance - SOFT_CAP;
-  // Each point above soft cap gives 50% value
-  const diminishedExcess = excessCrit * 0.5;
-
-  return Math.min(SOFT_CAP + diminishedExcess, HARD_CAP);
+  // k controls the smoothness: smaller k = steeper curve
+  // At raw=0.75 (50% excess), we want effective ≈ 0.625 (50% of range above soft cap)
+  // 0.125 = 0.25 * (0.25 / (0.25 + k)) → k ≈ 0.25
+  const K = 0.25;
+  return applySmoothDR(rawCritChance, SOFT_CAP, HARD_CAP, K);
 }
 
 /**
  * Apply diminishing returns to damage bonus
- * Soft cap at 200%, hard cap at 500%
- * Above soft cap, bonuses are 30% as effective
+ * Linear below 200%, smooth hyperbolic curve above
+ * Hard cap at 500%
+ * 
+ * - Below 200%: linear (no DR)
+ * - Above 200%: smooth hyperbolic curve
+ * - Hard cap at 500%
  */
 function applyDamageDiminishingReturns(rawBonus: number): number {
-  const DAMAGE_SOFT_CAP = 2.0;  // 200% bonus
-  const DAMAGE_HARD_CAP = 5.0;  // 500% max
-
-  if (rawBonus <= DAMAGE_SOFT_CAP) {
-    return rawBonus;
-  }
-
-  const excess = rawBonus - DAMAGE_SOFT_CAP;
-  const diminished = excess * 0.3;  // 30% effectiveness above soft cap
-
-  return Math.min(DAMAGE_SOFT_CAP + diminished, DAMAGE_HARD_CAP);
+  const SOFT_CAP = 2.0;  // 200% bonus
+  const HARD_CAP = 5.0;  // 500% max
+  // k controls the smoothness: at raw=3.0 (1.0 excess), we want effective ≈ 2.5 (50% of range)
+  // 0.5 = 3.0 * (1.0 / (1.0 + k)) → k ≈ 5.0, but let's use k=3.0 for smoother curve
+  const K = 3.0;
+  return applySmoothDR(rawBonus, SOFT_CAP, HARD_CAP, K);
 }
 
 /**
  * Apply diminishing returns to attack speed bonus
- * Soft cap at 100%, hard cap at 300%
+ * Linear below 100%, smooth hyperbolic curve above
+ * Hard cap at 300%
+ * 
+ * - Below 100%: linear (no DR)
+ * - Above 100%: smooth hyperbolic curve
+ * - Hard cap at 300%
  */
 function applyAttackSpeedDiminishingReturns(rawBonus: number): number {
   const SOFT_CAP = 1.0;   // 100% bonus
   const HARD_CAP = 3.0;   // 300% max
-
-  if (rawBonus <= SOFT_CAP) {
-    return rawBonus;
-  }
-
-  const excess = rawBonus - SOFT_CAP;
-  const diminished = excess * 0.4;  // 40% effectiveness above soft cap
-
-  return Math.min(SOFT_CAP + diminished, HARD_CAP);
+  // k controls the smoothness: at raw=2.0 (1.0 excess), we want effective ≈ 2.0 (50% of range)
+  // 1.0 = 2.0 * (1.0 / (1.0 + k)) → k = 1.0
+  const K = 1.0;
+  return applySmoothDR(rawBonus, SOFT_CAP, HARD_CAP, K);
 }
 
 /**

@@ -13,7 +13,10 @@ export type WaveModifierType =
   | 'elite_rush'   // 3x elite chance
   | 'boss_guard'   // Boss + elite guards only
   | 'regenerating' // Enemies heal 2% HP/sec
-  | 'shielded';    // First 50% damage absorbed
+  | 'shielded'      // First 50% damage absorbed
+  | 'scattered_formation'  // Enemies spawn spread out, -30% splash effectiveness
+  | 'chain_breaker'       // -50% chain chance, +20% HP
+  | 'splash_dampener';     // -40% splash damage, +25% gold reward
 
 export interface WaveModifierEffect {
   speedMultiplier?: number;
@@ -23,6 +26,10 @@ export interface WaveModifierEffect {
   eliteChanceMultiplier?: number;
   regenerationPercent?: number;
   shieldPercent?: number;
+  // Counterplay modifiers
+  splashEffectivenessReduction?: number;  // Reduces splash damage effectiveness (0.0-1.0)
+  chainChanceReduction?: number;          // Reduces chain chance (0.0-1.0)
+  goldRewardBonus?: number;               // Additional gold reward multiplier
 }
 
 export interface WaveModifier {
@@ -105,6 +112,36 @@ export const WAVE_MODIFIERS: Record<WaveModifierType, WaveModifier> = {
     effect: { shieldPercent: 0.50 },
     rewardMultiplier: 1.35,
   },
+  scattered_formation: {
+    type: 'scattered_formation',
+    name: 'Rozproszona Formacja',
+    description: 'Wrogowie spawnują się rozproszeni, -30% skuteczność splash',
+    icon: '🌊',
+    effect: { splashEffectivenessReduction: 0.30 },
+    rewardMultiplier: 1.20,
+  },
+  chain_breaker: {
+    type: 'chain_breaker',
+    name: 'Przerywacz Łańcuchów',
+    description: 'Wrogowie mają -50% szansy na chain, +20% HP',
+    icon: '⚡',
+    effect: { 
+      chainChanceReduction: 0.50,
+      hpMultiplier: 1.20,
+    },
+    rewardMultiplier: 1.25,
+  },
+  splash_dampener: {
+    type: 'splash_dampener',
+    name: 'Tłumik Eksplozji',
+    description: 'Splash damage redukowany o 40%, +25% złota',
+    icon: '💥',
+    effect: { 
+      splashEffectivenessReduction: 0.40,
+      goldRewardBonus: 0.25,
+    },
+    rewardMultiplier: 1.30,
+  },
 };
 
 /**
@@ -156,6 +193,9 @@ export function getCombinedModifierEffect(modifiers: WaveModifierType[]): WaveMo
     eliteChanceMultiplier: 1.0,
     regenerationPercent: 0,
     shieldPercent: 0,
+    splashEffectivenessReduction: 0,
+    chainChanceReduction: 0,
+    goldRewardBonus: 0,
   };
 
   for (const modType of modifiers) {
@@ -180,6 +220,15 @@ export function getCombinedModifierEffect(modifiers: WaveModifierType[]): WaveMo
     }
     if (mod.effect.shieldPercent) {
       combined.shieldPercent = Math.max(combined.shieldPercent!, mod.effect.shieldPercent);
+    }
+    if (mod.effect.splashEffectivenessReduction) {
+      combined.splashEffectivenessReduction! += mod.effect.splashEffectivenessReduction;
+    }
+    if (mod.effect.chainChanceReduction) {
+      combined.chainChanceReduction! += mod.effect.chainChanceReduction;
+    }
+    if (mod.effect.goldRewardBonus) {
+      combined.goldRewardBonus! += mod.effect.goldRewardBonus;
     }
   }
 

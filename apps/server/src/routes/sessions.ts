@@ -9,6 +9,7 @@ import {
   submitSegment,
   endGameSession,
   getActiveSession,
+  refreshSessionToken,
   GameSessionError,
 } from '../services/gameSessions.js';
 
@@ -145,6 +146,34 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     return reply.send(session);
+  });
+
+  // Refresh session token (extend expiry for long gameplay sessions)
+  fastify.post<{
+    Params: { sessionId: string };
+  }>('/v1/sessions/:sessionId/refresh-token', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const { sessionId } = request.params;
+    const body = request.body as { sessionToken?: string };
+
+    if (!body.sessionToken) {
+      return reply.status(400).send({ error: 'sessionToken is required' });
+    }
+
+    const result = await refreshSessionToken(
+      request.userId,
+      sessionId,
+      body.sessionToken,
+    );
+
+    if (!result) {
+      return reply.status(404).send({ error: 'Session not found or token invalid' });
+    }
+
+    return reply.send(result);
   });
 };
 

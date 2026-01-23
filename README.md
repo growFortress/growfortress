@@ -291,6 +291,9 @@ REDIS_URL="redis://localhost:6379"
 
 # Auth (change in production!)
 JWT_SECRET="min-32-characters-secret-key-here"
+# Optional: For secret rotation - set to previous secret to allow old tokens to still be verified
+# After all refresh tokens expire (7 days), you can remove this variable
+JWT_SECRET_PREVIOUS="previous-secret-key-here"
 JWT_ACCESS_EXPIRY="15m"
 JWT_REFRESH_EXPIRY="7d"
 
@@ -318,6 +321,32 @@ CORS_ORIGINS="http://localhost:5173"
 |-----|----------|-------------|
 | `leaderboard-snapshot` | Hourly | Cache top 100 in Redis |
 | `metrics-snapshot` | Every 5 min | Record system metrics |
+
+## Backups
+
+Automated backup system for PostgreSQL and Redis with point-in-time recovery support.
+
+**Quick Setup:**
+```bash
+# 1. Restart containers with backup config
+docker-compose down && docker-compose up -d
+
+# 2. Test backup scripts
+bash scripts/backup-postgres.sh full
+bash scripts/backup-redis.sh
+
+# 3. Set up automation (see docs/BACKUP-SETUP.md)
+```
+
+**Documentation:**
+- [Backup Setup Guide](docs/BACKUP-SETUP.md) - Quick start
+- [Backup Strategy](docs/BACKUP-STRATEGY.md) - Complete strategy
+- [Render Configuration](docs/RENDER-BACKUP-CONFIG.md) - Production setup
+
+**Backup Schedule:**
+- PostgreSQL: Daily at 02:00 UTC (30-day retention)
+- Redis: Every 6 hours (7-day retention)
+- WAL Archiving: Continuous (7-day retention)
 
 ## Community
 

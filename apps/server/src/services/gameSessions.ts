@@ -426,6 +426,7 @@ export async function submitSegment(
   xpEarned: number;
   materialsEarned?: Record<string, number>;
   nextSegmentAuditTicks: number[];
+  sessionToken?: string; // New session token for continued gameplay
   newInventory: { gold: number; dust: number; materials?: Record<string, number> };
   newProgression: { level: number; xp: number; totalXp: number; xpToNextLevel: number };
 } | null> {
@@ -677,6 +678,17 @@ export async function submitSegment(
   // Generate next segment audit ticks
   const nextSegmentAuditTicks = generateSegmentAuditTicks(SEGMENT_SIZE, TICK_HZ);
 
+  // Generate new session token with extended expiry for continued gameplay
+  const newSessionToken = await createSessionToken({
+    sessionId,
+    userId,
+    seed: tokenPayload.seed,
+    simVersion: tokenPayload.simVersion,
+    startingWave: tokenPayload.startingWave,
+    segmentAuditTicks: nextSegmentAuditTicks,
+    simConfig: tokenPayload.simConfig,
+  });
+
   return {
     verified: true,
     goldEarned,
@@ -684,6 +696,7 @@ export async function submitSegment(
     xpEarned,
     materialsEarned,
     nextSegmentAuditTicks,
+    sessionToken: newSessionToken, // Return new token for continued gameplay
     newInventory: {
       gold: result.newInventory.gold,
       dust: result.newInventory.dust,
@@ -691,6 +704,55 @@ export async function submitSegment(
     },
     newProgression: result.newProgression,
   };
+}
+
+/**
+ * Refresh session token for an active game session
+ * Returns a new session token with extended expiry
+ */
+export async function refreshSessionToken(
+  userId: string,
+  sessionId: string,
+  currentSessionToken: string,
+): Promise<{ sessionToken: string } | null> {
+  // Verify current session token
+  const tokenPayload = await verifySessionToken(currentSessionToken);
+  if (!tokenPayload || tokenPayload.sessionId !== sessionId) {
+    return null;
+  }
+
+  // Verify session belongs to user and is still active
+  const session = await prisma.gameSession.findUnique({
+    where: { id: sessionId },
+    select: {
+      id: true,
+      userId: true,
+      endedAt: true,
+      seed: true,
+      currentWave: true,
+      configJson: true,
+    },
+  });
+
+  if (!session || session.endedAt || session.userId !== userId) {
+    return null;
+  }
+
+  // Use the audit ticks from the token payload
+  const segmentAuditTicks = tokenPayload.segmentAuditTicks;
+
+  // Create new session token with same payload but extended expiry
+  const newSessionToken = await createSessionToken({
+    sessionId: session.id,
+    userId: session.userId,
+    seed: tokenPayload.seed,
+    simVersion: tokenPayload.simVersion,
+    startingWave: tokenPayload.startingWave,
+    segmentAuditTicks,
+    simConfig: tokenPayload.simConfig,
+  });
+
+  return { sessionToken: newSessionToken };
 }
 
 /**

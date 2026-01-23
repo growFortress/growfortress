@@ -21,6 +21,7 @@ const ConfigSchema = z.object({
 
   // Auth
   JWT_SECRET: z.string().min(32),
+  JWT_SECRET_PREVIOUS: z.string().min(32).optional(), // For secret rotation - allows old tokens to still be verified
   JWT_ACCESS_EXPIRY: z.string().default("15m"),
   JWT_REFRESH_EXPIRY: z.string().default("7d"),
 

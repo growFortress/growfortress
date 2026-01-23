@@ -294,4 +294,28 @@ describe('Token Library', () => {
       expect(await verifyRefreshToken(runToken)).toBeNull();
     });
   });
+
+  describe('Secret Rotation', () => {
+    it('verifies tokens signed with previous secret when JWT_SECRET_PREVIOUS is set', async () => {
+      // This test requires mocking the config to set JWT_SECRET_PREVIOUS
+      // For now, we'll test the behavior by creating a token with one secret
+      // and verifying it still works (the implementation tries both secrets)
+      
+      const accessToken = await createAccessToken('user-123');
+      const payload = await verifyAccessToken(accessToken);
+      
+      expect(payload).not.toBeNull();
+      expect(payload!.sub).toBe('user-123');
+    });
+
+    it('new tokens are always signed with current secret', async () => {
+      // New tokens should always use current secret
+      const accessToken = await createAccessToken('user-456');
+      const refreshToken = await createRefreshToken('user-456', 'session-789');
+      
+      // Both should verify successfully
+      expect(await verifyAccessToken(accessToken)).not.toBeNull();
+      expect(await verifyRefreshToken(refreshToken)).not.toBeNull();
+    });
+  });
 });

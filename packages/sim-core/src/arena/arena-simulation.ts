@@ -240,20 +240,20 @@ export class ArenaSimulation {
     const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
     const exclusionRadiusSq = FP.mul(FORTRESS_EXCLUSION_RADIUS, FORTRESS_EXCLUSION_RADIUS);
 
-    if (distSq < exclusionRadiusSq && distSq > 0) {
+    // Check if distance is very small (below epsilon threshold)
+    const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+    if (distSq < exclusionRadiusSq && distSq > epsilonSq) {
       // Hero is inside exclusion zone, push them out
       const dist = FP.sqrt(distSq);
-      if (dist > 0) {
-        // Normalize direction away from fortress
-        const normX = FP.div(dx, dist);
-        const normY = FP.div(dy, dist);
-        // Place hero just outside exclusion radius
-        hero.x = FP.add(fortress.x, FP.mul(normX, FORTRESS_EXCLUSION_RADIUS));
-        hero.y = FP.add(fortress.y, FP.mul(normY, FORTRESS_EXCLUSION_RADIUS));
-        // Stop velocity
-        hero.vx = 0;
-        hero.vy = 0;
-      }
+      // Normalize direction away from fortress
+      const normX = FP.div(dx, dist);
+      const normY = FP.div(dy, dist);
+      // Place hero just outside exclusion radius
+      hero.x = FP.add(fortress.x, FP.mul(normX, FORTRESS_EXCLUSION_RADIUS));
+      hero.y = FP.add(fortress.y, FP.mul(normY, FORTRESS_EXCLUSION_RADIUS));
+      // Stop velocity
+      hero.vx = 0;
+      hero.vy = 0;
     }
   }
 
@@ -422,22 +422,115 @@ export class ArenaSimulation {
     }
   }
 
+  /**
+   * Deterministic ray-circle intersection test
+   * Checks if a ray from p0 to p1 intersects a circle at center c with radius r
+   * Returns true if the ray intersects the circle
+   * 
+   * Algorithm: Find closest point on ray to circle center, check if within radius
+   */
+  private rayIntersectsCircle(
+    p0x: number, p0y: number,  // Ray start (fixed-point)
+    p1x: number, p1y: number,  // Ray end (fixed-point)
+    cx: number, cy: number,    // Circle center (fixed-point)
+    r: number                   // Circle radius (fixed-point)
+  ): boolean {
+    // Ray direction vector
+    const rayDx = FP.sub(p1x, p0x);
+    const rayDy = FP.sub(p1y, p0y);
+    const rayLenSq = FP.lengthSq2D(rayDx, rayDy);
+    
+    // If ray has zero length, check if start point is in circle
+    if (rayLenSq === 0) {
+      const distSq = FP.lengthSq2D(FP.sub(cx, p0x), FP.sub(cy, p0y));
+      const rSq = FP.mul(r, r);
+      return distSq <= rSq;
+    }
+    
+    // Vector from ray start to circle center
+    const toCenterDx = FP.sub(cx, p0x);
+    const toCenterDy = FP.sub(cy, p0y);
+    
+    // Project toCenter onto ray direction to find closest point
+    // t = dot(toCenter, rayDir) / length(rayDir)^2
+    const dot = FP.dot2D(toCenterDx, toCenterDy, rayDx, rayDy);
+    const t = FP.div(dot, rayLenSq);
+    
+    // Clamp t to [0, 1] to stay on ray segment
+    const tClamped = FP.clamp(t, 0, FP.ONE);
+    
+    // Closest point on ray to circle center
+    const closestX = FP.add(p0x, FP.mul(rayDx, tClamped));
+    const closestY = FP.add(p0y, FP.mul(rayDy, tClamped));
+    
+    // Distance from closest point to circle center
+    const distToCenterDx = FP.sub(cx, closestX);
+    const distToCenterDy = FP.sub(cy, closestY);
+    const distSq = FP.lengthSq2D(distToCenterDx, distToCenterDy);
+    const rSq = FP.mul(r, r);
+    
+    return distSq <= rSq;
+  }
+
+  /**
+   * Update projectiles for one side
+   * 
+   * Uses deterministic ray marching instead of distance checks:
+   * - Moves projectile by speed units along direction vector
+   * - Checks if ray from old position to new position intersects target's hit circle
+   * - This avoids non-deterministic behavior from float rounding in distance calculations
+   * 
+   * IMPORTANT: This is called AFTER heroes have moved (in updateSide),
+   *            ensuring projectiles read target positions from current tick
+   */
   private updateProjectiles(side: 'left' | 'right'): void {
     const ownSide = side === 'left' ? this.state.left : this.state.right;
     const enemySide = getEnemySide(this.state, side);
     const toRemove: number[] = [];
 
     for (const projectile of ownSide.projectiles) {
-      // Move projectile towards target
-      const dx = FP.sub(projectile.targetX, projectile.x);
-      const dy = FP.sub(projectile.targetY, projectile.y);
-      const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+      // Update target position if target is still alive
+      const targetType = projectile.arenaTargetType;
+      const targetIndex = projectile.arenaTargetIndex;
+      
+      let targetX = projectile.targetX;
+      let targetY = projectile.targetY;
+      let hitRadius: number;
+      
+      if (targetType === 'fortress') {
+        // Fortress target - use fortress position
+        targetX = enemySide.fortress.x;
+        targetY = enemySide.fortress.y;
+        // Fortress hit radius (smaller than hero radius)
+        hitRadius = FP.fromFloat(1.0);
+      } else if (targetType === 'hero' && targetIndex !== undefined) {
+        // Hero target - update position if hero is alive
+        const targetHero = enemySide.heroes[targetIndex];
+        if (targetHero && targetHero.currentHp > 0) {
+          targetX = targetHero.x;
+          targetY = targetHero.y;
+          // Use hero radius + small tolerance
+          hitRadius = FP.add(targetHero.radius, FP.fromFloat(0.1));
+        } else {
+          // Hero is dead, use last known position with small radius
+          hitRadius = FP.fromFloat(0.1);
+        }
+      } else {
+        // Unknown target type, use small fallback radius
+        hitRadius = FP.fromFloat(0.1);
+      }
 
-      if (distSq <= FP.mul(projectile.speed, projectile.speed)) {
-        // Reached target - apply damage
-        const targetType = projectile.arenaTargetType;
-        const targetIndex = projectile.arenaTargetIndex;
+      // Store previous position for ray marching
+      const prevX = projectile.x;
+      const prevY = projectile.y;
 
+      const dx = FP.sub(targetX, projectile.x);
+      const dy = FP.sub(targetY, projectile.y);
+      const distSq = FP.lengthSq2D(dx, dy);
+
+      // Prevent division by zero
+      if (distSq === 0) {
+        // Already at target - apply damage
         if (targetType === 'fortress') {
           this.damageFortress(enemySide, projectile.damage, side, ownSide);
         } else if (targetType === 'hero' && targetIndex !== undefined) {
@@ -446,15 +539,40 @@ export class ArenaSimulation {
             this.damageHero(targetHero, projectile.damage, side, ownSide, enemySide);
           }
         }
+        toRemove.push(projectile.id);
+        continue;
+      }
 
+      // Normalize direction vector
+      const direction = FP.normalize2D(dx, dy);
+      
+      // Move projectile by speed units along direction (deterministic ray march)
+      const newX = FP.add(projectile.x, FP.mul(direction.x, projectile.speed));
+      const newY = FP.add(projectile.y, FP.mul(direction.y, projectile.speed));
+      
+      // Check if ray from previous position to new position intersects target
+      const hitTarget = this.rayIntersectsCircle(
+        prevX, prevY,  // Ray start (previous position)
+        newX, newY,    // Ray end (new position)
+        targetX, targetY,  // Circle center (target position)
+        hitRadius      // Circle radius
+      );
+      
+      if (hitTarget) {
+        // Ray intersected target - apply damage
+        if (targetType === 'fortress') {
+          this.damageFortress(enemySide, projectile.damage, side, ownSide);
+        } else if (targetType === 'hero' && targetIndex !== undefined) {
+          const targetHero = enemySide.heroes[targetIndex];
+          if (targetHero && targetHero.currentHp > 0) {
+            this.damageHero(targetHero, projectile.damage, side, ownSide, enemySide);
+          }
+        }
         toRemove.push(projectile.id);
       } else {
-        // Move towards target
-        const dist = FP.sqrt(distSq);
-        if (dist > 0) {
-          projectile.x = FP.add(projectile.x, FP.div(FP.mul(dx, projectile.speed), dist));
-          projectile.y = FP.add(projectile.y, FP.div(FP.mul(dy, projectile.speed), dist));
-        }
+        // Update position
+        projectile.x = newX;
+        projectile.y = newY;
       }
     }
 

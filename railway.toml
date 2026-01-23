@@ -1,5 +1,6 @@
 # =============================================================================
 # Railway deployment configuration - Grow Fortress Server
+# UWAGA SERVER JEST NA RENDER
 # =============================================================================
 
 [build]

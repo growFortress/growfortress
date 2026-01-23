@@ -71,7 +71,7 @@ describe('Hub Preview Routes', () => {
         highestWave: 150,
         defaultFortressClass: 'fire',
         exclusiveItems: ['mythic_crown'],
-        progression: { level: 25 },
+        progression: { level: 40 }, // Level 40 required to unlock 'fire' class
         powerUpgrades: {
           heroUpgrades: [
             { heroId: 'storm', statUpgrades: { hp: 10, damage: 8 } },
@@ -115,7 +115,7 @@ describe('Hub Preview Routes', () => {
       expect(body.displayName).toBe('TargetPlayer');
       expect(body.description).toBe('A strong player');
       expect(body.guildTag).toBe('PRO');
-      expect(body.level).toBe(25);
+      expect(body.level).toBe(40);
       expect(body.highestWave).toBe(150);
       expect(body.totalPower).toBe(5000);
       expect(body.fortressClass).toBe('fire');

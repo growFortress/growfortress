@@ -42,16 +42,16 @@ describe('RELICS data', () => {
     }
   });
 
-  it('has 27 total relics', () => {
-    expect(RELICS.length).toBe(27);
+  it('has 38 total relics', () => {
+    expect(RELICS.length).toBe(38);
   });
 
   it('has correct number of relics per category', () => {
-    expect(getRelicsByCategory('build_defining').length).toBe(4);
-    expect(getRelicsByCategory('standard').length).toBe(7); // +2 physics defense relics
+    expect(getRelicsByCategory('build_defining').length).toBe(8);
+    expect(getRelicsByCategory('standard').length).toBe(7);
     expect(getRelicsByCategory('class').length).toBe(5);
     expect(getRelicsByCategory('pillar').length).toBe(3);
-    expect(getRelicsByCategory('synergy').length).toBe(2);
+    expect(getRelicsByCategory('synergy').length).toBe(3);
     expect(getRelicsByCategory('economy').length).toBe(3);
     expect(getRelicsByCategory('cursed').length).toBe(3);
   });

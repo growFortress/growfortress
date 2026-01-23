@@ -71,7 +71,7 @@ describe('HubPreview Service', () => {
         highestWave: 100,
         defaultFortressClass: 'ice',
         exclusiveItems: ['legendary_sword'],
-        progression: { level: 10 },
+        progression: { level: 20 }, // Level 20 required to unlock 'ice' class
         powerUpgrades: {
           heroUpgrades: [],
           turretUpgrades: [],
@@ -95,7 +95,7 @@ describe('HubPreview Service', () => {
       expect(result?.description).toBe('A test player');
       expect(result?.highestWave).toBe(100);
       expect(result?.fortressClass).toBe('ice');
-      expect(result?.level).toBe(10);
+      expect(result?.level).toBe(20);
       expect(result?.totalPower).toBe(2500);
       expect(result?.exclusiveItems).toEqual(['legendary_sword']);
       expect(result?.guildTag).toBeNull();

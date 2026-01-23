@@ -6,10 +6,21 @@ services:
       POSTGRES_USER: arcade
       POSTGRES_PASSWORD: arcade
       POSTGRES_DB: arcade
+      # WAL Archiving (for PITR)
+      POSTGRES_INITDB_ARGS: "-c wal_level=replica"
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backups/postgres:/backups
+      - ./backups/postgres/wal:/var/lib/postgresql/wal_archive
+    command: >
+      postgres
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f'
+      -c max_wal_senders=3
+      -c hot_standby=on
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U arcade -d arcade"]
       interval: 5s
@@ -23,6 +34,16 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+      - ./backups/redis:/backups
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --dir /data
+      --appenddirname appendonlydir
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
