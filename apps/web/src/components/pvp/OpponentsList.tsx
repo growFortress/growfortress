@@ -8,10 +8,11 @@ import {
   showErrorToast,
   openHubPreview,
   userPower,
-  startArenaBattle,
+  showBattleResult,
 } from '../../state/index.js';
-import { createChallenge, PvpApiError } from '../../api/pvp.js';
-import type { PvpOpponent } from '@arcade/protocol';
+import { createChallenge, resolveChallenge, PvpApiError } from '../../api/pvp.js';
+import type { PvpOpponent, PvpResolveRequest } from '@arcade/protocol';
+import { ArenaSimulation, type ArenaBuildConfig } from '@arcade/sim-core';
 import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import styles from './PvpPanel.module.css';
 
@@ -30,15 +31,53 @@ export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
     try {
       const response = await createChallenge(opponent.userId);
 
-      // Transition to arena battle scene if battleData is available
       if (response.battleData) {
-        startArenaBattle({
-          seed: response.battleData.seed as number,
-          challengerBuild: response.battleData.challengerBuild as import('@arcade/sim-core').ArenaBuildConfig,
-          challengedBuild: response.battleData.challengedBuild as import('@arcade/sim-core').ArenaBuildConfig,
-          challenge: response.challenge,
-          opponent,
-        });
+        const seed = response.battleData.seed as number;
+        const challengerBuild = response.battleData.challengerBuild as ArenaBuildConfig;
+        const challengedBuild = response.battleData.challengedBuild as ArenaBuildConfig;
+        const challenge = response.challenge;
+
+        // Run simulation immediately (skip battle scene)
+        const simulation = new ArenaSimulation(seed, challengerBuild, challengedBuild);
+        const simResult = simulation.run();
+
+        // Build client result for server verification
+        const winnerId =
+          simResult.winner === 'left'
+            ? challenge.challengerId
+            : simResult.winner === 'right'
+              ? challenge.challengedId
+              : null;
+
+        const clientResult: PvpResolveRequest['result'] = {
+          winnerId,
+          winReason: simResult.winReason,
+          challengerStats: {
+            finalHp: simResult.leftStats.finalHp,
+            damageDealt: simResult.leftStats.damageDealt,
+            heroesAlive: simResult.leftStats.heroesAlive,
+          },
+          challengedStats: {
+            finalHp: simResult.rightStats.finalHp,
+            damageDealt: simResult.rightStats.damageDealt,
+            heroesAlive: simResult.rightStats.heroesAlive,
+          },
+          duration: simResult.duration,
+        };
+
+        // Send result to server for verification
+        const resolveResponse = await resolveChallenge(challenge.id, clientResult);
+
+        // Show result modal directly
+        showBattleResult(
+          {
+            ...challenge,
+            status: resolveResponse.challenge.status,
+            winnerId: resolveResponse.challenge.winnerId,
+          },
+          resolveResponse.result,
+          resolveResponse.rewards
+        );
       } else {
         showErrorToast('Nie udało się przygotować walki');
       }

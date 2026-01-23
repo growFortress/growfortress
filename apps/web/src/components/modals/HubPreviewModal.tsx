@@ -13,6 +13,8 @@ import {
   getArtifactById,
   calculateHeroStats,
   calculateTurretStats,
+  ArenaSimulation,
+  type ArenaBuildConfig,
 } from '@arcade/sim-core';
 import {
   hubPreviewData,
@@ -26,9 +28,10 @@ import {
 import { getExclusiveItemById } from '../../state/leaderboard.signals.js';
 import { useTranslation, currentLanguage } from '../../i18n/useTranslation.js';
 import { HubPreviewRenderer } from '../../renderer/HubPreviewRenderer.js';
-import { createChallenge, PvpApiError } from '../../api/pvp.js';
+import { createChallenge, resolveChallenge, PvpApiError } from '../../api/pvp.js';
+import type { PvpResolveRequest } from '@arcade/protocol';
 import { getUserId } from '../../api/auth.js';
-import { showErrorToast, startArenaBattle } from '../../state/index.js';
+import { showErrorToast, showBattleResult } from '../../state/index.js';
 import { GuildTag } from '../shared/GuildTag.js';
 import { logger } from '../../utils/logger.js';
 import styles from './HubPreviewModal.module.css';
@@ -173,13 +176,54 @@ export function HubPreviewModal() {
     try {
       const response = await createChallenge(data.userId);
       if (response.battleData) {
-        startArenaBattle({
-          seed: response.battleData.seed as number,
-          challengerBuild: response.battleData.challengerBuild as import('@arcade/sim-core').ArenaBuildConfig,
-          challengedBuild: response.battleData.challengedBuild as import('@arcade/sim-core').ArenaBuildConfig,
-          challenge: response.challenge,
-        });
+        const seed = response.battleData.seed as number;
+        const challengerBuild = response.battleData.challengerBuild as ArenaBuildConfig;
+        const challengedBuild = response.battleData.challengedBuild as ArenaBuildConfig;
+        const challenge = response.challenge;
+
+        // Run simulation immediately (skip battle scene)
+        const simulation = new ArenaSimulation(seed, challengerBuild, challengedBuild);
+        const simResult = simulation.run();
+
+        // Build client result for server verification
+        const winnerId =
+          simResult.winner === 'left'
+            ? challenge.challengerId
+            : simResult.winner === 'right'
+              ? challenge.challengedId
+              : null;
+
+        const clientResult: PvpResolveRequest['result'] = {
+          winnerId,
+          winReason: simResult.winReason,
+          challengerStats: {
+            finalHp: simResult.leftStats.finalHp,
+            damageDealt: simResult.leftStats.damageDealt,
+            heroesAlive: simResult.leftStats.heroesAlive,
+          },
+          challengedStats: {
+            finalHp: simResult.rightStats.finalHp,
+            damageDealt: simResult.rightStats.damageDealt,
+            heroesAlive: simResult.rightStats.heroesAlive,
+          },
+          duration: simResult.duration,
+        };
+
+        // Send result to server for verification
+        const resolveResponse = await resolveChallenge(challenge.id, clientResult);
+
         closeHubPreview();
+
+        // Show result modal directly
+        showBattleResult(
+          {
+            ...challenge,
+            status: resolveResponse.challenge.status,
+            winnerId: resolveResponse.challenge.winnerId,
+          },
+          resolveResponse.result,
+          resolveResponse.rewards
+        );
       } else {
         showErrorToast(t('hubPreview.errors.battlePrepareFailed'));
       }

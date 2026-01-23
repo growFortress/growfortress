@@ -14,7 +14,7 @@ import { SessionRecoveryModal } from "./modals/SessionRecoveryModal.js";
 import { RewardsModal } from "./modals/RewardsModal.js";
 import { SettingsMenu } from "./modals/SettingsMenu.js";
 import { BuildPresetsModal } from "./modals/BuildPresetsModal.js";
-import { PvpPanel, PvpBattleResult, PvpReplayViewer, ArenaBattleScene } from "./pvp/index.js";
+import { PvpPanel, PvpBattleResult, PvpReplayViewer } from "./pvp/index.js";
 import {
   GuildPanel,
   GuildCreateModal,
@@ -561,7 +561,6 @@ function AppContent() {
         <PvpPanel />
         <PvpBattleResult />
         <PvpReplayViewer />
-        <ArenaBattleScene />
         <GuildPanel />
         <GuildCreateModal onSuccess={() => {}} />
         <GuildSearchModal onSuccess={() => {}} />

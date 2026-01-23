@@ -366,7 +366,9 @@ export function useGameLoop(
         return;
       }
 
-      const key = event.key.toLowerCase();
+      const key = event.key?.toLowerCase();
+      if (!key) return;
+
       let changed = false;
 
       switch (key) {
@@ -412,7 +414,8 @@ export function useGameLoop(
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
+      const key = event.key?.toLowerCase();
+      if (!key) return;
       let changed = false;
 
       switch (key) {
