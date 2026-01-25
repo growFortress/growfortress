@@ -49,6 +49,7 @@ import battlepassRoutes from "./routes/battlepass.js";
 import { supportTicketRoutes } from "./routes/supportTickets.js";
 import referralRoutes from "./routes/referrals.js";
 import gachaRoutes from "./routes/gacha.js";
+import expeditionRoutes from "./routes/expedition.js";
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -184,6 +185,7 @@ export async function buildApp() {
   await fastify.register(supportTicketRoutes);
   await fastify.register(referralRoutes);
   await fastify.register(gachaRoutes);
+  await fastify.register(expeditionRoutes);
 
   // Admin routes (separate auth system)
   await fastify.register(adminRoutes, { prefix: "/admin" });

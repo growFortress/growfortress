@@ -538,6 +538,23 @@ describe('Guild Battle Service', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('NOT_ENOUGH_BATTLE_HEROES');
     });
+
+    it('respects defender daily defense limit (5)', async () => {
+      // Attacker has 0 attacks, defender has reached max defenses
+      mockPrisma.guildBattle.count
+        .mockResolvedValueOnce(0) // Attacker daily attacks
+        .mockResolvedValueOnce(5); // Defender daily defenses (max is 5)
+
+      const result = await instantAttack(
+        'guild-123',
+        'guild-456',
+        'user-123',
+        selectedMemberIds
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('DEFENDER_MAX_ATTACKS_RECEIVED');
+    });
   });
 
   // ============================================================================

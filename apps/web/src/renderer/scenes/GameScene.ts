@@ -8,13 +8,14 @@ import type {
   TurretSlot,
   PillarId,
 } from "@arcade/sim-core";
-import { FP, getSkillById } from "@arcade/sim-core";
+import { FP, getSkillById, popDeathPhysics } from "@arcade/sim-core";
 import { EnemySystem } from "../systems/EnemySystem.js";
 import { ProjectileSystem } from "../systems/ProjectileSystem.js";
 import { HeroSystem } from "../systems/HeroSystem.js";
 import { TurretSystem } from "../systems/TurretSystem.js";
 import { WallSystem } from "../systems/WallSystem.js";
 import { MilitiaSystem } from "../systems/MilitiaSystem.js";
+import { RagdollSystem } from "../systems/RagdollSystem.js";
 import { LightingSystem } from "../effects/LightingSystem.js";
 import {
   parallaxBackground,
@@ -63,6 +64,7 @@ export class GameScene {
   private turretSystem: TurretSystem;
   private wallSystem: WallSystem;
   private militiaSystem: MilitiaSystem;
+  private ragdollSystem: RagdollSystem;
 
   // Exposed for external access
   public lighting: LightingSystem;
@@ -118,6 +120,10 @@ export class GameScene {
     // Hero System (heroes on battlefield)
     this.heroSystem = new HeroSystem();
     this.container.addChild(this.heroSystem.container);
+
+    // Ragdoll System (flying dead enemies, above heroes)
+    this.ragdollSystem = new RagdollSystem();
+    this.container.addChild(this.ragdollSystem.container);
 
     // Projectile System (above entities)
     this.projectileSystem = new ProjectileSystem();
@@ -279,6 +285,38 @@ export class GameScene {
       this.militiaSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
       this.heroSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
       this.projectileSystem.update(state, this.width, this.height, renderAlpha, deltaMs);
+
+      // Process death physics events and spawn ragdolls
+      this.processDeathPhysics(state);
+
+      // Update ragdoll physics
+      this.ragdollSystem.update(deltaMs, this.width, this.height);
+
+      // Check domino effect - ragdolls hitting living enemies
+      // Convert enemy positions to screen coordinates
+      const enemyScreenPositions = state.enemies.map(e => ({
+        x: fpXToScreen(e.x, this.width),
+        y: fpYToScreen(e.y, this.height),
+      }));
+
+      const dominoHits = this.ragdollSystem.checkDominoEffect(enemyScreenPositions);
+
+      // Spawn chain explosions for domino hits
+      for (const hit of dominoHits) {
+        this.effects.vfx.spawnChainExplosion(hit.x, hit.y, 'natural', 0.6);
+        this.effects.triggerHitstop('minor');
+      }
+
+      // Update camera effects (punch zoom, shake, slow-mo)
+      this.effects.updateCameraEffects(deltaMs);
+
+      // Apply camera transform to scene
+      const cameraTransform = this.effects.getCameraTransform();
+      this.container.scale.set(cameraTransform.scale);
+      this.container.position.set(
+        cameraTransform.offsetX + (this.width * (1 - cameraTransform.scale)) / 2,
+        cameraTransform.offsetY + (this.height * (1 - cameraTransform.scale)) / 2
+      );
     } else {
       // Disable interactive layer in hub mode so heroes can be clicked
       this.inputController.disableInteraction();
@@ -288,6 +326,10 @@ export class GameScene {
       // Hard reset effects on transition to hub
       if (this.wasInGame) {
         this.effects.resetForHub();
+        this.ragdollSystem.clear();
+        // Reset camera transform
+        this.container.scale.set(1);
+        this.container.position.set(0, 0);
         this.wasInGame = false;
         // Reset theme initialization flags so they update on next game start
         this.hasInitializedTheme = false;
@@ -553,6 +595,50 @@ export class GameScene {
 
       // Update tracked cooldown
       this.lastSkillCooldowns[skillId] = currentCooldown;
+    }
+  }
+
+  /**
+   * Process death physics events from simulation and spawn ragdolls.
+   * This creates the satisfying flying corpse effect when enemies are killed.
+   */
+  private processDeathPhysics(state: GameState): void {
+    void state; // Used for context, not directly needed here
+
+    const deathEvents = popDeathPhysics();
+
+    for (const event of deathEvents) {
+      // Spawn ragdoll with physics from the kill
+      // RagdollSystem handles coordinate conversion internally
+      this.ragdollSystem.spawnFromDeathPhysics(event, this.width, this.height);
+
+      // Convert fixed-point position to screen coordinates for VFX
+      const screenX = fpXToScreen(event.x, this.width);
+      const screenY = fpYToScreen(event.y, this.height);
+
+      // Trigger camera effects for big kills
+      if (event.isBigKill) {
+        // Check if boss (very high damage or special type)
+        const isBoss = event.damage > 500 || event.enemyType === 'mafia_boss' ||
+                       event.enemyType === 'ai_core' || event.enemyType === 'cosmic_beast' ||
+                       event.enemyType === 'dimensional_being' || event.enemyType === 'titan' ||
+                       event.enemyType === 'god';
+
+        this.effects.triggerBigKillEffects(screenX, screenY, isBoss);
+
+        // Spawn enhanced explosion for big kills
+        this.effects.vfx.spawnBigKillExplosion(
+          screenX,
+          screenY,
+          event.sourceClass,
+          Math.min(2, 1 + event.damage / 200) // Scale with damage
+        );
+      }
+    }
+
+    // Track multi-kills for slow-motion effect
+    if (deathEvents.length >= 3) {
+      this.effects.triggerMultiKillEffects(deathEvents.length);
     }
   }
 }

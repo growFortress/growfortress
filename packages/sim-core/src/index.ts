@@ -35,10 +35,17 @@ export {
   HERO_PHYSICS,
   ENEMY_PHYSICS,
   DEFAULT_PHYSICS_CONFIG,
+  // Knockback system
+  calculateKnockback,
+  calculateDominoKnockback,
+  CLASS_KNOCKBACK_MODIFIERS,
+  KNOCKBACK_CONFIG,
   type Vec2FP,
   type PhysicsBody,
   type PhysicsConfig,
   type CollisionResult,
+  type KnockbackForce,
+  type ClassKnockbackModifier,
 } from './physics.js';
 
 // Types
@@ -149,6 +156,23 @@ export {
   getSkillById,
 } from './data/classes.js';
 
+// Transcendence Perks (Expanded Prestige)
+export {
+  TRANSCENDENCE_PERKS,
+  getPerkById,
+  getAvailablePerks,
+  calculatePerkBonuses,
+  MAX_PRESTIGE_LEVEL,
+  PRESTIGE_BONUS_PER_LEVEL,
+  MAX_ASCENSION_LEVEL,
+  ASCENSION_BONUS_PER_LEVEL,
+  MAX_TRANSCENDENCE_LEVEL,
+  TRANSCENDENCE_BONUS_PER_LEVEL,
+  ESSENCE_PER_TRANSCENDENCE,
+  type TranscendencePerk,
+  type TranscendencePerkEffect,
+} from './data/transcendence-perks.js';
+
 // Modifiers
 export {
   computeModifiers,
@@ -198,6 +222,13 @@ export {
   STORM_FORGE_SYNERGY_RANGE,
   STORM_FORGE_SYNERGY_RANGE_SQ,
   STORM_FORGE_ATTACK_SPEED_BONUS,
+  // Hero pair/trio synergies for UI
+  getHeroSynergies,
+  getActiveSynergiesForHeroes,
+  HERO_PAIR_SYNERGIES,
+  HERO_TRIO_SYNERGIES,
+  type HeroPairSynergyDef,
+  type HeroTrioSynergyDef,
 } from './systems/synergy.js';
 
 // Unified Progression System
@@ -471,6 +502,7 @@ export {
   BOSS_RUSH_CYCLE_LENGTH,
   BOSS_RUSH_MILESTONES,
   DEFAULT_BOSS_RUSH_CONFIG,
+  BOSS_RUSH_SHOP_ITEMS,
   // Functions
   getBossRushBossStats,
   getBossAtIndex,
@@ -484,6 +516,11 @@ export {
   startIntermission,
   endIntermission,
   generateBossRushSummary,
+  // Roguelike mode functions
+  chooseBossRushRelic,
+  rerollBossRushRelics,
+  purchaseBossRushShopItem,
+  getAvailableGold,
   // Types
   type BossRushBoss,
   type BossRushConfig,
@@ -492,6 +529,7 @@ export {
   type BossRushMilestoneReward,
   type BossRushState,
   type BossRushSummary,
+  type BossRushShopItem,
 } from './boss-rush.js';
 
 // Boss Rush Simulation (Server-side verification)
@@ -693,9 +731,11 @@ export {
   applyArtifactBonusesToStats,
 } from './systems/artifacts.js';
 
-// Combo System
+// Combo System & Death Physics
 export {
   popComboTriggers,
+  popDeathPhysics,
+  type DeathPhysicsEvent,
 } from './systems/projectile.js';
 
 export {
@@ -766,3 +806,30 @@ export {
   type Milestone,
   type MilestoneReward,
 } from './data/milestones.js';
+
+// Auto-Play System (Idle/Incremental)
+export {
+  // Config
+  DEFAULT_AUTO_PLAY_CONFIG,
+  createAggressiveConfig,
+  createDefensiveConfig,
+  createFarmingConfig,
+  // Relic Selection
+  scoreRelic,
+  selectBestRelic,
+  // Shop Purchases
+  scoreShopItem,
+  selectBestShopItem,
+  getShopPurchaseRecommendations,
+  // Decision Making
+  getAutoPlayDecisions,
+  shouldActivateSkill,
+  shouldBuyHeal,
+  // Types
+  type AutoPlayConfig,
+  type AutoPlayRelicPriority,
+  type AutoPlayShopPriority,
+  type AutoPlaySkillMode,
+  type AutoPlayDecision,
+  type AutoPlayDecisionType,
+} from './auto-play.js';

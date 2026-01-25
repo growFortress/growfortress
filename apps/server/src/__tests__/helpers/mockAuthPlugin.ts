@@ -37,7 +37,7 @@ const mockAuthPlugin: FastifyPluginAsync = async (fastify) => {
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return reply
           .status(401)
-          .send({ error: "Missing authorization header" });
+          .send({ error: "Unauthorized" });
       }
 
       // In mock mode, extract userId from JWT payload (without cryptographic verification)

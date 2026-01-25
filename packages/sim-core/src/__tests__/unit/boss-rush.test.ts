@@ -21,6 +21,12 @@ import {
   BOSS_RUSH_MILESTONES,
   DEFAULT_BOSS_RUSH_CONFIG,
   BossRushState,
+  // New roguelike mode exports
+  BOSS_RUSH_SHOP_ITEMS,
+  chooseBossRushRelic,
+  rerollBossRushRelics,
+  purchaseBossRushShopItem,
+  getAvailableGold,
 } from '../../boss-rush.js';
 
 // ============================================================================
@@ -511,8 +517,8 @@ describe('Boss Rush State', () => {
 // ============================================================================
 
 describe('Boss Rush Configuration', () => {
-  it('has default intermission of 90 ticks (3 seconds at 30Hz)', () => {
-    expect(DEFAULT_BOSS_RUSH_CONFIG.intermissionTicks).toBe(90);
+  it('has default intermission of 300 ticks (10 seconds at 30Hz) for relic/shop decisions', () => {
+    expect(DEFAULT_BOSS_RUSH_CONFIG.intermissionTicks).toBe(300);
   });
 
   it('has default scaling of 1.10 per boss (+10%)', () => {
@@ -533,5 +539,194 @@ describe('Boss Rush Configuration', () => {
 
   it('has boss speed multiplier of 0.5 (half speed)', () => {
     expect(DEFAULT_BOSS_RUSH_CONFIG.bossSpeedMultiplier).toBe(0.5);
+  });
+});
+
+// ============================================================================
+// ROGUELIKE MODE TESTS
+// ============================================================================
+
+describe('Boss Rush Shop Items', () => {
+  it('contains heal items', () => {
+    const healItems = BOSS_RUSH_SHOP_ITEMS.filter(item => item.type === 'heal');
+    expect(healItems.length).toBeGreaterThanOrEqual(2);
+    expect(healItems.some(item => item.id === 'heal_small')).toBe(true);
+    expect(healItems.some(item => item.id === 'heal_large')).toBe(true);
+  });
+
+  it('contains reroll item', () => {
+    const rerollItem = BOSS_RUSH_SHOP_ITEMS.find(item => item.type === 'reroll');
+    expect(rerollItem).toBeDefined();
+    expect(rerollItem!.id).toBe('reroll_relics');
+  });
+
+  it('contains stat boost items', () => {
+    const statItems = BOSS_RUSH_SHOP_ITEMS.filter(item => item.type === 'stat_boost');
+    expect(statItems.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('all items have valid cost and name', () => {
+    for (const item of BOSS_RUSH_SHOP_ITEMS) {
+      expect(item.cost).toBeGreaterThan(0);
+      expect(item.name.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('Relic Selection in Roguelike Mode', () => {
+  let state: BossRushState;
+
+  beforeEach(() => {
+    state = createBossRushState();
+    // Set up relic options as if boss was just killed
+    state.relicOptions = ['relic_1', 'relic_2', 'relic_3'];
+    state.relicChosen = false;
+    state.inIntermission = true;
+  });
+
+  it('chooseBossRushRelic selects a valid relic', () => {
+    const success = chooseBossRushRelic(state, 'relic_2');
+    expect(success).toBe(true);
+    expect(state.relicChosen).toBe(true);
+    expect(state.collectedRelics).toContain('relic_2');
+  });
+
+  it('chooseBossRushRelic fails for invalid relic', () => {
+    const success = chooseBossRushRelic(state, 'invalid_relic');
+    expect(success).toBe(false);
+    expect(state.relicChosen).toBe(false);
+  });
+
+  it('chooseBossRushRelic fails if already chosen', () => {
+    chooseBossRushRelic(state, 'relic_1');
+    const secondChoice = chooseBossRushRelic(state, 'relic_2');
+    expect(secondChoice).toBe(false);
+    expect(state.collectedRelics).not.toContain('relic_2');
+  });
+
+  it('rerollBossRushRelics replaces options', () => {
+    state.goldEarned = 200; // Ensure enough gold
+
+    const newOptions = ['relic_a', 'relic_b', 'relic_c'];
+    const success = rerollBossRushRelics(state, newOptions);
+
+    expect(success).toBe(true);
+    expect(state.relicOptions).toEqual(newOptions);
+    expect(state.rerollsUsed).toBe(1);
+  });
+
+  it('rerollBossRushRelics fails if no options to set', () => {
+    const success = rerollBossRushRelics(state, []);
+    expect(success).toBe(false);
+  });
+});
+
+describe('Shop Purchases', () => {
+  let state: BossRushState;
+
+  beforeEach(() => {
+    state = createBossRushState();
+    state.goldEarned = 500;
+    state.inIntermission = true;
+  });
+
+  it('purchaseBossRushShopItem for heal item restores HP', () => {
+    const currentHp = 500;
+    const maxHp = 1000;
+
+    const result = purchaseBossRushShopItem(state, 'heal_small', currentHp, maxHp);
+
+    expect(result.success).toBe(true);
+    expect(result.newFortressHp).toBeGreaterThan(currentHp);
+    expect(result.newFortressHp).toBeLessThanOrEqual(maxHp);
+    expect(state.shopPurchases['heal_small']).toBe(1);
+    expect(state.goldSpent).toBeGreaterThan(0);
+  });
+
+  it('purchaseBossRushShopItem for stat boost applies bonus', () => {
+    const result = purchaseBossRushShopItem(state, 'damage_boost', 500, 1000);
+
+    expect(result.success).toBe(true);
+    expect(result.statBonus).toBeDefined();
+    expect(result.statBonus?.stat).toBe('damageBonus');
+    expect(result.statBonus?.value).toBeGreaterThan(0);
+  });
+
+  it('purchaseBossRushShopItem fails without enough gold', () => {
+    state.goldEarned = 10; // Not enough for any item
+
+    const result = purchaseBossRushShopItem(state, 'heal_large', 500, 1000);
+
+    expect(result.success).toBe(false);
+    expect(state.shopPurchases['heal_large']).toBeUndefined();
+  });
+
+  it('purchaseBossRushShopItem fails for invalid item', () => {
+    const result = purchaseBossRushShopItem(state, 'invalid_item', 500, 1000);
+
+    expect(result.success).toBe(false);
+  });
+
+  it('getAvailableGold returns correct amount', () => {
+    state.goldEarned = 1000;
+    state.goldSpent = 350;
+
+    const available = getAvailableGold(state);
+
+    expect(available).toBe(650);
+  });
+});
+
+describe('Extended BossRushState for Roguelike', () => {
+  it('createBossRushState initializes roguelike fields', () => {
+    const state = createBossRushState();
+
+    expect(state.relicOptions).toEqual([]);
+    expect(state.relicChosen).toBe(false);
+    expect(state.collectedRelics).toEqual([]);
+    expect(state.rerollsUsed).toBe(0);
+    expect(state.shopPurchases).toEqual({});
+    expect(state.shopStatBoosts).toEqual({
+      damageBonus: 0,
+      attackSpeedBonus: 0,
+      critChance: 0,
+    });
+    expect(state.synergiesActivated).toBe(0);
+    expect(state.synergyDamage).toEqual({});
+    expect(state.bestSingleHit).toBe(0);
+    expect(state.totalHealing).toBe(0);
+    expect(state.goldSpent).toBe(0);
+  });
+
+  it('startIntermission with relic options sets them', () => {
+    const state = createBossRushState();
+    state.bossesKilled = 1;
+
+    const relicOptions = ['test_relic_1', 'test_relic_2', 'test_relic_3'];
+    startIntermission(state, 1000, DEFAULT_BOSS_RUSH_CONFIG, relicOptions);
+
+    expect(state.inIntermission).toBe(true);
+    expect(state.relicOptions).toEqual(relicOptions);
+    expect(state.relicChosen).toBe(false);
+  });
+
+  it('generateBossRushSummary includes roguelike stats', () => {
+    const state = createBossRushState();
+    state.bossesKilled = 5;
+    state.goldEarned = 1500;
+    state.goldSpent = 300;
+    state.collectedRelics = ['relic_1', 'relic_2'];
+    state.rerollsUsed = 2;
+    state.synergiesActivated = 3;
+    state.bestSingleHit = 9999;
+
+    const summary = generateBossRushSummary(state);
+
+    expect(summary.bossesKilled).toBe(5);
+    expect(summary.collectedRelics).toEqual(['relic_1', 'relic_2']);
+    expect(summary.rerollsUsed).toBe(2);
+    expect(summary.synergiesActivated).toBe(3);
+    expect(summary.bestSingleHit).toBe(9999);
+    expect(summary.goldSpent).toBe(300);
   });
 });

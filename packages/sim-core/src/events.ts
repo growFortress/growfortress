@@ -64,15 +64,26 @@ export function validateEvent(
     case 'SPAWN_MILITIA':
       return validateSpawnMilitia(event, state);
 
+    case 'SHOP_PURCHASE':
+      // Boss Rush shop - handled in BossRushSimulation
+      return { valid: true };
+
     default:
       return { valid: false, reason: 'Unknown event type' };
   }
 }
 
 function validateChooseRelic(
-  event: { type: 'CHOOSE_RELIC'; tick: number; wave: number; optionIndex: number },
+  event: { type: 'CHOOSE_RELIC'; tick: number; wave?: number; optionIndex?: number; relicId?: string },
   state: GameState
 ): EventValidation {
+  // Boss Rush mode uses relicId directly
+  if (event.relicId !== undefined) {
+    // For Boss Rush, we skip standard validation as it's handled in BossRushSimulation
+    return { valid: true };
+  }
+
+  // Standard endless mode validation
   // Must be in choice mode
   if (!state.inChoice || !state.pendingChoice) {
     return { valid: false, reason: 'Not in choice mode' };
@@ -84,7 +95,7 @@ function validateChooseRelic(
   }
 
   // Check option index is valid
-  if (event.optionIndex < 0 || event.optionIndex >= state.pendingChoice.options.length) {
+  if (event.optionIndex === undefined || event.optionIndex < 0 || event.optionIndex >= state.pendingChoice.options.length) {
     return { valid: false, reason: 'Invalid option index' };
   }
 
@@ -282,16 +293,26 @@ export function applyEvent(
     case 'SPAWN_MILITIA':
       return applySpawnMilitia(event, state);
 
+    case 'SHOP_PURCHASE':
+      // Boss Rush shop - handled in BossRushSimulation
+      return true;
+
     default:
       return false;
   }
 }
 
 function applyChooseRelic(
-  event: { type: 'CHOOSE_RELIC'; tick: number; wave: number; optionIndex: number },
+  event: { type: 'CHOOSE_RELIC'; tick: number; wave?: number; optionIndex?: number; relicId?: string },
   state: GameState
 ): boolean {
-  if (!state.pendingChoice) return false;
+  // Boss Rush mode - handled separately in BossRushSimulation
+  if (event.relicId !== undefined) {
+    return true;
+  }
+
+  // Standard endless mode
+  if (!state.pendingChoice || event.optionIndex === undefined || event.wave === undefined) return false;
 
   const relicId = state.pendingChoice.options[event.optionIndex];
   const relicDef = getRelicById(relicId);

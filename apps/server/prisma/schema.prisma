@@ -154,6 +154,9 @@ model User {
   // Support Tickets
   supportTickets SupportTicket[]
 
+  // Expedition System (Offline wave progress)
+  expeditionProgress ExpeditionProgress?
+
   @@index([referredById])
   @@index([banned])
 }
@@ -405,6 +408,21 @@ model PowerUpgrades {
 
   // Cached total power (recalculated on each upgrade)
   cachedTotalPower Int @default(0)
+
+  // ===== EXPANDED PRESTIGE SYSTEM =====
+
+  // Ascension: unlocked when all 3 fortress prestige stats reach max (5)
+  // Each ascension resets prestige levels but gives +10% global bonus
+  ascensionLevel  Int  @default(0)  // 0-10 (max 10 ascensions)
+  ascensionBonuses Json @default("{}") // { globalBonus: number }
+
+  // Transcendence: unlocked at Ascension Level 3
+  // Provides permanent perks and +5% all stats
+  transcendenceLevel Int @default(0)  // 0-5 (max 5 transcendences)
+  transcendencePerks String[] @default([]) // Array of perk IDs
+
+  // Essence: premium currency earned from transcendence
+  essenceBalance Int @default(0)
 
   version   Int      @default(1)
   updatedAt DateTime @updatedAt
@@ -1968,4 +1986,37 @@ model BonusCodeRedemption {
   @@unique([codeId, userId]) // Each user can redeem each code only once
   @@index([userId])
   @@index([codeId])
+}
+
+// ============================================================================
+// EXPEDITION SYSTEM (Offline Wave Progress)
+// ============================================================================
+
+model ExpeditionProgress {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  isActive        Boolean   @default(false)
+  startedAt       DateTime?
+  lastProcessedAt DateTime?
+
+  // Progress tracking
+  wavesCleared    Int       @default(0)
+  maxWavesPerHour Int       @default(10) // Base rate, modified by power
+
+  // Pending rewards (accumulate until claimed)
+  pendingGold     Int       @default(0)
+  pendingDust     Int       @default(0)
+  pendingXp       Int       @default(0)
+  pendingMaterials Json     @default("{}")
+
+  // Snapshot of player state when expedition started
+  loadoutSnapshot Json?     // { heroIds, turretIds, fortressClass, artifactIds }
+  powerSnapshot   Int       @default(0) // Total power at expedition start
+
+  // Limits
+  maxOfflineHours Int       @default(8) // Max hours of offline progress
+
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

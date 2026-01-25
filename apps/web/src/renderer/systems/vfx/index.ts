@@ -1,6 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import type { FortressClass, EnemyType } from '@arcade/sim-core';
-import { graphicsSettings } from '../../../state/settings.signals.js';
+import { graphicsSettings, FIRST_SESSION_VFX_BOOST } from '../../../state/settings.signals.js';
+import { isFirstSession, FIRST_SESSION_WAVE_THRESHOLD, gameState } from '../../../state/game.signals.js';
 
 import type {
   Particle,
@@ -99,8 +100,29 @@ export class VFXSystem {
   // --- SETTINGS INTEGRATION ---
   private get particleMultiplier(): number {
     const { particles, quality } = graphicsSettings.value;
-    if (quality === 'low') return Math.min(particles, 0.5);
-    return particles;
+    let multiplier = quality === 'low' ? Math.min(particles, 0.5) : particles;
+
+    // Boost particles during first session for impactful first impression
+    if (this.isInFirstSessionBoostWindow()) {
+      multiplier *= FIRST_SESSION_VFX_BOOST;
+    }
+
+    return multiplier;
+  }
+
+  /**
+   * Check if we're in the first session boost window (first few waves for new players).
+   */
+  private isInFirstSessionBoostWindow(): boolean {
+    if (!isFirstSession.value) return false;
+    const state = gameState.value;
+    if (!state) return true; // Boost before first state
+    // Disable boost after threshold waves
+    if (state.wave > FIRST_SESSION_WAVE_THRESHOLD) {
+      isFirstSession.value = false; // Turn off for rest of session
+      return false;
+    }
+    return true;
   }
 
   // --- CALLBACKS ---
@@ -352,6 +374,18 @@ export class VFXSystem {
 
   public spawnShockwave(x: number, y: number): void {
     this.explosions.spawnShockwave(x, y);
+  }
+
+  public spawnBigKillExplosion(x: number, y: number, fortressClass: FortressClass, damageMultiplier: number = 1): void {
+    this.explosions.spawnBigKillExplosion(x, y, fortressClass, damageMultiplier, this.particleMultiplier, this.stagedEffects);
+  }
+
+  public spawnChainExplosion(x: number, y: number, fortressClass: FortressClass, intensity: number = 0.6): void {
+    this.explosions.spawnChainExplosion(x, y, fortressClass, intensity, this.particleMultiplier);
+  }
+
+  public spawnShatterEffect(x: number, y: number, pieceCount: number = 12): void {
+    this.explosions.spawnShatterEffect(x, y, pieceCount, this.particleMultiplier);
   }
 
   // ============================================================

@@ -479,5 +479,362 @@ describe('Guild Application Service', () => {
         })
       );
     });
+
+    it('should throw APPLICATION_NOT_PENDING if already processed', async () => {
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        applicantId: 'user-456',
+        status: 'ACCEPTED',
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+
+      await expect(cancelApplication('app-123', 'user-456'))
+        .rejects.toThrow(GUILD_ERROR_CODES.APPLICATION_NOT_PENDING);
+    });
+  });
+
+  // ============================================================================
+  // createApplication - Additional Edge Cases
+  // ============================================================================
+
+  describe('createApplication - edge cases', () => {
+    it('should throw USER_NOT_FOUND if applicant does not exist', async () => {
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findUnique.mockResolvedValue(
+        createMockGuild({
+          id: 'guild-123',
+          settings: { accessMode: 'APPLY', minLevel: 1 },
+          _count: { members: 5 },
+        })
+      );
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(createApplication('guild-123', 'nonexistent-user'))
+        .rejects.toThrow(GUILD_ERROR_CODES.USER_NOT_FOUND);
+    });
+
+    it('should throw MAX_APPLICATIONS_REACHED if too many active applications', async () => {
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findUnique.mockResolvedValue(
+        createMockGuild({
+          id: 'guild-123',
+          settings: { accessMode: 'APPLY', minLevel: 1 },
+          _count: { members: 5 },
+        })
+      );
+      mockPrisma.user.findUnique.mockResolvedValue(
+        createMockUser({ id: 'user-456', highestWave: 50 })
+      );
+      mockPrisma.guildApplication.findFirst.mockResolvedValue(null);
+      mockPrisma.guildApplication.count.mockResolvedValue(5); // Max is typically 5
+
+      await expect(createApplication('guild-123', 'user-456'))
+        .rejects.toThrow(GUILD_ERROR_CODES.MAX_APPLICATIONS_REACHED);
+    });
+
+    it('should allow application at minLevel boundary', async () => {
+      const application = createMockGuildApplication();
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findUnique.mockResolvedValue(
+        createMockGuild({
+          id: 'guild-123',
+          settings: { accessMode: 'APPLY', minLevel: 50 },
+          _count: { members: 5 },
+        })
+      );
+      mockPrisma.user.findUnique.mockResolvedValue(
+        createMockUser({ id: 'user-456', highestWave: 50 })
+      );
+      mockPrisma.guildApplication.findFirst.mockResolvedValue(null);
+      mockPrisma.guildApplication.count.mockResolvedValue(0);
+      mockPrisma.guildApplication.create.mockResolvedValue(application);
+
+      const result = await createApplication('guild-123', 'user-456');
+
+      expect(result).toEqual(application);
+    });
+
+    it('should create application without message', async () => {
+      const application = createMockGuildApplication({ message: null });
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findUnique.mockResolvedValue(
+        createMockGuild({
+          id: 'guild-123',
+          settings: { accessMode: 'APPLY', minLevel: 1 },
+          _count: { members: 5 },
+        })
+      );
+      mockPrisma.user.findUnique.mockResolvedValue(
+        createMockUser({ id: 'user-456', highestWave: 50 })
+      );
+      mockPrisma.guildApplication.findFirst.mockResolvedValue(null);
+      mockPrisma.guildApplication.count.mockResolvedValue(0);
+      mockPrisma.guildApplication.create.mockResolvedValue(application);
+
+      await createApplication('guild-123', 'user-456');
+
+      expect(mockPrisma.guildApplication.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            message: null,
+          }),
+        })
+      );
+    });
+
+    it('should handle null settings as INVITE_ONLY mode', async () => {
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+      mockPrisma.guild.findUnique.mockResolvedValue(
+        createMockGuild({
+          id: 'guild-123',
+          settings: null, // No settings - defaults to INVITE_ONLY
+          _count: { members: 5 },
+        })
+      );
+
+      await expect(createApplication('guild-123', 'user-456'))
+        .rejects.toThrow(GUILD_ERROR_CODES.GUILD_NOT_ACCEPTING_APPLICATIONS);
+    });
+  });
+
+  // ============================================================================
+  // acceptApplication - Additional Edge Cases
+  // ============================================================================
+
+  describe('acceptApplication - edge cases', () => {
+    it('should throw INSUFFICIENT_PERMISSIONS if responder in different guild', async () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        status: 'PENDING',
+        expiresAt: futureDate,
+        guild: { structureKwatera: 5, disbanded: false, _count: { members: 5 } },
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(
+        createMockGuildMember({ role: 'LEADER', guildId: 'different-guild' })
+      );
+
+      await expect(acceptApplication('app-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
+    });
+
+    it('should throw GUILD_DISBANDED if guild was disbanded', async () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        status: 'PENDING',
+        expiresAt: futureDate,
+        guild: { structureKwatera: 5, disbanded: true, _count: { members: 5 } },
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(
+        createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' })
+      );
+
+      await expect(acceptApplication('app-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.GUILD_DISBANDED);
+    });
+
+    it('should throw USER_ALREADY_IN_GUILD if applicant joined another guild', async () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        applicantId: 'user-456',
+        status: 'PENDING',
+        expiresAt: futureDate,
+        guild: { structureKwatera: 5, disbanded: false, _count: { members: 5 } },
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique
+        .mockResolvedValueOnce(createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' }))
+        .mockResolvedValueOnce(createMockGuildMember({ userId: 'user-456', guildId: 'other-guild' }));
+
+      await expect(acceptApplication('app-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.USER_ALREADY_IN_GUILD);
+    });
+
+    it('should throw GUILD_FULL if guild reached capacity since application', async () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      mockGetMemberCapacity.mockReturnValue(10);
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        applicantId: 'user-456',
+        status: 'PENDING',
+        expiresAt: futureDate,
+        guild: { structureKwatera: 0, disbanded: false, _count: { members: 10 } }, // Full
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique
+        .mockResolvedValueOnce(createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' }))
+        .mockResolvedValueOnce(null);
+
+      await expect(acceptApplication('app-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.GUILD_FULL);
+    });
+
+    it('should allow OFFICER to accept applications', async () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        applicantId: 'user-456',
+        status: 'PENDING',
+        expiresAt: futureDate,
+        guild: { structureKwatera: 5, disbanded: false, _count: { members: 5 } },
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique
+        .mockResolvedValueOnce(createMockGuildMember({ role: 'OFFICER', guildId: 'guild-123' }))
+        .mockResolvedValueOnce(null);
+      mockPrisma.$transaction.mockResolvedValue([{}, {}, {}, {}]);
+
+      await acceptApplication('app-123', 'officer-123');
+
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // declineApplication - Additional Edge Cases
+  // ============================================================================
+
+  describe('declineApplication - edge cases', () => {
+    it('should throw INSUFFICIENT_PERMISSIONS if responder in different guild', async () => {
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        status: 'PENDING',
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(
+        createMockGuildMember({ role: 'LEADER', guildId: 'different-guild' })
+      );
+
+      await expect(declineApplication('app-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
+    });
+
+    it('should throw APPLICATION_NOT_PENDING if expired', async () => {
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        status: 'EXPIRED',
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(
+        createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' })
+      );
+
+      await expect(declineApplication('app-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.APPLICATION_NOT_PENDING);
+    });
+
+    it('should allow OFFICER to decline applications', async () => {
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        status: 'PENDING',
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(
+        createMockGuildMember({ role: 'OFFICER', guildId: 'guild-123' })
+      );
+      mockPrisma.guildApplication.update.mockResolvedValue({});
+
+      await declineApplication('app-123', 'officer-123');
+
+      expect(mockPrisma.guildApplication.update).toHaveBeenCalled();
+    });
+
+    it('should throw INSUFFICIENT_PERMISSIONS if not in guild', async () => {
+      const application = createMockGuildApplication({
+        id: 'app-123',
+        guildId: 'guild-123',
+        status: 'PENDING',
+      });
+      mockPrisma.guildApplication.findUnique.mockResolvedValue(application);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+
+      await expect(declineApplication('app-123', 'random-user'))
+        .rejects.toThrow(GUILD_ERROR_CODES.INSUFFICIENT_PERMISSIONS);
+    });
+  });
+
+  // ============================================================================
+  // getGuildApplications - Additional Tests
+  // ============================================================================
+
+  describe('getGuildApplications - edge cases', () => {
+    it('should respect pagination with offset', async () => {
+      mockPrisma.guildApplication.findMany.mockResolvedValue([]);
+      mockPrisma.guildApplication.count.mockResolvedValue(100);
+
+      await getGuildApplications('guild-123', undefined, 25, 50);
+
+      expect(mockPrisma.guildApplication.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 25,
+          skip: 50,
+        })
+      );
+    });
+
+    it('should return empty when guild has no applications', async () => {
+      mockPrisma.guildApplication.findMany.mockResolvedValue([]);
+      mockPrisma.guildApplication.count.mockResolvedValue(0);
+
+      const result = await getGuildApplications('guild-123');
+
+      expect(result.applications).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should order by createdAt descending', async () => {
+      mockPrisma.guildApplication.findMany.mockResolvedValue([]);
+      mockPrisma.guildApplication.count.mockResolvedValue(0);
+
+      await getGuildApplications('guild-123');
+
+      expect(mockPrisma.guildApplication.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { createdAt: 'desc' },
+        })
+      );
+    });
+  });
+
+  // ============================================================================
+  // getUserApplications - Additional Tests
+  // ============================================================================
+
+  describe('getUserApplications - edge cases', () => {
+    it('should respect pagination', async () => {
+      mockPrisma.guildApplication.findMany.mockResolvedValue([]);
+      mockPrisma.guildApplication.count.mockResolvedValue(10);
+
+      await getUserApplications('user-456', 5, 5);
+
+      expect(mockPrisma.guildApplication.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 5,
+          skip: 5,
+        })
+      );
+    });
+
+    it('should return empty when user has no pending applications', async () => {
+      mockPrisma.guildApplication.findMany.mockResolvedValue([]);
+      mockPrisma.guildApplication.count.mockResolvedValue(0);
+
+      const result = await getUserApplications('user-456');
+
+      expect(result.applications).toEqual([]);
+      expect(result.total).toBe(0);
+    });
   });
 });

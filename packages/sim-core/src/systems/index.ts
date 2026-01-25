@@ -81,7 +81,13 @@ export {
   calculatePillarModifiers,
   calculateTurretAdjacencyBonuses,
   getTurretSynergyBonus,
+  getHeroSynergies,
+  getActiveSynergiesForHeroes,
+  HERO_PAIR_SYNERGIES,
+  HERO_TRIO_SYNERGIES,
   type TurretSynergyBonus,
+  type HeroPairSynergyDef,
+  type HeroTrioSynergyDef,
 } from './synergy.js';
 
 // ============================================================================
@@ -200,4 +206,21 @@ export {
   HERO_SEPARATION_RADIUS,
   HERO_SEPARATION_FORCE,
   DEFAULT_EFFECT_DURATION,
+  // Fortress attack balance constants
+  MIN_FORTRESS_ATTACK_INTERVAL,
+  MAX_FORTRESS_ATTACK_SPEED,
+  FORTRESS_BASE_DAMAGE,
+  FORTRESS_BASE_ATTACK_INTERVAL,
+  PIERCE_DAMAGE_FALLOFF,
+  PROJECTILE_CLASS_SPEED,
+  FORTRESS_CLASS_DAMAGE,
+  FORTRESS_CLASS_PIERCE,
+  // Projectile physics constants
+  PROJECTILE_CLASS_TRAJECTORY,
+  ARC_GRAVITY,
+  ARC_LAUNCH_ANGLE,
+  PROJECTILE_CLASS_HOMING,
+  HOMING_MAX_TURN_RATE,
+  PROJECTILE_CLASS_HIT_RADIUS,
+  PROJECTILE_BASE_HIT_RADIUS,
 } from './constants.js';

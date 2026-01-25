@@ -283,5 +283,31 @@
       "description": "Fire deals +35% DMG"
     }
   },
+  "synergies": {
+    "stormForge": {
+      "name": "Storm Forge",
+      "description": "+25% attack speed when near each other"
+    },
+    "frontlineSupport": {
+      "name": "Frontline Support",
+      "description": "Medic heals Vanguard 50% faster, Vanguard gets +20% damage reduction"
+    },
+    "thermalShock": {
+      "name": "Thermal Shock",
+      "description": "Enemies that are both burned AND frozen take +100% damage"
+    },
+    "superconductor": {
+      "name": "Superconductor",
+      "description": "Storm's chain lightning gains +2 extra targets"
+    },
+    "voidResonance": {
+      "name": "Void Resonance",
+      "description": "Both get +25% damage, Omega execute threshold +5%"
+    },
+    "balancedSquad": {
+      "name": "Balanced Squad",
+      "description": "All three get +20% damage, +20% heal effectiveness, +15% damage reduction"
+    }
+  },
   "artifacts": {}
 }

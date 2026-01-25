@@ -1,4 +1,8 @@
-﻿import type { TutorialTip, TutorialStepId } from "../state/tutorial.signals.js";
+﻿import type {
+  TutorialTip,
+  TutorialStepId,
+  TutorialCompletion,
+} from "../state/tutorial.signals.js";
 
 // Tutorial step configuration (without translations - use getTutorialSteps for i18n)
 export interface TutorialStepConfig {
@@ -6,6 +10,7 @@ export interface TutorialStepConfig {
   highlightRef?: string;
   position: "top" | "bottom" | "left" | "right" | "center";
   autoDismissMs?: number;
+  completion?: TutorialCompletion;
 }
 
 export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> = {
@@ -18,7 +23,8 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
     id: "bomb_skill",
     highlightRef: "fortress-skills",
     position: "left",
-    autoDismissMs: 8000,
+    autoDismissMs: 0, // Interactive - no auto-dismiss
+    completion: { type: "action", actionType: "ACTIVATE_SKILL" },
   },
   relic_selection: {
     id: "relic_selection",
@@ -29,7 +35,8 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
     id: "speed_controls",
     highlightRef: "speed-controls",
     position: "left",
-    autoDismissMs: 6000,
+    autoDismissMs: 0, // Interactive - no auto-dismiss
+    completion: { type: "signal", signalName: "speedMultiplier", expectedChange: "any" },
   },
   build_synergy: {
     id: "build_synergy",
@@ -40,19 +47,22 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
     id: "fortress_upgrades",
     highlightRef: "fortress-upgrades",
     position: "left",
-    autoDismissMs: 9000,
+    autoDismissMs: 0, // Interactive - no auto-dismiss
+    completion: { type: "click" },
   },
   hero_stat_upgrades: {
     id: "hero_stat_upgrades",
     highlightRef: "hero-stat-upgrades",
     position: "right",
-    autoDismissMs: 9000,
+    autoDismissMs: 0, // Interactive - no auto-dismiss
+    completion: { type: "click" },
   },
   hero_tiers: {
     id: "hero_tiers",
     highlightRef: "hero-tier-upgrade",
     position: "bottom",
-    autoDismissMs: 9000,
+    autoDismissMs: 0, // Interactive - no auto-dismiss
+    completion: { type: "click" },
   },
   fortress_unlocks: {
     id: "fortress_unlocks",
@@ -64,7 +74,8 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
     id: "manual_control",
     highlightRef: "game-canvas",
     position: "center",
-    autoDismissMs: 9000,
+    autoDismissMs: 0, // Interactive - no auto-dismiss
+    completion: { type: "signal", signalName: "manualControlHeroId", expectedChange: "truthy" },
   },
   hero_drag: {
     id: "hero_drag",

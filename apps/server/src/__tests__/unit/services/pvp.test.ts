@@ -13,6 +13,7 @@ import {
   cancelChallenge,
   getReplayData,
   getUserPvpStats,
+  resolveChallenge,
   PvpError,
 } from '../../../services/pvp.js';
 import {
@@ -21,6 +22,7 @@ import {
   createMockPvpChallenge,
   createMockPvpResult,
   createMockPowerUpgrades,
+  createMockPlayerArtifact,
 } from '../../mocks/prisma.js';
 
 // Mock sim-core to avoid complex simulation dependencies
@@ -1117,6 +1119,880 @@ describe('PvP Service', () => {
       expect(result.wins).toBe(0);
       expect(result.losses).toBe(0);
       expect(result.winRate).toBe(0);
+    });
+  });
+
+  // ============================================================================
+  // resolveChallenge
+  // ============================================================================
+
+  describe('resolveChallenge', () => {
+    const validClientResult = {
+      winnerId: 'user-123',
+      winReason: 'fortress_destroyed',
+      challengerStats: {
+        finalHp: 500,
+        damageDealt: 15000,
+        heroesAlive: 2,
+      },
+      challengedStats: {
+        finalHp: 0,
+        damageDealt: 12000,
+        heroesAlive: 0,
+      },
+      duration: 180,
+    };
+
+    it('throws CHALLENGE_NOT_FOUND for non-existent challenge', async () => {
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(null);
+
+      await expect(
+        resolveChallenge('nonexistent', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'CHALLENGE_NOT_FOUND',
+      });
+    });
+
+    it('throws CHALLENGE_FORBIDDEN when user is not a participant', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-456',
+        challengedId: 'user-789',
+        status: 'PENDING',
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'CHALLENGE_FORBIDDEN',
+      });
+    });
+
+    it('throws CHALLENGE_ALREADY_RESOLVED for already resolved challenge', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'RESOLVED',
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'CHALLENGE_ALREADY_RESOLVED',
+      });
+    });
+
+    it('throws CHALLENGE_NOT_PENDING for declined challenge', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'DECLINED',
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'CHALLENGE_NOT_PENDING',
+      });
+    });
+
+    it('throws CHALLENGE_NOT_PENDING for cancelled challenge', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'CANCELLED',
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'CHALLENGE_NOT_PENDING',
+      });
+    });
+
+    it('throws CHALLENGE_EXPIRED for expired challenge', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() - 1000), // Already expired
+        seed: 12345,
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+      mockPrisma.pvpChallenge.update.mockResolvedValue({ ...challenge, status: 'EXPIRED' });
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'CHALLENGE_EXPIRED',
+      });
+
+      // Verify the challenge was marked as expired
+      expect(mockPrisma.pvpChallenge.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { status: 'EXPIRED' },
+        })
+      );
+    });
+
+    it('throws CHALLENGE_NOT_PENDING when seed is missing', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        seed: null,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'CHALLENGE_NOT_PENDING',
+      });
+    });
+
+    it('throws USER_NOT_FOUND when challenger build cannot be loaded', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        seed: 12345,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', validClientResult)
+      ).rejects.toMatchObject({
+        code: 'USER_NOT_FOUND',
+      });
+    });
+
+    it('throws RESULT_MISMATCH when client result does not match server', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        seed: 12345,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      const challenger = createMockUser({ id: 'user-123', displayName: 'Challenger' });
+      const challenged = createMockUser({ id: 'user-456', displayName: 'Challenged' });
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
+        if (where.id === 'user-123') {
+          return {
+            ...challenger,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-123' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        if (where.id === 'user-456') {
+          return {
+            ...challenged,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-456' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        return null;
+      });
+
+      // Client claims different winner than server would calculate
+      const mismatchResult = {
+        winnerId: 'user-456', // Wrong winner
+        winReason: 'fortress_destroyed',
+        challengerStats: {
+          finalHp: 0,
+          damageDealt: 12000,
+          heroesAlive: 0,
+        },
+        challengedStats: {
+          finalHp: 500,
+          damageDealt: 15000,
+          heroesAlive: 2,
+        },
+        duration: 180,
+      };
+
+      await expect(
+        resolveChallenge('challenge-123', 'user-123', mismatchResult)
+      ).rejects.toMatchObject({
+        code: 'RESULT_MISMATCH',
+      });
+    });
+
+    it('allows challenger to resolve the challenge', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        seed: 12345,
+        challengerPower: 1000,
+        challengedPower: 950,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      const challenger = createMockUser({ id: 'user-123', displayName: 'Challenger' });
+      const challenged = createMockUser({ id: 'user-456', displayName: 'Challenged' });
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
+        if (where.id === 'user-123') {
+          return {
+            ...challenger,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-123' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        if (where.id === 'user-456') {
+          return {
+            ...challenged,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-456' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        return null;
+      });
+
+      mockPrisma.$transaction.mockResolvedValue([
+        { ...challenge, status: 'RESOLVED', winnerId: 'user-123' },
+        createMockPvpResult(),
+        {},
+        {},
+        {},
+        {},
+      ]);
+      mockPrisma.pvpResult.update.mockResolvedValue({});
+
+      // Mock artifact-related calls (artifact drops may occur randomly)
+      mockPrisma.playerArtifact.count.mockResolvedValue(0);
+      mockPrisma.playerArtifact.findFirst.mockResolvedValue(null);
+      mockPrisma.playerArtifact.create.mockResolvedValue(
+        createMockPlayerArtifact('test_artifact', { userId: 'user-123' })
+      );
+
+      const result = await resolveChallenge('challenge-123', 'user-123', validClientResult);
+
+      expect(result.challenge.status).toBe('RESOLVED');
+      expect(result.challenge.winnerId).toBe('user-123');
+      expect(result.result).toBeDefined();
+      expect(result.rewards).toBeDefined();
+      expect(result.rewards?.gold).toBeGreaterThan(0);
+      expect(result.rewards?.dust).toBe(1); // PVP_REWARDS.dust
+    });
+
+    it('allows challenged player to resolve the challenge', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        seed: 12345,
+        challengerPower: 1000,
+        challengedPower: 950,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      const challenger = createMockUser({ id: 'user-123', displayName: 'Challenger' });
+      const challenged = createMockUser({ id: 'user-456', displayName: 'Challenged' });
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
+        if (where.id === 'user-123') {
+          return {
+            ...challenger,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-123' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        if (where.id === 'user-456') {
+          return {
+            ...challenged,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-456' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        return null;
+      });
+
+      mockPrisma.$transaction.mockResolvedValue([
+        { ...challenge, status: 'RESOLVED', winnerId: 'user-123' },
+        createMockPvpResult(),
+        {},
+        {},
+        {},
+        {},
+      ]);
+      mockPrisma.pvpResult.update.mockResolvedValue({});
+
+      // Mock artifact-related calls (artifact drops may occur randomly)
+      mockPrisma.playerArtifact.count.mockResolvedValue(0);
+      mockPrisma.playerArtifact.findFirst.mockResolvedValue(null);
+      mockPrisma.playerArtifact.create.mockResolvedValue(
+        createMockPlayerArtifact('test_artifact', { userId: 'user-456' })
+      );
+
+      const result = await resolveChallenge('challenge-123', 'user-456', validClientResult);
+
+      expect(result.challenge.status).toBe('RESOLVED');
+      // Challenged player still sees the result, even if they lost
+      expect(result.result).toBeDefined();
+    });
+  });
+
+  // ============================================================================
+  // createChallenge - Power Range Enforcement
+  // ============================================================================
+
+  describe('createChallenge - Power Range Enforcement', () => {
+    // Note: The enforcePowerRange option tests are covered in integration tests
+    // as they require complex mocking of the full power calculation chain.
+    // The unit tests here focus on simpler scenarios.
+
+    it('allows challenge regardless of power when enforcePowerRange is not set', async () => {
+      // This test verifies that by default, power range is not enforced
+      const fullUserData = {
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: { statUpgrades: { hp: 0, damage: 0 } }, heroTiers: {}, cachedTotalPower: 1000 },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
+      };
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }: { where: { id: string } }) => {
+        if (where.id === 'user-123') return {
+          ...createMockUser({ id: 'user-123', displayName: 'Challenger' }),
+          ...fullUserData,
+        };
+        if (where.id === 'user-456') return {
+          ...createMockUser({ id: 'user-456', displayName: 'Challenged' }),
+          ...fullUserData,
+          powerUpgrades: { ...fullUserData.powerUpgrades, cachedTotalPower: 5000 },
+        };
+        return null;
+      });
+
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.create.mockResolvedValue(
+        createMockPvpChallenge({
+          challengerId: 'user-123',
+          challengedId: 'user-456',
+          challengerPower: 1000,
+          challengedPower: 5000,
+        })
+      );
+
+      // Without enforcePowerRange, challenge should succeed
+      const result = await createChallenge('user-123', 'user-456');
+
+      expect(result.challenge.challengedPower).toBe(5000);
+    });
+  });
+
+  // ============================================================================
+  // getChallenge - Battle Data
+  // ============================================================================
+
+  describe('getChallenge - Battle Data', () => {
+    it('includes battle data for pending challenges', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        seed: 12345,
+      });
+
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue({
+        ...challenge,
+        challenger: { displayName: 'Challenger' },
+        challenged: { displayName: 'Challenged' },
+        result: null,
+      });
+
+      const challenger = createMockUser({ id: 'user-123', displayName: 'Challenger' });
+      const challenged = createMockUser({ id: 'user-456', displayName: 'Challenged' });
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
+        if (where.id === 'user-123') {
+          return {
+            ...challenger,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-123' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        if (where.id === 'user-456') {
+          return {
+            ...challenged,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-456' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        return null;
+      });
+
+      const result = await getChallenge('challenge-123', 'user-123');
+
+      expect(result.battleData).toBeDefined();
+      expect(result.battleData?.seed).toBe(12345);
+      expect(result.battleData?.challengerBuild).toBeDefined();
+      expect(result.battleData?.challengedBuild).toBeDefined();
+    });
+
+    it('does not include battle data for resolved challenges', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'RESOLVED',
+        seed: 12345,
+      });
+
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue({
+        ...challenge,
+        challenger: { displayName: 'Challenger' },
+        challenged: { displayName: 'Challenged' },
+        result: createMockPvpResult(),
+      });
+
+      const result = await getChallenge('challenge-123', 'user-123');
+
+      // For resolved challenges, battleData is not populated with fresh builds
+      expect(result.battleData).toBeUndefined();
+      expect(result.result).toBeDefined();
+    });
+
+    it('includes rewards for resolved challenges when viewing as challenger', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'RESOLVED',
+        seed: 12345,
+      });
+
+      const pvpResult = createMockPvpResult({
+        challengerRewards: { gold: 50, dust: 1, honorChange: 25, artifactId: 'test_artifact' },
+        challengedRewards: { gold: 25, dust: 1, honorChange: -15 },
+      });
+
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue({
+        ...challenge,
+        challenger: { displayName: 'Challenger' },
+        challenged: { displayName: 'Challenged' },
+        result: pvpResult,
+      });
+
+      const result = await getChallenge('challenge-123', 'user-123');
+
+      expect(result.rewards).toBeDefined();
+      expect(result.rewards?.gold).toBe(50);
+      expect(result.rewards?.honorChange).toBe(25);
+      expect(result.rewards?.artifactId).toBe('test_artifact');
+    });
+
+    it('includes rewards for resolved challenges when viewing as challenged', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'RESOLVED',
+        seed: 12345,
+      });
+
+      const pvpResult = createMockPvpResult({
+        challengerRewards: { gold: 50, dust: 1, honorChange: 25 },
+        challengedRewards: { gold: 25, dust: 1, honorChange: -15 },
+      });
+
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue({
+        ...challenge,
+        challenger: { displayName: 'Challenger' },
+        challenged: { displayName: 'Challenged' },
+        result: pvpResult,
+      });
+
+      const result = await getChallenge('challenge-123', 'user-456');
+
+      expect(result.rewards).toBeDefined();
+      expect(result.rewards?.gold).toBe(25);
+      expect(result.rewards?.honorChange).toBe(-15);
+    });
+  });
+
+  // ============================================================================
+  // getChallenges - Multiple Statuses
+  // ============================================================================
+
+  describe('getChallenges - Status Filtering', () => {
+    it('filters by RESOLVED status', async () => {
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.count.mockResolvedValue(0);
+
+      await getChallenges('user-123', 'all', 'RESOLVED');
+
+      expect(mockPrisma.pvpChallenge.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'RESOLVED',
+          }),
+        })
+      );
+    });
+
+    it('filters by EXPIRED status', async () => {
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.count.mockResolvedValue(0);
+
+      await getChallenges('user-123', 'all', 'EXPIRED');
+
+      expect(mockPrisma.pvpChallenge.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'EXPIRED',
+          }),
+        })
+      );
+    });
+
+    it('filters by DECLINED status', async () => {
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.count.mockResolvedValue(0);
+
+      await getChallenges('user-123', 'all', 'DECLINED');
+
+      expect(mockPrisma.pvpChallenge.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'DECLINED',
+          }),
+        })
+      );
+    });
+
+    it('filters by CANCELLED status', async () => {
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.count.mockResolvedValue(0);
+
+      await getChallenges('user-123', 'all', 'CANCELLED');
+
+      expect(mockPrisma.pvpChallenge.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'CANCELLED',
+          }),
+        })
+      );
+    });
+
+    it('returns empty array when no challenges match filter', async () => {
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.count.mockResolvedValue(0);
+
+      const result = await getChallenges('user-123', 'received', 'PENDING');
+
+      expect(result.challenges).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+  });
+
+  // ============================================================================
+  // acceptChallenge - Additional Scenarios
+  // ============================================================================
+
+  describe('acceptChallenge - Additional Scenarios', () => {
+    it('includes hero stats in battle result', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      const challenger = createMockUser({ id: 'user-123', displayName: 'Challenger' });
+      const challenged = createMockUser({ id: 'user-456', displayName: 'Challenged' });
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
+        if (where.id === 'user-123') {
+          return {
+            ...challenger,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-123' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        if (where.id === 'user-456') {
+          return {
+            ...challenged,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-456' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        return null;
+      });
+
+      mockPrisma.$transaction.mockResolvedValue([]);
+
+      const result = await acceptChallenge('challenge-123', 'user-456');
+
+      expect(result.result.challengerStats).toBeDefined();
+      expect(result.result.challengerStats.heroesAlive).toBeDefined();
+      expect(result.result.challengedStats).toBeDefined();
+      expect(result.result.challengedStats.heroesAlive).toBeDefined();
+    });
+
+    it('returns build configs in battle data', async () => {
+      const challenge = createMockPvpChallenge({
+        challengerId: 'user-123',
+        challengedId: 'user-456',
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      mockPrisma.pvpChallenge.findUnique.mockResolvedValue(challenge);
+
+      const challenger = createMockUser({ id: 'user-123', displayName: 'Challenger' });
+      const challenged = createMockUser({ id: 'user-456', displayName: 'Challenged' });
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }) => {
+        if (where.id === 'user-123') {
+          return {
+            ...challenger,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-123' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        if (where.id === 'user-456') {
+          return {
+            ...challenged,
+            progression: { level: 10 },
+            powerUpgrades: createMockPowerUpgrades({ userId: 'user-456' }),
+            inventory: { unlockedHeroIds: [], unlockedTurretIds: [] },
+          };
+        }
+        return null;
+      });
+
+      mockPrisma.$transaction.mockResolvedValue([]);
+
+      const result = await acceptChallenge('challenge-123', 'user-456');
+
+      expect(result.battleData).toBeDefined();
+      expect(result.battleData.seed).toBeDefined();
+      expect(result.battleData.challengerBuild.ownerId).toBe('user-123');
+      expect(result.battleData.challengedBuild.ownerId).toBe('user-456');
+    });
+  });
+
+  // ============================================================================
+  // getOpponents - Edge Cases
+  // ============================================================================
+
+  describe('getOpponents - Edge Cases', () => {
+    it('handles user with null progression', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...defaultUserForArenaPower,
+        progression: null, // No progression
+      });
+      mockPrisma.user.findMany.mockResolvedValue([]);
+      mockPrisma.user.count.mockResolvedValue(0);
+
+      const result = await getOpponents('user-123');
+
+      expect(result.myPower).toBe(0);
+      expect(result.opponents).toEqual([]);
+    });
+
+    it('handles limit option correctly', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...defaultUserForArenaPower,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
+      });
+
+      // Create 10 mock users
+      const manyUsers = Array.from({ length: 10 }, (_, i) => ({
+        id: `user-${i}`,
+        displayName: `Opponent${i}`,
+        pvpWins: 5,
+        pvpLosses: 3,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
+      }));
+      mockPrisma.user.findMany.mockResolvedValue(manyUsers);
+      mockPrisma.user.count.mockResolvedValue(10);
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+
+      const result = await getOpponents('user-123', { limit: 3 });
+
+      // Should return at most the limit
+      expect(result.opponents.length).toBeLessThanOrEqual(3);
+    });
+
+    it('marks opponents correctly based on cooldown status', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...defaultUserForArenaPower,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
+      });
+
+      const opponentWithCooldown = {
+        id: 'user-456',
+        displayName: 'CooldownOpponent',
+        pvpWins: 5,
+        pvpLosses: 3,
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {} },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
+      };
+
+      mockPrisma.user.findMany.mockResolvedValue([opponentWithCooldown]);
+      mockPrisma.user.count.mockResolvedValue(1);
+
+      // 3 recent challenges = cooldown active
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([
+        createMockPvpChallenge({ challengedId: 'user-456', createdAt: new Date(Date.now() - 1000) }),
+        createMockPvpChallenge({ challengedId: 'user-456', createdAt: new Date(Date.now() - 2000) }),
+        createMockPvpChallenge({ challengedId: 'user-456', createdAt: new Date(Date.now() - 3000) }),
+      ]);
+
+      const result = await getOpponents('user-123');
+
+      expect(result.opponents.length).toBe(1);
+      expect(result.opponents[0].canChallenge).toBe(false);
+      expect(result.opponents[0].challengeCooldownEndsAt).toBeDefined();
+    });
+  });
+
+  // ============================================================================
+  // createChallenge - Battle Data
+  // ============================================================================
+
+  describe('createChallenge - Battle Data', () => {
+    it('includes seed and build configs in response', async () => {
+      const fullUserData = {
+        progression: { level: 10 },
+        powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {}, cachedTotalPower: 1000 },
+        inventory: { unlockedHeroIds: ['vanguard'] },
+        artifacts: [],
+      };
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }: { where: { id: string } }) => {
+        if (where.id === 'user-123') return {
+          ...createMockUser({ id: 'user-123', displayName: 'Challenger' }),
+          ...fullUserData,
+        };
+        if (where.id === 'user-456') return {
+          ...createMockUser({ id: 'user-456', displayName: 'Challenged' }),
+          ...fullUserData,
+        };
+        return null;
+      });
+
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.create.mockResolvedValue(
+        createMockPvpChallenge({
+          challengerId: 'user-123',
+          challengedId: 'user-456',
+          seed: 12345,
+        })
+      );
+
+      const result = await createChallenge('user-123', 'user-456');
+
+      expect(result.battleData).toBeDefined();
+      expect(result.battleData.seed).toBeDefined();
+      expect(result.battleData.seed).toBeGreaterThan(0);
+      expect(result.battleData.challengerBuild).toBeDefined();
+      expect(result.battleData.challengerBuild.ownerId).toBe('user-123');
+      expect(result.battleData.challengerBuild.ownerName).toBe('Challenger');
+      expect(result.battleData.challengedBuild).toBeDefined();
+      expect(result.battleData.challengedBuild.ownerId).toBe('user-456');
+      expect(result.battleData.challengedBuild.ownerName).toBe('Challenged');
+    });
+
+    it('includes fortress class and hero configs in builds', async () => {
+      const challengerData = {
+        progression: { level: 10 },
+        powerUpgrades: {
+          heroUpgrades: [{ heroId: 'storm', statUpgrades: { hp: 5, damage: 3 } }],
+          fortressUpgrades: { statUpgrades: { hp: 10, damage: 5 } },
+          heroTiers: { storm: 2 },
+          cachedTotalPower: 1200,
+        },
+        inventory: { unlockedHeroIds: ['storm', 'vanguard'] },
+        artifacts: [{ equippedToHeroId: 'storm', artifactId: 'test_artifact' }],
+        defaultHeroId: 'storm',
+        defaultFortressClass: 'fire',
+      };
+
+      mockPrisma.user.findUnique.mockImplementation(({ where }: { where: { id: string } }) => {
+        if (where.id === 'user-123') return {
+          ...createMockUser({ id: 'user-123', displayName: 'Challenger' }),
+          ...challengerData,
+        };
+        if (where.id === 'user-456') return {
+          ...createMockUser({ id: 'user-456', displayName: 'Challenged' }),
+          progression: { level: 10 },
+          powerUpgrades: { heroUpgrades: [], fortressUpgrades: {}, heroTiers: {}, cachedTotalPower: 1000 },
+          inventory: { unlockedHeroIds: ['vanguard'] },
+          artifacts: [],
+        };
+        return null;
+      });
+
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
+      mockPrisma.pvpChallenge.create.mockResolvedValue(
+        createMockPvpChallenge({
+          challengerId: 'user-123',
+          challengedId: 'user-456',
+        })
+      );
+
+      const result = await createChallenge('user-123', 'user-456');
+
+      expect(result.battleData.challengerBuild.fortressClass).toBeDefined();
+      expect(result.battleData.challengerBuild.heroIds).toBeDefined();
+      expect(result.battleData.challengerBuild.heroConfigs).toBeDefined();
+    });
+  });
+
+  // ============================================================================
+  // PvpError - Additional Codes
+  // ============================================================================
+
+  describe('PvpError - Additional Codes', () => {
+    it('supports CHALLENGE_ALREADY_RESOLVED code', () => {
+      const error = new PvpError('Test', 'CHALLENGE_ALREADY_RESOLVED');
+      expect(error.code).toBe('CHALLENGE_ALREADY_RESOLVED');
+    });
+
+    it('supports CHALLENGE_NOT_RESOLVED code', () => {
+      const error = new PvpError('Test', 'CHALLENGE_NOT_RESOLVED');
+      expect(error.code).toBe('CHALLENGE_NOT_RESOLVED');
+    });
+
+    it('supports RESULT_MISMATCH code', () => {
+      const error = new PvpError('Test', 'RESULT_MISMATCH');
+      expect(error.code).toBe('RESULT_MISMATCH');
     });
   });
 });

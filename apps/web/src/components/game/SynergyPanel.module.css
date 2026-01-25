@@ -143,3 +143,89 @@
 .compact .tips {
   display: none;
 }
+
+/* Hero Synergies Section */
+.heroSynergiesSection {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.heroSynergiesHeader {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--color-success);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.heroSynergyActive {
+  background: linear-gradient(135deg, var(--color-success-10), var(--color-success-20));
+  border: 1px solid var(--color-success-40);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  margin-bottom: 6px;
+}
+
+.heroSynergyName {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--color-success);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.heroSynergyBonuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.heroSynergyBonus {
+  font-size: 9px;
+  padding: 2px 6px;
+  background: var(--color-success-20);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-xs);
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+/* Almost Active Section */
+.almostActiveSection {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--glass-border);
+}
+
+.almostActiveHeader {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--color-warning, #f59e0b);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.almostActiveItem {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  margin-bottom: 6px;
+}
+
+.almostActiveName {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--color-text-80);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.almostActiveMissing {
+  font-size: 10px;
+  color: var(--color-warning, #f59e0b);
+  font-style: italic;
+}

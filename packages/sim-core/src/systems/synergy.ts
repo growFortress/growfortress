@@ -456,3 +456,163 @@ export function getBalancedSquadBonus(state: GameState, hero: ActiveHero): { dam
 
   return { damage: 0, heal: 0, dr: 0 };
 }
+
+// ============================================================================
+// SYNERGY DATA EXPORT FOR UI
+// ============================================================================
+
+/**
+ * Hero pair synergy definition for UI display
+ */
+export interface HeroPairSynergyDef {
+  id: string;
+  name: string;
+  nameKey: string; // i18n key
+  heroes: [string, string];
+  description: string;
+  descriptionKey: string; // i18n key
+  bonuses: string[];
+}
+
+/**
+ * Hero trio synergy definition for UI display
+ */
+export interface HeroTrioSynergyDef {
+  id: string;
+  name: string;
+  nameKey: string;
+  heroes: [string, string, string];
+  description: string;
+  descriptionKey: string;
+  bonuses: string[];
+}
+
+/**
+ * All hero pair synergies - exported for UI to display "Works With" info
+ */
+export const HERO_PAIR_SYNERGIES: HeroPairSynergyDef[] = [
+  {
+    id: 'storm-forge',
+    name: 'Storm Forge',
+    nameKey: 'data:synergies.stormForge.name',
+    heroes: ['storm', 'forge'],
+    description: '+25% attack speed when near each other',
+    descriptionKey: 'data:synergies.stormForge.description',
+    bonuses: ['+25% AS'],
+  },
+  {
+    id: 'medic-vanguard',
+    name: 'Frontline Support',
+    nameKey: 'data:synergies.frontlineSupport.name',
+    heroes: ['medic', 'vanguard'],
+    description: 'Medic heals Vanguard 50% faster, Vanguard gets +20% damage reduction',
+    descriptionKey: 'data:synergies.frontlineSupport.description',
+    bonuses: ['+50% heal', '+20% DR'],
+  },
+  {
+    id: 'pyro-frost',
+    name: 'Thermal Shock',
+    nameKey: 'data:synergies.thermalShock.name',
+    heroes: ['pyro', 'frost'],
+    description: 'Enemies that are both burned AND frozen take +100% damage',
+    descriptionKey: 'data:synergies.thermalShock.description',
+    bonuses: ['+100% DMG'],
+  },
+  {
+    id: 'storm-frost',
+    name: 'Superconductor',
+    nameKey: 'data:synergies.superconductor.name',
+    heroes: ['storm', 'frost'],
+    description: "Storm's chain lightning gains +2 extra targets",
+    descriptionKey: 'data:synergies.superconductor.description',
+    bonuses: ['+2 chains'],
+  },
+  {
+    id: 'omega-titan',
+    name: 'Void Resonance',
+    nameKey: 'data:synergies.voidResonance.name',
+    heroes: ['omega', 'titan'],
+    description: 'Both get +25% damage, Omega execute threshold +5%',
+    descriptionKey: 'data:synergies.voidResonance.description',
+    bonuses: ['+25% DMG', '+5% execute'],
+  },
+];
+
+/**
+ * All hero trio synergies
+ */
+export const HERO_TRIO_SYNERGIES: HeroTrioSynergyDef[] = [
+  {
+    id: 'balanced-squad',
+    name: 'Balanced Squad',
+    nameKey: 'data:synergies.balancedSquad.name',
+    heroes: ['medic', 'pyro', 'vanguard'],
+    description: 'All three get +20% damage, +20% heal effectiveness, +15% damage reduction',
+    descriptionKey: 'data:synergies.balancedSquad.description',
+    bonuses: ['+20% DMG', '+20% heal', '+15% DR'],
+  },
+];
+
+/**
+ * Get all synergies that include a specific hero
+ */
+export function getHeroSynergies(heroId: string): {
+  pairs: Array<HeroPairSynergyDef & { partner: string }>;
+  trios: Array<HeroTrioSynergyDef & { partners: string[] }>;
+} {
+  const pairs = HERO_PAIR_SYNERGIES
+    .filter(s => s.heroes.includes(heroId))
+    .map(s => ({
+      ...s,
+      partner: s.heroes.find(h => h !== heroId) || '',
+    }));
+
+  const trios = HERO_TRIO_SYNERGIES
+    .filter(s => s.heroes.includes(heroId))
+    .map(s => ({
+      ...s,
+      partners: s.heroes.filter(h => h !== heroId),
+    }));
+
+  return { pairs, trios };
+}
+
+/**
+ * Check which synergies are active for a given hero lineup
+ */
+export function getActiveSynergiesForHeroes(heroIds: string[]): {
+  active: Array<HeroPairSynergyDef | HeroTrioSynergyDef>;
+  almostActive: Array<{ synergy: HeroPairSynergyDef | HeroTrioSynergyDef; missing: string[] }>;
+} {
+  const heroSet = new Set(heroIds);
+  const active: Array<HeroPairSynergyDef | HeroTrioSynergyDef> = [];
+  const almostActive: Array<{ synergy: HeroPairSynergyDef | HeroTrioSynergyDef; missing: string[] }> = [];
+
+  // Check pairs
+  for (const synergy of HERO_PAIR_SYNERGIES) {
+    const present = synergy.heroes.filter(h => heroSet.has(h));
+    if (present.length === 2) {
+      active.push(synergy);
+    } else if (present.length === 1) {
+      almostActive.push({
+        synergy,
+        missing: synergy.heroes.filter(h => !heroSet.has(h)),
+      });
+    }
+  }
+
+  // Check trios
+  for (const synergy of HERO_TRIO_SYNERGIES) {
+    const present = synergy.heroes.filter(h => heroSet.has(h));
+    if (present.length === 3) {
+      active.push(synergy);
+    } else if (present.length >= 2) {
+      almostActive.push({
+        synergy,
+        missing: synergy.heroes.filter(h => !heroSet.has(h)),
+      });
+    }
+  }
+
+  return { active, almostActive };
+}

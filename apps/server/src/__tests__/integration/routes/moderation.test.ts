@@ -59,25 +59,6 @@ function createMockUserBlock(overrides: Record<string, unknown> = {}) {
   };
 }
 
-// Helper to create mock user mute
-function createMockUserMute(overrides: Record<string, unknown> = {}) {
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 1);
-
-  return {
-    id: 'mute-123',
-    userId: 'user-789',
-    mutedBy: 'admin-123',
-    reason: 'SPAM',
-    details: 'Test mute details',
-    expiresAt,
-    createdAt: new Date(),
-    user: { username: 'muteduser', displayName: 'Muted User' },
-    moderator: { username: 'admin', displayName: 'Admin' },
-    ...overrides,
-  };
-}
-
 describe('Moderation Routes Integration', () => {
   let app: FastifyInstance;
 

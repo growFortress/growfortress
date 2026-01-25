@@ -16,8 +16,8 @@ import {
   popComboTriggers,
 } from '../../../systems/projectile.js';
 import { createGameState, createEnemy, createSimConfig } from '../../helpers/factories.js';
-import type { GameState, ActiveProjectile, ActiveHero, ActiveTurret, Enemy, SkillEffect } from '../../../types.js';
-import { PROJECTILE_BASE_SPEED, PIERCE_HIT_RADIUS, PIERCE_DAMAGE_MULTIPLIER } from '../../../systems/constants.js';
+import type { GameState, ActiveProjectile, ActiveHero, ActiveTurret, SkillEffect } from '../../../types.js';
+import { PROJECTILE_BASE_SPEED } from '../../../systems/constants.js';
 
 // Helper to create a projectile with defaults
 function createProjectile(overrides: Partial<ActiveProjectile> = {}): ActiveProjectile {
@@ -403,7 +403,8 @@ describe('Projectile System', () => {
 
       expect(state.projectiles).toHaveLength(1);
       expect(state.projectiles[0].sourceType).toBe('fortress');
-      expect(state.projectiles[0].pierceCount).toBe(3); // FORTRESS_PIERCE_COUNT
+      // Pierce count is now class-based: natural=2, ice=1, fire=2, lightning=3, tech=4
+      expect(state.projectiles[0].pierceCount).toBe(2); // Natural class default
       expect(state.projectiles[0].hitEnemyIds).toEqual([]);
     });
   });

@@ -13,11 +13,10 @@ import {
   calculateTurretStats,
   calculateTurretCost,
   calculateTurretHp,
-  TURRET_DEFINITIONS,
   TURRET_SLOTS,
 } from '../../../data/turrets.js';
 import { createGameState, createEnemy, createSimConfig } from '../../helpers/factories.js';
-import type { ActiveTurret, TurretTargetingMode, Enemy } from '../../../types.js';
+import type { ActiveTurret, Enemy } from '../../../types.js';
 import { Xorshift32 } from '../../../rng.js';
 
 // Turret stats use scale 16384 = 1.0 (not 65536 like FP.toFloat)

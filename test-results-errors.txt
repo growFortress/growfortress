@@ -1,0 +1,216 @@
+================================================================================
+                    SZCZEGÓŁOWA LISTA WSZYSTKICH BŁĘDÓW
+                    Data: 2026-01-23
+================================================================================
+
+BŁĘDY W @arcade/server
+================================================================================
+
+1. BŁĄD: energy.test.ts - GET /v1/energy - should return 401 without auth
+   ------------------------------------------------------------------------
+   Plik: src/__tests__/integration/routes/energy.test.ts
+   Linia: 58
+   Typ: AssertionError
+   
+   Komunikat błędu:
+   AssertionError: expected 'Missing authorization header' to be 'Unauthorized'
+   
+   Szczegóły:
+   - Oczekiwany komunikat: 'Unauthorized'
+   - Otrzymany komunikat: 'Missing authorization header'
+   - Status code: 401 (poprawny)
+   
+   Przyczyna:
+   Test oczekuje zunifikowanego komunikatu 'Unauthorized', ale API zwraca
+   bardziej szczegółowy komunikat 'Missing authorization header'.
+   
+   Rozwiązanie:
+   Opcja 1: Zmienić komunikat błędu w API na 'Unauthorized'
+   Opcja 2: Zaktualizować test, aby oczekiwał 'Missing authorization header'
+   Opcja 3: Zwracać 'Unauthorized' w body, ale szczegóły w innym polu
+   
+   Priorytet: ŚREDNI
+   Wpływ: Niski (funkcjonalność działa, tylko komunikat się różni)
+
+2. BŁĄD: energy.test.ts - POST /v1/energy/refill - should return 401 without auth
+   --------------------------------------------------------------------------------
+   Plik: src/__tests__/integration/routes/energy.test.ts
+   Linia: 227
+   Typ: AssertionError
+   
+   Komunikat błędu:
+   AssertionError: expected 'Missing authorization header' to be 'Unauthorized'
+   
+   Szczegóły:
+   - Oczekiwany komunikat: 'Unauthorized'
+   - Otrzymany komunikat: 'Missing authorization header'
+   - Status code: 401 (poprawny)
+   
+   Przyczyna:
+   Identyczny problem jak w błędzie #1 - niezgodność komunikatów błędów.
+   
+   Rozwiązanie:
+   Zunifikować komunikaty błędów w całym API (patrz błąd #1).
+   
+   Priorytet: ŚREDNI
+   Wpływ: Niski (funkcjonalność działa, tylko komunikat się różni)
+
+3. BŁĄD: shop.test.ts - POST /v1/shop/buy-dust - should buy booster with dust
+   ---------------------------------------------------------------------------
+   Plik: src/__tests__/integration/routes/shop.test.ts
+   Linia: 453
+   Typ: AssertionError
+   
+   Komunikat błędu:
+   AssertionError: expected 404 to be 200
+   
+   Szczegóły:
+   - Oczekiwany status: 200 (OK)
+   - Otrzymany status: 404 (Not Found)
+   - Endpoint: POST /v1/shop/buy-dust
+   
+   Przyczyna:
+   Endpoint /v1/shop/buy-dust nie istnieje lub routing jest nieprawidłowy.
+   Możliwe przyczyny:
+   - Endpoint nie został zarejestrowany w routerze
+   - Błędna ścieżka w routingu
+   - Middleware blokuje dostęp
+   - Endpoint został usunięty/przeniesiony
+   
+   Rozwiązanie:
+   1. Sprawdzić, czy endpoint istnieje w routes/shop.ts
+   2. Sprawdzić, czy routing jest poprawnie skonfigurowany
+   3. Sprawdzić, czy middleware nie blokuje dostępu
+   4. Sprawdzić logi serwera podczas testu
+   
+   Priorytet: WYSOKI
+   Wpływ: Wysoki (funkcjonalność nie działa)
+
+4. BŁĄD: shop.test.ts - POST /v1/shop/buy-dust - should return 400 for insufficient dust
+   ---------------------------------------------------------------------------------------
+   Plik: src/__tests__/integration/routes/shop.test.ts
+   Linia: 477
+   Typ: AssertionError
+   
+   Komunikat błędu:
+   AssertionError: expected 404 to be 400
+   
+   Szczegóły:
+   - Oczekiwany status: 400 (Bad Request)
+   - Otrzymany status: 404 (Not Found)
+   - Endpoint: POST /v1/shop/buy-dust
+   - Oczekiwany komunikat: 'INSUFFICIENT_DUST'
+   
+   Przyczyna:
+   Identyczny problem jak w błędzie #3 - endpoint nie istnieje lub routing
+   jest nieprawidłowy. Test próbuje sprawdzić walidację (400), ale nie może
+   tego zrobić, ponieważ endpoint zwraca 404.
+   
+   Rozwiązanie:
+   Naprawić endpoint (patrz błąd #3), a następnie sprawdzić, czy walidacja
+   działa poprawnie i zwraca 400 dla niewystarczającej ilości dust.
+   
+   Priorytet: WYSOKI
+   Wpływ: Wysoki (funkcjonalność nie działa)
+
+================================================================================
+
+BŁĘDY W @arcade/sim-core
+================================================================================
+
+5. BŁĄD: turret.test.ts - should trigger ability when cooldown reaches zero
+   --------------------------------------------------------------------------
+   Plik: src/__tests__/unit/systems/turret.test.ts
+   Linia: 206
+   Typ: AssertionError
+   
+   Komunikat błędu:
+   AssertionError: expected 899 to be 900
+   
+   Szczegóły:
+   - Oczekiwana wartość: 900
+   - Otrzymana wartość: 899
+   - Właściwość: state.turrets[0].specialCooldown
+   - Turret: railgun
+   - Kontekst: Po wywołaniu ability, cooldown powinien być resetowany do
+               wartości ability.cooldown (900), ale jest resetowany do 899.
+   
+   Przyczyna:
+   Off-by-one error w logice resetowania cooldown. Możliwe przyczyny:
+   - Cooldown jest dekrementowany przed sprawdzeniem, czy osiągnął 0
+   - Reset następuje przed pełnym wyzerowaniem
+   - Błąd w logice tick'owania cooldown
+   - Problem z zaokrągleniem w fixed-point math
+   
+   Rozwiązanie:
+   1. Sprawdzić logikę resetowania cooldown w turret system
+   2. Sprawdzić, czy dekrementacja następuje w odpowiednim momencie
+   3. Sprawdzić, czy fixed-point math nie powoduje problemów z zaokrągleniem
+   4. Rozważyć użycie >= zamiast == przy sprawdzaniu cooldown == 0
+   
+   Priorytet: ŚREDNI
+   Wpływ: Średni (może wpływać na timing abilities, ale różnica 1 tick jest minimalna)
+
+6. BŁĄD: arena-ai.test.ts - heroes maintain attack cooldowns
+   -----------------------------------------------------------
+   Plik: src/__tests__/unit/arena/arena-ai.test.ts
+   Linia: 519
+   Typ: AssertionError
+   
+   Komunikat błędu:
+   AssertionError: expected undefined not to be undefined
+   
+   Szczegóły:
+   - Właściwość: hero.attackCooldown
+   - Kontekst: Test sprawdza, czy bohaterowie w stanie arena mają właściwość
+               attackCooldown zdefiniowaną i >= 0
+   - Problem: Właściwość attackCooldown jest undefined
+   
+   Przyczyna:
+   Właściwość attackCooldown nie istnieje na obiekcie hero w stanie arena.
+   Możliwe przyczyny:
+   - Typ ActiveHero nie zawiera właściwości attackCooldown
+   - Właściwość nie jest inicjalizowana podczas tworzenia stanu
+   - Właściwość jest usuwana podczas transformacji stanu
+   - Problem z typami TypeScript (właściwość może być opcjonalna)
+   
+   Rozwiązanie:
+   1. Sprawdzić definicję typu ActiveHero
+   2. Sprawdzić, czy attackCooldown jest inicjalizowana podczas tworzenia hero
+   3. Sprawdzić, czy właściwość nie jest usuwana podczas transformacji
+   4. Dodać właściwość do typu, jeśli nie istnieje
+   5. Upewnić się, że właściwość jest inicjalizowana w odpowiednich miejscach
+   
+   Priorytet: WYSOKI
+   Wpływ: Wysoki (może powodować błędy runtime, jeśli kod próbuje odczytać
+          undefined property)
+
+================================================================================
+
+PODSUMOWANIE BŁĘDÓW
+================================================================================
+
+Łączna liczba błędów: 6
+
+Według priorytetu:
+  - WYSOKI: 3 błędy (shop routes, arena-ai attackCooldown)
+  - ŚREDNI: 3 błędy (energy messages, turret cooldown)
+
+Według typu:
+  - Assertion Failures: 6
+  - Runtime Errors: 0
+  - Compilation Errors: 0
+
+Według pakietu:
+  - @arcade/server: 4 błędy
+  - @arcade/sim-core: 2 błędy
+
+Rekomendowane kolejność naprawy:
+  1. shop.test.ts - oba błędy (endpoint nie działa)
+  2. arena-ai.test.ts - attackCooldown (może powodować runtime errors)
+  3. energy.test.ts - oba błędy (zunifikować komunikaty)
+  4. turret.test.ts - cooldown (off-by-one, niski wpływ)
+
+================================================================================
+KONIEC LISTY BŁĘDÓW
+================================================================================

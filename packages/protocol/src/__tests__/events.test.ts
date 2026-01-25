@@ -145,12 +145,23 @@ describe('Events Schemas', () => {
       expect(result.success).toBe(false);
     });
 
-    it('rejects event missing required fields for type', () => {
-      // CHOOSE_RELIC requires wave and optionIndex
+    it('accepts CHOOSE_RELIC with optional fields omitted', () => {
+      // CHOOSE_RELIC has optional wave/optionIndex (endless mode) and relicId (boss rush mode)
       const result = GameEventSchema.safeParse({
         type: 'CHOOSE_RELIC',
         tick: 1000,
-        // missing wave and optionIndex
+        // wave, optionIndex, and relicId are all optional
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects event with wrong type for discriminator', () => {
+      // Test that required fields from other event types are not mixed
+      const result = GameEventSchema.safeParse({
+        type: 'ACTIVATE_SKILL',
+        tick: 1000,
+        // missing required skillId, targetX, targetY
       });
 
       expect(result.success).toBe(false);

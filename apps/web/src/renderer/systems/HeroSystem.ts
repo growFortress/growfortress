@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics, Text, Sprite } from 'pixi.js';
 import type { GameState, ActiveHero, HeroState } from '@arcade/sim-core';
 import { FP, STORM_FORGE_SYNERGY_RANGE_SQ } from '@arcade/sim-core';
 import { Tween, TweenManager } from '../animation/Tween.js';
@@ -119,6 +119,7 @@ interface DirtyFlags {
 
 interface HeroVisual {
   container: Container;
+  sprite: Sprite | null; // Dodane: Sprite dla nowej grafiki
   lastState: HeroState;
   heroId: string;
   lastManualControlled: boolean;
@@ -435,6 +436,7 @@ export class HeroSystem {
 
     return {
       container,
+      sprite: null,
       lastState: hero.state,
       heroId: hero.definitionId,
       lastManualControlled: hero.isManualControlled === true,
@@ -766,6 +768,31 @@ export class HeroSystem {
       return;
     }
 
+    // Jeśli mamy sprite'a, aktualizujemy tylko jego stan (np. tint przy obrażeniach lub tier)
+    if (visual.sprite) {
+        // Upewnij się, że stare body jest ukryte
+        body.visible = false;
+        visual.sprite.visible = true;
+
+        // Tutaj można dodać efekty dla sprite'a
+        // Np. zmiana koloru przy tierze wyższym (złota poświata?)
+        if (hero.tier === 2) {
+             visual.sprite.tint = 0xddddff; // Lekko jasny
+        } else if (hero.tier === 3) {
+             visual.sprite.tint = 0xffffdd; // Lekko złoty
+        } else {
+             visual.sprite.tint = 0xffffff;
+        }
+
+        // Combat flash effect - tint logic is handled above via tier coloring
+        // Additional flash effects could be added here with filters if needed
+
+        visual.dirty.body = false;
+        return;
+    }
+
+    // Fallback do starego renderowania
+    body.visible = true;
     body.clear();
     this.drawHeroBody(body, hero, size, colors, time, anim);
     visual.dirty.body = false;

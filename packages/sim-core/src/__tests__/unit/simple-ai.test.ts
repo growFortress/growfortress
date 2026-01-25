@@ -13,8 +13,7 @@ import {
   resetSimpleAI,
 } from '../../simple-ai.js';
 import { createGameState, createEnemy } from '../helpers/factories.js';
-import { initializeHeroes } from '../../systems/initialization.js';
-import type { ActiveHero, Enemy, GameState } from '../../types.js';
+import type { ActiveHero, Enemy } from '../../types.js';
 
 const fortressX = FP.fromInt(2);
 

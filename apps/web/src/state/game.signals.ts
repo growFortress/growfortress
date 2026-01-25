@@ -89,6 +89,13 @@ export const forceResetToHub = signal(false);
 // Game speed multiplier (1x, 2x)
 export const gameSpeed = signal<GameSpeed>(1);
 
+// First session flag - true during first few waves for enhanced VFX
+// This creates a more impactful first impression for new players
+export const isFirstSession = signal(false);
+
+// Wave threshold for "first session" enhanced effects
+export const FIRST_SESSION_WAVE_THRESHOLD = 5;
+
 // Game state snapshot (updated each tick during gameplay)
 export const gameState = signal<GameStateSnapshot | null>(null);
 

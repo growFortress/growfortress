@@ -7,7 +7,6 @@ import {
   createMockGuildMember,
   createMockChatMessage,
   createMockUser,
-  createMockGuild,
 } from '../../mocks/prisma.js';
 
 // Import test setup
@@ -339,6 +338,243 @@ describe('GuildChat Service', () => {
 
       // offset(100) + limit(50) = 150 >= total(100), so hasMore = false
       expect(resultEnd.hasMore).toBe(false);
+    });
+
+    it('should return empty messages array for guild with no messages', async () => {
+      const mockMember = createMockGuildMember({
+        userId,
+        guildId,
+        guild: { disbanded: false },
+      });
+
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember);
+      mockPrisma.chatMessage.findMany.mockResolvedValue([]);
+      mockPrisma.chatMessage.count.mockResolvedValue(0);
+
+      const result = await getGuildMessages(guildId, userId);
+
+      expect(result.messages).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.hasMore).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // Content Filtering Edge Cases
+  // ============================================================================
+
+  describe('sendGuildMessage - content filtering', () => {
+    const guildId = 'guild-filter-test';
+    const userId = 'user-filter-test';
+
+    it('should throw error when message content is blocked', async () => {
+      const mockMember = createMockGuildMember({
+        userId,
+        guildId,
+        guild: { disbanded: false },
+      });
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember);
+
+      (filterMessageContent as ReturnType<typeof vi.fn>).mockReturnValue({
+        allowed: false,
+        filteredContent: '',
+        error: 'Content blocked',
+        warnings: ['Profanity detected'],
+      });
+
+      await expect(sendGuildMessage(guildId, userId, 'bad content')).rejects.toThrow('Content blocked');
+    });
+
+    it('should use filtered content when message is modified', async () => {
+      const modifiedUserId = 'user-modified-content';
+      const mockMember = createMockGuildMember({
+        userId: modifiedUserId,
+        guildId,
+        guild: { disbanded: false },
+      });
+      const mockSender = createMockUser({ id: modifiedUserId, displayName: 'Sender' });
+      const mockMessage = createMockChatMessage({
+        id: 'msg-filtered',
+        senderId: modifiedUserId,
+        content: 'Clean message',
+      });
+
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember);
+      mockPrisma.user.findUnique.mockResolvedValue(mockSender);
+      mockPrisma.chatMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.guildMember.findMany.mockResolvedValue([{ userId: modifiedUserId }]);
+
+      (filterMessageContent as ReturnType<typeof vi.fn>).mockReturnValue({
+        allowed: true,
+        filteredContent: 'Clean message', // Original was 'b@d message'
+        warnings: ['Modified content'],
+      });
+
+      await sendGuildMessage(guildId, modifiedUserId, 'b@d message');
+
+      expect(mockPrisma.chatMessage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          content: 'Clean message',
+        }),
+      });
+    });
+
+    it('should throw error when content is blocked with message', async () => {
+      const blockedUserId = 'user-blocked-content';
+      const mockMember = createMockGuildMember({
+        userId: blockedUserId,
+        guildId,
+        guild: { disbanded: false },
+      });
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember);
+
+      (filterMessageContent as ReturnType<typeof vi.fn>).mockReturnValue({
+        allowed: false,
+        filteredContent: '',
+        error: 'Prohibited content',
+        warnings: [],
+      });
+
+      await expect(sendGuildMessage(guildId, blockedUserId, 'prohibited'))
+        .rejects.toThrow('Prohibited content');
+    });
+  });
+
+  // ============================================================================
+  // Rate Limiting Edge Cases
+  // ============================================================================
+
+  describe('sendGuildMessage - rate limiting details', () => {
+    it('should allow messages after rate limit window resets', async () => {
+      const guildId = 'guild-rate-reset';
+      const userId = 'user-rate-reset';
+      const content = 'Hello';
+
+      const mockMember = createMockGuildMember({
+        userId,
+        guildId,
+        guild: { disbanded: false },
+      });
+      const mockSender = createMockUser({ id: userId });
+      const mockMessage = createMockChatMessage();
+
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember);
+      mockPrisma.user.findUnique.mockResolvedValue(mockSender);
+      mockPrisma.chatMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.guildMember.findMany.mockResolvedValue([{ userId }]);
+
+      // First message should succeed
+      const result = await sendGuildMessage(guildId, userId, content);
+      expect(result).toBeDefined();
+    });
+
+    it('should track rate limits per user independently', async () => {
+      const guildId = 'guild-independent-rate';
+      const user1 = 'user-rate-1';
+      const user2 = 'user-rate-2';
+      const content = 'Hello';
+
+      const mockMessage = createMockChatMessage();
+
+      // User 1 sends messages
+      const mockMember1 = createMockGuildMember({
+        userId: user1,
+        guildId,
+        guild: { disbanded: false },
+      });
+      const mockSender1 = createMockUser({ id: user1 });
+
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember1);
+      mockPrisma.user.findUnique.mockResolvedValue(mockSender1);
+      mockPrisma.chatMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.guildMember.findMany.mockResolvedValue([{ userId: user1 }, { userId: user2 }]);
+
+      // User 2 should be able to send regardless of user 1's rate limit
+      const mockMember2 = createMockGuildMember({
+        userId: user2,
+        guildId,
+        guild: { disbanded: false },
+      });
+      const mockSender2 = createMockUser({ id: user2 });
+
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember2);
+      mockPrisma.user.findUnique.mockResolvedValue(mockSender2);
+
+      const result = await sendGuildMessage(guildId, user2, content);
+      expect(result).toBeDefined();
+    });
+  });
+
+  // ============================================================================
+  // WebSocket Broadcasting Edge Cases
+  // ============================================================================
+
+  describe('sendGuildMessage - broadcasting', () => {
+    it('should broadcast to empty guild member list gracefully', async () => {
+      const guildId = 'guild-empty-members';
+      const userId = 'user-solo';
+      const content = 'Hello';
+
+      const mockMember = createMockGuildMember({
+        userId,
+        guildId,
+        guild: { disbanded: false },
+      });
+      const mockSender = createMockUser({ id: userId, displayName: 'Solo' });
+      const mockMessage = createMockChatMessage();
+
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember);
+      mockPrisma.user.findUnique.mockResolvedValue(mockSender);
+      mockPrisma.chatMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.guildMember.findMany.mockResolvedValue([]); // No members returned
+
+      // Should not throw
+      await sendGuildMessage(guildId, userId, content);
+
+      expect(broadcastToUsers).toHaveBeenCalledWith([], expect.any(Object));
+    });
+
+    it('should include correct message data in broadcast', async () => {
+      const guildId = 'guild-broadcast-data';
+      const userId = 'user-broadcast';
+      const content = 'Broadcast test';
+
+      const mockMember = createMockGuildMember({
+        userId,
+        guildId,
+        guild: { disbanded: false },
+      });
+      const mockSender = createMockUser({ id: userId, displayName: 'Broadcaster' });
+      const timestamp = new Date('2026-01-24T12:00:00Z');
+      const mockMessage = createMockChatMessage({
+        id: 'msg-broadcast-test',
+        senderId: userId,
+        content: 'Broadcast test',
+        createdAt: timestamp,
+      });
+
+      mockPrisma.guildMember.findUnique.mockResolvedValue(mockMember);
+      mockPrisma.user.findUnique.mockResolvedValue(mockSender);
+      mockPrisma.chatMessage.create.mockResolvedValue(mockMessage);
+      mockPrisma.guildMember.findMany.mockResolvedValue([{ userId }]);
+
+      await sendGuildMessage(guildId, userId, content);
+
+      expect(broadcastToUsers).toHaveBeenCalledWith(
+        [userId],
+        expect.objectContaining({
+          type: 'guild:chat:message',
+          data: expect.objectContaining({
+            guildId,
+            message: expect.objectContaining({
+              id: 'msg-broadcast-test',
+              senderId: userId,
+              senderName: 'Broadcaster',
+              content: 'Broadcast test',
+            }),
+          }),
+        })
+      );
     });
   });
 });

@@ -187,6 +187,44 @@ export async function fetchExclusiveItems(): Promise<ExclusiveItemsResponse> {
 }
 
 // ============================================================================
+// GUILD TROPHY LEADERBOARD
+// ============================================================================
+
+export interface GuildTrophyLeaderboardEntry {
+  rank: number;
+  guildId: string;
+  guildName: string;
+  guildTag: string;
+  guildLevel: number;
+  memberCount: number;
+  trophyCount: number;
+  totalStatBonus: number;
+  topTrophies: string[];
+}
+
+export interface GuildTrophyLeaderboardResponse {
+  category: string;
+  entries: GuildTrophyLeaderboardEntry[];
+  total: number;
+}
+
+/**
+ * Fetch guild trophy leaderboard
+ */
+export async function fetchGuildTrophyLeaderboard(
+  options: { limit?: number; offset?: number } = {}
+): Promise<GuildTrophyLeaderboardResponse> {
+  const params = new URLSearchParams();
+  if (options.limit) params.set('limit', options.limit.toString());
+  if (options.offset) params.set('offset', options.offset.toString());
+
+  const queryString = params.toString();
+  const path = `/v1/leaderboards/guilds/trophies${queryString ? `?${queryString}` : ''}`;
+
+  return leaderboardRequest<GuildTrophyLeaderboardResponse>(path);
+}
+
+// ============================================================================
 // LOAD ALL DATA
 // ============================================================================
 

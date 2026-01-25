@@ -6,8 +6,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   mockPrisma,
   createMockUser,
-  createMockInventory,
-  createMockProgression,
   createMockSession,
   createMockPasswordResetToken,
 } from '../../mocks/prisma.js';

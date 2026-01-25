@@ -238,7 +238,7 @@ export function formatDamageCompact(damage: number): string {
 // ACTIONS
 // ============================================================================
 
-/** Reset all Boss Rush state */
+/** Reset all Boss Rush state (including roguelike state) */
 export function resetBossRushState(): void {
   bossRushActive.value = false;
   bossRushSessionId.value = null;
@@ -269,6 +269,24 @@ export function resetBossRushState(): void {
   bossRushIntermission.value = false;
   intermissionCountdown.value = 0;
   bossRushError.value = null;
+
+  // Reset roguelike state
+  bossRushRelicOptions.value = [];
+  bossRushRelicChosen.value = false;
+  bossRushCollectedRelics.value = [];
+  bossRushRerollsUsed.value = 0;
+  bossRushGoldSpent.value = 0;
+  bossRushShopStatBoosts.value = {
+    damageBonus: 0,
+    attackSpeedBonus: 0,
+    critChance: 0,
+  };
+  bossRushShopPurchases.value = {};
+  bossRushSynergiesActivated.value = 0;
+  bossRushSynergyDamage.value = {};
+  bossRushBestSingleHit.value = 0;
+  bossRushTotalHealing.value = 0;
+  showBossRushShop.value = false;
 }
 
 /** Initialize Boss Rush session */
@@ -422,3 +440,141 @@ export function updateUserBestScore(damage: number, bosses: number): void {
     userBestBossesKilled.value = bosses;
   }
 }
+
+// ============================================================================
+// ROGUELIKE MODE STATE
+// ============================================================================
+
+/** Available relic options during intermission */
+export const bossRushRelicOptions = signal<string[]>([]);
+
+/** Whether player has chosen a relic this intermission */
+export const bossRushRelicChosen = signal(false);
+
+/** All relics collected this run */
+export const bossRushCollectedRelics = signal<string[]>([]);
+
+/** Number of relic rerolls used */
+export const bossRushRerollsUsed = signal(0);
+
+/** Gold spent in shop */
+export const bossRushGoldSpent = signal(0);
+
+/** Shop stat boosts accumulated */
+export const bossRushShopStatBoosts = signal({
+  damageBonus: 0,
+  attackSpeedBonus: 0,
+  critChance: 0,
+});
+
+/** Shop purchases by item ID */
+export const bossRushShopPurchases = signal<Record<string, number>>({});
+
+/** Synergies activated this run */
+export const bossRushSynergiesActivated = signal(0);
+
+/** Damage dealt per synergy type */
+export const bossRushSynergyDamage = signal<Record<string, number>>({});
+
+/** Best single hit damage */
+export const bossRushBestSingleHit = signal(0);
+
+/** Total healing from shop */
+export const bossRushTotalHealing = signal(0);
+
+/** Show shop panel during intermission */
+export const showBossRushShop = signal(false);
+
+// ============================================================================
+// ROGUELIKE COMPUTED VALUES
+// ============================================================================
+
+/** Available gold to spend (earned - spent) */
+export const bossRushAvailableGold = computed(() => {
+  return bossRushGoldEarned.value - bossRushGoldSpent.value;
+});
+
+// ============================================================================
+// ROGUELIKE ACTIONS
+// ============================================================================
+
+/** Set relic options for current intermission */
+export function setBossRushRelicOptions(options: string[]): void {
+  bossRushRelicOptions.value = options;
+  bossRushRelicChosen.value = false;
+}
+
+/** Player chose a relic */
+export function chooseBossRushRelic(relicId: string): void {
+  if (bossRushRelicOptions.value.includes(relicId)) {
+    bossRushCollectedRelics.value = [...bossRushCollectedRelics.value, relicId];
+    bossRushRelicChosen.value = true;
+  }
+}
+
+/** Reroll relic options (deducts gold) */
+export function rerollBossRushRelics(newOptions: string[], cost: number): boolean {
+  if (bossRushAvailableGold.value < cost) {
+    return false;
+  }
+  bossRushGoldSpent.value += cost;
+  bossRushRerollsUsed.value += 1;
+  bossRushRelicOptions.value = newOptions;
+  bossRushRelicChosen.value = false;
+  return true;
+}
+
+/** Purchase shop item */
+export function purchaseBossRushShopItem(
+  itemId: string,
+  cost: number,
+  healAmount?: number,
+  statBonus?: { stat: 'damageBonus' | 'attackSpeedBonus' | 'critChance'; value: number }
+): boolean {
+  if (bossRushAvailableGold.value < cost) {
+    return false;
+  }
+
+  bossRushGoldSpent.value += cost;
+  bossRushShopPurchases.value = {
+    ...bossRushShopPurchases.value,
+    [itemId]: (bossRushShopPurchases.value[itemId] || 0) + 1,
+  };
+
+  if (healAmount) {
+    bossRushTotalHealing.value += healAmount;
+  }
+
+  if (statBonus) {
+    const current = bossRushShopStatBoosts.value;
+    bossRushShopStatBoosts.value = {
+      ...current,
+      [statBonus.stat]: current[statBonus.stat] + statBonus.value,
+    };
+  }
+
+  return true;
+}
+
+/** Update synergy tracking */
+export function updateBossRushSynergyStats(synergiesActivated: number, synergyDamage: Record<string, number>): void {
+  bossRushSynergiesActivated.value = synergiesActivated;
+  bossRushSynergyDamage.value = synergyDamage;
+}
+
+/** Update best single hit */
+export function updateBossRushBestHit(damage: number): void {
+  if (damage > bossRushBestSingleHit.value) {
+    bossRushBestSingleHit.value = damage;
+  }
+}
+
+/** Show/hide shop panel */
+export function openBossRushShop(): void {
+  showBossRushShop.value = true;
+}
+
+export function closeBossRushShop(): void {
+  showBossRushShop.value = false;
+}
+

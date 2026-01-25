@@ -5,6 +5,8 @@ import type { ParticlePool } from '../particlePool.js';
 import { DAMAGE_TEXT_CONFIG, CRIT_TEXT_CONFIG, STREAK_CONFIGS, COMBO_CONFIGS } from '../config.js';
 import { filterManager } from '../../../effects/FilterManager.js';
 import i18n from '../../../../i18n/index.js';
+import { isFirstSession, FIRST_SESSION_WAVE_THRESHOLD, gameState } from '../../../../state/game.signals.js';
+import { FIRST_SESSION_SHAKE_THRESHOLD } from '../../../../state/settings.signals.js';
 
 /**
  * Text effect handlers for damage numbers, combos, kill streaks.
@@ -118,10 +120,23 @@ export class TextEffects {
       targetScale: isCrit ? 0.6 : 0.45,
     });
 
-    // Screen shake for very high damage (1000+)
-    if (damage >= 1000) {
-      this.triggerScreenShake(2, 100);
+    // Screen shake for high damage - lower threshold during first session
+    const shakeThreshold = this.isInFirstSessionBoostWindow() ? FIRST_SESSION_SHAKE_THRESHOLD : 1000;
+    if (damage >= shakeThreshold) {
+      // Slightly stronger shake during first session
+      const intensity = this.isInFirstSessionBoostWindow() ? 3 : 2;
+      this.triggerScreenShake(intensity, 100);
     }
+  }
+
+  /**
+   * Check if we're in the first session boost window.
+   */
+  private isInFirstSessionBoostWindow(): boolean {
+    if (!isFirstSession.value) return false;
+    const state = gameState.value;
+    if (!state) return true;
+    return state.wave <= FIRST_SESSION_WAVE_THRESHOLD;
   }
 
   /**

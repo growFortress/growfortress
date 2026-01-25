@@ -441,7 +441,6 @@ describe('Edge Cases', () => {
 
   it('should not double-trigger combo on same hit sequence', () => {
     const enemy = createComboEnemy({ hp: 100, maxHp: 100 });
-    const initialHp = enemy.hp;
 
     // First combo
     applyDamageHits(enemy, [

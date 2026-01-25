@@ -24,7 +24,7 @@ export type MainTab = 'permanent' | 'weekly' | 'guild';
 export const activeMainTab = signal<MainTab>('permanent');
 
 /** Current sub tab based on main tab */
-export type SubTab = PlayerLeaderboardCategory | 'guildHonor';
+export type SubTab = PlayerLeaderboardCategory | 'guildHonor' | 'guildTrophies';
 export const activeSubTab = signal<SubTab>('totalWaves');
 
 /** Selected week for weekly leaderboards */
@@ -79,6 +79,29 @@ export const guildLeaderboardTotal = signal(0);
 
 /** User's guild rank */
 export const myGuildRank = signal<number | null>(null);
+
+// ============================================================================
+// GUILD TROPHY LEADERBOARD DATA
+// ============================================================================
+
+/** Guild trophy leaderboard entry type */
+export interface GuildTrophyLeaderboardEntry {
+  rank: number;
+  guildId: string;
+  guildName: string;
+  guildTag: string;
+  guildLevel: number;
+  memberCount: number;
+  trophyCount: number;
+  totalStatBonus: number;
+  topTrophies: string[];
+}
+
+/** Current guild trophy leaderboard entries */
+export const guildTrophyLeaderboardEntries = signal<GuildTrophyLeaderboardEntry[]>([]);
+
+/** Total count of guild trophy entries */
+export const guildTrophyLeaderboardTotal = signal(0);
 
 // ============================================================================
 // USER RANKS
@@ -141,6 +164,11 @@ export const hasMoreEntries = computed(() => {
 /** Has more entries to load (guild leaderboard) */
 export const hasMoreGuildEntries = computed(() => {
   return guildLeaderboardEntries.value.length < guildLeaderboardTotal.value;
+});
+
+/** Has more entries to load (guild trophy leaderboard) */
+export const hasMoreGuildTrophyEntries = computed(() => {
+  return guildTrophyLeaderboardEntries.value.length < guildTrophyLeaderboardTotal.value;
 });
 
 /** Formatted time until reset */
@@ -224,8 +252,10 @@ export function resetLeaderboardData() {
   leaderboardOffset.value = 0;
   leaderboardEntries.value = [];
   guildLeaderboardEntries.value = [];
+  guildTrophyLeaderboardEntries.value = [];
   leaderboardTotal.value = 0;
   guildLeaderboardTotal.value = 0;
+  guildTrophyLeaderboardTotal.value = 0;
 }
 
 /** Set selected week */
@@ -305,5 +335,21 @@ export function setGuildLeaderboardData(
   guildLeaderboardTotal.value = total;
   leaderboardOffset.value = guildLeaderboardEntries.value.length;
   myGuildRank.value = myRank;
+  leaderboardError.value = null;
+}
+
+/** Update guild trophy leaderboard data from API response */
+export function setGuildTrophyLeaderboardData(
+  entries: GuildTrophyLeaderboardEntry[],
+  total: number,
+  append = false
+) {
+  if (append) {
+    guildTrophyLeaderboardEntries.value = [...guildTrophyLeaderboardEntries.value, ...entries];
+  } else {
+    guildTrophyLeaderboardEntries.value = entries;
+  }
+  guildTrophyLeaderboardTotal.value = total;
+  leaderboardOffset.value = guildTrophyLeaderboardEntries.value.length;
   leaderboardError.value = null;
 }

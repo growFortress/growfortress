@@ -1,8 +1,9 @@
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 import {
   showOnboardingModal,
   selectedFortressClass,
   initializeHubFromLoadout,
+  gamePhase,
 } from "../../state/index.js";
 import { completeOnboarding, getProfile } from "../../api/client.js";
 import { updateFromProfile } from "../../state/actions.js";
@@ -17,19 +18,45 @@ const STARTER_KIT = {
   turretType: "railgun" as const,
 };
 
-const TOTAL_STEPS = 3;
+// Simplified onboarding - single step instead of 3
+const TOTAL_STEPS = 1;
 
-type OnboardingStep = "welcome" | "synergy" | "ready";
+type OnboardingStep = "quick";
 
-const STEPS: OnboardingStep[] = ["welcome", "synergy", "ready"];
+const STEPS: OnboardingStep[] = ["quick"];
 
 export function OnboardingModal() {
   const { t } = useTranslation("modals");
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoCompleting, setAutoCompleting] = useState(false);
 
-  const step = STEPS[currentStep];
+  // Step is used for multi-step flow - kept for potential future expansion
+  const _step = STEPS[currentStep];
+  void _step;
+
+  // Auto-complete onboarding if player is already in game (came from auto-start)
+  useEffect(() => {
+    if (showOnboardingModal.value && gamePhase.value === 'playing' && !autoCompleting) {
+      setAutoCompleting(true);
+      // Player is already playing - just complete onboarding silently in background
+      completeOnboarding({
+        fortressClass: STARTER_KIT.fortressClass,
+        heroId: STARTER_KIT.heroId,
+        turretType: STARTER_KIT.turretType,
+      }).then(() => {
+        return getProfile();
+      }).then((profile) => {
+        updateFromProfile(profile);
+        showOnboardingModal.value = false;
+      }).catch((err) => {
+        console.error("Background onboarding error:", err);
+        // Still close modal - player is already playing
+        showOnboardingModal.value = false;
+      });
+    }
+  }, [showOnboardingModal.value, gamePhase.value, autoCompleting]);
 
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS - 1) {
@@ -80,188 +107,49 @@ export function OnboardingModal() {
   };
 
   const renderStepContent = () => {
-    switch (step) {
-      case "welcome":
-        return (
-          <>
-            <div class={styles.contentHeader}>
-              <h2 class={styles.title}>
-                {t("onboarding.steps.welcome.title")}
-              </h2>
-              <p class={styles.subtitle}>
-                {t("onboarding.steps.welcome.subtitle")}
-              </p>
-            </div>
+    // Simplified single-step onboarding
+    return (
+      <>
+        <div class={styles.contentHeader}>
+          <h2 class={styles.title}>
+            {t("onboarding.steps.quick.title", { defaultValue: "Defend Your Fortress!" })}
+          </h2>
+          <p class={styles.subtitle}>
+            {t("onboarding.steps.quick.subtitle", { defaultValue: "Survive waves of enemies and grow stronger" })}
+          </p>
+        </div>
 
-            <div class={styles.cardGrid}>
-              <div class={styles.card}>
-                <div class={styles.cardIcon}>🌊</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.welcome.cards.endless.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.welcome.cards.endless.description")}
-                </div>
-              </div>
-              <div class={styles.card}>
-                <div class={styles.cardIcon}>🎯</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.welcome.cards.squad.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.welcome.cards.squad.description")}
-                </div>
-              </div>
-              <div class={styles.card}>
-                <div class={styles.cardIcon}>📈</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.welcome.cards.progression.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.welcome.cards.progression.description")}
-                </div>
-              </div>
+        <div class={styles.cardGrid}>
+          <div class={styles.card}>
+            <div class={styles.cardIcon}>⚔️</div>
+            <div class={styles.cardTitle}>
+              {t("onboarding.steps.ready.cards.auto.title")}
             </div>
-          </>
-        );
+            <div class={styles.cardDescription}>
+              {t("onboarding.steps.ready.cards.auto.description")}
+            </div>
+          </div>
+          <div class={styles.card}>
+            <div class={styles.cardIcon}>🧿</div>
+            <div class={styles.cardTitle}>
+              {t("onboarding.steps.ready.cards.relics.title")}
+            </div>
+            <div class={styles.cardDescription}>
+              {t("onboarding.steps.ready.cards.relics.description")}
+            </div>
+          </div>
+        </div>
 
-      case "synergy":
-        return (
-          <>
-            <div class={styles.contentHeader}>
-              <h2 class={styles.title}>
-                {t("onboarding.steps.synergy.title")}
-              </h2>
-              <p class={styles.subtitle}>
-                {t("onboarding.steps.synergy.subtitle")}
-              </p>
-            </div>
-
-            <div class={styles.cardGrid}>
-              <div class={`${styles.card} ${styles.synergyCard}`}>
-                <div class={styles.cardIcon}>🌿</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.synergy.cards.fortress.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.synergy.cards.fortress.description")}
-                </div>
-                <div class={styles.synergyBenefit}>
-                  {t("onboarding.steps.synergy.cards.fortress.benefit")}
-                </div>
-              </div>
-              <div class={`${styles.card} ${styles.synergyCard}`}>
-                <div class={styles.cardIcon}>🛡️</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.synergy.cards.hero.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.synergy.cards.hero.description")}
-                </div>
-                <div class={styles.synergyBenefit}>
-                  {t("onboarding.steps.synergy.cards.hero.benefit")}
-                </div>
-              </div>
-              <div class={`${styles.card} ${styles.synergyCard}`}>
-                <div class={styles.cardIcon}>⚡</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.synergy.cards.turret.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.synergy.cards.turret.description")}
-                </div>
-                <div class={styles.synergyBenefit}>
-                  {t("onboarding.steps.synergy.cards.turret.benefit")}
-                </div>
-              </div>
-              <div class={`${styles.card} ${styles.synergyCard}`}>
-                <div class={styles.cardIcon}>🧿</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.synergy.cards.relic.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.synergy.cards.relic.description")}
-                </div>
-                <div class={styles.synergyBenefit}>
-                  {t("onboarding.steps.synergy.cards.relic.benefit")}
-                </div>
-              </div>
-            </div>
-
-            <div class={styles.synergyExplanation}>
-              <div class={styles.synergyArrow}>+</div>
-              <div class={styles.synergyResult}>
-                <span class={styles.synergyResultIcon}>🔗</span>
-                <span class={styles.synergyResultText}>
-                  {t("onboarding.steps.synergy.result")}
-                </span>
-              </div>
-            </div>
-          </>
-        );
-
-      case "ready":
-        return (
-          <>
-            <div class={styles.contentHeader}>
-              <h2 class={styles.title}>
-                {t("onboarding.steps.ready.title")}
-              </h2>
-              <p class={styles.subtitle}>
-                {t("onboarding.steps.ready.subtitle")}
-              </p>
-            </div>
-
-            <div class={styles.cardGrid}>
-              <div class={styles.card}>
-                <div class={styles.cardIcon}>⚔️</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.ready.cards.auto.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.ready.cards.auto.description")}
-                </div>
-              </div>
-              <div class={styles.card}>
-                <div class={styles.cardIcon}>🧿</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.ready.cards.relics.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.ready.cards.relics.description")}
-                </div>
-              </div>
-              <div class={styles.card}>
-                <div class={styles.cardIcon}>⬆️</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.ready.cards.upgrades.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.ready.cards.upgrades.description")}
-                </div>
-              </div>
-              <div class={styles.card}>
-                <div class={styles.cardIcon}>➕</div>
-                <div class={styles.cardTitle}>
-                  {t("onboarding.steps.ready.cards.slots.title")}
-                </div>
-                <div class={styles.cardDescription}>
-                  {t("onboarding.steps.ready.cards.slots.description")}
-                </div>
-              </div>
-            </div>
-
-            <div class={styles.starterKit}>
-              <span class={styles.starterKitLabel}>
-                {t("onboarding.steps.ready.starterKit")}
-              </span>
-              <span class={styles.starterKitItems}>
-                🌿 Natural + 🛡️ Vanguard + ⚡ Railgun + 🧿 Team Spirit
-              </span>
-            </div>
-          </>
-        );
-    }
+        <div class={styles.starterKit}>
+          <span class={styles.starterKitLabel}>
+            {t("onboarding.steps.ready.starterKit")}
+          </span>
+          <span class={styles.starterKitItems}>
+            🌿 Natural + 🛡️ Vanguard + ⚡ Railgun
+          </span>
+        </div>
+      </>
+    );
   };
 
   const isLastStep = currentStep === TOTAL_STEPS - 1;

@@ -1,5 +1,8 @@
 import type { JSX } from 'preact';
-import { activeSynergies, selectedFortressClass } from '../../state/index.js';
+import { useRef, useEffect } from 'preact/hooks';
+import { activeSynergies, selectedFortressClass, activeHeroes, showSynergyToast } from '../../state/index.js';
+import { getActiveSynergiesForHeroes, getHeroById } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './SynergyPanel.module.css';
 
 // Class colors
@@ -29,13 +32,45 @@ interface SynergyPanelProps {
 }
 
 export function SynergyPanel({ compact = false }: SynergyPanelProps) {
+  const { t } = useTranslation(['common', 'data']);
   const fortressClass = selectedFortressClass.value;
   const synergies = activeSynergies.value;
+  const heroes = activeHeroes.value;
 
   if (!fortressClass) return null;
 
   const classColor = CLASS_COLORS[fortressClass];
   const classIcon = CLASS_ICONS[fortressClass];
+
+  // Get hero pair/trio synergies
+  const heroIds = heroes.map(h => h.definitionId);
+  const { active: activeHeroSynergies, almostActive } = getActiveSynergiesForHeroes(heroIds);
+
+  // Track previous active synergies to detect new activations
+  const prevActiveIds = useRef<Set<string>>(new Set());
+
+  // Detect newly activated synergies and show toasts
+  useEffect(() => {
+    const currentActiveIds = new Set(activeHeroSynergies.map(s => s.id));
+
+    // Find synergies that just became active
+    for (const synergy of activeHeroSynergies) {
+      if (!prevActiveIds.current.has(synergy.id)) {
+        // New synergy activated - show toast
+        const type = synergy.heroes.length >= 3 ? 'trio' : 'pair';
+        showSynergyToast(synergy.id, synergy.name, synergy.bonuses, type);
+      }
+    }
+
+    // Update previous state
+    prevActiveIds.current = currentActiveIds;
+  }, [activeHeroSynergies]);
+
+  // Helper to get hero name
+  const getHeroName = (id: string): string => {
+    const heroDef = getHeroById(id);
+    return heroDef ? t(`data:heroes.${id}.name`, { defaultValue: heroDef.name }) : id;
+  };
 
   return (
     <div
@@ -50,7 +85,7 @@ export function SynergyPanel({ compact = false }: SynergyPanelProps) {
         </div>
       )}
 
-      {/* Synergy list */}
+      {/* Fortress Synergy list */}
       {synergies.length > 0 ? (
         <div class={styles.synergyList}>
           {synergies.map((synergy, index) => (
@@ -87,8 +122,51 @@ export function SynergyPanel({ compact = false }: SynergyPanelProps) {
         </div>
       )}
 
+      {/* Active Hero Pair/Trio Synergies */}
+      {!compact && activeHeroSynergies.length > 0 && (
+        <div class={styles.heroSynergiesSection}>
+          <div class={styles.heroSynergiesHeader}>
+            ⚡ {t('synergyPanel.activeHeroSynergies', { defaultValue: 'Hero Combos' })}
+          </div>
+          {activeHeroSynergies.map(synergy => (
+            <div key={synergy.id} class={styles.heroSynergyActive}>
+              <span class={styles.heroSynergyName}>
+                {t(synergy.nameKey, { defaultValue: synergy.name })}
+              </span>
+              <div class={styles.heroSynergyBonuses}>
+                {synergy.bonuses.map((bonus, i) => (
+                  <span key={i} class={styles.heroSynergyBonus}>{bonus}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Almost Active Hero Synergies (1 hero away) */}
+      {!compact && almostActive.length > 0 && (
+        <div class={styles.almostActiveSection}>
+          <div class={styles.almostActiveHeader}>
+            🔓 {t('synergyPanel.almostActive', { defaultValue: 'Almost Active' })}
+          </div>
+          {almostActive.slice(0, 2).map(({ synergy, missing }) => (
+            <div key={synergy.id} class={styles.almostActiveItem}>
+              <span class={styles.almostActiveName}>
+                {t(synergy.nameKey, { defaultValue: synergy.name })}
+              </span>
+              <span class={styles.almostActiveMissing}>
+                {t('synergyPanel.needHero', {
+                  hero: missing.map(id => getHeroName(id)).join(', '),
+                  defaultValue: `Need: ${missing.map(id => getHeroName(id)).join(', ')}`
+                })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Synergy tips */}
-      {!compact && synergies.length < 3 && (
+      {!compact && synergies.length < 3 && almostActive.length === 0 && (
         <div class={styles.tips}>
           {synergies.every(s => s.type !== 'hero-fortress') && (
             <div class={styles.tip}>

@@ -10,7 +10,7 @@
  */
 
 import type { InfinityStoneType } from '../types.js';
-import { getStoneById } from '../data/infinity-stones.js';
+import { getStoneById } from '../data/crystals.js';
 import { FP_BASE } from './constants.js';
 
 /**

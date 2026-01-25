@@ -283,5 +283,31 @@
       "description": "Fire zadaje +35% DMG"
     }
   },
+  "synergies": {
+    "stormForge": {
+      "name": "Burza i Kuźnia",
+      "description": "+25% szybkości ataku gdy są blisko siebie"
+    },
+    "frontlineSupport": {
+      "name": "Wsparcie Frontu",
+      "description": "Medyk leczy Awangardę 50% szybciej, Awangarda +20% redukcji obrażeń"
+    },
+    "thermalShock": {
+      "name": "Szok Termiczny",
+      "description": "Wrogowie z podpaleniem I zamrożeniem otrzymują +100% obrażeń"
+    },
+    "superconductor": {
+      "name": "Nadprzewodnik",
+      "description": "Łańcuchowe błyskawice Storma zyskują +2 dodatkowe cele"
+    },
+    "voidResonance": {
+      "name": "Rezonans Pustki",
+      "description": "Obaj zyskują +25% obrażeń, Omega próg egzekucji +5%"
+    },
+    "balancedSquad": {
+      "name": "Zbalansowany Oddział",
+      "description": "Cała trójka: +20% obrażeń, +20% leczenia, +15% redukcji obrażeń"
+    }
+  },
   "artifacts": {}
 }

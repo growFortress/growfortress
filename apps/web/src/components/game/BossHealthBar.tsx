@@ -11,6 +11,12 @@ import {
   intermissionCountdown,
   showBossRushDetails,
   formatDamage,
+  // Roguelike mode
+  bossRushRelicOptions,
+  bossRushRelicChosen,
+  bossRushAvailableGold,
+  openBossRushShop,
+  showChoiceModal,
 } from '../../state/index.js';
 import { PILLAR_INFO } from '../../state/game.signals.js';
 import styles from './BossHealthBar.module.css';
@@ -63,9 +69,32 @@ export function BossHealthBar() {
       <div class={`${styles.healthBarContainer} ${isLowHp ? styles.lowHp : ''}`}>
         {isIntermission ? (
           <div class={styles.intermissionBar}>
-            <span class={styles.intermissionText}>
-              NASTĘPNY BOSS ZA {intermissionCountdown.value}...
-            </span>
+            <div class={styles.intermissionContent}>
+              <span class={styles.intermissionText}>
+                NEXT BOSS IN {intermissionCountdown.value}s
+              </span>
+              <div class={styles.intermissionActions}>
+                {/* Relic selection button */}
+                {bossRushRelicOptions.value.length > 0 && !bossRushRelicChosen.value && !showChoiceModal.value && (
+                  <span class={styles.relicPrompt}>
+                    Choose a relic!
+                  </span>
+                )}
+                {bossRushRelicChosen.value && (
+                  <span class={styles.relicChosen}>
+                    Relic chosen
+                  </span>
+                )}
+                {/* Shop button */}
+                <button
+                  type="button"
+                  class={styles.shopButton}
+                  onClick={openBossRushShop}
+                >
+                  🏪 Shop ({bossRushAvailableGold.value}🪙)
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <>

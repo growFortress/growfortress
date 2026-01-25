@@ -86,6 +86,12 @@ import {
 } from './data/artifacts.js';
 import { hasHeroPassive } from './data/heroes.js';
 import type { CrystalType, CrystalMatrixState, MaterialType } from './types.js';
+import {
+  MIN_FORTRESS_ATTACK_INTERVAL,
+  MAX_FORTRESS_ATTACK_SPEED,
+  FORTRESS_BASE_DAMAGE,
+  FORTRESS_BASE_ATTACK_INTERVAL,
+} from './systems/constants.js';
 
 // ============================================================================
 // Constants
@@ -137,8 +143,8 @@ export function getDefaultConfig(availableRelics: string[] = RELICS.map(r => r.i
     segmentSize: 5,             // 5 waves per segment for verification
     startingWave: 0,            // Resume point for endless
     fortressBaseHp: 200,
-    fortressBaseDamage: 10,
-    fortressAttackInterval: 15, // 0.5 seconds at 30Hz
+    fortressBaseDamage: FORTRESS_BASE_DAMAGE,      // 12 - stronger per hit
+    fortressAttackInterval: FORTRESS_BASE_ATTACK_INTERVAL, // 18 ticks - slower but impactful
     skillCooldownTicks: 300,    // 10 seconds
     skillDamage: 50,
     skillRadius: FP.fromInt(8),
@@ -1514,13 +1520,18 @@ export class Simulation {
 
   /**
    * Fortress auto-attack
+   * Now with attack speed caps to prevent extreme fire rates
    */
   private updateFortressAttack(): void {
-    // Calculate attack speed bonus (additive system)
+    // Calculate attack speed bonus (additive system) with cap
     const synergyAttackSpeedBonus = this.state.synergyModifiers.attackSpeedBonus ?? 0;
-    const totalAttackSpeedBonus = this.state.modifiers.attackSpeedBonus + synergyAttackSpeedBonus;
-    const attackInterval = Math.floor(
-      this.config.fortressAttackInterval / (1 + totalAttackSpeedBonus)
+    const totalAttackSpeedBonus = Math.min(
+      this.state.modifiers.attackSpeedBonus + synergyAttackSpeedBonus,
+      MAX_FORTRESS_ATTACK_SPEED - 1  // Cap at MAX_FORTRESS_ATTACK_SPEED (e.g., 4.0x = 3.0 bonus)
+    );
+    const attackInterval = Math.max(
+      MIN_FORTRESS_ATTACK_INTERVAL,  // Never faster than MIN_FORTRESS_ATTACK_INTERVAL ticks
+      Math.floor(this.config.fortressAttackInterval / (1 + totalAttackSpeedBonus))
     );
 
     if (this.state.tick - this.state.fortressLastAttackTick >= attackInterval) {

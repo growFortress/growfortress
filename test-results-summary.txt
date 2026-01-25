@@ -1,0 +1,75 @@
+================================================================================
+                    PODSUMOWANIE WYNIKÓW TESTÓW
+                    Data: 2026-01-23
+================================================================================
+
+STATYSTYKI OGÓLNE
+-----------------
+Łączna liczba testów:        3,382
+Testy zakończone sukcesem:   3,373 (99.73%)
+Testy zakończone niepowodzeniem: 6 (0.18%)
+Testy pominięte:             3 (0.09%)
+Czas wykonania łącznie:      ~77 sekund
+
+STATUS PER PAKIET
+-----------------
+✅ @arcade/protocol
+   - Testy: 168 (100% sukces)
+   - Czas: 1.30s
+   - Status: SUKCES
+
+❌ @arcade/server
+   - Testy: 1,381 (99.71% sukces)
+   - Nieudane: 4
+   - Pominięte: 2
+   - Czas: 19.86s
+   - Status: CZĘŚCIOWY SUKCES
+
+❌ @arcade/sim-core
+   - Testy: 1,826 (99.89% sukces)
+   - Nieudane: 2
+   - Pominięte: 1
+   - Czas: 28.62s
+   - Status: CZĘŚCIOWY SUKCES
+
+✅ @arcade/web (Playwright e2e)
+   - Testy: 7 (100% sukces)
+   - Czas: 28.2s
+   - Status: SUKCES
+
+PODSUMOWANIE BŁĘDÓW
+-------------------
+Łącznie nieudanych testów: 6
+
+@arcade/server (4 błędy):
+  1. energy.test.ts - "should return 401 without auth" (GET /v1/energy)
+     - Problem: Oczekiwany komunikat 'Unauthorized', otrzymano 'Missing authorization header'
+  2. energy.test.ts - "should return 401 without auth" (POST /v1/energy/refill)
+     - Problem: Oczekiwany komunikat 'Unauthorized', otrzymano 'Missing authorization header'
+  3. shop.test.ts - "should buy booster with dust"
+     - Problem: Oczekiwany status 200, otrzymano 404
+  4. shop.test.ts - "should return 400 for insufficient dust"
+     - Problem: Oczekiwany status 400, otrzymano 404
+
+@arcade/sim-core (2 błędy):
+  1. turret.test.ts - "should trigger ability when cooldown reaches zero"
+     - Problem: Oczekiwany cooldown 900, otrzymano 899 (różnica 1 tick)
+  2. arena-ai.test.ts - "heroes maintain attack cooldowns"
+     - Problem: Właściwość 'attackCooldown' jest undefined na obiekcie hero
+
+WNIOSKI
+-------
+- Większość testów (99.73%) przechodzi pomyślnie
+- Błędy są głównie związane z:
+  * Niezgodnościami w komunikatach błędów API (server)
+  * Brakującymi endpointami lub routingiem (shop routes)
+  * Drobnych różnicach w logice cooldownów (sim-core)
+  * Brakującymi właściwościami w typach (arena-ai)
+
+Rekomendacje:
+1. Naprawić komunikaty błędów w energy routes (zunifikować do 'Unauthorized')
+2. Sprawdzić routing dla shop/buy-dust endpoint
+3. Poprawić logikę cooldownów w turret abilities (off-by-one error)
+4. Dodać właściwość attackCooldown do typu ActiveHero w arena
+
+================================================================================

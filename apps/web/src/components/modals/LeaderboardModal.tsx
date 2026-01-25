@@ -26,6 +26,7 @@ import {
   leaderboardSearchQuery,
   hasMoreEntries,
   hasMoreGuildEntries,
+  hasMoreGuildTrophyEntries,
   closeLeaderboardModal,
   setMainTab,
   setSubTab,
@@ -33,8 +34,10 @@ import {
   getUserRankForCategory,
   getExclusiveItemById,
   guildLeaderboardEntries,
+  guildTrophyLeaderboardEntries,
   myGuildRank,
   setGuildLeaderboardData,
+  setGuildTrophyLeaderboardData,
   setLeaderboardData,
   type MainTab,
   type SubTab,
@@ -47,6 +50,8 @@ import {
   fetchAvailableRewards,
   loadLeaderboardData,
   claimReward,
+  fetchGuildTrophyLeaderboard,
+  type GuildTrophyLeaderboardEntry,
 } from '../../api/leaderboard.js';
 import styles from './LeaderboardModal.module.css';
 
@@ -69,7 +74,7 @@ const SUB_TABS: Record<MainTab, { id: SubTab; labelKey: string; icon: string }[]
   ],
   guild: [
     { id: 'guildHonor', labelKey: 'leaderboard.subTabs.honor', icon: '⚔️' },
-    // NOTE: guildTrophies disabled - endpoint not implemented
+    { id: 'guildTrophies', labelKey: 'leaderboard.subTabs.guildTrophies', icon: '🏆' },
   ],
 };
 
@@ -137,6 +142,29 @@ export function LeaderboardModal() {
       return;
     }
 
+    if (subTab === 'guildTrophies') {
+      if (isLoadingMore) {
+        leaderboardLoadingMore.value = true;
+      } else {
+        leaderboardLoading.value = true;
+      }
+      fetchGuildTrophyLeaderboard({
+        limit: leaderboardLimit.value,
+        offset,
+      })
+        .then((response) => {
+          setGuildTrophyLeaderboardData(response.entries, response.total, append);
+        })
+        .catch((err) => {
+          leaderboardError.value = err.message || t('leaderboard.guildLoadError');
+        })
+        .finally(() => {
+          leaderboardLoading.value = false;
+          leaderboardLoadingMore.value = false;
+        });
+      return;
+    }
+
     const category = subTab as PlayerLeaderboardCategory;
     if (isLoadingMore) {
       leaderboardLoadingMore.value = true;
@@ -187,7 +215,12 @@ export function LeaderboardModal() {
     const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
 
     if (isNearBottom) {
-      const hasMore = mainTab === 'guild' ? hasMoreGuildEntries.value : hasMoreEntries.value;
+      let hasMore = hasMoreEntries.value;
+      if (subTab === 'guildHonor') {
+        hasMore = hasMoreGuildEntries.value;
+      } else if (subTab === 'guildTrophies') {
+        hasMore = hasMoreGuildTrophyEntries.value;
+      }
       if (hasMore) {
         loadData(true);
       }
@@ -342,8 +375,35 @@ export function LeaderboardModal() {
               <span class={styles.emptyTitle}>{t('leaderboard.error')}</span>
               <span class={styles.emptyMessage}>{error}</span>
             </div>
+          ) : subTab === 'guildTrophies' ? (
+            // Guild trophy leaderboard
+            guildTrophyLeaderboardEntries.value.length === 0 ? (
+              <div class={styles.emptyState}>
+                <span class={styles.emptyIcon}>🏆</span>
+                <span class={styles.emptyTitle}>{t('leaderboard.noTrophies')}</span>
+                <span class={styles.emptyMessage}>
+                  {t('leaderboard.noTrophiesMessage')}
+                </span>
+              </div>
+            ) : (
+              <>
+                {guildTrophyLeaderboardEntries.value.map((entry) => (
+                  <GuildTrophyEntryRow
+                    key={entry.guildId}
+                    entry={entry}
+                    isMyGuild={playerGuild.value?.id === entry.guildId}
+                    t={t}
+                  />
+                ))}
+                {loadingMore && (
+                  <div class={styles.loadingMore}>
+                    <div class={styles.loadingSpinner} />
+                  </div>
+                )}
+              </>
+            )
           ) : mainTab === 'guild' ? (
-            // Guild leaderboard
+            // Guild honor leaderboard
             guildEntries.length === 0 ? (
               <div class={styles.emptyState}>
                 <span class={styles.emptyIcon}>🏰</span>
@@ -581,6 +641,48 @@ function GuildLeaderboardEntryRow({ entry, isMyGuild, t }: GuildLeaderboardEntry
       </div>
       <div class={styles.entryScore}>
         {entry.honor.toLocaleString()} {t('leaderboard.scoreLabels.honor')}
+      </div>
+    </div>
+  );
+}
+
+interface GuildTrophyEntryRowProps {
+  entry: GuildTrophyLeaderboardEntry;
+  isMyGuild: boolean;
+  t: (key: string, params?: Record<string, unknown>) => string;
+}
+
+function GuildTrophyEntryRow({ entry, isMyGuild, t }: GuildTrophyEntryRowProps) {
+  const isPodium = entry.rank <= 3;
+  const podiumClass = entry.rank === 1
+    ? styles.first
+    : entry.rank === 2
+    ? styles.second
+    : entry.rank === 3
+    ? styles.third
+    : '';
+
+  return (
+    <div
+      class={`${styles.entry} ${isPodium ? styles.podium : ''} ${podiumClass} ${
+        isMyGuild ? styles.isCurrentUser : ''
+      }`}
+    >
+      <div class={styles.entryRank}>
+        {entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `#${entry.rank}`}
+      </div>
+      <div class={styles.entryInfo}>
+        <div class={styles.entryNameRow}>
+          <span class={styles.entryName}>{entry.guildName}</span>
+          <span class={styles.guildTagBadge}>[{entry.guildTag}]</span>
+        </div>
+        <div class={styles.entryMeta}>
+          <span>🏆 {entry.trophyCount} {t('leaderboard.trophies')}</span>
+          <span style={{ marginLeft: '8px' }}>👥 {entry.memberCount}</span>
+        </div>
+      </div>
+      <div class={styles.entryScore}>
+        +{entry.totalStatBonus}% {t('leaderboard.scoreLabels.statBonus')}
       </div>
     </div>
   );

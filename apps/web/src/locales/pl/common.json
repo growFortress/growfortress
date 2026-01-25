@@ -269,7 +269,8 @@
     "synergyActive": "Aktywna",
     "synergyInactive": "Użyj fortecy {{class}}",
     "antiSynergies": "Anty-synergie",
-    "statChanges": "Zmiany statystyk"
+    "statChanges": "Zmiany statystyk",
+    "worksWith": "Synergie z bohaterami"
   },
   "turretPlacement": {
     "title": "Postaw Wieżyczkę",
@@ -323,6 +324,7 @@
       "weeklyHonor": "honor",
       "guildHonor": "honor",
       "guildTrophies": "trofea",
+      "statBonus": "statystyki",
       "points": "punktów"
     },
     "yourPosition": "Twoja pozycja",
@@ -333,6 +335,9 @@
     "error": "Błąd",
     "noGuilds": "Brak gildii",
     "noGuildsMessage": "Żadna gildia nie pojawiła się jeszcze w tym rankingu.",
+    "noTrophies": "Brak trofeów",
+    "noTrophiesMessage": "Żadna gildia nie zdobyła jeszcze trofeów.",
+    "trophies": "trofeów",
     "noData": "Brak danych",
     "noDataMessage": "Nikt jeszcze nie pojawił się w tym rankingu.",
     "searchPlaceholder": "Szukaj po nazwie...",
@@ -632,5 +637,43 @@
       "descriptionTooLong": "Opis musi mieć mniej niż 2000 znaków",
       "rateLimited": "Zbyt wiele zgłoszeń. Poczekaj przed utworzeniem kolejnego."
     }
+  },
+  "synergyPanel": {
+    "activeHeroSynergies": "Synergie Bohaterów",
+    "almostActive": "Prawie Aktywne",
+    "needHero": "Potrzeba: {{hero}}"
+  },
+  "synergyToast": {
+    "pairUnlocked": "SYNERGIA AKTYWNA!",
+    "trioUnlocked": "SYNERGIA TRIO!"
+  },
+  "artifacts": {
+    "title": "Ekwipunek",
+    "ariaLabel": "Okno ekwipunku",
+    "tabs": {
+      "artifacts": "Artefakty",
+      "items": "Przedmioty"
+    },
+    "sections": {
+      "equipped": "Założone",
+      "available": "Dostępne"
+    },
+    "empty": {
+      "artifacts": "Brak dostępnych artefaktów. Craftuj lub zdobywaj artefakty podczas gry!",
+      "items": "Brak przedmiotów w ekwipunku. Kup przedmioty w sklepie!"
+    },
+    "craftButton": "Craftuj Artefakty",
+    "upgradeItem": "Ulepsz za {{cost}} złota",
+    "errors": {
+      "upgradeFailed": "Nie udało się ulepszyć przedmiotu"
+    }
+  },
+  "tiers": {
+    "common": "Zwykły",
+    "uncommon": "Rzadki",
+    "rare": "Rzadki",
+    "epic": "Epicki",
+    "legendary": "Legendarny",
+    "mythic": "Mityczny"
   }
 }

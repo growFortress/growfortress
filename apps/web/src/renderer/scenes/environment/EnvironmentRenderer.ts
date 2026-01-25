@@ -1,7 +1,13 @@
 import { Container, Graphics } from "pixi.js";
 import type { FortressClass, PillarId } from "@arcade/sim-core";
 import { FP } from "@arcade/sim-core";
-import { LAYOUT, fpXToScreen } from "../../CoordinateSystem.js";
+import {
+  PATH_TOP_PERCENT,
+  PATH_HEIGHT_PERCENT,
+  TURRET_LANE_HEIGHT_PERCENT,
+  FORTRESS_POSITION_X,
+  fpXToScreen
+} from "../../CoordinateSystem.js";
 import { themeManager, type EnvironmentTheme } from "./ThemeManager.js";
 
 // --- THEME & CONSTANTS (legacy, used for tower rendering) ---
@@ -307,8 +313,8 @@ export class EnvironmentRenderer {
     }
 
     // Clamp y to ground area
-    const pathTop = this.height * LAYOUT.groundY;
-    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
+    const pathTop = this.height * PATH_TOP_PERCENT;
+    const pathBottom = pathTop + this.height * PATH_HEIGHT_PERCENT;
     const clampedY = Math.max(pathTop, Math.min(pathBottom, y));
 
     this.cracks.push({
@@ -474,8 +480,8 @@ export class EnvironmentRenderer {
     const progress = this.lightFlicker.elapsed / this.lightFlicker.duration;
     const flickerAlpha = this.lightFlicker.intensity * (1 - progress) * 0.3;
 
-    const pathTop = this.height * LAYOUT.groundY;
-    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
+    const pathTop = this.height * PATH_TOP_PERCENT;
+    const pathBottom = pathTop + this.height * PATH_HEIGHT_PERCENT;
     const flickerType = this.currentTheme.effects.flickerElements;
     const accentColor = this.currentTheme.deck.accentGlow;
 
@@ -722,10 +728,10 @@ export class EnvironmentRenderer {
     const { width, height } = this;
     const deck = this.currentTheme.deck;
     const sky = this.currentTheme.sky;
-    const turretLaneH = height * LAYOUT.turretLaneHeight;
-    const topTurretLaneY = height * LAYOUT.groundY - turretLaneH;
-    const pathTop = height * LAYOUT.groundY;
-    const pathBottom = pathTop + height * LAYOUT.pathHeight;
+    const turretLaneH = height * TURRET_LANE_HEIGHT_PERCENT;
+    const topTurretLaneY = height * PATH_TOP_PERCENT - turretLaneH;
+    const pathTop = height * PATH_TOP_PERCENT;
+    const pathBottom = pathTop + height * PATH_HEIGHT_PERCENT;
     const bottomTurretLaneY = pathBottom;
     const pathCenterY = (pathTop + pathBottom) / 2;
 
@@ -977,9 +983,9 @@ export class EnvironmentRenderer {
    */
   private drawTeslaTower(g: Graphics, fortressClass: FortressClass, tier: number): void {
     const colors = CLASS_COLORS[fortressClass] || CLASS_COLORS.natural;
-    const x = fpXToScreen(FP.fromInt(LAYOUT.fortressPositionX), this.width) + 50;
-    const pathTop = this.height * LAYOUT.groundY;
-    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
+    const x = fpXToScreen(FP.fromInt(FORTRESS_POSITION_X), this.width) + 50;
+    const pathTop = this.height * PATH_TOP_PERCENT;
+    const pathBottom = pathTop + this.height * PATH_HEIGHT_PERCENT;
     const pathCenterY = (pathTop + pathBottom) / 2;
 
     const towerWidth = 70;
@@ -1182,8 +1188,8 @@ export class EnvironmentRenderer {
   private drawSpawnPortal(g: Graphics, isActive: boolean = false): void {
     if (this.width === 0 || this.height === 0) return;
 
-    const pathTop = this.height * LAYOUT.groundY;
-    const pathBottom = pathTop + this.height * LAYOUT.pathHeight;
+    const pathTop = this.height * PATH_TOP_PERCENT;
+    const pathBottom = pathTop + this.height * PATH_HEIGHT_PERCENT;
     const centerY = (pathTop + pathBottom) / 2;
     const portalX = this.width + 5;
 

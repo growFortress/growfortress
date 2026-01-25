@@ -197,10 +197,8 @@ export function updateTurrets(
 
       // Apply ability effect
       applyTurretAbility(turret, turretDef.ability, state, enemiesInRange, rng);
-    }
-
-    // Decrease special cooldown
-    if (turret.specialCooldown > 0) {
+    } else if (turret.specialCooldown > 0) {
+      // Decrease special cooldown (only when ability didn't fire this tick)
       turret.specialCooldown--;
     }
   }

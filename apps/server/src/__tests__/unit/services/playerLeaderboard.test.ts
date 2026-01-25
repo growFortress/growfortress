@@ -5,9 +5,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   mockPrisma,
   createMockUser,
-  createMockProgression,
   createMockWeeklyPlayerReward,
-  createMockInventory,
 } from '../../mocks/prisma.js';
 import { mockRedis, setMockRedisValue, resetRedisMock } from '../../mocks/redis.js';
 

@@ -340,6 +340,9 @@ export function resetGameState(): void {
     fortress.selectedHeroId.value = null;
     fortress.selectedTurretSlot.value = null;
 
+    // Reset synergy toasts for new session
+    ui.resetShownSynergies();
+
     // Note: turretSlots is now a computed signal based on purchasedTurretSlots
     // It automatically updates when purchasedTurretSlots changes
   });

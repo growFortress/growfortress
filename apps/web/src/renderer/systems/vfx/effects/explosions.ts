@@ -458,4 +458,292 @@ export class ExplosionEffects {
       this.particles.push(p);
     }
   }
+
+  // ============================================================================
+  // ENHANCED DESTRUCTION EFFECTS
+  // ============================================================================
+
+  /**
+   * Big kill explosion - dramatically enhanced version for high damage kills
+   * Multiple rings, more debris, crater mark effect
+   */
+  spawnBigKillExplosion(
+    x: number,
+    y: number,
+    fortressClass: FortressClass,
+    damageMultiplier: number,
+    particleMultiplier: number,
+    stagedEffects: StagedEffect[]
+  ): void {
+    const colors = CLASS_VFX_COLORS[fortressClass];
+    const config = CLASS_EXPLOSION_CONFIG[fortressClass];
+    const intensity = Math.min(2.0, 1.0 + damageMultiplier * 0.5);
+
+    // Massive flash
+    this.factory.flash({ x, y, color: 0xffffff, size: 50 * intensity });
+    this.factory.flash({ x, y, color: colors.glow, size: 40 * intensity });
+
+    // Triple shockwave rings
+    for (let i = 0; i < 3; i++) {
+      const delay = i * 50;
+      setTimeout(() => {
+        this.factory.shockwaveRings(x, y, colors.secondary, intensity * (1 - i * 0.2));
+      }, delay);
+    }
+
+    // Extra debris - double the normal amount
+    const debrisCount = Math.floor(40 * particleMultiplier);
+    for (let i = 0; i < debrisCount; i++) {
+      const angle = (Math.PI * 2 * i) / debrisCount + Math.random() * 0.3;
+      const speed = 150 + Math.random() * 200;
+      const p = this.pool.acquire();
+
+      p.x = x + (Math.random() - 0.5) * 10;
+      p.y = y + (Math.random() - 0.5) * 10;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 50; // Upward bias
+      p.life = 0.6 + Math.random() * 0.4;
+      p.maxLife = p.life;
+      p.size = 3 + Math.random() * 4;
+      p.color = Math.random() > 0.5 ? colors.primary : colors.secondary;
+      p.gravity = config.debrisGravity;
+      p.drag = 0.95;
+      p.shape = config.debrisShape;
+      p.rotation = Math.random() * Math.PI * 2;
+      p.rotationSpeed = (Math.random() - 0.5) * 12;
+
+      this.particles.push(p);
+    }
+
+    // Crater mark (ground darkening)
+    const crater = this.pool.acquire();
+    crater.x = x;
+    crater.y = y + 20; // Below explosion
+    crater.vx = 0;
+    crater.vy = 0;
+    crater.life = 5.0; // Long lasting
+    crater.maxLife = 5.0;
+    crater.size = 30 * intensity;
+    crater.startSize = 30 * intensity;
+    crater.endSize = 35 * intensity;
+    crater.color = 0x222222;
+    crater.shape = 'circle';
+    crater.startAlpha = 0.4;
+    crater.endAlpha = 0;
+    this.particles.push(crater);
+
+    // Heavy screen shake
+    this.triggerScreenShake(config.screenShake * intensity * 1.5, 250);
+
+    // Dynamic lighting
+    this.triggerLightingFlash(x, y, colors.glow, 150 * intensity);
+
+    // Filter effects
+    filterManager.applyScreenShockwave(x, y, 1000);
+    filterManager.applyScreenFlash('white', 200, 0.4);
+
+    // Queue additional staged effects
+    stagedEffects.push({
+      x,
+      y,
+      fortressClass,
+      intensity,
+      elapsed: 0,
+      stages: [],
+      kind: 'staggered',
+    });
+  }
+
+  /**
+   * Chain explosion - smaller explosion triggered by domino effect
+   * Propagates from ragdoll collision
+   */
+  spawnChainExplosion(
+    x: number,
+    y: number,
+    fortressClass: FortressClass,
+    intensity: number,
+    particleMultiplier: number
+  ): void {
+    const colors = CLASS_VFX_COLORS[fortressClass];
+    const baseIntensity = Math.min(intensity, 0.7);
+
+    // Quick flash
+    this.factory.flash({ x, y, color: colors.glow, size: 20 * baseIntensity });
+
+    // Single shockwave
+    this.factory.shockwaveRings(x, y, colors.secondary, baseIntensity * 0.6);
+
+    // Debris burst
+    const debrisCount = Math.floor(15 * particleMultiplier);
+    for (let i = 0; i < debrisCount; i++) {
+      const angle = (Math.PI * 2 * i) / debrisCount + Math.random() * 0.5;
+      const speed = 80 + Math.random() * 100;
+      const p = this.pool.acquire();
+
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 0.3 + Math.random() * 0.2;
+      p.maxLife = p.life;
+      p.size = 2 + Math.random() * 2;
+      p.color = colors.primary;
+      p.gravity = 150;
+      p.drag = 0.9;
+      p.shape = 'circle';
+
+      this.particles.push(p);
+    }
+
+    // Small shake
+    this.triggerScreenShake(1.5, 80);
+  }
+
+  /**
+   * Ice shatter effect - crystalline fragments exploding outward
+   * For ice class kills or frozen enemy deaths
+   */
+  spawnShatterEffect(
+    x: number,
+    y: number,
+    pieceCount: number,
+    particleMultiplier: number
+  ): void {
+    const iceColors = CLASS_VFX_COLORS.ice;
+    const count = Math.floor(pieceCount * particleMultiplier);
+
+    // Central flash (cold blue)
+    this.factory.flash({ x, y, color: 0x88ddff, size: 25 });
+    this.factory.flash({ x, y, color: 0xffffff, size: 15 });
+
+    // Ice crystal fragments
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+      const speed = 100 + Math.random() * 150;
+      const p = this.pool.acquire();
+
+      p.x = x + (Math.random() - 0.5) * 8;
+      p.y = y + (Math.random() - 0.5) * 8;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 30;
+      p.life = 0.5 + Math.random() * 0.3;
+      p.maxLife = p.life;
+      p.size = 4 + Math.random() * 6;
+      p.color = Math.random() > 0.3 ? iceColors.primary : 0xffffff;
+      p.gravity = 120;
+      p.drag = 0.94;
+      p.shape = 'diamond';
+      p.rotation = Math.random() * Math.PI * 2;
+      p.rotationSpeed = (Math.random() - 0.5) * 15;
+      p.startAlpha = 0.9;
+      p.endAlpha = 0;
+
+      this.particles.push(p);
+    }
+
+    // Frost mist
+    for (let i = 0; i < Math.floor(8 * particleMultiplier); i++) {
+      const p = this.pool.acquire();
+      p.x = x + (Math.random() - 0.5) * 20;
+      p.y = y + (Math.random() - 0.5) * 15;
+      p.vx = (Math.random() - 0.5) * 30;
+      p.vy = -20 - Math.random() * 30;
+      p.life = 0.6 + Math.random() * 0.4;
+      p.maxLife = p.life;
+      p.startSize = 8;
+      p.endSize = 20;
+      p.size = 8;
+      p.color = 0xaaddff;
+      p.shape = 'smoke';
+      p.startAlpha = 0.5;
+      p.endAlpha = 0;
+      p.drag = 0.96;
+
+      this.particles.push(p);
+    }
+
+    // Expanding frost ring
+    const ring = this.pool.acquire();
+    ring.x = x;
+    ring.y = y;
+    ring.vx = 0;
+    ring.vy = 0;
+    ring.life = 0.25;
+    ring.maxLife = 0.25;
+    ring.startSize = 10;
+    ring.endSize = 60;
+    ring.size = 10;
+    ring.color = iceColors.glow;
+    ring.shape = 'ring';
+    ring.startAlpha = 0.7;
+    ring.endAlpha = 0;
+    this.particles.push(ring);
+
+    // Sound/shake
+    this.triggerScreenShake(2, 100);
+  }
+
+  /**
+   * Persistent debris that accumulates on the ground
+   * Returns particle references for the system to track
+   */
+  spawnPersistentDebris(
+    x: number,
+    y: number,
+    color: number,
+    count: number,
+    _groundY: number
+  ): void {
+    for (let i = 0; i < count; i++) {
+      const p = this.pool.acquire();
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 30 + Math.random() * 50;
+
+      p.x = x + (Math.random() - 0.5) * 10;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed - 40;
+      p.life = 8.0 + Math.random() * 4.0; // Long lasting
+      p.maxLife = p.life;
+      p.size = 2 + Math.random() * 3;
+      p.color = color;
+      p.gravity = 180;
+      p.drag = 0.92;
+      p.shape = 'square';
+      p.rotation = Math.random() * Math.PI * 2;
+      p.rotationSpeed = (Math.random() - 0.5) * 8;
+      p.startAlpha = 1.0;
+      p.endAlpha = 0; // Fade out at end
+
+      this.particles.push(p);
+    }
+  }
+
+  /**
+   * Impact mark on ground (crater-like visual)
+   */
+  spawnImpactMark(
+    x: number,
+    y: number,
+    radius: number,
+    color: number
+  ): void {
+    const mark = this.pool.acquire();
+    mark.x = x;
+    mark.y = y;
+    mark.vx = 0;
+    mark.vy = 0;
+    mark.life = 10.0; // 10 second lifetime
+    mark.maxLife = 10.0;
+    mark.size = radius;
+    mark.startSize = radius;
+    mark.endSize = radius * 1.1;
+    mark.color = color;
+    mark.shape = 'circle';
+    mark.startAlpha = 0.3;
+    mark.endAlpha = 0;
+
+    this.particles.push(mark);
+  }
 }

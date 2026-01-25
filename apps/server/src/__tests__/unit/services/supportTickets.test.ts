@@ -22,7 +22,7 @@ describe('Support Tickets Service', () => {
   const mockTicket = {
     id: 'ticket-1',
     userId: 'user-123',
-    category: 'BUG' as const,
+    category: 'BUG_REPORT' as const,
     subject: 'Game crashed',
     description: 'The game crashed during wave 15',
     status: 'OPEN' as const,
@@ -40,7 +40,7 @@ describe('Support Tickets Service', () => {
 
       const result = await createTicket(
         'user-123',
-        'BUG',
+        'BUG_REPORT',
         'Game crashed',
         'The game crashed during wave 15'
       );
@@ -49,7 +49,7 @@ describe('Support Tickets Service', () => {
       expect(mockPrisma.supportTicket.create).toHaveBeenCalledWith({
         data: {
           userId: 'user-123',
-          category: 'BUG',
+          category: 'BUG_REPORT',
           subject: 'Game crashed',
           description: 'The game crashed during wave 15',
         },
@@ -69,7 +69,7 @@ describe('Support Tickets Service', () => {
       mockPrisma.supportTicket.create.mockResolvedValue(mockTicket);
 
       const longSubject = 'a'.repeat(300);
-      await createTicket('user-123', 'BUG', longSubject, 'description');
+      await createTicket('user-123', 'BUG_REPORT', longSubject, 'description');
 
       expect(mockPrisma.supportTicket.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -84,7 +84,7 @@ describe('Support Tickets Service', () => {
       mockPrisma.supportTicket.create.mockResolvedValue(mockTicket);
 
       const longDescription = 'a'.repeat(3000);
-      await createTicket('user-123', 'BUG', 'subject', longDescription);
+      await createTicket('user-123', 'BUG_REPORT', 'subject', longDescription);
 
       expect(mockPrisma.supportTicket.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -98,7 +98,7 @@ describe('Support Tickets Service', () => {
       mockPrisma.supportTicket.count.mockResolvedValue(5); // At limit
 
       await expect(
-        createTicket('user-123', 'BUG', 'subject', 'description')
+        createTicket('user-123', 'BUG_REPORT', 'subject', 'description')
       ).rejects.toThrow('Rate limit exceeded');
     });
   });
@@ -312,10 +312,10 @@ describe('Support Tickets Service', () => {
       mockPrisma.supportTicket.findMany.mockResolvedValue([]);
       mockPrisma.supportTicket.count.mockResolvedValue(0);
 
-      await listAllTickets(1, 20, 'OPEN', 'BUG');
+      await listAllTickets(1, 20, 'OPEN', 'BUG_REPORT');
 
       expect(mockPrisma.supportTicket.findMany).toHaveBeenCalledWith({
-        where: { status: 'OPEN', category: 'BUG' },
+        where: { status: 'OPEN', category: 'BUG_REPORT' },
         skip: 0,
         take: 20,
         orderBy: { createdAt: 'desc' },

@@ -4,7 +4,7 @@
  */
 
 import { FP } from './fixed';
-import type { FP as FPType } from './types';
+import type { FP as FPType, FortressClass } from './types';
 
 // ============================================================================
 // SPATIAL HASH - Optimized O(n) collision detection
@@ -1036,4 +1036,209 @@ function applySeparationForceWithMassOptimized(
       }
     }
   }
+}
+
+// ============================================================================
+// KNOCKBACK SYSTEM - Death Physics for Visual Ragdoll Effects
+// ============================================================================
+
+/**
+ * Knockback force result for death physics
+ * Used to pass data to the visual ragdoll system
+ */
+export interface KnockbackForce {
+  /** Knockback velocity X (fixed-point) */
+  kbX: FPType;
+  /** Knockback velocity Y (fixed-point) */
+  kbY: FPType;
+  /** Angular momentum for visual spin (float, in radians/sec) */
+  spinForce: number;
+  /** Whether this was a "big kill" (high damage, for extra VFX) */
+  isBigKill: boolean;
+}
+
+/**
+ * Class-specific knockback modifiers
+ * Each class has a unique feel when killing enemies
+ */
+export interface ClassKnockbackModifier {
+  /** Base knockback multiplier */
+  scale: number;
+  /** Upward bias (0-1), adds vertical knockback */
+  upwardBias: number;
+  /** Angular spread (0-1), adds randomness to knockback direction */
+  spreadAngle: number;
+  /** Whether knockback should have explosive spread */
+  explosive: boolean;
+}
+
+/** Knockback modifiers per fortress class */
+export const CLASS_KNOCKBACK_MODIFIERS: Record<FortressClass, ClassKnockbackModifier> = {
+  // Natural - standard knockback
+  natural: { scale: 1.0, upwardBias: 0.1, spreadAngle: 0.2, explosive: false },
+  // Ice - weaker knockback but shatters
+  ice: { scale: 0.7, upwardBias: 0.3, spreadAngle: 0.5, explosive: false },
+  // Fire - strong upward knockback (explosions!)
+  fire: { scale: 1.5, upwardBias: 0.5, spreadAngle: 0.3, explosive: true },
+  // Lightning - chain push effect
+  lightning: { scale: 1.1, upwardBias: 0.15, spreadAngle: 0.15, explosive: false },
+  // Tech - focused, directional knockback
+  tech: { scale: 1.3, upwardBias: 0.05, spreadAngle: 0.1, explosive: false },
+  // Void - pull-then-push implode effect
+  void: { scale: 1.4, upwardBias: 0.2, spreadAngle: 0.4, explosive: true },
+  // Plasma - explosive radial knockback
+  plasma: { scale: 1.6, upwardBias: 0.35, spreadAngle: 0.6, explosive: true },
+};
+
+/** Knockback configuration constants */
+export const KNOCKBACK_CONFIG = {
+  /** Base knockback scale applied to sqrt(damage) */
+  baseScale: 0.12,
+  /** Damage exponent (sqrt = 0.5, for logarithmic feel) */
+  damageExponent: 0.5,
+  /** Maximum knockback velocity (prevents absurd launches) */
+  maxKnockback: 6.0,
+  /** Minimum damage to trigger any knockback */
+  minDamageThreshold: 5,
+  /** Damage threshold for "big kill" flag (triggers extra VFX) */
+  bigKillThreshold: 500,
+  /** Base spin force multiplier */
+  spinScale: 8.0,
+  /** Maximum spin force */
+  maxSpin: 25.0,
+};
+
+/**
+ * Calculate knockback force for death physics
+ *
+ * This calculates the force that will be applied to a visual ragdoll
+ * when an enemy dies. The knockback direction is from source to target,
+ * with class-specific modifiers for different feels.
+ *
+ * @param sourceX - Projectile source X position (fixed-point)
+ * @param sourceY - Projectile source Y position (fixed-point)
+ * @param targetX - Enemy X position (fixed-point)
+ * @param targetY - Enemy Y position (fixed-point)
+ * @param damage - Damage dealt (kills the enemy)
+ * @param sourceClass - Fortress class of the damage source
+ * @param rng - Random number generator (for spread)
+ * @returns Knockback force data for visual ragdoll
+ */
+export function calculateKnockback(
+  sourceX: FPType,
+  sourceY: FPType,
+  targetX: FPType,
+  targetY: FPType,
+  damage: number,
+  sourceClass: FortressClass,
+  rng: () => number
+): KnockbackForce {
+  // Get class modifier
+  const modifier = CLASS_KNOCKBACK_MODIFIERS[sourceClass];
+
+  // Calculate direction from source to target
+  const dx = FP.sub(targetX, sourceX);
+  const dy = FP.sub(targetY, sourceY);
+  const distSq = FP.add(FP.mul(dx, dx), FP.mul(dy, dy));
+
+  // Normalize direction (with fallback for zero distance)
+  let dirX: FPType;
+  let dirY: FPType;
+  const epsilonSq = FP.mul(FP.EPSILON, FP.EPSILON);
+
+  if (distSq <= epsilonSq) {
+    // Very close, use rightward direction
+    dirX = FP.ONE;
+    dirY = 0;
+  } else {
+    const dist = FP.sqrt(distSq);
+    dirX = FP.div(dx, dist);
+    dirY = FP.div(dy, dist);
+  }
+
+  // Calculate knockback magnitude: baseScale * sqrt(damage) * classScale
+  const damageBasedStrength = Math.pow(
+    Math.max(damage - KNOCKBACK_CONFIG.minDamageThreshold, 0),
+    KNOCKBACK_CONFIG.damageExponent
+  );
+  const magnitude = Math.min(
+    KNOCKBACK_CONFIG.baseScale * damageBasedStrength * modifier.scale,
+    KNOCKBACK_CONFIG.maxKnockback
+  );
+
+  // Apply spread angle (adds randomness to direction)
+  const spreadOffset = (rng() - 0.5) * 2 * modifier.spreadAngle;
+  const cos = Math.cos(spreadOffset);
+  const sin = Math.sin(spreadOffset);
+
+  // Rotate direction by spread
+  const rotatedDirX = FP.toFloat(dirX) * cos - FP.toFloat(dirY) * sin;
+  const rotatedDirY = FP.toFloat(dirX) * sin + FP.toFloat(dirY) * cos;
+
+  // Calculate knockback velocity
+  let kbX = FP.fromFloat(rotatedDirX * magnitude);
+  let kbY = FP.fromFloat(rotatedDirY * magnitude);
+
+  // Apply upward bias (adds vertical knockback for launch effects)
+  const upwardForce = FP.fromFloat(-magnitude * modifier.upwardBias);
+  kbY = FP.add(kbY, upwardForce);
+
+  // If explosive, add outward radial force
+  if (modifier.explosive) {
+    const radialBoost = 1.2;
+    kbX = FP.mul(kbX, FP.fromFloat(radialBoost));
+    kbY = FP.mul(kbY, FP.fromFloat(radialBoost));
+  }
+
+  // Calculate spin force (angular momentum)
+  // Spin is based on tangential component of impact
+  const tangentialForce = FP.toFloat(dirX) * magnitude;
+  const spinDirection = tangentialForce > 0 ? 1 : -1;
+  const spinMagnitude = Math.abs(tangentialForce) * KNOCKBACK_CONFIG.spinScale;
+  const spinForce = Math.min(spinMagnitude * spinDirection, KNOCKBACK_CONFIG.maxSpin);
+
+  // Add some randomness to spin
+  const spinVariation = (rng() - 0.5) * 5;
+
+  return {
+    kbX,
+    kbY,
+    spinForce: spinForce + spinVariation,
+    isBigKill: damage >= KNOCKBACK_CONFIG.bigKillThreshold,
+  };
+}
+
+/**
+ * Calculate knockback for domino effect (ragdoll hitting living enemy)
+ * Uses fixed direction and reduced force
+ *
+ * @param ragdollVx - Ragdoll velocity X
+ * @param ragdollVy - Ragdoll velocity Y
+ * @param ragdollMass - Ragdoll mass (affects momentum transfer)
+ */
+export function calculateDominoKnockback(
+  ragdollVx: number,
+  ragdollVy: number,
+  ragdollMass: number = 1.0
+): KnockbackForce {
+  // Transfer momentum based on ragdoll velocity
+  const momentumScale = 0.4 * ragdollMass;
+  const magnitude = Math.sqrt(ragdollVx * ragdollVx + ragdollVy * ragdollVy);
+
+  // Normalize and scale
+  if (magnitude < 0.1) {
+    return { kbX: 0, kbY: 0, spinForce: 0, isBigKill: false };
+  }
+
+  const dirX = ragdollVx / magnitude;
+  const dirY = ragdollVy / magnitude;
+
+  const kbMagnitude = Math.min(magnitude * momentumScale, 3.0);
+
+  return {
+    kbX: FP.fromFloat(dirX * kbMagnitude),
+    kbY: FP.fromFloat(dirY * kbMagnitude),
+    spinForce: (dirX > 0 ? 1 : -1) * kbMagnitude * 3,
+    isBigKill: false,
+  };
 }

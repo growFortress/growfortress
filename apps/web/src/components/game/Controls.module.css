@@ -278,3 +278,185 @@
     animation: none;
   }
 }
+
+/* ========== AUTO-PLAY CONTROLS ========== */
+.autoPlayControls {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 15, 30, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 8px 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.autoPlayButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(30, 30, 50, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-text-80);
+}
+
+.autoPlayButton:hover {
+  background: rgba(50, 50, 80, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.autoPlayButton.active {
+  background: linear-gradient(135deg, rgba(0, 180, 255, 0.3), rgba(0, 120, 200, 0.3));
+  border-color: rgba(0, 200, 255, 0.5);
+  color: var(--color-text);
+  box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
+}
+
+.autoPlayIcon {
+  font-size: 18px;
+}
+
+.autoPlayLabel {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.autoPlayPresets {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.presetButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(30, 30, 50, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 14px;
+}
+
+.presetButton:hover {
+  background: rgba(50, 50, 80, 0.8);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.presetButton.activePreset {
+  background: rgba(0, 180, 255, 0.25);
+  border-color: rgba(0, 200, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 200, 255, 0.3);
+}
+
+.speedButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(30, 30, 50, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-text-80);
+  margin-left: 4px;
+}
+
+.speedButton:hover {
+  background: rgba(50, 50, 80, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.speedButton.active {
+  background: linear-gradient(135deg, rgba(255, 180, 0, 0.3), rgba(200, 120, 0, 0.3));
+  border-color: rgba(255, 180, 0, 0.5);
+  color: var(--color-text);
+  box-shadow: 0 0 10px rgba(255, 180, 0, 0.3);
+}
+
+.speedIcon {
+  font-size: 14px;
+}
+
+.speedLabel {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Responsive adjustments for auto-play controls */
+@media (max-width: 768px) {
+  .autoPlayControls {
+    bottom: 16px;
+    left: 16px;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .autoPlayButton,
+  .speedButton {
+    padding: 6px 10px;
+  }
+
+  .autoPlayIcon,
+  .speedIcon {
+    font-size: 16px;
+  }
+
+  .autoPlayLabel,
+  .speedLabel {
+    font-size: 11px;
+  }
+
+  .presetButton {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .autoPlayControls {
+    bottom: 12px;
+    left: 12px;
+    padding: 5px 8px;
+    gap: 4px;
+  }
+
+  .autoPlayButton {
+    padding: 5px 8px;
+  }
+
+  .autoPlayLabel {
+    display: none;
+  }
+
+  .speedLabel {
+    font-size: 10px;
+  }
+
+  .autoPlayPresets {
+    display: none;
+  }
+}

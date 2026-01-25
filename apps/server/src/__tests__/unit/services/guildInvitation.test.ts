@@ -633,5 +633,315 @@ describe('Guild Invitation Service', () => {
 
       expect(result).toBe(0);
     });
+
+    it('handles large batch of expired invitations', async () => {
+      mockPrisma.guildInvitation.updateMany.mockResolvedValue({ count: 1000 });
+
+      const result = await expireOldInvitations();
+
+      expect(result).toBe(1000);
+    });
+  });
+
+  // ============================================================================
+  // createInvitation - Additional Edge Cases
+  // ============================================================================
+
+  describe('createInvitation - edge cases', () => {
+    it('should allow invitation even if guild almost full', async () => {
+      const member = createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' });
+      const guild = createMockGuild({
+        id: 'guild-123',
+        structureKwatera: 5, // 15 max members
+        _count: { members: 14 }, // 1 slot left
+      });
+      const invitee = createMockUser({ id: 'user-456' });
+      const invitation = createMockInvitation();
+
+      mockPrisma.guildMember.findUnique
+        .mockResolvedValueOnce(member)
+        .mockResolvedValueOnce(null);
+      mockPrisma.guild.findUnique.mockResolvedValue({ ...guild, _count: { members: 14 } });
+      mockPrisma.user.findUnique.mockResolvedValue(invitee);
+      mockPrisma.guildInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.guildInvitation.create.mockResolvedValue(invitation);
+
+      const result = await createInvitation('guild-123', 'leader-123', 'user-456');
+
+      expect(result).toEqual(invitation);
+    });
+
+    it('should include optional message in invitation', async () => {
+      const member = createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' });
+      const guild = createMockGuild({ id: 'guild-123', _count: { members: 5 } });
+      const invitee = createMockUser({ id: 'user-456' });
+      const invitation = createMockInvitation({ message: 'Welcome to our guild!' });
+
+      mockPrisma.guildMember.findUnique
+        .mockResolvedValueOnce(member)
+        .mockResolvedValueOnce(null);
+      mockPrisma.guild.findUnique.mockResolvedValue({ ...guild, _count: { members: 5 } });
+      mockPrisma.user.findUnique.mockResolvedValue(invitee);
+      mockPrisma.guildInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.guildInvitation.create.mockResolvedValue(invitation);
+
+      await createInvitation('guild-123', 'leader-123', 'user-456', 'Welcome to our guild!');
+
+      expect(mockPrisma.guildInvitation.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            message: 'Welcome to our guild!',
+          }),
+        })
+      );
+    });
+
+    it('should handle empty message as null', async () => {
+      const member = createMockGuildMember({ role: 'LEADER', guildId: 'guild-123' });
+      const guild = createMockGuild({ id: 'guild-123', _count: { members: 5 } });
+      const invitee = createMockUser({ id: 'user-456' });
+      const invitation = createMockInvitation({ message: null });
+
+      mockPrisma.guildMember.findUnique
+        .mockResolvedValueOnce(member)
+        .mockResolvedValueOnce(null);
+      mockPrisma.guild.findUnique.mockResolvedValue({ ...guild, _count: { members: 5 } });
+      mockPrisma.user.findUnique.mockResolvedValue(invitee);
+      mockPrisma.guildInvitation.findFirst.mockResolvedValue(null);
+      mockPrisma.guildInvitation.create.mockResolvedValue(invitation);
+
+      await createInvitation('guild-123', 'leader-123', 'user-456', '');
+
+      expect(mockPrisma.guildInvitation.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            message: null,
+          }),
+        })
+      );
+    });
+  });
+
+  // ============================================================================
+  // getGuildInvitations - Additional Edge Cases
+  // ============================================================================
+
+  describe('getGuildInvitations - edge cases', () => {
+    it('should return empty when no invitations exist', async () => {
+      mockPrisma.guildInvitation.findMany.mockResolvedValue([]);
+      mockPrisma.guildInvitation.count.mockResolvedValue(0);
+
+      const result = await getGuildInvitations('guild-123');
+
+      expect(result.invitations).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should handle large offset correctly', async () => {
+      mockPrisma.guildInvitation.findMany.mockResolvedValue([]);
+      mockPrisma.guildInvitation.count.mockResolvedValue(5);
+
+      const result = await getGuildInvitations('guild-123', undefined, 10, 100);
+
+      expect(result.invitations).toEqual([]);
+      expect(result.total).toBe(5);
+    });
+
+    it('should filter by DECLINED status', async () => {
+      mockPrisma.guildInvitation.findMany.mockResolvedValue([]);
+      mockPrisma.guildInvitation.count.mockResolvedValue(0);
+
+      await getGuildInvitations('guild-123', 'DECLINED');
+
+      expect(mockPrisma.guildInvitation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: 'DECLINED' }),
+        })
+      );
+    });
+
+    it('should filter by EXPIRED status', async () => {
+      mockPrisma.guildInvitation.findMany.mockResolvedValue([]);
+      mockPrisma.guildInvitation.count.mockResolvedValue(0);
+
+      await getGuildInvitations('guild-123', 'EXPIRED');
+
+      expect(mockPrisma.guildInvitation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: 'EXPIRED' }),
+        })
+      );
+    });
+  });
+
+  // ============================================================================
+  // getUserInvitations - Additional Edge Cases
+  // ============================================================================
+
+  describe('getUserInvitations - edge cases', () => {
+    it('should not return expired invitations even if status is PENDING', async () => {
+      mockPrisma.guildInvitation.findMany.mockResolvedValue([]);
+      mockPrisma.guildInvitation.count.mockResolvedValue(0);
+
+      await getUserInvitations('user-456');
+
+      expect(mockPrisma.guildInvitation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'PENDING',
+            expiresAt: { gt: expect.any(Date) },
+          }),
+        })
+      );
+    });
+
+    it('should order by creation date descending', async () => {
+      mockPrisma.guildInvitation.findMany.mockResolvedValue([]);
+      mockPrisma.guildInvitation.count.mockResolvedValue(0);
+
+      await getUserInvitations('user-456');
+
+      expect(mockPrisma.guildInvitation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { createdAt: 'desc' },
+        })
+      );
+    });
+  });
+
+  // ============================================================================
+  // getInvitation - Additional Edge Cases
+  // ============================================================================
+
+  describe('getInvitation - edge cases', () => {
+    it('should include guild details', async () => {
+      const invitation = createMockInvitation({
+        guild: { name: 'Test Guild', tag: 'TST' },
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+
+      const result = await getInvitation('inv-123');
+
+      expect(result?.guild.name).toBe('Test Guild');
+      expect(result?.guild.tag).toBe('TST');
+    });
+
+    it('should include inviter details', async () => {
+      const invitation = createMockInvitation({
+        inviter: { displayName: 'GuildLeader' },
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+
+      const result = await getInvitation('inv-123');
+
+      expect(result?.inviter.displayName).toBe('GuildLeader');
+    });
+
+    it('should include invitee details', async () => {
+      const invitation = createMockInvitation({
+        invitee: { displayName: 'NewPlayer' },
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+
+      const result = await getInvitation('inv-123');
+
+      expect(result?.invitee.displayName).toBe('NewPlayer');
+    });
+  });
+
+  // ============================================================================
+  // acceptInvitation - Additional Edge Cases
+  // ============================================================================
+
+  describe('acceptInvitation - edge cases', () => {
+    it('should handle edge case of accepting just before expiry', async () => {
+      const almostExpired = new Date(Date.now() + 1000); // 1 second from now
+      const invitation = createMockInvitation({
+        expiresAt: almostExpired,
+        inviteeId: 'user-456',
+        guild: { name: 'Test', tag: 'TST', structureKwatera: 5, disbanded: false, _count: { members: 5 } },
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockResolvedValue([{}, {}, {}]);
+
+      // Should not throw
+      await acceptInvitation('inv-123', 'user-456');
+
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // declineInvitation - Additional Edge Cases
+  // ============================================================================
+
+  describe('declineInvitation - edge cases', () => {
+    it('should throw if invitation expired', async () => {
+      const invitation = createMockInvitation({
+        inviteeId: 'user-456',
+        status: 'EXPIRED',
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+
+      await expect(declineInvitation('inv-123', 'user-456'))
+        .rejects.toThrow(GUILD_ERROR_CODES.INVITATION_NOT_PENDING);
+    });
+
+    it('should throw if invitation cancelled', async () => {
+      const invitation = createMockInvitation({
+        inviteeId: 'user-456',
+        status: 'CANCELLED',
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+
+      await expect(declineInvitation('inv-123', 'user-456'))
+        .rejects.toThrow(GUILD_ERROR_CODES.INVITATION_NOT_PENDING);
+    });
+  });
+
+  // ============================================================================
+  // cancelInvitation - Additional Edge Cases
+  // ============================================================================
+
+  describe('cancelInvitation - edge cases', () => {
+    it('should throw if invitation expired', async () => {
+      const invitation = createMockInvitation({
+        inviterId: 'leader-123',
+        status: 'EXPIRED',
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+
+      await expect(cancelInvitation('inv-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.INVITATION_NOT_PENDING);
+    });
+
+    it('should throw if invitation declined', async () => {
+      const invitation = createMockInvitation({
+        inviterId: 'leader-123',
+        status: 'DECLINED',
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null);
+
+      await expect(cancelInvitation('inv-123', 'leader-123'))
+        .rejects.toThrow(GUILD_ERROR_CODES.INVITATION_NOT_PENDING);
+    });
+
+    it('should allow cancel by original inviter who is no longer in guild', async () => {
+      const invitation = createMockInvitation({
+        inviterId: 'ex-leader-123',
+        status: 'PENDING',
+      });
+      mockPrisma.guildInvitation.findUnique.mockResolvedValue(invitation);
+      mockPrisma.guildMember.findUnique.mockResolvedValue(null); // Ex-leader no longer in any guild
+      mockPrisma.guildInvitation.update.mockResolvedValue({});
+
+      // Should succeed - inviter can always cancel their own invitations
+      await cancelInvitation('inv-123', 'ex-leader-123');
+
+      expect(mockPrisma.guildInvitation.update).toHaveBeenCalled();
+    });
   });
 });

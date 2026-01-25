@@ -19,7 +19,7 @@
     "startLabel": "Rozpocznij",
     "gameModes": "Tryby gry",
     "comingSoon": "Wkrótce dostępne! Tryb w przygotowaniu.",
-    "bossRushComingSoon": "Boss Rush - Wkrótce dostępne",
+    "bossRushTooltip": "Zmierz się z potężnymi bossami w nieskończonej gauntlet!",
     "bossRushLabel": "Boss Rush",
     "fightPlayers": "Walcz z innymi graczami!",
     "pvpArena": "PvP Arena - Walcz z innymi graczami",
@@ -255,7 +255,10 @@
       "title": "Przeciągnij, by przestawić",
       "description": "Możesz przeciągnąć bohatera na polu bitwy, aby szybko zmienić jego pozycję."
     },
-    "dismiss": "Rozumiem"
+    "dismiss": "Rozumiem",
+    "tryIt": "Spróbuj!",
+    "skip": "Pomiń",
+    "completed": "Świetnie!"
   },
   "unlock": {
     "level": "Poziom {{level}}",

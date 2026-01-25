@@ -43,34 +43,25 @@ export const ENEMY_VERTICAL_LANES = 7;
 export const ENEMY_VERTICAL_SPREAD_PX = 40;
 
 // ============================================================================
+// FORTRESS POSITIONING
+// ============================================================================
+
+/** Fortress X position in game units */
+export const FORTRESS_POSITION_X = 2;
+
+/** Fortress HP bar offset in pixels */
+export const FORTRESS_HP_BAR_OFFSET = 20;
+
+/** Enemy HP bar offset in pixels */
+export const ENEMY_HP_BAR_OFFSET = 8;
+
+/** Grid spacing in pixels */
+export const GRID_SPACING = 80;
+
+// ============================================================================
 // FIXED-POINT SCALE (Q16.16 format)
 // ============================================================================
 
 /** Fixed-point scale factor (65536 = 1.0 unit) */
 export const FP_SCALE = 65536;
 
-// ============================================================================
-// LEGACY LAYOUT OBJECT (for backwards compatibility)
-// ============================================================================
-
-/**
- * Legacy LAYOUT object - prefer individual constants for new code.
- * @deprecated Use individual constants for better tree-shaking
- */
-export const LAYOUT = {
-  fieldWidth: FIELD_WIDTH,
-  fieldHeight: FIELD_HEIGHT,
-  fieldCenterY: FIELD_CENTER_Y,
-  turretLaneHeight: TURRET_LANE_HEIGHT_PERCENT,
-  pathTopPercent: PATH_TOP_PERCENT,
-  pathBottomPercent: PATH_BOTTOM_PERCENT,
-  pathHeight: PATH_HEIGHT_PERCENT,
-  enemyVerticalLanes: ENEMY_VERTICAL_LANES,
-  enemyVerticalSpread: ENEMY_VERTICAL_SPREAD_PX,
-  // GameScene specific constants
-  fortressPositionX: 2,
-  fortressHpBarOffset: 20,
-  enemyHpBarOffset: 8,
-  gridSpacing: 80,
-  groundY: PATH_TOP_PERCENT,
-} as const;

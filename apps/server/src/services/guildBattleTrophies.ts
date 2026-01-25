@@ -432,3 +432,115 @@ export async function getTrophyStatBonus(guildId: string): Promise<number> {
 
   return calculateTotalStatBonus(trophies.map(t => t.trophyId));
 }
+
+// ============================================================================
+// LEADERBOARD
+// ============================================================================
+
+export interface GuildTrophyLeaderboardEntry {
+  rank: number;
+  guildId: string;
+  guildName: string;
+  guildTag: string;
+  guildLevel: number;
+  memberCount: number;
+  trophyCount: number;
+  totalStatBonus: number;
+  topTrophies: string[]; // Top 3 trophy IDs
+}
+
+/**
+ * Get guild trophy leaderboard, ranked by total stat bonus from trophies
+ */
+export async function getGuildTrophyLeaderboard(
+  limit = 50,
+  offset = 0
+): Promise<{
+  entries: GuildTrophyLeaderboardEntry[];
+  total: number;
+}> {
+  // Get all active guilds with member counts
+  const guilds = await prisma.guild.findMany({
+    where: {
+      disbanded: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      tag: true,
+      structureKwatera: true,
+      structureSkarbiec: true,
+      structureAkademia: true,
+      structureZbrojownia: true,
+      _count: {
+        select: { members: true },
+      },
+    },
+  });
+
+  // Get all active trophies grouped by guild
+  const allTrophies = await prisma.guildBattleTrophy.findMany({
+    where: {
+      isActive: true,
+      guildId: { in: guilds.map((g) => g.id) },
+    },
+    select: {
+      guildId: true,
+      trophyId: true,
+      earnedAt: true,
+    },
+    orderBy: { earnedAt: 'desc' },
+  });
+
+  // Group trophies by guild
+  const trophiesByGuild = new Map<string, { trophyId: string; earnedAt: Date }[]>();
+  for (const trophy of allTrophies) {
+    const existing = trophiesByGuild.get(trophy.guildId) || [];
+    existing.push({ trophyId: trophy.trophyId, earnedAt: trophy.earnedAt });
+    trophiesByGuild.set(trophy.guildId, existing);
+  }
+
+  // Calculate scores and sort
+  const rankedGuilds = guilds
+    .map((guild) => {
+      const guildTrophies = trophiesByGuild.get(guild.id) || [];
+      const trophyIds = guildTrophies.map((t) => t.trophyId);
+      const totalStatBonus = calculateTotalStatBonus(trophyIds);
+      // Calculate guild "level" as sum of structure levels
+      const guildLevel =
+        guild.structureKwatera +
+        guild.structureSkarbiec +
+        guild.structureAkademia +
+        guild.structureZbrojownia;
+      return {
+        guildId: guild.id,
+        guildName: guild.name,
+        guildTag: guild.tag,
+        guildLevel,
+        memberCount: guild._count.members,
+        trophyCount: trophyIds.length,
+        totalStatBonus,
+        topTrophies: trophyIds.slice(0, 3), // Most recent 3
+      };
+    })
+    .filter((g) => g.trophyCount > 0) // Only guilds with at least 1 trophy
+    .sort((a, b) => {
+      // Sort by total stat bonus descending, then by trophy count
+      if (b.totalStatBonus !== a.totalStatBonus) {
+        return b.totalStatBonus - a.totalStatBonus;
+      }
+      return b.trophyCount - a.trophyCount;
+    });
+
+  const total = rankedGuilds.length;
+
+  // Apply pagination and add ranks
+  const entries = rankedGuilds
+    .slice(offset, offset + limit)
+    .map((guild, index) => ({
+      rank: offset + index + 1,
+      ...guild,
+    }));
+
+  return { entries, total };
+}

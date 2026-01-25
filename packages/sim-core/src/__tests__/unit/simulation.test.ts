@@ -17,8 +17,8 @@ describe('getDefaultConfig', () => {
     expect(config.segmentSize).toBe(5);
     expect(config.startingWave).toBe(0);
     expect(config.fortressBaseHp).toBe(200);
-    expect(config.fortressBaseDamage).toBe(10);
-    expect(config.fortressAttackInterval).toBe(15);
+    expect(config.fortressBaseDamage).toBe(12);  // Balanced: stronger per hit
+    expect(config.fortressAttackInterval).toBe(18);  // Balanced: slower but impactful
     expect(config.skillCooldownTicks).toBe(300);
     expect(config.skillDamage).toBe(50);
     expect(config.skillRadius).toBe(FP.fromInt(8));

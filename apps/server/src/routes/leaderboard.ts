@@ -16,6 +16,7 @@ import {
   getTimeUntilWeeklyReset,
   type LeaderboardCategory,
 } from '../services/playerLeaderboard.js';
+import { getGuildTrophyLeaderboard } from '../services/guildBattleTrophies.js';
 import { ALL_EXCLUSIVE_ITEMS } from '@arcade/sim-core';
 import { isUserConnected } from '../services/websocket.js';
 
@@ -189,6 +190,27 @@ const leaderboardRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/v1/leaderboards/exclusive-items', { config: { public: true } }, async (_request, reply) => {
     return reply.send({
       items: ALL_EXCLUSIVE_ITEMS,
+    });
+  });
+
+  // ==========================================
+  // GUILD TROPHY LEADERBOARD
+  // ==========================================
+
+  const GuildTrophyLeaderboardQuerySchema = z.object({
+    limit: z.coerce.number().min(1).max(100).default(50),
+    offset: z.coerce.number().min(0).default(0),
+  });
+
+  // Get guild trophy leaderboard (public)
+  fastify.get('/v1/leaderboards/guilds/trophies', { config: { public: true } }, async (request, reply) => {
+    const query = GuildTrophyLeaderboardQuerySchema.parse(request.query);
+
+    const result = await getGuildTrophyLeaderboard(query.limit, query.offset);
+
+    return reply.send({
+      category: 'guildTrophies',
+      ...result,
     });
   });
 };

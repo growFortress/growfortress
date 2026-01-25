@@ -291,5 +291,371 @@ describe('GuildPreview Service', () => {
       const cacheKeys = getMockRedisKeys();
       expect(cacheKeys).not.toContain(cacheKey);
     });
+
+    it('should handle non-existent cache gracefully', async () => {
+      const guildId = 'guild-never-cached';
+
+      // Should not throw
+      await invalidateGuildPreviewCache(guildId);
+    });
+  });
+
+  // ============================================================================
+  // ACCESS MODE TESTS
+  // ============================================================================
+
+  describe('getGuildPreview - access mode', () => {
+    const guildId = 'guild-access-mode';
+
+    it('should return INVITE_ONLY for guilds with no settings', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Invite Only Guild',
+        tag: 'INV',
+        description: null,
+        emblemUrl: null,
+        settings: null,
+        honor: 1000,
+        structureKwatera: 0,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 0 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.accessMode).toBe('INVITE_ONLY');
+    });
+
+    it('should return APPLY access mode when configured', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Open Guild',
+        tag: 'OPEN',
+        description: 'Anyone can apply',
+        emblemUrl: null,
+        settings: { accessMode: 'APPLY', minLevel: 10 },
+        honor: 2000,
+        structureKwatera: 5,
+        structureSkarbiec: 5,
+        structureAkademia: 5,
+        structureZbrojownia: 5,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 5 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.accessMode).toBe('APPLY');
+    });
+
+    it('should return CLOSED access mode when configured', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Closed Guild',
+        tag: 'CLSD',
+        description: 'Not accepting new members',
+        emblemUrl: null,
+        settings: { accessMode: 'CLOSED', minLevel: 100 },
+        honor: 5000,
+        structureKwatera: 10,
+        structureSkarbiec: 10,
+        structureAkademia: 10,
+        structureZbrojownia: 10,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 30 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.accessMode).toBe('CLOSED');
+    });
+  });
+
+  // ============================================================================
+  // EMBLEM URL TESTS
+  // ============================================================================
+
+  describe('getGuildPreview - emblem', () => {
+    const guildId = 'guild-emblem';
+
+    it('should include emblemUrl when present', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Emblem Guild',
+        tag: 'EMB',
+        description: null,
+        emblemUrl: 'https://example.com/emblem.png',
+        settings: null,
+        honor: 1000,
+        structureKwatera: 0,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 5 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.emblemUrl).toBe('https://example.com/emblem.png');
+    });
+
+    it('should return null emblemUrl when not set', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'No Emblem Guild',
+        tag: 'NEM',
+        description: null,
+        emblemUrl: null,
+        settings: null,
+        honor: 1000,
+        structureKwatera: 0,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 5 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.emblemUrl).toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // MEMBER SORTING TESTS
+  // ============================================================================
+
+  describe('getGuildPreview - member sorting', () => {
+    const guildId = 'guild-sorting';
+
+    it('should sort members by role then power', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Sorted Guild',
+        tag: 'SRT',
+        description: null,
+        emblemUrl: null,
+        settings: null,
+        honor: 3000,
+        structureKwatera: 10,
+        structureSkarbiec: 5,
+        structureAkademia: 5,
+        structureZbrojownia: 5,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [
+          {
+            userId: 'member-high-power',
+            role: 'MEMBER',
+            user: {
+              displayName: 'HighPowerMember',
+              progression: { level: 30 },
+              powerUpgrades: { cachedTotalPower: 50000 },
+            },
+          },
+          {
+            userId: 'leader',
+            role: 'LEADER',
+            user: {
+              displayName: 'TheLeader',
+              progression: { level: 25 },
+              powerUpgrades: { cachedTotalPower: 30000 },
+            },
+          },
+          {
+            userId: 'officer-low',
+            role: 'OFFICER',
+            user: {
+              displayName: 'LowOfficer',
+              progression: { level: 20 },
+              powerUpgrades: { cachedTotalPower: 10000 },
+            },
+          },
+          {
+            userId: 'officer-high',
+            role: 'OFFICER',
+            user: {
+              displayName: 'HighOfficer',
+              progression: { level: 22 },
+              powerUpgrades: { cachedTotalPower: 25000 },
+            },
+          },
+        ],
+        _count: { members: 4 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.topMembers).toHaveLength(4);
+      // Leader should be first
+      expect(result?.topMembers[0].role).toBe('LEADER');
+      expect(result?.topMembers[0].displayName).toBe('TheLeader');
+      // Then officers sorted by power
+      expect(result?.topMembers[1].role).toBe('OFFICER');
+      expect(result?.topMembers[1].displayName).toBe('HighOfficer');
+      expect(result?.topMembers[2].role).toBe('OFFICER');
+      expect(result?.topMembers[2].displayName).toBe('LowOfficer');
+      // Then members
+      expect(result?.topMembers[3].role).toBe('MEMBER');
+    });
+
+    it('should handle members with null progression', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Null Progression Guild',
+        tag: 'NPG',
+        description: null,
+        emblemUrl: null,
+        settings: null,
+        honor: 1000,
+        structureKwatera: 0,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [
+          {
+            userId: 'member-no-progression',
+            role: 'MEMBER',
+            user: {
+              displayName: 'NewPlayer',
+              progression: null,
+              powerUpgrades: null,
+            },
+          },
+        ],
+        _count: { members: 1 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.topMembers[0].level).toBe(1); // Default level
+      expect(result?.topMembers[0].power).toBe(0); // Default power
+    });
+  });
+
+  // ============================================================================
+  // TROPHY HANDLING TESTS
+  // ============================================================================
+
+  describe('getGuildPreview - trophies', () => {
+    const guildId = 'guild-trophies';
+
+    it('should include trophies array', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'Trophy Guild',
+        tag: 'TRO',
+        description: null,
+        emblemUrl: null,
+        settings: null,
+        honor: 5000,
+        structureKwatera: 10,
+        structureSkarbiec: 10,
+        structureAkademia: 10,
+        structureZbrojownia: 10,
+        trophies: ['FIRST_BLOOD', 'BATTLE_HARDENED', 'WAR_MACHINE'],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 20 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.trophies).toEqual(['FIRST_BLOOD', 'BATTLE_HARDENED', 'WAR_MACHINE']);
+    });
+
+    it('should handle empty trophies array', async () => {
+      const mockGuild = {
+        id: guildId,
+        name: 'No Trophy Guild',
+        tag: 'NTG',
+        description: null,
+        emblemUrl: null,
+        settings: null,
+        honor: 1000,
+        structureKwatera: 0,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
+        trophies: [],
+        createdAt: new Date('2024-01-01'),
+        members: [],
+        _count: { members: 5 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.trophies).toEqual([]);
+    });
+  });
+
+  // ============================================================================
+  // CREATION DATE TESTS
+  // ============================================================================
+
+  describe('getGuildPreview - createdAt', () => {
+    const guildId = 'guild-date';
+
+    it('should format createdAt as ISO string', async () => {
+      const createdDate = new Date('2023-06-15T10:30:00Z');
+      const mockGuild = {
+        id: guildId,
+        name: 'Date Test Guild',
+        tag: 'DATE',
+        description: null,
+        emblemUrl: null,
+        settings: null,
+        honor: 1000,
+        structureKwatera: 0,
+        structureSkarbiec: 0,
+        structureAkademia: 0,
+        structureZbrojownia: 0,
+        trophies: [],
+        createdAt: createdDate,
+        members: [],
+        _count: { members: 5 },
+      };
+
+      mockPrisma.guild.findFirst.mockResolvedValue(mockGuild);
+
+      const result = await getGuildPreview(guildId);
+
+      expect(result?.createdAt).toBe('2023-06-15T10:30:00.000Z');
+    });
   });
 });

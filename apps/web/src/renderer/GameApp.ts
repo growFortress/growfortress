@@ -3,6 +3,7 @@ import { CRTFilter } from "pixi-filters";
 import { GameScene, type HubState } from "./scenes/GameScene.js";
 import { ColonyScene } from "./scenes/ColonyScene.js";
 import { filterManager, FilterManager } from "./effects/FilterManager.js";
+import { assetManager } from "./managers/AssetManager.js";
 import type { ColonyStatus } from "@arcade/protocol";
 import { logger } from "../utils/logger.js";
 
@@ -210,6 +211,17 @@ export class GameApp {
 
     // Initialize with preference for WebGPU if available
     logger.debug("[GameApp] Initializing PixiJS Application...");
+
+    // Preload game assets with progress logging
+    logger.debug("[GameApp] Loading game assets...");
+    await assetManager.loadGameAssets((progress) => {
+      if (progress.loaded % 5 === 0 || progress.loaded === progress.total) {
+        logger.debug(`[GameApp] Asset loading: ${progress.loaded}/${progress.total}`);
+      }
+    });
+    const stats = assetManager.getStats();
+    logger.debug(`[GameApp] Assets loaded: ${stats.loaded}, failed: ${stats.failed}`);
+
     const resizeTarget = this.canvas.parentElement ?? window;
     const initOptions = {
       canvas: this.canvas,

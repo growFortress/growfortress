@@ -1,8 +1,59 @@
 /**
  * Shop Routes Integration Tests
+ *
+ * IMPORTANT: vi.mock calls are hoisted to the top of the file by Vitest.
+ * The prisma mock MUST be declared here (not just in setup.ts) to ensure
+ * it's applied before any transitive imports of prisma through testApp.
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
+
+// Mock prisma - hoisted before any imports that depend on it
+vi.mock('../../../lib/prisma.js', async () => {
+  const { mockPrisma } = await import('../../mocks/prisma.js');
+  return {
+    prisma: mockPrisma,
+    Prisma: {},
+  };
+});
+
+// Mock config - needed before redis and other modules load
+vi.mock('../../../config.js', () => ({
+  config: {
+    DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+    REDIS_URL: 'redis://localhost:6379',
+    JWT_SECRET: 'test-jwt-secret-key-for-testing-purposes-only-minimum-32-chars',
+    JWT_ACCESS_EXPIRY: '15m',
+    JWT_REFRESH_EXPIRY: '7d',
+    PORT: 3000,
+    NODE_ENV: 'test',
+    RUN_TOKEN_SECRET: 'test-run-token-secret-key-for-testing-minimum-32-chars',
+    RUN_TOKEN_EXPIRY_SECONDS: 600,
+    RATE_LIMIT_MAX: 100,
+    RATE_LIMIT_WINDOW_MS: 60000,
+    API_PREFIX: '',
+  },
+  parseDuration: (duration: string): number => {
+    const match = duration.match(/^(\d+)([smhd])$/);
+    if (!match) return 0;
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+    switch (unit) {
+      case 's': return value * 1000;
+      case 'm': return value * 60 * 1000;
+      case 'h': return value * 60 * 60 * 1000;
+      case 'd': return value * 24 * 60 * 60 * 1000;
+      default: return 0;
+    }
+  },
+}));
+
+// Mock redis
+vi.mock('../../../lib/redis.js', async () => {
+  const { mockRedis } = await import('../../mocks/redis.js');
+  return { redis: mockRedis };
+});
+
 import { buildTestApp, generateTestToken } from '../../helpers/testApp.js';
 import { mockPrisma, createMockInventory } from '../../mocks/prisma.js';
 import '../../helpers/setup.js';
@@ -423,7 +474,7 @@ describe('Shop Routes Integration', () => {
       const response = await app.inject({
         method: 'POST',
         url: '/v1/shop/buy-dust',
-        payload: { itemType: 'booster', itemId: 'xp_boost_1h' },
+        payload: { itemType: 'booster', itemId: 'xp_3h' },
       });
 
       expect(response.statusCode).toBe(401);
@@ -432,7 +483,7 @@ describe('Shop Routes Integration', () => {
     it('should buy booster with dust', async () => {
       const inventory = createMockInventory({ dust: 500 });
       mockPrisma.inventory.findUnique.mockResolvedValue(inventory);
-      mockPrisma.inventory.update.mockResolvedValue({ ...inventory, dust: 400 });
+      mockPrisma.inventory.update.mockResolvedValue({ ...inventory, dust: 390 });
       mockPrisma.activeBooster.findFirst.mockResolvedValue(null);
       mockPrisma.activeBooster.create.mockResolvedValue(createMockActiveBooster());
 
@@ -446,7 +497,7 @@ describe('Shop Routes Integration', () => {
         },
         payload: {
           itemType: 'booster',
-          itemId: 'xp_boost_1h',
+          itemId: 'xp_3h',
         },
       });
 
@@ -470,7 +521,7 @@ describe('Shop Routes Integration', () => {
         },
         payload: {
           itemType: 'booster',
-          itemId: 'xp_boost_1h',
+          itemId: 'xp_3h',
         },
       });
 

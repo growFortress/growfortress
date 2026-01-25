@@ -19,7 +19,7 @@ import {
   isMaxItemTier,
   type ItemTier,
 } from '@arcade/sim-core';
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useCallback } from 'preact/hooks';
 import { Modal } from '../shared/Modal.js';
 import { getAccessToken } from '../../api/auth.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
@@ -40,8 +40,10 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   ]);
 }
 
-// Active tab
+// Active tab and selection signals
 const activeTab = signal<'artifacts' | 'items'>('artifacts');
+const selectedArtifactId = signal<string | null>(null);
+const selectedItemId = signal<string | null>(null);
 
 // Artifact slot icons
 const SLOT_ICONS: Record<string, string> = {
@@ -88,20 +90,91 @@ async function upgradeItem(itemId: string): Promise<{
 export function ArtifactsModal() {
   const { t, language } = useTranslation(['common', 'data', 'modals']);
   const isVisible = artifactsModalVisible.value;
-  const getArtifactName = (artifactId: string, name: string, polishName: string) =>
-    t(`data:artifacts.${artifactId}.name`, {
-      defaultValue: language === 'pl' ? polishName : name,
-    });
   const tab = activeTab.value;
   const artifacts = artifactsWithDefs.value;
   const items = itemsWithDefs.value;
   const unequipped = unequippedArtifacts.value;
+  const selectedArtifact = selectedArtifactId.value;
+  const selectedItem = selectedItemId.value;
 
   const equippedArtifacts = artifacts.filter((a) => a.equippedToHeroId);
+  const allArtifacts = [...equippedArtifacts, ...unequipped];
 
   const gold = displayGold.value;
   const [loadingItem, setLoadingItem] = useState<string | null>(null);
 
+  // Helper functions
+  const getArtifactName = useCallback(
+    (artifactId: string, name: string, polishName: string) =>
+      t(`data:artifacts.${artifactId}.name`, {
+        defaultValue: language === 'pl' ? polishName : name,
+      }),
+    [t, language]
+  );
+
+  const getTierColor = useCallback((tier: ItemTier): string => {
+    const colorHex = ITEM_TIER_CONFIG[tier].color.toString(16).padStart(6, '0');
+    return `#${colorHex}`;
+  }, []);
+
+  // Reset selection when modal closes
+  useEffect(() => {
+    if (!isVisible) {
+      selectedArtifactId.value = null;
+      selectedItemId.value = null;
+    }
+  }, [isVisible]);
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (tab === 'artifacts') {
+        if (!allArtifacts.length) return;
+        const currentIndex = allArtifacts.findIndex((a) => a.id === selectedArtifact);
+
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextIndex = currentIndex < allArtifacts.length - 1 ? currentIndex + 1 : 0;
+          selectedArtifactId.value = allArtifacts[nextIndex].id;
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevIndex = currentIndex > 0 ? currentIndex - 1 : allArtifacts.length - 1;
+          selectedArtifactId.value = allArtifacts[prevIndex].id;
+        }
+      } else if (tab === 'items') {
+        if (!items.length) return;
+        const currentIndex = items.findIndex((i) => i.itemId === selectedItem);
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+          selectedItemId.value = items[nextIndex].itemId;
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+          selectedItemId.value = items[prevIndex].itemId;
+        }
+      }
+
+      // Tab switching with number keys
+      if (e.key === '1') {
+        activeTab.value = 'artifacts';
+      } else if (e.key === '2') {
+        activeTab.value = 'items';
+      }
+    },
+    [tab, allArtifacts, items, selectedArtifact, selectedItem]
+  );
+
+  useEffect(() => {
+    if (isVisible) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+    return undefined;
+  }, [isVisible, handleKeyDown]);
+
+  // API handlers
   const handleUpgradeItem = async (itemId: string) => {
     setLoadingItem(itemId);
     try {
@@ -114,22 +187,19 @@ export function ArtifactsModal() {
         showErrorToast(result.error);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nie udało się ulepszyć przedmiotu';
+      const message = error instanceof Error ? error.message : t('artifacts.errors.upgradeFailed');
       showErrorToast(message);
     } finally {
       setLoadingItem(null);
     }
   };
 
-  const getTierColor = (tier: ItemTier): string => {
-    const colorHex = ITEM_TIER_CONFIG[tier].color.toString(16).padStart(6, '0');
-    return `#${colorHex}`;
-  };
-
   const handleCraftClick = () => {
     hideArtifactsModal();
     showCraftingModal();
   };
+
+  const itemsCount = items.reduce((sum, i) => sum + i.amount, 0);
 
   return (
     <Modal
@@ -139,33 +209,45 @@ export function ArtifactsModal() {
       class={styles.modalContent}
       ariaLabel={t('artifacts.ariaLabel')}
     >
-      <div class={styles.tabs}>
+      {/* Tabs */}
+      <div class={styles.tabs} role="tablist">
         <button
           class={`${styles.tab} ${tab === 'artifacts' ? styles.active : ''}`}
           onClick={() => (activeTab.value = 'artifacts')}
+          role="tab"
+          aria-selected={tab === 'artifacts'}
+          aria-controls="artifacts-panel"
         >
-          Artifacts ({artifacts.length})
+          {t('artifacts.tabs.artifacts')} ({artifacts.length})
         </button>
         <button
           class={`${styles.tab} ${tab === 'items' ? styles.active : ''}`}
           onClick={() => (activeTab.value = 'items')}
+          role="tab"
+          aria-selected={tab === 'items'}
+          aria-controls="items-panel"
         >
-          Items ({items.reduce((sum, i) => sum + i.amount, 0)})
+          {t('artifacts.tabs.items')} ({itemsCount})
         </button>
       </div>
 
+      {/* Artifacts Tab */}
       {tab === 'artifacts' && (
-        <>
+        <div id="artifacts-panel" role="tabpanel" class={styles.contentWrapper}>
           {equippedArtifacts.length > 0 && (
             <div class={styles.section}>
               <div class={styles.sectionTitle}>
-                Equipped <span class={styles.count}>{equippedArtifacts.length}</span>
+                {t('artifacts.sections.equipped')}{' '}
+                <span class={styles.count}>{equippedArtifacts.length}</span>
               </div>
-              <div class={styles.grid}>
+              <div class={styles.grid} role="listbox" aria-label={t('artifacts.sections.equipped')}>
                 {equippedArtifacts.map((artifact) => (
-                  <div
+                  <button
                     key={artifact.id}
-                    class={`${styles.artifactCard} ${styles.equipped} ${styles[artifact.definition.rarity]}`}
+                    class={`${styles.artifactCard} ${styles.equipped} ${styles[artifact.definition.rarity]} ${selectedArtifact === artifact.id ? styles.selected : ''}`}
+                    onClick={() => (selectedArtifactId.value = artifact.id)}
+                    role="option"
+                    aria-selected={selectedArtifact === artifact.id}
                   >
                     <span class={styles.equippedBadge}>✓</span>
                     <span class={styles.artifactIcon}>
@@ -181,7 +263,7 @@ export function ArtifactsModal() {
                     <span class={styles.artifactSlot}>
                       {t(`heroDetails.artifactSlots.${artifact.definition.slot}`)}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -189,18 +271,23 @@ export function ArtifactsModal() {
 
           <div class={styles.section}>
             <div class={styles.sectionTitle}>
-              Available <span class={styles.count}>{unequipped.length}</span>
+              {t('artifacts.sections.available')}{' '}
+              <span class={styles.count}>{unequipped.length}</span>
             </div>
             {unequipped.length === 0 ? (
               <div class={styles.empty}>
-                No artifacts available. Craft or find artifacts during gameplay!
+                <span class={styles.emptyIcon}>📦</span>
+                <span>{t('artifacts.empty.artifacts')}</span>
               </div>
             ) : (
-              <div class={styles.grid}>
+              <div class={styles.grid} role="listbox" aria-label={t('artifacts.sections.available')}>
                 {unequipped.map((artifact) => (
-                  <div
+                  <button
                     key={artifact.id}
-                    class={`${styles.artifactCard} ${styles[artifact.definition.rarity]}`}
+                    class={`${styles.artifactCard} ${styles[artifact.definition.rarity]} ${selectedArtifact === artifact.id ? styles.selected : ''}`}
+                    onClick={() => (selectedArtifactId.value = artifact.id)}
+                    role="option"
+                    aria-selected={selectedArtifact === artifact.id}
                   >
                     <span class={styles.artifactIcon}>
                       {SLOT_ICONS[artifact.definition.slot] || '📦'}
@@ -215,78 +302,134 @@ export function ArtifactsModal() {
                     <span class={styles.artifactSlot}>
                       {t(`heroDetails.artifactSlots.${artifact.definition.slot}`)}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
           </div>
 
           <button class={styles.craftButton} onClick={handleCraftClick}>
-            ⚒️ Craft Artifacts
+            ⚒️ {t('artifacts.craftButton')}
           </button>
-        </>
+        </div>
       )}
 
+      {/* Items Tab */}
       {tab === 'items' && (
-        <div class={styles.section}>
-          {items.length === 0 ? (
-            <div class={styles.empty}>
-              No items in inventory. Buy items from the shop!
-            </div>
-          ) : (
-            <div class={styles.grid}>
-              {items.map((item) => (
-                <div key={item.itemId} class={styles.itemCard}>
-                  <span class={styles.itemIcon}>
-                    {ITEM_ICONS[item.itemId] || '📦'}
-                  </span>
-                  <div class={styles.itemInfo}>
-                    <div class={styles.itemName}>{item.definition.polishName}</div>
-                    <div class={styles.itemDesc}>{item.definition.description}</div>
-                    
-                    {/* Item Tier & Upgrade */}
-                    {(() => {
-                      const itemState = powerState.value.itemTiers.find(i => i.itemId === item.itemId);
-                      const currentTier = itemState?.tier || 'common';
-                      const tierConfig = ITEM_TIER_CONFIG[currentTier];
-                      const nextTier = getNextItemTier(currentTier);
-                      const isMaxed = isMaxItemTier(currentTier);
-                      const cost = tierConfig.upgradeCost;
-                      const canAfford = cost !== null && gold >= cost;
-
-                      return (
-                        <div class={styles.itemTierSection}>
-                          <div class={styles.tierInfo}>
-                            <span class={styles.tierName} style={{ color: getTierColor(currentTier) }}>
-                              {tierConfig.name}
-                            </span>
-                            <span class={styles.tierBonus}>x{tierConfig.effectMultiplier.toFixed(2)}</span>
-                          </div>
-                          
-                          {nextTier && (
-                            <div class={styles.upgradeInfo}>
-                              <span class={styles.nextBonus}>→ x{ITEM_TIER_CONFIG[nextTier].effectMultiplier.toFixed(2)}</span>
-                              <button 
-                                class={styles.upgradeButton}
-                                disabled={!canAfford || loadingItem === item.itemId}
-                                onClick={() => handleUpgradeItem(item.itemId)}
-                              >
-                                {loadingItem === item.itemId ? '...' : `${cost} 🪙`}
-                              </button>
-                            </div>
-                          )}
-                          {isMaxed && <span class={styles.maxLabel}>MAX</span>}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <span class={styles.itemAmount}>×{item.amount}</span>
-                </div>
-              ))}
-            </div>
-          )}
+        <div id="items-panel" role="tabpanel" class={styles.contentWrapper}>
+          <div class={styles.section}>
+            {items.length === 0 ? (
+              <div class={styles.empty}>
+                <span class={styles.emptyIcon}>🛒</span>
+                <span>{t('artifacts.empty.items')}</span>
+              </div>
+            ) : (
+              <div class={styles.grid} role="listbox" aria-label={t('artifacts.tabs.items')}>
+                {items.map((item) => (
+                  <ItemCard
+                    key={item.itemId}
+                    item={item}
+                    isSelected={selectedItem === item.itemId}
+                    isLoading={loadingItem === item.itemId}
+                    gold={gold}
+                    onSelect={() => (selectedItemId.value = item.itemId)}
+                    onUpgrade={() => handleUpgradeItem(item.itemId)}
+                    getTierColor={getTierColor}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </Modal>
+  );
+}
+
+// ============================================
+// ItemCard Component
+// ============================================
+interface ItemCardProps {
+  item: (typeof itemsWithDefs)['value'][number];
+  isSelected: boolean;
+  isLoading: boolean;
+  gold: number;
+  onSelect: () => void;
+  onUpgrade: () => void;
+  getTierColor: (tier: ItemTier) => string;
+}
+
+function ItemCard({
+  item,
+  isSelected,
+  isLoading,
+  gold,
+  onSelect,
+  onUpgrade,
+  getTierColor,
+}: ItemCardProps) {
+  const { t, language } = useTranslation(['common', 'data']);
+  const itemState = powerState.value.itemTiers.find((i) => i.itemId === item.itemId);
+  const currentTier = itemState?.tier || 'common';
+  const tierConfig = ITEM_TIER_CONFIG[currentTier];
+  const nextTier = getNextItemTier(currentTier);
+  const isMaxed = isMaxItemTier(currentTier);
+  const cost = tierConfig.upgradeCost;
+  const canAfford = cost !== null && gold >= cost;
+
+  const itemName = t(`data:items.${item.itemId}.name`, {
+    defaultValue: language === 'pl' ? item.definition.polishName : item.definition.name,
+  });
+
+  const itemDesc = t(`data:items.${item.itemId}.description`, {
+    defaultValue: item.definition.description,
+  });
+
+  return (
+    <button
+      class={`${styles.itemCard} ${isSelected ? styles.selected : ''}`}
+      onClick={onSelect}
+      role="option"
+      aria-selected={isSelected}
+    >
+      <span class={styles.itemIcon}>{ITEM_ICONS[item.itemId] || '📦'}</span>
+      <div class={styles.itemInfo}>
+        <div class={styles.itemName}>{itemName}</div>
+        <div class={styles.itemDesc}>{itemDesc}</div>
+
+        {/* Item Tier Section */}
+        <div class={styles.itemTierSection}>
+          <div class={styles.tierInfo}>
+            <span class={styles.tierName} style={{ color: getTierColor(currentTier) }}>
+              {t(`tiers.${currentTier}`, { defaultValue: tierConfig.name })}
+            </span>
+            <span class={styles.tierBonus}>×{tierConfig.effectMultiplier.toFixed(2)}</span>
+          </div>
+
+          {nextTier && (
+            <div class={styles.upgradeInfo}>
+              <span class={styles.nextBonus}>
+                → ×{ITEM_TIER_CONFIG[nextTier].effectMultiplier.toFixed(2)}
+              </span>
+              <button
+                class={styles.upgradeButton}
+                disabled={!canAfford || isLoading}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpgrade();
+                }}
+                aria-label={t('artifacts.upgradeItem', { cost })}
+              >
+                {isLoading ? '...' : `${cost} 🪙`}
+              </button>
+            </div>
+          )}
+          {isMaxed && (
+            <span class={styles.maxLabel}>{t('common:labels.max', { defaultValue: 'MAX' })}</span>
+          )}
+        </div>
+      </div>
+      <span class={styles.itemAmount}>×{item.amount}</span>
+    </button>
   );
 }

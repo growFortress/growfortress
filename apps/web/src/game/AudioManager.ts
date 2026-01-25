@@ -203,6 +203,12 @@ class AudioManager {
       case 'combo':
         this.playComboSound();
         break;
+      case 'synergy_unlocked':
+        this.playSynergyUnlockedSound();
+        break;
+      case 'synergy_trio':
+        this.playSynergyTrioSound();
+        break;
       case 'duo_attack':
         this.playDuoAttackSound();
         break;
@@ -611,6 +617,119 @@ class AudioManager {
 
     impactOsc.start(now + 0.1);
     impactOsc.stop(now + 0.25);
+  }
+
+  /**
+   * Synergy unlocked - celebratory ascending chime with harmonic resonance
+   */
+  private playSynergyUnlockedSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 major chord rising
+
+    notes.forEach((freq, i) => {
+      const osc = this.context!.createOscillator();
+      const gain = this.context!.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const start = now + i * 0.06;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.25, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+
+      osc.start(start);
+      osc.stop(start + 0.4);
+    });
+
+    // Add shimmer effect
+    const shimmer = this.context.createOscillator();
+    const shimmerGain = this.context.createGain();
+
+    shimmer.type = 'triangle';
+    shimmer.frequency.setValueAtTime(1046.5, now + 0.15); // C6
+
+    shimmerGain.gain.setValueAtTime(0, now + 0.15);
+    shimmerGain.gain.linearRampToValueAtTime(0.15, now + 0.2);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    shimmer.connect(shimmerGain);
+    shimmerGain.connect(this.sfxGain);
+
+    shimmer.start(now + 0.15);
+    shimmer.stop(now + 0.5);
+  }
+
+  /**
+   * Trio synergy unlocked - even more epic with full chord and sparkle
+   */
+  private playSynergyTrioSound(): void {
+    if (!this.context || !this.sfxGain) return;
+
+    const now = this.context.currentTime;
+    // Full major chord + octave (C5 E5 G5 C6)
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+
+    notes.forEach((freq, i) => {
+      const osc = this.context!.createOscillator();
+      const gain = this.context!.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const start = now + i * 0.05;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.2, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+
+      osc.start(start);
+      osc.stop(start + 0.5);
+    });
+
+    // Sparkle arpeggio
+    const sparkleNotes = [1318.51, 1567.98, 2093.0]; // E6, G6, C7
+    sparkleNotes.forEach((freq, i) => {
+      const osc = this.context!.createOscillator();
+      const gain = this.context!.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+
+      const start = now + 0.2 + i * 0.05;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+
+      osc.start(start);
+      osc.stop(start + 0.3);
+    });
+
+    // Deep resonance for impact
+    const bass = this.context.createOscillator();
+    const bassGain = this.context.createGain();
+
+    bass.type = 'sine';
+    bass.frequency.value = 130.81; // C3
+
+    bassGain.gain.setValueAtTime(0.25, now);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+    bass.connect(bassGain);
+    bassGain.connect(this.sfxGain);
+
+    bass.start(now);
+    bass.stop(now + 0.6);
   }
 
   /**

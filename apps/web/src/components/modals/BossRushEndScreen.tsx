@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'preact/hooks';
 import { Button } from '../shared/Button.js';
 import { Modal } from '../shared/Modal.js';
 import {
@@ -16,8 +17,18 @@ import {
   formatDamageCompact,
   resetBossRushState,
   BOSS_RUSH_MILESTONES,
+  // Roguelike stats
+  bossRushCollectedRelics,
+  bossRushRerollsUsed,
+  bossRushSynergiesActivated,
+  bossRushBestSingleHit,
+  bossRushGoldSpent,
+  bossRushTotalHealing,
+  hasEnergy,
 } from '../../state/index.js';
+import { speedSettings, toggleAutoRestart } from '../../state/settings.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { getRelicById } from '@arcade/sim-core';
 import styles from './BossRushEndScreen.module.css';
 
 /** Pillar emoji lookup */
@@ -44,6 +55,44 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
   // Check if this is a new personal best
   const isNewBest = totalDamageDealt.value > userBestDamage.value;
 
+  // Auto-restart countdown state
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const autoRestartEnabled = speedSettings.value.autoRestart;
+  const autoRestartDelay = speedSettings.value.autoRestartDelay;
+  const canAutoRestart = autoRestartEnabled && hasEnergy.value;
+
+  // Auto-restart timer
+  useEffect(() => {
+    if (!showBossRushEndScreen.value || !canAutoRestart) {
+      setCountdown(null);
+      return;
+    }
+
+    // Start countdown
+    setCountdown(Math.ceil(autoRestartDelay / 1000));
+    const startTime = Date.now();
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.ceil((autoRestartDelay - elapsed) / 1000);
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+        setCountdown(null);
+        handlePlayAgain();
+      } else {
+        setCountdown(remaining);
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [showBossRushEndScreen.value, canAutoRestart, autoRestartDelay]);
+
+  // Cancel auto-restart on manual interaction
+  function cancelAutoRestart() {
+    setCountdown(null);
+  }
+
   async function handlePlayAgain() {
     closeBossRushEndScreen();
     resetBossRushState();
@@ -51,6 +100,7 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
   }
 
   function handleMenu() {
+    cancelAutoRestart();
     closeBossRushEndScreen();
     resetBossRushState();
     onMenu();
@@ -126,6 +176,80 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
         </div>
       )}
 
+      {/* Roguelike Run Stats */}
+      {(bossRushCollectedRelics.value.length > 0 || bossRushSynergiesActivated.value > 0) && (
+        <div class={styles.section}>
+          <h3 class={styles.sectionTitle}>Run Stats</h3>
+          <div class={styles.runStats}>
+            {/* Relics Collected */}
+            {bossRushCollectedRelics.value.length > 0 && (
+              <div class={styles.runStatRow}>
+                <span class={styles.runStatIcon}>🔮</span>
+                <span class={styles.runStatLabel}>Relics Collected</span>
+                <span class={styles.runStatValue}>{bossRushCollectedRelics.value.length}</span>
+              </div>
+            )}
+            {/* Synergies Activated */}
+            {bossRushSynergiesActivated.value > 0 && (
+              <div class={styles.runStatRow}>
+                <span class={styles.runStatIcon}>🔗</span>
+                <span class={styles.runStatLabel}>Synergies Activated</span>
+                <span class={styles.runStatValue}>{bossRushSynergiesActivated.value}</span>
+              </div>
+            )}
+            {/* Best Single Hit */}
+            {bossRushBestSingleHit.value > 0 && (
+              <div class={styles.runStatRow}>
+                <span class={styles.runStatIcon}>💥</span>
+                <span class={styles.runStatLabel}>Best Single Hit</span>
+                <span class={styles.runStatValue}>{formatDamageCompact(bossRushBestSingleHit.value)}</span>
+              </div>
+            )}
+            {/* Gold Spent */}
+            {bossRushGoldSpent.value > 0 && (
+              <div class={styles.runStatRow}>
+                <span class={styles.runStatIcon}>🪙</span>
+                <span class={styles.runStatLabel}>Gold Spent</span>
+                <span class={styles.runStatValue}>{formatDamage(bossRushGoldSpent.value)}</span>
+              </div>
+            )}
+            {/* Total Healing */}
+            {bossRushTotalHealing.value > 0 && (
+              <div class={styles.runStatRow}>
+                <span class={styles.runStatIcon}>💚</span>
+                <span class={styles.runStatLabel}>HP Healed</span>
+                <span class={styles.runStatValue}>{formatDamage(bossRushTotalHealing.value)}</span>
+              </div>
+            )}
+            {/* Rerolls Used */}
+            {bossRushRerollsUsed.value > 0 && (
+              <div class={styles.runStatRow}>
+                <span class={styles.runStatIcon}>🎲</span>
+                <span class={styles.runStatLabel}>Relic Rerolls</span>
+                <span class={styles.runStatValue}>{bossRushRerollsUsed.value}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Collected Relics List */}
+          {bossRushCollectedRelics.value.length > 0 && (
+            <div class={styles.relicsList}>
+              <h4 class={styles.relicsListTitle}>Collected Relics</h4>
+              <div class={styles.relicsGrid}>
+                {bossRushCollectedRelics.value.map(relicId => {
+                  const relic = getRelicById(relicId);
+                  return (
+                    <div key={relicId} class={styles.relicItem} title={relic?.description}>
+                      <span class={styles.relicName}>{relic?.name || relicId}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Achievements */}
       {achievedMilestones.value.length > 0 && (
         <div class={styles.section}>
@@ -179,6 +303,22 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
         </div>
       )}
 
+      {/* Auto-Restart Indicator */}
+      {countdown !== null && countdown > 0 && (
+        <div class={styles.autoRestartIndicator}>
+          <span class={styles.autoRestartText}>
+            🔄 Auto-restart in {countdown}s
+          </span>
+          <button
+            type="button"
+            class={styles.cancelAutoRestart}
+            onClick={cancelAutoRestart}
+          >
+            ✕ Cancel
+          </button>
+        </div>
+      )}
+
       {/* Buttons */}
       <div class={styles.buttons}>
         <Button variant="secondary" onClick={handleMenu}>
@@ -187,6 +327,24 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
         <Button variant="skill" onClick={handlePlayAgain}>
           🔄 {t('bossRushEnd.playAgain')}
         </Button>
+      </div>
+
+      {/* Auto-Restart Toggle */}
+      <div class={styles.autoRestartToggle}>
+        <label class={styles.toggleLabel}>
+          <input
+            type="checkbox"
+            checked={autoRestartEnabled}
+            onChange={toggleAutoRestart}
+            class={styles.toggleCheckbox}
+          />
+          <span class={styles.toggleText}>
+            🤖 Auto-restart {autoRestartEnabled ? 'ON' : 'OFF'}
+            {autoRestartEnabled && !hasEnergy.value && (
+              <span class={styles.noEnergy}> (no energy)</span>
+            )}
+          </span>
+        </label>
       </div>
     </Modal>
   );

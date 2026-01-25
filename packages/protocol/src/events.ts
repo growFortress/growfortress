@@ -8,8 +8,9 @@ const BaseEventSchema = z.object({
 // Choose relic event
 export const ChooseRelicEventSchema = BaseEventSchema.extend({
   type: z.literal('CHOOSE_RELIC'),
-  wave: z.number().int().min(1),
-  optionIndex: z.number().int().min(0).max(2),
+  wave: z.number().int().min(1).optional(), // Wave number (endless mode)
+  optionIndex: z.number().int().min(0).max(2).optional(), // Option index (endless mode)
+  relicId: z.string().optional(), // Relic ID (boss rush mode)
 });
 
 export type ChooseRelicEvent = z.infer<typeof ChooseRelicEventSchema>;
@@ -107,6 +108,14 @@ export const SpawnMilitiaEventSchema = BaseEventSchema.extend({
 
 export type SpawnMilitiaEvent = z.infer<typeof SpawnMilitiaEventSchema>;
 
+// Shop purchase event (Boss Rush roguelike mode)
+export const ShopPurchaseEventSchema = BaseEventSchema.extend({
+  type: z.literal('SHOP_PURCHASE'),
+  itemId: z.string(), // Shop item ID to purchase
+});
+
+export type ShopPurchaseEvent = z.infer<typeof ShopPurchaseEventSchema>;
+
 // Union of all game events
 export const GameEventSchema = z.discriminatedUnion('type', [
   ChooseRelicEventSchema,
@@ -120,6 +129,7 @@ export const GameEventSchema = z.discriminatedUnion('type', [
   SetTurretTargetingEventSchema,
   ActivateOverchargeEventSchema,
   SpawnMilitiaEventSchema,
+  ShopPurchaseEventSchema,
 ]);
 
 export type GameEvent = z.infer<typeof GameEventSchema>;

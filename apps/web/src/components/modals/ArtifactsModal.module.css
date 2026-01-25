@@ -1,72 +1,33 @@
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--color-bg-overlay);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-  animation: fadeIn var(--duration-normal) var(--ease-standard);
-  backdrop-filter: blur(var(--modal-backdrop-blur));
-  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+/**
+ * ArtifactsModal Styles - Upgraded to match CraftingModal standard
+ */
+
+/* ============================================
+   MODAL CONTAINER
+   ============================================ */
+.modalContent {
+  min-width: 700px;
+  max-width: 850px;
 }
 
-.modal {
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  min-width: 500px;
-  max-width: 700px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg), var(--glow-primary);
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: var(--border-neutral);
-}
-
-.title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: var(--glow-primary);
-}
-
-.closeBtn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-60);
-  font-size: 24px;
-  cursor: pointer;
-  transition: color var(--duration-normal) var(--ease-standard);
-  padding: 4px 8px;
-}
-
-.closeBtn:hover {
-  color: var(--color-text);
-}
-
+/* ============================================
+   TABS
+   ============================================ */
 .tabs {
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
+  padding: 8px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-dark);
 }
 
 .tab {
   flex: 1;
   padding: 10px 16px;
-  background: var(--color-bg);
-  border: var(--border-neutral);
+  background: transparent;
+  border: 2px solid transparent;
   border-radius: var(--radius-sm);
   color: var(--color-text-60);
   font-family: var(--font-display);
@@ -83,19 +44,60 @@
   color: var(--color-text);
 }
 
+.tab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .tab.active {
   background: var(--color-primary-20);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
+/* ============================================
+   CONTENT LAYOUT
+   ============================================ */
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-30) var(--color-bg);
+}
+
+.contentWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.contentWrapper::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: var(--radius-full);
+}
+
+.contentWrapper::-webkit-scrollbar-thumb {
+  background: var(--color-primary-30);
+  border-radius: var(--radius-full);
+}
+
+.contentWrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-50);
+}
+
+/* ============================================
+   SECTIONS
+   ============================================ */
 .section {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .sectionTitle {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-text-60);
   text-transform: uppercase;
@@ -114,15 +116,21 @@
   color: var(--color-primary);
 }
 
+/* ============================================
+   ARTIFACT GRID
+   ============================================ */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
 }
 
+/* ============================================
+   ARTIFACT CARD
+   ============================================ */
 .artifactCard {
-  background: var(--color-bg);
-  border: var(--border-width) solid var(--rarity-color, var(--color-neutral));
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--rarity-color, var(--color-neutral));
   border-radius: var(--radius-sm);
   padding: 12px;
   display: flex;
@@ -136,14 +144,38 @@
 }
 
 .artifactCard:hover {
-  background: var(--color-bg-elevated);
-  transform: var(--hover-lift);
-  box-shadow: var(--shadow-md), 0 0 20px var(--rarity-color, var(--color-primary));
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md), 0 0 20px color-mix(in srgb, var(--rarity-color) 40%, transparent);
+}
+
+.artifactCard:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.artifactCard.selected {
+  background: var(--color-primary-10);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px var(--color-primary-20);
+  animation: selectPulse 0.4s var(--ease-spring) forwards;
 }
 
 .artifactCard.equipped {
   border-style: dashed;
+  opacity: 0.8;
+}
+
+@keyframes selectPulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-primary-50);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px var(--color-primary-30);
+  }
+  100% {
+    box-shadow: 0 0 15px 0 var(--color-primary-20);
+  }
 }
 
 .artifactIcon {
@@ -181,29 +213,45 @@
   font-weight: 600;
 }
 
+/* ============================================
+   ITEM CARD
+   ============================================ */
 .itemCard {
-  background: var(--color-bg);
-  border: var(--border-neutral);
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 10px;
+  padding: 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   transition: var(--transition-interactive-normal);
 }
 
 .itemCard:hover {
-  background: var(--color-bg-elevated);
-  border-color: var(--color-primary-50);
+  background: rgba(0, 0, 0, 0.3);
+  border-color: var(--glass-border);
+}
+
+.itemCard:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.itemCard.selected {
+  background: var(--color-primary-10);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px var(--color-primary-20);
 }
 
 .itemIcon {
-  font-size: 24px;
+  font-size: 28px;
+  flex-shrink: 0;
 }
 
 .itemInfo {
   flex: 1;
+  min-width: 0;
 }
 
 .itemName {
@@ -211,12 +259,14 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text);
+  margin-bottom: 2px;
 }
 
 .itemDesc {
   font-family: var(--font-body);
   font-size: 10px;
   color: var(--color-text-60);
+  line-height: 1.3;
 }
 
 .itemAmount {
@@ -224,23 +274,123 @@
   font-size: 16px;
   font-weight: 700;
   color: var(--color-text);
+  flex-shrink: 0;
 }
 
+/* ============================================
+   ITEM TIER SECTION
+   ============================================ */
+.itemTierSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.tierInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tierName {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tierBonus {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text-60);
+}
+
+.upgradeInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.nextBonus {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-success);
+}
+
+.upgradeButton {
+  padding: 4px 10px;
+  background: var(--color-primary-20);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+}
+
+.upgradeButton:hover:not(:disabled) {
+  background: var(--color-primary-30);
+  box-shadow: 0 0 10px var(--color-primary-30);
+}
+
+.upgradeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--color-neutral);
+  color: var(--color-neutral);
+  background: transparent;
+}
+
+.maxLabel {
+  padding: 4px 10px;
+  background: var(--color-success-20);
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-sm);
+  color: var(--color-success);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   text-align: center;
   padding: 40px;
-  color: var(--color-text-60);
+  color: var(--color-text-40);
   font-family: var(--font-body);
   font-size: 14px;
 }
 
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+/* ============================================
+   CRAFT BUTTON
+   ============================================ */
 .craftButton {
   width: 100%;
   margin-top: 16px;
-  padding: 12px;
+  padding: 14px 24px;
   background: var(--color-primary-20);
-  border: var(--border-primary);
-  border-radius: var(--radius-sm);
+  border: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
   color: var(--color-primary);
   font-family: var(--font-display);
   font-size: 14px;
@@ -250,20 +400,125 @@
   cursor: pointer;
   transition: var(--transition-interactive-normal);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .craftButton:hover {
   background: var(--color-primary-30);
-  box-shadow: var(--shadow-sm), var(--glow-primary);
+  box-shadow: var(--shadow-sm), 0 0 25px var(--color-primary-30);
+  transform: translateY(-1px);
 }
 
-/* Rarity colors - using CSS custom properties for flexibility */
-.legendary { --rarity-color: var(--color-primary); }
-.epic { --rarity-color: #a855f7; }
-.rare { --rarity-color: #3b82f6; }
-.common { --rarity-color: var(--color-neutral); }
+.craftButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
 
+/* ============================================
+   RARITY COLORS
+   ============================================ */
+.legendary {
+  --rarity-color: var(--color-primary);
+  --rarity-glow: var(--color-primary-30);
+}
+
+.epic {
+  --rarity-color: #a855f7;
+  --rarity-glow: rgba(168, 85, 247, 0.3);
+}
+
+.rare {
+  --rarity-color: #3b82f6;
+  --rarity-glow: rgba(59, 130, 246, 0.3);
+}
+
+.common {
+  --rarity-color: var(--color-neutral);
+  --rarity-glow: rgba(58, 74, 90, 0.3);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .artifactCard.selected,
+  .craftButton:hover {
+    animation: none;
+  }
+
+  .artifactCard,
+  .itemCard,
+  .tab,
+  .craftButton,
+  .upgradeButton {
+    transition: none;
+  }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 750px) {
+  .modalContent {
+    min-width: auto;
+    max-width: 95vw;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .artifactCard {
+    padding: 10px;
+  }
+
+  .artifactIcon {
+    font-size: 28px;
+  }
+
+  .artifactName {
+    font-size: 10px;
+  }
+
+  .itemTierSection {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .upgradeInfo {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 500px) {
+  .tabs {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tab {
+    padding: 8px 12px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .contentWrapper {
+    max-height: 50vh;
+  }
 }

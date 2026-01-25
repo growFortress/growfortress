@@ -5,10 +5,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   mockPrisma,
   resetPrismaMock,
-  createMockGuild,
-  createMockGuildMember,
   createMockGuildTowerRace,
-  createMockGuildTreasury,
 } from '../../mocks/prisma.js';
 
 // Import test setup

@@ -14,6 +14,43 @@ export type TutorialStepId =
   | "manual_control"
   | "hero_drag";
 
+// ============ Interactive Tutorial Completion Types ============
+
+// Signal names that can be monitored for changes
+export type TutorialSignalName =
+  | "speedMultiplier"
+  | "selectedTargetedSkill"
+  | "manualControlHeroId";
+
+// Signal-based completion: wait for a signal to change
+export interface SignalCompletion {
+  type: "signal";
+  signalName: TutorialSignalName;
+  expectedChange: "any" | "truthy";
+}
+
+// Action-based completion: wait for game action
+export interface ActionCompletion {
+  type: "action";
+  actionType: "ACTIVATE_SKILL" | "HERO_COMMAND";
+}
+
+// Click-based completion: click on highlighted element
+export interface ClickCompletion {
+  type: "click";
+}
+
+// No completion required (default behavior)
+export interface NoCompletion {
+  type: "none";
+}
+
+export type TutorialCompletion =
+  | SignalCompletion
+  | ActionCompletion
+  | ClickCompletion
+  | NoCompletion;
+
 // Tutorial tip configuration
 export interface TutorialTip {
   id: TutorialStepId;
@@ -22,6 +59,7 @@ export interface TutorialTip {
   highlightRef?: string; // data-tutorial attribute value
   position: "top" | "bottom" | "left" | "right" | "center";
   autoDismissMs?: number; // Auto-dismiss after N ms (0 = no auto-dismiss)
+  completion?: TutorialCompletion; // Interactive completion condition
 }
 
 // LocalStorage key
@@ -93,5 +131,27 @@ export function isTipCompleted(id: TutorialStepId): boolean {
 
 export function resetTutorialProgress(): void {
   tutorialProgress.value = new Set();
+  activeTutorialTip.value = null;
+}
+
+// ============ Interactive Tutorial Action Tracking ============
+
+// Tracks last game action for action-based completion
+export const lastGameAction = signal<{
+  type: string;
+  tick: number;
+} | null>(null);
+
+// Record a game action (called from Game.ts)
+export function recordGameAction(type: string, tick: number): void {
+  lastGameAction.value = { type, tick };
+}
+
+// Complete an interactive tip (marks completed and clears active)
+export function completeInteractiveTip(): void {
+  const tip = activeTutorialTip.value;
+  if (tip) {
+    markTipCompleted(tip.id);
+  }
   activeTutorialTip.value = null;
 }

@@ -19,8 +19,16 @@ import {
   startIntermission,
   endIntermission,
   generateBossRushSummary,
+  chooseBossRushRelic,
+  rerollBossRushRelics,
+  purchaseBossRushShopItem,
   type BossRushSummary,
 } from './boss-rush.js';
+import {
+  getRelicChoicesV2,
+  getRelicById,
+  type ExtendedRelicSelectionContext,
+} from './data/relics.js';
 import { fnv1a32, computeChainHash } from './checkpoints.js';
 import { initializeHeroes, initializeTurrets } from './systems.js';
 import { DEFAULT_MODIFIERS } from './data/relics.js';
@@ -453,10 +461,76 @@ export class BossRushSimulation {
         }
         break;
 
-      case 'CHOOSE_RELIC':
-      case 'REROLL_RELICS':
-        // Not applicable in Boss Rush mode
+      case 'CHOOSE_RELIC': {
+        // Choose a relic during intermission
+        if (event.relicId && this.state.bossRush.inIntermission) {
+          const success = chooseBossRushRelic(this.state.bossRush, event.relicId);
+          if (success) {
+            // Apply relic modifiers to state
+            const relicDef = getRelicById(event.relicId);
+            if (relicDef && relicDef.modifiers) {
+              // Apply basic stat bonuses from relic modifiers
+              if (relicDef.modifiers.damageBonus) {
+                this.state.modifiers.damageBonus += relicDef.modifiers.damageBonus;
+              }
+              if (relicDef.modifiers.attackSpeedBonus) {
+                this.state.modifiers.attackSpeedBonus += relicDef.modifiers.attackSpeedBonus;
+              }
+              if (relicDef.modifiers.critChance) {
+                this.state.modifiers.critChance = Math.min(1, this.state.modifiers.critChance + relicDef.modifiers.critChance);
+              }
+              if (relicDef.modifiers.maxHpBonus) {
+                this.state.modifiers.maxHpBonus += relicDef.modifiers.maxHpBonus;
+              }
+              if (relicDef.modifiers.goldBonus) {
+                this.state.modifiers.goldBonus += relicDef.modifiers.goldBonus;
+              }
+            }
+          }
+        }
         break;
+      }
+
+      case 'REROLL_RELICS': {
+        // Reroll relic options (costs gold)
+        if (this.state.bossRush.inIntermission) {
+          // Generate new options
+          const newOptions = this.generateRelicOptionsForBossRush();
+          rerollBossRushRelics(this.state.bossRush, newOptions);
+        }
+        break;
+      }
+
+      case 'SHOP_PURCHASE': {
+        // Purchase a shop item
+        if (event.itemId && this.state.bossRush.inIntermission) {
+          const result = purchaseBossRushShopItem(
+            this.state.bossRush,
+            event.itemId,
+            this.state.fortressHp,
+            this.state.fortressMaxHp
+          );
+
+          if (result.success) {
+            // Apply effects
+            if (result.newFortressHp !== undefined) {
+              this.state.fortressHp = result.newFortressHp;
+            }
+            if (result.statBonus) {
+              const { stat, value } = result.statBonus;
+              // Apply stat bonus to modifiers
+              if (stat === 'damageBonus') {
+                this.state.modifiers.damageBonus += value;
+              } else if (stat === 'attackSpeedBonus') {
+                this.state.modifiers.attackSpeedBonus += value;
+              } else if (stat === 'critChance') {
+                this.state.modifiers.critChance = Math.min(1, this.state.modifiers.critChance + value);
+              }
+            }
+          }
+        }
+        break;
+      }
     }
   }
 
@@ -488,9 +562,28 @@ export class BossRushSimulation {
       this.config.bossRush
     );
 
-    // Start intermission
-    startIntermission(this.state.bossRush, this.state.tick, this.config.bossRush);
+    // Generate relic options for the intermission
+    const relicOptions = this.generateRelicOptionsForBossRush();
+
+    // Start intermission with relic options
+    startIntermission(this.state.bossRush, this.state.tick, this.config.bossRush, relicOptions);
     this.state.currentBoss = null;
+  }
+
+  /**
+   * Generate relic options for Boss Rush mode
+   */
+  private generateRelicOptionsForBossRush(): string[] {
+    const context: ExtendedRelicSelectionContext = {
+      fortressClass: this.config.fortressClass,
+      pillarId: undefined,
+      fortressLevel: this.config.commanderLevel,
+      ownedRelicIds: this.state.bossRush.collectedRelics,
+    };
+
+    const choices = getRelicChoicesV2(3, context, this.rng);
+
+    return choices.map(r => r.id);
   }
 
   /**

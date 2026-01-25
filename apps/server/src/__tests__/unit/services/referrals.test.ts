@@ -2,7 +2,7 @@
  * Referrals service tests
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mockPrisma, createMockUser, createMockInventory } from '../../mocks/prisma.js';
+import { mockPrisma, createMockUser } from '../../mocks/prisma.js';
 import '../../helpers/setup.js';
 
 // Import service functions after setup

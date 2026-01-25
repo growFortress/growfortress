@@ -1046,6 +1046,9 @@ export interface AnalyticsStats {
   enemiesKilledByFortress: number;
 }
 
+// Projectile trajectory type
+export type ProjectileTrajectory = 'linear' | 'arc';
+
 // NEW: Projectile in flight
 export interface ActiveProjectile {
   id: number;
@@ -1068,6 +1071,19 @@ export interface ActiveProjectile {
   isChained?: boolean;    // True if this is a chain projectile (prevents infinite chaining)
   pierceCount?: number;   // How many additional enemies this projectile can pierce through
   hitEnemyIds?: number[]; // Track which enemies have already been hit (for pierce)
+
+  // === NEW PHYSICS PROPERTIES ===
+  /** Trajectory type: linear (straight) or arc (parabolic with gravity) */
+  trajectory?: ProjectileTrajectory;
+  /** Vertical velocity for arc trajectories (fixed-point) */
+  vy?: number;
+  /** Horizontal velocity for physics-based movement (fixed-point) */
+  vx?: number;
+  /** Homing strength: 0 = no tracking, 1 = aggressive tracking */
+  homingStrength?: number;
+  /** Hit detection radius multiplier (1.0 = standard, 2.0 = double size) */
+  hitRadius?: number;
+
   // Arena-specific target metadata
   arenaTargetType?: 'fortress' | 'hero';
   arenaTargetIndex?: number;

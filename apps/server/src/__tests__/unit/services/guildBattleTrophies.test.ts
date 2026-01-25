@@ -1,8 +1,8 @@
 /**
  * Guild Battle Trophies service tests
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mockPrisma, resetPrismaMock, createMockGuild } from '../../mocks/prisma.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { mockPrisma, resetPrismaMock } from '../../mocks/prisma.js';
 import '../../helpers/setup.js';
 import {
   getOrCreateStreak,

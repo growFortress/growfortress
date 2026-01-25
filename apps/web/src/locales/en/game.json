@@ -19,7 +19,7 @@
     "startLabel": "Start",
     "gameModes": "Game modes",
     "comingSoon": "Coming soon! Mode in preparation.",
-    "bossRushComingSoon": "Boss Rush - Coming soon",
+    "bossRushTooltip": "Challenge powerful bosses in an endless gauntlet!",
     "bossRushLabel": "Boss Rush",
     "fightPlayers": "Fight other players!",
     "pvpArena": "PvP Arena - Fight other players",
@@ -255,7 +255,10 @@
       "title": "Drag to Reposition",
       "description": "You can drag a hero on the battlefield to quickly change their position."
     },
-    "dismiss": "Got it"
+    "dismiss": "Got it",
+    "tryIt": "Try it!",
+    "skip": "Skip for now",
+    "completed": "Nice!"
   },
   "unlock": {
     "level": "Level {{level}}",

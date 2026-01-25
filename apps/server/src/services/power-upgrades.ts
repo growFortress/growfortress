@@ -236,6 +236,164 @@ export async function upgradeFortressStat(
 }
 
 // ============================================================================
+// BATCH FORTRESS STAT UPGRADE
+// ============================================================================
+
+export interface BatchUpgradeRequest {
+  stat: FortressUpgradableStat;
+  targetLevel: number | 'max'; // 'max' = upgrade to max affordable level
+}
+
+export interface BatchUpgradeResponse {
+  success: boolean;
+  levelsGained: number;
+  newLevel: number;
+  goldSpent: number;
+  newGold: number;
+  newTotalPower: number;
+  error?: string;
+}
+
+/**
+ * Upgrade fortress stat by multiple levels at once.
+ * Can specify targetLevel as a number or 'max' to upgrade as high as possible.
+ */
+export async function batchUpgradeFortressStat(
+  userId: string,
+  stat: FortressUpgradableStat,
+  targetLevel: number | 'max'
+): Promise<BatchUpgradeResponse> {
+  const config = findStatConfig(FORTRESS_STAT_UPGRADES, stat);
+  if (!config) {
+    return {
+      success: false,
+      levelsGained: 0,
+      newLevel: 0,
+      goldSpent: 0,
+      newGold: 0,
+      newTotalPower: 0,
+      error: 'Invalid stat',
+    };
+  }
+
+  const [{ powerData }, inventory, commanderLevel] = await Promise.all([
+    getOrCreatePowerUpgrades(userId),
+    prisma.inventory.findUnique({ where: { userId } }),
+    getCommanderLevel(userId),
+  ]);
+
+  if (!inventory) {
+    return {
+      success: false,
+      levelsGained: 0,
+      newLevel: 0,
+      goldSpent: 0,
+      newGold: 0,
+      newTotalPower: 0,
+      error: 'Inventory not found',
+    };
+  }
+
+  const currentLevel = powerData.fortressUpgrades.statUpgrades[stat] || 0;
+
+  // Determine actual target level
+  let actualTarget: number;
+  if (targetLevel === 'max') {
+    actualTarget = config.maxLevel;
+  } else {
+    actualTarget = Math.min(targetLevel, config.maxLevel);
+  }
+
+  if (currentLevel >= actualTarget) {
+    return {
+      success: false,
+      levelsGained: 0,
+      newLevel: currentLevel,
+      goldSpent: 0,
+      newGold: inventory.gold,
+      newTotalPower: calculateQuickTotalPower(powerData, commanderLevel),
+      error: currentLevel >= config.maxLevel ? 'Max level reached' : 'Target level not higher than current',
+    };
+  }
+
+  // Calculate total cost and find affordable level
+  let totalCost = 0;
+  let newLevel = currentLevel;
+  let availableGold = inventory.gold;
+
+  while (newLevel < actualTarget) {
+    const nextLevelCost = getUpgradeCost(config, newLevel);
+    if (totalCost + nextLevelCost > availableGold) {
+      // Can't afford next level, stop here
+      if (targetLevel === 'max') {
+        break; // This is fine for 'max' mode
+      } else {
+        // Explicit target requested but can't afford
+        return {
+          success: false,
+          levelsGained: 0,
+          newLevel: currentLevel,
+          goldSpent: 0,
+          newGold: inventory.gold,
+          newTotalPower: calculateQuickTotalPower(powerData, commanderLevel),
+          error: 'Not enough gold',
+        };
+      }
+    }
+    totalCost += nextLevelCost;
+    newLevel++;
+  }
+
+  const levelsGained = newLevel - currentLevel;
+  if (levelsGained === 0) {
+    return {
+      success: false,
+      levelsGained: 0,
+      newLevel: currentLevel,
+      goldSpent: 0,
+      newGold: inventory.gold,
+      newTotalPower: calculateQuickTotalPower(powerData, commanderLevel),
+      error: 'Not enough gold for any upgrades',
+    };
+  }
+
+  // Apply upgrade
+  powerData.fortressUpgrades.statUpgrades[stat] = newLevel;
+  const newTotalPower = calculateQuickTotalPower(powerData, commanderLevel);
+
+  await Promise.all([
+    prisma.inventory.update({
+      where: { userId },
+      data: { gold: inventory.gold - totalCost },
+    }),
+    prisma.powerUpgrades.upsert({
+      where: { userId },
+      create: {
+        userId,
+        fortressUpgrades: JSON.stringify(powerData.fortressUpgrades),
+        heroUpgrades: JSON.stringify(powerData.heroUpgrades),
+        turretUpgrades: JSON.stringify(powerData.turretUpgrades),
+        itemTiers: JSON.stringify(powerData.itemTiers),
+        cachedTotalPower: newTotalPower,
+      },
+      update: {
+        fortressUpgrades: JSON.stringify(powerData.fortressUpgrades),
+        cachedTotalPower: newTotalPower,
+      },
+    }),
+  ]);
+
+  return {
+    success: true,
+    levelsGained,
+    newLevel,
+    goldSpent: totalCost,
+    newGold: inventory.gold - totalCost,
+    newTotalPower,
+  };
+}
+
+// ============================================================================
 // HERO STAT UPGRADE
 // ============================================================================
 

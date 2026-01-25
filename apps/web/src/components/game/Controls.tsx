@@ -1,5 +1,6 @@
-import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModalVisible, hasPendingRewards, bossRushActive } from '../../state/index.js';
+import { gamePhase, showMaterialsModal, showArtifactsModal, heroRecruitmentModalVisible, hasPendingRewards, bossRushActive, openBossRushSetup } from '../../state/index.js';
 import { showColonyScene, colonySceneVisible } from '../../state/idle.signals.js';
+import { autoPlaySettings, speedSettings, toggleAutoPlay, cycleSpeedMultiplier, setAutoPlayPreset } from '../../state/settings.signals.js';
 import { Button } from '../shared/Button.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { Icon } from '../icons/Icon.js';
@@ -87,16 +88,14 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
           <div class={styles.navGroupWrapper}>
             <span class={styles.groupLabel}>{t('controls.gameModes')}</span>
             <div class={styles.navGroup} data-group="modes" role="group" aria-label={t('controls.gameModes')}>
-              <Tooltip content={t('controls.comingSoon')} position="top">
+              <Tooltip content={t('controls.bossRushTooltip')} position="top">
                 <Button
                   variant="skill"
                   size="sm"
-                  disabled={true}
-                  aria-label={t('controls.bossRushComingSoon')}
-                  style={{ opacity: 0.6 }}
+                  onClick={openBossRushSetup}
+                  aria-label={t('controls.bossRushLabel')}
                 >
                   <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>👹</span> {t('controls.bossRushLabel')}
-                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>{t('controls.soonBadge')}</span>
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.comingSoon')} position="top">
@@ -129,6 +128,70 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
             <span class={styles.menuIcon}>☰</span>
             <span class={styles.menuLabel}>{t('game:sidePanel.menu')}</span>
           </button>
+        </div>
+      )}
+
+      {/* Auto-Play Controls - shown during Boss Rush */}
+      {isBossRush && (
+        <div class={styles.autoPlayControls}>
+          <Tooltip content={autoPlaySettings.value.enabled ? 'Disable auto-play' : 'Enable auto-play'} position="top">
+            <button
+              type="button"
+              class={`${styles.autoPlayButton} ${autoPlaySettings.value.enabled ? styles.active : ''}`}
+              onClick={toggleAutoPlay}
+              aria-label={autoPlaySettings.value.enabled ? 'Disable auto-play' : 'Enable auto-play'}
+            >
+              <span class={styles.autoPlayIcon}>{autoPlaySettings.value.enabled ? '🤖' : '👤'}</span>
+              <span class={styles.autoPlayLabel}>
+                {autoPlaySettings.value.enabled ? 'AUTO' : 'MANUAL'}
+              </span>
+            </button>
+          </Tooltip>
+
+          {autoPlaySettings.value.enabled && (
+            <div class={styles.autoPlayPresets}>
+              <button
+                type="button"
+                class={`${styles.presetButton} ${autoPlaySettings.value.relicPriority === 'damage' ? styles.activePreset : ''}`}
+                onClick={() => setAutoPlayPreset('damage')}
+              >
+                ⚔️
+              </button>
+              <button
+                type="button"
+                class={`${styles.presetButton} ${autoPlaySettings.value.relicPriority === 'defense' ? styles.activePreset : ''}`}
+                onClick={() => setAutoPlayPreset('defense')}
+              >
+                🛡️
+              </button>
+              <button
+                type="button"
+                class={`${styles.presetButton} ${autoPlaySettings.value.relicPriority === 'gold' ? styles.activePreset : ''}`}
+                onClick={() => setAutoPlayPreset('gold')}
+              >
+                💰
+              </button>
+              <button
+                type="button"
+                class={`${styles.presetButton} ${autoPlaySettings.value.relicPriority === 'balanced' ? styles.activePreset : ''}`}
+                onClick={() => setAutoPlayPreset('balanced')}
+              >
+                ⚖️
+              </button>
+            </div>
+          )}
+
+          <Tooltip content={`Speed: ${speedSettings.value.speedMultiplier}x`} position="top">
+            <button
+              type="button"
+              class={`${styles.speedButton} ${speedSettings.value.speedMultiplier > 1 ? styles.active : ''}`}
+              onClick={cycleSpeedMultiplier}
+              aria-label={`Change speed (currently ${speedSettings.value.speedMultiplier}x)`}
+            >
+              <span class={styles.speedIcon}>⚡</span>
+              <span class={styles.speedLabel}>{speedSettings.value.speedMultiplier}x</span>
+            </button>
+          </Tooltip>
         </div>
       )}
     </div>

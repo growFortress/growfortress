@@ -1,0 +1,355 @@
+================================================================================
+                    SZCZEGÓŁOWY RAPORT ANALIZY TESTÓW
+                    Data: 2026-01-23
+================================================================================
+
+1. ANALIZA PER PAKIET
+================================================================================
+
+1.1 @arcade/protocol
+--------------------
+Status: ✅ SUKCES (100%)
+Test Files: 7 passed
+Tests: 168 passed
+Czas wykonania: 1.30s
+  - transform: 810ms
+  - setup: 2ms
+  - collect: 1.66s
+  - tests: 235ms
+  - environment: 3ms
+  - prepare: 3.45s
+
+Pliki testowe:
+  ✓ events.test.ts (19 tests) - 20ms
+  ✓ leaderboard.test.ts (22 tests) - 28ms
+  ✓ daily-quests.test.ts (21 tests) - 31ms
+  ✓ power-upgrades.test.ts (35 tests) - 35ms
+  ✓ auth.test.ts (27 tests) - 34ms
+  ✓ mastery.test.ts (25 tests) - 50ms
+  ✓ sessions.test.ts (19 tests) - 37ms
+
+Analiza: Wszystkie testy przeszły pomyślnie. Pakiet jest w doskonałym stanie.
+
+1.2 @arcade/server
+------------------
+Status: ❌ CZĘŚCIOWY SUKCES (99.71%)
+Test Files: 2 failed | 61 passed (63)
+Tests: 4 failed | 1,375 passed | 2 skipped (1,381)
+Czas wykonania: 19.86s
+  - transform: 12.20s
+  - setup: 10.48s
+  - collect: 92.63s
+  - tests: 31.77s
+  - environment: 45ms
+  - prepare: 31.69s
+
+Rozkład testów:
+  - Unit tests: ~1,200 testów
+  - Integration tests: ~180 testów
+  - Kategorie:
+    * Services: ~1,000 testów
+    * Routes: ~180 testów
+    * Lib: ~50 testów
+    * Jobs: ~10 testów
+
+Nieudane testy:
+
+1. src/__tests__/integration/routes/energy.test.ts
+   Test: "should return 401 without auth" (GET /v1/energy)
+   Błąd: AssertionError: expected 'Missing authorization header' to be 'Unauthorized'
+   Lokalizacja: linia 58
+   Typ: Niezgodność komunikatu błędu
+   Priorytet: ŚREDNI
+
+2. src/__tests__/integration/routes/energy.test.ts
+   Test: "should return 401 without auth" (POST /v1/energy/refill)
+   Błąd: AssertionError: expected 'Missing authorization header' to be 'Unauthorized'
+   Lokalizacja: linia 227
+   Typ: Niezgodność komunikatu błędu
+   Priorytet: ŚREDNI
+
+3. src/__tests__/integration/routes/shop.test.ts
+   Test: "should buy booster with dust"
+   Błąd: AssertionError: expected 404 to be 200
+   Lokalizacja: linia 453
+   Typ: Brak endpointu lub błędny routing
+   Priorytet: WYSOKI
+
+4. src/__tests__/integration/routes/shop.test.ts
+   Test: "should return 400 for insufficient dust"
+   Błąd: AssertionError: expected 404 to be 400
+   Lokalizacja: linia 477
+   Typ: Brak endpointu lub błędny routing
+   Priorytet: WYSOKI
+
+Pominięte testy:
+  - pvp.test.ts: 2 testy (prawdopodobnie wymagają dodatkowej konfiguracji)
+
+Najwolniejsze testy (top 10):
+  1. artifacts.test.ts - 2,270ms
+  2. heroes.test.ts - 1,598ms
+  3. guildPreview.test.ts - 1,086ms
+  4. pvp.test.ts - 909ms
+  5. moderation.test.ts - 756ms
+  6. energy.test.ts - 500ms
+  7. shop.test.ts - 631ms
+  8. guilds.test.ts - 631ms
+  9. guildTreasury.test.ts - 641ms
+  10. guildTowerRace.test.ts - 601ms
+
+Uwagi:
+  - Występują ostrzeżenia o nieinicjalizowanym WebSocket service (nie blokują testów)
+  - Niektóre testy mają błędy w logach (np. auth.test.ts - problemy z fortressPrestige),
+    ale testy przechodzą (prawdopodobnie są to oczekiwane błędy w testach negatywnych)
+
+1.3 @arcade/sim-core
+--------------------
+Status: ❌ CZĘŚCIOWY SUKCES (99.89%)
+Test Files: 2 failed | 36 passed (38)
+Tests: 2 failed | 1,823 passed | 1 skipped (1,826)
+Czas wykonania: 28.62s
+  - transform: 6.05s
+  - setup: 580ms
+  - collect: 21.96s
+  - tests: 60.98s
+  - environment: 19ms
+  - prepare: 20.57s
+
+Rozkład testów:
+  - Unit tests: ~1,800 testów
+  - Integration tests: ~25 testów
+  - Kategorie:
+    * Systems: ~200 testów
+    * Arena: ~200 testów
+    * Data: ~400 testów
+    * Power: ~50 testów
+    * Simulation: ~100 testów
+    * Inne: ~850 testów
+
+Nieudane testy:
+
+1. src/__tests__/unit/systems/turret.test.ts
+   Test: "should trigger ability when cooldown reaches zero"
+   Błąd: AssertionError: expected 899 to be 900
+   Lokalizacja: linia 206
+   Typ: Off-by-one error w cooldown
+   Priorytet: ŚREDNI
+   Szczegóły: Cooldown jest resetowany do 899 zamiast 900. Prawdopodobnie problem
+              z logiką dekrementacji cooldown (może być resetowany przed osiągnięciem 0)
+
+2. src/__tests__/unit/arena/arena-ai.test.ts
+   Test: "heroes maintain attack cooldowns"
+   Błąd: AssertionError: expected undefined not to be undefined
+   Lokalizacja: linia 519
+   Typ: Brakująca właściwość w typie
+   Priorytet: WYSOKI
+   Szczegóły: Właściwość 'attackCooldown' nie istnieje na obiekcie hero w stanie arena.
+              Prawdopodobnie typ ActiveHero nie zawiera tej właściwości lub nie jest
+              inicjalizowana podczas tworzenia stanu.
+
+Pominięte testy:
+  - power-calculator.test.ts: 1 test (prawdopodobnie wymaga dodatkowej konfiguracji)
+
+Najwolniejsze testy (top 10):
+  1. arena-server-client.test.ts - 24,329ms (24.3s)
+  2. arena-comprehensive.test.ts - 15,252ms (15.3s)
+  3. full-game.test.ts - 8,654ms (8.7s)
+  4. arena-simulation.test.ts - 4,260ms (4.3s)
+  5. replay.test.ts - 2,675ms (2.7s)
+  6. determinism.test.ts - 1,925ms (1.9s)
+  7. level-up.test.ts - 498ms
+  8. simulation.test.ts - 388ms
+  9. guild-arena.test.ts - 393ms
+  10. hero-stats-and-skills.test.ts - 385ms
+
+Uwagi:
+  - Testy arena są bardzo czasochłonne (łącznie ~48 sekund z 3 najwolniejszych)
+  - Testy deterministyczne i replay działają poprawnie
+  - Większość testów jednostkowych jest bardzo szybka (<100ms)
+
+1.4 @arcade/web (Playwright e2e)
+--------------------------------
+Status: ✅ SUKCES (100%)
+Tests: 7 passed
+Czas wykonania: 28.2s
+
+Pliki testowe:
+  ✓ app.spec.ts (7 tests)
+    - should load the app successfully
+    - should have correct page title
+    - should show auth form for unauthenticated users
+    - should handle keyboard navigation
+    - should render game canvas when authenticated
+    - should be responsive
+    - should handle network errors gracefully
+
+Analiza: Wszystkie testy e2e przeszły pomyślnie. Aplikacja web działa poprawnie.
+
+================================================================================
+
+2. ANALIZA BŁĘDÓW
+================================================================================
+
+2.1 Kategoryzacja błędów
+------------------------
+
+Błędy asercji (Assertion Failures): 6
+  - Niezgodność wartości: 2 (cooldown, status code)
+  - Niezgodność komunikatów: 2 (error messages)
+  - Brakujące właściwości: 1 (attackCooldown)
+  - Nieprawidłowe statusy HTTP: 2 (404 zamiast 200/400)
+
+Błędy czasu wykonania: 0
+Błędy składni/kompilacji: 0 (testy się uruchomiły)
+Błędy zależności: 0
+
+2.2 Najczęstsze wzorce błędów
+-----------------------------
+
+1. Niezgodność komunikatów błędów API (2 przypadki)
+   - Problem: Testy oczekują 'Unauthorized', API zwraca 'Missing authorization header'
+   - Wpływ: Niski (funkcjonalność działa, tylko komunikat się różni)
+   - Rozwiązanie: Zunifikować komunikaty błędów lub zaktualizować testy
+
+2. Brakujące endpointy (2 przypadki)
+   - Problem: Endpoint /v1/shop/buy-dust zwraca 404
+   - Wpływ: Wysoki (funkcjonalność nie działa)
+   - Rozwiązanie: Sprawdzić routing i implementację endpointu
+
+3. Off-by-one errors (1 przypadek)
+   - Problem: Cooldown resetowany do 899 zamiast 900
+   - Wpływ: Średni (może wpływać na timing abilities)
+   - Rozwiązanie: Poprawić logikę resetowania cooldown
+
+4. Brakujące właściwości w typach (1 przypadek)
+   - Problem: attackCooldown nie istnieje na ActiveHero
+   - Wpływ: Wysoki (może powodować błędy runtime)
+   - Rozwiązanie: Dodać właściwość do typu i inicjalizować ją
+
+2.3 Testy wymagające najpilniejszej uwagi
+-----------------------------------------
+
+PRIORYTET WYSOKI:
+  1. shop.test.ts - "should buy booster with dust" (404 zamiast 200)
+  2. shop.test.ts - "should return 400 for insufficient dust" (404 zamiast 400)
+  3. arena-ai.test.ts - "heroes maintain attack cooldowns" (undefined property)
+
+PRIORYTET ŚREDNI:
+  4. energy.test.ts - oba testy (niezgodność komunikatów)
+  5. turret.test.ts - "should trigger ability when cooldown reaches zero" (off-by-one)
+
+================================================================================
+
+3. ANALIZA WYDAJNOŚCI
+================================================================================
+
+3.1 Średni czas wykonania testu
+--------------------------------
+- Protocol: ~7.7ms/test (bardzo szybko)
+- Server: ~14.4ms/test (szybko)
+- Sim-core: ~15.7ms/test (szybko)
+- Web e2e: ~4.0s/test (normalne dla e2e)
+
+3.2 Testy przekraczające próg 1 sekundy
+----------------------------------------
+Server:
+  - artifacts.test.ts: 2.27s
+  - heroes.test.ts: 1.60s
+  - guildPreview.test.ts: 1.09s
+
+Sim-core:
+  - arena-server-client.test.ts: 24.33s ⚠️
+  - arena-comprehensive.test.ts: 15.25s ⚠️
+  - full-game.test.ts: 8.65s ⚠️
+  - arena-simulation.test.ts: 4.26s
+  - replay.test.ts: 2.68s
+  - determinism.test.ts: 1.93s
+
+3.3 Identyfikacja wąskich gardeł
+---------------------------------
+- Testy arena w sim-core są bardzo czasochłonne (łącznie ~48s)
+- Testy integration w server mogą być zoptymalizowane
+- Testy e2e są w normie dla tego typu testów
+
+Rekomendacje optymalizacji:
+  1. Rozważyć parallelizację testów arena
+  2. Zoptymalizować testy integration w server (szczególnie artifacts, heroes)
+  3. Rozważyć mockowanie dla niektórych testów integration
+
+================================================================================
+
+4. ANALIZA STRUKTURY TESTÓW
+================================================================================
+
+4.1 Rozkład testów
+------------------
+Unit tests: ~3,000 testów (88.7%)
+Integration tests: ~205 testów (6.1%)
+E2E tests: 7 testów (0.2%)
+Pominięte: 3 testy (0.1%)
+
+4.2 Liczba testów per kategoria funkcjonalna
+--------------------------------------------
+
+Server:
+  - Services: ~1,000 testów
+  - Routes: ~180 testów
+  - Lib: ~50 testów
+  - Jobs: ~10 testów
+
+Sim-core:
+  - Systems: ~200 testów
+  - Arena: ~200 testów
+  - Data: ~400 testów
+  - Power: ~50 testów
+  - Simulation: ~100 testów
+  - Inne: ~850 testów
+
+Protocol:
+  - Auth: 27 testów
+  - Sessions: 19 testów
+  - Events: 19 testów
+  - Leaderboard: 22 testów
+  - Daily Quests: 21 testów
+  - Power Upgrades: 35 testów
+  - Mastery: 25 testów
+
+4.3 Obszary bez testów lub z niskim pokryciem
+---------------------------------------------
+- @arcade/admin: Ma konfigurację vitest, ale brak skryptu testowego
+- E2E testy: Tylko 7 testów (można rozszerzyć)
+- Niektóre edge cases mogą nie być pokryte (wymaga analizy coverage)
+
+================================================================================
+
+5. WNIOSKI I REKOMENDACJE
+================================================================================
+
+5.1 Obszary wymagające poprawy
+------------------------------
+1. Naprawić endpoint /v1/shop/buy-dust (zwraca 404)
+2. Dodać właściwość attackCooldown do typu ActiveHero
+3. Zunifikować komunikaty błędów API (Unauthorized vs Missing authorization header)
+4. Poprawić logikę resetowania cooldown w turret abilities
+
+5.2 Testy wymagające refaktoryzacji
+-----------------------------------
+1. Testy arena w sim-core (bardzo czasochłonne - rozważyć optymalizację)
+2. Testy integration w server (artifacts, heroes - >1s każdy)
+
+5.3 Braki w pokryciu testami
+-----------------------------
+1. @arcade/admin - brak testów (mimo konfiguracji)
+2. E2E testy - można rozszerzyć o więcej scenariuszy
+3. Edge cases - wymaga analizy coverage
+
+5.4 Sugestie optymalizacji
+--------------------------
+1. Parallelizacja testów arena
+2. Mockowanie dla testów integration
+3. Cache'owanie setup dla powtarzalnych testów
+4. Rozważyć testy smoke dla szybkiej weryfikacji
+
+================================================================================
+KONIEC RAPORTU
+================================================================================

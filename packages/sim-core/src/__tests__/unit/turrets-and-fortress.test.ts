@@ -631,7 +631,7 @@ describe('Fortress Attack System', () => {
 describe('Fortress Attack Interval', () => {
   it('fortress attacks at configured interval', () => {
     const config = getDefaultConfig();
-    expect(config.fortressAttackInterval).toBe(15); // 0.5 seconds at 30Hz
+    expect(config.fortressAttackInterval).toBe(18); // 0.6 seconds at 30Hz (balanced)
   });
 
   it('fortress tracks last attack tick', () => {

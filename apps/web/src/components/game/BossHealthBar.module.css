@@ -131,12 +131,71 @@
   }
 }
 
+.intermissionContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  justify-content: center;
+}
+
 .intermissionText {
   font-size: 1rem;
   font-weight: 600;
   color: white;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.1em;
+}
+
+.intermissionActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.relicPrompt {
+  background: var(--color-warning);
+  color: var(--color-bg-panel);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  animation: bounce 0.5s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.relicChosen {
+  background: var(--color-success);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.shopButton {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shopButton:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
 }
 
 /* Pillar Row */

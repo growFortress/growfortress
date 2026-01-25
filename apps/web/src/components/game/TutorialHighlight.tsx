@@ -4,8 +4,10 @@ import { useEffect, useState, useRef } from "preact/hooks";
 import {
   activeTutorialTip,
   dismissCurrentTip,
+  completeInteractiveTip,
 } from "../../state/tutorial.signals.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
+import { useTutorialCompletion, isInteractiveTip } from "../../hooks/useTutorialCompletion.js";
 import styles from "./TutorialHighlight.module.css";
 
 function getTooltipPosition(
@@ -60,6 +62,12 @@ export function TutorialHighlight() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const dismissTimerRef = useRef<number | null>(null);
 
+  // Use the tutorial completion hook for signal/action-based completion
+  useTutorialCompletion();
+
+  // Check if this is an interactive tip
+  const isInteractive = isInteractiveTip(tip);
+
   // Find highlighted element
   useEffect(() => {
     if (!tip) {
@@ -102,9 +110,32 @@ export function TutorialHighlight() {
     };
   }, [tip]);
 
-  // Auto-dismiss timer
+  // Click-based completion detection
   useEffect(() => {
-    if (!tip || !tip.autoDismissMs) return;
+    if (!tip?.completion || tip.completion.type !== "click") return;
+    if (!tip.highlightRef) return;
+
+    const element = document.querySelector(
+      `[data-tutorial="${tip.highlightRef}"]`
+    );
+    if (!element) return;
+
+    const handleClick = () => {
+      completeInteractiveTip();
+    };
+
+    // Use capture phase to detect click before it bubbles
+    element.addEventListener("click", handleClick, { capture: true });
+
+    return () => {
+      element.removeEventListener("click", handleClick, { capture: true });
+    };
+  }, [tip]);
+
+  // Auto-dismiss timer (skip for interactive tips)
+  useEffect(() => {
+    // Don't auto-dismiss interactive tips
+    if (!tip || !tip.autoDismissMs || isInteractive) return;
 
     dismissTimerRef.current = window.setTimeout(() => {
       handleDismiss();
@@ -115,7 +146,7 @@ export function TutorialHighlight() {
         clearTimeout(dismissTimerRef.current);
       }
     };
-  }, [tip]);
+  }, [tip, isInteractive]);
 
   const handleDismiss = () => {
     dismissCurrentTip();
@@ -134,12 +165,17 @@ export function TutorialHighlight() {
 
   const tooltipStyle = getTooltipPosition(tip.position, targetRect);
 
+  // Button text differs for interactive tips
+  const buttonText = isInteractive
+    ? t("tutorial.tryIt", { defaultValue: "Try it!" })
+    : t("tutorial.dismiss");
+
   const content = (
     <div class={styles.overlay} onClick={handleOverlayClick}>
       {/* Highlight cutout (if targeting element) */}
       {targetRect && (
         <div
-          class={styles.highlightBox}
+          class={`${styles.highlightBox} ${isInteractive ? styles.interactive : ""}`}
           style={{
             top: `${targetRect.top - 8}px`,
             left: `${targetRect.left - 8}px`,
@@ -150,12 +186,24 @@ export function TutorialHighlight() {
       )}
 
       {/* Tooltip */}
-      <div class={styles.tooltip} style={tooltipStyle}>
+      <div
+        class={`${styles.tooltip} ${isInteractive ? styles.interactive : ""}`}
+        style={tooltipStyle}
+      >
         <h3 class={styles.title}>{tip.title}</h3>
         <p class={styles.description}>{tip.description}</p>
-        <button class={styles.dismissBtn} onClick={handleDismiss}>
-          {t("tutorial.dismiss")}
+        <button
+          class={`${styles.dismissBtn} ${isInteractive ? styles.tryItBtn : ""}`}
+          onClick={handleDismiss}
+        >
+          {buttonText}
         </button>
+        {/* Skip link for interactive tips (escape hatch if stuck) */}
+        {isInteractive && (
+          <button class={styles.skipLink} onClick={handleDismiss}>
+            {t("tutorial.skip", { defaultValue: "Skip for now" })}
+          </button>
+        )}
       </div>
     </div>
   );

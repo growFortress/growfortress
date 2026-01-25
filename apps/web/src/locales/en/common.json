@@ -269,7 +269,8 @@
     "synergyActive": "Active",
     "synergyInactive": "Use {{class}} fortress",
     "antiSynergies": "Anti-synergies",
-    "statChanges": "Stat changes"
+    "statChanges": "Stat changes",
+    "worksWith": "Works With"
   },
   "turretPlacement": {
     "title": "Place Turret",
@@ -323,6 +324,7 @@
       "weeklyHonor": "honor",
       "guildHonor": "honor",
       "guildTrophies": "trophies",
+      "statBonus": "stats",
       "points": "points"
     },
     "yourPosition": "Your position",
@@ -333,6 +335,9 @@
     "error": "Error",
     "noGuilds": "No guilds",
     "noGuildsMessage": "No guilds have appeared in this ranking yet.",
+    "noTrophies": "No trophies",
+    "noTrophiesMessage": "No guilds have earned trophies yet.",
+    "trophies": "trophies",
     "noData": "No data",
     "noDataMessage": "No one has appeared in this ranking yet.",
     "searchPlaceholder": "Search by name...",
@@ -632,5 +637,43 @@
       "descriptionTooLong": "Description must be under 2000 characters",
       "rateLimited": "Too many tickets. Please wait before creating another."
     }
+  },
+  "synergyPanel": {
+    "activeHeroSynergies": "Hero Combos",
+    "almostActive": "Almost Active",
+    "needHero": "Need: {{hero}}"
+  },
+  "synergyToast": {
+    "pairUnlocked": "SYNERGY UNLOCKED!",
+    "trioUnlocked": "TRIO SYNERGY!"
+  },
+  "artifacts": {
+    "title": "Inventory",
+    "ariaLabel": "Inventory modal",
+    "tabs": {
+      "artifacts": "Artifacts",
+      "items": "Items"
+    },
+    "sections": {
+      "equipped": "Equipped",
+      "available": "Available"
+    },
+    "empty": {
+      "artifacts": "No artifacts available. Craft or find artifacts during gameplay!",
+      "items": "No items in inventory. Buy items from the shop!"
+    },
+    "craftButton": "Craft Artifacts",
+    "upgradeItem": "Upgrade for {{cost}} gold",
+    "errors": {
+      "upgradeFailed": "Failed to upgrade item"
+    }
+  },
+  "tiers": {
+    "common": "Common",
+    "uncommon": "Uncommon",
+    "rare": "Rare",
+    "epic": "Epic",
+    "legendary": "Legendary",
+    "mythic": "Mythic"
   }
 }

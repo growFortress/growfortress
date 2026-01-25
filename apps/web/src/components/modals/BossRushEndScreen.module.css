@@ -188,6 +188,88 @@
   font-size: 0.8rem;
 }
 
+/* Run Stats (Roguelike) */
+.runStats {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.runStatRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.runStatRow:not(:last-child) {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+.runStatIcon {
+  font-size: 0.9rem;
+  width: 20px;
+  text-align: center;
+}
+
+.runStatLabel {
+  flex: 1;
+  color: var(--color-text-60);
+  font-size: 0.85rem;
+}
+
+.runStatValue {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Collected Relics List */
+.relicsList {
+  margin-top: 0.75rem;
+}
+
+.relicsListTitle {
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem 0;
+}
+
+.relicsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.relicItem {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text);
+  cursor: help;
+  transition: border-color 0.2s;
+}
+
+.relicItem:hover {
+  border-color: var(--color-primary);
+}
+
+.relicName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  display: inline-block;
+}
+
 /* Achievements */
 .achievements {
   display: flex;
@@ -304,6 +386,82 @@
 
 .buttons button {
   min-width: 140px;
+}
+
+/* Auto-Restart */
+.autoRestartIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(0, 180, 255, 0.15), rgba(0, 120, 200, 0.15));
+  border: 1px solid rgba(0, 200, 255, 0.4);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  animation: autoRestartPulse 1s ease-in-out infinite;
+}
+
+@keyframes autoRestartPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+  }
+}
+
+.autoRestartText {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.cancelAutoRestart {
+  background: rgba(255, 100, 100, 0.2);
+  border: 1px solid rgba(255, 100, 100, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.75rem;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelAutoRestart:hover {
+  background: rgba(255, 100, 100, 0.3);
+  border-color: rgba(255, 100, 100, 0.6);
+}
+
+.autoRestartToggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.toggleCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.toggleText {
+  font-size: 0.85rem;
+  color: var(--color-text-80);
+}
+
+.noEnergy {
+  color: var(--color-danger);
+  font-style: italic;
 }
 
 /* Responsive */

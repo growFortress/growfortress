@@ -15,6 +15,7 @@ import {
 } from '@arcade/protocol';
 import {
   upgradeFortressStat,
+  batchUpgradeFortressStat,
   upgradeHeroStat,
   upgradeTurretStat,
   upgradeItemTier,
@@ -23,6 +24,7 @@ import {
   prestigeTurretStat,
   getPrestigeStatus,
 } from '../services/power-upgrades.js';
+import { z } from 'zod';
 
 const powerUpgradesRoutes: FastifyPluginAsync = async (fastify) => {
   // Get power summary
@@ -49,6 +51,32 @@ const powerUpgradesRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const result = await upgradeFortressStat(request.userId, body.stat);
+
+    if (!result.success) {
+      return reply.status(400).send(result);
+    }
+
+    return reply.send(result);
+  });
+
+  // Batch upgrade fortress stat (multiple levels at once)
+  const BatchUpgradeSchema = z.object({
+    stat: z.enum(['hp', 'damage', 'armor']),
+    targetLevel: z.union([z.number().int().positive(), z.literal('max')]),
+  });
+
+  fastify.post('/v1/power/fortress/batch', async (request, reply) => {
+    if (!request.userId) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    const parseResult = BatchUpgradeSchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return reply.status(400).send({ error: 'Invalid request body', details: parseResult.error.flatten() });
+    }
+
+    const { stat, targetLevel } = parseResult.data;
+    const result = await batchUpgradeFortressStat(request.userId, stat, targetLevel);
 
     if (!result.success) {
       return reply.status(400).send(result);

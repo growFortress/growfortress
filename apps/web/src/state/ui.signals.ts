@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals';
 import type { FortressLevelReward, WaveStats } from '@arcade/sim-core';
+import { audioManager } from '../game/AudioManager.js';
 
 /**
  * Leaderboard entry type.
@@ -147,6 +148,100 @@ export function showWarningToast(message: string): void {
  */
 export function showInfoToast(message: string): void {
   showErrorToast(message, 'info');
+}
+
+// ============================================================================
+// SYNERGY ACTIVATION TOASTS
+// ============================================================================
+
+/**
+ * Synergy toast data for showing synergy activation
+ */
+export interface SynergyToastData {
+  id: string;
+  name: string;
+  bonuses: string[];
+  type: 'pair' | 'trio';
+  timestamp: number;
+}
+
+/**
+ * Track shown synergies this session to avoid duplicate toasts
+ */
+export const shownSynergies = signal<Set<string>>(new Set());
+
+/**
+ * Active synergy toast (currently showing)
+ */
+export const activeSynergyToast = signal<SynergyToastData | null>(null);
+
+/**
+ * Queue of pending synergy toasts
+ */
+const synergyToastQueue: SynergyToastData[] = [];
+let processingQueue = false;
+
+/**
+ * Show a synergy activation toast (only once per session per synergy)
+ */
+export function showSynergyToast(synergyId: string, name: string, bonuses: string[], type: 'pair' | 'trio'): void {
+  // Check if already shown this session
+  if (shownSynergies.value.has(synergyId)) {
+    return;
+  }
+
+  // Mark as shown
+  shownSynergies.value = new Set([...shownSynergies.value, synergyId]);
+
+  // Add to queue
+  synergyToastQueue.push({
+    id: synergyId,
+    name,
+    bonuses,
+    type,
+    timestamp: Date.now(),
+  });
+
+  // Process queue
+  processToastQueue();
+}
+
+/**
+ * Process the synergy toast queue
+ */
+function processToastQueue(): void {
+  if (processingQueue || synergyToastQueue.length === 0) {
+    return;
+  }
+
+  processingQueue = true;
+  const toast = synergyToastQueue.shift();
+
+  if (toast) {
+    activeSynergyToast.value = toast;
+
+    // Play synergy sound
+    audioManager.playSfx(toast.type === 'trio' ? 'synergy_trio' : 'synergy_unlocked');
+
+    // Auto-dismiss after 3 seconds and process next
+    setTimeout(() => {
+      activeSynergyToast.value = null;
+      processingQueue = false;
+      processToastQueue();
+    }, 3000);
+  } else {
+    processingQueue = false;
+  }
+}
+
+/**
+ * Reset shown synergies (call when starting a new game session)
+ */
+export function resetShownSynergies(): void {
+  shownSynergies.value = new Set();
+  activeSynergyToast.value = null;
+  synergyToastQueue.length = 0;
+  processingQueue = false;
 }
 
 // ============================================================================

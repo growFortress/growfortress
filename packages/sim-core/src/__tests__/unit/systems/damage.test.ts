@@ -19,7 +19,8 @@ import {
 } from '../../../physics.js';
 import { FP } from '../../../fixed.js';
 import { Xorshift32 } from '../../../rng.js';
-import type { ActiveHero, ActiveTurret, PhysicsBody } from '../../../types.js';
+import type { ActiveHero, ActiveTurret } from '../../../types.js';
+import type { PhysicsBody } from '../../../physics.js';
 
 // Helper to create a test hero
 function createTestHero(overrides: Partial<ActiveHero> = {}): ActiveHero {

@@ -44,20 +44,24 @@ function createMockHero(overrides: Partial<ActiveHero> = {}): ActiveHero {
     definitionId: 'storm',
     level: 1,
     tier: 1,
+    xp: 0,
     currentHp: 100,
     maxHp: 100,
     x: FP.fromInt(10),
     y: FP.fromInt(7),
     vx: 0,
     vy: 0,
+    radius: FP.fromFloat(0.4),
+    mass: FP.fromFloat(1.0),
     state: 'idle',
-    stateTimer: 0,
-    attackCooldown: 0,
-    animationState: 'idle',
-    animationTimer: 0,
-    equippedArtifact: null,
+    lastAttackTick: -1000,
+    skillCooldowns: {},
+    buffs: [],
+    equippedArtifact: undefined,
+    equippedItems: [],
+    isManualControlled: false,
     ...overrides,
-  };
+  } as ActiveHero;
 }
 
 // ============================================================================
@@ -516,8 +520,8 @@ describe('Arena AI - Defensive Decisions', () => {
       const state = createTestState();
 
       for (const hero of state.left.heroes) {
-        expect(hero.attackCooldown).toBeDefined();
-        expect(hero.attackCooldown).toBeGreaterThanOrEqual(0);
+        expect(hero.lastAttackTick).toBeDefined();
+        expect(typeof hero.lastAttackTick).toBe('number');
       }
     });
   });

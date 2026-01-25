@@ -22,6 +22,7 @@ import { MaterialDrop } from './MaterialDrop.js';
 import { ArtifactDrop } from './ArtifactDrop.js';
 import { BossHealthBar } from './BossHealthBar.js';
 import { BossRushHUD } from './BossRushHUD.js';
+import { BossRushShopPanel } from './BossRushShopPanel.js';
 
 // Lazy-loaded modals - loaded on demand (20-30% bundle size reduction)
 const HeroDetailsModal = lazy(() => import('../modals/HeroDetailsModal.js').then(m => ({ default: m.HeroDetailsModal })));
@@ -55,7 +56,6 @@ import {
   heroPlacementModalVisible,
   showBossRushSetup,
   showBossRushEndScreen,
-  isGuestMode,
   showOnboardingModal,
   onboardingCompleted,
 } from '../../state/index.js';
@@ -66,8 +66,12 @@ import {
 } from '../../state/idle.signals.js';
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
 import { ApiError } from '../../api/base.js';
-import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar } from '../../state/index.js';
+import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar, isFirstSession } from '../../state/index.js';
 import { fetchEnergy, hasEnergy } from '../../state/energy.signals.js';
+import { speedSettings } from '../../state/settings.signals.js';
+import { useAutoPlay } from '../../hooks/useAutoPlay.js';
+import { bossRushActive } from '../../state/boss-rush.signals.js';
+import type { GameSpeed } from '../../game/loop.js';
 
 interface GameContainerProps {
   onLoadProfile: () => Promise<void>;
@@ -111,6 +115,32 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
   // Tutorial triggers - monitors game state and shows contextual tips
   useTutorialTriggers();
 
+  // Auto-play integration for Boss Rush mode
+  const handleAutoPlayHealFortress = useCallback((healPercent: number) => {
+    // The heal is already applied through the boss-rush signals
+    // This callback is just for any additional effects
+    console.log(`[AutoPlay] Healing fortress by ${healPercent * 100}%`);
+  }, []);
+
+  const handleAutoPlayRerollRelics = useCallback(() => {
+    // Reroll is handled through boss-rush signals
+    console.log('[AutoPlay] Rerolling relics');
+  }, []);
+
+  useAutoPlay({
+    chooseRelicByIndex: chooseRelic,
+    healFortress: handleAutoPlayHealFortress,
+    rerollRelics: handleAutoPlayRerollRelics,
+  });
+
+  // Sync speed settings with game speed
+  useEffect(() => {
+    if (bossRushActive.value) {
+      const speed = speedSettings.value.speedMultiplier as GameSpeed;
+      setGameSpeed(speed);
+    }
+  }, [speedSettings.value.speedMultiplier, setGameSpeed]);
+
   // Auto-start session when recovery modal is confirmed
   useEffect(() => {
     if (savedSession && !sessionRecoveryVisible && !sessionStarting) {
@@ -148,33 +178,39 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     }
   }, [forceResetToHub.value, reset]);
 
-  // Auto-start game for new guests
+  // Auto-start game for ALL new players (guests and registered) who haven't completed onboarding
   useEffect(() => {
     if (
-      isGuestMode.value &&
       gamePhase.value === 'idle' &&
       !onboardingCompleted.value &&
       canvasReady &&
       !sessionStarting &&
-      !sessionRecoveryVisible
+      !sessionRecoveryVisible &&
+      !showOnboardingModal.value
     ) {
-      console.log('[GameContainer] Auto-starting game for guest...');
-      // Set natural fortress class as default for guests
-      selectedFortressClass.value = 'natural';
-      // Start the session
+      console.log('[GameContainer] Auto-starting game for new player...');
+      // Set natural fortress class as default
+      if (!selectedFortressClass.value) {
+        selectedFortressClass.value = 'natural';
+      }
+
+      // Enable enhanced VFX for first session - creates impactful first impression
+      isFirstSession.value = true;
+
+      // Start the session immediately - let them play first, learn later
       handleStartSession();
 
-      // Show onboarding after a delay (7 seconds into gameplay)
+      // Show simplified onboarding after a short delay (5 seconds into gameplay)
       const onboardingTimer = setTimeout(() => {
-        if (gamePhase.value === 'playing') {
+        if (gamePhase.value === 'playing' && !onboardingCompleted.value) {
           showOnboardingModal.value = true;
         }
-      }, 7000);
+      }, 5000);
 
       return () => clearTimeout(onboardingTimer);
     }
     return undefined;
-  }, [isGuestMode.value, gamePhase.value, onboardingCompleted.value, canvasReady, sessionStarting, sessionRecoveryVisible]);
+  }, [gamePhase.value, onboardingCompleted.value, canvasReady, sessionStarting, sessionRecoveryVisible]);
 
   const updateUiScale = useCallback((width: number, height: number) => {
     const baseWidth = 1920;
@@ -503,6 +539,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       {/* Boss Rush HUD (eagerly loaded - visible during gameplay) */}
       <BossHealthBar />
       <BossRushHUD />
+      <BossRushShopPanel />
 
       {/* Colony Scene Overlay (full-screen colony management) */}
       <ColonySceneOverlay

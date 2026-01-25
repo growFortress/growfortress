@@ -64,6 +64,7 @@ import {
   manualControlHeroId,
   manualMoveInput,
 } from "../state/index.js";
+import { recordGameAction } from "../state/tutorial.signals.js";
 
 /** Options for starting an endless session */
 export interface SessionStartOptions {
@@ -889,6 +890,9 @@ export class Game {
       ...lastSkillTargetPositions.value,
       [skillId]: { x: targetX, y: targetY },
     };
+
+    // Record action for tutorial completion tracking
+    recordGameAction("ACTIVATE_SKILL", state.tick);
 
     audioManager.playSfx("skill_activate");
     this.events.push(event);

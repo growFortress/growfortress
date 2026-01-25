@@ -31,8 +31,10 @@ vi.mock('../../../lib/queue.js', () => ({
       active: 5,
       delayed: 2,
       failed: 3,
+      completed: 100,
+      total: 17,
     },
-    queues: {},
+    queues: [],
   })),
 }));
 
@@ -154,8 +156,10 @@ describe('Alerts Service', () => {
           active: 5,
           delayed: 2,
           failed: 3,
+          completed: 100,
+          total: 1507,
         },
-        queues: {},
+        queues: [],
       });
 
       mockPrisma.systemError.count.mockResolvedValue(0);
@@ -180,8 +184,10 @@ describe('Alerts Service', () => {
           active: 5,
           delayed: 2,
           failed: 3,
+          completed: 100,
+          total: 2507,
         },
-        queues: {},
+        queues: [],
       });
 
       mockPrisma.systemError.count.mockResolvedValue(0);
@@ -205,8 +211,10 @@ describe('Alerts Service', () => {
           active: 5,
           delayed: 2,
           failed: 60, // Above threshold
+          completed: 100,
+          total: 17,
         },
-        queues: {},
+        queues: [],
       });
 
       mockPrisma.systemError.count.mockResolvedValue(0);

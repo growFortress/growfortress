@@ -7,6 +7,7 @@ import { Leaderboard } from "./layout/Leaderboard.js";
 import { SyncStatus } from "./toasts/SyncStatus.js";
 import { RewardsToast } from "./toasts/RewardsToast.js";
 import { ErrorToast } from "./toasts/ErrorToast.js";
+import { SynergyToast } from "./toasts/SynergyToast.js";
 import { LevelUpToast } from "./toasts/LevelUpToast.js";
 import { UnlockNotificationQueue } from "./game/UnlockNotification.js";
 import { OnboardingModal } from "./modals/OnboardingModal.js";
@@ -543,6 +544,7 @@ function AppContent() {
           <RewardsToast />
           <ErrorToast />
           <LevelUpToast />
+          <SynergyToast />
           <UnlockNotificationQueue
             notifications={unlockNotifications.value}
             onDismiss={dismissUnlockNotification}
