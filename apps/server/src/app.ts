@@ -38,7 +38,6 @@ import { bugReportRoutes } from "./routes/bugReports.js";
 import iapRoutes from "./routes/iap.js";
 import pillarChallengeRoutes from "./routes/pillarChallenge.js";
 import masteryRoutes from "./routes/mastery.js";
-import dailyQuestsRoutes from "./routes/dailyQuests.js";
 import hubPreviewRoutes from "./routes/hubPreview.js";
 import guildPreviewRoutes from "./routes/guildPreview.js";
 import shopRoutes from "./routes/shop.js";
@@ -50,6 +49,7 @@ import { supportTicketRoutes } from "./routes/supportTickets.js";
 import referralRoutes from "./routes/referrals.js";
 import gachaRoutes from "./routes/gacha.js";
 import expeditionRoutes from "./routes/expedition.js";
+import achievementsRoutes from "./routes/achievements.js";
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -174,7 +174,6 @@ export async function buildApp() {
   await fastify.register(iapRoutes);
   await fastify.register(pillarChallengeRoutes);
   await fastify.register(masteryRoutes);
-  await fastify.register(dailyQuestsRoutes);
   await fastify.register(hubPreviewRoutes);
   await fastify.register(guildPreviewRoutes);
   await fastify.register(shopRoutes);
@@ -186,6 +185,7 @@ export async function buildApp() {
   await fastify.register(referralRoutes);
   await fastify.register(gachaRoutes);
   await fastify.register(expeditionRoutes);
+  await fastify.register(achievementsRoutes);
 
   // Admin routes (separate auth system)
   await fastify.register(adminRoutes, { prefix: "/admin" });

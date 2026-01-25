@@ -19,6 +19,7 @@ import {
   showChoiceModal,
 } from '../../state/index.js';
 import { PILLAR_INFO } from '../../state/game.signals.js';
+import { GoldIcon } from '../icons/index.js';
 import styles from './BossHealthBar.module.css';
 
 /** Pillar emoji lookup */
@@ -91,7 +92,7 @@ export function BossHealthBar() {
                   class={styles.shopButton}
                   onClick={openBossRushShop}
                 >
-                  🏪 Shop ({bossRushAvailableGold.value}🪙)
+                  🏪 Shop ({bossRushAvailableGold.value} <GoldIcon size={14} style={{ display: 'inline-block', verticalAlign: 'middle' }} />)
                 </button>
               </div>
             </div>

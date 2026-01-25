@@ -689,12 +689,27 @@ export {
   UpgradeColonyRequestSchema,
   UpgradeColonyResponseSchema,
   IdleRewardsConfigResponseSchema,
+  // Prestige System
+  PrestigeStatusSchema,
+  PrestigeResponseSchema,
+  // Colony Milestones
+  ColonyMilestoneStatusSchema,
+  MilestonesResponseSchema,
+  ClaimMilestoneRequestSchema,
+  ClaimMilestoneResponseSchema,
+  // Types
   type ColonyStatus,
   type PendingIdleRewardsResponse,
   type ClaimIdleRewardsResponse,
   type UpgradeColonyRequest,
   type UpgradeColonyResponse,
   type IdleRewardsConfigResponse,
+  type PrestigeStatus,
+  type PrestigeResponse,
+  type ColonyMilestoneStatus,
+  type MilestonesResponse,
+  type ClaimMilestoneRequest,
+  type ClaimMilestoneResponse,
 } from "./idle.js";
 
 // Materials
@@ -864,34 +879,46 @@ export {
   type AssembleMatrixResponse,
 } from "./pillar-challenge.js";
 
-// Daily Quests
+// Achievement System (Permanent progression - Hero Zero style)
 export {
-  // Enums
-  DailyQuestIdSchema,
-  QuestBonusTypeSchema,
-  // Definitions
-  DailyQuestDefinitionSchema,
-  DailyQuestProgressSchema,
-  // API schemas
-  DailyQuestsResponseSchema,
-  ClaimQuestRewardRequestSchema,
-  ClaimQuestRewardResponseSchema,
-  ClaimAllQuestsResponseSchema,
-  // Static data
-  DAILY_QUEST_DEFINITIONS,
-  TOTAL_DAILY_DUST,
-  DAILY_QUEST_ERROR_CODES,
+  // Schemas
+  AchievementCategorySchema,
+  AchievementIdSchema,
+  AchievementTierSchema,
+  AchievementDefinitionSchema,
+  AchievementProgressSchema,
+  LifetimeStatsSchema,
+  // API Schemas
+  GetAchievementsResponseSchema,
+  ClaimAchievementRewardRequestSchema,
+  ClaimAchievementRewardResponseSchema,
+  ClaimAllAchievementsResponseSchema,
+  SetActiveTitleRequestSchema,
+  SetActiveTitleResponseSchema,
+  // Static Data
+  ACHIEVEMENT_DEFINITIONS,
+  ACHIEVEMENT_ERROR_CODES,
+  // Helper Functions
+  getAchievementById,
+  getAchievementsByCategory,
+  getTotalTiers,
+  getTotalDustRewards,
+  getAllTitles,
   // Types
-  type DailyQuestId,
-  type QuestBonusType,
-  type DailyQuestDefinition,
-  type DailyQuestProgress,
-  type DailyQuestsResponse,
-  type ClaimQuestRewardRequest,
-  type ClaimQuestRewardResponse,
-  type ClaimAllQuestsResponse,
-  type DailyQuestErrorCode,
-} from "./daily-quests.js";
+  type AchievementCategory,
+  type AchievementId,
+  type AchievementTier,
+  type AchievementDefinition,
+  type AchievementProgress,
+  type LifetimeStats,
+  type GetAchievementsResponse,
+  type ClaimAchievementRewardRequest,
+  type ClaimAchievementRewardResponse,
+  type ClaimAllAchievementsResponse,
+  type SetActiveTitleRequest,
+  type SetActiveTitleResponse,
+  type AchievementErrorCode,
+} from "./achievements.js";
 
 // Energy System (Premium economy - limits free play)
 export {

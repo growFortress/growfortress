@@ -904,8 +904,6 @@ export async function deleteAccount(userId: string): Promise<boolean> {
       prisma.playerArtifact.deleteMany({ where: { userId } }),
       // Delete battlepass progress
       prisma.battlePassProgress.deleteMany({ where: { userId } }),
-      // Delete daily quests
-      prisma.dailyQuestProgress.deleteMany({ where: { userId } }),
       // Delete mastery progress
       prisma.masteryProgress.deleteMany({ where: { userId } }),
       // Delete power upgrades

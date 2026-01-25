@@ -38,7 +38,7 @@ import {
 import { displayDust, displayGold } from '../../state/game.signals.js';
 import { unlockedHeroIds } from '../../state/fortress.signals.js';
 import { Button } from '../shared/Button.js';
-import { Icon, type IconName, DustIcon } from '../icons/index.js';
+import { Icon, type IconName, DustIcon, GoldIcon } from '../icons/index.js';
 import styles from './ShopModal.module.css';
 
 // Session storage key for interstitial offer
@@ -231,7 +231,7 @@ export function ShopModal() {
               <span class={styles.contentValue}>600</span>
             </div>
             <div class={styles.contentItem}>
-              <span class={styles.resourceEmoji}>🪙</span>
+              <GoldIcon size={18} className={styles.resourceEmoji} />
               <span class={styles.contentValue}>3,000</span>
             </div>
             <div class={styles.contentItem}>
@@ -296,7 +296,7 @@ export function ShopModal() {
                 )}
                 {lastPurchase.value.goldGranted && lastPurchase.value.goldGranted > 0 && (
                   <div class={styles.rewardItem}>
-                    <span class={styles.rewardEmoji}>🪙</span>
+                    <GoldIcon size={18} className={styles.rewardEmoji} />
                     <span>+{lastPurchase.value.goldGranted} {t('shop.gold')}</span>
                   </div>
                 )}
@@ -439,7 +439,7 @@ export function ShopModal() {
               )}
               {selectedProduct.goldAmount && selectedProduct.goldAmount > 0 && (
                 <div class={styles.productDetailContentItem}>
-                  <span class={styles.resourceEmoji}>🪙</span>
+                  <GoldIcon size={16} className={styles.resourceEmoji} />
                   <span class={styles.productDetailContentValue}>
                     {selectedProduct.goldAmount.toLocaleString()} {t('shop.gold')}
                   </span>
@@ -563,7 +563,7 @@ export function ShopModal() {
                       <span>600</span>
                     </div>
                     <div class={styles.contentItem}>
-                      <span class={styles.resourceEmoji}>🪙</span>
+                      <GoldIcon size={18} className={styles.resourceEmoji} />
                       <span>3,000</span>
                     </div>
                     <div class={styles.contentItem}>
@@ -791,7 +791,7 @@ export function ShopModal() {
                   <span>{product.dustAmount}</span>
                 </div>
                 <div class={styles.contentItem}>
-                  <span class={styles.resourceEmoji}>🪙</span>
+                  <GoldIcon size={18} className={styles.resourceEmoji} />
                   <span>{(product.goldAmount ?? 0).toLocaleString()}</span>
                 </div>
                 {(bundle?.randomHeroCount ?? 0) > 0 && (
@@ -852,7 +852,7 @@ export function ShopModal() {
             <span class={styles.balanceLabel}>{t('shop.dust')}</span>
           </div>
           <div class={styles.balance}>
-            <span class={styles.balanceIcon}>🪙</span>
+            <GoldIcon size={20} className={styles.balanceIcon} />
             <span class={styles.balanceValue}>{gold}</span>
             <span class={styles.balanceLabel}>{t('shop.gold')}</span>
           </div>

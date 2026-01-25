@@ -487,8 +487,11 @@ export function getEnemyStats(
   const cycle = Math.floor((wave - 1) / 100);
   const effectiveWave = ((wave - 1) % 100) + 1;
 
-  // Scale HP and damage by effective wave within cycle (12% per wave)
-  const waveScale = 1 + (effectiveWave - 1) * 0.12;
+  // Scale HP and damage by effective wave within cycle
+  // Early waves (1-30) get +3% bonus for better challenge progression
+  const earlyWaveBonus = effectiveWave <= 30 ? 0.03 : 0;
+  const waveScale = 1 + (effectiveWave - 1) * (0.12 + earlyWaveBonus);
+  // Wave 1: 1.0x, Wave 10: 2.35x (was 2.08x), Wave 30: 5.35x
 
   // Cycle scaling: exponential 1.6^cycle (reduced from 2x for better balance)
   // Cycle 0: 1x, Cycle 1: 1.6x, Cycle 2: 2.56x, Cycle 3: 4.1x
@@ -616,14 +619,15 @@ export function getWaveComposition(
     ? 8 + Math.floor(wave * 2.5)
     : 8 + Math.floor(30 * 2.5 + (wave - 30) * 1.8)) * 2;
 
-  // Elite chance scales slower early, then ramps to cap later
+  // Elite chance - start higher and scale faster for better early-game challenge
+  // Wave 1: 8.6%, Wave 10: 14.6%, Wave 20: 20.6%
   const eliteCap = wave < 60 ? 0.35 : 0.5;
-  const eliteChance = Math.min(0.05 + wave * 0.004, eliteCap);
+  const eliteChance = Math.min(0.08 + wave * 0.006, eliteCap);
 
   // Spawn interval - enemies spawn one by one from portal
-  // Base: ~0.65 seconds between spawns, speeds up with waves for dynamic pacing
-  // Faster spawning creates exciting "wave" feel instead of slow trickle
-  const baseInterval = Math.max(tickHz * 0.65 - effectiveWave * 0.22, tickHz * 0.35);
+  // Base: ~0.55 seconds between spawns (was 0.65), speeds up with waves
+  // Faster spawning creates more pressure and exciting "wave" feel
+  const baseInterval = Math.max(tickHz * 0.55 - effectiveWave * 0.20, tickHz * 0.30);
   const spawnInterval = Math.max(baseInterval - cycle * 2, 12); // Min ~0.4s at 30Hz
 
   const enemies: Array<{ type: EnemyType; count: number }> = [];

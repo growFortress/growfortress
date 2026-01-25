@@ -1,0 +1,134 @@
+/* Milestone Popup - Achievement notification */
+
+.popup {
+  --neon-cyan: #00ffff;
+  --neon-gold: #ffd700;
+  --neon-green: #00ff41;
+
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(10, 10, 15, 0.98) 0%, rgba(15, 15, 25, 0.98) 100%);
+  border: 1px solid var(--neon-gold);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+  z-index: 150;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--neon-gold);
+  letter-spacing: 0.1em;
+}
+
+.content {
+  margin-bottom: 1rem;
+}
+
+.milestoneName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--neon-cyan);
+  margin-bottom: 0.25rem;
+}
+
+.milestoneDesc {
+  font-size: 0.875rem;
+  color: #888;
+  margin-bottom: 0.75rem;
+}
+
+.reward {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.rewardLabel {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.rewardItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.rewardItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--neon-gold);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.rewardIcon {
+  font-size: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.dismissBtn,
+.claimBtn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dismissBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #888;
+}
+
+.dismissBtn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ccc;
+}
+
+.claimBtn {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
+  border: 1px solid var(--neon-gold);
+  color: var(--neon-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.claimBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.15) 100%);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.claimBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

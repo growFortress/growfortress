@@ -1,0 +1,68 @@
+/* Milestone Tracker - Progress to next milestone */
+
+.tracker {
+  --neon-cyan: #00ffff;
+  --neon-green: #00ff41;
+  --neon-gold: #ffd700;
+
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 150px;
+}
+
+.milestone {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.milestone strong {
+  color: var(--neon-cyan);
+}
+
+.production {
+  font-size: 0.875rem;
+  color: var(--neon-gold);
+  font-weight: 500;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-cyan) 0%, var(--neon-green) 100%);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.fill.complete {
+  background: linear-gradient(90deg, var(--neon-gold) 0%, #ff9500 100%);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.percentage {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--neon-cyan);
+  min-width: 40px;
+  text-align: right;
+}

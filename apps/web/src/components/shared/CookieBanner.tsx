@@ -8,13 +8,19 @@ const CONSENT_KEY = "cookie-consent";
 export function CookieBanner() {
   const { t } = useTranslation("modals");
   const [visible, setVisible] = useState(false);
+  const [delayComplete, setDelayComplete] = useState(false);
+
+  // Delay showing banner to avoid cluttering initial load
+  useEffect(() => {
+    const timer = setTimeout(() => setDelayComplete(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
-    if (localStorage.getItem(CONSENT_KEY)) {
-      return;
-    }
+    if (!delayComplete) return;
+    if (localStorage.getItem(CONSENT_KEY)) return;
     setVisible(true);
-  }, []);
+  }, [delayComplete]);
 
   const handleAccept = () => {
     localStorage.setItem(CONSENT_KEY, "accepted");

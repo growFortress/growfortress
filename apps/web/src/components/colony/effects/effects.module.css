@@ -1,0 +1,255 @@
+/* Sci-Fi Terminal Effects */
+
+/* Scanlines - CRT monitor effect */
+.scanlines {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 1000;
+}
+
+.movingLine {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: scanMove 8s linear infinite;
+}
+
+@keyframes scanMove {
+  from {
+    top: 0;
+  }
+  to {
+    top: 100%;
+  }
+}
+
+/* Glitch text effect - RGB split */
+.glitch {
+  position: relative;
+  display: inline-block;
+  color: #00ffff;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.glitch::before {
+  color: #ff00ff;
+  z-index: -1;
+}
+
+.glitch::after {
+  color: #00ff41;
+  z-index: -2;
+}
+
+.glitch.active::before {
+  opacity: 0.8;
+  animation: glitch1 0.3s infinite;
+}
+
+.glitch.active::after {
+  opacity: 0.8;
+  animation: glitch2 0.3s infinite;
+}
+
+@keyframes glitch1 {
+  0%,
+  100% {
+    clip-path: inset(40% 0 61% 0);
+    transform: translate(-2px, -2px);
+  }
+  20% {
+    clip-path: inset(92% 0 1% 0);
+    transform: translate(2px, 2px);
+  }
+  40% {
+    clip-path: inset(43% 0 1% 0);
+    transform: translate(-2px, 0);
+  }
+  60% {
+    clip-path: inset(25% 0 58% 0);
+    transform: translate(2px, -1px);
+  }
+  80% {
+    clip-path: inset(54% 0 7% 0);
+    transform: translate(-1px, 2px);
+  }
+}
+
+@keyframes glitch2 {
+  0%,
+  100% {
+    clip-path: inset(25% 0 58% 0);
+    transform: translate(2px, 1px);
+  }
+  20% {
+    clip-path: inset(54% 0 7% 0);
+    transform: translate(-2px, -1px);
+  }
+  40% {
+    clip-path: inset(40% 0 61% 0);
+    transform: translate(1px, 2px);
+  }
+  60% {
+    clip-path: inset(92% 0 1% 0);
+    transform: translate(-1px, -2px);
+  }
+  80% {
+    clip-path: inset(43% 0 1% 0);
+    transform: translate(2px, 0);
+  }
+}
+
+/* Hologram overlay effect */
+.hologram {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 255, 0.1) 0%,
+    rgba(0, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  border-radius: 8px;
+  overflow: hidden;
+  backdrop-filter: blur(2px);
+}
+
+.hologramScanline {
+  position: absolute;
+  width: 100%;
+  height: 30%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: hologramScan 2s linear infinite;
+}
+
+@keyframes hologramScan {
+  from {
+    top: -30%;
+  }
+  to {
+    top: 100%;
+  }
+}
+
+.hologramStats {
+  position: relative;
+  z-index: 1;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  color: #00ffff;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.hologramStats div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hologramStats span {
+  color: #00ff41;
+  font-weight: 600;
+}
+
+/* Energy burst effect - for upgrades */
+.burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 100;
+}
+
+.burstParticle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #00ffff 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.burstRing {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #00ffff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.burstFlash {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(
+    circle,
+    rgba(0, 255, 255, 0.6) 0%,
+    transparent 70%
+  );
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+/* Pulse animation for milestone glow */
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4);
+  }
+}
+
+/* Neon border glow */
+.neonBorder {
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.neonBorder:hover {
+  border-color: #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
+}

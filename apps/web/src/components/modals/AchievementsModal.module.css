@@ -1,0 +1,393 @@
+/* Title selector */
+.titleSelector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  border: var(--border-neutral);
+}
+
+.titleLabel {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-60);
+}
+
+.titleSelect {
+  flex: 1;
+  background: var(--color-bg-elevated);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.titleSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Category tabs */
+.categoryTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: var(--border-neutral);
+}
+
+.categoryTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-60);
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+}
+
+.categoryTab:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+}
+
+.categoryTab.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.categoryIcon {
+  font-size: 14px;
+}
+
+.categoryName {
+  font-weight: 600;
+}
+
+.categoryProgress {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--color-text-60);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-bg-elevated);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error state */
+.error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-error-bg, rgba(255, 0, 0, 0.1));
+  border: 1px solid var(--color-error, #ff4444);
+  border-radius: var(--radius-sm);
+  color: var(--color-error, #ff4444);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+.errorIcon {
+  font-size: 20px;
+}
+
+/* Achievements list */
+.achievementsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.noAchievements {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-text-60);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* Achievement card */
+.achievementCard {
+  background: var(--color-bg);
+  border: var(--border-neutral);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: var(--transition-interactive-normal);
+}
+
+.achievementCard:hover {
+  background: var(--color-bg-elevated);
+}
+
+.achievementCard.hasReward {
+  border-color: var(--color-success);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.achievementHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.achievementInfo {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.achievementIcon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 4px var(--color-primary));
+}
+
+.achievementTitles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.achievementName {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.achievementDesc {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.tierBadge {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark, #005577) 100%);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Progress section */
+.progressSection {
+  margin-bottom: 12px;
+}
+
+.progressBar {
+  height: 6px;
+  background: var(--color-bg-elevated);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-success) 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.progressSeparator {
+  color: var(--color-text-40);
+}
+
+/* Tiers list */
+.tiersList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tierItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  opacity: 0.6;
+  transition: var(--transition-interactive-normal);
+}
+
+.tierItem.reached {
+  opacity: 1;
+  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, rgba(0, 255, 0, 0.05) 100%);
+}
+
+.tierItem.claimed {
+  opacity: 0.5;
+  background: var(--color-bg);
+}
+
+.tierNumber {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  min-width: 28px;
+}
+
+.tierTarget {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-60);
+  min-width: 60px;
+}
+
+.tierRewards {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rewardBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-neutral);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.claimTierBtn {
+  background: linear-gradient(135deg, var(--color-success) 0%, #006600 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+}
+
+.claimTierBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 50%, transparent);
+}
+
+.claimTierBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.claimedBadge {
+  font-size: 16px;
+  color: var(--color-success);
+}
+
+/* Footer */
+.footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: var(--border-neutral);
+  display: flex;
+  justify-content: center;
+}
+
+.claimAllBtn {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark, #005577) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 32px;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  box-shadow: var(--shadow-md), 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.claimAllBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg), 0 0 30px color-mix(in srgb, var(--color-primary) 50%, transparent);
+}
+
+.claimAllBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling */
+.achievementsList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.achievementsList::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: 3px;
+}
+
+.achievementsList::-webkit-scrollbar-thumb {
+  background: var(--color-neutral);
+  border-radius: 3px;
+}
+
+.achievementsList::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-40);
+}

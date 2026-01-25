@@ -203,7 +203,7 @@ eliteMult = 2.5 (for elite enemies)
 waveMult = 1 + (effectiveWave - 1) × 0.05  // +5% per wave
 cycleMult = 1.4^cycle                        // Exponential: 1x, 1.4x, 1.96x, 2.74x...
 
-Note: Dust is no longer earned from enemy kills (only via daily quests)
+Note: Dust is no longer earned from enemy kills (only via achievements and purchases)
 ```
 
 ---

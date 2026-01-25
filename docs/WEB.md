@@ -56,6 +56,8 @@ apps/web/
 5. **initializing** - Initialize game systems
 6. **ready** - Application ready
 
+> **Przeprojektowanie uruchamiania:** propozycje ulepszeń (splash, canvas-first, rozbicie useGameLoop, useBootSequence) opisane są w [BOOT-REDESIGN-PROPOSAL.md](./BOOT-REDESIGN-PROPOSAL.md).
+
 ### Game Phases
 | Phase | Description |
 |-------|-------------|
@@ -145,7 +147,7 @@ Fixed-Point (Q16.16) ↔ Game Units (0-40 x 0-15) ↔ Screen Pixels
 - `HeroRecruitmentModal.tsx`
 - `BossRushSetupModal.tsx`
 - `BuildPresetsModal.tsx`
-- `DailyQuestsModal.tsx`
+- `AchievementsModal.tsx`
 - `LeaderboardModal.tsx`
 - `StatisticsDashboardModal.tsx`
 - `ShopModal.tsx`
@@ -197,7 +199,7 @@ Fixed-Point (Q16.16) ↔ Game Units (0-40 x 0-15) ↔ Screen Pixels
 | `client.ts` | Auth, profile, leaderboard |
 | `battlepass.ts` | Battle pass |
 | `boss-rush.ts` | Boss rush sessions |
-| `dailyQuests.ts` | Daily quests |
+| `achievements.ts` | Achievements system |
 | `energy.ts` | Energy management |
 | `gacha.ts` | Gacha system |
 | `guild.ts` | Guild operations |
@@ -237,7 +239,7 @@ Fixed-Point (Q16.16) ↔ Game Units (0-40 x 0-15) ↔ Screen Pixels
 | `leaderboard.signals.ts` | Leaderboard data |
 | `battlepass.signals.ts` | Battle pass progress |
 | `mastery.signals.ts` | Mastery tree |
-| `dailyQuests.signals.ts` | Daily quests |
+| `achievements.signals.ts` | Achievements system |
 | `pillar-challenge.signals.ts` | Pillar challenges |
 | `pillarUnlocks.signals.ts` | Pillar unlocks |
 | `shop.signals.ts` | Shop inventory |

@@ -23,6 +23,7 @@ import {
 import { recordWeeklyHonorGain } from "./playerLeaderboard.js";
 import { isUserConnected } from "./websocket.js";
 import { addArtifact } from "./artifacts.js";
+import { updateLifetimeStats } from "./achievements.js";
 
 // ============================================================================
 // ERROR CLASS
@@ -575,21 +576,52 @@ export async function getOpponents(
   );
   const limited = shuffled.slice(0, take);
 
-  const opponents = await Promise.all(
-    limited.map(async ({ user, power }) => {
-      const cooldownInfo = await canChallengeUser(userId, user.id);
-      return {
-        userId: user.id,
-        displayName: user.displayName,
-        power,
-        pvpWins: user.pvpWins,
-        pvpLosses: user.pvpLosses,
-        canChallenge: cooldownInfo.canChallenge,
-        challengeCooldownEndsAt: cooldownInfo.cooldownEndsAt?.toISOString(),
-        isOnline: isUserConnected(user.id),
-      };
-    }),
-  );
+  // Batch fetch cooldown info for all opponents in a single query (8 queries → 1)
+  const opponentIds = limited.map(({ user }) => user.id);
+  const since = new Date(Date.now() - PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000);
+
+  const recentChallenges = await prisma.pvpChallenge.findMany({
+    where: {
+      challengerId: userId,
+      challengedId: { in: opponentIds },
+      createdAt: { gte: since },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Group challenges by challengedId
+  const challengesByOpponent = new Map<string, Date[]>();
+  for (const challenge of recentChallenges) {
+    const dates = challengesByOpponent.get(challenge.challengedId) || [];
+    dates.push(challenge.createdAt);
+    challengesByOpponent.set(challenge.challengedId, dates);
+  }
+
+  const opponents = limited.map(({ user, power }) => {
+    const challenges = challengesByOpponent.get(user.id) || [];
+    const canChallenge = challenges.length < PVP_CONSTANTS.MAX_CHALLENGES_PER_OPPONENT;
+
+    let cooldownEndsAt: Date | undefined;
+    if (!canChallenge && challenges.length > 0) {
+      const oldestChallenge = challenges[challenges.length - 1];
+      if (oldestChallenge) {
+        cooldownEndsAt = new Date(
+          oldestChallenge.getTime() + PVP_CONSTANTS.COOLDOWN_HOURS * 60 * 60 * 1000
+        );
+      }
+    }
+
+    return {
+      userId: user.id,
+      displayName: user.displayName,
+      power,
+      pvpWins: user.pvpWins,
+      pvpLosses: user.pvpLosses,
+      canChallenge,
+      challengeCooldownEndsAt: cooldownEndsAt?.toISOString(),
+      isOnline: isUserConnected(user.id),
+    };
+  });
 
   return { opponents, total: candidates.length, myPower };
 }
@@ -1184,6 +1216,20 @@ export async function resolveChallenge(
     );
   }
 
+  // Update lifetime stats for achievements
+  const challengerIsWinner = serverResult.winnerId === challenge.challengerId;
+  const challengedIsWinner = serverResult.winnerId === challenge.challengedId;
+  await Promise.all([
+    updateLifetimeStats(challenge.challengerId, {
+      pvpBattles: 1,
+      pvpVictories: challengerIsWinner ? 1 : 0,
+    }),
+    updateLifetimeStats(challenge.challengedId, {
+      pvpBattles: 1,
+      pvpVictories: challengedIsWinner ? 1 : 0,
+    }),
+  ]);
+
   let challengerRewardArtifactId = challengerArtifactId;
   if (challengerArtifactId) {
     const result = await addArtifact(challenge.challengerId, challengerArtifactId);
@@ -1460,6 +1506,20 @@ export async function acceptChallenge(
       () => {},
     );
   }
+
+  // Update lifetime stats for achievements
+  const challengerIsWinner = winnerId === challenge.challengerId;
+  const challengedIsWinner = winnerId === challenge.challengedId;
+  await Promise.all([
+    updateLifetimeStats(challenge.challengerId, {
+      pvpBattles: 1,
+      pvpVictories: challengerIsWinner ? 1 : 0,
+    }),
+    updateLifetimeStats(challenge.challengedId, {
+      pvpBattles: 1,
+      pvpVictories: challengedIsWinner ? 1 : 0,
+    }),
+  ]);
 
   return {
     challenge: {

@@ -18,11 +18,11 @@ import { incrementTotalWaves } from './playerLeaderboard.js';
 import { applySimConfigSnapshot, buildSimConfigSnapshot } from './simConfig.js';
 import { getGameConfig } from './gameConfig.js';
 import { getActiveMultipliers } from './events.js';
-import { updateQuestsFromRun } from './dailyQuests.js';
 import { getUserGuildBonuses } from './guild.js';
 import { consumeEnergy } from './energy.js';
 import { ENERGY_ERROR_CODES } from '@arcade/protocol';
 import { getUnlockedPillarsForUser } from './pillarUnlocks.js';
+import { updateLifetimeStats } from './achievements.js';
 
 /** Simulation tick rate - 30Hz provides smooth gameplay while being computationally manageable */
 const TICK_HZ = 30;
@@ -892,6 +892,21 @@ export async function endGameSession(
       },
     });
 
+    // Update totalGoldEarned for prestige calculation
+    if (totalGoldEarned > 0) {
+      await tx.colonyProgress.upsert({
+        where: { userId: session.userId },
+        create: {
+          userId: session.userId,
+          colonyLevels: { farm: 0, mine: 0, market: 0, factory: 0 },
+          totalGoldEarned: BigInt(totalGoldEarned),
+        },
+        update: {
+          totalGoldEarned: { increment: BigInt(totalGoldEarned) },
+        },
+      });
+    }
+
     // Fetch updated inventory
     const updatedInventory = await tx.inventory.findUnique({
       where: { userId: session.userId },
@@ -912,14 +927,11 @@ export async function endGameSession(
     await incrementTotalWaves(session.userId, wavesCleared);
   }
 
-  // Update daily quest progress
-  // Note: Run completed counts for 'first_blood' quest
-  // Wave count approximated from waves cleared for 'wave_hunter' quest
-  // (actual enemy kills would require simulation state tracking)
-  await updateQuestsFromRun(session.userId, {
+  // Update lifetime stats for achievements
+  await updateLifetimeStats(session.userId, {
     runsCompleted: 1,
-    enemiesKilled: wavesCleared * 15, // Approximate: ~15 enemies per wave
-    elitesKilled: Math.floor(wavesCleared / 5), // Approximate: ~1 elite per 5 waves
+    wavesCompleted: wavesCleared,
+    goldEarned: totalGoldEarned.toString(),
   });
 
   return {

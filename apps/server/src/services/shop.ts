@@ -78,23 +78,34 @@ async function getUserCurrency(userId: string): Promise<Currency> {
  * Get shop overview with products and user purchase info
  */
 export async function getShopOverview(userId: string): Promise<GetShopResponse> {
-  const currency = await getUserCurrency(userId);
-  // Get user's purchase counts for limited items
-  const purchaseLimits = await prisma.userPurchaseLimit.findMany({
-    where: { userId },
+  // Optimized: Single query to fetch all needed user data (4 queries → 1)
+  const userData = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      preferredCurrency: true,
+      purchaseLimits: true,
+      purchases: {
+        where: { status: 'COMPLETED', productType: 'DUST' },
+        select: { productId: true },
+        distinct: ['productId'],
+      },
+      inventory: {
+        select: { unlockedHeroIds: true },
+      },
+    },
   });
+
+  const currency = (userData?.preferredCurrency as Currency) ?? 'PLN';
+  const purchaseLimits = userData?.purchaseLimits ?? [];
+
+  // Build userPurchases map
   const userPurchases: Record<string, number> = {};
   for (const limit of purchaseLimits) {
     userPurchases[limit.productId] = limit.purchaseCount;
   }
 
   // Check first-purchase bonus availability for dust packages
-  const purchasedPackages = await prisma.shopPurchase.findMany({
-    where: { userId, status: 'COMPLETED', productType: 'DUST' },
-    select: { productId: true },
-    distinct: ['productId'],
-  });
-  const purchasedSet = new Set(purchasedPackages.map((p: { productId: string }) => p.productId));
+  const purchasedSet = new Set((userData?.purchases ?? []).map((p: { productId: string }) => p.productId));
   const firstPurchaseBonusAvailable: Record<string, boolean> = {};
   for (const pkg of SHOP_DUST_PACKAGES) {
     firstPurchaseBonusAvailable[pkg.id] = !purchasedSet.has(pkg.id);
@@ -106,11 +117,7 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
   );
 
   // Get user's unlocked heroes for premium hero availability
-  const inventory = await prisma.inventory.findUnique({
-    where: { userId },
-    select: { unlockedHeroIds: true },
-  });
-  const unlockedHeroIds = new Set(inventory?.unlockedHeroIds ?? []);
+  const unlockedHeroIds = new Set(userData?.inventory?.unlockedHeroIds ?? []);
 
   // Check if battle pass is purchased
   const battlePassPurchased = purchaseLimits.some(
@@ -877,17 +884,6 @@ async function handleConvenienceItem(
       await tx.user.update({
         where: { id: userId },
         data: { lastIdleClaimAt: new Date(Date.now() - 8 * 60 * 60 * 1000) }, // 8 hours ago
-      });
-      break;
-    case 'quest_refresh':
-      // Delete today's quest progress to allow re-completion
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      await tx.dailyQuestProgress.deleteMany({
-        where: {
-          userId,
-          resetAt: { gte: today },
-        },
       });
       break;
     // Other items would be handled by their respective systems

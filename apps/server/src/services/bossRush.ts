@@ -15,8 +15,8 @@ import { BOSS_RUSH_REJECTION_REASONS, GameEventSchema } from '@arcade/protocol';
 import { getUserProfile } from './auth.js';
 import { upsertBossRushLeaderboardEntry, getUserBossRushRank } from './bossRushLeaderboard.js';
 import { getCurrentWeekKey } from '../lib/queue.js';
-import { updateQuestsFromRun } from './dailyQuests.js';
 import { addPoints as addBattlePassPoints } from './battlepass.js';
+import { updateLifetimeStats } from './achievements.js';
 
 /** Simulation tick rate */
 const TICK_HZ = 30;
@@ -434,15 +434,17 @@ export async function finishBossRushSession(
   // Get user's rank
   const rankInfo = await getUserBossRushRank(userId, weekKey);
 
-  // Update daily quest progress for boss_rush_daily quest
-  await updateQuestsFromRun(userId, {
-    bossesKilled: summary.bossesKilled,
-  });
-
   // Grant Battle Pass points for each boss killed
   if (summary.bossesKilled > 0) {
     await addBattlePassPoints(userId, 'boss_rush', summary.bossesKilled);
   }
+
+  // Update lifetime stats for achievements
+  await updateLifetimeStats(userId, {
+    bossKills: summary.bossesKilled,
+    bossRushCycles: 1,
+    damageDealt: Math.floor(summary.totalDamageDealt).toString(),
+  });
 
   return {
     verified: true,

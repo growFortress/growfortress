@@ -83,14 +83,44 @@ describe('Guild Boss Service', () => {
   // ============================================================================
 
   describe('getBossStatus', () => {
+    // Helper to create mock combined result (boss + stats in single query)
+    const createMockCombinedResult = (overrides: {
+      bossEndsAt?: Date;
+      todaysAttemptId?: string | null;
+      todaysAttemptDamage?: bigint | null;
+      todaysAttemptHeroId?: string | null;
+      todaysAttemptHeroTier?: number | null;
+      todaysAttemptHeroPower?: number | null;
+      todaysAttemptAttemptedAt?: Date | null;
+      userTotalDamage?: bigint;
+      guildTotalDamage?: bigint;
+      higherGuildsCount?: bigint;
+    } = {}) => [{
+      bossId: 'boss-123',
+      bossWeekKey: '2026-W02',
+      bossBossType: 'dragon',
+      bossTotalHp: BigInt(50000000),
+      bossCurrentHp: BigInt(50000000),
+      bossWeakness: 'arcane',
+      bossEndsAt: overrides.bossEndsAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      bossCreatedAt: new Date(),
+      todaysAttemptId: overrides.todaysAttemptId ?? null,
+      todaysAttemptDamage: overrides.todaysAttemptDamage ?? null,
+      todaysAttemptHeroId: overrides.todaysAttemptHeroId ?? null,
+      todaysAttemptHeroTier: overrides.todaysAttemptHeroTier ?? null,
+      todaysAttemptHeroPower: overrides.todaysAttemptHeroPower ?? null,
+      todaysAttemptAttemptedAt: overrides.todaysAttemptAttemptedAt ?? null,
+      userTotalDamage: overrides.userTotalDamage ?? BigInt(0),
+      guildTotalDamage: overrides.guildTotalDamage ?? BigInt(0),
+      higherGuildsCount: overrides.higherGuildsCount ?? BigInt(0),
+    }];
+
     it('returns canAttack=true if user has not attacked today', async () => {
-      const mockBoss = createMockGuildBoss();
-      mockPrisma.guildBoss.findUnique.mockResolvedValue(mockBoss);
-      mockPrisma.guildBossAttempt.findFirst.mockResolvedValue(null);
-      mockPrisma.guildBossAttempt.aggregate
-        .mockResolvedValueOnce({ _sum: { damage: null } }) // user damage
-        .mockResolvedValueOnce({ _sum: { damage: BigInt(500000) } }); // guild damage
-      mockPrisma.$queryRaw.mockResolvedValue([{ count: BigInt(0) }]);
+      // Single combined query returns boss + stats
+      mockPrisma.$queryRaw.mockResolvedValue(createMockCombinedResult({
+        guildTotalDamage: BigInt(500000),
+        higherGuildsCount: BigInt(0),
+      }));
 
       const result = await getBossStatus('guild-123', 'user-123');
 
@@ -100,14 +130,17 @@ describe('Guild Boss Service', () => {
     });
 
     it('returns canAttack=false if user already attacked today', async () => {
-      const mockBoss = createMockGuildBoss();
-      const mockAttempt = createMockGuildBossAttempt();
-      mockPrisma.guildBoss.findUnique.mockResolvedValue(mockBoss);
-      mockPrisma.guildBossAttempt.findFirst.mockResolvedValue(mockAttempt);
-      mockPrisma.guildBossAttempt.aggregate
-        .mockResolvedValueOnce({ _sum: { damage: BigInt(100000) } })
-        .mockResolvedValueOnce({ _sum: { damage: BigInt(500000) } });
-      mockPrisma.$queryRaw.mockResolvedValue([{ count: BigInt(2) }]);
+      mockPrisma.$queryRaw.mockResolvedValue(createMockCombinedResult({
+        todaysAttemptId: 'attempt-123',
+        todaysAttemptDamage: BigInt(100000),
+        todaysAttemptHeroId: 'THUNDERLORD',
+        todaysAttemptHeroTier: 1,
+        todaysAttemptHeroPower: 1000,
+        todaysAttemptAttemptedAt: new Date(),
+        userTotalDamage: BigInt(100000),
+        guildTotalDamage: BigInt(500000),
+        higherGuildsCount: BigInt(2),
+      }));
 
       const result = await getBossStatus('guild-123', 'user-123');
 
@@ -117,13 +150,9 @@ describe('Guild Boss Service', () => {
     });
 
     it('returns canAttack=false if boss has expired', async () => {
-      const expiredBoss = createMockGuildBoss({
-        endsAt: new Date(Date.now() - 1000), // Already ended
-      });
-      mockPrisma.guildBoss.findUnique.mockResolvedValue(expiredBoss);
-      mockPrisma.guildBossAttempt.findFirst.mockResolvedValue(null);
-      mockPrisma.guildBossAttempt.aggregate.mockResolvedValue({ _sum: { damage: null } });
-      mockPrisma.$queryRaw.mockResolvedValue([]);
+      mockPrisma.$queryRaw.mockResolvedValue(createMockCombinedResult({
+        bossEndsAt: new Date(Date.now() - 1000), // Already ended
+      }));
 
       const result = await getBossStatus('guild-123', 'user-123');
 
@@ -131,14 +160,11 @@ describe('Guild Boss Service', () => {
     });
 
     it('calculates correct guild rank', async () => {
-      const mockBoss = createMockGuildBoss();
-      mockPrisma.guildBoss.findUnique.mockResolvedValue(mockBoss);
-      mockPrisma.guildBossAttempt.findFirst.mockResolvedValue(null);
-      mockPrisma.guildBossAttempt.aggregate
-        .mockResolvedValueOnce({ _sum: { damage: BigInt(50000) } })
-        .mockResolvedValueOnce({ _sum: { damage: BigInt(200000) } });
-      // 3 guilds have higher damage
-      mockPrisma.$queryRaw.mockResolvedValue([{ count: BigInt(3) }]);
+      mockPrisma.$queryRaw.mockResolvedValue(createMockCombinedResult({
+        userTotalDamage: BigInt(50000),
+        guildTotalDamage: BigInt(200000),
+        higherGuildsCount: BigInt(3),
+      }));
 
       const result = await getBossStatus('guild-123', 'user-123');
 
@@ -146,11 +172,11 @@ describe('Guild Boss Service', () => {
     });
 
     it('returns null rank if guild has no damage', async () => {
-      const mockBoss = createMockGuildBoss();
-      mockPrisma.guildBoss.findUnique.mockResolvedValue(mockBoss);
-      mockPrisma.guildBossAttempt.findFirst.mockResolvedValue(null);
-      mockPrisma.guildBossAttempt.aggregate.mockResolvedValue({ _sum: { damage: null } });
-      mockPrisma.$queryRaw.mockResolvedValue([]);
+      mockPrisma.$queryRaw.mockResolvedValue(createMockCombinedResult({
+        userTotalDamage: BigInt(0),
+        guildTotalDamage: BigInt(0),
+        higherGuildsCount: BigInt(0),
+      }));
 
       const result = await getBossStatus('guild-123', 'user-123');
 

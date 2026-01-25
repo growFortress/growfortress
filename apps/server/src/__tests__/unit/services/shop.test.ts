@@ -74,11 +74,6 @@ describe('Shop Service', () => {
     vi.clearAllMocks();
   });
 
-  const mockUser = {
-    id: 'user-123',
-    preferredCurrency: 'PLN',
-  };
-
   const mockInventory = {
     userId: 'user-123',
     dust: 500,
@@ -87,12 +82,24 @@ describe('Shop Service', () => {
     materials: {},
   };
 
+  // Helper to create combined user data for optimized getShopOverview query
+  const createMockUserData = (overrides: {
+    preferredCurrency?: string | null;
+    purchaseLimits?: Array<{ productId: string; purchaseCount: number }>;
+    purchases?: Array<{ productId: string }>;
+    unlockedHeroIds?: string[];
+  } = {}) => ({
+    preferredCurrency: overrides.preferredCurrency ?? 'PLN',
+    purchaseLimits: overrides.purchaseLimits ?? [],
+    purchases: overrides.purchases ?? [],
+    inventory: {
+      unlockedHeroIds: overrides.unlockedHeroIds ?? ['vanguard'],
+    },
+  });
+
   describe('getShopOverview', () => {
     it('returns shop overview with all categories', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([]);
-      mockPrisma.inventory.findUnique.mockResolvedValue(mockInventory);
+      mockPrisma.user.findUnique.mockResolvedValue(createMockUserData());
 
       const result = await getShopOverview('user-123');
 
@@ -103,12 +110,9 @@ describe('Shop Service', () => {
     });
 
     it('hides starter pack if already purchased', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([
-        { userId: 'user-123', productId: 'starter_pack', purchaseCount: 1 },
-      ]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([]);
-      mockPrisma.inventory.findUnique.mockResolvedValue(mockInventory);
+      mockPrisma.user.findUnique.mockResolvedValue(createMockUserData({
+        purchaseLimits: [{ productId: 'starter_pack', purchaseCount: 1 }],
+      }));
 
       const result = await getShopOverview('user-123');
 
@@ -119,12 +123,9 @@ describe('Shop Service', () => {
     });
 
     it('tracks first purchase bonus availability', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([
-        { productId: 'dust_small', status: 'COMPLETED', productType: 'DUST' },
-      ]);
-      mockPrisma.inventory.findUnique.mockResolvedValue(mockInventory);
+      mockPrisma.user.findUnique.mockResolvedValue(createMockUserData({
+        purchases: [{ productId: 'dust_small' }],
+      }));
 
       const result = await getShopOverview('user-123');
 
@@ -133,13 +134,9 @@ describe('Shop Service', () => {
     });
 
     it('filters out owned premium heroes', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([]);
-      mockPrisma.inventory.findUnique.mockResolvedValue({
-        ...mockInventory,
+      mockPrisma.user.findUnique.mockResolvedValue(createMockUserData({
         unlockedHeroIds: ['vanguard', 'phoenix'],
-      });
+      }));
 
       const result = await getShopOverview('user-123');
 
@@ -149,10 +146,9 @@ describe('Shop Service', () => {
     });
 
     it('uses default currency when user has none set', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, preferredCurrency: null });
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([]);
-      mockPrisma.inventory.findUnique.mockResolvedValue(mockInventory);
+      mockPrisma.user.findUnique.mockResolvedValue(createMockUserData({
+        preferredCurrency: null,
+      }));
 
       const result = await getShopOverview('user-123');
 
@@ -243,9 +239,6 @@ describe('Shop Service', () => {
           },
           user: {
             update: vi.fn().mockResolvedValue({}),
-          },
-          dailyQuestProgress: {
-            deleteMany: vi.fn().mockResolvedValue({}),
           },
         };
         return await callback(tx);

@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals';
 import { gamePhase, displayGold } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { GoldIcon } from '../icons/index.js';
 import styles from './WallPlacementPanel.module.css';
 
 // Wall type definitions (sci-fi themed)
@@ -99,7 +100,7 @@ export function WallPlacementPanel() {
               <div class={styles.wallInfo}>
                 <span class={styles.wallName}>{t(wall.nameKey)}</span>
                 <span class={styles.wallCost}>
-                  <span class={styles.goldIcon}>🪙</span>
+                  <GoldIcon size={16} className={styles.goldIcon} />
                   {wall.cost}
                 </span>
               </div>

@@ -25,6 +25,11 @@ import {
   createMockPlayerArtifact,
 } from '../../mocks/prisma.js';
 
+// Mock achievements service to avoid database dependencies
+vi.mock('../../../services/achievements.js', () => ({
+  updateLifetimeStats: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Mock sim-core to avoid complex simulation dependencies
 vi.mock('@arcade/sim-core', () => ({
   runArenaBattle: vi.fn(() => ({
@@ -201,6 +206,7 @@ describe('PvP Service', () => {
       });
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
 
       await getOpponents('user-123');
 
@@ -219,6 +225,7 @@ describe('PvP Service', () => {
       });
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
 
       await getOpponents('user-123');
 
@@ -311,6 +318,7 @@ describe('PvP Service', () => {
       });
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
 
       const result = await getOpponents('user-123');
 
@@ -327,6 +335,7 @@ describe('PvP Service', () => {
       mockPrisma.powerUpgrades.findUnique.mockResolvedValue(null);
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
 
       const result = await getOpponents('user-123');
 
@@ -1807,6 +1816,7 @@ describe('PvP Service', () => {
       });
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(0);
+      mockPrisma.pvpChallenge.findMany.mockResolvedValue([]);
 
       const result = await getOpponents('user-123');
 

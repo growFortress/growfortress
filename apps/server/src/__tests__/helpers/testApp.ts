@@ -26,8 +26,8 @@ import guildPreviewRoutes from "../../routes/guildPreview.js";
 import shopRoutes from "../../routes/shop.js";
 import gachaRoutes from "../../routes/gacha.js";
 import battlepassRoutes from "../../routes/battlepass.js";
-import dailyQuestsRoutes from "../../routes/dailyQuests.js";
 import pillarChallengeRoutes from "../../routes/pillarChallenge.js";
+import achievementsRoutes from "../../routes/achievements.js";
 
 /**
  * Build a test app with mocked dependencies
@@ -67,8 +67,8 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await fastify.register(shopRoutes);
   await fastify.register(gachaRoutes);
   await fastify.register(battlepassRoutes);
-  await fastify.register(dailyQuestsRoutes);
   await fastify.register(pillarChallengeRoutes);
+  await fastify.register(achievementsRoutes);
 
   return fastify;
 }

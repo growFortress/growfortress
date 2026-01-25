@@ -3,13 +3,14 @@ import type { FortressClass, ActiveHero } from '@arcade/sim-core';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { useTutorialTriggers } from '../../tutorial/useTutorialTriggers.js';
+import { useTutorialPause } from '../../hooks/useTutorialPause.js';
 import './GameContainer.css';
 import { Hud } from './Hud.js';
 import { Controls } from './Controls.js';
 import { HubOverlay } from './HubOverlay.js';
 import { GameSidePanel } from './GameSidePanel.js';
 import { GameBottomPanel } from './GameBottomPanel.js';
-import { ColonySceneOverlay } from './ColonySceneOverlay.js';
+import { ColonyTerminal, PrestigeModal, MilestonePopup } from '../colony/index.js';
 import { TutorialHighlight } from './TutorialHighlight.js';
 // Critical modals - loaded eagerly (needed immediately on game start)
 import { ChoiceModal } from '../modals/ChoiceModal.js';
@@ -59,11 +60,7 @@ import {
   showOnboardingModal,
   onboardingCompleted,
 } from '../../state/index.js';
-import {
-  colonySceneVisible,
-  idleRewardsState,
-  upgradingColony,
-} from '../../state/idle.signals.js';
+// Colony state is managed internally by ColonyTerminal
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
 import { ApiError } from '../../api/base.js';
 import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar, isFirstSession } from '../../state/index.js';
@@ -105,15 +102,15 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     startBossRush,
     endBossRush,
     setGameSpeed,
-    showColonyScene: showColonySceneRenderer,
-    hideColonyScene: hideColonySceneRenderer,
-    updateColonies,
-    playColonyClaimAnimation,
-    playColonyUpgradeAnimation,
+    pauseForTutorial,
+    resumeFromTutorial,
   } = useGameLoop(canvasRef, canvasReady);
 
   // Tutorial triggers - monitors game state and shows contextual tips
   useTutorialTriggers();
+
+  // Tutorial pause - pauses game when tutorial tip is active
+  useTutorialPause(pauseForTutorial, resumeFromTutorial);
 
   // Auto-play integration for Boss Rush mode
   const handleAutoPlayHealFortress = useCallback((healPercent: number) => {
@@ -248,33 +245,6 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     observer.observe(target);
     return () => observer.disconnect();
   }, [updateUiScale]);
-
-  // Sync colony scene visibility with signal
-  useEffect(() => {
-    if (colonySceneVisible.value) {
-      showColonySceneRenderer();
-    } else {
-      hideColonySceneRenderer();
-    }
-  }, [colonySceneVisible.value, showColonySceneRenderer, hideColonySceneRenderer]);
-
-  // Update colonies in renderer when idle rewards state changes or scene becomes visible
-  useEffect(() => {
-    const state = idleRewardsState.value;
-    const isVisible = colonySceneVisible.value;
-    if (state?.colonies && isVisible) {
-      console.log('[GameContainer] Updating colonies in scene:', state.colonies.length);
-      updateColonies(state.colonies);
-    }
-  }, [idleRewardsState.value, colonySceneVisible.value, updateColonies]);
-
-  // Play upgrade animation when colony is being upgraded
-  useEffect(() => {
-    const colonyId = upgradingColony.value;
-    if (colonyId) {
-      playColonyUpgradeAnimation(colonyId);
-    }
-  }, [upgradingColony.value, playColonyUpgradeAnimation]);
 
   const handleStartClick = async () => {
     // First, show class selection if not already selected
@@ -541,11 +511,10 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       <BossRushHUD />
       <BossRushShopPanel />
 
-      {/* Colony Scene Overlay (full-screen colony management) */}
-      <ColonySceneOverlay
-        onUpgradeAnimation={playColonyUpgradeAnimation}
-        onClaimAnimation={playColonyClaimAnimation}
-      />
+      {/* Colony Terminal (full-screen colony management) */}
+      <ColonyTerminal />
+      <PrestigeModal />
+      <MilestonePopup />
 
       {/* Tutorial highlight overlay (renders via portal) */}
       <TutorialHighlight />

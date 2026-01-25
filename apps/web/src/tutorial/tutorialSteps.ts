@@ -14,10 +14,31 @@ export interface TutorialStepConfig {
 }
 
 export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> = {
+  welcome_intro: {
+    id: "welcome_intro",
+    position: "center",
+    autoDismissMs: 0, // Must click to continue
+    completion: { type: "click" },
+  },
   fortress_auto_attack: {
     id: "fortress_auto_attack",
     position: "center",
-    autoDismissMs: 6000,
+    autoDismissMs: 0, // Must click to continue (was 6000)
+    completion: { type: "click" },
+  },
+  fortress_health: {
+    id: "fortress_health",
+    highlightRef: "fortress-health",
+    position: "top",
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
+  gold_resource: {
+    id: "gold_resource",
+    highlightRef: "gold-display",
+    position: "left",
+    autoDismissMs: 0,
+    completion: { type: "click" },
   },
   bomb_skill: {
     id: "bomb_skill",
@@ -37,6 +58,27 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
     position: "left",
     autoDismissMs: 0, // Interactive - no auto-dismiss
     completion: { type: "signal", signalName: "speedMultiplier", expectedChange: "any" },
+  },
+  turret_targeting: {
+    id: "turret_targeting",
+    highlightRef: "turret-targeting",
+    position: "left",
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
+  militia_spawn: {
+    id: "militia_spawn",
+    highlightRef: "militia-panel",
+    position: "top",
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
+  dust_resource: {
+    id: "dust_resource",
+    highlightRef: "dust-display",
+    position: "left",
+    autoDismissMs: 0,
+    completion: { type: "click" },
   },
   build_synergy: {
     id: "build_synergy",
@@ -90,10 +132,25 @@ type TranslationFunction = (key: string) => string;
 
 export function getTutorialSteps(t: TranslationFunction): Record<TutorialStepId, TutorialTip> {
   return {
+    welcome_intro: {
+      ...TUTORIAL_STEP_CONFIGS.welcome_intro,
+      title: t("tutorial.welcomeIntro.title"),
+      description: t("tutorial.welcomeIntro.description"),
+    },
     fortress_auto_attack: {
       ...TUTORIAL_STEP_CONFIGS.fortress_auto_attack,
       title: t("tutorial.fortressAutoAttack.title"),
       description: t("tutorial.fortressAutoAttack.description"),
+    },
+    fortress_health: {
+      ...TUTORIAL_STEP_CONFIGS.fortress_health,
+      title: t("tutorial.fortressHealth.title"),
+      description: t("tutorial.fortressHealth.description"),
+    },
+    gold_resource: {
+      ...TUTORIAL_STEP_CONFIGS.gold_resource,
+      title: t("tutorial.goldResource.title"),
+      description: t("tutorial.goldResource.description"),
     },
     bomb_skill: {
       ...TUTORIAL_STEP_CONFIGS.bomb_skill,
@@ -109,6 +166,21 @@ export function getTutorialSteps(t: TranslationFunction): Record<TutorialStepId,
       ...TUTORIAL_STEP_CONFIGS.speed_controls,
       title: t("tutorial.speedControls.title"),
       description: t("tutorial.speedControls.description"),
+    },
+    turret_targeting: {
+      ...TUTORIAL_STEP_CONFIGS.turret_targeting,
+      title: t("tutorial.turretTargeting.title"),
+      description: t("tutorial.turretTargeting.description"),
+    },
+    militia_spawn: {
+      ...TUTORIAL_STEP_CONFIGS.militia_spawn,
+      title: t("tutorial.militiaSpawn.title"),
+      description: t("tutorial.militiaSpawn.description"),
+    },
+    dust_resource: {
+      ...TUTORIAL_STEP_CONFIGS.dust_resource,
+      title: t("tutorial.dustResource.title"),
+      description: t("tutorial.dustResource.description"),
     },
     build_synergy: {
       ...TUTORIAL_STEP_CONFIGS.build_synergy,
@@ -150,13 +222,43 @@ export function getTutorialSteps(t: TranslationFunction): Record<TutorialStepId,
 
 // Legacy static export for backwards compatibility (Polish only)
 export const TUTORIAL_STEPS: Record<TutorialStepId, TutorialTip> = {
+  welcome_intro: {
+    id: "welcome_intro",
+    title: "Witaj w Grow Fortress!",
+    description:
+      "Broń twierdzy przed falami wrogów. Twierdza i wieżyczki atakują automatycznie - Ty podejmujesz strategiczne decyzje!",
+    position: "center",
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
   fortress_auto_attack: {
     id: "fortress_auto_attack",
     title: "Twoja Twierdza",
     description:
-      "Twierdza i wieÅ¼yczki atakujÄ… automatycznie. Obserwuj jak broniÄ… CiÄ™ przed wrogami!",
+      "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak bronią Cię przed wrogami!",
     position: "center",
-    autoDismissMs: 6000,
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
+  fortress_health: {
+    id: "fortress_health",
+    title: "Zdrowie Twierdzy",
+    description:
+      "To jest HP twojej twierdzy. Jeśli spadnie do zera - przegrywasz. Chroń ją za wszelką cenę!",
+    highlightRef: "fortress-health",
+    position: "top",
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
+  gold_resource: {
+    id: "gold_resource",
+    title: "Złoto",
+    description:
+      "Zdobywasz złoto za zabijanie wrogów. Wydawaj je na ulepszenia między sesjami!",
+    highlightRef: "gold-display",
+    position: "left",
+    autoDismissMs: 0,
+    completion: { type: "click" },
   },
   bomb_skill: {
     id: "bomb_skill",
@@ -177,12 +279,43 @@ export const TUTORIAL_STEPS: Record<TutorialStepId, TutorialTip> = {
   },
   speed_controls: {
     id: "speed_controls",
-    title: "Kontrola PrÄ™dkoÅ›ci",
+    title: "Kontrola Prędkości",
     description:
-      "Przyspiesz grÄ™ przyciskami 2x lub 3x gdy poczujesz siÄ™ pewniej.",
+      "Przyspiesz grę przyciskami 2x gdy poczujesz się pewniej.",
     highlightRef: "speed-controls",
     position: "left",
-    autoDismissMs: 6000,
+    autoDismissMs: 0,
+    completion: { type: "signal", signalName: "speedMultiplier", expectedChange: "any" },
+  },
+  turret_targeting: {
+    id: "turret_targeting",
+    title: "Celowanie Wieżyczek",
+    description:
+      "Zmień tryb celowania wieżyczek: najbliżsi, najsłabsi, najsilniejsi lub najszybsi wrogowie.",
+    highlightRef: "turret-targeting",
+    position: "left",
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
+  militia_spawn: {
+    id: "militia_spawn",
+    title: "Milicja",
+    description:
+      "Przywołuj jednostki milicji za dust! Piechota, łucznicy i tarczownicy pomogą bronić twierdzy.",
+    highlightRef: "militia-panel",
+    position: "top",
+    autoDismissMs: 0,
+    completion: { type: "click" },
+  },
+  dust_resource: {
+    id: "dust_resource",
+    title: "Dust",
+    description:
+      "Dust zdobywasz na koniec fal. Używaj go do przywoływania milicji i specjalnych ulepszeń!",
+    highlightRef: "dust-display",
+    position: "left",
+    autoDismissMs: 0,
+    completion: { type: "click" },
   },
   build_synergy: {
     id: "build_synergy",

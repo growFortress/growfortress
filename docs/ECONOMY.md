@@ -5,7 +5,7 @@
 The game features multiple currencies and resource systems:
 
 - **Gold** - Primary currency (earned in-game)
-- **Dust** - Premium currency (daily quests, purchases)
+- **Dust** - Premium currency (achievements, purchases)
 - **Honor** - PvP rating currency
 - **Sigils** - Leaderboard reward currency
 - **Materials** - Crafting resources
@@ -25,7 +25,7 @@ The game features multiple currencies and resource systems:
 | Boss Kill | 18-70 gold | Based on boss type |
 | Level Up | 100 gold | Per level gained |
 | Idle Rewards | Variable | Colony production |
-| Daily Quests | Bonus gold | Quest rewards |
+| Achievements | Bonus gold | Tier rewards |
 
 ### Gold Scaling Formula
 ```
@@ -57,12 +57,11 @@ finalGold = baseGold × eliteMult × goldFindBonus × waveMult × cycleMult
 
 | Source | Amount |
 |--------|--------|
-| Daily Quest: First Blood | 10 dust |
-| Daily Quest: Wave Hunter | 25 dust |
-| Daily Quest: Elite Slayer | 15 dust |
-| Daily Quest: Boss Slayer | 20 dust |
-| Daily Quest: Dedicated | 30 dust |
-| **Total Daily** | **100 dust** |
+| Achievement Tier I-III | 5-15 dust |
+| Achievement Tier IV-VI | 20-40 dust |
+| Achievement Tier VII-VIII | 50-75 dust |
+| Achievement Tier IX-X | 100+ dust |
+| **Total Lifetime** | **~1,650 dust** |
 
 | Source | Amount |
 |--------|--------|
@@ -220,7 +219,7 @@ finalGold = baseGold × eliteMult × goldFindBonus × waveMult × cycleMult
 ### Point Sources
 | Source | Points |
 |--------|--------|
-| Daily Quest Complete | 10 |
+| Achievement Tier Claimed | 10 |
 | Wave 50 Reached | 25 |
 | Boss Kill | 5 |
 | PvP Win | 15 |
@@ -250,21 +249,43 @@ finalGold = baseGold × eliteMult × goldFindBonus × waveMult × cycleMult
 
 ---
 
-## Daily Quests
+## Achievements
 
-### Quest Definitions
+### Overview
+Permanent progression system with tiered rewards (Hero Zero "Heroic Deeds" style):
+- **8 categories**: Combat, Progression, Collection, Economy, PvP, Guild, Challenge, Mastery
+- **24 achievements** with 5-10 tiers each
+- **~226 claimable tiers** total
+- **Lifetime stats** tracked permanently (never reset)
 
-| Quest | Target | Dust |
-|-------|--------|------|
-| First Blood | Complete 1 wave | 10 |
-| Wave Hunter | Complete 50 waves | 25 |
-| Elite Slayer | Kill 20 elites | 15 |
-| Boss Slayer | Kill 5 bosses | 20 |
-| Dedicated | Play 30 minutes | 30 |
+### Categories & Examples
 
-### Reset Time
-- Daily reset: 00:00 UTC
-- All quests refresh
+| Category | Example Achievement | Stat Tracked |
+|----------|---------------------|--------------|
+| Combat | Enemy Slayer | totalKills |
+| Combat | Elite Hunter | eliteKills |
+| Combat | Boss Destroyer | bossKills |
+| Progression | Wave Warrior | wavesCompleted |
+| Progression | Dedicated Player | runsCompleted |
+| Collection | Hero Collector | heroesUnlocked |
+| Economy | Gold Magnate | goldEarned |
+| PvP | Arena Champion | pvpVictories |
+| Challenge | Boss Rush Survivor | bossRushCycles |
+| Mastery | Skill Master | skillsActivated |
+
+### Tier Rewards
+
+| Tier Range | Dust | Gold | Materials | Title |
+|------------|------|------|-----------|-------|
+| I-III | 5-15 | 100-500 | - | - |
+| IV-VI | 20-40 | 1K-3K | Rare | - |
+| VII-VIII | 50-75 | 5K-8K | Epic | - |
+| IX-X | 100+ | 10K+ | Legendary | Yes |
+
+### Titles
+- ~25 unique titles unlockable from achievement tiers
+- Only one title active at a time
+- Displayed next to player name
 
 ---
 

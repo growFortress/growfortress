@@ -74,8 +74,11 @@ export interface SessionStartOptions {
   pillarId?: PillarId;
 }
 
-/** Save session snapshot every N ticks (10 seconds at 30Hz) */
-const SESSION_SNAPSHOT_INTERVAL = 300;
+/** Fallback: Save session snapshot every N ticks (30 seconds at 30Hz) */
+const SESSION_SNAPSHOT_FALLBACK_INTERVAL = 900;
+
+/** HP threshold for significant change snapshot (percentage) */
+const SIGNIFICANT_HP_CHANGE_THRESHOLD = 0.2; // 20% HP change triggers snapshot
 
 export type GamePhase =
   | "idle"
@@ -123,8 +126,11 @@ export class Game {
   private static readonly MAX_SEGMENT_RETRIES = 5;
   private static readonly BASE_RETRY_DELAY_MS = 2000; // 2 seconds base delay
 
-  // Session persistence state
+  // Session persistence state (event-driven snapshots with deduplication)
   private lastSnapshotTick = 0;
+  private lastSnapshotWave = 0;
+  private lastSnapshotHpPercent = 1.0;
+  private lastSnapshotHash = 0;
   private sessionOptions: SessionStartOptions = {};
 
   // Token refresh state
@@ -242,6 +248,8 @@ export class Game {
       this.auditTickSet = new Set(sessionInfo.segmentAuditTicks);
       this.pendingSegmentSubmit = false;
       this.lastSnapshotTick = 0;
+      this.lastSnapshotWave = sessionInfo.startingWave;
+      this.lastSnapshotHpPercent = 1.0;
       this.lastFortressHp = sessionInfo.fortressBaseHp;
       this.lastLevel = sessionInfo.commanderLevel;
 
@@ -371,6 +379,10 @@ export class Game {
     this.pendingSegmentSubmit = false;
     this.lastSnapshotTick =
       snapshot.lastSnapshotTick ?? snapshot.simulationState.tick;
+    this.lastSnapshotWave = snapshot.simulationState.wave;
+    this.lastSnapshotHpPercent = snapshot.simulationState.fortressMaxHp > 0
+      ? snapshot.simulationState.fortressHp / snapshot.simulationState.fortressMaxHp
+      : 1.0;
     this.sessionOptions = {
       fortressClass,
       startingHeroes: snapshot.startingHeroes,
@@ -474,11 +486,8 @@ export class Game {
       );
     }
 
-    // Periodically save session snapshot for page refresh recovery
-    if (state.tick - this.lastSnapshotTick >= SESSION_SNAPSHOT_INTERVAL) {
-      this.lastSnapshotTick = state.tick;
-      this.saveSessionSnapshot();
-    }
+    // Event-driven session snapshots for page refresh recovery
+    this.checkAndSaveSnapshot(state);
 
     this.callbacks.onStateChange();
   }
@@ -784,6 +793,10 @@ export class Game {
       this.callbacks.onChoiceRequired(newState.pendingChoice.options);
     } else {
       this.phase = "playing";
+
+      // Save snapshot after relic choice (significant game state change)
+      console.log("[Game] Saving snapshot: relic_chosen");
+      this.saveSessionSnapshot();
 
       // Submit segment if we were at a boundary before the choice
       // The wave has now incremented, so we must use the saved boundary state
@@ -1136,6 +1149,8 @@ export class Game {
     this.lastChainHash = 0;
     this.lastCheckpointTick = 0;
     this.lastSnapshotTick = 0;
+    this.lastSnapshotWave = 0;
+    this.lastSnapshotHpPercent = 1.0;
     this.auditTickSet.clear();
     this.pendingSegmentSubmit = false;
     this.segmentSubmitRetryCount = 0;
@@ -1145,9 +1160,78 @@ export class Game {
     this.callbacks.onStateChange();
   }
 
+  /**
+   * Check if snapshot should be saved based on game events.
+   * Triggers on: wave complete, significant HP change, or fallback interval.
+   */
+  private checkAndSaveSnapshot(state: GameState): void {
+    if (!this.sessionInfo || !this.simulation) return;
+
+    let shouldSave = false;
+    let reason = "";
+
+    // 1. Wave complete - save when wave changes
+    if (state.wave > this.lastSnapshotWave) {
+      shouldSave = true;
+      reason = `wave_complete (${this.lastSnapshotWave} -> ${state.wave})`;
+      this.lastSnapshotWave = state.wave;
+    }
+
+    // 2. Significant HP change (> 20% drop)
+    const currentHpPercent = state.fortressMaxHp > 0
+      ? state.fortressHp / state.fortressMaxHp
+      : 1.0;
+    const hpChange = Math.abs(currentHpPercent - this.lastSnapshotHpPercent);
+    if (hpChange >= SIGNIFICANT_HP_CHANGE_THRESHOLD) {
+      shouldSave = true;
+      reason = `hp_change (${Math.round(this.lastSnapshotHpPercent * 100)}% -> ${Math.round(currentHpPercent * 100)}%)`;
+      this.lastSnapshotHpPercent = currentHpPercent;
+    }
+
+    // 3. Fallback: periodic save every 30 seconds (900 ticks)
+    if (!shouldSave && state.tick - this.lastSnapshotTick >= SESSION_SNAPSHOT_FALLBACK_INTERVAL) {
+      shouldSave = true;
+      reason = "fallback_interval";
+    }
+
+    if (shouldSave) {
+      this.lastSnapshotTick = state.tick;
+      if (reason !== "fallback_interval") {
+        console.log(`[Game] Saving snapshot: ${reason}`);
+      }
+      this.saveSessionSnapshot();
+    }
+  }
+
+  /**
+   * Compute a simple hash of key game state for deduplication.
+   * This prevents saving identical snapshots.
+   */
+  private computeStateHash(state: GameState): number {
+    // Simple hash based on key state values
+    // Changes in these values indicate meaningful state change
+    let hash = 0;
+    hash = (hash * 31 + state.tick) | 0;
+    hash = (hash * 31 + state.wave) | 0;
+    hash = (hash * 31 + Math.round(state.fortressHp)) | 0;
+    hash = (hash * 31 + state.relics.length) | 0;
+    hash = (hash * 31 + state.commanderLevel) | 0;
+    hash = (hash * 31 + state.heroes.length) | 0;
+    hash = (hash * 31 + state.turrets.length) | 0;
+    return hash;
+  }
+
   /** Save session snapshot to IndexedDB for page refresh recovery */
   private saveSessionSnapshot(): void {
     if (!this.sessionInfo || !this.simulation) return;
+
+    // Hash-based deduplication - skip if state hasn't changed
+    const state = this.simulation.state;
+    const currentHash = this.computeStateHash(state);
+    if (currentHash === this.lastSnapshotHash) {
+      return; // State unchanged, skip saving
+    }
+    this.lastSnapshotHash = currentHash;
 
     const snapshot: ActiveSessionSnapshot = {
       userId: getUserId() || undefined,

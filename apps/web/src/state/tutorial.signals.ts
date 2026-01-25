@@ -2,10 +2,16 @@ import { signal, effect } from "@preact/signals";
 
 // Tutorial step identifiers
 export type TutorialStepId =
+  | "welcome_intro"
   | "fortress_auto_attack"
+  | "fortress_health"
+  | "gold_resource"
   | "bomb_skill"
   | "relic_selection"
   | "speed_controls"
+  | "turret_targeting"
+  | "militia_spawn"
+  | "dust_resource"
   | "build_synergy"
   | "fortress_upgrades"
   | "hero_stat_upgrades"
@@ -97,18 +103,24 @@ export const activeTutorialTip = signal<TutorialTip | null>(null);
 // Whether tutorials are enabled (for first-time players)
 export const tutorialsEnabled = signal(true);
 
+// Signal to request game pause during tutorials
+export const tutorialPauseRequested = signal<boolean>(false);
+
 // Auto-save progress when it changes
 effect(() => {
   saveProgress(tutorialProgress.value);
 });
 
 // Actions
-export function showTutorialTip(tip: TutorialTip): void {
+export function showTutorialTip(tip: TutorialTip, shouldPause = true): void {
   // Don't show if already completed or another tip is active
   if (tutorialProgress.value.has(tip.id) || activeTutorialTip.value !== null) {
     return;
   }
   activeTutorialTip.value = tip;
+  if (shouldPause) {
+    tutorialPauseRequested.value = true;
+  }
 }
 
 export function dismissCurrentTip(): void {
@@ -117,6 +129,7 @@ export function dismissCurrentTip(): void {
     markTipCompleted(tip.id);
   }
   activeTutorialTip.value = null;
+  tutorialPauseRequested.value = false;
 }
 
 export function markTipCompleted(id: TutorialStepId): void {
@@ -154,4 +167,5 @@ export function completeInteractiveTip(): void {
     markTipCompleted(tip.id);
   }
   activeTutorialTip.value = null;
+  tutorialPauseRequested.value = false;
 }

@@ -6,6 +6,55 @@ import { audioManager } from '../../game/AudioManager.js';
 import { EnemyVisualPool, type EnemyVisualBundle } from '../ObjectPool.js';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
 import { graphicsSettings } from '../../state/settings.signals.js';
+import { themeManager } from '../scenes/environment/ThemeManager.js';
+
+// --- TERRAIN VISIBILITY UTILITIES ---
+/**
+ * Calculate relative luminance of a color (0-1 scale).
+ * Used to determine if terrain is light or dark for outline/shadow adaptation.
+ */
+function getColorLuminance(color: number): number {
+  const r = ((color >> 16) & 0xff) / 255;
+  const g = ((color >> 8) & 0xff) / 255;
+  const b = (color & 0xff) / 255;
+  // Standard relative luminance formula (ITU-R BT.709)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Get terrain visibility settings based on current theme.
+ * Returns outline color and shadow alpha optimized for terrain contrast.
+ */
+function getTerrainVisibilitySettings(): { outlineColor: number; outlineAlpha: number; shadowAlpha: number } {
+  const theme = themeManager.getCurrentTheme();
+  const terrainColor = theme.deck.plate;
+  const luminance = getColorLuminance(terrainColor);
+
+  // Bright terrain (Gods, Science-light areas): dark outline, darker shadow
+  // Dark terrain (Streets, Cosmos): lighter outline, standard shadow
+  if (luminance > 0.35) {
+    // Bright terrain - use dark outline for maximum contrast
+    return {
+      outlineColor: 0x000000,
+      outlineAlpha: 0.8,
+      shadowAlpha: 0.5, // Darker shadow on bright terrain
+    };
+  } else if (luminance > 0.15) {
+    // Medium terrain (Mutants, Magic) - dual tone outline
+    return {
+      outlineColor: 0x000000,
+      outlineAlpha: 0.6,
+      shadowAlpha: 0.4,
+    };
+  } else {
+    // Dark terrain (Streets, Cosmos) - lighter outline
+    return {
+      outlineColor: 0xffffff,
+      outlineAlpha: 0.4,
+      shadowAlpha: 0.3,
+    };
+  }
+}
 
 // --- CONSTANTS ---
 const THEME = {
@@ -390,12 +439,15 @@ export class EnemySystem {
 
     const color = getEnemyColor(enemy.type);
 
-    // -1. Shadow Layer (ground indicator for depth)
+    // Get terrain-adaptive visibility settings
+    const visibility = getTerrainVisibilitySettings();
+
+    // -1. Shadow Layer (ground indicator for depth) - adaptive alpha based on terrain
     const shadowOffsetY = size * 0.7;
     const shadowWidth = size * 0.7;
     const shadowHeight = size * 0.2;
     bundle.shadow.ellipse(0, shadowOffsetY, shadowWidth, shadowHeight)
-      .fill({ color: 0x000000, alpha: 0.3 });
+      .fill({ color: 0x000000, alpha: visibility.shadowAlpha });
 
     // 0. Elite Glow Layer (handled by pool based on isElite flag)
     if (bundle.eliteGlow) {
@@ -403,6 +455,10 @@ export class EnemySystem {
       bundle.eliteGlow.circle(0, 0, size * 1.5).fill({ color: THEME.elite, alpha: 0.15 });
       bundle.eliteGlow.circle(0, 0, size * 1.25).fill({ color: THEME.elite, alpha: 0.2 });
     }
+
+    // 0.5. Outline Layer - terrain-adaptive visibility outline
+    // Draw outline BEFORE body so it appears behind/around the enemy
+    this.drawEnemyOutline(bundle.outline, enemy.type, size, visibility.outlineColor, visibility.outlineAlpha, enemy.isElite);
 
     // 1. Body Graphics - draw unique shape per enemy type
     this.drawEnemyShape(bundle.body, enemy.type, size, color, enemy.isElite);
@@ -774,6 +830,118 @@ export class EnemySystem {
     if (isElite) {
       g.circle(0, 0, size * 1.05).stroke({ width: 3, color: THEME.elite });
     }
+  }
+
+  /**
+   * Draw terrain-adaptive outline for enemy visibility.
+   * Uses simplified shapes slightly larger than the body for clear silhouette.
+   */
+  private drawEnemyOutline(g: Graphics, type: EnemyType, size: number, outlineColor: number, outlineAlpha: number, isElite: boolean): void {
+    const strokeWidth = isElite ? 3 : 2;
+    const outlineSize = size * 1.1; // Slightly larger than body
+
+    // Draw outline based on enemy shape category
+    switch (type) {
+      // Circle-based enemies
+      case 'runner':
+      case 'leech':
+      case 'mafia_boss':
+      case 'ai_core':
+      case 'cosmic_beast':
+      case 'dimensional_being':
+      case 'god':
+      case 'demon':
+        g.circle(0, 0, outlineSize)
+          .stroke({ width: strokeWidth, color: outlineColor, alpha: outlineAlpha });
+        break;
+
+      // Square/Rectangle-based enemies
+      case 'bruiser':
+      case 'robot':
+      case 'titan':
+        g.roundRect(-outlineSize, -outlineSize, outlineSize * 2, outlineSize * 2, outlineSize * 0.25)
+          .stroke({ width: strokeWidth, color: outlineColor, alpha: outlineAlpha });
+        break;
+
+      // Polygon-based enemies (5-8 sides)
+      case 'gangster':
+        this.drawPolygonOutline(g, 5, outlineSize, strokeWidth, outlineColor, outlineAlpha);
+        break;
+      case 'thug':
+        this.drawPolygonOutline(g, 6, outlineSize, strokeWidth, outlineColor, outlineAlpha);
+        break;
+      case 'einherjar':
+        this.drawPolygonOutline(g, 8, outlineSize, strokeWidth, outlineColor, outlineAlpha);
+        break;
+
+      // Star-based enemies
+      case 'mutant_hunter':
+        this.drawStarOutline(g, 6, outlineSize, outlineSize * 0.5, strokeWidth, outlineColor, outlineAlpha);
+        break;
+
+      // Triangle/Arrow-based enemies
+      case 'drone':
+        g.poly([outlineSize, 0, -outlineSize * 0.6, -outlineSize * 0.7, -outlineSize * 0.6, outlineSize * 0.7])
+          .stroke({ width: strokeWidth, color: outlineColor, alpha: outlineAlpha });
+        break;
+
+      // Diamond-based enemies
+      case 'sorcerer':
+        g.poly([0, -outlineSize, outlineSize, 0, 0, outlineSize, -outlineSize, 0])
+          .stroke({ width: strokeWidth, color: outlineColor, alpha: outlineAlpha });
+        break;
+
+      // Complex humanoid shapes - use simplified ellipse
+      case 'sentinel':
+      case 'kree_soldier':
+        g.ellipse(0, 0, outlineSize * 0.8, outlineSize)
+          .stroke({ width: strokeWidth, color: outlineColor, alpha: outlineAlpha });
+        break;
+
+      // Skrull and other blob shapes
+      case 'skrull':
+        g.ellipse(0, 0, outlineSize, outlineSize * 0.8)
+          .stroke({ width: strokeWidth, color: outlineColor, alpha: outlineAlpha });
+        break;
+
+      // Special enemies - use circle as default
+      case 'catapult':
+      case 'sapper':
+      case 'healer':
+      case 'shielder':
+      case 'teleporter':
+      case 'scatterer':
+      case 'lone_wolf':
+      default:
+        g.circle(0, 0, outlineSize)
+          .stroke({ width: strokeWidth, color: outlineColor, alpha: outlineAlpha });
+        break;
+    }
+  }
+
+  /**
+   * Draw polygon outline for visibility
+   */
+  private drawPolygonOutline(g: Graphics, sides: number, radius: number, strokeWidth: number, color: number, alpha: number): void {
+    const points: number[] = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = (i * 2 * Math.PI) / sides - Math.PI / 2;
+      points.push(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    }
+    g.poly(points).stroke({ width: strokeWidth, color, alpha });
+  }
+
+  /**
+   * Draw star outline for visibility
+   */
+  private drawStarOutline(g: Graphics, points: number, outerRadius: number, innerRadius: number, strokeWidth: number, color: number, alpha: number): void {
+    const starPoints: number[] = [];
+    for (let i = 0; i < points * 2; i++) {
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const angle = (i * Math.PI) / points - Math.PI / 2;
+      starPoints.push(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    }
+    g.poly(starPoints).stroke({ width: strokeWidth, color, alpha });
   }
 
   /**

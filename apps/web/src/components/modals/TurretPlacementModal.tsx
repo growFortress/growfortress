@@ -17,6 +17,7 @@ import {
 } from '../../state/index.js';
 import { unlockTurret } from '../../api/client.js';
 import { Modal } from '../shared/Modal.js';
+import { GoldIcon } from '../icons/index.js';
 import styles from './TurretPlacementModal.module.css';
 
 // Turret role description translation keys
@@ -224,7 +225,7 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
                 ) : (
                   <>
                     <div class={`${styles.costBadge} ${!canAfford ? styles.costInsufficient : ''}`}>
-                      <span class={styles.goldIcon}>🪙</span>
+                      <GoldIcon size={16} className={styles.goldIcon} />
                       {baseCost}
                     </div>
                     {!canAfford && (

@@ -17,6 +17,7 @@ import { baseGold, playerMaterials } from '../../state/index.js';
 import { craftArtifact } from '../../api/client.js';
 import { Modal } from '../shared/Modal.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { GoldIcon } from '../icons/index.js';
 import styles from './CraftingModal.module.css';
 
 // State signals
@@ -407,7 +408,7 @@ function RecipeDetailView({
           {/* Gold cost */}
           <div class={`${styles.goldRow} ${gold >= cost.gold ? styles.met : styles.notMet}`}>
             <span class={styles.materialIndicator}>{gold >= cost.gold ? '✓' : '✗'}</span>
-            <span class={styles.goldIcon}>🪙</span>
+            <GoldIcon size={18} className={styles.goldIcon} />
             <div class={styles.goldProgress}>
               <div class={styles.materialHeader}>
                 <span class={styles.materialName}>{t('common:resources.gold')}</span>

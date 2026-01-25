@@ -5,7 +5,7 @@
  * Complex integration scenarios with multiple dependencies are better tested
  * in integration tests.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   endGameSession,
   getActiveSession,
@@ -16,6 +16,11 @@ import {
   createMockUser,
   createMockGameSession,
 } from '../../mocks/prisma.js';
+
+// Mock achievements service to avoid database dependencies
+vi.mock('../../../services/achievements.js', () => ({
+  updateLifetimeStats: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('Game Sessions Service', () => {
   describe('endGameSession', () => {

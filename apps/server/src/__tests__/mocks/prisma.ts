@@ -58,7 +58,6 @@ interface MockPrisma {
   powerUpgrades: MockPrismaOperations;
   scheduledEvent: MockPrismaOperations;
   gameConfig: MockPrismaOperations;
-  dailyQuestProgress: MockPrismaOperations;
   // Guild system
   guild: MockPrismaOperations;
   guildMember: MockPrismaOperations;
@@ -139,6 +138,8 @@ interface MockPrisma {
   weeklyPlayerReward: MockPrismaOperations;
   // Password reset
   passwordResetToken: MockPrismaOperations;
+  // Achievements system
+  playerAchievements: MockPrismaOperations;
   $transaction: ReturnType<typeof vi.fn>;
   $connect: ReturnType<typeof vi.fn>;
   $disconnect: ReturnType<typeof vi.fn>;
@@ -166,7 +167,6 @@ export const mockPrisma: MockPrisma = {
   powerUpgrades: createMockOperations(),
   scheduledEvent: createMockOperations(),
   gameConfig: createMockOperations(),
-  dailyQuestProgress: createMockOperations(),
   // Guild system
   guild: createMockOperations(),
   guildMember: createMockOperations(),
@@ -247,6 +247,8 @@ export const mockPrisma: MockPrisma = {
   weeklyPlayerReward: createMockOperations(),
   // Password reset
   passwordResetToken: createMockOperations(),
+  // Achievements system
+  playerAchievements: createMockOperations(),
   $transaction: vi.fn(async (input: unknown): Promise<unknown> => {
     if (typeof input === 'function') {
       return input(mockPrisma);
@@ -1082,5 +1084,82 @@ export function createMockPasswordResetToken(overrides: Record<string, unknown> 
     createdAt: new Date(),
     user: createMockUser(),
     ...overrides,
+  };
+}
+
+// ============================================================================
+// ACHIEVEMENTS SYSTEM MOCKS
+// ============================================================================
+
+/**
+ * Helper to create default lifetime stats
+ */
+export function createDefaultLifetimeStats(overrides: Record<string, unknown> = {}) {
+  return {
+    totalKills: 0,
+    eliteKills: 0,
+    bossKills: 0,
+    wavesCompleted: 0,
+    runsCompleted: 0,
+    goldEarned: '0',
+    dustSpent: 0,
+    heroesUnlocked: 0,
+    turretsUnlocked: 0,
+    artifactsObtained: 0,
+    pvpBattles: 0,
+    pvpVictories: 0,
+    guildBattles: 0,
+    bossRushCycles: 0,
+    pillarChallengesCompleted: 0,
+    materialsCollected: 0,
+    relicsChosen: 0,
+    skillsActivated: 0,
+    damageDealt: '0',
+    criticalHits: 0,
+    guildDonations: 0,
+    towerRaceWaves: 0,
+    crystalFragments: 0,
+    masteryPoints: 0,
+    synergiesTriggered: 0,
+    commanderLevel: 1,
+    prestigeCount: 0,
+    ...overrides,
+  };
+}
+
+/**
+ * Helper to create mock player achievements data
+ */
+export function createMockPlayerAchievements(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'achievements-123',
+    userId: 'user-123',
+    lifetimeStats: createDefaultLifetimeStats(),
+    achievementProgress: {},
+    claimedTiers: {},
+    unlockedTitles: [] as string[],
+    activeTitle: null,
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+/**
+ * Helper to create mock player achievements with progress
+ */
+export function createMockPlayerAchievementsWithProgress(
+  lifetimeStatsOverrides: Record<string, unknown> = {},
+  claimedTiersOverrides: Record<string, number[]> = {},
+  titlesOverrides: string[] = []
+) {
+  return {
+    id: 'achievements-123',
+    userId: 'user-123',
+    lifetimeStats: createDefaultLifetimeStats(lifetimeStatsOverrides),
+    achievementProgress: {},
+    claimedTiers: claimedTiersOverrides,
+    unlockedTitles: titlesOverrides,
+    activeTitle: null,
+    updatedAt: new Date(),
   };
 }

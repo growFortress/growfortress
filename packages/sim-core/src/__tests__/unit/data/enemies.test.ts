@@ -73,22 +73,22 @@ describe('getEnemyStats', () => {
   });
 
   describe('wave scaling', () => {
-    it('applies wave scaling (12% per wave)', () => {
+    it('applies wave scaling (15% per wave for waves 1-30)', () => {
       const wave2 = getEnemyStats('runner', 2, false);
       const wave11 = getEnemyStats('runner', 11, false);
 
-      // Wave 2: 29 * 1.12 = 32.48, floored to 32
-      expect(wave2.hp).toBe(32);
+      // Wave 2: 29 * 1.15 = 33.35, floored to 33 (15% scaling for early waves)
+      expect(wave2.hp).toBe(33);
 
-      // Wave 11: 29 * 2.2 = 63.8, floored to 63
-      expect(wave11.hp).toBe(63);
+      // Wave 11: 29 * (1 + 10 * 0.15) = 29 * 2.5 = 72.5, floored to 72
+      expect(wave11.hp).toBe(72);
     });
 
     it('scales damage with wave', () => {
       const wave6 = getEnemyStats('bruiser', 6, false);
 
-      // Wave 6: 21 * 1.6 = 33.6, floored to 33
-      expect(wave6.damage).toBe(33);
+      // Wave 6: 21 * (1 + 5 * 0.15) = 21 * 1.75 = 36.75, floored to 36
+      expect(wave6.damage).toBe(36);
     });
   });
 
@@ -111,11 +111,11 @@ describe('getEnemyStats', () => {
 
     it('combines wave scaling and elite multipliers', () => {
       const elite = getEnemyStats('runner', 5, true);
-      // Wave 5: 1 + (5-1) * 0.12 = 1.48
-      // HP: 29 * 1.48 * 3 = 128.76, floored to 128
-      expect(elite.hp).toBe(128);
-      // Damage: 8 * 1.48 * 2.5 = 29.6, floored to 29
-      expect(elite.damage).toBe(29);
+      // Wave 5: 1 + (5-1) * 0.15 = 1.6 (15% scaling for early waves)
+      // HP: 29 * 1.6 * 3 = 139.2, floored to 139
+      expect(elite.hp).toBe(139);
+      // Damage: 8 * 1.6 * 2.5 = 32
+      expect(elite.damage).toBe(32);
     });
   });
 
@@ -375,10 +375,10 @@ describe('getWaveComposition', () => {
       expect(wave1.eliteChance).toBeLessThan(wave10.eliteChance);
     });
 
-    it('elite chance starts at 5.4-5.5% (Endless mode formula)', () => {
+    it('elite chance starts at 8.6% (Endless mode formula)', () => {
       const composition = getWaveComposition(1, 30);
-      // 0.05 + 1 * 0.005 = 0.055 (but may have floating point precision issues)
-      expect(composition.eliteChance).toBeCloseTo(0.055, 2);
+      // 0.08 + 1 * 0.006 = 0.086 (higher base and scaling for early-game challenge)
+      expect(composition.eliteChance).toBeCloseTo(0.086, 2);
     });
 
     it('elite chance caps at 50% (Endless mode)', () => {

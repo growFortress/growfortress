@@ -211,9 +211,21 @@
     "relicsDescription": "Po każdej fali wybierz relikt. Relikty wzmacniają twoją obronę na całą sesję!",
     "waveN": "Fala {{n}}",
     "clickToClose": "Kliknij aby zamknąć",
+    "welcomeIntro": {
+      "title": "Witaj w Grow Fortress!",
+      "description": "Broń twierdzy przed falami wrogów. Twierdza i wieżyczki atakują automatycznie - Ty podejmujesz strategiczne decyzje!"
+    },
     "fortressAutoAttack": {
       "title": "Twoja Twierdza",
       "description": "Twierdza i wieżyczki atakują automatycznie. Obserwuj jak bronią Cię przed wrogami!"
+    },
+    "fortressHealth": {
+      "title": "Zdrowie Twierdzy",
+      "description": "To jest HP twojej twierdzy. Jeśli spadnie do zera - przegrywasz. Chroń ją za wszelką cenę!"
+    },
+    "goldResource": {
+      "title": "Złoto",
+      "description": "Zdobywasz złoto za zabijanie wrogów. Wydawaj je na ulepszenia między sesjami!"
     },
     "bombSkill": {
       "title": "Umiejętności Twierdzy",
@@ -226,6 +238,18 @@
     "speedControls": {
       "title": "Kontrola Prędkości",
       "description": "Przyspiesz grę przyciskiem 2x gdy poczujesz się pewniej."
+    },
+    "turretTargeting": {
+      "title": "Celowanie Wieżyczek",
+      "description": "Zmień tryb celowania wieżyczek: najbliżsi, najsłabsi, najsilniejsi lub najszybsi wrogowie."
+    },
+    "militiaSpawn": {
+      "title": "Milicja",
+      "description": "Przywołuj jednostki milicji za dust! Piechota, łucznicy i tarczownicy pomogą bronić twierdzy."
+    },
+    "dustResource": {
+      "title": "Dust",
+      "description": "Dust zdobywasz na koniec fal. Używaj go do przywoływania milicji i specjalnych ulepszeń!"
     },
     "buildSynergy": {
       "title": "Synergia Twojego Buildu",
@@ -305,6 +329,7 @@
     "xpProgress": "Postęp doświadczenia",
     "dailyQuestsWithRewards": "Dzienne Zadania ({{count}} nagród)",
     "leaderboardsWithRewards": "Rankingi (nagrody do odebrania)",
+    "achievementsWithRewards": "Osiagniecia (nagrody do odebrania)",
     "worldExploration": "Eksploracja Światów",
     "pvpArena": "PvP Arena",
     "pvpArenaWithChallenges": "PvP Arena ({{count}} wyzwań)",

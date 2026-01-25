@@ -902,8 +902,22 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
           </button>
         </div>
 
-        {/* Version */}
-        <span class={styles.version}>Grow Fortress v1.0</span>
+        {/* Version & Credits */}
+        <div class={styles.footerCredits}>
+          <span class={styles.version}>Grow Fortress v1.0</span>
+          <span class={styles.creditSeparator}> • </span>
+          <span class={styles.developedBy}>
+            {t("settings.developedBy")}
+            <a
+              href={`/company/index-${language === "pl" ? "pl" : "en"}.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={styles.studioLink}
+            >
+              PlazaWorks
+            </a>
+          </span>
+        </div>
       </div>
     </Modal>
   );

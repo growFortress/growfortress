@@ -36,7 +36,7 @@ packages/protocol/src/
 ├── battlepass.ts         # Battle pass system
 ├── shop.ts               # Shop system
 ├── pillar-challenge.ts   # Pillar challenge mode
-├── daily-quests.ts       # Daily quests
+├── achievements.ts       # Achievements system (permanent progression)
 ├── energy.ts             # Energy system
 ├── mastery.ts            # Mastery skill trees
 ├── hub-preview.ts        # Hub preview
@@ -338,29 +338,50 @@ The largest schema module covering all guild functionality.
 
 ---
 
-## Daily Quests (`daily-quests.ts`)
+## Achievements (`achievements.ts`)
 
-### Quest Definitions
+### Overview
 
-| Quest ID | Target | Dust Reward |
-|----------|--------|-------------|
-| first_blood | Complete 1 wave | 10 |
-| wave_hunter | Complete 50 waves | 25 |
-| elite_slayer | Kill 20 elites | 15 |
-| boss_slayer | Kill 5 bosses | 20 |
-| dedicated | Play 30 minutes | 30 |
+Permanent progression system with tiered rewards (Hero Zero "Heroic Deeds" style):
+- 8 categories, 24 achievements, ~226 claimable tiers
+- Lifetime stats tracked permanently (never reset)
+- Rewards: Dust, Gold, Materials, Titles
 
-**Total daily dust**: 100
+### Categories
+
+| Category | Description |
+|----------|-------------|
+| combat | Kills, damage, crits |
+| progression | Waves, levels, prestiges |
+| collection | Heroes, artifacts, materials |
+| economy | Gold earned, dust spent |
+| pvp | Arena battles, wins |
+| guild | Donations, Tower Race |
+| challenge | Boss Rush, Pillar Challenge |
+| mastery | Skills, synergies |
+
+### Example Achievements
+
+| ID | Category | Stat | Tiers |
+|----|----------|------|-------|
+| enemy_slayer | combat | totalKills | 100→1M (10) |
+| wave_warrior | progression | wavesCompleted | 50→50M (10) |
+| gold_magnate | economy | goldEarned | 10K→10B (10) |
+| arena_champion | pvp | pvpVictories | 5→30K (10) |
 
 ### Schemas
 
 | Schema | Description |
 |--------|-------------|
-| `DailyQuestIdSchema` | Quest identifiers |
-| `DailyQuestDefinitionSchema` | Quest config |
-| `DailyQuestProgressSchema` | Progress (progress/target, claimed) |
-| `DailyQuestsResponseSchema` | All quests with resetAt |
-| `ClaimQuestRewardRequestSchema` | Claim single quest |
+| `AchievementIdSchema` | Achievement identifiers |
+| `AchievementCategorySchema` | Category enum |
+| `AchievementTierSchema` | Tier config (target, rewards) |
+| `AchievementDefinitionSchema` | Full achievement definition |
+| `AchievementProgressSchema` | Player progress per achievement |
+| `GetAchievementsResponseSchema` | All achievements with progress |
+| `ClaimAchievementRewardRequestSchema` | Claim single tier |
+| `ClaimAllAchievementsResponseSchema` | Bulk claim response |
+| `SetActiveTitleRequestSchema` | Set active title |
 
 ---
 
@@ -577,7 +598,7 @@ Monetization
 └── Boosters (multipliers)
 
 Quality of Life
-├── Daily Quests (dust rewards)
+├── Achievements (permanent progression, dust rewards)
 ├── Energy System (session limits)
 ├── Idle Rewards (passive income)
 ├── Leaderboards (rankings)

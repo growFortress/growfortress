@@ -8,6 +8,7 @@ import {
   formatDamage,
 } from '../../state/index.js';
 import { Button } from '../shared/Button.js';
+import { GoldIcon } from '../icons/index.js';
 import styles from './BossRushShopPanel.module.css';
 
 /** Item type icons */
@@ -69,7 +70,7 @@ function ShopItem({ item, onPurchase, disabled, purchaseCount }: ShopItemProps) 
         <span class={`${styles.cost} ${!canAfford ? styles.cantAfford : ''}`}>
           {item.cost}
         </span>
-        <span class={styles.goldIcon}>🪙</span>
+        <GoldIcon size={18} className={styles.goldIcon} />
       </div>
       {purchaseCount > 0 && (
         <div class={styles.purchaseCount}>x{purchaseCount}</div>
@@ -125,7 +126,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
       <div class={styles.header}>
         <h3 class={styles.title}>🏪 Shop</h3>
         <div class={styles.gold}>
-          <span class={styles.goldIcon}>🪙</span>
+          <GoldIcon size={18} className={styles.goldIcon} />
           <span class={styles.goldAmount}>{formatDamage(availableGold)}</span>
         </div>
         <button

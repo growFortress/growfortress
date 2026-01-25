@@ -833,3 +833,31 @@ export {
   type AutoPlayDecision,
   type AutoPlayDecisionType,
 } from './auto-play.js';
+
+// Prestige System (Stellar Rebirth)
+export {
+  PRESTIGE_BONUSES,
+  PRESTIGE_MINIMUM_GOLD,
+  calculateStellarPoints,
+  getPrestigeBonus,
+  getPrestigeUnlocks,
+  getNextPrestigeTier,
+  getPrestigeProgress,
+  canPrestige,
+  getPrestigeMultiplier,
+  type PrestigeTier,
+} from './data/prestige.js';
+
+// Colony Milestones (Production Goals)
+export {
+  COLONY_MILESTONES,
+  getColonyMilestoneById,
+  getUnclaimedMilestones,
+  getNextColonyMilestone,
+  getMilestoneProgress as getColonyMilestoneProgress,
+  isPrestigeUnlockedByMilestone,
+  getClaimedMilestones,
+  canClaimMilestone,
+  type ColonyMilestone,
+  type ColonyMilestoneReward,
+} from './data/milestones-colony.js';

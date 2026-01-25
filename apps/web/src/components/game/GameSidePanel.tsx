@@ -13,7 +13,7 @@ import { PillarDisplay } from "./PillarDisplay.js";
 import { HeroSkillBar } from "./HeroSkillBar.js";
 import { TurretSkillBar } from "./TurretSkillBar.js";
 import { FortressSkillBar } from "./FortressSkillBar.js";
-import { DustIcon } from "../icons/index.js";
+import { DustIcon, GoldIcon } from "../icons/index.js";
 import styles from "./GameSidePanel.module.css";
 
 interface GameSidePanelProps {
@@ -62,7 +62,7 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
         <h3 class={styles.sectionTitle}>{t("game:sidePanel.resources")}</h3>
         <div class={styles.resourcesList}>
           <div class={styles.resourceItem}>
-            <span class={styles.resourceIcon} aria-hidden="true">🪙</span>
+            <GoldIcon size={20} className={styles.resourceIcon} />
             <span class={styles.resourceValue}>{displayGold.value}</span>
             <span class={styles.resourceLabel}>{t("common:resources.gold")}</span>
           </div>

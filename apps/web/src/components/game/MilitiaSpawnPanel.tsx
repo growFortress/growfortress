@@ -2,6 +2,7 @@ import { gamePhase, displayGold, gameState } from '../../state/index.js';
 import { spawnMilitiaFn } from '../../state/gameActions.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { FP } from '@arcade/sim-core';
+import { GoldIcon } from '../icons/index.js';
 import styles from './MilitiaSpawnPanel.module.css';
 
 // Militia type definitions (sci-fi themed)
@@ -124,7 +125,7 @@ export function MilitiaSpawnPanel() {
                   </span>
                 </div>
                 <span class={styles.militiaCost}>
-                  <span class={styles.goldIcon}>🪙</span>
+                  <GoldIcon size={16} className={styles.goldIcon} />
                   {militia.cost}
                 </span>
                 {onCooldown && (

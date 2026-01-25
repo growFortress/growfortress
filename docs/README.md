@@ -19,6 +19,7 @@
 | | [TURRETS.md](TURRETS.md) | 4 tower types |
 | | [CLASSES.md](CLASSES.md) | 7 fortress configurations |
 | **Progression** | [PROGRESSION.md](PROGRESSION.md) | Leveling, unlocks, tiers |
+| | [ACHIEVEMENTS.md](ACHIEVEMENTS.md) | Permanent achievements (24 achievements, ~226 tiers) |
 | | [MASTERY.md](MASTERY.md) | 7 class skill trees |
 | | [CRYSTALS.md](CRYSTALS.md) | Crystal Matrix system |
 | **Items** | [RELICS.md](RELICS.md) | 27 wave rewards |
@@ -67,6 +68,7 @@
 | Relics | 27 |
 | Enemies | 27 |
 | Pillars | 6 |
+| Achievements | 24 (~226 tiers) |
 | Mastery Nodes | 126 (18×7) |
 | API Routes | 31 modules |
 | Services | 50+ |

@@ -364,10 +364,39 @@
   gap: 1.5rem;
 }
 
+.footerCredits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
 .version {
   color: var(--color-text-dim);
   font-size: 0.8rem;
   font-family: monospace;
+}
+
+.creditSeparator {
+  color: var(--color-text-20);
+  font-size: 0.8rem;
+}
+
+.developedBy {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+}
+
+.studioLink {
+  color: var(--color-text-dim);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.studioLink:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .legalLinks {

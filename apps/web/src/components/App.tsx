@@ -1,131 +1,38 @@
 import type { ComponentChildren } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 import { AuthScreen } from "./auth/AuthScreen.js";
 import { Header } from "./layout/Header.js";
 import { GameContainer } from "./game/GameContainer.js";
 import { Leaderboard } from "./layout/Leaderboard.js";
-import { SyncStatus } from "./toasts/SyncStatus.js";
-import { RewardsToast } from "./toasts/RewardsToast.js";
-import { ErrorToast } from "./toasts/ErrorToast.js";
-import { SynergyToast } from "./toasts/SynergyToast.js";
-import { LevelUpToast } from "./toasts/LevelUpToast.js";
-import { UnlockNotificationQueue } from "./game/UnlockNotification.js";
-import { OnboardingModal } from "./modals/OnboardingModal.js";
-import { SessionRecoveryModal } from "./modals/SessionRecoveryModal.js";
-import { RewardsModal } from "./modals/RewardsModal.js";
-import { SettingsMenu } from "./modals/SettingsMenu.js";
-import { BuildPresetsModal } from "./modals/BuildPresetsModal.js";
-import { PvpPanel, PvpBattleResult, PvpReplayViewer } from "./pvp/index.js";
-import {
-  GuildPanel,
-  GuildCreateModal,
-  GuildSearchModal,
-} from "./guild/index.js";
-import { MessagesModal } from "./messages/MessagesModal.js";
-import { LeaderboardModal } from "./modals/LeaderboardModal.js";
-import { StatisticsDashboardModal } from "./modals/StatisticsDashboardModal.js";
-import { HubPreviewModal } from "./modals/HubPreviewModal.js";
-import { GuildPreviewModal } from "./modals/GuildPreviewModal.js";
-import { DailyQuestsModal } from "./modals/DailyQuestsModal.js";
-import { ShopModal } from "./modals/ShopModal.js";
-import { LegalModal } from "./modals/LegalModal.js";
-import { SupportPage } from "./support/SupportPage.js";
-import { ArtifactsModal } from "./modals/ArtifactsModal.js";
-import { IdleRewardsModal } from "./modals/IdleRewardsModal.js";
-import { PillarUnlockModal } from "./modals/PillarUnlockModal.js";
-import { GuestRegistrationModal } from "./modals/GuestRegistrationModal.js";
-import { AdminBroadcastPanel, AdminModerationPanel } from "./admin/index.js";
+import { ModalLayer } from "./layout/ModalLayer.js";
+import { ToastLayer } from "./layout/ToastLayer.js";
 import { ErrorBoundary } from "./shared/ErrorBoundary.js";
 import { LoadingScreen } from "./shared/LoadingScreen.js";
 import { SplashScreen } from "./shared/SplashScreen.js";
 import { ScreenReaderAnnouncer } from "./shared/ScreenReaderAnnouncer.js";
 import { MinimumScreenSize } from "./shared/MinimumScreenSize.js";
 import { CookieBanner } from "./shared/CookieBanner.js";
+import { LegalModal } from "./modals/LegalModal.js";
+import { SupportPage } from "./support/SupportPage.js";
 import { Analytics } from "@vercel/analytics/react";
-import { syncManager } from "../storage/sync.js";
-import {
-  getActiveSession,
-  clearActiveSession,
-  type ActiveSessionSnapshot,
-} from "../storage/idb.js";
-import {
-  login,
-  register,
-  getProfile,
-  getLeaderboard,
-  getPowerSummary,
-  refreshTokensApi,
-  getArtifacts,
-  logout,
-  createGuestSession,
-} from "../api/client.js";
-import {
-  isAuthenticated as checkAuth,
-  clearTokens,
-  setDisplayName,
-  onAuthInvalidated,
-  getUserId,
-  isGuestUser,
-} from "../api/auth.js";
 import { useTranslation } from "../i18n/useTranslation.js";
-import {
-  authError,
-  authLoading,
-  checkIdleRewards,
-  cleanupMessagesWebSocket,
-  dismissUnlockNotification,
-  fetchDailyQuests,
-  forceResetToHub,
-  initMessagesWebSocket,
-  initializeHubFromLoadout,
-  isAuthenticated as isAuthSignal,
-  pendingSessionSnapshot,
-  refreshUnreadCounts,
-  setPowerSummary,
-  showOnboardingModal,
-  showSessionRecoveryModal,
-  syncStatus,
-  unlockNotifications,
-  updateArtifacts,
-  updateFromProfile,
-  updateItems,
-  updateLeaderboard,
-  pillarUnlockModalVisible,
-  closePillarUnlockModal,
-  isGuestMode,
-  setGuestMode,
-  clearGuestMode,
-} from "../state/index.js";
-import { fetchEnergy } from "../state/energy.signals.js";
-import { fetchPillarUnlocks } from "../state/pillarUnlocks.signals.js";
+import { isAuthenticated as isAuthSignal } from "../state/index.js";
 import { captureReferralCodeFromUrl } from "../utils/referral.js";
-
-import {
-  useQuery,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import { useBootSequence } from "../hooks/useBootSequence.js";
+import { useAuth } from "../hooks/useAuth.js";
+import { useProfileSync } from "../hooks/useProfileSync.js";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: true,
       retry: 1,
-      staleTime: 1000 * 30, // 30 seconds
+      staleTime: 1000 * 30,
     },
   },
 });
 
-// Loading stages for the app initialization
-type LoadingStage =
-  | "splash" // Ekran powitalny z logo
-  | "checking_session" // Sprawdzanie lokalnej sesji
-  | "verifying_tokens" // Weryfikacja/odświeżanie tokenów
-  | "loading_profile" // Ładowanie profilu gracza
-  | "initializing" // Inicjalizacja systemu gry
-  | "ready"; // Gotowe
-
-// Single consistent loading message - no stage changes for seamless UX
 const LOADING_MESSAGE = "Ładowanie...";
 
 export function App() {
@@ -139,398 +46,72 @@ export function App() {
 }
 
 function AppContent() {
-  const [loadingStage, setLoadingStage] =
-    useState<LoadingStage>("splash");
-  const [savedSession, setSavedSession] =
-    useState<ActiveSessionSnapshot | null>(null);
+  const { t } = useTranslation(["common"]);
 
   useEffect(() => {
     captureReferralCodeFromUrl();
   }, []);
 
-  // Core Authentication State
-  const [internalAuth, setInternalAuth] = useState(checkAuth());
-  const { t } = useTranslation(["auth", "common"]);
+  // Boot sequence
+  const boot = useBootSequence();
 
-  // Profile Query
-  const { data: profile, refetch: refetchProfile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: getProfile,
-    enabled: internalAuth,
+  // Auth handlers
+  const onAuthSuccess = () => {
+    boot.setAuthenticated(true);
+    boot.setStage("loading_profile");
+  };
+  const { handleLogin, handleRegister, handleGuestLogin, handleLogout } = useAuth(onAuthSuccess);
+
+  // Profile sync
+  const { refetchProfile } = useProfileSync({
+    isAuthenticated: boot.isAuthenticated,
+    hasSavedSession: !!boot.savedSession,
+    setStage: boot.setStage,
   });
-
-  // Leaderboard Query
-  const { data: leaderboardData } = useQuery({
-    queryKey: ["leaderboard"],
-    queryFn: () => getLeaderboard(),
-    enabled: internalAuth,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  // Power Summary Query
-  const { data: powerData } = useQuery({
-    queryKey: ["power-summary"],
-    queryFn: getPowerSummary,
-    enabled: internalAuth,
-  });
-
-  // Artifacts Query
-  const { data: artifactsData } = useQuery({
-    queryKey: ["artifacts"],
-    queryFn: getArtifacts,
-    enabled: internalAuth,
-  });
-
-  // Sync Profile to Signals
-  useEffect(() => {
-    if (profile) {
-      // Przejdź do etapu inicjalizacji
-      setLoadingStage("initializing");
-
-      updateFromProfile(profile);
-      setDisplayName(profile.displayName);
-      isAuthSignal.value = true;
-
-      // Sync guest mode from profile
-      setGuestMode(profile.isGuest ?? false);
-
-      if (!profile.onboardingCompleted) {
-        showOnboardingModal.value = true;
-      } else {
-        initializeHubFromLoadout();
-      }
-
-      // Check for idle rewards and daily quests after profile loads
-      checkIdleRewards();
-      fetchDailyQuests();
-      fetchEnergy();
-      fetchPillarUnlocks();
-
-      // Po krótkiej chwili na inicjalizację - gotowe
-      const timer = setTimeout(() => {
-        setLoadingStage("ready");
-        authLoading.value = false; // Clear loading state after profile is loaded
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [profile]);
-
-  // Sync Leaderboard to Signals
-  useEffect(() => {
-    if (leaderboardData) {
-      updateLeaderboard(leaderboardData.entries);
-    }
-  }, [leaderboardData]);
-
-  // Sync Power Summary to Signals
-  useEffect(() => {
-    if (powerData) {
-      setPowerSummary(powerData);
-    }
-  }, [powerData]);
-
-  // Sync Artifacts to Signals
-  useEffect(() => {
-    if (artifactsData) {
-      updateArtifacts(artifactsData.artifacts);
-      updateItems(artifactsData.items);
-    }
-  }, [artifactsData]);
-
-  // Initialize WebSocket for real-time messaging when authenticated
-  useEffect(() => {
-    if (internalAuth && profile) {
-      initMessagesWebSocket();
-      refreshUnreadCounts();
-    }
-
-    return () => {
-      if (internalAuth && profile) {
-        cleanupMessagesWebSocket();
-      }
-    };
-  }, [internalAuth, profile]);
-
-  // Check for session recovery when auth is confirmed
-  useEffect(() => {
-    if (internalAuth) {
-      getActiveSession(getUserId()).then((session) => {
-        if (session) {
-          setSavedSession(session);
-          pendingSessionSnapshot.value = {
-            sessionId: session.sessionId,
-            savedAt: session.savedAt,
-            fortressClass: session.fortressClass,
-          };
-          showSessionRecoveryModal.value = true;
-        }
-      });
-    }
-  }, [internalAuth]);
-
-  // Set up sync status listener
-  useEffect(() => {
-    const unsubscribe = syncManager.addListener((status) => {
-      syncStatus.value = status;
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthInvalidated(() => {
-      isAuthSignal.value = false;
-      setInternalAuth(false);
-      authLoading.value = false;
-      authError.value = null;
-      showSessionRecoveryModal.value = false;
-      pendingSessionSnapshot.value = null;
-      setSavedSession(null);
-      clearGuestMode();
-      clearActiveSession().catch((err) =>
-        console.error("Failed to clear session:", err),
-      );
-    });
-    return unsubscribe;
-  }, []);
-
-  // Handle splash screen completion
-  const handleSplashComplete = () => {
-    setLoadingStage("checking_session");
-  };
-
-  // Initial Auth Check - runs after splash completes
-  useEffect(() => {
-    if (loadingStage !== "checking_session") return;
-
-    const init = async () => {
-      try {
-        // Check for existing valid auth
-        if (checkAuth()) {
-          // Restore guest mode from storage if applicable
-          if (isGuestUser()) {
-            isGuestMode.value = true;
-          }
-          setLoadingStage("loading_profile");
-          return;
-        }
-
-        setLoadingStage("verifying_tokens");
-        const refreshed = await refreshTokensApi();
-
-        if (refreshed) {
-          // Restore guest mode from storage if applicable
-          if (isGuestUser()) {
-            isGuestMode.value = true;
-          }
-          setInternalAuth(true);
-          setLoadingStage("loading_profile");
-        } else {
-          // No valid session - create guest session automatically
-          await clearActiveSession();
-          setSavedSession(null);
-          pendingSessionSnapshot.value = null;
-
-          try {
-            console.log("[App] Creating guest session...");
-            await createGuestSession();
-            isGuestMode.value = true;
-            setInternalAuth(true);
-            setLoadingStage("loading_profile");
-          } catch (guestError) {
-            console.error("[App] Failed to create guest session:", guestError);
-            // Fall back to showing AuthScreen on error
-            setLoadingStage("ready");
-          }
-        }
-      } catch {
-        clearTokens();
-        isAuthSignal.value = false;
-        setInternalAuth(false);
-        clearGuestMode();
-        setLoadingStage("ready");
-      }
-    };
-    init();
-  }, [loadingStage]);
-
-  const handleLogin = async (username: string, password: string) => {
-    authLoading.value = true;
-    authError.value = null;
-
-    try {
-      await login({ username, password });
-      setInternalAuth(true);
-      setLoadingStage("loading_profile");
-      // Force refetch profile immediately after successful login
-      await refetchProfile();
-    } catch (error) {
-      if (error instanceof Error && "status" in error) {
-        const status = (error as { status: number }).status;
-        if (status === 401) {
-          authError.value = t("errors.invalidCredentials");
-        } else if (status === 403) {
-          authError.value = t("errors.accountBanned");
-        } else if (status === 400) {
-          authError.value =
-            t("errors.invalidUsernameFormat");
-        } else {
-          authError.value =
-            t("errors.connectionFailed");
-        }
-      } else {
-        authError.value =
-          t("errors.connectionFailed");
-      }
-      authLoading.value = false;
-    }
-  };
-
-  const handleRegister = async (username: string, password: string) => {
-    authLoading.value = true;
-    authError.value = null;
-
-    try {
-      await register({ username, password });
-      setInternalAuth(true);
-      setLoadingStage("loading_profile");
-      // Force refetch profile immediately after successful registration
-      await refetchProfile();
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "status" in error &&
-        (error as { status: number }).status === 400
-      ) {
-        authError.value =
-          t("errors.registrationFailed");
-      } else if (
-        error instanceof Error &&
-        error.message.includes("Validation")
-      ) {
-        authError.value = t("errors.validationError");
-      } else {
-        authError.value =
-          t("errors.connectionFailed");
-      }
-      authLoading.value = false;
-    }
-  };
-
-  const handleGuestLogin = async () => {
-    authLoading.value = true;
-    authError.value = null;
-
-    try {
-      await createGuestSession();
-      setGuestMode(true);
-      setInternalAuth(true);
-      setLoadingStage("loading_profile");
-      await refetchProfile();
-    } catch (error) {
-      authError.value = t("errors.connectionFailed");
-      authLoading.value = false;
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    isAuthSignal.value = false;
-    setInternalAuth(false);
-    clearGuestMode();
-  };
 
   const loadProfile = async () => {
     try {
-      const profile = await getProfile();
-      updateFromProfile(profile);
-
-      // Check for idle rewards after profile loads
-      checkIdleRewards();
-
-      // Fetch daily quests status
-      fetchDailyQuests();
-      fetchEnergy();
-      fetchPillarUnlocks();
+      await refetchProfile();
     } catch {
       // Silently fail
     }
   };
 
-  const handleSessionContinue = () => {
-    // Session data is passed via savedSession state
-    // GameContainer will use it to restore the session
-  };
-
-  const handleSessionAbandon = async () => {
-    await clearActiveSession();
-    setSavedSession(null);
-    pendingSessionSnapshot.value = null;
-    forceResetToHub.value = true; // Signal GameContainer to reset to hub
-  };
-
-  const handleSessionResumed = () => {
-    setSavedSession(null);
-    pendingSessionSnapshot.value = null;
-  };
-
+  // Render based on boot stage
   let content: ComponentChildren;
 
-  // Pokaż ekran powitalny na starcie
-  if (loadingStage === "splash") {
-    content = <SplashScreen durationMs={4000} onComplete={handleSplashComplete} />;
-  } else if (loadingStage !== "ready") {
-    // Pokaż ekran ładowania podczas inicjalizacji
-    // Pokaż AuthScreen gdy nie ma uwierzytelnienia i zakończyliśmy sprawdzanie
-    if (loadingStage !== "checking_session" && !internalAuth) {
-      content = (
-        <AuthScreen onLogin={handleLogin} onRegister={handleRegister} onGuestLogin={handleGuestLogin} />
-      );
-    } else {
-      // Jeden spójny ekran ładowania - identyczny jak HTML loader
-      content = <LoadingScreen message={LOADING_MESSAGE} />;
-    }
+  if (boot.stage === "splash") {
+    content = (
+      <SplashScreen
+        minDurationMs={1500}
+        onReady={boot.performAuthCheck}
+        onComplete={boot.handleSplashComplete}
+      />
+    );
+  } else if (boot.stage !== "ready") {
+    content = <LoadingScreen message={LOADING_MESSAGE} />;
   } else if (!isAuthSignal.value) {
-    content = <AuthScreen onLogin={handleLogin} onRegister={handleRegister} onGuestLogin={handleGuestLogin} />;
+    content = (
+      <AuthScreen
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        onGuestLogin={handleGuestLogin}
+      />
+    );
   } else {
     content = (
       <ErrorBoundary>
-        {/* Screen reader announcer for live updates */}
         <ScreenReaderAnnouncer />
-
-        {/* Skip links for keyboard navigation */}
-        <a
-          href="#main-content"
-          class="skip-link"
-          style={{
-            position: "absolute",
-            top: "-40px",
-            left: 0,
-            background: "var(--color-primary)",
-            color: "var(--color-bg)",
-            padding: "8px 16px",
-            zIndex: 9999,
-            textDecoration: "none",
-            fontWeight: "bold",
-          }}
-          onFocus={(e) => {
-            (e.target as HTMLElement).style.top = "0";
-          }}
-          onBlur={(e) => {
-            (e.target as HTMLElement).style.top = "-40px";
-          }}
-        >
-          {t("common:app.skipToContent")}
-        </a>
+        <SkipLink label={t("common:app.skipToContent")} />
 
         <div id="app">
           <Header />
           <main id="main-content" role="main" aria-label={t("common:app.gameAriaLabel")}>
             <GameContainer
               onLoadProfile={loadProfile}
-              savedSession={savedSession}
-              onSessionResumeFailed={handleSessionAbandon}
-              onSessionResumed={handleSessionResumed}
+              savedSession={boot.savedSession}
+              onSessionResumeFailed={boot.handleSessionAbandon}
+              onSessionResumed={boot.handleSessionResumed}
             />
           </main>
           <aside role="complementary" aria-label={t("common:app.leaderboardAriaLabel")}>
@@ -538,50 +119,12 @@ function AppContent() {
           </aside>
         </div>
 
-        {/* Toast notifications */}
-        <div role="region" aria-label={t("common:app.notificationsAriaLabel")} aria-live="polite">
-          <SyncStatus />
-          <RewardsToast />
-          <ErrorToast />
-          <LevelUpToast />
-          <SynergyToast />
-          <UnlockNotificationQueue
-            notifications={unlockNotifications.value}
-            onDismiss={dismissUnlockNotification}
-          />
-        </div>
-
-        {/* Modal dialogs */}
-        <OnboardingModal />
-        <RewardsModal />
-        <SessionRecoveryModal
-          onContinue={handleSessionContinue}
-          onAbandon={handleSessionAbandon}
+        <ToastLayer />
+        <ModalLayer
+          onLogout={handleLogout}
+          onSessionContinue={boot.handleSessionContinue}
+          onSessionAbandon={boot.handleSessionAbandon}
         />
-        <SettingsMenu onLogout={handleLogout} />
-        <BuildPresetsModal />
-        <PvpPanel />
-        <PvpBattleResult />
-        <PvpReplayViewer />
-        <GuildPanel />
-        <GuildCreateModal onSuccess={() => {}} />
-        <GuildSearchModal onSuccess={() => {}} />
-        <MessagesModal />
-        <LeaderboardModal />
-        <StatisticsDashboardModal />
-        <HubPreviewModal />
-        <GuildPreviewModal />
-        <DailyQuestsModal />
-        <ShopModal />
-        <ArtifactsModal />
-        <IdleRewardsModal />
-        <PillarUnlockModal
-          visible={pillarUnlockModalVisible.value}
-          onClose={closePillarUnlockModal}
-        />
-        <GuestRegistrationModal />
-        <AdminBroadcastPanel />
-        <AdminModerationPanel />
       </ErrorBoundary>
     );
   }
@@ -594,5 +137,34 @@ function AppContent() {
       <CookieBanner />
       <Analytics />
     </>
+  );
+}
+
+/** Accessibility skip link for keyboard navigation */
+function SkipLink({ label }: { label: string }) {
+  return (
+    <a
+      href="#main-content"
+      class="skip-link"
+      style={{
+        position: "absolute",
+        top: "-40px",
+        left: 0,
+        background: "var(--color-primary)",
+        color: "var(--color-bg)",
+        padding: "8px 16px",
+        zIndex: 9999,
+        textDecoration: "none",
+        fontWeight: "bold",
+      }}
+      onFocus={(e) => {
+        (e.target as HTMLElement).style.top = "0";
+      }}
+      onBlur={(e) => {
+        (e.target as HTMLElement).style.top = "-40px";
+      }}
+    >
+      {label}
+    </a>
   );
 }

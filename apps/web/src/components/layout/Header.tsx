@@ -18,19 +18,18 @@ import {
   openLeaderboardModal,
   openStatisticsDashboard,
   hasUnclaimedRewards,
-  showDailyQuestsPanel,
-  hasUnclaimedQuestRewards,
-  unclaimedCompletedCount,
   showShopModal,
   showPillarUnlockModal,
   openPvpPanel,
   pvpPendingChallenges,
+  showAchievementsModal,
+  hasUnclaimedAchievements,
 } from '../../state/index.js';
 import { colonySceneVisible } from '../../state/idle.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Tooltip } from '../shared/Tooltip.js';
 import { EnergyBar } from '../game/EnergyBar.js';
-import { Icon, DustIcon } from '../icons/index.js';
+import { Icon, DustIcon, GoldIcon } from '../icons/index.js';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -63,7 +62,7 @@ export function Header(_props: HeaderProps) {
               <span class={styles.groupLabel}>{t('header.resourcesLabel')}</span>
               <div class={styles.resourceGroup}>
                 <div class={styles.resource} aria-label={t('header.resourceGold', { amount: displayGold.value })}>
-                  <span class={styles.resourceIcon} aria-hidden="true">🪙</span>
+                  <GoldIcon size={22} className={styles.resourceIcon} />
                   <span class={`${styles.resourceValue} ${styles.gold}`}>{displayGold.value}</span>
                 </div>
                 <div class={styles.resource} aria-label={t('header.resourceDust', { amount: displayDust.value })}>
@@ -106,22 +105,6 @@ export function Header(_props: HeaderProps) {
             <div class={styles.navGroupWrapper}>
             <span class={styles.groupLabel}>{t('header.shortcutsLabel')}</span>
             <div class={styles.buttonGroup}>
-              {/* Daily Quests - frequent daily actions */}
-              <Tooltip content={t('common:navigation.dailyQuests')} position="bottom">
-                <button
-                  class={styles.headerBtn}
-                  onClick={() => showDailyQuestsPanel()}
-                  aria-label={hasUnclaimedQuestRewards.value ? t('header.dailyQuestsWithRewards', { count: unclaimedCompletedCount.value }) : t('common:navigation.dailyQuests')}
-                >
-                  <Icon name="daily-quests" size={18} />
-                  {hasUnclaimedQuestRewards.value && (
-                    <span class={styles.badge} aria-hidden="true">
-                      {unclaimedCompletedCount.value}
-                    </span>
-                  )}
-                </button>
-              </Tooltip>
-
               {/* World Exploration - gameplay */}
               <Tooltip content={t('header.worldExploration')} position="bottom">
                 <button
@@ -173,6 +156,22 @@ export function Header(_props: HeaderProps) {
                   aria-label={t('common:navigation.statistics')}
                 >
                   <Icon name="chart" size={18} />
+                </button>
+              </Tooltip>
+
+              {/* Achievements - progression */}
+              <Tooltip content={t('common:navigation.achievements')} position="bottom">
+                <button
+                  class={styles.headerBtn}
+                  onClick={() => showAchievementsModal()}
+                  aria-label={hasUnclaimedAchievements.value
+                    ? t('header.achievementsWithRewards')
+                    : t('common:navigation.achievements')}
+                >
+                  <Icon name="medal" size={18} />
+                  {hasUnclaimedAchievements.value && (
+                    <span class={styles.dotBadge} aria-label={t('header.rewardsToClaim')} />
+                  )}
                 </button>
               </Tooltip>
 

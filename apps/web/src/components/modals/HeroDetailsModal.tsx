@@ -37,6 +37,7 @@ import {
   type PowerStatUpgrades,
 } from '@arcade/protocol';
 import { Modal } from '../shared/Modal.js';
+import { GoldIcon } from '../icons/index.js';
 import {
   HeroIdentityCard,
   SkillCard,
@@ -149,7 +150,7 @@ function HeroStatRow({
               onClick={onUpgrade}
             >
               {isLoading ? '...' : `${upgradeCost}`}
-              <span class={styles.goldIcon}>🪙</span>
+              <GoldIcon size={16} className={styles.goldIcon} />
             </button>
           )}
         </>

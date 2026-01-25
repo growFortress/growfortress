@@ -130,8 +130,8 @@ model User {
   // Milestone System (Permanent Unlocks)
   milestones PlayerMilestones?
 
-  // Daily Quests
-  dailyQuestProgress DailyQuestProgress[]
+  // Achievement System (Permanent progression tracking)
+  achievements PlayerAchievements?
 
   // Energy System (Premium economy)
   energy UserEnergy?
@@ -229,18 +229,37 @@ model MasteryProgress {
 // Colony System - Offline Gold Income
 // Stores colony upgrade levels and pending gold from offline time
 model ColonyProgress {
-  id            String   @id @default(cuid())
-  userId        String   @unique
+  id              String    @id @default(cuid())
+  userId          String    @unique
   // Colony levels stored as JSON: { [colonyId]: level }
   // e.g., { "farm": 5, "mine": 3, "market": 0, "factory": 0 }
-  colonyLevels  Json     @default("{\"farm\":0,\"mine\":0,\"market\":0,\"factory\":0}")
+  colonyLevels    Json      @default("{\"farm\":0,\"mine\":0,\"market\":0,\"factory\":0}")
   // Last time gold was collected/calculated
-  lastClaimAt   DateTime @default(now())
+  lastClaimAt     DateTime  @default(now())
   // Pending gold from offline time (calculated on next login)
-  pendingGold   Int      @default(0)
-  version       Int      @default(1)
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pendingGold     Int       @default(0)
+  version         Int       @default(1)
+  updatedAt       DateTime  @updatedAt
+
+  // Prestige System - Stellar Rebirth
+  stellarPoints   Int       @default(0)
+  totalGoldEarned BigInt    @default(0)  // Lifetime gold for prestige calculation
+  prestigeCount   Int       @default(0)
+  lastPrestigeAt  DateTime?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones      ColonyMilestone[]
+}
+
+// Colony Milestones - Production Goals with Rewards
+model ColonyMilestone {
+  id               String          @id @default(cuid())
+  colonyProgressId String
+  colonyProgress   ColonyProgress  @relation(fields: [colonyProgressId], references: [id], onDelete: Cascade)
+  milestoneId      String          // "first_steps", "growing_colony", etc.
+  claimedAt        DateTime        @default(now())
+
+  @@unique([colonyProgressId, milestoneId])
 }
 
 // Milestone Progress - Permanent Unlocks from Wave Achievements
@@ -1684,25 +1703,39 @@ model IAPTransaction {
 }
 
 // ============================================================================
-// DAILY QUESTS
+// ACHIEVEMENT SYSTEM (Permanent progression tracking - Hero Zero style)
 // ============================================================================
 
-model DailyQuestProgress {
-  id        String   @id @default(cuid())
-  userId    String
-  questId   String // 'first_blood', 'wave_hunter', 'elite_slayer', 'boss_rush_daily', 'pillar_master'
-  progress  Int      @default(0) // Current progress towards target
-  completed Boolean  @default(false) // Whether target was reached
-  claimed   Boolean  @default(false) // Whether reward was claimed
-  resetAt   DateTime // Next reset time (midnight UTC)
-  updatedAt DateTime @updatedAt
+model PlayerAchievements {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+
+  // Lifetime stats for achievement tracking (persisted across runs)
+  // Structure: { totalKills, eliteKills, bossKills, wavesCompleted, runsCompleted,
+  //              goldEarned (bigint string), dustSpent, heroesUnlocked, turretsUnlocked,
+  //              artifactsObtained, pvpBattles, pvpVictories, guildBattles,
+  //              bossRushCycles, pillarChallengesCompleted, materialsCollected,
+  //              relicsChosen, skillsActivated, damageDealt (bigint string), criticalHits,
+  //              guildDonations, towerRaceWaves, crystalFragments, masteryPoints, synergiesTriggered }
+  lifetimeStats       Json     @default("{}")
+
+  // Achievement progress: { [achievementId]: { tier: number, progress: number } }
+  achievementProgress Json     @default("{}")
+
+  // Claimed tiers: { [achievementId]: number[] } - array of claimed tier numbers
+  claimedTiers        Json     @default("{}")
+
+  // Unlocked titles from achievements
+  unlockedTitles      String[] @default([])
+
+  // Active/equipped title
+  activeTitle         String?
+
+  updatedAt           DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Unique constraint: one progress record per quest per reset period
-  @@unique([userId, questId, resetAt])
   @@index([userId])
-  @@index([resetAt])
 }
 
 // ============================================================================

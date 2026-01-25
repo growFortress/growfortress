@@ -120,6 +120,7 @@ export function createContainerPool(maxSize = 100): ObjectPool<Container> {
  * Each enemy visual consists of:
  * - Container (root)
  * - Graphics (shadow) - ground shadow for depth
+ * - Graphics (outline) - visibility outline adapts to terrain brightness
  * - Graphics (body)
  * - Graphics (details)
  * - Graphics (hpBar)
@@ -129,6 +130,7 @@ export function createContainerPool(maxSize = 100): ObjectPool<Container> {
 export interface EnemyVisualBundle {
   container: Container;
   shadow: Graphics;
+  outline: Graphics;
   body: Graphics;
   details: Graphics;
   hpBar: Graphics;
@@ -185,6 +187,11 @@ export class EnemyVisualPool {
       container.addChild(eliteGlow);
     }
 
+    // Outline layer (rendered before body for visibility on all terrains)
+    const outline = new Graphics();
+    outline.label = 'outline';
+    container.addChild(outline);
+
     const body = new Graphics();
     body.label = 'body';
     container.addChild(body);
@@ -201,7 +208,7 @@ export class EnemyVisualPool {
     statusEffects.label = 'statusEffects';
     container.addChild(statusEffects);
 
-    return { container, shadow, body, details, hpBar, statusEffects, eliteGlow };
+    return { container, shadow, outline, body, details, hpBar, statusEffects, eliteGlow };
   }
 
   release(bundle: EnemyVisualBundle): void {
@@ -215,6 +222,7 @@ export class EnemyVisualPool {
 
     // Clear all graphics
     bundle.shadow.clear();
+    bundle.outline.clear();
     bundle.body.clear();
     bundle.details.clear();
     bundle.hpBar.clear();

@@ -144,64 +144,139 @@ export async function getCurrentBoss(): Promise<GuildBoss> {
 
 /**
  * Get boss status for a guild member
+ * Optimized: combines getCurrentBoss + stats into single query (2 queries → 1)
+ * Uses INSERT ON CONFLICT to ensure boss exists, then fetches all data
  */
 export async function getBossStatus(guildId: string, userId: string): Promise<GuildBossStatus> {
-  const boss = await getCurrentBoss();
-
-  // Check if user already attacked today
+  const weekKey = getCurrentWeekKey();
+  const weekNumber = parseInt(weekKey.split('-W')[1], 10);
+  const bossType = BOSS_TYPES[weekNumber % BOSS_TYPES.length];
+  const weakness = FORTRESS_WEAKNESSES[weekNumber % FORTRESS_WEAKNESSES.length];
+  const endsAt = getBossEndTime(weekKey);
   const todayStart = getTodayStart();
   const todayEnd = getTodayEnd();
 
-  const todaysAttempt = await prisma.guildBossAttempt.findFirst({
-    where: {
-      guildBossId: boss.id,
-      userId,
-      attemptedAt: {
-        gte: todayStart,
-        lte: todayEnd,
-      },
-    },
-  });
-
-  // Get user's total damage this week
-  const userDamageResult = await prisma.guildBossAttempt.aggregate({
-    where: {
-      guildBossId: boss.id,
-      userId,
-    },
-    _sum: {
-      damage: true,
-    },
-  });
-  const myTotalDamage = Number(userDamageResult._sum.damage || 0);
-
-  // Get guild's total damage
-  const guildDamageResult = await prisma.guildBossAttempt.aggregate({
-    where: {
-      guildBossId: boss.id,
-      guildId,
-    },
-    _sum: {
-      damage: true,
-    },
-  });
-  const guildTotalDamage = Number(guildDamageResult._sum.damage || 0);
-
-  // Calculate guild rank - count guilds with higher total damage
-  let guildRank: number | null = null;
-  if (guildTotalDamage > 0) {
-    // Fixed: Use subquery to correctly count guilds with higher damage
-    const higherGuildsResult = await prisma.$queryRaw<{ count: bigint }[]>`
+  // Single query: ensure boss exists + fetch all stats
+  const result = await prisma.$queryRaw<
+    {
+      bossId: string;
+      bossWeekKey: string;
+      bossBossType: string;
+      bossTotalHp: bigint;
+      bossCurrentHp: bigint;
+      bossWeakness: string | null;
+      bossEndsAt: Date;
+      bossCreatedAt: Date;
+      todaysAttemptId: string | null;
+      todaysAttemptDamage: bigint | null;
+      todaysAttemptHeroId: string | null;
+      todaysAttemptHeroTier: number | null;
+      todaysAttemptHeroPower: number | null;
+      todaysAttemptAttemptedAt: Date | null;
+      userTotalDamage: bigint;
+      guildTotalDamage: bigint;
+      higherGuildsCount: bigint;
+    }[]
+  >`
+    WITH ensure_boss AS (
+      INSERT INTO "GuildBoss" ("id", "weekKey", "bossType", "totalHp", "currentHp", "weakness", "endsAt", "createdAt")
+      VALUES (gen_random_uuid(), ${weekKey}, ${bossType}, ${BOSS_TOTAL_HP}, ${BOSS_TOTAL_HP}, ${weakness}, ${endsAt}, NOW())
+      ON CONFLICT ("weekKey") DO UPDATE SET "weekKey" = EXCLUDED."weekKey"
+      RETURNING *
+    ),
+    boss AS (
+      SELECT * FROM ensure_boss
+    ),
+    today_attempt AS (
+      SELECT id, damage, "heroId", "heroTier", "heroPower", "attemptedAt"
+      FROM "GuildBossAttempt"
+      WHERE "guildBossId" = (SELECT id FROM boss)
+        AND "userId" = ${userId}
+        AND "attemptedAt" >= ${todayStart}
+        AND "attemptedAt" <= ${todayEnd}
+      LIMIT 1
+    ),
+    user_damage AS (
+      SELECT COALESCE(SUM(damage), 0) as total
+      FROM "GuildBossAttempt"
+      WHERE "guildBossId" = (SELECT id FROM boss) AND "userId" = ${userId}
+    ),
+    guild_damage AS (
+      SELECT COALESCE(SUM(damage), 0) as total
+      FROM "GuildBossAttempt"
+      WHERE "guildBossId" = (SELECT id FROM boss) AND "guildId" = ${guildId}
+    ),
+    higher_guilds AS (
       SELECT COUNT(*) as count FROM (
         SELECT "guildId"
         FROM "GuildBossAttempt"
-        WHERE "guildBossId" = ${boss.id}
+        WHERE "guildBossId" = (SELECT id FROM boss)
         GROUP BY "guildId"
-        HAVING SUM(damage) > ${BigInt(guildTotalDamage)}
-      ) as higher_guilds
-    `;
-    guildRank = (higherGuildsResult[0]?.count ? Number(higherGuildsResult[0].count) : 0) + 1;
+        HAVING SUM(damage) > (SELECT total FROM guild_damage)
+      ) hg
+    )
+    SELECT
+      b.id as "bossId",
+      b."weekKey" as "bossWeekKey",
+      b."bossType" as "bossBossType",
+      b."totalHp" as "bossTotalHp",
+      b."currentHp" as "bossCurrentHp",
+      b."weakness" as "bossWeakness",
+      b."endsAt" as "bossEndsAt",
+      b."createdAt" as "bossCreatedAt",
+      ta.id as "todaysAttemptId",
+      ta.damage as "todaysAttemptDamage",
+      ta."heroId" as "todaysAttemptHeroId",
+      ta."heroTier" as "todaysAttemptHeroTier",
+      ta."heroPower" as "todaysAttemptHeroPower",
+      ta."attemptedAt" as "todaysAttemptAttemptedAt",
+      ud.total as "userTotalDamage",
+      gd.total as "guildTotalDamage",
+      hg.count as "higherGuildsCount"
+    FROM boss b
+    CROSS JOIN user_damage ud
+    CROSS JOIN guild_damage gd
+    CROSS JOIN higher_guilds hg
+    LEFT JOIN today_attempt ta ON true
+  `;
+
+  const row = result[0];
+  if (!row) {
+    throw new Error('Failed to get or create boss');
   }
+
+  const boss: GuildBoss = {
+    id: row.bossId,
+    weekKey: row.bossWeekKey,
+    bossType: row.bossBossType,
+    totalHp: row.bossTotalHp,
+    currentHp: row.bossCurrentHp,
+    weakness: row.bossWeakness,
+    endsAt: row.bossEndsAt,
+    createdAt: row.bossCreatedAt,
+  };
+
+  const myTotalDamage = Number(row.userTotalDamage || 0);
+  const guildTotalDamage = Number(row.guildTotalDamage || 0);
+
+  // Reconstruct today's attempt if it exists
+  const todaysAttempt: GuildBossAttempt | null = row.todaysAttemptId
+    ? {
+        id: row.todaysAttemptId,
+        guildBossId: boss.id,
+        guildId,
+        userId,
+        damage: row.todaysAttemptDamage!,
+        heroId: row.todaysAttemptHeroId!,
+        heroTier: row.todaysAttemptHeroTier!,
+        heroPower: row.todaysAttemptHeroPower!,
+        attemptedAt: row.todaysAttemptAttemptedAt!,
+      }
+    : null;
+
+  // Calculate guild rank (only if guild has damage)
+  const guildRank: number | null =
+    guildTotalDamage > 0 ? Number(row.higherGuildsCount || 0) + 1 : null;
 
   const canAttack = !todaysAttempt && new Date() < boss.endsAt;
 

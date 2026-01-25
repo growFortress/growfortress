@@ -50,7 +50,9 @@ export type IconName =
   | 'hero'
   | 'materials'
   | 'artifact'
-  | 'gathering';
+  | 'gathering'
+  // Achievements
+  | 'medal';
 
 interface IconProps {
   /** Icon name */
@@ -127,6 +129,8 @@ const ICONS: Record<IconName, string> = {
   'artifact': 'M12 2l-5.5 9L12 22l5.5-11L12 2zm0 3.84L14.93 11H9.07L12 5.84zM9.07 13h5.86L12 18.56 9.07 13zm1.97-2l.96-3.1.96 3.1h-1.92z',
   // Gathering - Factory/Production
   'gathering': 'M22 22H2v-2h20v2zM10 2H4v6h6V2zm-2 4H6V4h2v2zm6-4v6h6V2h-6zm4 4h-2V4h2v2zm-6 8V8H6v6h6zm-2-4H8v2h2v-2zm8 4v-6h-6v6h6zm-2-4h-2v2h2v-2zM4 20h4v-4H4v4zm10 0h4v-4h-4v4z',
+  // Medal - Achievement icon
+  'medal': 'M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V22l4-2 4 2v-7.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
 };
 
 export function Icon({

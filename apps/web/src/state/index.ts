@@ -732,34 +732,6 @@ export {
   type MasteryState,
 } from './mastery.signals.js';
 
-// Daily Quests signals
-export {
-  // State
-  dailyQuestsState,
-  dailyQuestsLoading,
-  dailyQuestsError,
-  dailyQuestsPanelVisible,
-  claimingQuest,
-  claimingAll,
-  // Computed
-  unclaimedCompletedCount,
-  unclaimedDustTotal,
-  hasUnclaimedRewards as hasUnclaimedQuestRewards,
-  totalPotentialDust,
-  overallProgress,
-  timeUntilReset as questsTimeUntilReset,
-  // Actions
-  fetchDailyQuests,
-  claimQuestReward,
-  claimAllQuestRewards,
-  showDailyQuestsPanel,
-  hideDailyQuestsPanel,
-  getQuestDefinition,
-  resetDailyQuestsState,
-  // Types
-  type DailyQuestsState,
-} from './dailyQuests.signals.js';
-
 // Hub Preview signals
 export {
   hubPreviewData,
@@ -926,6 +898,43 @@ export {
   removeWall,
   spawnMilitia,
 } from './gameActions.signals.js';
+
+// Achievements System (permanent progression)
+export {
+  // Signals
+  achievementsData,
+  achievementsLoading,
+  achievementsError,
+  achievementsModalVisible,
+  claimingAchievement,
+  claimingAll as claimingAllAchievements,
+  settingTitle,
+  selectedCategory as achievementsSelectedCategory,
+  // Computed
+  totalUnclaimedCount as achievementsUnclaimedCount,
+  hasUnclaimedAchievementRewards as hasUnclaimedAchievements,
+  unlockedTitles,
+  activeTitle,
+  lifetimeStats,
+  filteredAchievements,
+  achievementsWithUnclaimedRewards,
+  categoryProgress,
+  totalAchievementsCompleted,
+  totalAchievementsCount,
+  // Actions
+  fetchAchievements,
+  claimReward as claimAchievementReward,
+  claimAllRewards as claimAllAchievementRewards,
+  setActiveTitle,
+  showAchievementsModal,
+  hideAchievementsModal,
+  setSelectedCategory,
+  resetAchievementsState,
+  isTierClaimed as isAchievementTierClaimed,
+  isTierClaimable as isAchievementTierClaimable,
+  getTierRomanNumeral,
+  formatStatNumber,
+} from './achievements.signals.js';
 
 // Re-export types
 export type { LeaderboardEntry, GameEndState } from './ui.signals.js';

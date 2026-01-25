@@ -1,7 +1,5 @@
-import { useState, useCallback } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { MATERIAL_DEFINITIONS } from '@arcade/sim-core';
-import type { ColonyStatus } from '@arcade/protocol';
 import {
   idleRewardsState,
   idleRewardsModalVisible,
@@ -12,13 +10,9 @@ import {
   hasPendingRewards,
   totalPendingGold,
   totalColonyGoldPerHour,
-  upgradeColony,
-  upgradingColony,
   showColonyScene,
 } from '../../state/idle.signals.js';
-import { baseGold } from '../../state/profile.signals.js';
 import { Modal } from '../shared/Modal.js';
-import { IdleRewardsScene } from './IdleRewardsScene.js';
 import styles from './IdleRewardsModal.module.css';
 
 // Rarity colors
@@ -43,67 +37,6 @@ const MATERIAL_ICONS: Record<string, string> = {
   super_soldier_serum: '💉',
 };
 
-// Building popup component (shown when clicking a building in scene)
-function BuildingPopup({
-  colony,
-  onClose,
-  onUpgrade,
-}: {
-  colony: ColonyStatus;
-  onClose: () => void;
-  onUpgrade: () => void;
-}) {
-  const { t } = useTranslation(['modals', 'common', 'game']);
-  const isUpgrading = upgradingColony.value === colony.id;
-  const playerGold = baseGold.value;
-  const canAfford = playerGold >= colony.upgradeCost;
-  const isMaxLevel = colony.level >= colony.maxLevel;
-  const colonyName = t(`game:colonyScene.colonyNames.${colony.id}`, { defaultValue: colony.name });
-
-  if (!colony.unlocked) {
-    return (
-      <div class={`${styles.buildingPopup} ${styles.locked}`} onClick={(e) => e.stopPropagation()}>
-        <div class={styles.buildingPopupName}>{colonyName}</div>
-        <div class={styles.buildingPopupUnlock}>
-          {t('game:colonyScene.unlockAtLevel', { level: colony.unlockLevel })}
-        </div>
-        <button class={styles.colonyUpgradeBtn} onClick={onClose} style={{ marginTop: '8px', opacity: 0.6 }}>
-          {t('common:buttons.close')}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div class={styles.buildingPopup} onClick={(e) => e.stopPropagation()}>
-      <div class={styles.buildingPopupName}>
-        {t('idleRewards.buildingNameLevel', { name: colonyName, level: colony.level })}
-      </div>
-      <div class={styles.buildingPopupStats}>
-        {t('game:colonyScene.production')}: {colony.goldPerHour} 🪙/h
-      </div>
-      {colony.pendingGold > 0 && (
-        <div class={styles.buildingPopupPending}>
-          {t('game:colonyScene.collected')}: +{colony.pendingGold} 🪙
-        </div>
-      )}
-      {isMaxLevel ? (
-        <span class={styles.colonyMaxLevel}>{t('game:colonyScene.maxLevel')}</span>
-      ) : (
-        <button
-          class={styles.colonyUpgradeBtn}
-          onClick={onUpgrade}
-          disabled={!canAfford || isUpgrading || !colony.canUpgrade}
-        >
-          {isUpgrading
-            ? t('game:colonyScene.upgrading')
-            : t('idleRewards.upgradeForCost', { cost: colony.upgradeCost })}
-        </button>
-      )}
-    </div>
-  );
-}
-
 export function IdleRewardsModal() {
   const { t } = useTranslation(['modals', 'common']);
   const isVisible = idleRewardsModalVisible.value;
@@ -112,10 +45,6 @@ export function IdleRewardsModal() {
   const canClaim = hasPendingRewards.value;
   const pendingGold = totalPendingGold.value;
   const goldPerHour = totalColonyGoldPerHour.value;
-  const currentUpgrading = upgradingColony.value;
-
-  // Selected building for popup
-  const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
 
   if (!state) return null;
 
@@ -135,25 +64,10 @@ export function IdleRewardsModal() {
     }
   };
 
-  const handleBuildingClick = useCallback((colonyId: string) => {
-    setSelectedBuildingId(colonyId);
-  }, []);
-
-  const handleClosePopup = useCallback(() => {
-    setSelectedBuildingId(null);
-  }, []);
-
-  const handleUpgrade = useCallback(async () => {
-    if (selectedBuildingId) {
-      await upgradeColony(selectedBuildingId);
-    }
-  }, [selectedBuildingId]);
-
-  // Check if there are any colonies to display
-  const hasColonies = state.colonies && state.colonies.length > 0;
-  const selectedColony = selectedBuildingId
-    ? state.colonies.find((c) => c.id === selectedBuildingId)
-    : null;
+  const handleManageBase = () => {
+    hideIdleRewardsModal();
+    showColonyScene();
+  };
 
   return (
     <Modal
@@ -163,40 +77,21 @@ export function IdleRewardsModal() {
       class={styles.modalContent}
       ariaLabel={t('idleRewards.ariaLabel')}
     >
-      {/* Colony Scene with Pixi canvas */}
-      {hasColonies && (
-        <div class={styles.sceneContainer} onClick={handleClosePopup}>
-          {/* Scene header overlay */}
-          <div class={styles.sceneHeader}>
-            <div class={styles.sceneTimeInfo}>
-              <span class={styles.sceneTimeIcon}>⏰</span>
-              <span class={styles.sceneTimeText}>{formatIdleTime(state.cappedHours)}</span>
-            </div>
-            {goldPerHour > 0 && (
-              <div class={styles.sceneProductionInfo}>
-                <span class={styles.sceneProductionText}>{goldPerHour} 🪙/h</span>
-              </div>
-            )}
-          </div>
-
-          {/* Pixi canvas */}
-          <IdleRewardsScene
-            colonies={state.colonies}
-            visible={isVisible}
-            onBuildingClick={handleBuildingClick}
-            upgradingColonyId={currentUpgrading}
-          />
-
-          {/* Building popup */}
-          {selectedColony && (
-            <BuildingPopup
-              colony={selectedColony}
-              onClose={handleClosePopup}
-              onUpgrade={handleUpgrade}
-            />
-          )}
+      {/* Time and production info */}
+      <div class={styles.statsHeader}>
+        <div class={styles.statItem}>
+          <span class={styles.statIcon}>&#9201;</span>
+          <span class={styles.statLabel}>Time Offline</span>
+          <span class={styles.statValue}>{formatIdleTime(state.cappedHours)}</span>
         </div>
-      )}
+        {goldPerHour > 0 && (
+          <div class={styles.statItem}>
+            <span class={styles.statIcon}>&#129689;</span>
+            <span class={styles.statLabel}>Production</span>
+            <span class={styles.statValue}>{goldPerHour}/h</span>
+          </div>
+        )}
+      </div>
 
       {/* Compact rewards display */}
       <div class={styles.rewards}>
@@ -209,7 +104,7 @@ export function IdleRewardsModal() {
               class={styles.compactRewardItem}
               style={{ '--rarity-color': '#ffd700' } as Record<string, string>}
             >
-              <span class={styles.compactRewardIcon}>🪙</span>
+              <span class={styles.compactRewardIcon}>&#129689;</span>
               <span class={styles.compactRewardAmount}>+{pendingGold}</span>
             </div>
           )}
@@ -220,7 +115,7 @@ export function IdleRewardsModal() {
               class={styles.compactRewardItem}
               style={{ '--rarity-color': '#9932cc' } as Record<string, string>}
             >
-              <span class={styles.compactRewardIcon}>💨</span>
+              <span class={styles.compactRewardIcon}>&#128142;</span>
               <span class={styles.compactRewardAmount}>+{state.pendingDust}</span>
             </div>
           )}
@@ -266,15 +161,12 @@ export function IdleRewardsModal() {
           </button>
         )}
 
-        {/* Button to open full-screen colony scene */}
+        {/* Button to open full-screen colony terminal */}
         <button
           class={styles.manageBaseBtn}
-          onClick={() => {
-            hideIdleRewardsModal();
-            showColonyScene();
-          }}
+          onClick={handleManageBase}
         >
-          🏭 Zarządzaj bazą
+          &#127981; Zarządzaj bazą
         </button>
       </div>
     </Modal>

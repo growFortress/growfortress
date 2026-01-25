@@ -23,34 +23,36 @@ function getTooltipPosition(
   }
 
   const padding = 16;
+  const tooltipWidth = 280;
+  const tooltipHeight = 180; // Estimated
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
+  // Helper to clamp horizontal position within viewport
+  const clampLeft = (left: number) => Math.max(padding, Math.min(left, viewportWidth - tooltipWidth - padding));
+  const clampTop = (top: number) => Math.max(padding, Math.min(top, viewportHeight - tooltipHeight - padding));
+
   switch (position) {
-    case "bottom":
-      return {
-        top: `${targetRect.bottom + padding}px`,
-        left: `${targetRect.left + targetRect.width / 2}px`,
-        transform: "translateX(-50%)",
-      };
-    case "top":
-      return {
-        bottom: `${viewportHeight - targetRect.top + padding}px`,
-        left: `${targetRect.left + targetRect.width / 2}px`,
-        transform: "translateX(-50%)",
-      };
-    case "left":
-      return {
-        top: `${targetRect.top + targetRect.height / 2}px`,
-        right: `${viewportWidth - targetRect.left + padding}px`,
-        transform: "translateY(-50%)",
-      };
-    case "right":
-      return {
-        top: `${targetRect.top + targetRect.height / 2}px`,
-        left: `${targetRect.right + padding}px`,
-        transform: "translateY(-50%)",
-      };
+    case "bottom": {
+      const left = clampLeft(targetRect.left + targetRect.width / 2 - tooltipWidth / 2);
+      const top = Math.min(targetRect.bottom + padding, viewportHeight - tooltipHeight - padding);
+      return { top: `${top}px`, left: `${left}px` };
+    }
+    case "top": {
+      const left = clampLeft(targetRect.left + targetRect.width / 2 - tooltipWidth / 2);
+      const top = Math.max(targetRect.top - tooltipHeight - padding, padding);
+      return { top: `${top}px`, left: `${left}px` };
+    }
+    case "left": {
+      const left = Math.max(targetRect.left - tooltipWidth - padding, padding);
+      const top = clampTop(targetRect.top + targetRect.height / 2 - tooltipHeight / 2);
+      return { top: `${top}px`, left: `${left}px` };
+    }
+    case "right": {
+      const left = Math.min(targetRect.right + padding, viewportWidth - tooltipWidth - padding);
+      const top = clampTop(targetRect.top + targetRect.height / 2 - tooltipHeight / 2);
+      return { top: `${top}px`, left: `${left}px` };
+    }
     default:
       return {};
   }

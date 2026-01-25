@@ -23,9 +23,9 @@ import { resetGuildState } from './guild.signals.js';
 import { resetMessagesState } from './messages.signals.js';
 import { resetPvpState } from './pvp.signals.js';
 import { resetBossRushState } from './boss-rush.signals.js';
-import { resetDailyQuestsState } from './dailyQuests.signals.js';
 import { resetEnergyState } from './energy.signals.js';
 import { resetPillarUnlocksState } from './pillarUnlocks.signals.js';
+import { resetAchievementsState } from './achievements.signals.js';
 import { getProfile } from '../api/client.js';
 import { GameAnnouncements } from '../components/shared/ScreenReaderAnnouncer.js';
 import { setLanguage } from '../i18n/useTranslation.js';
@@ -580,14 +580,14 @@ export function resetAllState(): void {
     // Reset Boss Rush state
     resetBossRushState();
 
-    // Reset Daily Quests state
-    resetDailyQuestsState();
-
     // Reset Energy state
     resetEnergyState();
 
     // Reset Pillar Unlocks state
     resetPillarUnlocksState();
+
+    // Reset Achievements state
+    resetAchievementsState();
 
     // Reset UI state
     ui.resetUIState();

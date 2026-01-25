@@ -159,10 +159,13 @@ describe('Shop Routes Integration', () => {
     });
 
     it('should return shop overview with categories', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(createMockUser());
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([]);
-      mockPrisma.inventory.findUnique.mockResolvedValue(createMockInventory());
+      // Optimized query returns nested data in user.findUnique
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        purchaseLimits: [],
+        purchases: [],
+        inventory: { unlockedHeroIds: ['vanguard'] },
+      });
 
       const token = await generateTestToken('user-123');
 
@@ -183,12 +186,13 @@ describe('Shop Routes Integration', () => {
     });
 
     it('should include user preferred currency in prices', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(
-        createMockUser({ preferredCurrency: 'EUR' })
-      );
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([]);
-      mockPrisma.inventory.findUnique.mockResolvedValue(createMockInventory());
+      // Optimized query returns nested data in user.findUnique
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser({ preferredCurrency: 'EUR' }),
+        purchaseLimits: [],
+        purchases: [],
+        inventory: { unlockedHeroIds: ['vanguard'] },
+      });
 
       const token = await generateTestToken('user-123');
 
@@ -206,12 +210,15 @@ describe('Shop Routes Integration', () => {
     });
 
     it('should show starter pack unavailable when already purchased', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(createMockUser());
-      mockPrisma.userPurchaseLimit.findMany.mockResolvedValue([
-        { userId: 'user-123', productId: 'starter_pack', purchaseCount: 1 },
-      ]);
-      mockPrisma.shopPurchase.findMany.mockResolvedValue([]);
-      mockPrisma.inventory.findUnique.mockResolvedValue(createMockInventory());
+      // Optimized query returns nested data in user.findUnique
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...createMockUser(),
+        purchaseLimits: [
+          { userId: 'user-123', productId: 'starter_pack', purchaseCount: 1 },
+        ],
+        purchases: [],
+        inventory: { unlockedHeroIds: ['vanguard'] },
+      });
 
       const token = await generateTestToken('user-123');
 

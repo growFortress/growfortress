@@ -10,6 +10,17 @@ import {
   calculateTotalGoldPerHour,
   calculateColonyUpgradeCost,
   type ActiveColony,
+  // Prestige imports
+  calculateStellarPoints,
+  getPrestigeBonus,
+  getPrestigeUnlocks,
+  canPrestige,
+  PRESTIGE_MINIMUM_GOLD,
+  // Milestone imports
+  COLONY_MILESTONES,
+  getColonyMilestoneById,
+  getNextColonyMilestone,
+  getColonyMilestoneProgress,
 } from '@arcade/sim-core';
 
 /**
@@ -167,14 +178,20 @@ function generateIdleDrops(
 }
 
 /**
- * Parse colony levels from database JSON
+ * Parse colony levels from database JSON with safe validation
  */
-function parseColonyLevels(colonyLevelsJson: unknown): Record<string, number> {
-  if (typeof colonyLevelsJson === 'object' && colonyLevelsJson !== null) {
-    return colonyLevelsJson as Record<string, number>;
+function parseColonyLevels(json: unknown): Record<string, number> {
+  const defaults = { farm: 0, mine: 0, market: 0, factory: 0 };
+  if (typeof json !== 'object' || json === null) return defaults;
+
+  const result = { ...defaults };
+  for (const [key, val] of Object.entries(json)) {
+    // Only allow known colony keys with valid non-negative number values
+    if (key in defaults && typeof val === 'number' && val >= 0 && Number.isFinite(val)) {
+      result[key as keyof typeof defaults] = Math.floor(val);
+    }
   }
-  // Default to all level 0
-  return { farm: 0, mine: 0, market: 0, factory: 0 };
+  return result;
 }
 
 /**
@@ -358,7 +375,7 @@ export async function claimIdleRewards(userId: string): Promise<ClaimResult> {
       },
     });
 
-    // Update colony progress lastClaimAt if it exists
+    // Update colony progress lastClaimAt and totalGoldEarned for prestige
     await tx.colonyProgress.upsert({
       where: { userId },
       create: {
@@ -366,10 +383,12 @@ export async function claimIdleRewards(userId: string): Promise<ClaimResult> {
         colonyLevels: { farm: 0, mine: 0, market: 0, factory: 0 },
         lastClaimAt: new Date(),
         pendingGold: 0,
+        totalGoldEarned: BigInt(pending.pendingGold),
       },
       update: {
         lastClaimAt: new Date(),
         pendingGold: 0,
+        totalGoldEarned: { increment: BigInt(pending.pendingGold) },
       },
     });
 
@@ -536,5 +555,362 @@ export async function upgradeColony(userId: string, colonyId: string): Promise<C
     },
     goldSpent: upgradeCost,
     remainingGold: result.remainingGold,
+  };
+}
+
+// ============================================================================
+// PRESTIGE SYSTEM
+// ============================================================================
+
+export interface PrestigeStatusResult {
+  stellarPoints: number;
+  totalGoldEarned: string;
+  prestigeCount: number;
+  canPrestige: boolean;
+  pendingStellarPoints: number;
+  currentBonus: number;
+  unlocks: string[];
+}
+
+/**
+ * Get prestige status for a user
+ */
+export async function getPrestigeStatus(userId: string): Promise<PrestigeStatusResult | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      colonyProgress: true,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  const stellarPoints = user.colonyProgress?.stellarPoints ?? 0;
+  const totalGoldEarned = user.colonyProgress?.totalGoldEarned ?? 0n;
+  const prestigeCount = user.colonyProgress?.prestigeCount ?? 0;
+
+  const pendingStellarPoints = calculateStellarPoints(totalGoldEarned) - stellarPoints;
+  const currentBonus = getPrestigeBonus(stellarPoints);
+  const unlocks = getPrestigeUnlocks(stellarPoints);
+
+  return {
+    stellarPoints,
+    totalGoldEarned: totalGoldEarned.toString(),
+    prestigeCount,
+    canPrestige: canPrestige(totalGoldEarned) && pendingStellarPoints > 0,
+    pendingStellarPoints: Math.max(0, pendingStellarPoints),
+    currentBonus,
+    unlocks,
+  };
+}
+
+export interface PrestigeResult {
+  success: boolean;
+  error?: string;
+  newStellarPoints?: number;
+  newBonus?: number;
+  newUnlocks?: string[];
+}
+
+/**
+ * Perform prestige (stellar rebirth)
+ */
+export async function performPrestige(userId: string): Promise<PrestigeResult> {
+  const colonyProgress = await prisma.colonyProgress.findUnique({
+    where: { userId },
+  });
+
+  if (!colonyProgress) {
+    return { success: false, error: 'Colony progress not found' };
+  }
+
+  const totalGoldEarned = colonyProgress.totalGoldEarned;
+
+  if (!canPrestige(totalGoldEarned)) {
+    return { success: false, error: `Requires at least ${PRESTIGE_MINIMUM_GOLD.toString()} total gold earned` };
+  }
+
+  const newStellarPoints = calculateStellarPoints(totalGoldEarned);
+  const pointsToAdd = newStellarPoints - colonyProgress.stellarPoints;
+
+  if (pointsToAdd <= 0) {
+    return { success: false, error: 'No stellar points to earn' };
+  }
+
+  // Perform prestige in transaction
+  await prisma.$transaction(async (tx) => {
+    // Reset colony levels but keep stellar points and total gold earned
+    await tx.colonyProgress.update({
+      where: { userId },
+      data: {
+        colonyLevels: { farm: 0, mine: 0, market: 0, factory: 0 },
+        stellarPoints: newStellarPoints,
+        prestigeCount: { increment: 1 },
+        lastPrestigeAt: new Date(),
+        pendingGold: 0,
+      },
+    });
+  });
+
+  const newBonus = getPrestigeBonus(newStellarPoints);
+  const newUnlocks = getPrestigeUnlocks(newStellarPoints);
+
+  return {
+    success: true,
+    newStellarPoints,
+    newBonus,
+    newUnlocks,
+  };
+}
+
+// ============================================================================
+// MILESTONES
+// ============================================================================
+
+export interface MilestoneStatusResult {
+  milestones: Array<{
+    id: string;
+    name: string;
+    description: string;
+    requirement: number;
+    claimed: boolean;
+    canClaim: boolean;
+    reward: {
+      gold?: number;
+      dust?: number;
+      material?: string;
+      unlock?: string;
+    };
+  }>;
+  currentGoldPerHour: number;
+  nextMilestone: {
+    id: string;
+    name: string;
+    description: string;
+    requirement: number;
+    claimed: boolean;
+    canClaim: boolean;
+    reward: {
+      gold?: number;
+      dust?: number;
+      material?: string;
+      unlock?: string;
+    };
+  } | null;
+  progress: number | null;
+}
+
+/**
+ * Get milestone status for a user
+ */
+export async function getMilestoneStatus(userId: string): Promise<MilestoneStatusResult | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      progression: true,
+      colonyProgress: {
+        include: {
+          milestones: true,
+        },
+      },
+    },
+  });
+
+  if (!user || !user.progression) {
+    return null;
+  }
+
+  // Get colony levels and calculate gold per hour
+  const colonyLevels = user.colonyProgress
+    ? parseColonyLevels(user.colonyProgress.colonyLevels)
+    : { farm: 0, mine: 0, market: 0, factory: 0 };
+  const colonies = toActiveColonies(colonyLevels);
+  const fortressLevel = user.progression.level;
+  const goldPerHour = calculateTotalGoldPerHour(colonies, fortressLevel);
+
+  // Get claimed milestone IDs
+  const claimedIds = user.colonyProgress?.milestones.map(m => m.milestoneId) ?? [];
+
+  // Build milestone status list
+  const milestones = COLONY_MILESTONES.map(m => ({
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    requirement: m.requirement,
+    claimed: claimedIds.includes(m.id),
+    canClaim: goldPerHour >= m.requirement && !claimedIds.includes(m.id),
+    reward: m.reward,
+  }));
+
+  // Get next milestone
+  const next = getNextColonyMilestone(goldPerHour);
+  const nextMilestone = next ? {
+    id: next.id,
+    name: next.name,
+    description: next.description,
+    requirement: next.requirement,
+    claimed: false,
+    canClaim: false,
+    reward: next.reward,
+  } : null;
+
+  // Get progress
+  const progressData = getColonyMilestoneProgress(goldPerHour);
+  const progress = progressData?.progress ?? null;
+
+  return {
+    milestones,
+    currentGoldPerHour: goldPerHour,
+    nextMilestone,
+    progress,
+  };
+}
+
+export interface ClaimMilestoneResult {
+  success: boolean;
+  error?: string;
+  reward?: {
+    gold?: number;
+    dust?: number;
+    materialId?: string;
+    materialAmount?: number;
+  };
+  newInventory?: {
+    gold: number;
+    dust: number;
+    materials: Record<string, number>;
+  };
+}
+
+/**
+ * Claim a milestone reward
+ */
+export async function claimMilestone(userId: string, milestoneId: string): Promise<ClaimMilestoneResult> {
+  const milestone = getColonyMilestoneById(milestoneId);
+  if (!milestone) {
+    return { success: false, error: 'Invalid milestone ID' };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      progression: true,
+      inventory: true,
+      colonyProgress: {
+        include: {
+          milestones: true,
+        },
+      },
+    },
+  });
+
+  if (!user || !user.progression || !user.inventory) {
+    return { success: false, error: 'User not found' };
+  }
+
+  // Check if already claimed
+  const alreadyClaimed = user.colonyProgress?.milestones.some(m => m.milestoneId === milestoneId);
+  if (alreadyClaimed) {
+    return { success: false, error: 'Milestone already claimed' };
+  }
+
+  // Check if milestone requirements are met
+  const colonyLevels = user.colonyProgress
+    ? parseColonyLevels(user.colonyProgress.colonyLevels)
+    : { farm: 0, mine: 0, market: 0, factory: 0 };
+  const colonies = toActiveColonies(colonyLevels);
+  const fortressLevel = user.progression.level;
+  const goldPerHour = calculateTotalGoldPerHour(colonies, fortressLevel);
+
+  if (goldPerHour < milestone.requirement) {
+    return { success: false, error: `Requires ${milestone.requirement} gold/hour production` };
+  }
+
+  // Ensure colonyProgress exists
+  let colonyProgressId = user.colonyProgress?.id;
+  if (!colonyProgressId) {
+    const newProgress = await prisma.colonyProgress.create({
+      data: {
+        userId,
+        colonyLevels: { farm: 0, mine: 0, market: 0, factory: 0 },
+      },
+    });
+    colonyProgressId = newProgress.id;
+  }
+
+  // Claim reward in transaction
+  const result = await prisma.$transaction(async (tx) => {
+    // Create milestone claim record
+    await tx.colonyMilestone.create({
+      data: {
+        colonyProgressId,
+        milestoneId,
+      },
+    });
+
+    // Apply rewards
+    const goldReward = milestone.reward.gold ?? 0;
+    const dustReward = milestone.reward.dust ?? 0;
+
+    // Update inventory with gold and dust
+    const updatedInventory = await tx.inventory.update({
+      where: { userId },
+      data: {
+        gold: { increment: goldReward },
+        dust: { increment: dustReward },
+      },
+    });
+
+    // Handle material reward if present
+    let materialId: string | undefined;
+    let materialAmount = 0;
+    if (milestone.reward.material) {
+      // Find a random material of the specified rarity
+      const materialsOfRarity = MATERIAL_DEFINITIONS.filter(
+        m => m.rarity === milestone.reward.material
+      );
+      if (materialsOfRarity.length > 0) {
+        const selected = materialsOfRarity[randomInt(0, materialsOfRarity.length)];
+        materialId = selected.id;
+        materialAmount = 1;
+
+        // Add material to inventory
+        const currentMaterials = (updatedInventory.materials as Record<string, number>) || {};
+        const newMaterials = { ...currentMaterials };
+        newMaterials[materialId] = (newMaterials[materialId] || 0) + materialAmount;
+
+        await tx.inventory.update({
+          where: { userId },
+          data: { materials: newMaterials },
+        });
+      }
+    }
+
+    return {
+      goldReward,
+      dustReward,
+      materialId,
+      materialAmount,
+      newGold: updatedInventory.gold + goldReward, // Already incremented above
+      newDust: updatedInventory.dust + dustReward,
+      newMaterials: updatedInventory.materials as Record<string, number>,
+    };
+  });
+
+  return {
+    success: true,
+    reward: {
+      gold: result.goldReward > 0 ? result.goldReward : undefined,
+      dust: result.dustReward > 0 ? result.dustReward : undefined,
+      materialId: result.materialId,
+      materialAmount: result.materialAmount > 0 ? result.materialAmount : undefined,
+    },
+    newInventory: {
+      gold: result.newGold,
+      dust: result.newDust,
+      materials: result.newMaterials,
+    },
   };
 }

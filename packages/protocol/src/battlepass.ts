@@ -204,12 +204,13 @@ export type BuyBattlePassTiersResponse = z.infer<typeof BuyBattlePassTiersRespon
 // ============================================================================
 
 export const BattlePassPointSourceSchema = z.enum([
-  'daily_quest',      // 50 BP per quest
-  'weekly_challenge', // 200 BP per challenge
-  'boss_rush',        // 25 BP per boss killed
-  'pvp_win',          // 30 BP per win
-  'login',            // 10 BP daily
-  'purchase',         // Direct tier purchase
+  'daily_quest',        // 50 BP per quest (legacy, kept for compatibility)
+  'weekly_challenge',   // 200 BP per challenge
+  'boss_rush',          // 25 BP per boss killed
+  'pvp_win',            // 30 BP per win
+  'login',              // 10 BP daily
+  'purchase',           // Direct tier purchase
+  'achievement_claimed', // 10 BP per achievement tier claimed
 ]);
 export type BattlePassPointSource = z.infer<typeof BattlePassPointSourceSchema>;
 
@@ -220,6 +221,7 @@ export const BP_POINT_VALUES: Record<BattlePassPointSource, number> = {
   pvp_win: 30,
   login: 10,
   purchase: 100,  // Per tier
+  achievement_claimed: 10,
 };
 
 // ============================================================================

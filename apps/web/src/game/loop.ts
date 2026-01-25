@@ -16,6 +16,7 @@ export class GameLoop {
   private render: (alpha: number) => void;
   private running = false;
   private paused = false;
+  private pausedForExternal = false; // Tracks if paused by external source (tutorial)
   private lastTime = 0;
   private accumulator = 0;
   private rafId: number | null = null;
@@ -59,9 +60,33 @@ export class GameLoop {
 
   resume(): void {
     if (!this.running || !this.paused) return;
+    // Don't resume if externally paused (e.g., tutorial active)
+    if (this.pausedForExternal) return;
     this.paused = false;
     this.lastTime = performance.now(); // Reset to avoid large delta
     this.tick(this.lastTime);
+  }
+
+  /** Pause from external source (tutorial, modal, etc.) - blocks visibility resume */
+  pauseExternal(): void {
+    if (!this.running) return;
+    this.pausedForExternal = true;
+    this.pause();
+  }
+
+  /** Resume from external pause */
+  resumeExternal(): void {
+    if (!this.pausedForExternal) return;
+    this.pausedForExternal = false;
+    // Only resume if not hidden
+    if (!document.hidden) {
+      this.resume();
+    }
+  }
+
+  /** Check if paused by external source */
+  isPausedExternal(): boolean {
+    return this.pausedForExternal;
   }
 
   private cancelFrame(): void {

@@ -2,9 +2,13 @@ import { defineConfig } from "vite";
 import preact from "@preact/preset-vite";
 import path from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: process.env.VITE_CDN_URL || "/",
   plugins: [preact()],
+  // Remove console.log and debugger statements in production
+  esbuild: {
+    drop: mode === "production" ? ["console", "debugger"] : [],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -37,6 +41,9 @@ export default defineConfig({
     target: "es2020",
     outDir: "dist",
     sourcemap: false, // Disabled in production to reduce bundle size (~30-40%)
+    // Remove console.log and debugger in production builds
+    minify: "esbuild",
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -68,4 +75,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

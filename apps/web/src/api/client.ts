@@ -50,6 +50,11 @@ import type {
   UpgradeColonyRequest,
   UpgradeColonyResponse,
   IdleRewardsConfigResponse,
+  PrestigeStatus,
+  PrestigeResponse,
+  MilestonesResponse,
+  ClaimMilestoneRequest,
+  ClaimMilestoneResponse,
   BulkReward,
   ClaimBulkRewardResponse,
   ReferralStatusResponse,
@@ -585,6 +590,31 @@ export async function upgradeColony(
   data: UpgradeColonyRequest,
 ): Promise<UpgradeColonyResponse> {
   return request<UpgradeColonyResponse>("/v1/idle/colony/upgrade", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// Prestige System
+export async function getPrestigeStatus(): Promise<PrestigeStatus> {
+  return request<PrestigeStatus>("/v1/idle/prestige");
+}
+
+export async function performPrestige(): Promise<PrestigeResponse> {
+  return request<PrestigeResponse>("/v1/idle/prestige", {
+    method: "POST",
+  });
+}
+
+// Colony Milestones
+export async function getMilestones(): Promise<MilestonesResponse> {
+  return request<MilestonesResponse>("/v1/idle/milestones");
+}
+
+export async function claimColonyMilestone(
+  data: ClaimMilestoneRequest,
+): Promise<ClaimMilestoneResponse> {
+  return request<ClaimMilestoneResponse>("/v1/idle/milestone/claim", {
     method: "POST",
     body: JSON.stringify(data),
   });

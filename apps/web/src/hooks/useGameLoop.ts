@@ -113,12 +113,9 @@ interface UseGameLoopReturn {
   setTurretTargeting: (slotIndex: number, mode: 'closest_to_fortress' | 'weakest' | 'strongest' | 'nearest_to_turret' | 'fastest') => void;
   activateOvercharge: (slotIndex: number) => void;
   spawnMilitia: (militiaType: 'infantry' | 'archer' | 'shield_bearer', x: number, y: number, count?: number) => void;
-  // Colony scene methods
-  showColonyScene: () => void;
-  hideColonyScene: () => void;
-  updateColonies: (colonies: import('@arcade/protocol').ColonyStatus[]) => void;
-  playColonyClaimAnimation: () => Promise<void>;
-  playColonyUpgradeAnimation: (colonyId: string) => void;
+  // Tutorial pause methods
+  pauseForTutorial: () => void;
+  resumeFromTutorial: () => void;
 }
 
 export function useGameLoop(
@@ -142,13 +139,6 @@ export function useGameLoop(
     const HUB_THROTTLE_THRESHOLD = 5; // After 5 idle frames, slow down to 10fps
     const renderer = new GameApp(canvas);
     rendererRef.current = renderer;
-
-    // Set up colony building click callback to dispatch custom event
-    renderer.setOnColonyBuildingClick((colonyId, _colony) => {
-      window.dispatchEvent(
-        new CustomEvent('colony-building-click', { detail: { colonyId } })
-      );
-    });
 
     const game = new Game({
       onStateChange: () => {
@@ -808,39 +798,17 @@ export function useGameLoop(
     game.spawnMilitia(militiaType, x, y, count);
   }, []);
 
-  // Colony scene methods
-  const showColonyScene = useCallback((): void => {
-    const renderer = rendererRef.current;
-    if (!renderer) return;
-    renderer.showColonyScene();
+  // Tutorial pause methods
+  const pauseForTutorial = useCallback((): void => {
+    const loop = loopRef.current;
+    if (!loop) return;
+    loop.pauseExternal();
   }, []);
 
-  const hideColonyScene = useCallback((): void => {
-    const renderer = rendererRef.current;
-    if (!renderer) return;
-    renderer.hideColonyScene();
-  }, []);
-
-  const updateColonies = useCallback((colonies: import('@arcade/protocol').ColonyStatus[]): void => {
-    logger.debug('[useGameLoop] updateColonies called with:', colonies.length, 'colonies');
-    const renderer = rendererRef.current;
-    if (!renderer) {
-      logger.debug('[useGameLoop] No renderer available!');
-      return;
-    }
-    renderer.setColonies(colonies);
-  }, []);
-
-  const playColonyClaimAnimation = useCallback(async (): Promise<void> => {
-    const renderer = rendererRef.current;
-    if (!renderer) return;
-    await renderer.playColonyClaimAnimation();
-  }, []);
-
-  const playColonyUpgradeAnimation = useCallback((colonyId: string): void => {
-    const renderer = rendererRef.current;
-    if (!renderer) return;
-    renderer.playColonyUpgradeAnimation(colonyId);
+  const resumeFromTutorial = useCallback((): void => {
+    const loop = loopRef.current;
+    if (!loop) return;
+    loop.resumeExternal();
   }, []);
 
   return {
@@ -860,11 +828,8 @@ export function useGameLoop(
     setTurretTargeting,
     activateOvercharge,
     spawnMilitia,
-    // Colony scene methods
-    showColonyScene,
-    hideColonyScene,
-    updateColonies,
-    playColonyClaimAnimation,
-    playColonyUpgradeAnimation,
+    // Tutorial pause methods
+    pauseForTutorial,
+    resumeFromTutorial,
   };
 }

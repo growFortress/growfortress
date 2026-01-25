@@ -111,11 +111,11 @@ apps/server/
 | `gacha.ts` | Gacha banner system |
 | `energy.ts` | Premium energy currency |
 
-### Quest & Challenge Systems
+### Achievement & Challenge Systems
 
 | Route File | Size | Description |
 |------------|------|-------------|
-| `dailyQuests.ts` | 2.9 KB | Daily quest system |
+| `achievements.ts` | 4.5 KB | Achievements system (permanent progression) |
 | `pillarChallenge.ts` | 8.4 KB | Pillar Challenge mode |
 | `pillarUnlocks.ts` | - | Dust-gated progression |
 | `battlepass.ts` | - | Battle pass progression |
@@ -201,7 +201,7 @@ apps/server/
 - `heroes.ts` (6.3 KB) - Hero system
 - `artifacts.ts` - Artifacts
 - `mastery.ts` (11 KB) - Skill trees
-- `dailyQuests.ts` (13 KB) - Daily quests
+- `achievements.ts` (15 KB) - Achievements system (permanent progression)
 - `materials.ts` - Material drops
 - `energy.ts` (4.6 KB) - Energy currency
 

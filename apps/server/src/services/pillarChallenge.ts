@@ -45,6 +45,7 @@ import {
   getDefaultPillarChallengeConfig,
   type PillarChallengeSimConfig,
 } from '@arcade/sim-core';
+import { updateLifetimeStats } from './achievements.js';
 
 // ============================================================================
 // CONSTANTS
@@ -674,6 +675,12 @@ export async function submitPillarChallenge(
 
     // Get updated crystal progress
     const newCrystalProgress = await getOrCreateCrystalProgress(userId);
+
+    // Update lifetime stats for achievements
+    await updateLifetimeStats(userId, {
+      pillarChallengesCompleted: 1,
+      crystalFragments: fragmentRewards.primaryFragments + fragmentRewards.secondaryFragments,
+    });
 
     return {
       success: true,

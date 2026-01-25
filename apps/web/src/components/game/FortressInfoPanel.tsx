@@ -45,6 +45,7 @@ import { Button } from '../shared/Button.js';
 import { announce } from '../shared/ScreenReaderAnnouncer.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { guildBonuses } from '../../state/guild.signals.js';
+import { GoldIcon } from '../icons/index.js';
 import styles from './FortressInfoPanel.module.css';
 
 // Class colors
@@ -484,7 +485,7 @@ export function FortressInfoPanel() {
                       class={canAfford ? styles.affordableBtn : ''}
                       aria-label={t('fortressPanel.upgradeFor', { name: upgradeName, cost })}
                     >
-                      {cost} 🪙
+                      {cost} <GoldIcon size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '2px' }} />
                     </Button>
                   )}
                 </div>

@@ -1,7 +1,7 @@
 /**
  * Sessions Routes Integration Tests
  */
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildTestApp, generateTestToken } from '../../helpers/testApp.js';
 import {
@@ -11,7 +11,11 @@ import {
   createMockProgression,
   createMockGameSession,
 } from '../../mocks/prisma.js';
-import { vi } from 'vitest';
+
+// Mock achievements service to avoid database dependencies
+vi.mock('../../../services/achievements.js', () => ({
+  updateLifetimeStats: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('Sessions Routes Integration', () => {
   let app: FastifyInstance;

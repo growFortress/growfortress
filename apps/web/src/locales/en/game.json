@@ -211,9 +211,21 @@
     "relicsDescription": "After each wave choose a relic. Relics strengthen your defense for the whole session!",
     "waveN": "Wave {{n}}",
     "clickToClose": "Click to close",
+    "welcomeIntro": {
+      "title": "Welcome to Grow Fortress!",
+      "description": "Defend your fortress against waves of enemies. Your fortress and turrets attack automatically - your job is to make strategic decisions!"
+    },
     "fortressAutoAttack": {
       "title": "Your Fortress",
       "description": "Fortress and turrets attack automatically. Watch them defend you from enemies!"
+    },
+    "fortressHealth": {
+      "title": "Fortress Health",
+      "description": "This is your fortress HP. If it reaches zero, the game ends. Protect it at all costs!"
+    },
+    "goldResource": {
+      "title": "Gold",
+      "description": "You earn gold by killing enemies. Spend it on permanent upgrades between sessions!"
     },
     "bombSkill": {
       "title": "Fortress Skills",
@@ -226,6 +238,18 @@
     "speedControls": {
       "title": "Speed Controls",
       "description": "Speed up the game with 2x button when you feel confident."
+    },
+    "turretTargeting": {
+      "title": "Turret Targeting",
+      "description": "Change turret targeting mode: closest, weakest, strongest, or fastest enemies."
+    },
+    "militiaSpawn": {
+      "title": "Militia",
+      "description": "Summon militia units for dust! Infantry, archers, and shield bearers will help defend your fortress."
+    },
+    "dustResource": {
+      "title": "Dust",
+      "description": "Dust is earned at the end of waves. Use it to summon militia and for special upgrades!"
     },
     "buildSynergy": {
       "title": "Your Build Synergy",
@@ -305,6 +329,7 @@
     "xpProgress": "Experience progress",
     "dailyQuestsWithRewards": "Daily Quests ({{count}} rewards)",
     "leaderboardsWithRewards": "Leaderboards (rewards to claim)",
+    "achievementsWithRewards": "Achievements (rewards to claim)",
     "worldExploration": "World Exploration",
     "pvpArena": "PvP Arena",
     "pvpArenaWithChallenges": "PvP Arena ({{count}} challenges)",

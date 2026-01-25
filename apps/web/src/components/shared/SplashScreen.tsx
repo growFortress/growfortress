@@ -7,8 +7,14 @@ import styles from './SplashScreen.module.css';
 // =============================================================================
 
 export interface SplashScreenProps {
-  /** Duration in milliseconds before triggering exit */
-  durationMs?: number;
+  /** Minimum duration in milliseconds before splash can complete */
+  minDurationMs?: number;
+  /**
+   * Promise that must resolve before splash completes.
+   * Splash waits for BOTH minDuration AND onReady to finish.
+   * This allows critical initialization to run in parallel with splash animation.
+   */
+  onReady?: () => Promise<void>;
   /** Callback when splash is complete (after exit animation) */
   onComplete?: () => void;
 }
@@ -125,29 +131,47 @@ function GameLogo({ class: className }: SVGProps) {
 // =============================================================================
 
 export function SplashScreen({
-  durationMs = 4000,
+  minDurationMs = 1500,
+  onReady,
   onComplete,
 }: SplashScreenProps) {
   const { t } = useTranslation('common');
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Start exit animation before duration ends
-    const exitDelay = durationMs - 500; // 500ms for exit animation
-    const exitTimer = setTimeout(() => {
-      setIsExiting(true);
-    }, exitDelay);
+    let cancelled = false;
+    const EXIT_ANIMATION_MS = 500;
 
-    // Call onComplete after full duration
-    const completeTimer = setTimeout(() => {
+    async function runSplash() {
+      // Run minimum duration and onReady in parallel
+      const minDurationPromise = new Promise<void>((resolve) =>
+        setTimeout(resolve, minDurationMs)
+      );
+      const readyPromise = onReady ? onReady() : Promise.resolve();
+
+      // Wait for BOTH to complete
+      await Promise.all([minDurationPromise, readyPromise]);
+
+      if (cancelled) return;
+
+      // Start exit animation
+      setIsExiting(true);
+
+      // Wait for exit animation, then call onComplete
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, EXIT_ANIMATION_MS)
+      );
+
+      if (cancelled) return;
       onComplete?.();
-    }, durationMs);
+    }
+
+    runSplash();
 
     return () => {
-      clearTimeout(exitTimer);
-      clearTimeout(completeTimer);
+      cancelled = true;
     };
-  }, [durationMs, onComplete]);
+  }, [minDurationMs, onReady, onComplete]);
 
   const containerClass = `${styles.container} ${isExiting ? styles.containerExiting : ''}`;
 

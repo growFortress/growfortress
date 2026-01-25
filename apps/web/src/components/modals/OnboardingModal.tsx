@@ -70,10 +70,6 @@ export function OnboardingModal() {
     }
   };
 
-  const handleSkip = async () => {
-    await handleStart();
-  };
-
   const handleStart = async () => {
     setLoading(true);
     setError(null);
@@ -164,29 +160,12 @@ export function OnboardingModal() {
       showCloseButton={false}
     >
       <div class={styles.container}>
-        {/* Header with progress */}
+        {/* Header with logo and developer credit */}
         <header class={styles.header}>
-          <div class={styles.progress}>
-            <span class={styles.stepLabel}>
-              {t("onboarding.stepLabel", {
-                current: currentStep + 1,
-                total: TOTAL_STEPS,
-              })}
-            </span>
-            <div class={styles.progressBar}>
-              <div
-                class={styles.progressFill}
-                style={{ width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%` }}
-              />
-            </div>
+          <div class={styles.logoContainer}>
+            <span class={styles.logoText}>GROW FORTRESS</span>
           </div>
-          <button
-            class={styles.skipButton}
-            onClick={handleSkip}
-            disabled={loading}
-          >
-            {t("onboarding.skip")}
-          </button>
+          <span class={styles.developerCredit}>Developed by PlazaWorks</span>
         </header>
 
         {error && <div class={styles.error}>{error}</div>}

@@ -13,7 +13,7 @@ import { unlockHero } from '../../api/client.js';
 import { updateProfileFromServer } from '../../state/index.js';
 import { Modal } from '../shared/Modal.js';
 import { HeroAvatar } from '../shared/HeroAvatar.js';
-import { DustIcon } from '../icons/index.js';
+import { DustIcon, GoldIcon } from '../icons/index.js';
 import styles from './HeroRecruitmentModal.module.css';
 
 // Rarity configuration
@@ -227,7 +227,7 @@ export function HeroRecruitmentModal() {
                   <>
                     {cost.gold > 0 && (
                       <div class={`${styles.costItem} ${gold < cost.gold ? styles.insufficient : ''}`}>
-                        <span class={styles.costIcon}>🪙</span>
+                        <GoldIcon size={16} className={styles.costIcon} />
                         {cost.gold.toLocaleString()}
                       </div>
                     )}
@@ -259,7 +259,7 @@ export function HeroRecruitmentModal() {
       <div class={styles.container}>
         <div class={styles.resourceBar}>
           <div class={styles.resource}>
-            <span class={styles.goldIcon}>🪙</span>
+            <GoldIcon size={20} className={styles.goldIcon} />
             <span class={styles.resourceValue}>{gold.toLocaleString()}</span>
           </div>
           <div class={styles.resource}>

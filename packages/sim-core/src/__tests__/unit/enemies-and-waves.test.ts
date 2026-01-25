@@ -171,24 +171,28 @@ describe('Boss Enemies', () => {
 
 describe('Enemy Stat Scaling', () => {
   describe('wave scaling formula', () => {
+    // Formula: 1 + (wave - 1) * (0.12 + earlyWaveBonus)
+    // earlyWaveBonus = 0.03 for waves 1-30, 0 after
+    // So waves 1-30 use 0.15 scaling, waves 31+ use 0.12 scaling
+
     it('wave 1 has no scaling (1.0x)', () => {
       const stats = getEnemyStats('runner', 1, false);
       expect(stats.hp).toBe(29); // Exact base HP
     });
 
-    it('wave 2 has 12% increase (1.12x)', () => {
+    it('wave 2 has 15% increase (1.15x) for early waves', () => {
       const stats = getEnemyStats('bruiser', 2, false);
-      // 144 * 1.12 = 161.28 → 161
-      expect(stats.hp).toBe(161);
+      // 144 * 1.15 = 165.6 → 165
+      expect(stats.hp).toBe(165);
     });
 
-    it('wave 10 has 108% increase (2.08x)', () => {
+    it('wave 10 has 135% increase (2.35x) for early waves', () => {
       const stats = getEnemyStats('runner', 10, false);
-      // 29 * (1 + 9 * 0.12) = 29 * 2.08 = 60.32 → 60
-      expect(stats.hp).toBe(60);
+      // 29 * (1 + 9 * 0.15) = 29 * 2.35 = 68.15 → 68
+      expect(stats.hp).toBe(68);
     });
 
-    it('wave 50 has massive scaling', () => {
+    it('wave 50 has massive scaling (back to 12% after wave 30)', () => {
       const stats = getEnemyStats('runner', 50, false);
       // 29 * (1 + 49 * 0.12) = 29 * 6.88 = 199.52 → 199
       expect(stats.hp).toBe(199);
@@ -210,10 +214,10 @@ describe('Enemy Stat Scaling', () => {
 
     it('elite wave 10 combines both scalings', () => {
       const elite = getEnemyStats('runner', 10, true);
-      // HP: 29 * 2.08 * 3 = 180.96 → 180
-      expect(elite.hp).toBe(180);
-      // Damage: 8 * 2.08 * 2.5 = 41.6 → 41
-      expect(elite.damage).toBe(41);
+      // HP: 29 * 2.35 * 3 = 204.45 → 204 (early wave bonus: 15% scaling)
+      expect(elite.hp).toBe(204);
+      // Damage: 8 * 2.35 * 2.5 = 47, but floor gives 46 due to FP precision
+      expect(elite.damage).toBe(46);
     });
   });
 
@@ -301,38 +305,40 @@ describe('Wave Composition', () => {
   });
 
   describe('elite chance formula (Endless mode)', () => {
-    // Formula: 0.05 + wave * 0.005, capped at 50%
-    it('wave 1: 0.05 + 1*0.004 = 5.4%', () => {
-      expect(getWaveComposition(1, 30).eliteChance).toBeCloseTo(0.054, 5);
+    // Formula: 0.08 + wave * 0.006, capped at 50%
+    it('wave 1: 0.08 + 1*0.006 = 8.6%', () => {
+      expect(getWaveComposition(1, 30).eliteChance).toBeCloseTo(0.086, 5);
     });
 
-    it('wave 10: 0.05 + 10*0.004 = 9%', () => {
-      expect(getWaveComposition(10, 30).eliteChance).toBeCloseTo(0.09, 5);
+    it('wave 10: 0.08 + 10*0.006 = 14%', () => {
+      expect(getWaveComposition(10, 30).eliteChance).toBeCloseTo(0.14, 5);
     });
 
-    it('wave 50: 0.05 + 50*0.004 = 25%', () => {
-      expect(getWaveComposition(50, 30).eliteChance).toBeCloseTo(0.25, 5);
+    it('wave 50: 0.08 + 50*0.006 = 38%, but capped at 35% for waves < 60', () => {
+      expect(getWaveComposition(50, 30).eliteChance).toBeCloseTo(0.35, 5);
     });
 
-    it('wave 90+: nearing cap of 50%', () => {
-      expect(getWaveComposition(90, 30).eliteChance).toBeCloseTo(0.41, 5);
-      expect(getWaveComposition(100, 30).eliteChance).toBeCloseTo(0.45, 5);
+    it('wave 70+: capped at 50%', () => {
+      // 0.08 + 70*0.006 = 0.50 (exactly at cap)
+      expect(getWaveComposition(70, 30).eliteChance).toBeCloseTo(0.5, 5);
+      expect(getWaveComposition(100, 30).eliteChance).toBe(0.5);
       expect(getWaveComposition(200, 30).eliteChance).toBe(0.5);
     });
   });
 
   describe('spawn interval formula', () => {
-    // Formula: max(tickHz * 0.65 - effectiveWave * 0.25, tickHz * 0.3), min 9 ticks
-    it('wave 1: max(19.5 - 0.25, 9) = 19 ticks', () => {
-      expect(getWaveComposition(1, 30).spawnIntervalTicks).toBe(19);
+    // Formula: max(tickHz * 0.55 - effectiveWave * 0.20, tickHz * 0.30), min 12 ticks
+    // Faster spawning (was 0.65 base) creates more pressure in early waves
+    it('wave 1: floor(max(16.5 - 0.2, 9)) = 16 ticks', () => {
+      expect(getWaveComposition(1, 30).spawnIntervalTicks).toBe(16);
     });
 
-    it('wave 5: max(19.5 - 1.25, 9) = 18 ticks', () => {
-      expect(getWaveComposition(5, 30).spawnIntervalTicks).toBe(18);
+    it('wave 5: floor(max(16.5 - 1, 9)) = 15 ticks', () => {
+      expect(getWaveComposition(5, 30).spawnIntervalTicks).toBe(15);
     });
 
     it('high waves: minimum 12 ticks', () => {
-      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(15);
+      expect(getWaveComposition(20, 30).spawnIntervalTicks).toBe(12);
       expect(getWaveComposition(50, 30).spawnIntervalTicks).toBe(12);
     });
   });

@@ -204,5 +204,5 @@ Synergy toasts only show once per session to avoid notification fatigue while st
 
 1. **More Synergies**: Add more pair and trio combinations as new heroes are added
 2. **Synergy Skins**: Visual indicators on heroes when synergies are active
-3. **Synergy Quests**: Daily/weekly quests to activate specific synergies
+3. **Synergy Achievements**: Achievements for activating specific synergies
 4. **Synergy Preview**: Pre-game team builder that shows expected synergies

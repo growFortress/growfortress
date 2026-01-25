@@ -27,11 +27,6 @@ vi.mock('../../../lib/logger.js', () => ({
   },
 }));
 
-// Mock daily quests service
-vi.mock('../../../services/dailyQuests.js', () => ({
-  updateQuestsFromRun: vi.fn(),
-}));
-
 // Mock sim-core pillar challenge functions
 vi.mock('@arcade/sim-core', async () => {
   const actual = await vi.importActual('@arcade/sim-core');

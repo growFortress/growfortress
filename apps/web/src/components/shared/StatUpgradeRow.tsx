@@ -3,6 +3,7 @@ import {
   getStatBonusPercent,
   type StatUpgradeConfig,
 } from '@arcade/sim-core';
+import { GoldIcon } from '../icons/index.js';
 import styles from './StatUpgradeRow.module.css';
 
 // Stat icons
@@ -67,7 +68,7 @@ export function StatUpgradeRow({ config, currentLevel, gold, onUpgrade, isLoadin
               {isLoading ? '...' : (
                 <>
                   <span>{cost}</span>
-                  <span style={{ fontSize: '11px' }}>🪙</span>
+                  <GoldIcon size={11} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
                 </>
               )}
             </button>
