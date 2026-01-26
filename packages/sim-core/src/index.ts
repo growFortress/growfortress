@@ -116,6 +116,13 @@ export type {
   Militia,
   MilitiaType,
   MilitiaState,
+  // Directed Wave 1 (Tutorial/Showcase)
+  ScriptedEventTriggerType,
+  ScriptedEventType,
+  ScriptedEvent,
+  DirectedWave1EnemyEntry,
+  Wave2Adjustment,
+  DirectedWave1Config,
 } from './types.js';
 
 // Data
@@ -230,6 +237,35 @@ export {
   type HeroPairSynergyDef,
   type HeroTrioSynergyDef,
 } from './systems/synergy.js';
+
+// Synergy Tags System
+export {
+  // Tag definitions
+  TAG_DEFINITIONS,
+  getTagById,
+  getTagsByCategory,
+  // Entity tags
+  HERO_TAGS,
+  TURRET_TAGS,
+  PERK_TAGS,
+  getHeroTags,
+  getTurretTags,
+  getPerkTags,
+  // Synergy bonuses
+  TAG_SYNERGY_BONUSES,
+  getSynergyBonusesForTag,
+  // Calculation functions
+  calculateActiveTagSynergies,
+  getActiveSynergiesOnly,
+  calculateTotalSynergyBonuses,
+  getAlmostActiveSynergies,
+  // Types
+  type SynergyTag,
+  type TagCategory,
+  type TagDefinition,
+  type TagSynergyBonus,
+  type ActiveTagSynergy,
+} from './data/synergy-tags.js';
 
 // Unified Progression System
 export {
@@ -773,6 +809,17 @@ export {
   type WaveModifierEffect,
   type WaveModifier,
 } from './data/wave-modifiers.js';
+
+// Directed Wave 1 (Tutorial/Showcase)
+export {
+  TUTORIAL_RELIC_POOL,
+  getTutorialRelicOptions,
+  DIRECTED_WAVE_1_ENEMIES,
+  DIRECTED_WAVE_1_EVENTS,
+  DIRECTED_WAVE_2_ADJUSTMENT,
+  DEFAULT_DIRECTED_WAVE_1_CONFIG,
+  getDirectedWave1ConfigWithRelics,
+} from './data/directed-wave-presets.js';
 
 // Element Counter System (Rock-Paper-Scissors)
 export {

@@ -46,6 +46,7 @@ import {
   baseXpToNextLevel,
   currentWave,
   gameSpeed,
+  resetTimeControl,
   type GameEndState,
 } from '../state/index.js';
 import {
@@ -161,6 +162,7 @@ export function useGameLoop(
       ) => {
         setManualControlHero(null);
         setManualMoveInput(0, 0);
+        resetTimeControl(); // Reset slow motion when game ends
 
         const state = game.getState();
         const endState: GameEndState | null = state
@@ -224,6 +226,7 @@ export function useGameLoop(
       onBossRushEnd: () => {
         setManualControlHero(null);
         setManualMoveInput(0, 0);
+        resetTimeControl(); // Reset slow motion when boss rush ends
 
         // CRITICAL: Stop the game loop so hub loop can take over
         loop.stop();
@@ -481,6 +484,12 @@ export function useGameLoop(
     });
     loopRef.current = loop;
 
+    // Set up tick getter for slow motion system
+    loop.setTickGetter(() => {
+      const state = game.getState();
+      return state?.tick ?? 0;
+    });
+
     // Hub rendering loop for idle phase - with throttling for performance
     let lastHubRenderTime = 0;
     const renderHub = (timestamp: number = 0) => {
@@ -729,6 +738,7 @@ export function useGameLoop(
     game.reset();
     game.resetBossRush();
     resetGameState();
+    resetTimeControl();
   }, []);
 
   const startBossRush = useCallback(async (options: StartSessionOptions = {}): Promise<BossRushStartResponse | null> => {

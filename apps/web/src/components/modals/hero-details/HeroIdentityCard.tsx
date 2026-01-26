@@ -1,6 +1,8 @@
 import type { JSX } from 'preact';
 import type { FortressClass, HeroDefinition, HeroWeakness } from '@arcade/sim-core';
+import { getHeroTags } from '@arcade/sim-core';
 import { HeroAvatar } from '../../shared/HeroAvatar.js';
+import { TagList } from '../../common/TagBadge.js';
 import { useTranslation } from '../../../i18n/useTranslation.js';
 import styles from './HeroIdentityCard.module.css';
 import cardStyles from './cards.module.css';
@@ -81,6 +83,15 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
       <span class={`${cardStyles.badge} ${cardStyles.rarityBadge} ${cardStyles[heroDefinition.rarity]}`}>
         {t(`rarity.${heroDefinition.rarity}`).toUpperCase()}
       </span>
+
+      {/* Synergy Tags */}
+      <div class={styles.tagsRow}>
+        <TagList
+          tags={getHeroTags(heroDefinition.id)}
+          size="small"
+          maxVisible={5}
+        />
+      </div>
 
       {/* Tier & Level Display - Compact */}
       <div class={styles.tierLevelRow}>

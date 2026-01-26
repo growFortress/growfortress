@@ -737,6 +737,90 @@ export interface RelicChoice {
   offeredTick: number;
 }
 
+// ============================================================================
+// DIRECTED WAVE 1 SYSTEM (Tutorial/Showcase)
+// ============================================================================
+
+/**
+ * Trigger types for scripted events during directed wave 1
+ */
+export type ScriptedEventTriggerType = 'tick' | 'kill_count' | 'hp_percent' | 'enemies_remaining';
+
+/**
+ * Event types that can be triggered during directed wave 1
+ */
+export type ScriptedEventType = 'vfx_burst' | 'synergy_highlight' | 'tutorial_tip' | 'slow_motion';
+
+/**
+ * A scripted event that triggers during directed wave 1
+ */
+export interface ScriptedEvent {
+  /** Unique identifier for this event */
+  id: string;
+  /** What condition triggers this event */
+  triggerType: ScriptedEventTriggerType;
+  /** The value that triggers the event (e.g., kill count, tick number) */
+  triggerValue: number;
+  /** What type of event to trigger */
+  event: ScriptedEventType;
+  /** Additional data for the event (intensity, duration, etc.) */
+  data?: {
+    intensity?: number;
+    duration?: number;
+    confetti?: boolean;
+    screenShake?: boolean;
+    pulseHUD?: boolean;
+    factor?: number;  // For slow motion
+    tipId?: string;   // For tutorial tips
+  };
+}
+
+/**
+ * A single enemy entry in the directed wave 1 sequence
+ */
+export interface DirectedWave1EnemyEntry {
+  /** Enemy type to spawn */
+  type: EnemyType;
+  /** Whether this enemy is elite */
+  isElite: boolean;
+  /** Delay in ticks from the previous enemy spawn (first enemy uses this as delay from wave start) */
+  delayTicks: number;
+}
+
+/**
+ * Adjustments applied to wave 2 to ensure smooth transition from directed wave 1
+ */
+export interface Wave2Adjustment {
+  /** Multiplier for enemy count (e.g., 0.9 = 10% fewer enemies) */
+  enemyCountMultiplier: number;
+  /** Multiplier for elite chance (e.g., 0.8 = 20% lower elite chance) */
+  eliteChanceMultiplier: number;
+}
+
+/**
+ * Configuration for the directed (scripted) first wave
+ * This creates a curated "showcase" experience for new players
+ */
+export interface DirectedWave1Config {
+  /** Whether directed wave 1 is enabled */
+  enabled: boolean;
+
+  /** Fixed sequence of enemies to spawn (replaces RNG-based composition) */
+  enemies: DirectedWave1EnemyEntry[];
+
+  /** Whether to offer a relic choice before wave 1 starts */
+  offerRelicAtStart: boolean;
+
+  /** Optional: Force specific relic options for the early choice (tutorial-friendly relics) */
+  forcedRelicOptions?: string[];
+
+  /** Scripted events that trigger during wave 1 (VFX bursts, slow-mo, etc.) */
+  scriptedEvents: ScriptedEvent[];
+
+  /** Adjustments for wave 2 to smooth the transition to normal gameplay */
+  wave2Adjustment: Wave2Adjustment;
+}
+
 // Modifier system - additive bonus system for balanced scaling
 // Formula: base × (1 + sum of bonuses)
 export interface ModifierSet {
@@ -898,6 +982,10 @@ export interface SimConfig {
   // NEW: Starting relics (for first-run synergy showcase)
   // If provided, these relics are added to the player's inventory at session start
   startingRelics?: string[];
+
+  // NEW: Directed wave 1 configuration (tutorial/showcase mode)
+  // If provided and enabled, wave 1 uses scripted composition instead of RNG
+  directedWave1?: DirectedWave1Config;
 }
 
 // Main game state
@@ -1028,6 +1116,9 @@ export interface GameState {
   killStreak: number;        // Current consecutive kills within combo window
   lastKillTick: number;      // Tick of the last kill (for combo timing)
   highestKillStreak: number; // Best streak this run (for stats)
+
+  // Directed wave 1 system
+  earlyRelicOffered: boolean;  // Whether the pre-wave-1 relic choice was offered
 }
 
 // NEW: Pending artifact drop (for UI notification)

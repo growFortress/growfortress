@@ -1,4 +1,5 @@
 import { CONFIG } from '../config.js';
+import { timeScale, updateSlowMotion, slowMotionActive } from '../state/time.signals.js';
 
 const TICK_MS = 1000 / CONFIG.TICK_RATE;
 const MAX_DELTA_MS = 100; // Prevent spiral of death
@@ -103,13 +104,29 @@ export class GameLoop {
     this.lastTime = currentTime;
 
     const cappedDelta = Math.min(delta, MAX_DELTA_MS);
-    // Apply speed multiplier to delta time
-    this.accumulator += cappedDelta * this.speedMultiplier;
+
+    // Apply speed multiplier and slow motion time scale to delta time
+    // timeScale < 1.0 = slow motion (e.g., 0.3 = 30% speed)
+    // speedMultiplier > 1 = fast forward (e.g., 2 = 2x speed)
+    const effectiveTimeScale = slowMotionActive.value ? timeScale.value : 1.0;
+    this.accumulator += cappedDelta * this.speedMultiplier * effectiveTimeScale;
+
+    // Track ticks processed this frame for slow motion updates
+    let ticksProcessed = 0;
 
     // Fixed timestep for simulation
     while (this.accumulator >= TICK_MS) {
       this.game.step();
       this.accumulator -= TICK_MS;
+      ticksProcessed++;
+
+      // Update slow motion state after each tick
+      // We need to get the current tick from game state
+      if (slowMotionActive.value && ticksProcessed > 0) {
+        // Get current tick from game - we'll use a counter approach
+        // The actual tick is tracked in the simulation, but we update here
+        updateSlowMotion(this.getCurrentTick());
+      }
     }
 
     // Interpolation alpha for smooth rendering
@@ -118,6 +135,20 @@ export class GameLoop {
 
     this.rafId = requestAnimationFrame(this.tick);
   };
+
+  /** Get current tick from game (if available) */
+  private getCurrentTick(): number {
+    // The game interface is Steppable, which doesn't expose tick
+    // We'll use a callback pattern instead, set by the consumer
+    return this.tickGetter ? this.tickGetter() : 0;
+  }
+
+  /** Set a function to get current game tick */
+  setTickGetter(getter: () => number): void {
+    this.tickGetter = getter;
+  }
+
+  private tickGetter?: () => number;
 
   isRunning(): boolean {
     return this.running;

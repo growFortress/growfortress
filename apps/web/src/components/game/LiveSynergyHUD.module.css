@@ -1,0 +1,455 @@
+/**
+ * Live Synergy HUD Styles
+ */
+
+.container {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 100;
+  max-width: 320px;
+  background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(30, 30, 45, 0.95));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.container.expanded {
+  max-height: 400px;
+}
+
+/* Summary Bar */
+.summaryBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: rgba(255, 215, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  transition: background 0.2s ease;
+}
+
+.summaryBar:hover {
+  background: rgba(255, 215, 0, 0.15);
+}
+
+.summaryLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.synergyIcon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
+}
+
+.synergyCount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.synergyLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryStats {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.statBadge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--stat-color);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--stat-color);
+  white-space: nowrap;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.expandButton:hover {
+  color: #ffd700;
+}
+
+/* Expanded Content */
+.expandedContent {
+  max-height: 350px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
+}
+
+.expandedContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.expandedContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.expandedContent::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 3px;
+}
+
+/* Sections */
+.section {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.sectionHeader {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* Synergy List */
+.synergyList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.synergyItem {
+  position: relative;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid var(--synergy-color);
+  transition: all 0.2s ease;
+}
+
+.synergyItem:hover,
+.synergyItem.hovered {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.synergyHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.tagIcon {
+  font-size: 14px;
+}
+
+.synergyName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  flex: 1;
+}
+
+.synergyItem .synergyCount {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--synergy-color);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.synergyBonuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bonusChip {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--synergy-color);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 8px;
+  width: 200px;
+  padding: 8px;
+  background: rgba(10, 10, 20, 0.98);
+  border: 1px solid var(--synergy-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 110;
+  animation: tooltipFadeIn 0.2s ease;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.tooltipTitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.tooltipContributors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contributor {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* DPS Breakdown */
+.breakdownList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breakdownItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.breakdownIcon {
+  font-size: 12px;
+}
+
+.breakdownSource {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  flex: 1;
+}
+
+.breakdownBonus {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--entry-color);
+}
+
+/* Almost Active */
+.almostActiveList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.almostActiveItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  border-left: 2px dashed var(--synergy-color);
+  opacity: 0.7;
+}
+
+.almostActiveName {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  flex: 1;
+}
+
+.almostActiveNeeded {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    max-width: 280px;
+    top: 4px;
+    right: 4px;
+  }
+
+  .summaryBar {
+    padding: 6px 10px;
+  }
+
+  .tooltip {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin-left: 0;
+    width: 250px;
+  }
+}
+
+/* Animation for new synergies */
+@keyframes synergyPulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--synergy-color);
+  }
+  50% {
+    box-shadow: 0 0 12px 4px var(--synergy-color);
+  }
+  100% {
+    box-shadow: 0 0 0 0 var(--synergy-color);
+  }
+}
+
+.synergyItem.new {
+  animation: synergyPulse 1s ease-out;
+}
+
+/* ============================================================================
+   SHOWCASE MODE (Directed Wave 1 Experience)
+   ============================================================================ */
+
+@keyframes showcaseBorderPulse {
+  0% {
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3), inset 0 0 4px rgba(255, 215, 0, 0.1);
+  }
+  50% {
+    border-color: rgba(255, 215, 0, 0.9);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 8px rgba(255, 215, 0, 0.2);
+  }
+  100% {
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3), inset 0 0 4px rgba(255, 215, 0, 0.1);
+  }
+}
+
+@keyframes showcaseScaleIn {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.container.showcase {
+  animation: showcaseBorderPulse 2s ease-in-out infinite, showcaseScaleIn 0.5s ease-out;
+  border-width: 2px;
+  max-width: 360px;
+}
+
+.container.showcase .summaryBar {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+.container.showcase .synergyIcon {
+  animation: showcaseIconBounce 1s ease-in-out infinite;
+}
+
+@keyframes showcaseIconBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* Showcase mode: highlight "almost active" synergies more prominently */
+.container.showcase .almostActiveItem {
+  opacity: 1;
+  background: rgba(255, 215, 0, 0.1);
+  border-left-style: solid;
+  animation: almostActiveGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes almostActiveGlow {
+  0%, 100% {
+    background: rgba(255, 215, 0, 0.05);
+  }
+  50% {
+    background: rgba(255, 215, 0, 0.15);
+  }
+}
+
+.container.showcase .almostActiveNeeded {
+  color: rgba(255, 215, 0, 0.9);
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* Showcase banner at top */
+.showcaseBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.2));
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.showcaseBanner::before,
+.showcaseBanner::after {
+  content: '✨';
+  font-size: 12px;
+}
+
+/* Hide banner when not in showcase mode */
+.showcaseBanner.hidden {
+  display: none;
+}

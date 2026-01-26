@@ -104,6 +104,8 @@ export function createGameState(overrides: Partial<GameState> = {}): GameState {
       shield_bearer: 0,
     },
     maxMilitiaCount: 8,
+    // Directed wave system
+    earlyRelicOffered: false,
     ...overrides,
   };
 }

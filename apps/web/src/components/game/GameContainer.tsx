@@ -1,9 +1,11 @@
 import { useRef, useState, useCallback, useEffect, lazy, Suspense } from 'preact/compat';
 import type { FortressClass, ActiveHero } from '@arcade/sim-core';
+import { DIRECTED_WAVE_1_EVENTS } from '@arcade/sim-core';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { useTutorialTriggers } from '../../tutorial/useTutorialTriggers.js';
 import { useTutorialPause } from '../../hooks/useTutorialPause.js';
+import { useDirectedWaveEvents } from '../../hooks/useDirectedWaveEvents.js';
 import './GameContainer.css';
 import { Hud } from './Hud.js';
 import { Controls } from './Controls.js';
@@ -24,6 +26,7 @@ import { ArtifactDrop } from './ArtifactDrop.js';
 import { BossHealthBar } from './BossHealthBar.js';
 import { BossRushHUD } from './BossRushHUD.js';
 import { BossRushShopPanel } from './BossRushShopPanel.js';
+import { LiveSynergyHUD } from './LiveSynergyHUD.js';
 
 // Lazy-loaded modals - loaded on demand (20-30% bundle size reduction)
 const HeroDetailsModal = lazy(() => import('../modals/HeroDetailsModal.js').then(m => ({ default: m.HeroDetailsModal })));
@@ -63,7 +66,7 @@ import {
 // Colony state is managed internally by ColonyTerminal
 import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
 import { ApiError } from '../../api/base.js';
-import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar, isFirstSession } from '../../state/index.js';
+import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar, isFirstSession, isDirectedWave1Enabled } from '../../state/index.js';
 import { fetchEnergy, hasEnergy } from '../../state/energy.signals.js';
 import { speedSettings } from '../../state/settings.signals.js';
 import { useAutoPlay } from '../../hooks/useAutoPlay.js';
@@ -111,6 +114,13 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
 
   // Tutorial pause - pauses game when tutorial tip is active
   useTutorialPause(pauseForTutorial, resumeFromTutorial);
+
+  // Directed wave events - processes scripted VFX and slow-mo moments during wave 1
+  const directedWaveEnabled = isDirectedWave1Enabled();
+  useDirectedWaveEvents(
+    DIRECTED_WAVE_1_EVENTS,
+    directedWaveEnabled && isFirstSession.value
+  );
 
   // Auto-play integration for Boss Rush mode
   const handleAutoPlayHealFortress = useCallback((healPercent: number) => {
@@ -510,6 +520,9 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       <BossHealthBar />
       <BossRushHUD />
       <BossRushShopPanel />
+
+      {/* Live Synergy HUD - shows active synergies and DPS breakdown */}
+      <LiveSynergyHUD />
 
       {/* Colony Terminal (full-screen colony management) */}
       <ColonyTerminal />

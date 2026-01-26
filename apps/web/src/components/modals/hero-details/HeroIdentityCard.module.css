@@ -66,6 +66,13 @@
   justify-content: center;
 }
 
+/* Synergy Tags Row */
+.tagsRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
 /* Tier & Level Row - Compact */
 .tierLevelRow {
   display: flex;

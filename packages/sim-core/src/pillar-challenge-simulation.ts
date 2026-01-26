@@ -336,6 +336,8 @@ export function createPillarChallengeGameState(
       shield_bearer: 0,
     },
     maxMilitiaCount: 8,
+    // Directed wave system (not used in pillar challenge)
+    earlyRelicOffered: false,
   };
 }
 

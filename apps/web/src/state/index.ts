@@ -36,6 +36,20 @@ export {
   dismissGuestRegistrationPrompt,
 } from './guest.signals.js';
 
+// Experiments / A/B testing signals
+export {
+  experiments,
+  experimentsLoaded,
+  EXPERIMENT_DIRECTED_WAVE_1,
+  setExperiments,
+  getExperiment,
+  isInTreatment,
+  isInControl,
+  isDirectedWave1Enabled,
+  assignExperimentLocally,
+  clearExperiments,
+} from './experiments.signals.js';
+
 // Game signals
 export {
   gamePhase,
@@ -192,6 +206,37 @@ export {
   type SynergyBonus,
   type UpgradeTarget,
 } from './fortress.signals.js';
+
+// Synergy Tags signals (live synergies with tooltips)
+export {
+  // Signals
+  activePerks,
+  allTagSynergies,
+  activeTagSynergies,
+  almostActiveSynergies,
+  totalSynergyBonuses,
+  dpsBreakdown,
+  liveSynergyPanelExpanded,
+  hoveredSynergyId,
+  totalDamageBonus,
+  totalAttackSpeedBonus,
+  totalCritBonus,
+  activeSynergyCount,
+  showSynergies,
+  // Showcase mode
+  synergyShowcaseMode,
+  showcaseStartTime,
+  enableSynergyShowcase,
+  disableSynergyShowcase,
+  // Functions
+  toggleLiveSynergyPanel,
+  setHoveredSynergy,
+  getHeroTagsWithDefs,
+  getTurretTagsWithDefs,
+  resetSynergyTagsState,
+  // Types
+  type DPSBreakdownEntry,
+} from './synergy-tags.signals.js';
 
 // Materials signals
 export {
@@ -553,6 +598,42 @@ export {
   type GraphicsSettings,
   type GameSettings,
 } from './settings.signals.js';
+
+// Time control signals (slow motion effects)
+export {
+  timeScale,
+  slowMotionActive,
+  slowMotionEndTick,
+  slowMotionDuration,
+  slowMotionStartTick,
+  slowMotionProgress,
+  triggerSlowMotion,
+  endSlowMotion,
+  updateSlowMotion,
+  resetTimeControl,
+  getEasedTimeScale,
+} from './time.signals.js';
+
+// Directed Wave signals (scripted first wave experience)
+export {
+  directedWaveActive,
+  scriptedEventQueue,
+  triggeredEventIds,
+  lastTriggeredEvent,
+  lastEventTriggerTime,
+  pendingEventsCount,
+  hasPendingEvents,
+  initDirectedWave,
+  endDirectedWave,
+  processScriptedEvents,
+  resetDirectedWaveState,
+  onVFXBurst,
+  onSynergyHighlight,
+  onTutorialTip,
+  type VFXBurstCallback,
+  type SynergyHighlightCallback,
+  type TutorialTipCallback,
+} from './directed-wave.signals.js';
 
 // Messages signals
 export {

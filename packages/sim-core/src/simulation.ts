@@ -92,6 +92,9 @@ import {
   FORTRESS_BASE_DAMAGE,
   FORTRESS_BASE_ATTACK_INTERVAL,
 } from './systems/constants.js';
+import {
+  getTutorialRelicOptions,
+} from './data/directed-wave-presets.js';
 
 // ============================================================================
 // Constants
@@ -342,6 +345,9 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     killStreak: 0,
     lastKillTick: -1000, // Start with no recent kill
     highestKillStreak: 0,
+
+    // Directed wave 1 system
+    earlyRelicOffered: false,
 
     // Wall system
     walls: [],
@@ -675,26 +681,67 @@ export class Simulation {
       }
     }
 
+    // Check if this is directed wave 1
+    const directedConfig = this.config.directedWave1;
+    if (this.state.wave === 1 && directedConfig?.enabled) {
+      // Use scripted enemy sequence for wave 1
+      this.startDirectedWave1(directedConfig);
+      return;
+    }
+
+    // Normal wave composition
     const composition = getWaveComposition(
       this.state.wave,
       this.config.tickHz,
       this.config.unlockedPillars,
       this.config.pillarRotation ? undefined : this.state.currentPillar
     );
-    const queue: WaveSpawnEntry[] = [];
 
+    // Apply wave 2 adjustment if coming from directed wave 1
+    let adjustedEnemyCount = composition.enemies.reduce((sum, g) => sum + g.count, 0);
+    let adjustedEliteChance = composition.eliteChance;
+
+    if (this.state.wave === 2 && directedConfig?.enabled && directedConfig.wave2Adjustment) {
+      adjustedEnemyCount = Math.floor(adjustedEnemyCount * directedConfig.wave2Adjustment.enemyCountMultiplier);
+      adjustedEliteChance = composition.eliteChance * directedConfig.wave2Adjustment.eliteChanceMultiplier;
+    }
+
+    const queue: WaveSpawnEntry[] = [];
     let spawnTick = this.state.tick + this.config.waveIntervalTicks;
+    let enemiesAdded = 0;
 
     for (const group of composition.enemies) {
-      for (let i = 0; i < group.count; i++) {
-        const isElite = this.rng.nextFloat() < composition.eliteChance;
+      for (let i = 0; i < group.count && enemiesAdded < adjustedEnemyCount; i++) {
+        const isElite = this.rng.nextFloat() < adjustedEliteChance;
         queue.push({
           type: group.type,
           isElite,
           spawnTick,
         });
         spawnTick += composition.spawnIntervalTicks;
+        enemiesAdded++;
       }
+    }
+
+    this.state.waveSpawnQueue = queue;
+    this.state.waveTotalEnemies = queue.length;
+    this.state.waveSpawnedEnemies = 0;
+  }
+
+  /**
+   * Start directed wave 1 with scripted enemy sequence
+   */
+  private startDirectedWave1(config: NonNullable<SimConfig['directedWave1']>): void {
+    const queue: WaveSpawnEntry[] = [];
+    let spawnTick = this.state.tick;
+
+    for (const entry of config.enemies) {
+      spawnTick += entry.delayTicks;
+      queue.push({
+        type: entry.type,
+        isElite: entry.isElite,
+        spawnTick,
+      });
     }
 
     this.state.waveSpawnQueue = queue;
@@ -917,6 +964,51 @@ export class Simulation {
     }
 
     return choices.map((r: { id: string }) => r.id);
+  }
+
+  /**
+   * Offer an early relic choice before wave 1 starts (for directed wave tutorial)
+   * This allows new players to get a relic at the very start of the game.
+   *
+   * @returns true if early relic was offered, false if not applicable
+   */
+  public offerEarlyRelic(): boolean {
+    // Only offer before wave 1 starts
+    if (this.state.wave !== 0) {
+      return false;
+    }
+
+    // Don't offer if already offered
+    if (this.state.earlyRelicOffered) {
+      return false;
+    }
+
+    // Check if directed wave 1 config wants early relic
+    const directedConfig = this.config.directedWave1;
+    if (!directedConfig?.enabled || !directedConfig.offerRelicAtStart) {
+      return false;
+    }
+
+    // Generate relic options - use forced options if specified, otherwise tutorial pool
+    let options: string[];
+    if (directedConfig.forcedRelicOptions && directedConfig.forcedRelicOptions.length > 0) {
+      options = directedConfig.forcedRelicOptions;
+    } else {
+      // Use tutorial relic pool
+      options = getTutorialRelicOptions(this.rng, this.config.relicsPerChoice);
+    }
+
+    // Set up the choice state
+    this.state.inChoice = true;
+    this.state.pendingChoiceTick = this.state.tick;
+    this.state.pendingChoice = {
+      options,
+      wave: 0, // Special value indicating pre-game choice
+      offeredTick: this.state.tick,
+    };
+    this.state.earlyRelicOffered = true;
+
+    return true;
   }
 
   /**
