@@ -23,9 +23,12 @@ import {
 import { OpponentsList } from './OpponentsList.js';
 import { ChallengesList } from './ChallengesList.js';
 import { DamageIcon, CritMultiplierIcon } from '../icons/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './PvpPanel.module.css';
 
 export function PvpPanel() {
+  const { t } = useTranslation('game');
+
   // Load data when panel opens
   useEffect(() => {
     if (showPvpPanel.value) {
@@ -79,11 +82,11 @@ export function PvpPanel() {
           <div class={styles.headerContent}>
             <DamageIcon size={24} className={styles.headerIcon} />
             <div class={styles.headerText}>
-              <h2 class={styles.title}>PVP Arena</h2>
-              <span class={styles.subtitle}>Walcz z innymi graczami</span>
+              <h2 class={styles.title}>{t('pvp.panel.title')}</h2>
+              <span class={styles.subtitle}>{t('pvp.panel.subtitle')}</span>
             </div>
           </div>
-          <button class={styles.closeBtn} onClick={closePvpPanel} aria-label="Zamknij">
+          <button class={styles.closeBtn} onClick={closePvpPanel} aria-label={t('pvp.panel.close')}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
@@ -96,28 +99,28 @@ export function PvpPanel() {
             <div class={styles.statIcon}>🏆</div>
             <div class={styles.statContent}>
               <span class={styles.statValue}>{wins}</span>
-              <span class={styles.statLabel}>Wygrane</span>
+              <span class={styles.statLabel}>{t('pvp.stats.wins')}</span>
             </div>
           </div>
           <div class={`${styles.statCard} ${styles.statCardLosses}`}>
             <CritMultiplierIcon size={24} className={styles.statIcon} />
             <div class={styles.statContent}>
               <span class={styles.statValue}>{losses}</span>
-              <span class={styles.statLabel}>Przegrane</span>
+              <span class={styles.statLabel}>{t('pvp.stats.losses')}</span>
             </div>
           </div>
           <div class={`${styles.statCard} ${styles.statCardRate}`}>
             <div class={styles.statIcon}>📊</div>
             <div class={styles.statContent}>
               <span class={styles.statValue}>{pvpWinRate.value}%</span>
-              <span class={styles.statLabel}>Win Rate</span>
+              <span class={styles.statLabel}>{t('pvp.stats.winRate')}</span>
             </div>
           </div>
           <div class={`${styles.statCard} ${styles.statCardPower}`}>
             <div class={styles.statIcon}>💪</div>
             <div class={styles.statContent}>
               <span class={styles.statValue}>{formatPower(userPower.value)}</span>
-              <span class={styles.statLabel}>Twoja Moc</span>
+              <span class={styles.statLabel}>{t('pvp.stats.yourPower')}</span>
             </div>
           </div>
         </div>
@@ -129,26 +132,26 @@ export function PvpPanel() {
             onClick={() => setActivePvpTab('opponents')}
           >
             <span class={styles.tabIcon}>👥</span>
-            <span class={styles.tabText}>Przeciwnicy</span>
+            <span class={styles.tabText}>{t('pvp.tabs.opponents')}</span>
           </button>
           <button
             class={`${styles.tab} ${pvpActiveTab.value === 'pending' ? styles.tabActive : ''}`}
             onClick={() => setActivePvpTab('pending')}
           >
             <span class={styles.tabIcon}>⏳</span>
-            <span class={styles.tabText}>Wyzwania</span>
+            <span class={styles.tabText}>{t('pvp.tabs.challenges')}</span>
           </button>
           <button
             class={`${styles.tab} ${pvpActiveTab.value === 'history' ? styles.tabActive : ''}`}
             onClick={() => setActivePvpTab('history')}
           >
             <span class={styles.tabIcon}>📜</span>
-            <span class={styles.tabText}>Historia</span>
+            <span class={styles.tabText}>{t('pvp.tabs.history')}</span>
           </button>
           <button
             class={`${styles.refreshBtn} ${isLoading ? styles.refreshBtnSpinning : ''}`}
             onClick={refreshData}
-            title="Odśwież"
+            title={t('pvp.panel.refresh')}
             disabled={isLoading}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

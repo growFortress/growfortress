@@ -18,7 +18,7 @@ import {
   openBossRushShop,
   showChoiceModal,
 } from '../../state/index.js';
-import { PILLAR_INFO } from '../../state/game.signals.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { GoldIcon } from '../icons/index.js';
 import styles from './BossHealthBar.module.css';
 
@@ -33,12 +33,14 @@ const PILLAR_EMOJIS: Record<string, string> = {
 };
 
 export function BossHealthBar() {
+  const { t } = useTranslation('game');
+
   if (!bossRushActive.value) {
     return null;
   }
 
   const pillar = currentBossPillar.value;
-  const pillarInfo = pillar ? PILLAR_INFO[pillar] : null;
+  const pillarName = pillar ? t(`pillars.${pillar}.name`) : '';
   const pillarEmoji = pillar ? PILLAR_EMOJIS[pillar] || '👹' : '👹';
   const hpPercent = bossHpPercent.value;
   const isLowHp = hpPercent < 30;
@@ -111,7 +113,7 @@ export function BossHealthBar() {
       </div>
 
       <div class={styles.pillarRow}>
-        <span class={styles.pillarName}>{pillarInfo?.name || pillar} Pillar</span>
+        <span class={styles.pillarName}>{pillarName || pillar} Pillar</span>
         <button
           class={styles.detailsToggle}
           onClick={() => (showBossRushDetails.value = !showBossRushDetails.value)}

@@ -14,6 +14,7 @@ import { createChallenge, resolveChallenge, PvpApiError } from '../../api/pvp.js
 import type { PvpOpponent, PvpResolveRequest } from '@arcade/protocol';
 import { ArenaSimulation, type ArenaBuildConfig } from '@arcade/sim-core';
 import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './PvpPanel.module.css';
 
 interface OpponentsListProps {
@@ -21,6 +22,7 @@ interface OpponentsListProps {
 }
 
 export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
+  const { t } = useTranslation('game');
   const [challengingId, setChallengingId] = useState<string | null>(null);
   const myPower = userPower.value;
 
@@ -79,19 +81,19 @@ export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
           resolveResponse.rewards
         );
       } else {
-        showErrorToast('Nie udało się przygotować walki');
+        showErrorToast(t('pvp.errors.prepareFailed'));
       }
     } catch (error) {
       if (error instanceof PvpApiError) {
         if (error.code === 'COOLDOWN_ACTIVE') {
-          showErrorToast('Musisz poczekać przed kolejnym wyzwaniem tego gracza');
+          showErrorToast(t('pvp.errors.cooldownActive'));
         } else if (error.code === 'POWER_OUT_OF_RANGE') {
-          showErrorToast('Moc przeciwnika poza zakresem');
+          showErrorToast(t('pvp.errors.powerOutOfRange'));
         } else {
           showErrorToast(error.message);
         }
       } else {
-        showErrorToast('Nie udało się wysłać wyzwania');
+        showErrorToast(t('pvp.errors.sendFailed'));
       }
     } finally {
       setChallengingId(null);
@@ -119,9 +121,9 @@ export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
       <div class={styles.emptyState}>
         <div class={styles.emptyIcon}>🔍</div>
         <div class={styles.emptyText}>
-          Brak przeciwników w Twoim zakresie mocy.
+          {t('pvp.opponents.empty')}
           <br />
-          Zwiększ swoją moc, aby odblokować więcej graczy!
+          {t('pvp.opponents.emptyHint')}
         </div>
       </div>
     );
@@ -177,9 +179,9 @@ export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
                     </span>
                   </span>
                   <span class={styles.opponentRecord}>
-                    <span class={styles.recordWins}>{opponent.pvpWins}W</span>
+                    <span class={styles.recordWins}>{opponent.pvpWins}{t('pvp.opponents.winsShort')}</span>
                     <span class={styles.recordSep}>/</span>
-                    <span class={styles.recordLosses}>{opponent.pvpLosses}L</span>
+                    <span class={styles.recordLosses}>{opponent.pvpLosses}{t('pvp.opponents.lossesShort')}</span>
                     {winRate > 0 && (
                       <span class={styles.recordRate}>({winRate}%)</span>
                     )}
@@ -201,7 +203,7 @@ export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
                   ) : (
                     <>
                       <span class={styles.challengeBtnIcon}>⚔️</span>
-                      <span class={styles.challengeBtnText}>Walcz</span>
+                      <span class={styles.challengeBtnText}>{t('pvp.opponents.fight')}</span>
                     </>
                   )}
                 </button>
@@ -209,7 +211,7 @@ export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
                 <div class={styles.cooldownBadge}>
                   <span class={styles.cooldownIcon}>⏱️</span>
                   <span class={styles.cooldownTime}>
-                    {formatCooldown(opponent.challengeCooldownEndsAt)}
+                    {formatCooldown(opponent.challengeCooldownEndsAt, t('pvp.opponents.ready'))}
                   </span>
                 </div>
               )}
@@ -221,14 +223,14 @@ export function OpponentsList({ onRefresh: _onRefresh }: OpponentsListProps) {
   );
 }
 
-function formatCooldown(isoDate?: string): string {
+function formatCooldown(isoDate: string | undefined, readyText: string): string {
   if (!isoDate) return '';
 
   const endTime = new Date(isoDate).getTime();
   const now = Date.now();
   const diff = endTime - now;
 
-  if (diff <= 0) return 'Gotowe';
+  if (diff <= 0) return readyText;
 
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));

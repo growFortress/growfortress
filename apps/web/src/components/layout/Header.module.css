@@ -92,21 +92,21 @@
   display: flex;
   align-items: center;
   gap: var(--hud-spacing-sm);
-  min-width: 0;
-  flex-shrink: 1;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .rightGroup {
   display: flex;
   align-items: center;
-  min-width: 0;
-  flex-shrink: 1;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .navGroupWrapper {
   position: relative;
-  min-width: 0;
-  flex-shrink: 1;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .groupLabel {
@@ -165,9 +165,9 @@
   border: 1px solid rgba(0, 200, 255, 0.35);
   border-radius: calc(8px * var(--hud-scale));
   box-sizing: border-box;
-  min-width: 0;
-  flex-shrink: 1;
-  overflow: hidden;
+  min-width: fit-content;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 /* Resource Group */
@@ -179,8 +179,8 @@
   display: flex;
   align-items: center;
   gap: var(--hud-spacing-xs);
-  min-width: 0;
-  flex-shrink: 1;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .resourceIcon {
@@ -193,7 +193,8 @@
   font-weight: 700;
   font-size: var(--hud-font-lg);
   font-family: var(--font-display);
-  min-width: 0;
+  min-width: fit-content;
+  white-space: nowrap;
 }
 
 .resourceValue.gold {
@@ -291,11 +292,13 @@
   font-size: var(--hud-font-xl);
   font-family: var(--font-display);
   text-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
-  min-width: 0;
+  min-width: fit-content;
+  white-space: nowrap;
 }
 
 .xpTrack {
   width: calc(100px * var(--hud-scale));
+  min-width: calc(60px * var(--hud-scale));
   height: calc(8px * var(--hud-scale));
   background: var(--color-bg);
   border: var(--border-neutral);
@@ -343,7 +346,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 1;
+  flex-shrink: 0;
 }
 
 .headerBtn:hover {

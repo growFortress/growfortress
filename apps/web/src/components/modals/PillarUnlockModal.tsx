@@ -103,7 +103,7 @@ interface PillarCardProps {
 }
 
 function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
-  const { t } = useTranslation('modals');
+  const { t } = useTranslation(['modals', 'game']);
   const info = PILLAR_INFO[pillar.pillarId];
   const levelMet = fortressLevel >= pillar.requiredLevel;
   const isActive = currentPillar.value === pillar.pillarId;
@@ -116,6 +116,9 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
     !pillar.isUnlocked && !levelMet && styles.locked,
   ].filter(Boolean).join(' ');
 
+  // Get translated pillar name
+  const pillarName = t(`game:pillars.${pillar.pillarId}.name`, { defaultValue: pillar.pillarId });
+
   return (
     <div class={cardClasses}>
       {/* Pillar icon */}
@@ -125,11 +128,11 @@ function PillarCard({ pillar, fortressLevel }: PillarCardProps) {
 
       {/* Pillar info */}
       <div class={styles.pillarInfo}>
-        <h3 class={styles.pillarName}>{info?.name || pillar.pillarId}</h3>
+        <h3 class={styles.pillarName}>{pillarName}</h3>
         <p class={styles.pillarDescription}>
           {pillar.isUnlocked
-            ? t('pillarUnlock.unlockedDescription')
-            : t('pillarUnlock.requiredLevel', { level: pillar.requiredLevel })}
+            ? t('modals:pillarUnlock.unlockedDescription')
+            : t('modals:pillarUnlock.requiredLevel', { level: pillar.requiredLevel })}
         </p>
       </div>
 

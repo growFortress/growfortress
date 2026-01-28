@@ -1688,8 +1688,23 @@ export class Game {
 
   /** Handle player death in Boss Rush */
   private async onBossRushDeath(): Promise<void> {
-    if (!this.bossRushState || !this.bossRushSessionInfo || !this.simulation)
+    // Early exit if missing required state - but still notify callback to restart hub
+    if (!this.bossRushState || !this.bossRushSessionInfo || !this.simulation) {
+      console.warn("[BossRush] Missing state in onBossRushDeath, cleaning up gracefully");
+      showBossRushEnd({
+        verified: false,
+        rejectReason: "Session state unavailable",
+      });
+      if (this.callbacks.onBossRushEnd) {
+        this.callbacks.onBossRushEnd({
+          verified: false,
+          rejectReason: "Session state unavailable",
+        });
+      }
+      this.phase = "ended";
+      this.callbacks.onStateChange();
       return;
+    }
 
     const startTime = bossRushStartTime.value || Date.now();
     const deathTimeMs = Date.now() - startTime;
@@ -1699,7 +1714,7 @@ export class Game {
 
     // Generate summary
     const summary = generateBossRushSummary(this.bossRushState);
-    const timeSurvived = this.simulation.state.tick;
+    const timeSurvived = this.simulation.state?.tick ?? 0;
 
     try {
       // Submit results to server
@@ -1741,6 +1756,14 @@ export class Game {
         verified: false,
         rejectReason: "Failed to submit results",
       });
+
+      // CRITICAL: Still notify callback to restart hub loop even on API failure
+      if (this.callbacks.onBossRushEnd) {
+        this.callbacks.onBossRushEnd({
+          verified: false,
+          rejectReason: "Failed to submit results",
+        });
+      }
     }
 
     // Clear boss position and projectiles

@@ -160,46 +160,33 @@ export const nextBossWave = computed(() => {
 // Current pillar signal
 export const currentPillar = signal<PillarId>('streets');
 
-// Pillar display information
+// Pillar display information (non-translatable data only)
+// For translated names/subtitles, use t('game:pillars.<pillarId>.name') and t('game:pillars.<pillarId>.subtitle')
 export const PILLAR_INFO: Record<PillarId, {
-  name: string;
-  subtitle: string;
   color: string;
   icon: string;
 }> = {
   streets: {
-    name: 'Ulice',
-    subtitle: 'Street Level',
     color: '#ff6b6b',
     icon: '🏙️',
   },
   science: {
-    name: 'Nauka',
-    subtitle: 'Science & Tech',
     color: '#64ffda',
     icon: '🔬',
   },
   mutants: {
-    name: 'Mutanci',
-    subtitle: 'Mutant World',
     color: '#ee4540',
     icon: '🧬',
   },
   cosmos: {
-    name: 'Kosmos',
-    subtitle: 'Cosmic Level',
     color: '#3500d3',
     icon: '🌌',
   },
   magic: {
-    name: 'Magia',
-    subtitle: 'Mystic Realms',
     color: '#fbbf24',
     icon: '✨',
   },
   gods: {
-    name: 'Bogowie',
-    subtitle: 'Divine Level',
     color: '#ffd700',
     icon: '⚡',
   },

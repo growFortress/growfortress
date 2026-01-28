@@ -44,7 +44,7 @@ export function HeroPreviewModal({
   onClose,
   onRecruit,
 }: HeroPreviewModalProps) {
-  const { t } = useTranslation(['common', 'data']);
+  const { t } = useTranslation(['common', 'data', 'modals']);
   const [selectedTier, setSelectedTier] = useState<1 | 2 | 3>(1);
 
   const gold = displayGold.value;
@@ -69,7 +69,7 @@ export function HeroPreviewModal({
         return (
           <div class={styles.ownedBadge}>
             <span class={styles.ownedIcon}>✓</span>
-            {t('heroRecruitment.owned', { defaultValue: 'Posiadany' })}
+            {t('modals:heroRecruitment.status.owned')}
           </div>
         );
 
@@ -82,8 +82,8 @@ export function HeroPreviewModal({
           >
             <span class={styles.recruitText}>
               {isFree
-                ? t('heroRecruitment.unlock', { defaultValue: 'Odblokuj' })
-                : t('heroRecruitment.recruit', { defaultValue: 'Rekrutuj' })}
+                ? t('modals:heroRecruitment.unlock')
+                : t('modals:heroRecruitment.recruit')}
             </span>
             {!isFree && (
               <span class={styles.recruitCost}>
@@ -108,7 +108,7 @@ export function HeroPreviewModal({
         return (
           <div class={styles.lockedBadge}>
             <span class={styles.lockIcon}>🔒</span>
-            {t('heroRecruitment.requiresLevel', { level: requiredLevel, defaultValue: `Poziom ${requiredLevel}` })}
+            {t('modals:heroRecruitment.levelRequired', { level: requiredLevel })}
           </div>
         );
 
@@ -116,7 +116,7 @@ export function HeroPreviewModal({
         return (
           <div class={styles.premiumBadge}>
             <span class={styles.premiumIcon}>💎</span>
-            {t('heroRecruitment.premium', { defaultValue: 'Premium' })}
+            {t('modals:heroRecruitment.status.premium')}
           </div>
         );
     }
@@ -133,7 +133,7 @@ export function HeroPreviewModal({
         {/* Header */}
         <div class={styles.modalHeader}>
           <div class={styles.titleSection}>
-            <span class={styles.modalSubtitle}>{t('heroRecruitment.heroPreview', { defaultValue: 'Podgląd bohatera' })}</span>
+            <span class={styles.modalSubtitle}>{t('modals:heroRecruitment.heroPreview')}</span>
             <h2 class={styles.modalTitle}>
               {t(`data:heroes.${heroDefinition.id}.name`, { defaultValue: heroDefinition.name })}
             </h2>
@@ -153,7 +153,7 @@ export function HeroPreviewModal({
 
             {/* Base Stats */}
             <div class={styles.baseStatsSection}>
-              <h4 class={styles.sectionTitle}>{t('heroDetails.baseStats', { defaultValue: 'Statystyki bazowe' })}</h4>
+              <h4 class={styles.sectionTitle}>{t('modals:heroRecruitment.baseStats')}</h4>
               <div class={styles.statGrid}>
                 <div class={styles.statItem}>
                   <HpIcon size={18} className={styles.statIcon} />

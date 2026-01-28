@@ -10,7 +10,6 @@ import {
 } from '../../state/index.js';
 import { BOSS_RUSH_SEQUENCE, BOSS_RUSH_MILESTONES } from '@arcade/sim-core';
 import { getBossRushHistory, getBossRushLeaderboard } from '../../api/boss-rush.js';
-import { PILLAR_INFO } from '../../state/game.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './BossRushSetupModal.module.css';
 
@@ -29,7 +28,7 @@ interface BossRushSetupModalProps {
 }
 
 export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
-  const { t } = useTranslation('modals');
+  const { t } = useTranslation(['modals', 'game']);
   const [showBossSequence, setShowBossSequence] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -147,7 +146,7 @@ export function BossRushSetupModal({ onStart }: BossRushSetupModalProps) {
                   <span class={styles.bossEmoji}>{PILLAR_EMOJIS[boss.pillarId] || '👹'}</span>
                   <span class={styles.bossName}>{boss.name}</span>
                   <span class={styles.bossPillar}>
-                    ({PILLAR_INFO[boss.pillarId]?.name || boss.pillarId})
+                    ({t(`game:pillars.${boss.pillarId}.name`, { defaultValue: boss.pillarId })})
                   </span>
                 </div>
               ))}

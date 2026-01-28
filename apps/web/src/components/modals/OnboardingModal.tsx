@@ -1,12 +1,10 @@
 import { useState, useEffect } from "preact/hooks";
 import {
   showOnboardingModal,
-  selectedFortressClass,
-  initializeHubFromLoadout,
   gamePhase,
 } from "../../state/index.js";
 import { completeOnboarding, getProfile } from "../../api/client.js";
-import { updateFromProfile } from "../../state/actions.js";
+import { stateHydrator } from "../../services/boot/StateHydrator.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
 import { Modal } from "../shared/Modal.js";
 import styles from "./OnboardingModal.module.css";
@@ -48,7 +46,8 @@ export function OnboardingModal() {
       }).then(() => {
         return getProfile();
       }).then((profile) => {
-        updateFromProfile(profile);
+        // Use StateHydrator to properly initialize all state including hub
+        stateHydrator.hydrateProfile(profile, { skipIdleRewards: true });
         showOnboardingModal.value = false;
       }).catch((err) => {
         console.error("Background onboarding error:", err);
@@ -82,15 +81,9 @@ export function OnboardingModal() {
         turretType: STARTER_KIT.turretType,
       });
 
-      // Refresh profile to get updated state
+      // Refresh profile and hydrate all state properly (including hub initialization)
       const profile = await getProfile();
-      updateFromProfile(profile);
-
-      // Update fortress class signal
-      selectedFortressClass.value = STARTER_KIT.fortressClass;
-
-      // Initialize hub with default loadout
-      initializeHubFromLoadout();
+      stateHydrator.hydrateProfile(profile, { skipIdleRewards: true });
 
       // Close modal
       showOnboardingModal.value = false;

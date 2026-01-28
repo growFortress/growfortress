@@ -258,6 +258,49 @@
   },
   "heroRecruitment": {
     "title": "Hero Recruitment",
+    "heroPreview": "Hero preview",
+    "baseStats": "Base Stats",
+    "sections": {
+      "yourHeroes": "Your Heroes",
+      "availableForRecruitment": "Available for Recruitment",
+      "locked": "Locked",
+      "premium": "Premium"
+    },
+    "status": {
+      "owned": "Owned",
+      "free": "Free",
+      "premium": "Premium"
+    },
+    "progress": {
+      "levelShort": "Lvl {{current}} / {{required}}"
+    },
+    "rarity": {
+      "starter": "Starter",
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    },
+    "roles": {
+      "dps": "Damage",
+      "tank": "Tank",
+      "support": "Support",
+      "crowd_control": "Control",
+      "assassin": "Assassin"
+    },
+    "classes": {
+      "lightning": "Electric",
+      "tech": "Technology",
+      "void": "Void",
+      "natural": "Natural",
+      "fire": "Fire",
+      "ice": "Ice",
+      "plasma": "Plasma"
+    },
+    "stats": {
+      "hp": "HP",
+      "damage": "Damage"
+    },
     "recruit": "Recruit",
     "recruiting": "Recruiting...",
     "unlock": "Unlock",

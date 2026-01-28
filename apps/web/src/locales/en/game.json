@@ -95,6 +95,7 @@
     "title": "Hero Skills"
   },
   "turretSkills": {
+    "title": "Turrets",
     "targetingTitle": "Targeting priority",
     "targeting": {
       "closestToFortress": "Closest to fortress",
@@ -169,7 +170,7 @@
     "unlockRequired": "Lv.{{level}} required"
   },
   "fortressSkills": {
-    "title": "Fortress Skills",
+    "title": "Fortress",
     "baseDamage": "Base damage: {{damage}}",
     "cooldown": "Cooldown: {{seconds}}s",
     "effects": "Effects:",
@@ -540,6 +541,121 @@
     "errors": {
       "allocateFailed": "Failed to allocate stat points",
       "resetFailed": "Failed to reset stat points"
+    }
+  },
+  "pillars": {
+    "streets": {
+      "name": "Streets",
+      "subtitle": "Street Level"
+    },
+    "science": {
+      "name": "Science",
+      "subtitle": "Science & Tech"
+    },
+    "mutants": {
+      "name": "Mutants",
+      "subtitle": "Mutant World"
+    },
+    "cosmos": {
+      "name": "Cosmos",
+      "subtitle": "Cosmic Level"
+    },
+    "magic": {
+      "name": "Magic",
+      "subtitle": "Mystic Realms"
+    },
+    "gods": {
+      "name": "Gods",
+      "subtitle": "Divine Level"
+    }
+  },
+  "pvp": {
+    "panel": {
+      "title": "PVP Arena",
+      "subtitle": "Fight other players",
+      "close": "Close",
+      "refresh": "Refresh"
+    },
+    "stats": {
+      "wins": "Wins",
+      "losses": "Losses",
+      "winRate": "Win Rate",
+      "yourPower": "Your Power"
+    },
+    "tabs": {
+      "opponents": "Opponents",
+      "challenges": "Challenges",
+      "history": "History"
+    },
+    "opponents": {
+      "empty": "No opponents in your power range.",
+      "emptyHint": "Increase your power to unlock more players!",
+      "fight": "Fight",
+      "ready": "Ready",
+      "winsShort": "W",
+      "lossesShort": "L"
+    },
+    "challenges": {
+      "emptyPending": "No pending challenges",
+      "emptyHistory": "No battle history",
+      "play": "Play",
+      "cancel": "Cancel",
+      "decline": "Decline",
+      "showDetails": "Details",
+      "hideDetails": "Hide details",
+      "replay": "Replay",
+      "youAttacked": "You attacked {{name}}",
+      "youWereAttacked": "You were attacked by {{name}}",
+      "rewards": "Rewards",
+      "noData": "No data",
+      "noBattleDetails": "No battle details"
+    },
+    "result": {
+      "draw": "DRAW",
+      "victory": "VICTORY!",
+      "defeat": "DEFEAT",
+      "drawBadge": "Draw",
+      "winBadge": "Win",
+      "lossBadge": "Loss"
+    },
+    "winReason": {
+      "fortressDestroyed": "Fortress destroyed",
+      "timeout": "Time limit",
+      "draw": "Draw"
+    },
+    "battleStats": {
+      "fortressHp": "Fortress HP",
+      "damage": "Damage",
+      "heroes": "Heroes",
+      "alive": "alive",
+      "battleDuration": "Battle duration:"
+    },
+    "rewards": {
+      "title": "Rewards",
+      "dust": "Dust:",
+      "gold": "Gold:",
+      "honor": "Honor:",
+      "artifact": "Artifact:"
+    },
+    "actions": {
+      "close": "Close",
+      "watchReplay": "Watch Replay"
+    },
+    "time": {
+      "now": "Now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    },
+    "errors": {
+      "prepareFailed": "Failed to prepare battle",
+      "cooldownActive": "You must wait before challenging this player again",
+      "powerOutOfRange": "Opponent power out of range",
+      "sendFailed": "Failed to send challenge",
+      "startFailed": "Failed to start battle",
+      "declineFailed": "Failed to decline challenge",
+      "cancelFailed": "Failed to cancel challenge",
+      "loadResultFailed": "Failed to load result"
     }
   }
 }

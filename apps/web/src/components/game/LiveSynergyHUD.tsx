@@ -21,6 +21,7 @@ import {
   activeSynergyCount,
   showSynergies,
   synergyShowcaseMode,
+  bossRushActive,
 } from '../../state/index.js';
 import { getTagById, getHeroById, getTurretById } from '@arcade/sim-core';
 import { useTranslation } from '../../i18n/useTranslation.js';
@@ -36,8 +37,8 @@ export function LiveSynergyHUD() {
   const hovered = hoveredSynergyId.value;
   const isShowcaseMode = synergyShowcaseMode.value;
 
-  // Don't show during idle
-  if (!showSynergies.value) return null;
+  // Don't show during idle or Boss Rush
+  if (!showSynergies.value || bossRushActive.value) return null;
 
   // Don't show if no synergies (unless in showcase mode - show anyway to highlight almost-active)
   if (active.length === 0 && almostActive.length === 0 && !isShowcaseMode) return null;

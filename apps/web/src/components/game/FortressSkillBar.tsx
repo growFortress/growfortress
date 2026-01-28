@@ -1,5 +1,6 @@
 import { getClassById, type SkillDefinition, type SkillEffect } from '@arcade/sim-core';
 import { gameState, gamePhase, selectedFortressClass, selectedTargetedSkill, selectSkillForTargeting, clearSelectedSkill } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './FortressSkillBar.module.css';
 
 // Unique skill icons by skill ID (fortress skills)
@@ -147,6 +148,7 @@ interface FortressSkillBarProps {
 }
 
 export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
+  const { t } = useTranslation('game');
   const state = gameState.value;
   const phase = gamePhase.value;
   const fortressClass = selectedFortressClass.value;
@@ -200,7 +202,7 @@ export function FortressSkillBar({ compact = false }: FortressSkillBarProps) {
     <div class={`${styles.skillBar} ${compact ? styles.compact : ''}`} data-tutorial="fortress-skills">
       {!compact && (
         <div class={styles.header}>
-          <span class={styles.title}>Twierdza {classIcon}</span>
+          <span class={styles.title}>{t('fortressSkills.title')} {classIcon}</span>
         </div>
       )}
       <div class={styles.skillList}>

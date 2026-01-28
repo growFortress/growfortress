@@ -4,6 +4,7 @@ import {
   gamePhase,
   gameSpeed,
   selectedFortressClass,
+  bossRushActive,
   type GameSpeed,
 } from "../../state/index.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
@@ -30,6 +31,7 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
   const isPlaying = gamePhase.value !== "idle";
   const hasClass = selectedFortressClass.value !== null;
   const currentSpeed = gameSpeed.value;
+  const isBossRush = bossRushActive.value;
 
   // Only show during gameplay
   if (!isPlaying || !hasClass) {
@@ -74,11 +76,13 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
         </div>
       </section>
 
-      {/* Pillar Display Section */}
-      <section class={styles.pillarSection}>
-        <h3 class={styles.sectionTitle}>{t("game:sidePanel.pillars")}</h3>
-        <PillarDisplay />
-      </section>
+      {/* Pillar Display Section - hidden in Boss Rush */}
+      {!isBossRush && (
+        <section class={styles.pillarSection}>
+          <h3 class={styles.sectionTitle}>{t("game:sidePanel.pillars")}</h3>
+          <PillarDisplay />
+        </section>
+      )}
 
       {/* Skills Section */}
       <section class={styles.skillsSection}>

@@ -133,17 +133,6 @@
     "save": "Zapisz",
     "cancel": "Anuluj",
     "saving": "Zapisywanie...",
-      "referralTitle": "Poleć znajomym",
-      "referralDescription": "Udostępnij swój link. Gdy znajomy utworzy konto, oboje dostaniecie nagrody.",
-      "referralLoading": "Ładowanie danych zaproszeń...",
-      "referralUnavailable": "Nie można teraz pobrać informacji o poleceniach.",
-      "referralCopy": "Skopiuj link",
-      "referralCopied": "Skopiowano",
-      "referralCopyFailed": "Nie udało się skopiować linku",
-      "referralInvites": "Skuteczne zaproszenia",
-      "referralRewardsTitle": "Nagrody za znajomego",
-      "referralRewardYou": "Ty",
-      "referralRewardFriend": "Znajomy",
     "noHeroes": "Brak odblokowanych bohaterów.",
     "noTurrets": "Brak odblokowanych wież.",
     "errors": {
@@ -269,6 +258,49 @@
   },
   "heroRecruitment": {
     "title": "Rekrutacja Bohaterów",
+    "heroPreview": "Podgląd bohatera",
+    "baseStats": "Statystyki bazowe",
+    "sections": {
+      "yourHeroes": "Twoi Bohaterowie",
+      "availableForRecruitment": "Dostępni do Rekrutacji",
+      "locked": "Zablokowane",
+      "premium": "Premium"
+    },
+    "status": {
+      "owned": "Posiadany",
+      "free": "Darmowy",
+      "premium": "Premium"
+    },
+    "progress": {
+      "levelShort": "Poz. {{current}} / {{required}}"
+    },
+    "rarity": {
+      "starter": "Starter",
+      "common": "Zwykły",
+      "rare": "Rzadki",
+      "epic": "Epicki",
+      "legendary": "Legendarny"
+    },
+    "roles": {
+      "dps": "Obrażenia",
+      "tank": "Tank",
+      "support": "Wsparcie",
+      "crowd_control": "Kontrola",
+      "assassin": "Zabójca"
+    },
+    "classes": {
+      "lightning": "Elektryczny",
+      "tech": "Technologia",
+      "void": "Próżnia",
+      "natural": "Naturalny",
+      "fire": "Ogień",
+      "ice": "Lód",
+      "plasma": "Plazma"
+    },
+    "stats": {
+      "hp": "HP",
+      "damage": "Obrażenia"
+    },
     "recruit": "Rekrutuj",
     "recruiting": "Rekrutacja...",
     "unlock": "Odblokuj",
@@ -588,5 +620,3 @@
     "noAttribution": "Brak szczegółowego podziału"
   }
 }
-
-

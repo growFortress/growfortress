@@ -267,7 +267,7 @@ describe('Game Signals', () => {
 
       for (const pillar of pillars) {
         expect(PILLAR_INFO[pillar as keyof typeof PILLAR_INFO]).toBeDefined();
-        expect(PILLAR_INFO[pillar as keyof typeof PILLAR_INFO].name).toBeDefined();
+        // name and subtitle are now in translation files (game:pillars.<id>.name/subtitle)
         expect(PILLAR_INFO[pillar as keyof typeof PILLAR_INFO].color).toBeDefined();
         expect(PILLAR_INFO[pillar as keyof typeof PILLAR_INFO].icon).toBeDefined();
       }

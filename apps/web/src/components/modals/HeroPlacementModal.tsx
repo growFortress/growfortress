@@ -201,12 +201,14 @@ export function HeroPlacementModal() {
       onClick={handleClose}
     >
       <div class={styles.container}>
-        <h2 class={styles.title}>{t('heroPlacement.title')}</h2>
-        <p class={styles.subtitle}>
-          {t('heroPlacement.subtitle', {
-            slot: slotIndex !== null ? slotIndex + 1 : '?',
-          })}
-        </p>
+        <div class={styles.header}>
+          <h2 class={styles.title}>{t('heroPlacement.title')}</h2>
+          <p class={styles.subtitle}>
+            {t('heroPlacement.subtitle', {
+              slot: slotIndex !== null ? slotIndex + 1 : '?',
+            })}
+          </p>
+        </div>
 
         {availableHeroes.length === 0 ? (
           <div class={styles.emptyState}>{t('heroPlacement.noHeroes')}</div>
@@ -218,15 +220,27 @@ export function HeroPlacementModal() {
               const isCurrent = currentHero?.definitionId === hero.id;
               const isDisabled = isUsed && !isCurrent;
 
+              const cardClasses = [
+                styles.heroCard,
+                isDisabled ? styles.disabled : '',
+                isCurrent ? styles.current : '',
+              ].filter(Boolean).join(' ');
+
               return (
                 <button
                   key={hero.id}
-                  class={`${styles.heroCard} ${isDisabled ? styles.disabled : ''}`}
+                  class={cardClasses}
                   onClick={() => !isDisabled && handleSelect(hero.id)}
                   disabled={isDisabled}
                 >
                   <div class={styles.avatarWrap}>
-                    <HeroAvatar heroId={hero.id} tier={1} size={70} />
+                    <HeroAvatar heroId={hero.id} tier={1} size={64} />
+                    {isUsed && !isCurrent && (
+                      <span class={styles.usedBadge}>{t('heroPlacement.inUse')}</span>
+                    )}
+                    {isCurrent && (
+                      <span class={styles.currentBadge}>{t('heroPlacement.current')}</span>
+                    )}
                   </div>
                   <div class={styles.heroInfo}>
                     <div class={styles.heroName}>{hero.name}</div>
@@ -236,27 +250,23 @@ export function HeroPlacementModal() {
                       <span>{t(`roles.${roleKey}`)}</span>
                     </div>
                   </div>
-                  {isUsed && !isCurrent && (
-                    <span class={styles.usedBadge}>{t('heroPlacement.inUse')}</span>
-                  )}
-                  {isCurrent && (
-                    <span class={styles.currentBadge}>{t('heroPlacement.current')}</span>
-                  )}
                 </button>
               );
             })}
           </div>
         )}
 
-        <button
-          class={styles.closeButton}
-          onClick={() => {
-            heroPlacementModalVisible.value = false;
-            heroPlacementSlotIndex.value = null;
-          }}
-        >
-          {t('heroPlacement.cancel')}
-        </button>
+        <div class={styles.footer}>
+          <button
+            class={styles.closeButton}
+            onClick={() => {
+              heroPlacementModalVisible.value = false;
+              heroPlacementSlotIndex.value = null;
+            }}
+          >
+            {t('heroPlacement.cancel')}
+          </button>
+        </div>
       </div>
     </Modal>
   );

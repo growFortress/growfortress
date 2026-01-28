@@ -1,4 +1,4 @@
-import { gamePhase, selectedFortressClass } from '../../state/index.js';
+import { gamePhase, selectedFortressClass, bossRushActive } from '../../state/index.js';
 import { MilitiaSpawnPanel } from './MilitiaSpawnPanel.js';
 import styles from './GameBottomPanel.module.css';
 
@@ -9,9 +9,10 @@ import styles from './GameBottomPanel.module.css';
 export function GameBottomPanel() {
   const isPlaying = gamePhase.value !== 'idle';
   const hasClass = selectedFortressClass.value !== null;
+  const isBossRush = bossRushActive.value;
 
-  // Only show during gameplay
-  if (!isPlaying || !hasClass) {
+  // Only show during normal gameplay (not Boss Rush)
+  if (!isPlaying || !hasClass || isBossRush) {
     return null;
   }
 

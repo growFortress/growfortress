@@ -29,6 +29,7 @@ import type { PvpChallenge, PvpChallengeWithResult, PvpResolveRequest } from '@a
 import { ArenaSimulation, type ArenaBuildConfig } from '@arcade/sim-core';
 import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import { getArtifactById } from '@arcade/sim-core';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './PvpPanel.module.css';
 
 interface ChallengesListProps {
@@ -37,6 +38,7 @@ interface ChallengesListProps {
 }
 
 export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
+  const { t, language } = useTranslation('game');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [detailsById, setDetailsById] = useState<Record<string, PvpChallengeWithResult>>({});
@@ -61,7 +63,7 @@ export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
     try {
       const fullChallenge = await getChallenge(challenge.id);
       if (!fullChallenge?.battleData) {
-        showErrorToast('Nie udało się przygotować walki');
+        showErrorToast(t('pvp.errors.prepareFailed'));
         return;
       }
 
@@ -125,7 +127,7 @@ export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
       if (error instanceof PvpApiError) {
         showErrorToast(error.message);
       } else {
-        showErrorToast('Nie udało się uruchomić walki');
+        showErrorToast(t('pvp.errors.startFailed'));
       }
     } finally {
       setProcessingId(null);
@@ -142,7 +144,7 @@ export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
       updateChallengeStatus(challenge.id, 'DECLINED');
       await onRefresh();
     } catch (error) {
-      showErrorToast('Nie udało się odrzucić wyzwania');
+      showErrorToast(t('pvp.errors.declineFailed'));
     } finally {
       setProcessingId(null);
     }
@@ -157,7 +159,7 @@ export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
       updateChallengeStatus(challenge.id, 'CANCELLED');
       await onRefresh();
     } catch (error) {
-      showErrorToast('Nie udało się anulować wyzwania');
+      showErrorToast(t('pvp.errors.cancelFailed'));
     } finally {
       setProcessingId(null);
     }
@@ -182,10 +184,10 @@ export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
         setDetailsById((prev) => ({ ...prev, [challenge.id]: fullChallenge }));
         setExpandedId(challenge.id);
       } else {
-        showErrorToast('Nie udało się załadować wyniku');
+        showErrorToast(t('pvp.errors.loadResultFailed'));
       }
     } catch (error) {
-      showErrorToast('Nie udało się załadować wyniku');
+      showErrorToast(t('pvp.errors.loadResultFailed'));
     } finally {
       setDetailsLoadingId(null);
     }
@@ -215,8 +217,8 @@ export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
         </div>
         <div class={styles.emptyText}>
           {filter === 'pending'
-            ? 'Brak oczekujących wyzwań'
-            : 'Brak historii walk'}
+            ? t('pvp.challenges.emptyPending')
+            : t('pvp.challenges.emptyHistory')}
         </div>
       </div>
     );
@@ -236,6 +238,8 @@ export function ChallengesList({ filter, onRefresh }: ChallengesListProps) {
           onDecline={handleDecline}
           onCancel={handleCancel}
           onViewResult={handleViewResult}
+          t={t}
+          language={language}
         />
       ))}
     </div>
@@ -252,6 +256,8 @@ interface ChallengeCardProps {
   onDecline: (c: PvpChallenge) => Promise<void>;
   onCancel: (c: PvpChallenge) => Promise<void>;
   onViewResult: (c: PvpChallenge & { type: 'sent' | 'received' }) => Promise<void>;
+  t: (key: string, params?: Record<string, unknown>) => string;
+  language: string;
 }
 
 function ChallengeCard({
@@ -264,6 +270,8 @@ function ChallengeCard({
   onDecline,
   onCancel,
   onViewResult,
+  t,
+  language,
 }: ChallengeCardProps) {
   const isProcessing = processingId === challenge.id;
   const isSent = challenge.type === 'sent';
@@ -282,9 +290,9 @@ function ChallengeCard({
   const rewardArtifactName =
     rewardArtifact?.polishName ?? rewardArtifact?.name ?? rewardData?.artifactId;
   const actionText = isSent
-    ? `Za-atakowales ${challenge.challengedName}`
-    : `Zostales zaatakowany przez ${challenge.challengerName}`;
-  const winReasonText = detailResult ? getWinReasonText(detailResult.winReason) : '';
+    ? t('pvp.challenges.youAttacked', { name: challenge.challengedName })
+    : t('pvp.challenges.youWereAttacked', { name: challenge.challengerName });
+  const winReasonText = detailResult ? getWinReasonText(detailResult.winReason, t) : '';
   const durationText = detailResult ? formatDuration(detailResult.duration) : '';
   const rewardsText = rewardData
     ? [
@@ -293,7 +301,7 @@ function ChallengeCard({
         `Honor ${rewardData.honorChange >= 0 ? '+' : ''}${rewardData.honorChange}`,
         rewardArtifactName ? `Artifact ${rewardArtifactName}` : null,
       ].filter(Boolean).join(', ')
-    : 'Brak danych';
+    : t('pvp.challenges.noData');
 
   return (
     <div class={styles.challengeCard}>
@@ -314,7 +322,7 @@ function ChallengeCard({
             isDraw ? styles.resultDraw :
             isWinner ? styles.resultWin : styles.resultLoss
           }`}>
-            {isDraw ? '🤝 Remis' : isWinner ? '🏆 Wygrana' : '💀 Przegrana'}
+            {isDraw ? `🤝 ${t('pvp.result.drawBadge')}` : isWinner ? `🏆 ${t('pvp.result.winBadge')}` : `💀 ${t('pvp.result.lossBadge')}`}
           </span>
         ) : (
           <span class={`${styles.challengeStatus} ${getStatusColor(challenge.status)}`}>
@@ -328,7 +336,7 @@ function ChallengeCard({
           ⚡ {formatPower(challenge.challengerPower)} vs {formatPower(challenge.challengedPower)}
         </span>
         <span class={styles.challengeTime}>
-          {formatTimeAgo(challenge.createdAt)}
+          {formatTimeAgo(challenge.createdAt, t, language)}
         </span>
       </div>
 
@@ -342,14 +350,14 @@ function ChallengeCard({
                 disabled={isProcessing}
                 loading={isProcessing}
               >
-                Rozegraj
+                {t('pvp.challenges.play')}
               </Button>
               <Button
                 variant="secondary"
                 onClick={() => onCancel(challenge)}
                 disabled={isProcessing}
               >
-                Anuluj
+                {t('pvp.challenges.cancel')}
               </Button>
             </>
           ) : (
@@ -360,14 +368,14 @@ function ChallengeCard({
                 disabled={isProcessing}
                 loading={isProcessing}
               >
-                Rozegraj
+                {t('pvp.challenges.play')}
               </Button>
               <Button
                 variant="secondary"
                 onClick={() => onDecline(challenge)}
                 disabled={isProcessing}
               >
-                Odrzuc
+                {t('pvp.challenges.decline')}
               </Button>
             </>
           )}
@@ -382,13 +390,13 @@ function ChallengeCard({
             disabled={detailsLoading}
             loading={detailsLoading}
           >
-            {isExpanded ? 'Ukryj szczegoly' : 'Szczegoly'}
+            {isExpanded ? t('pvp.challenges.hideDetails') : t('pvp.challenges.showDetails')}
           </Button>
           <Button
             variant="skill"
             onClick={() => openReplayViewer(challenge)}
           >
-            Replay
+            {t('pvp.challenges.replay')}
           </Button>
         </div>
       )}
@@ -411,11 +419,11 @@ function ChallengeCard({
             </div>
           ) : (
             <div class={styles.listItemMeta}>
-              <span>Brak szczegolow walki</span>
+              <span>{t('pvp.challenges.noBattleDetails')}</span>
             </div>
           )}
           <div class={styles.listItemMeta}>
-            <span>Nagrody: {rewardsText}</span>
+            <span>{t('pvp.challenges.rewards')}: {rewardsText}</span>
           </div>
         </div>
       )}
@@ -423,14 +431,14 @@ function ChallengeCard({
   );
 }
 
-function getWinReasonText(reason: string): string {
+function getWinReasonText(reason: string, t: (key: string) => string): string {
   switch (reason) {
     case 'fortress_destroyed':
-      return 'Forteca zniszczona';
+      return t('pvp.winReason.fortressDestroyed');
     case 'timeout':
-      return 'Limit czasu';
+      return t('pvp.winReason.timeout');
     case 'draw':
-      return 'Remis';
+      return t('pvp.winReason.draw');
     default:
       return reason;
   }
@@ -443,7 +451,7 @@ function formatDuration(durationTicks: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-function formatTimeAgo(isoDate: string): string {
+function formatTimeAgo(isoDate: string, t: (key: string, params?: Record<string, unknown>) => string, locale: string): string {
   const date = new Date(isoDate);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -451,10 +459,10 @@ function formatTimeAgo(isoDate: string): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return 'Teraz';
-  if (diffMins < 60) return `${diffMins}m temu`;
-  if (diffHours < 24) return `${diffHours}h temu`;
-  if (diffDays < 7) return `${diffDays}d temu`;
+  if (diffMins < 1) return t('pvp.time.now');
+  if (diffMins < 60) return t('pvp.time.minutesAgo', { count: diffMins });
+  if (diffHours < 24) return t('pvp.time.hoursAgo', { count: diffHours });
+  if (diffDays < 7) return t('pvp.time.daysAgo', { count: diffDays });
 
-  return date.toLocaleDateString('pl-PL');
+  return date.toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US');
 }

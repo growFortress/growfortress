@@ -1,14 +1,16 @@
 /* Sci-Fi HUD: Resource display with solid background and holographic edge */
 .container {
   display: flex;
-  gap: 2rem;
-  padding: 1rem 1.75rem;
+  gap: var(--hud-spacing-xl);
+  padding: var(--hud-spacing-md) var(--hud-spacing-xl);
   background: var(--hud-bg-solid);
   border: var(--hud-border);
-  border-radius: 14px;
+  border-radius: calc(14px * var(--hud-scale));
   box-shadow: var(--holo-edge-subtle), var(--elevation-1);
   pointer-events: auto;
   transition: all 0.2s ease;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .container:hover {
@@ -20,40 +22,40 @@
 .resource {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  font-family:
-    "Outfit",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+  gap: var(--hud-spacing-sm);
+  font-family: var(--font-body);
   color: #fff;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .icon {
-  font-size: 1.5rem;
+  font-size: var(--hud-icon-md);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  flex-shrink: 0;
 }
 
 .value {
-  font-size: 1.4rem;
+  font-size: var(--hud-font-lg);
   font-weight: 700;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 /* Compact mode for tighter spaces */
 .compact {
-  padding: 0.625rem 1rem;
-  gap: 1.25rem;
+  padding: var(--hud-spacing-sm) var(--hud-spacing-md);
+  gap: var(--hud-spacing-lg);
 }
 
 .compact .icon {
-  font-size: 1.25rem;
+  font-size: var(--hud-icon-sm);
 }
 
 .compact .value {
-  font-size: 1.15rem;
+  font-size: var(--hud-font-md);
 }
 
 /* Resource type colors with glow */

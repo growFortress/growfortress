@@ -1,5 +1,6 @@
 import type { JSX } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
+import { useTranslation } from 'react-i18next';
 import { HEROES, getHeroUnlockCost, isHeroUnlockedAtLevel, getHeroUnlockLevel, isPremiumShopHero } from '@arcade/sim-core';
 import type { HeroIdType } from '@arcade/protocol';
 import {
@@ -18,22 +19,13 @@ import type { ComponentChildren } from 'preact';
 import { HeroPreviewModal } from './HeroPreviewModal.js';
 import styles from './HeroRecruitmentModal.module.css';
 
-// Rarity configuration
-const RARITY_CONFIG: Record<string, { color: string; label: string; order: number }> = {
-  starter: { color: '#6b7280', label: 'Starter', order: 0 },
-  common: { color: '#22c55e', label: 'Zwykły', order: 1 },
-  rare: { color: '#3b82f6', label: 'Rzadki', order: 2 },
-  epic: { color: '#a855f7', label: 'Epicki', order: 3 },
-  legendary: { color: '#fbbf24', label: 'Legendarny', order: 4 },
-};
-
-// Role labels (Polish)
-const ROLE_LABELS: Record<string, string> = {
-  dps: 'Obrażenia',
-  tank: 'Tank',
-  support: 'Wsparcie',
-  crowd_control: 'Kontrola',
-  assassin: 'Zabójca',
+// Rarity configuration (colors and order only - labels come from i18n)
+const RARITY_CONFIG: Record<string, { color: string; order: number }> = {
+  starter: { color: '#6b7280', order: 0 },
+  common: { color: '#22c55e', order: 1 },
+  rare: { color: '#3b82f6', order: 2 },
+  epic: { color: '#a855f7', order: 3 },
+  legendary: { color: '#fbbf24', order: 4 },
 };
 
 // Class icons and labels - using SVG for lightning and natural
@@ -58,15 +50,6 @@ function getClassIcon(className: string, size: number = 20): ComponentChildren {
   }
 }
 
-const CLASS_CONFIG: Record<string, { label: string }> = {
-  lightning: { label: 'Elektryczny' },
-  tech: { label: 'Technologia' },
-  void: { label: 'Próżnia' },
-  natural: { label: 'Naturalny' },
-  fire: { label: 'Ogień' },
-  ice: { label: 'Lód' },
-  plasma: { label: 'Plazma' },
-};
 
 type HeroStatus = 'owned' | 'available' | 'locked' | 'premium';
 
@@ -77,6 +60,7 @@ interface CategorizedHero {
 }
 
 export function HeroRecruitmentModal() {
+  const { t } = useTranslation('modals');
   const visible = heroRecruitmentModalVisible.value;
 
   const onClose = () => {
@@ -102,10 +86,10 @@ export function HeroRecruitmentModal() {
         unlockedHeroIds.value = result.unlockedHeroIds;
         await updateProfileFromServer();
       } else {
-        setError(result.error || 'Nie udało się zrekrutować bohatera');
+        setError(result.error || t('heroRecruitment.errors.failed'));
       }
     } catch (err) {
-      setError('Błąd połączenia z serwerem');
+      setError(t('heroRecruitment.errors.connection'));
       console.error('Failed to recruit hero:', err);
     } finally {
       setRecruiting(null);
@@ -164,8 +148,9 @@ export function HeroRecruitmentModal() {
     const canAfford = gold >= cost.gold && dust >= cost.dust;
     const isRecruiting = recruiting === hero.id;
     const isFree = hero.rarity === 'starter';
-    const classConfig = CLASS_CONFIG[hero.class] || { label: hero.class };
-    const roleLabel = ROLE_LABELS[hero.role] || hero.role;
+    const classLabel = t(`heroRecruitment.classes.${hero.class}`, { defaultValue: hero.class });
+    const roleLabel = t(`heroRecruitment.roles.${hero.role}`, { defaultValue: hero.role });
+    const rarityLabel = t(`heroRecruitment.rarity.${hero.rarity}`, { defaultValue: hero.rarity });
     const rarityConfig = RARITY_CONFIG[hero.rarity] || RARITY_CONFIG.common;
 
     const progressPercent = isLocked
@@ -187,7 +172,7 @@ export function HeroRecruitmentModal() {
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
       >
         <div class={styles.rarityBadge}>
-          {rarityConfig.label}
+          {rarityLabel}
         </div>
 
         {isOwned && (
@@ -203,17 +188,17 @@ export function HeroRecruitmentModal() {
         <div class={styles.heroMeta}>
           <div class={styles.heroClass}>
             <span class={styles.classIcon}>{getClassIcon(hero.class, 18)}</span>
-            {classConfig.label}
+            {classLabel}
           </div>
           <div class={styles.heroRole}>{roleLabel}</div>
         </div>
 
         <div class={styles.statsRow}>
-          <div class={styles.stat} title="HP">
+          <div class={styles.stat} title={t('heroRecruitment.stats.hp')}>
             <HpIcon size={16} className={styles.statIcon} style={{ color: '#ef4444' }} />
             <span class={styles.statValue}>{hero.baseStats.hp}</span>
           </div>
-          <div class={styles.stat} title="Obrażenia">
+          <div class={styles.stat} title={t('heroRecruitment.stats.damage')}>
             <DamageIcon size={16} className={styles.statIcon} style={{ color: '#f59e0b' }} />
             <span class={styles.statValue}>{hero.baseStats.damage}</span>
           </div>
@@ -224,7 +209,7 @@ export function HeroRecruitmentModal() {
             <div class={styles.lockedContent}>
               <div class={styles.lockBadge}>
                 <span class={styles.lockIcon}>💎</span>
-                Premium
+                {t('heroRecruitment.status.premium')}
               </div>
             </div>
           ) : isLocked ? (
@@ -237,25 +222,25 @@ export function HeroRecruitmentModal() {
                   />
                 </div>
                 <div class={styles.progressLabel}>
-                  Poz. {currentFortressLevel} / {requiredLevel}
+                  {t('heroRecruitment.progress.levelShort', { current: currentFortressLevel, required: requiredLevel })}
                 </div>
               </div>
               <div class={styles.lockBadge}>
                 <span class={styles.lockIcon}>🔒</span>
-                Poziom {requiredLevel}
+                {t('heroRecruitment.levelRequired', { level: requiredLevel })}
               </div>
             </div>
           ) : isOwned ? (
             <div class={styles.ownedContent}>
               <div class={styles.ownedLabel}>
-                <span>✓</span> Posiadany
+                <span>✓</span> {t('heroRecruitment.status.owned')}
               </div>
             </div>
           ) : (
             <div class={styles.recruitContent}>
               <div class={styles.costRow}>
                 {isFree ? (
-                  <span class={styles.freeLabel}>Darmowy</span>
+                  <span class={styles.freeLabel}>{t('heroRecruitment.status.free')}</span>
                 ) : (
                   <>
                     {cost.gold > 0 && (
@@ -281,7 +266,7 @@ export function HeroRecruitmentModal() {
                 }}
                 disabled={!canAfford || isRecruiting}
               >
-                {isRecruiting ? 'Rekrutacja...' : isFree ? 'Odblokuj' : 'Rekrutuj'}
+                {isRecruiting ? t('heroRecruitment.recruiting') : isFree ? t('heroRecruitment.unlock') : t('heroRecruitment.recruit')}
               </button>
             </div>
           )}
@@ -291,7 +276,7 @@ export function HeroRecruitmentModal() {
   };
 
   return (
-    <Modal visible={visible} onClose={onClose} title="Rekrutacja Bohaterów" size="fullscreen" class={styles.recruitmentModal} bodyClass={styles.modalBody}>
+    <Modal visible={visible} onClose={onClose} title={t('heroRecruitment.title')} size="fullscreen" class={styles.recruitmentModal} bodyClass={styles.modalBody}>
       <div class={styles.container}>
         <div class={styles.resourceBar}>
           <div class={styles.resource}>
@@ -312,7 +297,7 @@ export function HeroRecruitmentModal() {
             <div class={styles.section}>
               <div class={styles.sectionHeader}>
                 <span class={styles.sectionIcon}>✓</span>
-                <span class={styles.sectionTitle}>Twoi Bohaterowie</span>
+                <span class={styles.sectionTitle}>{t('heroRecruitment.sections.yourHeroes')}</span>
                 <span class={styles.sectionCount}>{ownedHeroes.length}</span>
               </div>
               <div class={styles.heroGrid}>
@@ -326,7 +311,7 @@ export function HeroRecruitmentModal() {
             <div class={styles.section}>
               <div class={styles.sectionHeader}>
                 <RangeIcon size={20} className={styles.sectionIcon} />
-                <span class={styles.sectionTitle}>Dostępni do Rekrutacji</span>
+                <span class={styles.sectionTitle}>{t('heroRecruitment.sections.availableForRecruitment')}</span>
                 <span class={styles.sectionCount}>{availableHeroes.length}</span>
               </div>
               <div class={styles.heroGrid}>
@@ -340,7 +325,7 @@ export function HeroRecruitmentModal() {
             <div class={styles.section}>
               <div class={styles.sectionHeader}>
                 <span class={styles.sectionIcon}>🔒</span>
-                <span class={styles.sectionTitle}>Zablokowane</span>
+                <span class={styles.sectionTitle}>{t('heroRecruitment.sections.locked')}</span>
                 <span class={styles.sectionCount}>{lockedHeroes.length}</span>
               </div>
               <div class={styles.heroGrid}>
@@ -354,7 +339,7 @@ export function HeroRecruitmentModal() {
             <div class={styles.section}>
               <div class={styles.sectionHeader}>
                 <span class={styles.sectionIcon}>💎</span>
-                <span class={styles.sectionTitle}>Premium</span>
+                <span class={styles.sectionTitle}>{t('heroRecruitment.sections.premium')}</span>
                 <span class={styles.sectionCount}>{premiumHeroes.length}</span>
               </div>
               <div class={styles.heroGrid}>

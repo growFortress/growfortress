@@ -7,6 +7,9 @@ import { RailgunIcon, ArtilleryIcon, ArcIcon, CryoIcon } from '../icons/index.js
 import type { ComponentChildren } from 'preact';
 import styles from './TurretSkillBar.module.css';
 
+// Re-export for components that need the translation hook at top level
+const useGameTranslation = () => useTranslation('game');
+
 // Turret icon components - using SVG matching game models
 function getTurretIcon(turretId: string, size: number = 24): ComponentChildren {
   switch (turretId) {
@@ -48,6 +51,7 @@ interface TurretSkillBarProps {
 }
 
 export function TurretSkillBar({ compact = false }: TurretSkillBarProps) {
+  const { t } = useGameTranslation();
   const turrets = activeTurrets.value;
   const phase = gamePhase.value;
 
@@ -60,7 +64,7 @@ export function TurretSkillBar({ compact = false }: TurretSkillBarProps) {
     <div class={`${styles.container} ${compact ? styles.compact : ''}`} data-tutorial="turret-targeting">
       {!compact && (
         <div class={styles.header}>
-          <span class={styles.title}>Wieżyczki</span>
+          <span class={styles.title}>{t('turretSkills.title')}</span>
         </div>
       )}
       <div class={styles.turretList}>

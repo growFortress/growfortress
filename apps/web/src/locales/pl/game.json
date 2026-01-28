@@ -95,6 +95,7 @@
     "title": "Umiejętności bohaterów"
   },
   "turretSkills": {
+    "title": "Wieżyczki",
     "targetingTitle": "Priorytet celu",
     "targeting": {
       "closestToFortress": "Najbliżej fortecy",
@@ -169,7 +170,7 @@
     "unlockRequired": "Poz.{{level}} wymagany"
   },
   "fortressSkills": {
-    "title": "Umiejętności Twierdzy",
+    "title": "Twierdza",
     "baseDamage": "Obrażenia bazowe: {{damage}}",
     "cooldown": "Cooldown: {{seconds}}s",
     "effects": "Efekty:",
@@ -540,6 +541,121 @@
     "errors": {
       "allocateFailed": "Nie udało się przydzielić punktów statystyk",
       "resetFailed": "Nie udało się zresetować punktów statystyk"
+    }
+  },
+  "pillars": {
+    "streets": {
+      "name": "Ulice",
+      "subtitle": "Poziom uliczny"
+    },
+    "science": {
+      "name": "Nauka",
+      "subtitle": "Nauka i technologia"
+    },
+    "mutants": {
+      "name": "Mutanci",
+      "subtitle": "Świat mutantów"
+    },
+    "cosmos": {
+      "name": "Kosmos",
+      "subtitle": "Poziom kosmiczny"
+    },
+    "magic": {
+      "name": "Magia",
+      "subtitle": "Mistyczne krainy"
+    },
+    "gods": {
+      "name": "Bogowie",
+      "subtitle": "Poziom boski"
+    }
+  },
+  "pvp": {
+    "panel": {
+      "title": "PVP Arena",
+      "subtitle": "Walcz z innymi graczami",
+      "close": "Zamknij",
+      "refresh": "Odśwież"
+    },
+    "stats": {
+      "wins": "Wygrane",
+      "losses": "Przegrane",
+      "winRate": "Win Rate",
+      "yourPower": "Twoja Moc"
+    },
+    "tabs": {
+      "opponents": "Przeciwnicy",
+      "challenges": "Wyzwania",
+      "history": "Historia"
+    },
+    "opponents": {
+      "empty": "Brak przeciwników w Twoim zakresie mocy.",
+      "emptyHint": "Zwiększ swoją moc, aby odblokować więcej graczy!",
+      "fight": "Walcz",
+      "ready": "Gotowe",
+      "winsShort": "W",
+      "lossesShort": "L"
+    },
+    "challenges": {
+      "emptyPending": "Brak oczekujących wyzwań",
+      "emptyHistory": "Brak historii walk",
+      "play": "Rozegraj",
+      "cancel": "Anuluj",
+      "decline": "Odrzuć",
+      "showDetails": "Szczegóły",
+      "hideDetails": "Ukryj szczegóły",
+      "replay": "Replay",
+      "youAttacked": "Zaatakowałeś {{name}}",
+      "youWereAttacked": "Zostałeś zaatakowany przez {{name}}",
+      "rewards": "Nagrody",
+      "noData": "Brak danych",
+      "noBattleDetails": "Brak szczegółów walki"
+    },
+    "result": {
+      "draw": "REMIS",
+      "victory": "ZWYCIĘSTWO!",
+      "defeat": "PORAŻKA",
+      "drawBadge": "Remis",
+      "winBadge": "Wygrana",
+      "lossBadge": "Przegrana"
+    },
+    "winReason": {
+      "fortressDestroyed": "Forteca zniszczona",
+      "timeout": "Limit czasu",
+      "draw": "Remis"
+    },
+    "battleStats": {
+      "fortressHp": "HP Fortecy",
+      "damage": "Obrażenia",
+      "heroes": "Bohaterowie",
+      "alive": "żywych",
+      "battleDuration": "Czas walki:"
+    },
+    "rewards": {
+      "title": "Nagrody",
+      "dust": "Dust:",
+      "gold": "Złoto:",
+      "honor": "Honor:",
+      "artifact": "Artefakt:"
+    },
+    "actions": {
+      "close": "Zamknij",
+      "watchReplay": "Obejrzyj Replay"
+    },
+    "time": {
+      "now": "Teraz",
+      "minutesAgo": "{{count}}m temu",
+      "hoursAgo": "{{count}}h temu",
+      "daysAgo": "{{count}}d temu"
+    },
+    "errors": {
+      "prepareFailed": "Nie udało się przygotować walki",
+      "cooldownActive": "Musisz poczekać przed kolejnym wyzwaniem tego gracza",
+      "powerOutOfRange": "Moc przeciwnika poza zakresem",
+      "sendFailed": "Nie udało się wysłać wyzwania",
+      "startFailed": "Nie udało się uruchomić walki",
+      "declineFailed": "Nie udało się odrzucić wyzwania",
+      "cancelFailed": "Nie udało się anulować wyzwania",
+      "loadResultFailed": "Nie udało się załadować wyniku"
     }
   }
 }

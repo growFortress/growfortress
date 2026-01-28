@@ -1,9 +1,11 @@
 import { useRef, useEffect } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { currentPillar, currentPillarInfo } from '../../state/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './PillarDisplay.module.css';
 
 export function PillarDisplay() {
+  const { t } = useTranslation('game');
   const containerRef = useRef<HTMLDivElement>(null);
   const prevPillarRef = useRef(currentPillar.value);
 
@@ -21,6 +23,7 @@ export function PillarDisplay() {
   }, [currentPillar.value]);
 
   const info = currentPillarInfo.value;
+  const pillarId = currentPillar.value;
 
   return (
     <div
@@ -30,8 +33,8 @@ export function PillarDisplay() {
     >
       <span class={styles.icon}>{info.icon}</span>
       <div class={styles.textContainer}>
-        <span class={styles.name}>{info.name}</span>
-        <span class={styles.subtitle}>{info.subtitle}</span>
+        <span class={styles.name}>{t(`pillars.${pillarId}.name`)}</span>
+        <span class={styles.subtitle}>{t(`pillars.${pillarId}.subtitle`)}</span>
       </div>
     </div>
   );
