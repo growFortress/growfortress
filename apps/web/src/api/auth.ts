@@ -1,6 +1,7 @@
 const USER_ID_KEY = "arcade_user_id";
 const DISPLAY_NAME_KEY = "arcade_display_name";
 const IS_GUEST_KEY = "arcade_is_guest";
+const HAS_SESSION_KEY = "arcade_has_session";
 
 let accessToken: string | null = null;
 
@@ -75,6 +76,8 @@ export function setAuthData(
   if (displayName) {
     safeSetItem(DISPLAY_NAME_KEY, displayName);
   }
+  // Mark that user has had a session (for refresh token optimization)
+  safeSetItem(HAS_SESSION_KEY, "true");
 }
 
 // Legacy function - consider migrating to setAuthData
@@ -95,7 +98,13 @@ export function clearTokens(): void {
   safeRemoveItem(USER_ID_KEY);
   safeRemoveItem(DISPLAY_NAME_KEY);
   safeRemoveItem(IS_GUEST_KEY);
+  safeRemoveItem(HAS_SESSION_KEY);
   notifyAuthInvalidated();
+}
+
+// Check if user has ever had a session (useful to skip unnecessary refresh attempts)
+export function hasSession(): boolean {
+  return safeGetItem(HAS_SESSION_KEY) === "true";
 }
 
 // JWT token expiration check

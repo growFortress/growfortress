@@ -59,7 +59,7 @@ import type {
   ClaimBulkRewardResponse,
   ReferralStatusResponse,
 } from "@arcade/protocol";
-import { setAuthData, clearTokens, setGuestModeStorage, clearGuestModeStorage } from "./auth.js";
+import { setAuthData, clearTokens, setGuestModeStorage, clearGuestModeStorage, hasSession } from "./auth.js";
 import { ApiError, request } from "./base.js";
 import { resetAllState } from "../state/index.js";
 import { getReferralCode, clearReferralCode } from "../utils/referral.js";
@@ -196,6 +196,11 @@ export async function login(
 }
 
 export async function refreshTokensApi(): Promise<AuthRefreshResponse | null> {
+  // Skip refresh if user has never had a session (avoids unnecessary 401 errors)
+  if (!hasSession()) {
+    return null;
+  }
+
   try {
     const response = await request<AuthRefreshResponse>("/v1/auth/refresh", {
       method: "POST",

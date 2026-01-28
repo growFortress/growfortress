@@ -4,7 +4,7 @@
  */
 
 import { CONFIG } from "../config.js";
-import { getAccessToken, setAuthData, clearTokens } from "./auth.js";
+import { getAccessToken, setAuthData, clearTokens, hasSession } from "./auth.js";
 
 // ============================================================================
 // ERROR CLASSES
@@ -40,6 +40,11 @@ let refreshPromise: Promise<boolean> | null = null;
  * @returns Promise<boolean> - true if refresh succeeded, false otherwise
  */
 export async function tryRefreshToken(): Promise<boolean> {
+  // Skip refresh if user has never had a session (no cookie to refresh)
+  if (!hasSession()) {
+    return false;
+  }
+
   // If already refreshing, return the existing promise
   if (refreshPromise) {
     return refreshPromise;
