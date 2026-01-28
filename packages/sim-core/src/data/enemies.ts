@@ -501,12 +501,18 @@ export function getEnemyStats(
   // Combined scaling
   const totalScale = waveScale * cycleScale;
 
+  // Early wave HP boost (waves 1-15 get extra HP to increase early difficulty)
+  // Wave 1: 1.5x, gradually decreasing to 1.0x by wave 15
+  const earlyWaveHpBoost = effectiveWave <= 15
+    ? 1.5 - (effectiveWave - 1) * (0.5 / 14)  // Linear decrease from 1.5 to 1.0
+    : 1.0;
+
   // Elite multipliers
   const eliteHpMult = isElite ? 3.0 : 1;
   const eliteDmgMult = isElite ? 2.5 : 1;
 
   return {
-    hp: Math.floor(archetype.baseHp * totalScale * eliteHpMult),
+    hp: Math.floor(archetype.baseHp * totalScale * eliteHpMult * earlyWaveHpBoost),
     speed: FP.fromFloat(archetype.baseSpeed / 30), // Convert to fixed-point units/tick
     damage: Math.floor(archetype.baseDamage * totalScale * eliteDmgMult),
   };
@@ -626,10 +632,10 @@ export function getWaveComposition(
   const eliteChance = Math.min(0.08 + wave * 0.006, eliteCap);
 
   // Spawn interval - enemies spawn one by one from portal
-  // Base: ~0.55 seconds between spawns (was 0.65), speeds up with waves
-  // Faster spawning creates more pressure and exciting "wave" feel
-  const baseInterval = Math.max(tickHz * 0.55 - effectiveWave * 0.20, tickHz * 0.30);
-  const spawnInterval = Math.max(baseInterval - cycle * 2, 12); // Min ~0.4s at 30Hz
+  // Base: ~0.35 seconds between spawns (buffed from 0.55), speeds up with waves
+  // Faster spawning creates more pressure and groups enemies together
+  const baseInterval = Math.max(tickHz * 0.35 - effectiveWave * 0.15, tickHz * 0.20);
+  const spawnInterval = Math.max(baseInterval - cycle * 2, 6); // Min ~0.2s at 30Hz
 
   const enemies: Array<{ type: EnemyType; count: number }> = [];
 

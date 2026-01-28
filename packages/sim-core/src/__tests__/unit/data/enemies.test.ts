@@ -17,31 +17,31 @@ describe('ENEMY_ARCHETYPES', () => {
   it('runner has correct base stats', () => {
     const runner = ENEMY_ARCHETYPES.runner;
     expect(runner.type).toBe('runner');
-    expect(runner.baseHp).toBe(29);
+    expect(runner.baseHp).toBe(60);       // Buffed from 29
     expect(runner.baseSpeed).toBe(2.33);
-    expect(runner.baseDamage).toBe(8);
-    expect(runner.goldReward).toBe(1);  // Reduced for economy balance
+    expect(runner.baseDamage).toBe(10);   // Buffed from 8
+    expect(runner.goldReward).toBe(1);
     expect(runner.dustReward).toBe(1);
   });
 
   it('bruiser has correct base stats', () => {
     const bruiser = ENEMY_ARCHETYPES.bruiser;
     expect(bruiser.type).toBe('bruiser');
-    expect(bruiser.baseHp).toBe(144);
+    expect(bruiser.baseHp).toBe(200);     // Buffed from 144
     expect(bruiser.baseSpeed).toBe(0.84);
-    expect(bruiser.baseDamage).toBe(21);
-    expect(bruiser.goldReward).toBe(5);  // Reduced for economy balance
-    expect(bruiser.dustReward).toBe(2);  // Reduced from 3
+    expect(bruiser.baseDamage).toBe(28);  // Buffed from 21
+    expect(bruiser.goldReward).toBe(3);   // Reduced from 5
+    expect(bruiser.dustReward).toBe(2);
   });
 
   it('leech has correct base stats', () => {
     const leech = ENEMY_ARCHETYPES.leech;
     expect(leech.type).toBe('leech');
-    expect(leech.baseHp).toBe(58);
+    expect(leech.baseHp).toBe(85);        // Buffed from 58
     expect(leech.baseSpeed).toBe(1.69);
-    expect(leech.baseDamage).toBe(5);
-    expect(leech.goldReward).toBe(4);  // Reduced for economy balance
-    expect(leech.dustReward).toBe(1);  // Reduced from 2
+    expect(leech.baseDamage).toBe(8);     // Buffed from 5
+    expect(leech.goldReward).toBe(2);     // Reduced from 4
+    expect(leech.dustReward).toBe(1);
   });
 
   it('all archetypes have descriptions', () => {
@@ -55,40 +55,43 @@ describe('getEnemyStats', () => {
   describe('base stats for wave 1', () => {
     it('returns correct base stats for runner at wave 1', () => {
       const stats = getEnemyStats('runner', 1, false);
-      expect(stats.hp).toBe(29); // No scaling at wave 1
-      expect(stats.damage).toBe(8);
+      // Wave 1: 60 * 1.0 (waveScale) * 1.5 (earlyWaveHpBoost) = 90
+      expect(stats.hp).toBe(90);
+      expect(stats.damage).toBe(10);
     });
 
     it('returns correct base stats for bruiser at wave 1', () => {
       const stats = getEnemyStats('bruiser', 1, false);
-      expect(stats.hp).toBe(144);
-      expect(stats.damage).toBe(21);
+      // Wave 1: 200 * 1.0 * 1.5 = 300
+      expect(stats.hp).toBe(300);
+      expect(stats.damage).toBe(28);
     });
 
     it('returns correct base stats for leech at wave 1', () => {
       const stats = getEnemyStats('leech', 1, false);
-      expect(stats.hp).toBe(58);
-      expect(stats.damage).toBe(5);
+      // Wave 1: 85 * 1.0 * 1.5 = 127
+      expect(stats.hp).toBe(127);
+      expect(stats.damage).toBe(8);
     });
   });
 
   describe('wave scaling', () => {
-    it('applies wave scaling (15% per wave for waves 1-30)', () => {
+    it('applies wave scaling (20% per wave for waves 1-40) with early HP boost', () => {
       const wave2 = getEnemyStats('runner', 2, false);
       const wave11 = getEnemyStats('runner', 11, false);
 
-      // Wave 2: 29 * 1.15 = 33.35, floored to 33 (15% scaling for early waves)
-      expect(wave2.hp).toBe(33);
+      // Wave 2: 60 * 1.20 * 1.464 = 105
+      expect(wave2.hp).toBe(105);
 
-      // Wave 11: 29 * (1 + 10 * 0.15) = 29 * 2.5 = 72.5, floored to 72
-      expect(wave11.hp).toBe(72);
+      // Wave 11: 60 * 3.0 * 1.143 = 205
+      expect(wave11.hp).toBe(205);
     });
 
-    it('scales damage with wave', () => {
+    it('scales damage with wave (no HP boost for damage)', () => {
       const wave6 = getEnemyStats('bruiser', 6, false);
 
-      // Wave 6: 21 * (1 + 5 * 0.15) = 21 * 1.75 = 36.75, floored to 36
-      expect(wave6.damage).toBe(36);
+      // Wave 6: 28 * 2.0 = 56
+      expect(wave6.damage).toBe(56);
     });
   });
 
@@ -111,11 +114,11 @@ describe('getEnemyStats', () => {
 
     it('combines wave scaling and elite multipliers', () => {
       const elite = getEnemyStats('runner', 5, true);
-      // Wave 5: 1 + (5-1) * 0.15 = 1.6 (15% scaling for early waves)
-      // HP: 29 * 1.6 * 3 = 139.2, floored to 139
-      expect(elite.hp).toBe(139);
-      // Damage: 8 * 1.6 * 2.5 = 32
-      expect(elite.damage).toBe(32);
+      // Wave 5: waveScale=1.8, earlyWaveHpBoost=1.357
+      // HP: 60 * 1.8 * 3.0 * 1.357 = 439
+      expect(elite.hp).toBe(439);
+      // Damage: 10 * 1.8 * 2.5 = 45
+      expect(elite.damage).toBe(45);
     });
   });
 
@@ -155,28 +158,27 @@ describe('getEnemyRewards', () => {
 
     it('returns correct base rewards for bruiser', () => {
       const rewards = getEnemyRewards('bruiser', false, 1.0, 1.0, 1);
-      // Base: gold=5 (reduced for balance), dust=0 (dust removed from enemy kills)
-      expect(rewards.gold).toBe(5);
+      // Base: gold=3 (reduced for balance), dust=0 (dust removed from enemy kills)
+      expect(rewards.gold).toBe(3);
       expect(rewards.dust).toBe(0);
     });
 
     it('returns correct base rewards for leech', () => {
       const rewards = getEnemyRewards('leech', false, 1.0, 1.0, 1);
-      // Base: gold=4 (reduced for balance), dust=0 (dust removed from enemy kills)
-      expect(rewards.gold).toBe(4);
+      // Base: gold=2 (reduced for balance), dust=0 (dust removed from enemy kills)
+      expect(rewards.gold).toBe(2);
       expect(rewards.dust).toBe(0);
     });
   });
 
   describe('elite multiplier', () => {
-    it('applies elite multiplier (2.5x) to gold only', () => {
+    it('applies elite multiplier (2.0x) to gold only', () => {
       // Use mafia_boss for higher base values to avoid floor() issues
       const normal = getEnemyRewards('mafia_boss', false, 1.0, 1.0, 1);
       const elite = getEnemyRewards('mafia_boss', true, 1.0, 1.0, 1);
 
-      // Elite gives 2.5x gold (18 * 2.5 = 45)
-      expect(elite.gold).toBeGreaterThan(normal.gold * 2);
-      expect(elite.gold).toBeLessThanOrEqual(normal.gold * 3);
+      // Elite gives 2.0x gold (12 * 2.0 = 24)
+      expect(elite.gold).toBe(normal.gold * 2);
       // Dust is always 0 (removed from enemy kills)
       expect(elite.dust).toBe(0);
       expect(normal.dust).toBe(0);
@@ -221,62 +223,61 @@ describe('getEnemyRewards', () => {
     });
   });
 
-  describe('wave scaling (5% per wave)', () => {
-    it('wave 2 has 5% increase (1.05x)', () => {
+  describe('wave scaling (3% per wave)', () => {
+    it('wave 2 has 3% increase (1.03x)', () => {
       const wave1 = getEnemyRewards('runner', false, 1.0, 1.0, 1);
       const wave2 = getEnemyRewards('runner', false, 1.0, 1.0, 2);
-      // Wave 2: 1 + (2-1) * 0.05 = 1.05
-      // Base: 1 * 1.05 = 1.05, floored to 1
+      // Wave 2: 1 + (2-1) * 0.03 = 1.03
+      // Base: 1 * 1.03 = 1.03, floored to 1
       expect(wave2.gold).toBeGreaterThanOrEqual(wave1.gold);
     });
 
-    it('wave 11 has 50% increase (1.50x)', () => {
-      // Wave 11: 1 + (11-1) * 0.05 = 1.50
-      // Base: 1 * 1.50 = 1.50, floored to 1
-      // Use bruiser for better precision: 5 * 1.50 = 7.5, floored to 7
+    it('wave 11 has 30% increase (1.30x)', () => {
+      // Wave 11: 1 + (11-1) * 0.03 = 1.30
+      // Use bruiser for better precision: 3 * 1.30 = 3.9, floored to 3
       const wave11Bruiser = getEnemyRewards('bruiser', false, 1.0, 1.0, 11);
-      expect(wave11Bruiser.gold).toBe(7); // 5 * 1.50 = 7.5 → 7
+      expect(wave11Bruiser.gold).toBe(3); // 3 * 1.30 = 3.9 → 3
     });
 
-    it('wave 100 has 495% increase (5.95x)', () => {
+    it('wave 100 has 297% increase (3.97x)', () => {
       const wave1 = getEnemyRewards('bruiser', false, 1.0, 1.0, 1);
       const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100);
-      // Wave 100: 1 + (100-1) * 0.05 = 1 + 4.95 = 5.95
-      // Base: 5 * 5.95 = 29.75, floored to 29
-      expect(wave100.gold).toBe(29);
-      expect(wave100.gold).toBeGreaterThan(wave1.gold * 5);
+      // Wave 100: 1 + (100-1) * 0.03 = 1 + 2.97 = 3.97
+      // Base: 3 * 3.97 = 11.91, floored to 11
+      expect(wave100.gold).toBe(11);
+      expect(wave100.gold).toBeGreaterThan(wave1.gold * 3); // 3% per wave means ~4x at wave 100
     });
   });
 
-  describe('cycle scaling (exponential 1.4^cycle)', () => {
+  describe('cycle scaling (exponential 1.3^cycle)', () => {
     it('cycle 0 (wave 1-100) has no cycle multiplier', () => {
       const wave1 = getEnemyRewards('bruiser', false, 1.0, 1.0, 1);
       const wave50 = getEnemyRewards('bruiser', false, 1.0, 1.0, 50);
       const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100);
-      
-      // All in cycle 0, so cycle multiplier = 1.4^0 = 1
+
+      // All in cycle 0, so cycle multiplier = 1.3^0 = 1
       // Only wave scaling applies
       expect(wave50.gold).toBeGreaterThan(wave1.gold);
       expect(wave100.gold).toBeGreaterThan(wave50.gold);
     });
 
-    it('cycle 1 (wave 101-200) applies 1.4x multiplier', () => {
+    it('cycle 1 (wave 101-200) applies 1.3x multiplier', () => {
       const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100);
       const wave200 = getEnemyRewards('bruiser', false, 1.0, 1.0, 200);
 
-      // Wave 100: effectiveWave=100, cycle=0 → 5 * 5.95 * 1.0 = 29
-      // Wave 200: effectiveWave=100, cycle=1 → 5 * 5.95 * 1.4 = 41.65 → 41
-      expect(wave200.gold).toBe(41); // 5 * 5.95 * 1.4 = 41.65 → 41
+      // Wave 100: effectiveWave=100, cycle=0 → 3 * 3.97 * 1.0 = 11
+      // Wave 200: effectiveWave=100, cycle=1 → 3 * 3.97 * 1.3 = 15.48 → 15
+      expect(wave200.gold).toBe(15);
       expect(wave200.gold).toBeGreaterThan(wave100.gold);
     });
 
-    it('cycle 2 (wave 201-300) applies 1.96x multiplier', () => {
+    it('cycle 2 (wave 201-300) applies 1.69x multiplier', () => {
       const wave200 = getEnemyRewards('bruiser', false, 1.0, 1.0, 200);
       const wave300 = getEnemyRewards('bruiser', false, 1.0, 1.0, 300);
 
-      // Wave 200: effectiveWave=100, cycle=1 → 5 * 5.95 * 1.4 = 41
-      // Wave 300: effectiveWave=100, cycle=2 → 5 * 5.95 * 1.96 = 58.31 → 58
-      expect(wave300.gold).toBe(58); // 5 * 5.95 * 1.96 = 58.31 → 58
+      // Wave 200: effectiveWave=100, cycle=1 → 3 * 3.97 * 1.3 = 15
+      // Wave 300: effectiveWave=100, cycle=2 → 3 * 3.97 * 1.69 = 20.12 → 20
+      expect(wave300.gold).toBe(20);
       expect(wave300.gold).toBeGreaterThan(wave200.gold);
     });
 
@@ -284,15 +285,15 @@ describe('getEnemyRewards', () => {
       const wave100 = getEnemyRewards('bruiser', false, 1.0, 1.0, 100); // cycle 0
       const wave200 = getEnemyRewards('bruiser', false, 1.0, 1.0, 200); // cycle 1
       const wave300 = getEnemyRewards('bruiser', false, 1.0, 1.0, 300); // cycle 2
-      
+
       // All have same effectiveWave=100, so ratio should match cycle multipliers
       const ratio1to0 = wave200.gold / wave100.gold;
       const ratio2to1 = wave300.gold / wave200.gold;
-      
-      // Cycle 1/0: 1.4/1.0 = 1.4
-      // Cycle 2/1: 1.96/1.4 = 1.4
-      expect(ratio1to0).toBeCloseTo(1.4, 0.1);
-      expect(ratio2to1).toBeCloseTo(1.4, 0.1);
+
+      // Cycle 1/0: 1.3/1.0 = 1.3
+      // Cycle 2/1: 1.69/1.3 = 1.3
+      expect(ratio1to0).toBeCloseTo(1.3, 0.1);
+      expect(ratio2to1).toBeCloseTo(1.3, 0.1);
     });
   });
 
@@ -301,15 +302,14 @@ describe('getEnemyRewards', () => {
       const wave50 = getEnemyRewards('bruiser', false, 1.0, 1.0, 50);
       const wave101 = getEnemyRewards('bruiser', false, 1.0, 1.0, 101);
       const wave150 = getEnemyRewards('bruiser', false, 1.0, 1.0, 150);
-      
-      // Wave 1: effectiveWave=1, cycle=0 → 5 * 1.0 * 1.0 = 5
-      // Wave 50: effectiveWave=50, cycle=0 → 5 * 3.45 * 1.0 = 17.25 → 17
-      // Wave 101: effectiveWave=1, cycle=1 → 5 * 1.0 * 1.4 = 7
-      // Wave 150: effectiveWave=50, cycle=1 → 5 * 3.45 * 1.4 = 24.15 → 24
-      
-      expect(wave50.gold).toBe(17); // 5 * 3.45 = 17.25 → 17
-      expect(wave101.gold).toBe(7); // 5 * 1.0 * 1.4 = 7
-      expect(wave150.gold).toBe(24); // 5 * 3.45 * 1.4 = 24.15 → 24
+
+      // Wave 50: effectiveWave=50, cycle=0 → 3 * 2.47 * 1.0 = 7.41 → 7
+      // Wave 101: effectiveWave=1, cycle=1 → 3 * 1.0 * 1.3 = 3.9 → 3
+      // Wave 150: effectiveWave=50, cycle=1 → 3 * 2.47 * 1.3 = 9.63 → 9
+
+      expect(wave50.gold).toBe(7);
+      expect(wave101.gold).toBe(3);
+      expect(wave150.gold).toBe(9);
     });
   });
 });
