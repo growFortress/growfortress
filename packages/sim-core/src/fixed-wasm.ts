@@ -51,7 +51,8 @@ async function loadWasm(): Promise<WasmModule | null> {
         // Try to import WASM module (path relative to dist/ after build)
         // wasm-pack generates: fixed_math.js and fixed_math_bg.wasm
         // @ts-ignore - WASM module may not exist at compile time, runtime fallback handles this
-        const wasmImport = await import('../dist/wasm/fixed_math.js');
+        // @vite-ignore - Tell Vite/Rollup to skip bundling this optional module
+        const wasmImport = await import(/* @vite-ignore */ '../dist/wasm/fixed_math.js');
 
         // The module has a default export that initializes the WASM binary
         // We need to call it to actually load the .wasm file
