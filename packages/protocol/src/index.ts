@@ -143,6 +143,7 @@ export {
   PartialRewardsSchema,
   SessionEndResponseSchema,
   ActiveSessionResponseSchema,
+  PowerDataSchema,
   type SessionStartRequest,
   type SessionEndRequest,
   type UpdateLoadoutRequest,
@@ -154,6 +155,7 @@ export {
   type PartialRewards,
   type SessionEndResponse,
   type ActiveSessionResponse,
+  type PowerData,
 } from "./sessions.js";
 
 // Upgrades

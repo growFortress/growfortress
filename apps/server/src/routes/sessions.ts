@@ -48,19 +48,22 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{
     Params: { sessionId: string };
   }>('/v1/sessions/:sessionId/segment', async (request, reply) => {
+    const requestStartTime = Date.now();
+    const { sessionId } = request.params;
+
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
-
-    const { sessionId } = request.params;
 
     let body;
     try {
       body = SegmentSubmitRequestSchema.parse(request.body);
     } catch (error) {
+      const latency = Date.now() - requestStartTime;
       request.log.warn({
         sessionId,
         userId: request.userId,
+        latency,
         validationError: error instanceof Error ? error.message : 'Unknown',
         body: request.body,
       }, 'Segment schema validation failed');
@@ -80,13 +83,32 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
         body.finalHash
       );
     } catch (error) {
+      const latency = Date.now() - requestStartTime;
+      request.log.error({
+        sessionId,
+        userId: request.userId,
+        latency,
+        startWave: body.startWave,
+        endWave: body.endWave,
+        error: error instanceof Error ? error.message : 'Unknown',
+        errorCode: error instanceof GameSessionError ? error.code : undefined,
+      }, 'Segment submission error');
       if (error instanceof GameSessionError && error.code === 'SESSION_FORBIDDEN') {
         return reply.status(403).send({ error: 'Forbidden' });
       }
       throw error;
     }
 
+    const latency = Date.now() - requestStartTime;
+
     if (!result) {
+      request.log.warn({
+        sessionId,
+        userId: request.userId,
+        latency,
+        startWave: body.startWave,
+        endWave: body.endWave,
+      }, 'Segment submission: session not found or expired');
       return reply.status(404).send({ error: 'Session not found or expired' });
     }
 
@@ -94,15 +116,36 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
       request.log.warn({
         sessionId,
         userId: request.userId,
+        latency,
         rejectReason: result.rejectReason,
         startWave: body.startWave,
         endWave: body.endWave,
+        eventsCount: body.events?.length ?? 0,
+        checkpointsCount: body.checkpoints?.length ?? 0,
       }, 'Segment verification failed');
       return reply.status(400).send({
         verified: false,
         reason: result.rejectReason,
       });
     }
+
+    // Log successful segment submission with full details
+    request.log.info({
+      sessionId,
+      userId: request.userId,
+      latency,
+      startWave: body.startWave,
+      endWave: body.endWave,
+      wavesCompleted: body.endWave - body.startWave,
+      goldEarned: result.goldEarned,
+      dustEarned: result.dustEarned,
+      xpEarned: result.xpEarned,
+      newLevel: result.newProgression.level,
+      newGold: result.newInventory.gold,
+      newDust: result.newInventory.dust,
+      eventsCount: body.events?.length ?? 0,
+      checkpointsCount: body.checkpoints?.length ?? 0,
+    }, 'Segment verified and persisted');
 
     return reply.send(result);
   });
@@ -111,16 +154,25 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{
     Params: { sessionId: string };
   }>('/v1/sessions/:sessionId/end', async (request, reply) => {
+    const requestStartTime = Date.now();
+    const { sessionId } = request.params;
+
     if (!request.userId) {
       return reply.status(401).send({ error: 'Unauthorized' });
     }
-
-    const { sessionId } = request.params;
 
     let body;
     try {
       body = SessionEndRequestSchema.parse(request.body || {});
     } catch (error) {
+      const latency = Date.now() - requestStartTime;
+      request.log.warn({
+        sessionId,
+        userId: request.userId,
+        latency,
+        validationError: error instanceof Error ? error.message : 'Unknown',
+        body: request.body,
+      }, 'End session schema validation failed');
       return reply.status(400).send({ error: 'Invalid request body' });
     }
 
@@ -133,15 +185,60 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
         body.partialRewards
       );
     } catch (error) {
+      const latency = Date.now() - requestStartTime;
+      request.log.error({
+        sessionId,
+        userId: request.userId,
+        latency,
+        reason: body.reason,
+        partialRewards: body.partialRewards,
+        error: error instanceof Error ? error.message : 'Unknown',
+        errorCode: error instanceof GameSessionError ? error.code : undefined,
+      }, 'End session error');
       if (error instanceof GameSessionError && error.code === 'SESSION_FORBIDDEN') {
         return reply.status(403).send({ error: 'Forbidden' });
       }
       throw error;
     }
 
+    const latency = Date.now() - requestStartTime;
+
     if (!result) {
+      request.log.warn({
+        sessionId,
+        userId: request.userId,
+        latency,
+        reason: body.reason,
+        partialRewards: body.partialRewards,
+      }, 'End session: session not found');
       return reply.status(404).send({ error: 'Session not found' });
     }
+
+    // Log successful session end with full details
+    request.log.info({
+      sessionId,
+      userId: request.userId,
+      latency,
+      reason: body.reason,
+      finalWave: result.finalWave,
+      totalGoldEarned: result.totalGoldEarned,
+      totalDustEarned: result.totalDustEarned,
+      totalXpEarned: result.totalXpEarned,
+      newLevel: result.newProgression.level,
+      newGold: result.newInventory.gold,
+      newDust: result.newInventory.dust,
+      partialRewardsRequested: body.partialRewards ? {
+        gold: body.partialRewards.gold,
+        dust: body.partialRewards.dust,
+        xp: body.partialRewards.xp,
+        finalWave: body.partialRewards.finalWave,
+      } : null,
+      partialRewardsApplied: body.partialRewards ? {
+        gold: result.totalGoldEarned,
+        dust: result.totalDustEarned,
+        xp: result.totalXpEarned,
+      } : null,
+    }, 'Session ended and persisted');
 
     return reply.send(result);
   });

@@ -10,7 +10,13 @@ import {
   createDefaultPlayerPowerData,
   type PillarId,
 } from '@arcade/sim-core';
-import type { SessionStartRequest } from '@arcade/protocol';
+import {
+  GameEventSchema,
+  PowerDataSchema,
+  normalizeHeroId,
+  type PowerData,
+  type SessionStartRequest,
+} from '@arcade/protocol';
 import { getUserProfile } from './auth.js';
 import { upsertLeaderboardEntry } from './leaderboard.js';
 import { addWaveContribution } from './guildTowerRace.js';
@@ -25,6 +31,7 @@ import { getUnlockedPillarsForUser } from './pillarUnlocks.js';
 import { updateLifetimeStats } from './achievements.js';
 import { batchUpdateMissionProgress } from './missions.js';
 import { awardWaveStatPoints, awardLevelUpStatPoints } from './stat-points.js';
+import { invalidateHubPreviewCache } from './hubPreview.js';
 
 /** Simulation tick rate - 30Hz provides smooth gameplay while being computationally manageable */
 const TICK_HZ = 30;
@@ -98,8 +105,30 @@ function sanitizePartialRewards(
     return undefined;
   }
 
+  // CRITICAL FIX: Instead of rejecting when finalWave exceeds max advance,
+  // clamp it to currentWave + MAX_PARTIAL_WAVE_ADVANCE and scale rewards proportionally.
+  // This prevents total progress loss when submitSegment fails due to network issues.
   if (finalWave > currentWave + MAX_PARTIAL_WAVE_ADVANCE) {
-    return undefined;
+    const maxAllowedWave = currentWave + MAX_PARTIAL_WAVE_ADVANCE;
+    const wavesRequested = finalWave - currentWave;
+    const wavesAllowed = maxAllowedWave - currentWave;
+    
+    // Scale rewards proportionally to the allowed wave advance
+    // Example: if user reached wave 34 but only wave 5 is allowed (from wave 0),
+    // scale rewards by 5/34
+    const rawScale = wavesAllowed > 0 && wavesRequested > 0
+      ? wavesAllowed / wavesRequested
+      : 0;
+    // Clamp defensively to [0, 1] to avoid any FP shenanigans
+    const rewardScale = Math.min(1, Math.max(0, rawScale));
+
+    return {
+      // Extra safety: ensure we never exceed MAX_PARTIAL_REWARD even after scaling
+      gold: Math.min(MAX_PARTIAL_REWARD, Math.floor(gold * rewardScale)),
+      dust: Math.min(MAX_PARTIAL_REWARD, Math.floor(dust * rewardScale)),
+      xp: Math.min(MAX_PARTIAL_REWARD, Math.floor(xp * rewardScale)),
+      finalWave: maxAllowedWave,
+    };
   }
 
   return partialRewards;
@@ -249,17 +278,88 @@ export async function startGameSession(
     where: { userId },
   });
 
-  // Parse power data or use defaults
+  // Parse power data or use defaults with schema validation
   const defaultPowerData = createDefaultPlayerPowerData();
-  const powerData = powerUpgradesRecord ? {
-    fortressUpgrades: JSON.parse(powerUpgradesRecord.fortressUpgrades as string),
-    heroUpgrades: JSON.parse(powerUpgradesRecord.heroUpgrades as string),
-    turretUpgrades: JSON.parse(powerUpgradesRecord.turretUpgrades as string),
-    itemTiers: JSON.parse(powerUpgradesRecord.itemTiers as string),
-    // Hero/Turret tier progression (1-3)
-    heroTiers: (powerUpgradesRecord.heroTiers as Record<string, number>) || {},
-    turretTiers: (powerUpgradesRecord.turretTiers as Record<string, number>) || {},
-  } : { ...defaultPowerData, heroTiers: {}, turretTiers: {} };
+  const defaultPowerDataWithTiers: PowerData = {
+    ...defaultPowerData,
+    heroTiers: {},
+    turretTiers: {},
+  };
+  let powerData: PowerData;
+
+  if (powerUpgradesRecord) {
+    // Safely parse and validate each JSON field
+    let parsedFortressUpgrades: unknown;
+    let parsedHeroUpgrades: unknown;
+    let parsedTurretUpgrades: unknown;
+    let parsedItemTiers: unknown;
+
+    try {
+      parsedFortressUpgrades = JSON.parse(powerUpgradesRecord.fortressUpgrades as string);
+    } catch (error) {
+      console.error('[startGameSession] Failed to parse fortressUpgrades JSON', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      parsedFortressUpgrades = defaultPowerData.fortressUpgrades;
+    }
+
+    try {
+      parsedHeroUpgrades = JSON.parse(powerUpgradesRecord.heroUpgrades as string);
+    } catch (error) {
+      console.error('[startGameSession] Failed to parse heroUpgrades JSON', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      parsedHeroUpgrades = defaultPowerData.heroUpgrades;
+    }
+
+    try {
+      parsedTurretUpgrades = JSON.parse(powerUpgradesRecord.turretUpgrades as string);
+    } catch (error) {
+      console.error('[startGameSession] Failed to parse turretUpgrades JSON', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      parsedTurretUpgrades = defaultPowerData.turretUpgrades;
+    }
+
+    try {
+      parsedItemTiers = JSON.parse(powerUpgradesRecord.itemTiers as string);
+    } catch (error) {
+      console.error('[startGameSession] Failed to parse itemTiers JSON', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      parsedItemTiers = defaultPowerData.itemTiers;
+    }
+
+    // Validate parsed data against schema
+    const powerDataToValidate = {
+      fortressUpgrades: parsedFortressUpgrades,
+      heroUpgrades: parsedHeroUpgrades,
+      turretUpgrades: parsedTurretUpgrades,
+      itemTiers: parsedItemTiers,
+      heroTiers: (powerUpgradesRecord.heroTiers as Record<string, number>) || {},
+      turretTiers: (powerUpgradesRecord.turretTiers as Record<string, number>) || {},
+    };
+
+    const validationResult = PowerDataSchema.safeParse(powerDataToValidate);
+    
+    if (!validationResult.success) {
+      console.error('[startGameSession] Power data schema validation failed', {
+        userId,
+        errors: validationResult.error.errors,
+        data: powerDataToValidate,
+      });
+      // Fall back to default power data on validation failure
+      powerData = defaultPowerDataWithTiers;
+    } else {
+      powerData = validationResult.data;
+    }
+  } else {
+    powerData = defaultPowerDataWithTiers;
+  }
 
   // Get equipped artifacts (heroId -> artifactId mapping)
   const equippedArtifactsArray = await prisma.playerArtifact.findMany({
@@ -297,6 +397,30 @@ export async function startGameSession(
   // Condition: user has never completed any waves (highestWave === 0)
   const isFirstRun = user.highestWave === 0;
   const startingRelics = isFirstRun ? ['team-spirit'] : undefined;
+
+  // Validate loadout: reject if client requests heroes/turrets they haven't unlocked
+  const requestedHeroes = (options.startingHeroes ?? []).map(normalizeHeroId);
+  const requestedTurrets = options.startingTurrets ?? [];
+  if (requestedHeroes.length > 0 || requestedTurrets.length > 0) {
+    const unlockedSetH = new Set(profile.unlockedHeroes);
+    const unlockedSetT = new Set(profile.unlockedTurrets);
+    for (const id of requestedHeroes) {
+      if (!unlockedSetH.has(id)) {
+        throw new GameSessionError(
+          'One or more starting heroes are not unlocked',
+          'INVALID_LOADOUT'
+        );
+      }
+    }
+    for (const id of requestedTurrets) {
+      if (!unlockedSetT.has(id)) {
+        throw new GameSessionError(
+          'One or more starting turrets are not unlocked',
+          'INVALID_LOADOUT'
+        );
+      }
+    }
+  }
 
   const { simConfig } = buildSimConfigSnapshot({
     commanderLevel,
@@ -432,9 +556,12 @@ export async function submitSegment(
   newInventory: { gold: number; dust: number; materials?: Record<string, number> };
   newProgression: { level: number; xp: number; totalXp: number; xpToNextLevel: number };
 } | null> {
+  const submitStartTime = Date.now();
+  
   // Verify session token
   const tokenPayload = await verifySessionToken(sessionToken);
   if (!tokenPayload || tokenPayload.sessionId !== sessionId) {
+    console.warn('[submitSegment] Invalid token', { userId, sessionId, tokenValid: !!tokenPayload, tokenSessionId: tokenPayload?.sessionId });
     return null;
   }
 
@@ -463,6 +590,7 @@ export async function submitSegment(
   });
 
   if (!session || session.endedAt) {
+    console.warn('[submitSegment] Session not found or ended', { userId, sessionId, sessionExists: !!session, endedAt: session?.endedAt });
     return null;
   }
 
@@ -472,6 +600,7 @@ export async function submitSegment(
 
   // Validate required relations exist
   if (!session.user.inventory || !session.user.progression) {
+    console.warn('[submitSegment] User data incomplete', { userId, sessionId, hasInventory: !!session.user.inventory, hasProgression: !!session.user.progression });
     return createRejectionResponse(
       'User data incomplete',
       { gold: 0, dust: 0 },
@@ -485,6 +614,13 @@ export async function submitSegment(
 
   // Validate segment boundaries
   if (startWave !== session.lastVerifiedWave) {
+    console.warn('[submitSegment] Invalid segment start wave', {
+      userId,
+      sessionId,
+      startWave,
+      lastVerifiedWave: session.lastVerifiedWave,
+      expectedStartWave: session.lastVerifiedWave,
+    });
     return createRejectionResponse(
       'Invalid segment start wave',
       { gold: inventory.gold, dust: inventory.dust },
@@ -493,12 +629,36 @@ export async function submitSegment(
   }
 
   if (tokenPayload.simVersion !== SIM_VERSION) {
+    console.warn('[submitSegment] SIM_VERSION_MISMATCH', {
+      userId,
+      sessionId,
+      tokenSimVersion: tokenPayload.simVersion,
+      currentSimVersion: SIM_VERSION,
+    });
     return createRejectionResponse(
       'SIM_VERSION_MISMATCH',
       { gold: inventory.gold, dust: inventory.dust },
       { level: progression.level, xp: progression.xp, totalXp: progression.totalXp }
     );
   }
+
+  // Validate events payload against protocol schema to protect simulation
+  const eventsValidation = GameEventSchema.array().safeParse(events);
+  if (!eventsValidation.success) {
+    console.warn('[submitSegment] Invalid events payload', {
+      userId,
+      sessionId,
+      startWave,
+      endWave,
+      issues: eventsValidation.error.issues,
+    });
+    return createRejectionResponse(
+      'Invalid events payload',
+      { gold: inventory.gold, dust: inventory.dust },
+      { level: progression.level, xp: progression.xp, totalXp: progression.totalXp }
+    );
+  }
+  const validatedEvents = eventsValidation.data;
 
   // Replay and verify segment
   let sim: Simulation;
@@ -518,7 +678,8 @@ export async function submitSegment(
     config.tickHz = TICK_HZ;
 
     sim = new Simulation(session.seed, config);
-    sim.setEvents(events as any[]);
+    // Use validated events only
+    sim.setEvents(validatedEvents as any[]);
     sim.setAuditTicks(tokenPayload.segmentAuditTicks);
 
     // Run simulation until we reach end wave or game ends
@@ -531,6 +692,14 @@ export async function submitSegment(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown simulation error';
+    console.error('[submitSegment] Simulation replay failed', {
+      userId,
+      sessionId,
+      startWave,
+      endWave,
+      error: message,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return createRejectionResponse(
       `Simulation replay failed: ${message}`,
       { gold: inventory.gold, dust: inventory.dust },
@@ -539,6 +708,14 @@ export async function submitSegment(
   }
 
   if (sim.state.tick >= maxTicks) {
+    console.warn('[submitSegment] SEGMENT_TICK_CAP', {
+      userId,
+      sessionId,
+      startWave,
+      endWave,
+      tick: sim.state.tick,
+      maxTicks,
+    });
     return createRejectionResponse(
       'SEGMENT_TICK_CAP',
       { gold: inventory.gold, dust: inventory.dust },
@@ -548,6 +725,14 @@ export async function submitSegment(
 
   const computedEndWave = sim.state.wave;
   if (computedEndWave !== endWave) {
+    console.warn('[submitSegment] END_WAVE_MISMATCH', {
+      userId,
+      sessionId,
+      startWave,
+      endWave,
+      computedEndWave,
+      expectedEndWave: endWave,
+    });
     return createRejectionResponse(
       'END_WAVE_MISMATCH',
       { gold: inventory.gold, dust: inventory.dust },
@@ -558,6 +743,14 @@ export async function submitSegment(
   // Verify final hash
   const computedHash = sim.getFinalHash();
   if (computedHash !== finalHash) {
+    console.warn('[submitSegment] Hash mismatch', {
+      userId,
+      sessionId,
+      startWave,
+      endWave,
+      computedHash,
+      providedHash: finalHash,
+    });
     return createRejectionResponse(
       'Hash mismatch',
       { gold: inventory.gold, dust: inventory.dust },
@@ -578,15 +771,52 @@ export async function submitSegment(
   const xpEarned = Math.floor(sim.state.segmentXpEarned * xpMultiplier);
   const materialsEarned = sim.state.segmentMaterialsEarned || {};
 
+  // Calculate new highest wave before transaction (needed for cache invalidation)
+  const newHighestWave = Math.max(session.user.highestWave, computedEndWave);
+
   // Update inventory and session in transaction
-  const result = await prisma.$transaction(async (tx) => {
+  const dbStartTime = Date.now();
+  const result = await prisma.$transaction(
+    async (tx) => {
+      // Re-fetch session inside transaction to guard against concurrent updates
+    const latestSession = await tx.gameSession.findUnique({
+      where: { id: sessionId },
+      select: {
+        lastVerifiedWave: true,
+        endedAt: true,
+      },
+    });
+
+    if (!latestSession || latestSession.endedAt) {
+      console.warn('[submitSegment] Session not found or ended during transaction', {
+        userId,
+        sessionId,
+        startWave,
+        endWave,
+      });
+      throw new GameSessionError('Session ended during segment submit', 'SESSION_FORBIDDEN');
+    }
+
+    if (latestSession.lastVerifiedWave !== startWave) {
+      console.warn('[submitSegment] Concurrent segment update detected', {
+        userId,
+        sessionId,
+        startWave,
+        endWave,
+        expectedLastVerifiedWave: startWave,
+        actualLastVerifiedWave: latestSession.lastVerifiedWave,
+      });
+      // Treat as forbidden to avoid double-spend of rewards
+      throw new GameSessionError('Concurrent segment update', 'SESSION_FORBIDDEN');
+    }
+
     // Create segment record
     await tx.segment.create({
       data: {
         gameSessionId: sessionId,
         startWave,
         endWave: computedEndWave,
-        eventsJson: events as Prisma.InputJsonValue,
+        eventsJson: validatedEvents as Prisma.InputJsonValue,
         checkpointsJson: checkpoints as Prisma.InputJsonValue,
         finalHash,
         verified: true,
@@ -610,7 +840,6 @@ export async function submitSegment(
     });
 
     // Update user's wave progress
-    const newHighestWave = Math.max(session.user.highestWave, computedEndWave);
     await tx.user.update({
       where: { id: session.userId },
       data: {
@@ -619,28 +848,34 @@ export async function submitSegment(
       },
     });
 
-    // Update inventory (gold & dust)
-    let newInventory = await tx.inventory.update({
-      where: { userId: session.userId },
-      data: {
-        gold: { increment: goldEarned },
-        dust: { increment: dustEarned },
-      },
-    });
+    // Update inventory (gold, dust, and materials in a single write to reduce lock time)
+    const hasMaterials = Object.keys(materialsEarned).length > 0;
+    let newInventory: { gold: number; dust: number; materials: unknown };
 
-    // Merge materials if any were earned
-    if (Object.keys(materialsEarned).length > 0) {
-      const currentMaterials = (newInventory.materials as Record<string, number>) || {};
+    if (hasMaterials) {
+      const currentInv = await tx.inventory.findUnique({
+        where: { userId: session.userId },
+        select: { materials: true },
+      });
+      const currentMaterials = (currentInv?.materials as Record<string, number>) || {};
       const updatedMaterials = { ...currentMaterials };
-
       for (const [materialId, amount] of Object.entries(materialsEarned)) {
         updatedMaterials[materialId] = (updatedMaterials[materialId] || 0) + amount;
       }
-
       newInventory = await tx.inventory.update({
         where: { userId: session.userId },
         data: {
-          materials: updatedMaterials,
+          gold: { increment: goldEarned },
+          dust: { increment: dustEarned },
+          materials: updatedMaterials as Prisma.InputJsonValue,
+        },
+      });
+    } else {
+      newInventory = await tx.inventory.update({
+        where: { userId: session.userId },
+        data: {
+          gold: { increment: goldEarned },
+          dust: { increment: dustEarned },
         },
       });
     }
@@ -675,7 +910,39 @@ export async function submitSegment(
         xpToNextLevel: getXpForLevel(newProgression.level) - newProgression.xp,
       },
     };
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    },
+  );
+  const dbLatency = Date.now() - dbStartTime;
+  const totalLatency = Date.now() - submitStartTime;
+
+  // Log successful segment persistence
+  console.info('[submitSegment] Segment persisted to DB', {
+    userId,
+    sessionId,
+    startWave,
+    endWave: computedEndWave,
+    wavesCompleted: computedEndWave - startWave,
+    goldEarned,
+    dustEarned,
+    xpEarned,
+    newLevel: result.newProgression.level,
+    newGold: result.newInventory.gold,
+    newDust: result.newInventory.dust,
+    oldHighestWave: session.user.highestWave,
+    newHighestWave,
+    dbLatency,
+    totalLatency,
   });
+
+  // Invalidate hub preview cache after highestWave update
+  try {
+    await invalidateHubPreviewCache(session.userId);
+  } catch (error) {
+    console.warn('Failed to invalidate hub preview cache after segment submission', { userId: session.userId, error });
+  }
 
   // Generate next segment audit ticks
   const nextSegmentAuditTicks = generateSegmentAuditTicks(SEGMENT_SIZE, TICK_HZ);
@@ -843,6 +1110,29 @@ export async function endGameSession(
 
   const sanitizedPartialRewards = sanitizePartialRewards(partialRewards, session.currentWave);
 
+  // Log partial rewards sanitization (critical for debugging wave persistence issues)
+  if (partialRewards && (!sanitizedPartialRewards || sanitizedPartialRewards.finalWave !== partialRewards.finalWave)) {
+    console.warn('[endGameSession] Partial rewards sanitized/rejected', {
+      userId,
+      sessionId,
+      currentWave: session.currentWave,
+      requestedFinalWave: partialRewards.finalWave,
+      requestedGold: partialRewards.gold,
+      requestedDust: partialRewards.dust,
+      requestedXp: partialRewards.xp,
+      sanitizedFinalWave: sanitizedPartialRewards?.finalWave ?? null,
+      sanitizedGold: sanitizedPartialRewards?.gold ?? null,
+      sanitizedDust: sanitizedPartialRewards?.dust ?? null,
+      sanitizedXp: sanitizedPartialRewards?.xp ?? null,
+      maxAdvance: MAX_PARTIAL_WAVE_ADVANCE,
+      reason: !sanitizedPartialRewards
+        ? 'rejected (invalid values or exceeds max advance)'
+        : sanitizedPartialRewards.finalWave !== partialRewards.finalWave
+        ? `finalWave clamped from ${partialRewards.finalWave} to ${sanitizedPartialRewards.finalWave} (max advance: ${MAX_PARTIAL_WAVE_ADVANCE})`
+        : 'sanitized',
+    });
+  }
+
   // Calculate XP to apply from partial rewards (with multipliers)
   let partialXpToApply = 0;
   let partialGoldToApply = 0;
@@ -878,6 +1168,7 @@ export async function endGameSession(
   }
 
   // Update session, user wave progress, inventory, progression, and clear active session
+  const dbStartTime = Date.now();
   const result = await prisma.$transaction(async (tx) => {
     // Update session
     await tx.gameSession.update({
@@ -944,6 +1235,37 @@ export async function endGameSession(
 
     return { updatedInventory, updatedProgression };
   });
+  const dbLatency = Date.now() - dbStartTime;
+
+  // Log successful session end persistence
+  console.info('[endGameSession] Session ended and persisted to DB', {
+    userId,
+    sessionId,
+    reason,
+    startingWave: session.startingWave,
+    finalWave,
+    wavesCleared: finalWave - session.startingWave,
+    oldHighestWave: session.user.highestWave,
+    newHighestWave: Math.max(session.user.highestWave, finalWave),
+    totalGoldEarned,
+    totalDustEarned,
+    totalXpEarned,
+    newLevel: result.updatedProgression.level,
+    newGold: result.updatedInventory?.gold ?? 0,
+    newDust: result.updatedInventory?.dust ?? 0,
+    partialRewardsApplied: !!sanitizedPartialRewards,
+    partialGoldApplied: partialGoldToApply,
+    partialDustApplied: partialDustToApply,
+    partialXpApplied: partialXpToApply,
+    dbLatency,
+  });
+
+  // Invalidate hub preview cache after highestWave update
+  try {
+    await invalidateHubPreviewCache(session.userId);
+  } catch (error) {
+    console.warn('Failed to invalidate hub preview cache after session end', { userId: session.userId, error });
+  }
 
   // Update leaderboard with final wave as score
   await upsertLeaderboardEntry(session.userId, sessionId, finalWave);
