@@ -12,6 +12,8 @@ import {
   formatDamageCompact,
   BOSS_RUSH_MILESTONES,
 } from '../../state/index.js';
+import { DamageIcon, RangeIcon } from '../icons/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './BossRushHUD.module.css';
 
 /** Pillar emoji lookup */
@@ -25,6 +27,8 @@ const PILLAR_EMOJIS: Record<string, string> = {
 };
 
 export function BossRushHUD() {
+  const { t } = useTranslation('game');
+
   if (!bossRushActive.value) {
     return null;
   }
@@ -38,14 +42,14 @@ export function BossRushHUD() {
       {/* Collapsed view */}
       <div class={styles.collapsedView}>
         <div class={styles.statRow}>
-          <span class={styles.icon}>⚔️</span>
+          <DamageIcon size={18} className={styles.icon} />
           <span class={styles.value}>{formatDamageCompact(totalDamageDealt.value)}</span>
-          <span class={styles.label}>DMG</span>
+          <span class={styles.label}>{t('bossRush.hud.dmg')}</span>
         </div>
         <div class={styles.statRow}>
-          <span class={styles.icon}>🎯</span>
+          <RangeIcon size={18} className={styles.icon} />
           <span class={styles.value}>{bossesKilled.value}</span>
-          <span class={styles.label}>Bossów</span>
+          <span class={styles.label}>{t('bossRush.hud.bossesLabel')}</span>
         </div>
         <div class={styles.statRow}>
           <span class={styles.icon}>⏱️</span>
@@ -65,7 +69,10 @@ export function BossRushHUD() {
         <div class={styles.expandedView}>
           {/* Total Damage Section */}
           <div class={styles.section}>
-            <div class={styles.sectionHeader}>⚔️ TOTAL DAMAGE</div>
+            <div class={styles.sectionHeader}>
+              <DamageIcon size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+              {t('bossRush.hud.totalDamage')}
+            </div>
             <div class={styles.bigValue}>{formatDamage(totalDamageDealt.value)}</div>
             {damagePerSecond.value > 0 && (
               <div class={styles.dps}>(+{formatDamageCompact(damagePerSecond.value)} DPS)</div>
@@ -74,15 +81,18 @@ export function BossRushHUD() {
 
           {/* Bosses Killed Section */}
           <div class={styles.section}>
-            <div class={styles.sectionHeader}>🎯 BOSSES KILLED</div>
+            <div class={styles.sectionHeader}>
+              <RangeIcon size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+              {t('bossRush.hud.bossesKilled')}
+            </div>
             <div class={styles.bigValue}>{bossesKilled.value}</div>
-            <div class={styles.cycleInfo}>Cycle {currentCycle.value + 1}</div>
+            <div class={styles.cycleInfo}>{t('bossRush.hud.cycle', { cycle: currentCycle.value + 1 })}</div>
           </div>
 
           {/* Damage Breakdown */}
           {history.length > 0 && (
             <div class={styles.section}>
-              <div class={styles.sectionHeader}>📈 DAMAGE BREAKDOWN</div>
+              <div class={styles.sectionHeader}>📈 {t('bossRush.hud.damageBreakdown')}</div>
               <div class={styles.damageList}>
                 {history.slice(-5).map((entry, index) => (
                   <div key={`${entry.bossIndex}-${index}`} class={styles.damageEntry}>
@@ -105,7 +115,7 @@ export function BossRushHUD() {
 
           {/* Milestones Section */}
           <div class={styles.section}>
-            <div class={styles.sectionHeader}>🏆 MILESTONES</div>
+            <div class={styles.sectionHeader}>🏆 {t('bossRush.hud.milestones')}</div>
             <div class={styles.milestoneList}>
               {milestones.map((milestone, index) => {
                 const achieved = achievedMilestones.value.includes(index);
@@ -120,7 +130,7 @@ export function BossRushHUD() {
                       {achieved ? '✅' : '⬜'}
                     </span>
                     <span class={styles.milestoneLabel}>
-                      {milestone.bosses} Bossów
+                      {t('bossRush.hud.bossesCount', { count: milestone.bosses })}
                     </span>
                     {!achieved && (
                       <div class={styles.progressBar}>

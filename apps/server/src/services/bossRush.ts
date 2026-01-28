@@ -17,6 +17,7 @@ import { upsertBossRushLeaderboardEntry, getUserBossRushRank } from './bossRushL
 import { getCurrentWeekKey } from '../lib/queue.js';
 import { addPoints as addBattlePassPoints } from './battlepass.js';
 import { updateLifetimeStats } from './achievements.js';
+import { updateMissionProgress } from './missions.js';
 
 /** Simulation tick rate */
 const TICK_HZ = 30;
@@ -444,6 +445,11 @@ export async function finishBossRushSession(
     bossKills: summary.bossesKilled,
     bossRushCycles: 1,
     damageDealt: Math.floor(summary.totalDamageDealt).toString(),
+  });
+
+  // Update mission progress for boss rush (non-blocking)
+  updateMissionProgress(userId, 'boss_rush_cycles', 1).catch((err) => {
+    console.error('Failed to update boss rush mission progress:', err);
   });
 
   return {

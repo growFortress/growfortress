@@ -2,6 +2,7 @@ import { Container, Text, TextStyle } from 'pixi.js';
 import type { Particle, FloatingText } from '../types.js';
 import type { ParticleFactory } from '../particleFactory.js';
 import type { ParticlePool } from '../particlePool.js';
+import type { TimeoutRegistry } from '../timeoutRegistry.js';
 import { DAMAGE_TEXT_CONFIG, CRIT_TEXT_CONFIG, STREAK_CONFIGS, COMBO_CONFIGS } from '../config.js';
 import { filterManager } from '../../../effects/FilterManager.js';
 import i18n from '../../../../i18n/index.js';
@@ -20,7 +21,8 @@ export class TextEffects {
     private container: Container,
     private floatingTexts: FloatingText[],
     private triggerScreenShake: (intensity: number, duration: number) => void,
-    private damageNumbersEnabled: () => boolean
+    private damageNumbersEnabled: () => boolean,
+    private timeoutRegistry: TimeoutRegistry
   ) {}
 
   /**
@@ -216,7 +218,7 @@ export class TextEffects {
 
     // Show bonus damage if provided
     if (bonusDamage && bonusDamage > 0) {
-      setTimeout(() => {
+      this.timeoutRegistry.setTimeout(() => {
         this.spawnDamageNumber(x, y, bonusDamage, { isCrit: true });
       }, 100);
     }

@@ -1,22 +1,22 @@
+/* Sci-Fi HUD: Side panel with solid background and holographic edge */
 .panel {
   position: fixed;
   top: 0;
+  bottom: 0;
   right: 0;
-  height: 100vh;
-  width: min(360px, 100vw);
-  background: var(--color-bg-panel);
+  width: min(var(--panel-sidebar-width), 100vw);
+  background: var(--hud-bg-solid);
   border: none;
-  border-left: 1px solid var(--color-primary-30);
+  border-left: var(--hud-border-active);
   border-radius: 0;
-  padding: 20px;
+  padding: var(--hud-spacing-lg);
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+  gap: var(--hud-spacing-md);
+  box-shadow: var(--holo-edge-primary), -10px 0 40px rgba(0, 0, 0, 0.5);
   overflow-y: auto;
-  backdrop-filter: blur(12px);
   z-index: var(--z-panels, 50);
-  --panel-width: min(360px, 100vw);
+  --panel-width: min(var(--panel-sidebar-width), 100vw);
 }
 
 .panel::-webkit-scrollbar {
@@ -68,20 +68,20 @@
 
 .fortressLabel {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--color-text-40);
+  color: var(--color-text-50);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .fortressClassName {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--class-color, var(--color-primary));
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .fortressActions {
@@ -148,30 +148,30 @@
 
 .powerLabel {
   font-family: var(--font-display);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--color-text-40);
+  color: var(--color-text-50);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
 }
 
 .powerValueWrapper {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .powerIcon {
-  font-size: 16px;
-  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
 }
 
 .powerValue {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 26px;
   font-weight: bold;
   color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
 }
 
 /* ==================== SECTIONS ==================== */
@@ -190,11 +190,11 @@
 
 .sectionTitle {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: var(--hud-font-sm);
   font-weight: 800;
-  color: var(--color-text-40);
+  color: var(--color-text-50);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   white-space: nowrap;
 }
 
@@ -215,10 +215,10 @@
   background: var(--color-bg);
   border: 1px solid var(--color-bg-elevated);
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: var(--hud-spacing-md);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--hud-spacing-sm);
   transition: all var(--duration-fast) var(--ease-standard);
 }
 
@@ -234,19 +234,36 @@
 }
 
 .upgradeIcon {
-  font-size: 18px;
-  width: 28px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--hud-button-size);
+  height: var(--hud-button-size);
+  flex-shrink: 0;
+}
+
+.upgradeNameGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .upgradeName {
-  flex: 1;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--color-text);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+}
+
+.upgradeDescription {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-50);
+  letter-spacing: 0.3px;
 }
 
 .upgradeLevel {
@@ -282,8 +299,8 @@
 
 .statValue {
   font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--color-text);
   cursor: default;
 }
@@ -379,19 +396,19 @@
 
 .profileLabel {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--color-text-40);
+  color: var(--color-text-50);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .playerNameValue {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-primary);
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
 }
 
 .guildTag {
@@ -546,96 +563,10 @@
   animation-delay: 0.1s;
 }
 
-/* ==================== MOBILE RESPONSIVE ==================== */
-@media (max-width: 768px) {
-  .panel {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: auto;
-    max-height: 55vh;
-    border-left: none;
-    border-top: 1px solid var(--color-primary-30);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 16px;
-    gap: 12px;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-    --panel-width: 0;
-  }
-
-  .fortressContent {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .fortressHeader {
-    gap: 10px;
-  }
-
-  .fortressClassName {
-    font-size: 14px;
-  }
-
-  .powerBadge {
-    padding: 8px 10px;
-  }
-
-  .powerValue {
-    font-size: 14px;
-  }
-
-  .upgradeCard {
-    padding: 10px;
-    gap: 6px;
-  }
-
-  .upgradeIcon {
-    font-size: 16px;
-    width: 24px;
-  }
-
-  .upgradeName {
-    font-size: 11px;
-  }
-
-  .profileContent {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .profileRow {
-    padding: 4px 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .panel {
-    padding: 12px;
-    max-height: 50vh;
-  }
-
-  .fortressHeader {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .fortressInfo {
-    flex: 1 1 100%;
-  }
-
-  .powerBadge {
-    flex: 0 0 auto;
-  }
-
-  .profileRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-}
+/* ==================== RESPONSIVE ==================== */
+/* Scaling is handled by CSS variables in theme.css */
+/* Panel width automatically adjusts via --panel-sidebar-width */
+/* Sidebar stays as sidebar on all supported breakpoints (768px+) */
 
 /* ==================== REDUCED MOTION ==================== */
 @media (prefers-reduced-motion: reduce) {

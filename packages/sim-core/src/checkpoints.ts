@@ -295,7 +295,7 @@ export function computeCheckpointHash(state: GameState): number {
     appendString(data, projectile.type);
     appendString(data, projectile.sourceType);
     appendSourceId(data, projectile.sourceId);
-    appendNumber(data, projectile.targetEnemyId);
+    appendNumber(data, projectile.targetEnemyId ?? -1); // -1 for manual shots without target enemy
     appendNumber(data, projectile.x);
     appendNumber(data, projectile.y);
     appendNumber(data, projectile.startX);

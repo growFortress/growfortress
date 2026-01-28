@@ -1,4 +1,5 @@
 import { useEffect } from "preact/hooks";
+import { effect } from "@preact/signals";
 import { tutorialPauseRequested } from "../state/tutorial.signals.js";
 import { gamePhase } from "../state/index.js";
 
@@ -10,20 +11,28 @@ export function useTutorialPause(
   pauseForTutorial: () => void,
   resumeFromTutorial: () => void
 ): void {
+  // Use @preact/signals effect() to properly react to signal changes
   useEffect(() => {
-    // Only manage pause during playing phase
-    if (gamePhase.value !== "playing") {
-      return;
-    }
+    const dispose = effect(() => {
+      const phase = gamePhase.value;
+      const pauseRequested = tutorialPauseRequested.value;
 
-    if (tutorialPauseRequested.value) {
-      pauseForTutorial();
-    } else {
-      resumeFromTutorial();
-    }
-  }, [tutorialPauseRequested.value, gamePhase.value, pauseForTutorial, resumeFromTutorial]);
+      // Only manage pause during playing phase
+      if (phase !== "playing") {
+        return;
+      }
 
-  // Clean up: ensure we resume when unmounting or leaving playing phase
+      if (pauseRequested) {
+        pauseForTutorial();
+      } else {
+        resumeFromTutorial();
+      }
+    });
+
+    return dispose;
+  }, [pauseForTutorial, resumeFromTutorial]);
+
+  // Clean up: ensure we resume when unmounting
   useEffect(() => {
     return () => {
       if (tutorialPauseRequested.value) {

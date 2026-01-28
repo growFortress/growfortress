@@ -1,10 +1,11 @@
 import type { CSSProperties } from "preact/compat";
 import { createPortal } from "preact/compat";
-import { useEffect, useState, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useState, useRef } from "preact/hooks";
 import {
   activeTutorialTip,
   dismissCurrentTip,
   completeInteractiveTip,
+  skipAllTutorials,
 } from "../../state/tutorial.signals.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
 import { useTutorialCompletion, isInteractiveTip } from "../../hooks/useTutorialCompletion.js";
@@ -70,8 +71,8 @@ export function TutorialHighlight() {
   // Check if this is an interactive tip
   const isInteractive = isInteractiveTip(tip);
 
-  // Find highlighted element
-  useEffect(() => {
+  // Find highlighted element - use useLayoutEffect to avoid visual jump
+  useLayoutEffect(() => {
     if (!tip) {
       setTargetRect(null);
       return undefined;
@@ -165,6 +166,10 @@ export function TutorialHighlight() {
 
   if (!tip) return null;
 
+  // Don't render until we have the target rect (prevents position jump)
+  // Only applies when highlightRef is set - centered tips render immediately
+  if (tip.highlightRef && !targetRect) return null;
+
   const tooltipStyle = getTooltipPosition(tip.position, targetRect);
 
   // Button text differs for interactive tips
@@ -204,6 +209,12 @@ export function TutorialHighlight() {
         {isInteractive && (
           <button class={styles.skipLink} onClick={handleDismiss}>
             {t("tutorial.skip", { defaultValue: "Skip for now" })}
+          </button>
+        )}
+        {/* Skip All Tutorials button - only on first step */}
+        {tip.id === "welcome_intro" && (
+          <button class={styles.skipAllBtn} onClick={() => skipAllTutorials()}>
+            {t("tutorial.skipAll", { defaultValue: "Skip All Tutorials" })}
           </button>
         )}
       </div>

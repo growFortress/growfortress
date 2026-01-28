@@ -15,7 +15,7 @@ const STANDARD_SKILLS: SkillDefinition[] = [
   {
     id: 'earthquake',
     name: 'Fala Uderzeniowa',
-    description: 'Wysyła falę uderzeniową zadającą obrażenia i spowalniającą wrogów',
+    description: 'Wysyła falę uderzeniową zadającą obrażenia i mocno spowalniającą wrogów',
     cooldownTicks: 450, // 15s
     damage: 40,
     radius: 15,
@@ -23,7 +23,7 @@ const STANDARD_SKILLS: SkillDefinition[] = [
     requiresTarget: true,
     effects: [
       { type: 'damage', amount: 40, target: 'area' },
-      { type: 'slow', percent: 30, duration: 90 }
+      { type: 'slow', percent: 45, duration: 150 }
     ]
   },
   {

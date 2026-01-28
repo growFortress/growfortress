@@ -26,6 +26,8 @@ import {
 import { showSuccessToast } from '../../state/ui.signals.js';
 import { Button } from '../shared/Button.js';
 import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
+import { DamageIcon, ArmorIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './GuildPanel.module.css';
 
 interface GuildMembersTabProps {
@@ -360,14 +362,14 @@ function MemberCard({ member, currentMembership, guildId, onRefresh }: MemberCar
     }
   };
 
-  const getRoleIcon = (role: string) => {
+  const getRoleIcon = (role: string): ComponentChildren => {
     switch (role) {
       case 'LEADER':
         return '👑';
       case 'OFFICER':
-        return '⚔️';
+        return <DamageIcon size={18} />;
       default:
-        return '🛡️';
+        return <ArmorIcon size={18} />;
     }
   };
 

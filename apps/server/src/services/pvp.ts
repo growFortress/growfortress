@@ -24,6 +24,7 @@ import { recordWeeklyHonorGain } from "./playerLeaderboard.js";
 import { isUserConnected } from "./websocket.js";
 import { addArtifact } from "./artifacts.js";
 import { updateLifetimeStats } from "./achievements.js";
+import { updateMissionProgress } from "./missions.js";
 
 // ============================================================================
 // ERROR CLASS
@@ -1229,6 +1230,14 @@ export async function resolveChallenge(
       pvpVictories: challengedIsWinner ? 1 : 0,
     }),
   ]);
+
+  // Update mission progress for both players (non-blocking)
+  Promise.all([
+    updateMissionProgress(challenge.challengerId, 'pvp_battles', 1),
+    updateMissionProgress(challenge.challengedId, 'pvp_battles', 1),
+  ]).catch((err) => {
+    console.error('Failed to update PvP mission progress:', err);
+  });
 
   let challengerRewardArtifactId = challengerArtifactId;
   if (challengerArtifactId) {

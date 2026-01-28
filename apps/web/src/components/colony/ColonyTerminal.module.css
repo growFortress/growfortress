@@ -201,10 +201,6 @@
   background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
 }
 
-.card:hover {
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
-}
 
 .card.locked {
   opacity: 0.5;

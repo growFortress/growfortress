@@ -15,6 +15,7 @@ import {
   type ArenaState,
   type ArenaBuildConfig,
 } from '@arcade/sim-core';
+import { DamageIcon } from '../icons/index.js';
 import styles from './PvpReplayViewer.module.css';
 
 const REPLAY_SPEEDS = [0.5, 1, 2, 4, 8];
@@ -240,7 +241,7 @@ export function PvpReplayViewer() {
                       class={`${styles.hero} ${hero.currentHp <= 0 ? styles.heroDead : ''}`}
                       title={`${hero.definitionId}: ${hero.currentHp} HP`}
                     >
-                      ⚔️
+                      <DamageIcon size={20} />
                     </div>
                   ))}
                 </div>
@@ -279,7 +280,7 @@ export function PvpReplayViewer() {
                       class={`${styles.hero} ${hero.currentHp <= 0 ? styles.heroDead : ''}`}
                       title={`${hero.definitionId}: ${hero.currentHp} HP`}
                     >
-                      ⚔️
+                      <DamageIcon size={20} />
                     </div>
                   ))}
                 </div>

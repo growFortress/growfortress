@@ -29,6 +29,7 @@ import {
 import { speedSettings, toggleAutoRestart } from '../../state/settings.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { getRelicById } from '@arcade/sim-core';
+import { DamageIcon, RangeIcon, CritChanceIcon } from '../icons/index.js';
 import styles from './BossRushEndScreen.module.css';
 
 /** Pillar emoji lookup */
@@ -127,13 +128,13 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
       {/* Summary Box */}
       <div class={styles.summaryBox}>
         <div class={styles.summaryRow}>
-          <span class={styles.summaryIcon}>⚔️</span>
+          <DamageIcon size={20} className={styles.summaryIcon} />
           <span class={styles.summaryLabel}>{t('bossRushEnd.totalDamage')}</span>
           <span class={styles.summaryValue}>{formatDamage(totalDamageDealt.value)}</span>
           {isNewBest && <span class={styles.newBest}>{t('bossRushEnd.newBest')}</span>}
         </div>
         <div class={styles.summaryRow}>
-          <span class={styles.summaryIcon}>🎯</span>
+          <RangeIcon size={20} className={styles.summaryIcon} />
           <span class={styles.summaryLabel}>{t('bossRushEnd.bossesKilled')}</span>
           <span class={styles.summaryValue}>
             {t('bossRushEnd.bossesKilledValue', { count: bossesKilled.value, cycle: currentCycle.value + 1 })}
@@ -179,13 +180,13 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
       {/* Roguelike Run Stats */}
       {(bossRushCollectedRelics.value.length > 0 || bossRushSynergiesActivated.value > 0) && (
         <div class={styles.section}>
-          <h3 class={styles.sectionTitle}>Run Stats</h3>
+          <h3 class={styles.sectionTitle}>{t('bossRushEnd.runStats.title')}</h3>
           <div class={styles.runStats}>
             {/* Relics Collected */}
             {bossRushCollectedRelics.value.length > 0 && (
               <div class={styles.runStatRow}>
                 <span class={styles.runStatIcon}>🔮</span>
-                <span class={styles.runStatLabel}>Relics Collected</span>
+                <span class={styles.runStatLabel}>{t('bossRushEnd.runStats.relicsCollected')}</span>
                 <span class={styles.runStatValue}>{bossRushCollectedRelics.value.length}</span>
               </div>
             )}
@@ -193,15 +194,15 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
             {bossRushSynergiesActivated.value > 0 && (
               <div class={styles.runStatRow}>
                 <span class={styles.runStatIcon}>🔗</span>
-                <span class={styles.runStatLabel}>Synergies Activated</span>
+                <span class={styles.runStatLabel}>{t('bossRushEnd.runStats.synergiesActivated')}</span>
                 <span class={styles.runStatValue}>{bossRushSynergiesActivated.value}</span>
               </div>
             )}
             {/* Best Single Hit */}
             {bossRushBestSingleHit.value > 0 && (
               <div class={styles.runStatRow}>
-                <span class={styles.runStatIcon}>💥</span>
-                <span class={styles.runStatLabel}>Best Single Hit</span>
+                <CritChanceIcon size={18} className={styles.runStatIcon} />
+                <span class={styles.runStatLabel}>{t('bossRushEnd.runStats.bestSingleHit')}</span>
                 <span class={styles.runStatValue}>{formatDamageCompact(bossRushBestSingleHit.value)}</span>
               </div>
             )}
@@ -209,7 +210,7 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
             {bossRushGoldSpent.value > 0 && (
               <div class={styles.runStatRow}>
                 <span class={styles.runStatIcon}>🪙</span>
-                <span class={styles.runStatLabel}>Gold Spent</span>
+                <span class={styles.runStatLabel}>{t('bossRushEnd.runStats.goldSpent')}</span>
                 <span class={styles.runStatValue}>{formatDamage(bossRushGoldSpent.value)}</span>
               </div>
             )}
@@ -217,7 +218,7 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
             {bossRushTotalHealing.value > 0 && (
               <div class={styles.runStatRow}>
                 <span class={styles.runStatIcon}>💚</span>
-                <span class={styles.runStatLabel}>HP Healed</span>
+                <span class={styles.runStatLabel}>{t('bossRushEnd.runStats.hpHealed')}</span>
                 <span class={styles.runStatValue}>{formatDamage(bossRushTotalHealing.value)}</span>
               </div>
             )}
@@ -225,7 +226,7 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
             {bossRushRerollsUsed.value > 0 && (
               <div class={styles.runStatRow}>
                 <span class={styles.runStatIcon}>🎲</span>
-                <span class={styles.runStatLabel}>Relic Rerolls</span>
+                <span class={styles.runStatLabel}>{t('bossRushEnd.runStats.relicRerolls')}</span>
                 <span class={styles.runStatValue}>{bossRushRerollsUsed.value}</span>
               </div>
             )}
@@ -234,7 +235,7 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
           {/* Collected Relics List */}
           {bossRushCollectedRelics.value.length > 0 && (
             <div class={styles.relicsList}>
-              <h4 class={styles.relicsListTitle}>Collected Relics</h4>
+              <h4 class={styles.relicsListTitle}>{t('bossRushEnd.runStats.collectedRelics')}</h4>
               <div class={styles.relicsGrid}>
                 {bossRushCollectedRelics.value.map(relicId => {
                   const relic = getRelicById(relicId);
@@ -307,14 +308,14 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
       {countdown !== null && countdown > 0 && (
         <div class={styles.autoRestartIndicator}>
           <span class={styles.autoRestartText}>
-            🔄 Auto-restart in {countdown}s
+            🔄 {t('bossRushEnd.autoRestart.countdown', { seconds: countdown })}
           </span>
           <button
             type="button"
             class={styles.cancelAutoRestart}
             onClick={cancelAutoRestart}
           >
-            ✕ Cancel
+            ✕ {t('bossRushEnd.autoRestart.cancel')}
           </button>
         </div>
       )}
@@ -339,9 +340,9 @@ export function BossRushEndScreen({ onPlayAgain, onMenu }: BossRushEndScreenProp
             class={styles.toggleCheckbox}
           />
           <span class={styles.toggleText}>
-            🤖 Auto-restart {autoRestartEnabled ? 'ON' : 'OFF'}
+            🤖 {t('bossRushEnd.autoRestart.toggle')} {autoRestartEnabled ? t('bossRushEnd.autoRestart.on') : t('bossRushEnd.autoRestart.off')}
             {autoRestartEnabled && !hasEnergy.value && (
-              <span class={styles.noEnergy}> (no energy)</span>
+              <span class={styles.noEnergy}> {t('bossRushEnd.autoRestart.noEnergy')}</span>
             )}
           </span>
         </label>

@@ -7,7 +7,7 @@ import { HeroAvatar } from '../../shared/HeroAvatar.js';
 import { Button } from '../../shared/Button.js';
 import { SkillCard } from './SkillCard.js';
 import { useTranslation } from '../../../i18n/useTranslation.js';
-import { DustIcon } from '../../icons/index.js';
+import { DustIcon, HpIcon, DamageIcon, SpeedIcon } from '../../icons/index.js';
 import styles from './TierPreviewModal.module.css';
 
 // Class colors
@@ -157,21 +157,21 @@ export function TierPreviewModal({
               <div class={styles.cardHeader}>{t('heroDetails.statChanges')}</div>
               <div class={styles.statDeltaCompact}>
                 <div class={styles.statDeltaItem}>
-                  <span class={styles.statDeltaIcon}>❤️</span>
+                  <HpIcon size={18} className={styles.statDeltaIcon} />
                   <span class={styles.statDeltaValues}>
                     {Math.round(statDeltas.hp.from)} → <strong>{Math.round(statDeltas.hp.to)}</strong>
                   </span>
                   <span class={styles.statDeltaBadge}>+{Math.round(statDeltas.hp.delta)}</span>
                 </div>
                 <div class={styles.statDeltaItem}>
-                  <span class={styles.statDeltaIcon}>⚔️</span>
+                  <DamageIcon size={18} className={styles.statDeltaIcon} />
                   <span class={styles.statDeltaValues}>
                     {Math.round(statDeltas.damage.from)} → <strong>{Math.round(statDeltas.damage.to)}</strong>
                   </span>
                   <span class={styles.statDeltaBadge}>+{Math.round(statDeltas.damage.delta)}</span>
                 </div>
                 <div class={styles.statDeltaItem}>
-                  <span class={styles.statDeltaIcon}>⚡</span>
+                  <SpeedIcon size={18} className={styles.statDeltaIcon} />
                   <span class={styles.statDeltaValues}>
                     {statDeltas.attackSpeed.from.toFixed(2)} → <strong>{statDeltas.attackSpeed.to.toFixed(2)}</strong>
                   </span>

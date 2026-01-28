@@ -35,9 +35,9 @@ export type ActivateAnnihilationEvent = ActivateSnapEvent; // Alias
 export const HeroCommandEventSchema = BaseEventSchema.extend({
   type: z.literal('HERO_COMMAND'),
   heroId: z.string().optional(), // Required for 'move', optional for team commands
-  targetX: z.number().optional(), // Position for 'move', enemy position for 'focus'
+  targetX: z.number().optional(), // Position for 'move', enemy position for 'focus', attack target for 'manual_attack'
   targetY: z.number().optional(),
-  commandType: z.enum(['move', 'focus', 'retreat']).optional(), // Default: 'move' (handled in code)
+  commandType: z.enum(['move', 'focus', 'retreat', 'manual_attack']).optional(), // Default: 'move' (handled in code)
   targetEnemyId: z.number().optional(), // Enemy ID for 'focus' command
 });
 

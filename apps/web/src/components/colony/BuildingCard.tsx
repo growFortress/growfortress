@@ -1,11 +1,11 @@
 /**
  * BuildingCard - Colony building card with sci-fi effects
- * Displays building stats with hologram overlay and upgrade animations
+ * Displays building stats with upgrade animations
  */
 import { useState } from 'preact/hooks';
 import { motion } from 'framer-motion';
 import { cn } from '../../utils/cn';
-import { GlitchText, HologramOverlay, EnergyBurst } from './effects';
+import { GlitchText, EnergyBurst } from './effects';
 import { formatNumber } from '../../utils/formatters';
 import type { ColonyStatus } from '@arcade/protocol';
 import styles from './ColonyTerminal.module.css';
@@ -17,7 +17,6 @@ interface BuildingCardProps {
 }
 
 export function BuildingCard({ colony, onUpgrade, isUpgrading }: BuildingCardProps) {
-  const [showHologram, setShowHologram] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
 
   const handleUpgrade = async () => {
@@ -69,9 +68,6 @@ export function BuildingCard({ colony, onUpgrade, isUpgrading }: BuildingCardPro
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      whileHover={{ scale: 1.02 }}
-      onHoverStart={() => setShowHologram(true)}
-      onHoverEnd={() => setShowHologram(false)}
     >
       {/* Header */}
       <div className={styles.cardHeader}>
@@ -100,16 +96,6 @@ export function BuildingCard({ colony, onUpgrade, isUpgrading }: BuildingCardPro
           </div>
         )}
       </div>
-
-      {/* Hologram Overlay */}
-      <HologramOverlay
-        visible={showHologram && !showBurst}
-        stats={{
-          goldPerHour: colony.goldPerHour,
-          level: colony.level,
-          nextLevelBonus: isMaxLevel ? undefined : nextLevelBonus,
-        }}
-      />
 
       {/* Upgrade Button */}
       {isMaxLevel ? (

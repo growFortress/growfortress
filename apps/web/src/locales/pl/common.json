@@ -29,6 +29,7 @@
   "resources": {
     "gold": "Złoto",
     "dust": "Pył",
+    "energy": "Energia",
     "crystals": "Kryształy",
     "keys": "Klucze",
     "xp": "XP"
@@ -173,6 +174,11 @@
       "hp": "Wzmocnione Mury",
       "damage": "Arsenał",
       "armor": "Pancerz"
+    },
+    "statUpgradeDescriptions": {
+      "hp": "HP Twierdzy",
+      "damage": "DMG Twierdzy",
+      "armor": "Pancerz Twierdzy"
     }
   },
   "heroDetails": {
@@ -185,7 +191,23 @@
     "statsShort": {
       "hp": "HP",
       "damage": "DMG",
-      "attackSpeed": "AS"
+      "attackSpeed": "AS",
+      "range": "ZAS",
+      "critChance": "KRYT"
+    },
+    "statsDescriptions": {
+      "damage": "Podstawowe obrażenia na atak. Ulepszenia zwiększają multiplikatywnie.",
+      "attackSpeed": "Liczba ataków na sekundę. Wyższa = szybsze ataki.",
+      "range": "Maksymalny zasięg ataku w jednostkach gry.",
+      "critChance": "Szansa na podwójne obrażenia (maks. 75%)."
+    },
+    "details": "Szczegóły",
+    "detailStats": {
+      "maxHp": "Maks. HP",
+      "moveSpeed": "Szybkość ruchu",
+      "deployCooldown": "Odnowienie",
+      "rarity": "Rzadkość",
+      "role": "Rola"
     },
     "nextLevel": "Do nast. poziomu",
     "levelShort": "Poz.",
@@ -351,7 +373,15 @@
     "guildLoadError": "Nie udało się załadować rankingu gildii",
     "members": "członków",
     "wins": "W",
-    "losses": "L"
+    "losses": "L",
+    "weekPeriod": "{{start}} - {{end}}",
+    "resetsIn": "Reset za",
+    "availableRewards": "Dostępne nagrody",
+    "top": "Top {{rank}}",
+    "place": "#{{rank}}",
+    "andMore": "i {{count}} więcej...",
+    "viewRewards": "Pokaż nagrody",
+    "hideRewards": "Ukryj nagrody"
   },
   "shop": {
     "title": "Sklep",
@@ -516,10 +546,12 @@
       "guild": "Gildia"
     },
     "threads": "Wątki",
-    "newMessage": "+ Nowa",
+    "newMessage": "Nowa",
     "loading": "Ładowanie...",
-    "noMessages": "Brak wiadomości",
-    "selectThread": "Wybierz wątek aby zobaczyć wiadomości",
+    "noMessages": "Pusta skrzynka",
+    "noMessagesHint": "Rozpocznij rozmowę przyciskiem + Nowa",
+    "selectThread": "Wybierz wątek",
+    "selectThreadHint": "Wybierz rozmowę z listy po lewej",
     "back": "Wróć",
     "writeMessage": "Napisz wiadomość...",
     "send": "Wyślij",
@@ -676,5 +708,29 @@
     "epic": "Epicki",
     "legendary": "Legendarny",
     "mythic": "Mityczny"
+  },
+  "daily": {
+    "title": "Dzienne Nagrody",
+    "ariaLabel": "Okno dziennych nagród",
+    "streak": "Seria",
+    "days": "dni",
+    "bonus": "Bonus",
+    "nextMilestone": "Następny milestone",
+    "daysUntil": "dni do",
+    "dayStreak": "dniowa seria",
+    "day": "Dzień",
+    "claimed": "Odebrane",
+    "claim": "Odbierz Nagrodę",
+    "claiming": "Odbieranie..."
+  },
+  "missions": {
+    "title": "Tygodniowe Misje",
+    "ariaLabel": "Okno tygodniowych misji",
+    "resetIn": "Reset za",
+    "claiming": "Odbieranie...",
+    "claimAll": "Odbierz Wszystkie",
+    "claimed": "Odebrane",
+    "claim": "Odbierz",
+    "loading": "Ładowanie misji..."
   }
 }

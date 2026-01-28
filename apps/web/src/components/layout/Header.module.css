@@ -2,15 +2,16 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: calc(100% - 420px);
-  padding: 16px 24px;
-  padding-left: 140px; /* Space for Wave component */
+  right: var(--panel-sidebar-width); /* Space for FortressInfoPanel */
+  padding: var(--hud-spacing-md) var(--hud-spacing-lg);
+  padding-left: calc(100px * var(--hud-scale) + var(--hud-spacing-xl) * 3 + var(--hud-spacing-md)); /* Space for Wave component (width + padding + margin) */
   box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: var(--z-header);
   pointer-events: none;
+  overflow: visible; /* Allow tooltips to show */
 }
 
 .header > * {
@@ -83,35 +84,73 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 24px;
+  gap: var(--hud-spacing-md);
+  min-width: 0; /* Allow shrinking */
 }
 
 .leftGroup {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--hud-spacing-sm);
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .rightGroup {
   display: flex;
   align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .navGroupWrapper {
   position: relative;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .groupLabel {
-  font-size: 0.6rem;
+  font-size: var(--hud-font-xs);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
   position: absolute;
-  top: -7px;
-  left: 12px;
-  background: rgba(0, 15, 30, 0.95);
-  padding: 0 6px;
+  top: calc(-10px * var(--hud-scale));
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(0, 20, 40, 0.98) 0%, rgba(0, 30, 50, 0.95) 100%);
+  padding: var(--hud-spacing-xs) var(--hud-spacing-sm);
+  border: 1px solid var(--color-primary-40);
+  border-radius: 4px;
   z-index: 1;
+  text-shadow: 0 0 8px var(--color-primary-50);
+  box-shadow:
+    0 0 6px var(--color-primary-30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+/* Decorative lines extending from label */
+.groupLabel::before,
+.groupLabel::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-primary-50), transparent);
+}
+
+.groupLabel::before {
+  right: 100%;
+  margin-right: 4px;
+  background: linear-gradient(90deg, transparent, var(--color-primary-50));
+}
+
+.groupLabel::after {
+  left: 100%;
+  margin-left: 4px;
 }
 
 /* Shared group styling */
@@ -120,35 +159,41 @@
 .buttonGroup {
   display: flex;
   align-items: center;
-  height: 56px;
-  padding: 10px 18px;
-  background: rgba(0, 20, 40, 0.85);
-  border: 1px solid rgba(0, 200, 255, 0.25);
-  border-radius: 12px;
+  height: var(--hud-button-size-lg);
+  padding: var(--hud-spacing-xs) var(--hud-spacing-md);
+  background: rgba(0, 20, 40, 0.9);
+  border: 1px solid rgba(0, 200, 255, 0.35);
+  border-radius: calc(8px * var(--hud-scale));
   box-sizing: border-box;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
 }
 
 /* Resource Group */
 .resourceGroup {
-  gap: 10px;
+  gap: var(--hud-spacing-md);
 }
 
 .resource {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--hud-spacing-xs);
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .resourceIcon {
-  font-size: 16px;
+  font-size: var(--hud-icon-sm);
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .resourceValue {
   font-weight: 700;
-  font-size: 17px;
+  font-size: var(--hud-font-lg);
   font-family: var(--font-display);
-  min-width: 24px;
+  min-width: 0;
 }
 
 .resourceValue.gold {
@@ -228,71 +273,77 @@
 
 /* Level with XP progress */
 .levelSection {
-  gap: 8px;
+  gap: var(--hud-spacing-sm);
 }
 
 .levelLabel {
-  font-size: 11px;
-  color: var(--color-text-40);
+  font-size: var(--hud-font-sm);
+  color: var(--color-text-50);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .levelValue {
   font-weight: 700;
   color: var(--color-primary);
-  font-size: 20px;
+  font-size: var(--hud-font-xl);
   font-family: var(--font-display);
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
-  min-width: 18px;
+  text-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+  min-width: 0;
 }
 
 .xpTrack {
-  width: 90px;
-  height: 10px;
+  width: calc(100px * var(--hud-scale));
+  height: calc(8px * var(--hud-scale));
   background: var(--color-bg);
   border: var(--border-neutral);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  flex-shrink: 1;
 }
 
 .xpFill {
   height: 100%;
   background: linear-gradient(90deg, var(--color-primary), #00ffcc);
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
   transition: width var(--duration-normal) var(--ease-standard);
   border-radius: var(--radius-sm);
 }
 
 .xpText {
-  font-size: 10px;
-  color: var(--color-text-50);
+  font-size: var(--hud-font-xs);
+  color: var(--color-text-60);
   font-family: var(--font-body);
-  min-width: 45px;
+  min-width: calc(40px * var(--hud-scale));
+  white-space: nowrap;
 }
 
 /* Button Group */
 .buttonGroup {
-  gap: 4px;
+  gap: var(--hud-spacing-xs);
+  flex-wrap: nowrap;
+  /* Allow shrinking but keep buttons visible */
 }
 
 /* Header Buttons (shared style) */
 .headerBtn {
   position: relative;
   background: rgba(0, 0, 0, 0.4);
-  border: 2px solid rgba(0, 200, 255, 0.35);
+  border: 1px solid rgba(0, 200, 255, 0.4);
   color: var(--color-text-80);
-  width: 38px;
-  height: 36px;
+  width: var(--hud-button-size);
+  height: var(--hud-button-size);
   padding: 0;
-  font-size: 18px;
+  font-size: var(--hud-icon-md);
   cursor: pointer;
   transition: all 0.15s ease;
-  border-radius: 8px;
+  border-radius: calc(6px * var(--hud-scale));
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 1;
 }
 
 .headerBtn:hover {
@@ -620,121 +671,39 @@
   animation: pulse 2s infinite;
 }
 
-/* ========== RESPONSIVE BREAKPOINTS ========== */
+/* ========== RESPONSIVE VISIBILITY RULES ========== */
+/* Scaling is handled by CSS variables in theme.css */
+/* These rules only handle hiding elements at breakpoints */
+/* Minimum supported width: 1024px (tablets use mobile version) */
 
-/* Tablet: side panel becomes overlay or smaller */
-@media (max-width: 1024px) {
-  .header {
-    width: calc(100% - 320px);
-    padding: 12px 16px;
-    padding-left: 140px;
+/* Large laptop (1280-1440px) */
+@media (max-width: 1439px) and (min-width: 1280px) {
+  .xpText {
+    display: none;
   }
 
-  .statusBar {
-    gap: 16px;
-  }
-
-  .leftGroup {
-    gap: 16px;
-  }
-
-  .resourceGroup,
-  .levelSection,
-  .buttonGroup {
-    height: 42px;
-    padding: 6px 10px;
-  }
-
-  .headerBtn {
-    width: 32px;
-    height: 30px;
-    font-size: 15px;
-  }
-
-  .xpTrack {
-    width: 70px;
-    height: 8px;
+  /* Hide last 2 shortcut buttons */
+  .buttonGroup button:nth-child(n+8) {
+    display: none;
   }
 }
 
-/* Small tablet / Large phone: side panel hidden or minimal */
-@media (max-width: 768px) {
-  .header {
-    width: 100%;
-    padding: 10px;
-    padding-left: 10px;
-    flex-wrap: wrap;
+/* Small laptop (1024-1280px) */
+@media (max-width: 1279px) and (min-width: 1024px) {
+  .xpText {
+    display: none;
   }
 
-  .statusBar {
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .leftGroup {
-    gap: 10px;
+  .levelLabel {
+    display: none;
   }
 
   .groupLabel {
     display: none;
   }
 
-  .resourceGroup,
-  .levelSection,
-  .buttonGroup {
-    height: 38px;
-    padding: 5px 8px;
-  }
-
-  .resourceLabel {
-    display: none;
-  }
-
-  .headerBtn {
-    width: 30px;
-    height: 28px;
-    font-size: 14px;
-  }
-
-  .levelValue {
-    font-size: 16px;
-  }
-
-  .xpTrack {
-    width: 60px;
-    height: 8px;
-  }
-}
-
-/* Phone: minimal header */
-@media (max-width: 480px) {
-  .header {
-    padding: 8px;
-  }
-
-  .statusBar {
-    gap: 6px;
-  }
-
-  .leftGroup {
-    gap: 6px;
-  }
-
-  .resourceGroup,
-  .levelSection,
-  .buttonGroup {
-    height: 34px;
-    padding: 4px 6px;
-  }
-
-  .headerBtn {
-    width: 26px;
-    height: 26px;
-    font-size: 12px;
-  }
-
-  .navGroupWrapper:has(.levelSection) {
+  /* Hide last 4 shortcut buttons */
+  .buttonGroup button:nth-child(n+6) {
     display: none;
   }
 }

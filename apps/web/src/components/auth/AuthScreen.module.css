@@ -121,7 +121,7 @@
 }
 
 .tagline {
-  color: var(--color-text-40);
+  color: var(--color-text-60);
   font-family: var(--font-body);
   margin: 0;
   font-size: 14px;
@@ -154,21 +154,26 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--color-text-60);
+  color: var(--color-text-80);
   font-size: 14px;
   letter-spacing: 0.5px;
 }
 
 .heroFeatureIcon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(0, 229, 255, 0.1);
-  border: 1px solid rgba(0, 229, 255, 0.2);
+  border: 1px solid rgba(0, 229, 255, 0.3);
   border-radius: 8px;
-  font-size: 16px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.heroFeatureIcon svg {
+  display: block;
 }
 
 /* ========== RIGHT SIDE - Form Section ========== */
@@ -274,19 +279,24 @@
   position: relative;
 }
 
-/* Input icon styling */
+/* Input icon styling - positioned relative to input (height ~48px, center at ~24px) */
 .inputIcon {
   position: absolute;
   left: 14px;
-  top: 50%;
+  top: 24px;
   transform: translateY(-50%);
-  font-size: 16px;
   color: var(--color-text-40);
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.7;
   transition: var(--transition-interactive-normal);
-  filter: grayscale(1);
-  -webkit-filter: grayscale(1);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inputIcon svg {
+  display: block;
 }
 
 /* Adjust input padding when icon is present */
@@ -319,10 +329,8 @@
 
 /* Icon glow on focus */
 .inputGroup input:focus ~ .inputIcon {
-  color: var(--color-primary-70);
+  color: var(--color-primary);
   opacity: 1;
-  filter: grayscale(1) brightness(1.2);
-  -webkit-filter: grayscale(1) brightness(1.2);
 }
 
 /* Visual validation indicators - invalid state */
@@ -352,7 +360,7 @@
 .validationIcon {
   position: absolute;
   right: 14px;
-  top: 50%;
+  top: 24px;
   transform: translateY(-50%);
   font-size: 14px;
   pointer-events: none;
@@ -387,7 +395,7 @@
 .passwordToggle {
   position: absolute;
   right: 12px;
-  top: 50%;
+  top: 24px;
   transform: translateY(-50%);
   background: none;
   border: none;
@@ -426,6 +434,61 @@
 
 .forgotPasswordLink:hover {
   color: var(--color-primary);
+}
+
+/* Remember me checkbox */
+.rememberMe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-60);
+  user-select: none;
+  transition: var(--transition-interactive-normal);
+}
+
+.rememberMe:hover {
+  color: var(--color-text-80);
+}
+
+.rememberMe input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-text-40);
+  border-radius: 4px;
+  background: var(--color-bg);
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition-interactive-normal);
+  flex-shrink: 0;
+}
+
+.rememberMe input[type="checkbox"]:hover {
+  border-color: var(--color-primary-50);
+}
+
+.rememberMe input[type="checkbox"]:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.rememberMe input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--color-bg);
+}
+
+.rememberMe input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* ========== Auth Toggle (Switch between login/register) ========== */
@@ -541,10 +604,10 @@
 }
 
 .guestButton {
-  background: transparent;
-  border: 2px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--color-text-30);
   padding: 12px 24px;
-  color: var(--color-text-60);
+  color: var(--color-text-80);
   font-family: var(--font-display);
   font-size: 14px;
   text-transform: uppercase;
@@ -557,9 +620,9 @@
 }
 
 .guestButton:hover {
-  border-color: var(--color-text-40);
+  border-color: var(--color-primary-50);
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 229, 255, 0.08);
 }
 
 .guestButton:focus-visible {
@@ -569,7 +632,7 @@
 
 .guestHint {
   font-size: 12px;
-  color: var(--color-text-30);
+  color: var(--color-text-50);
   text-align: center;
   animation: fadeIn 0.4s ease 0.35s both;
 }
@@ -614,7 +677,7 @@
   margin-top: auto;
   padding-top: 24px;
   font-size: 11px;
-  color: var(--color-text-30);
+  color: var(--color-text-50);
 }
 
 .footerItem {
@@ -648,19 +711,25 @@
 
 .analyticsIcon,
 .studioIcon {
-  font-size: 12px;
-  opacity: 0.7;
+  color: var(--color-text-50);
+  display: flex;
+  align-items: center;
+}
+
+.analyticsIcon svg,
+.studioIcon svg {
+  display: block;
 }
 
 .analyticsText,
 .studioText {
   font-size: 11px;
-  color: var(--color-text-30);
+  color: var(--color-text-50);
 }
 
 .analyticsLink,
 .studioLink {
-  color: var(--color-text-40);
+  color: var(--color-text-60);
   font-size: 11px;
   text-decoration: underline;
   background: none;
@@ -673,7 +742,7 @@
 
 .analyticsLink:hover,
 .studioLink:hover {
-  color: var(--color-primary-70);
+  color: var(--color-primary);
 }
 
 /* ========== Loading & Error States ========== */

@@ -115,19 +115,18 @@ describe('FortressUpgradableStatSchema', () => {
 });
 
 describe('HeroUpgradableStatSchema', () => {
-  it('accepts valid hero stats (simplified)', () => {
-    const validStats = ['hp', 'damage'];
+  it('accepts valid hero stats (4 main stats)', () => {
+    const validStats = ['damage', 'attackSpeed', 'range', 'critChance'];
     for (const stat of validStats) {
       expect(HeroUpgradableStatSchema.safeParse(stat).success).toBe(true);
     }
   });
 
   it('rejects removed stats', () => {
-    expect(HeroUpgradableStatSchema.safeParse('attackSpeed').success).toBe(false);
-    expect(HeroUpgradableStatSchema.safeParse('critChance').success).toBe(false);
+    expect(HeroUpgradableStatSchema.safeParse('hp').success).toBe(false);
     expect(HeroUpgradableStatSchema.safeParse('critMultiplier').success).toBe(false);
-    expect(HeroUpgradableStatSchema.safeParse('range').success).toBe(false);
     expect(HeroUpgradableStatSchema.safeParse('armor').success).toBe(false);
+    expect(HeroUpgradableStatSchema.safeParse('dodge').success).toBe(false);
   });
 });
 

@@ -59,31 +59,34 @@
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid var(--color-neutral-dark);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .tabBtn {
   flex: 1;
-  padding: 1rem;
+  padding: 0.875rem 1rem;
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--color-text-60);
   cursor: pointer;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
   transition: all 0.2s;
   border-bottom: 2px solid transparent;
+  position: relative;
 }
 
 .tabBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-80);
 }
 
 .activeTab {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
-  background: rgba(var(--color-primary-rgb), 0.1);
+  background: transparent;
 }
 
 .adminTab {
@@ -103,12 +106,15 @@
 .content {
   padding: 1.5rem;
   min-height: 300px;
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .settingsGroup {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.75rem;
 }
 
 /* Save Status Info Box */
@@ -207,8 +213,10 @@
 .accountBasicGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem 1.5rem;
-  margin: 1rem 0 2rem 0;
+  gap: 1.25rem 2rem;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .accountBasicGrid .settingRow {
@@ -218,16 +226,28 @@
 }
 
 .accountBasicGrid .settingRow label {
-  font-size: 0.9rem;
-  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.accountBasicGrid .currentValue {
+  color: var(--color-text);
+  font-size: 1rem;
 }
 
 /* Account Sections Grid - 2 columns for Email and Password */
 .accountSectionsGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.accountSectionsGrid .accountSection {
+  margin-bottom: 0;
 }
 
 .prioritySection {
@@ -302,16 +322,29 @@
 }
 
 .settingRow select {
-  background: var(--color-bg-dark);
-  border: 1px solid var(--color-neutral);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text);
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.settingRow select:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.settingRow select:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .settingRow select option {
   background: #1a1a2e;
   color: #e0e0e0;
+  padding: 0.5rem;
 }
 
 .errorText {
@@ -330,38 +363,42 @@
 .menuItem {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: none;
-  border: none;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   width: 100%;
-  color: var(--color-text);
+  color: var(--color-text-80);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   text-align: left;
 }
 
 .menuItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
 }
 
 .menuIcon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  opacity: 0.85;
 }
 
 .menuLabel {
-  font-size: 1.1rem;
+  font-size: 0.9375rem;
   font-family: var(--font-display);
 }
 
 .footer {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   text-align: center;
-  border-top: 1px solid var(--color-border);
-  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .footerCredits {
@@ -487,39 +524,48 @@
 
 /* Account Section Styles */
 .accountSection {
-  background: var(--color-bg);
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1.5rem;
+  padding: 1.25rem;
   margin-bottom: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.accountSection:hover {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 0.625rem;
+  margin-bottom: 0.875rem;
 }
 
 .sectionIcon {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
+  opacity: 0.9;
 }
 
 .sectionTitle {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
   color: var(--color-text);
+  letter-spacing: 0.01em;
 }
 
 .sectionDescription {
-  color: var(--color-text-dim);
-  font-size: 0.85rem;
-  margin: 0 0 0.75rem;
+  color: var(--color-text-60);
+  font-size: 0.8125rem;
+  margin: 0 0 1rem;
+  line-height: 1.5;
 }
 
 .sectionHint {
-  color: var(--color-text-dim);
-  font-size: 0.85rem;
+  color: var(--color-text-40);
+  font-size: 0.8125rem;
   margin: 0;
 }
 
@@ -527,27 +573,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .currentValue {
-  color: var(--color-text-dim);
+  color: var(--color-text-80);
   font-size: 0.9rem;
 }
 
 .editBtn {
-  padding: 0.4rem 0.75rem;
-  background: var(--color-primary-dim);
+  padding: 0.5rem 1rem;
+  background: transparent;
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-sm);
   color: var(--color-primary);
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .editBtn:hover {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-bg-dark);
 }
 
 .inlineForm {
@@ -558,51 +607,71 @@
 
 .formInput {
   width: 100%;
-  padding: 0.6rem 0.75rem;
-  background: var(--color-bg-dark);
-  border: 1px solid var(--color-neutral);
+  padding: 0.625rem 0.875rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   color: var(--color-text);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .formInput:focus {
   outline: none;
   border-color: var(--color-primary);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .formInput:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formInput::placeholder {
+  color: var(--color-text-40);
+}
+
+/* Referral Section Special Styling */
+.accountSection.referralSection {
+  background: linear-gradient(135deg, rgba(0, 200, 150, 0.08) 0%, rgba(0, 0, 0, 0.25) 100%);
+  border-color: rgba(0, 200, 150, 0.25);
 }
 
 .referralLinkRow {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
 }
 
 .referralLinkInput {
+  flex: 1;
+  min-width: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.8125rem;
   letter-spacing: 0.02em;
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .copyBtn {
-  padding: 0.6rem 1rem;
-  background: var(--color-primary);
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #00c896 0%, #00a080 100%);
   border: none;
   border-radius: var(--radius-sm);
   color: white;
   cursor: pointer;
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
   transition: all 0.2s;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .copyBtn:hover:not(:disabled) {
   filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 .copyBtn:disabled {
@@ -613,52 +682,58 @@
 .referralStats {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.875rem;
 }
 
 .referralStat {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
 }
 
 .referralStatLabel {
-  color: var(--color-text-dim);
-  font-size: 0.85rem;
+  color: var(--color-text-60);
+  font-size: 0.8125rem;
 }
 
 .referralStatValue {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
   color: var(--color-text);
 }
 
 .referralRewards {
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--color-border);
+  margin-top: 0.5rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.625rem;
 }
 
 .referralRewardsTitle {
-  color: var(--color-text);
-  font-size: 0.9rem;
+  color: var(--color-text-80);
+  font-size: 0.8125rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
 }
 
 .referralRewardRow {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .referralRewardLabel {
-  color: var(--color-text-dim);
-  font-size: 0.85rem;
-  min-width: 80px;
+  color: var(--color-text-60);
+  font-size: 0.8125rem;
+  min-width: 70px;
 }
 
 .formActions {
@@ -709,41 +784,46 @@
 .bonusCodeForm {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .bonusCodeInputRow {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  align-items: stretch;
 }
 
 .bonusCodeInputRow .formInput {
   flex: 1;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875rem;
 }
 
 .redeemBtn {
-  padding: 0.6rem 1rem;
+  padding: 0.625rem 1.25rem;
   background: var(--color-primary);
   border: none;
   border-radius: var(--radius-sm);
   color: white;
   cursor: pointer;
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   transition: all 0.2s;
   white-space: nowrap;
 }
 
 .redeemBtn:hover:not(:disabled) {
   filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 .redeemBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .rewardSuccess {
@@ -769,23 +849,29 @@
 
 .rewardItem {
   color: var(--color-text);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
 }
 
 /* Delete Account Styles */
 .dangerZone {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-neutral-dark);
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .dangerItem {
   color: var(--color-danger, #ef4444);
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.15);
 }
 
 .dangerItem:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .deleteConfirm {

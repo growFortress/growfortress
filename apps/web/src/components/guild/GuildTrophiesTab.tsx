@@ -9,6 +9,8 @@ import {
   type GuildBattleStreak,
 } from '../../api/guild.js';
 import { Spinner } from '../shared/Spinner.js';
+import { DamageIcon, CritMultiplierIcon, RangeIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './GuildPanel.module.css';
 
 interface GuildTrophiesTabProps {
@@ -23,12 +25,27 @@ interface TrophiesData {
   streak: GuildBattleStreak;
 }
 
-// Category display info
-const CATEGORY_INFO: Record<string, { label: string; icon: string; color: string }> = {
-  wins: { label: 'Wygrane', icon: '⚔️', color: '#7C3AED' },
-  streak: { label: 'Serie', icon: '🔥', color: '#F97316' },
-  combat: { label: 'Walka', icon: '💪', color: '#22C55E' },
-  rivalry: { label: 'Rywalizacja', icon: '👊', color: '#DC2626' },
+// Category display info - using SVG for wins
+function getCategoryIcon(category: string, size: number = 20): ComponentChildren {
+  switch (category) {
+    case 'wins':
+      return <DamageIcon size={size} />;
+    case 'streak':
+      return '🔥';
+    case 'combat':
+      return '💪';
+    case 'rivalry':
+      return '👊';
+    default:
+      return '🏆';
+  }
+}
+
+const CATEGORY_INFO: Record<string, { label: string; color: string }> = {
+  wins: { label: 'Wygrane', color: '#7C3AED' },
+  streak: { label: 'Serie', color: '#F97316' },
+  combat: { label: 'Walka', color: '#22C55E' },
+  rivalry: { label: 'Rywalizacja', color: '#DC2626' },
 };
 
 export function GuildTrophiesTab({ onRefresh: _onRefresh }: GuildTrophiesTabProps) {
@@ -106,7 +123,7 @@ export function GuildTrophiesTab({ onRefresh: _onRefresh }: GuildTrophiesTabProp
               style={{ '--cat-color': info.color } as any}
               onClick={() => setSelectedCategory(key)}
             >
-              {info.icon} {info.label}
+              {getCategoryIcon(key, 18)} {info.label}
             </button>
           ))}
         </div>
@@ -145,7 +162,7 @@ export function GuildTrophiesTab({ onRefresh: _onRefresh }: GuildTrophiesTabProp
 
         {filteredInProgress.length === 0 ? (
           <div class={styles.emptyState}>
-            <span class={styles.emptyIcon}>🎯</span>
+            <RangeIcon size={24} className={styles.emptyIcon} />
             <span class={styles.emptyText}>Wszystkie trofea zdobyte!</span>
           </div>
         ) : (
@@ -164,7 +181,7 @@ export function GuildTrophiesTab({ onRefresh: _onRefresh }: GuildTrophiesTabProp
         </div>
         <div class={styles.trophyInfoGrid}>
           <div class={styles.trophyInfoCard}>
-            <span class={styles.trophyInfoIcon}>⚔️</span>
+            <DamageIcon size={20} className={styles.trophyInfoIcon} />
             <div class={styles.trophyInfoContent}>
               <span class={styles.trophyInfoTitle}>Wygrana</span>
               <span class={styles.trophyInfoValue}>50 Guild Coins</span>
@@ -178,7 +195,7 @@ export function GuildTrophiesTab({ onRefresh: _onRefresh }: GuildTrophiesTabProp
             </div>
           </div>
           <div class={styles.trophyInfoCard}>
-            <span class={styles.trophyInfoIcon}>💀</span>
+            <CritMultiplierIcon size={20} className={styles.trophyInfoIcon} />
             <div class={styles.trophyInfoContent}>
               <span class={styles.trophyInfoTitle}>Dominacja (5 ocalonych)</span>
               <span class={styles.trophyInfoValue}>+25 Guild Coins</span>
@@ -214,7 +231,7 @@ function TrophyCard({ trophy, earned }: TrophyCardProps) {
       <div class={styles.trophyCardHeader}>
         <span class={styles.trophyCardIcon}>{trophy.icon}</span>
         <span class={styles.trophyCardCategory} style={{ color: categoryInfo.color }}>
-          {categoryInfo.icon} {categoryInfo.label}
+          {categoryInfo.label}
         </span>
       </div>
       <div class={styles.trophyCardBody}>

@@ -14,6 +14,7 @@ import { ParticlePool } from './particlePool.js';
 import { ParticleFactory } from './particleFactory.js';
 import { ExplosionEffects, DeathEffects, TextEffects, SkillEffects } from './effects/index.js';
 import { CLASS_VFX_COLORS } from './config.js';
+import { TimeoutRegistry } from './timeoutRegistry.js';
 
 // Re-export types for external use
 export type { FloatingText } from './types.js';
@@ -36,48 +37,53 @@ export class VFXSystem {
   private graphics: Graphics;
   private pool: ParticlePool;
   private factory: ParticleFactory;
-  
+
   // Effect handlers
   private explosions: ExplosionEffects;
   private deaths: DeathEffects;
   private text: TextEffects;
   private skills: SkillEffects;
-  
+
   // Staged effects queue for multi-phase effects
   private stagedEffects: StagedEffect[] = [];
-  
+
   // Callbacks
   private screenShakeCallback: ScreenShakeCallback | null = null;
   private lightingCallback: LightingCallback | null = null;
+
+  // Timeout registry for tracking and cancelling pending setTimeout calls
+  private timeoutRegistry: TimeoutRegistry;
 
   constructor() {
     this.container = new Container();
     this.graphics = new Graphics();
     this.container.addChild(this.graphics);
     this.pool = new ParticlePool(2000);
-    
+    this.timeoutRegistry = new TimeoutRegistry();
+
     // Create factory with access to pool and particles
     this.factory = new ParticleFactory(
       this.pool,
       this.particles,
       () => this.particleMultiplier
     );
-    
+
     // Initialize effect handlers
     this.explosions = new ExplosionEffects(
       this.pool,
       this.particles,
       this.factory,
       (intensity, duration) => this.triggerScreenShake(intensity, duration),
-      (x, y, color, radius) => this.triggerLightingFlash(x, y, color, radius)
+      (x, y, color, radius) => this.triggerLightingFlash(x, y, color, radius),
+      this.timeoutRegistry
     );
-    
+
     this.deaths = new DeathEffects(
       this.pool,
       this.particles,
       this.factory
     );
-    
+
     this.text = new TextEffects(
       this.pool,
       this.particles,
@@ -85,15 +91,17 @@ export class VFXSystem {
       this.container,
       this.floatingTexts,
       (intensity, duration) => this.triggerScreenShake(intensity, duration),
-      () => graphicsSettings.value.damageNumbers
+      () => graphicsSettings.value.damageNumbers,
+      this.timeoutRegistry
     );
-    
+
     this.skills = new SkillEffects(
       this.pool,
       this.particles,
       this.factory,
       (intensity, duration) => this.triggerScreenShake(intensity, duration),
-      (x, y, color, radius) => this.triggerLightingFlash(x, y, color, radius)
+      (x, y, color, radius) => this.triggerLightingFlash(x, y, color, radius),
+      this.timeoutRegistry
     );
   }
 
@@ -204,10 +212,15 @@ export class VFXSystem {
   }
 
   /**
-   * Clear all active VFX (particles, texts, staged effects).
-   * Useful when transitioning to hub to avoid lingering visuals.
+   * Clear all active VFX (particles, texts, staged effects, pending timers).
+   * Useful when transitioning to hub to avoid lingering visuals and memory leaks.
    */
   public clearAll(): void {
+    // CRITICAL: Cancel all pending setTimeout callbacks first
+    // This prevents memory leaks from closures that would otherwise
+    // continue spawning particles after the game ends
+    this.timeoutRegistry.clearAll();
+
     for (const ft of this.floatingTexts) {
       this.container.removeChild(ft.text);
       ft.text.destroy();
@@ -492,7 +505,7 @@ export class VFXSystem {
   public spawnWorldbreaker(x: number, y: number): void {
     this.triggerScreenShake(15, 600);
     this.skills.spawnGroundSmash(x, y, 1.5);
-    setTimeout(() => {
+    this.timeoutRegistry.setTimeout(() => {
       this.skills.spawnKineticBurst(x, y, 1.3);
     }, 150);
   }
@@ -1185,7 +1198,7 @@ export class VFXSystem {
       }
     }
 
-    setTimeout(() => {
+    this.timeoutRegistry.setTimeout(() => {
       this.spawnPlasmaImpact(targetX, targetY);
     }, steps * 10);
 
@@ -1349,7 +1362,7 @@ export class VFXSystem {
     star.rotationSpeed = 15;
     this.particles.push(star);
 
-    setTimeout(() => {
+    this.timeoutRegistry.setTimeout(() => {
       this.spawnHealEffect(x, y, 'heal');
     }, 150);
 

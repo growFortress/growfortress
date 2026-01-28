@@ -31,6 +31,7 @@ import {
   getUserEmail,
   createGuestUser,
   convertGuestToUser,
+  checkUsernameAvailability,
 } from "../services/auth.js";
 import { resolveLocaleDefaults } from "../services/geoip.js";
 import { withRateLimit } from "../plugins/rateLimit.js";
@@ -198,6 +199,22 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
         throw error;
       }
+    },
+  );
+
+  // Check username availability (public, rate limited)
+  fastify.get(
+    "/v1/auth/check-username/:username",
+    withRateLimit("auth", { config: { public: true } }),
+    async (request, reply) => {
+      const { username } = request.params as { username: string };
+
+      if (!username || typeof username !== "string") {
+        return reply.status(400).send({ error: "Username required" });
+      }
+
+      const result = await checkUsernameAvailability(username);
+      return reply.send(result);
     },
   );
 

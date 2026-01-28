@@ -21,6 +21,8 @@ import { baseGold } from '../../state/profile.signals.js';
 import { purchaseHeroSlot, purchaseTurretSlot } from '../../api/slots.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { SlotUnlockModal } from './SlotUnlockModal.js';
+import { HpIcon, DamageIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './TierEvolutionModal.module.css';
 
 interface TierEvolutionModalProps {
@@ -29,31 +31,38 @@ interface TierEvolutionModalProps {
   fortressLevel: number;
 }
 
-// Tier icons
-const TIER_ICONS: Record<number, string> = {
-  1: '🏠',
-  2: '🏰',
-  3: '⚔️',
-};
-
-// Reward type icons
-const REWARD_ICONS: Record<string, string> = {
-  hp_bonus: '❤️',
-  damage_bonus: '⚔️',
-  skill_unlock: '✨',
-  hero_slot: '🦸',
-  turret_slot: '🗼',
-  pillar_unlock: '🏛️',
-  feature_unlock: '🎮',
-  hero_unlock: '🦸',
-  turret_unlock: '🗼',
-  class_unlock: '🏰',
-};
+// Reward type icons - using SVG for stats
+function getRewardIcon(rewardType: string, size: number = 20): ComponentChildren {
+  switch (rewardType) {
+    case 'hp_bonus':
+      return <HpIcon size={size} />;
+    case 'damage_bonus':
+      return <DamageIcon size={size} />;
+    case 'skill_unlock':
+      return '✨';
+    case 'hero_slot':
+      return '🦸';
+    case 'turret_slot':
+      return '🗼';
+    case 'pillar_unlock':
+      return '🏛️';
+    case 'feature_unlock':
+      return '🎮';
+    case 'hero_unlock':
+      return '🦸';
+    case 'turret_unlock':
+      return '🗼';
+    case 'class_unlock':
+      return '🏰';
+    default:
+      return '🎁';
+  }
+}
 
 // Get all upcoming unlocks (up to maxCount)
 function getAllUpcomingUnlocks(
   currentLevel: number,
-  maxCount: number = 10
+  maxCount: number = 5
 ): Array<{ level: number; rewards: FortressLevelReward[] }> {
   const unlocks: Array<{ level: number; rewards: FortressLevelReward[] }> = [];
 
@@ -69,8 +78,6 @@ function getAllUpcomingUnlocks(
 
 // Helper function to translate reward descriptions
 function translateRewardDescription(description: string, t: (key: string, params?: any) => string): string {
-  // Map Polish descriptions to translation keys
-  // This is a temporary solution until reward descriptions are moved to i18n
   const descriptionMap: Record<string, string> = {
     'Odblokowano podstawową umiejętność konfiguracji': 'tierEvolution.rewards.skill1',
     'Odblokowano Wieżę Kriogeniczną': 'tierEvolution.rewards.turretCryo',
@@ -108,9 +115,9 @@ function translateRewardDescription(description: string, t: (key: string, params
 }
 
 export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolutionModalProps) {
-  const { t } = useTranslation(['common', 'modals']);
+  const { t } = useTranslation('modals');
   const currentTier = getFortressTier(fortressLevel);
-  const currentTierName = t(`fortressPanel.tierNames.${currentTier}`, {
+  const currentTierName = t(`tierEvolution.tierNames.${currentTier}`, {
     defaultValue: getFortressTierName(currentTier),
   });
   const isMaxLevel = fortressLevel >= MAX_FORTRESS_LEVEL;
@@ -121,7 +128,6 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
   const [slotUnlockModal, setSlotUnlockModal] = useState<{ type: 'hero' | 'turret'; slotNumber: number } | null>(null);
 
   // Get next purchasable slot info
-  // Function signature: (currentPurchased, commanderLevel, currentGold)
   const heroSlotInfo = useMemo(
     () => getNextHeroSlotInfo(purchasedHeroSlots.value, fortressLevel, baseGold.value),
     [purchasedHeroSlots.value, fortressLevel, baseGold.value]
@@ -141,10 +147,8 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
     try {
       const response = await purchaseHeroSlot();
       if (response.success) {
-        // Update local state
         if (response.newSlotCount !== undefined) {
           purchasedHeroSlots.value = response.newSlotCount;
-          // Show unlock modal
           setSlotUnlockModal({ type: 'hero', slotNumber: response.newSlotCount });
         }
         if (response.newGold !== undefined) {
@@ -158,7 +162,7 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
     } finally {
       setIsPurchasing(false);
     }
-  }, [heroSlotInfo]);
+  }, [heroSlotInfo, t]);
 
   // Handle turret slot purchase
   const handlePurchaseTurretSlot = useCallback(async () => {
@@ -172,7 +176,6 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
       if (response.success) {
         if (response.newSlotCount !== undefined) {
           purchasedTurretSlots.value = response.newSlotCount;
-          // Show unlock modal
           setSlotUnlockModal({ type: 'turret', slotNumber: response.newSlotCount });
         }
         if (response.newGold !== undefined) {
@@ -186,29 +189,36 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
     } finally {
       setIsPurchasing(false);
     }
-  }, [turretSlotInfo]);
+  }, [turretSlotInfo, t]);
 
-  // Calculate progress within current tier
+  // Calculate progress to next tier
   const tierProgress = useMemo(() => {
-    const prevTierLevel = currentTier === 3
-      ? FORTRESS_TIER_THRESHOLDS.TIER_3_LEVEL
-      : currentTier === 2
-        ? FORTRESS_TIER_THRESHOLDS.TIER_2_LEVEL
-        : 1;
+    if (currentTier >= 3) {
+      // Already at max tier, show progress to max level
+      const startLevel = FORTRESS_TIER_THRESHOLDS.TIER_3_LEVEL;
+      return ((fortressLevel - startLevel) / (MAX_FORTRESS_LEVEL - startLevel)) * 100;
+    }
+
     const nextTierLevel = currentTier === 1
       ? FORTRESS_TIER_THRESHOLDS.TIER_2_LEVEL
-      : currentTier === 2
-        ? FORTRESS_TIER_THRESHOLDS.TIER_3_LEVEL
-        : MAX_FORTRESS_LEVEL;
+      : FORTRESS_TIER_THRESHOLDS.TIER_3_LEVEL;
+    const prevTierLevel = currentTier === 1 ? 1 : FORTRESS_TIER_THRESHOLDS.TIER_2_LEVEL;
 
     return ((fortressLevel - prevTierLevel) / (nextTierLevel - prevTierLevel)) * 100;
   }, [fortressLevel, currentTier]);
 
   // Get upcoming unlocks
   const upcomingUnlocks = useMemo(
-    () => getAllUpcomingUnlocks(fortressLevel, 10),
+    () => getAllUpcomingUnlocks(fortressLevel, 5),
     [fortressLevel]
   );
+
+  // Get next tier info
+  const nextTierLevel = currentTier === 1
+    ? FORTRESS_TIER_THRESHOLDS.TIER_2_LEVEL
+    : currentTier === 2
+      ? FORTRESS_TIER_THRESHOLDS.TIER_3_LEVEL
+      : null;
 
   return (
     <Modal
@@ -218,224 +228,172 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
       size="medium"
     >
       <div class={styles.content}>
-        {/* Current Status */}
-        <div class={styles.currentStatus}>
-          <div class={styles.currentTierIcon}>
-            {TIER_ICONS[currentTier] || '🏰'}
+        {/* Current Tier Status */}
+        <div class={styles.header}>
+          <div class={styles.tierDisplay}>
+            <div class={styles.tierNumber}>{currentTier}</div>
+            <div class={styles.tierInfo}>
+              <span class={styles.tierName}>{currentTierName}</span>
+              <span class={styles.levelDisplay}>
+                {t('tierEvolution.currentLevel', { level: fortressLevel })}
+              </span>
+            </div>
           </div>
-          <div class={styles.currentInfo}>
-            <span class={styles.currentTierName}>{currentTierName}</span>
-            <span class={styles.currentLevel}>{t('tierEvolution.currentLevel', { level: fortressLevel })}</span>
-          </div>
-          <div class={styles.tierBadge}>{t('tierEvolution.tierBadge', { tier: currentTier })}</div>
+
+          {!isMaxLevel && nextTierLevel && (
+            <div class={styles.progressSection}>
+              <div class={styles.progressBar}>
+                <div
+                  class={styles.progressFill}
+                  style={{ width: `${Math.min(tierProgress, 100)}%` }}
+                />
+              </div>
+              <span class={styles.progressText}>
+                {t('tierEvolution.levelLabel')} {nextTierLevel}
+              </span>
+            </div>
+          )}
+
+          {isMaxLevel && (
+            <div class={styles.maxBadge}>MAX</div>
+          )}
         </div>
 
-        {/* Tier Timeline */}
-        <div class={styles.timeline}>
-          {[1, 2, 3].map((tierNum, index) => {
+        {/* Tier Evolution Track */}
+        <div class={styles.evolutionTrack}>
+          {[1, 2, 3].map((tierNum) => {
             const isCompleted = currentTier > tierNum;
             const isCurrent = currentTier === tierNum;
-            const isLocked = currentTier < tierNum;
-
-            const minLevel = tierNum === 1
-              ? 1
-              : tierNum === 2
-                ? FORTRESS_TIER_THRESHOLDS.TIER_2_LEVEL
-                : FORTRESS_TIER_THRESHOLDS.TIER_3_LEVEL;
-            const maxLevel = tierNum === 1
-              ? FORTRESS_TIER_THRESHOLDS.TIER_2_LEVEL - 1
-              : tierNum === 2
-                ? FORTRESS_TIER_THRESHOLDS.TIER_3_LEVEL - 1
-                : MAX_FORTRESS_LEVEL;
-
-            const tierName = t(`tierEvolution.tierNames.${tierNum}`);
-            const levelRange = maxLevel !== minLevel
-              ? `${t('tierEvolution.levelLabel')} ${minLevel}–${maxLevel}`
-              : `${t('tierEvolution.levelLabel')} ${minLevel}`;
+            const tierLabel = t(`tierEvolution.tierNames.${tierNum}`);
 
             return (
               <div
                 key={tierNum}
                 class={[
-                  styles.tierNode,
+                  styles.trackNode,
                   isCompleted && styles.completed,
                   isCurrent && styles.current,
-                  isLocked && styles.locked,
                 ].filter(Boolean).join(' ')}
               >
-                {/* Connector line */}
-                {index > 0 && (
-                  <div
-                    class={[
-                      styles.connector,
-                      isCompleted && styles.connectorCompleted,
-                      isCurrent && styles.connectorCurrent,
-                    ].filter(Boolean).join(' ')}
-                  />
-                )}
-
-                {/* Node */}
-                <div class={styles.nodeCircle}>
-                  <span class={styles.nodeIcon}>{TIER_ICONS[tierNum] || '🏰'}</span>
+                <div class={styles.nodeMarker}>
+                  {isCompleted ? '✓' : tierNum}
                 </div>
-
-                {/* Info */}
-                <div class={styles.nodeInfo}>
-                  <span class={styles.nodeName}>{tierName}</span>
-                  <span class={styles.nodeLevel}>{levelRange}</span>
-                </div>
-
-                {/* Progress bar for current tier */}
-                {isCurrent && !isMaxLevel && (
-                  <div class={styles.nodeProgress}>
-                    <div class={styles.nodeProgressBar}>
-                      <div
-                        class={styles.nodeProgressFill}
-                        style={{ width: `${tierProgress}%` }}
-                      />
-                    </div>
-                    <span class={styles.nodeProgressText}>{Math.round(tierProgress)}%</span>
-                  </div>
-                )}
-
-                {/* Max badge */}
-                {isCurrent && isMaxLevel && (
-                  <span class={styles.maxBadge}>MAX</span>
-                )}
+                <span class={styles.nodeLabel}>{tierLabel}</span>
               </div>
             );
           })}
+          <div class={styles.trackLine}>
+            <div
+              class={styles.trackLineFill}
+              style={{ width: `${((currentTier - 1) / 2) * 100}%` }}
+            />
+          </div>
         </div>
 
-        {/* Description */}
-        <p class={styles.tierDescription}>
-          {t(`tierEvolution.tierDescriptions.${currentTier}`)}
-        </p>
-
-        {/* Slot Purchase Section */}
+        {/* Slot Upgrades */}
         <div class={styles.slotsSection}>
-          <h3 class={styles.slotsSectionTitle}>{t('tierEvolution.availableSlots')}</h3>
+          <h3 class={styles.sectionTitle}>{t('tierEvolution.availableSlots')}</h3>
 
           {purchaseError && (
-            <div class={styles.purchaseError}>{purchaseError}</div>
+            <div class={styles.error}>{purchaseError}</div>
           )}
 
-          <div class={styles.slotsList}>
+          <div class={styles.slotsGrid}>
             {/* Hero Slots */}
-            <div class={styles.slotItem}>
-              <div class={styles.slotIcon}>🦸</div>
-              <div class={styles.slotInfo}>
-                <span class={styles.slotName}>{t('tierEvolution.heroSlots')}</span>
-                <span class={styles.slotCount}>
-                  {t('tierEvolution.slotCount', { current: purchasedHeroSlots.value, max: MAX_HERO_SLOTS })}
+            <div class={styles.slotCard}>
+              <div class={styles.slotHeader}>
+                <span class={styles.slotIcon}>🦸</span>
+                <span class={styles.slotTitle}>{t('tierEvolution.heroSlots')}</span>
+                <span class={styles.slotCounter}>
+                  {purchasedHeroSlots.value}/{MAX_HERO_SLOTS}
                 </span>
-                {heroSlotInfo && (
-                  <span class={styles.slotNextInfo}>
-                    {t('tierEvolution.nextSlot', { slot: heroSlotInfo.slot.slot })}
-                  </span>
-                )}
               </div>
+
               {heroSlotInfo ? (
-                <div class={styles.slotPurchase}>
+                <div class={styles.slotBody}>
                   <div class={styles.slotCost}>
-                    <span class={styles.slotCostGold}>
-                      {t('tierEvolution.costGold', { amount: heroSlotInfo.slot.goldCost.toLocaleString() })}
-                    </span>
-                    <span class={styles.slotCostLevel}>
+                    <span class={styles.goldCost}>🪙 {heroSlotInfo.slot.goldCost.toLocaleString()}</span>
+                    <span class={styles.levelReq}>
                       {t('tierEvolution.costLevel', { level: heroSlotInfo.slot.levelRequired })}
                     </span>
                   </div>
-                  {!heroSlotInfo.canPurchase && (
-                    <div class={styles.slotRequirements}>
-                      {heroSlotInfo.reason === 'level_too_low' && (
-                        <div class={styles.slotRequirement}>
-                          <span class={styles.slotRequirementLabel}>{t('tierEvolution.missingLevels')}</span>
-                          <span class={styles.slotRequirementValue}>
-                            {heroSlotInfo.slot.levelRequired - fortressLevel}
-                          </span>
-                        </div>
-                      )}
-                      {heroSlotInfo.reason === 'insufficient_gold' && (
-                        <div class={styles.slotRequirement}>
-                          <span class={styles.slotRequirementLabel}>{t('tierEvolution.missingGold')}</span>
-                          <span class={styles.slotRequirementValue}>
-                            {(heroSlotInfo.slot.goldCost - baseGold.value).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+
+                  {!heroSlotInfo.canPurchase && heroSlotInfo.reason === 'level_too_low' && (
+                    <span class={styles.requirement}>
+                      {t('tierEvolution.missingLevels')} {heroSlotInfo.slot.levelRequired - fortressLevel}
+                    </span>
                   )}
+                  {!heroSlotInfo.canPurchase && heroSlotInfo.reason === 'insufficient_gold' && (
+                    <span class={styles.requirement}>
+                      {t('tierEvolution.missingGold')} {(heroSlotInfo.slot.goldCost - baseGold.value).toLocaleString()}
+                    </span>
+                  )}
+
                   <Button
-                    variant={heroSlotInfo.canPurchase ? "primary" : "secondary"}
+                    variant={heroSlotInfo.canPurchase ? 'primary' : 'secondary'}
                     size="sm"
+                    fullWidth
                     disabled={!heroSlotInfo.canPurchase || isPurchasing}
                     onClick={handlePurchaseHeroSlot}
-                    aria-label={t('tierEvolution.purchaseHeroSlot', { amount: heroSlotInfo.slot.goldCost })}
                   >
-                    {isPurchasing ? t('tierEvolution.purchasing') : heroSlotInfo.canPurchase ? t('tierEvolution.purchase') : t('tierEvolution.unavailable')}
+                    {isPurchasing
+                      ? t('tierEvolution.purchasing')
+                      : heroSlotInfo.canPurchase
+                        ? t('tierEvolution.purchase')
+                        : t('tierEvolution.unavailable')}
                   </Button>
                 </div>
               ) : (
-                <span class={styles.slotMaxed}>{t('tierEvolution.maxed')}</span>
+                <div class={styles.slotMaxed}>{t('tierEvolution.maxed')}</div>
               )}
             </div>
 
             {/* Turret Slots */}
-            <div class={styles.slotItem}>
-              <div class={styles.slotIcon}>🗼</div>
-              <div class={styles.slotInfo}>
-                <span class={styles.slotName}>{t('tierEvolution.turretSlots')}</span>
-                <span class={styles.slotCount}>
-                  {t('tierEvolution.slotCount', { current: purchasedTurretSlots.value, max: MAX_TURRET_SLOTS })}
+            <div class={styles.slotCard}>
+              <div class={styles.slotHeader}>
+                <span class={styles.slotIcon}>🗼</span>
+                <span class={styles.slotTitle}>{t('tierEvolution.turretSlots')}</span>
+                <span class={styles.slotCounter}>
+                  {purchasedTurretSlots.value}/{MAX_TURRET_SLOTS}
                 </span>
-                {turretSlotInfo && (
-                  <span class={styles.slotNextInfo}>
-                    {t('tierEvolution.nextSlot', { slot: turretSlotInfo.slot.slot })}
-                  </span>
-                )}
               </div>
+
               {turretSlotInfo ? (
-                <div class={styles.slotPurchase}>
+                <div class={styles.slotBody}>
                   <div class={styles.slotCost}>
-                    <span class={styles.slotCostGold}>
-                      {t('tierEvolution.costGold', { amount: turretSlotInfo.slot.goldCost.toLocaleString() })}
-                    </span>
-                    <span class={styles.slotCostLevel}>
+                    <span class={styles.goldCost}>🪙 {turretSlotInfo.slot.goldCost.toLocaleString()}</span>
+                    <span class={styles.levelReq}>
                       {t('tierEvolution.costLevel', { level: turretSlotInfo.slot.levelRequired })}
                     </span>
                   </div>
-                  {!turretSlotInfo.canPurchase && (
-                    <div class={styles.slotRequirements}>
-                      {turretSlotInfo.reason === 'level_too_low' && (
-                        <div class={styles.slotRequirement}>
-                          <span class={styles.slotRequirementLabel}>{t('tierEvolution.missingLevels')}</span>
-                          <span class={styles.slotRequirementValue}>
-                            {turretSlotInfo.slot.levelRequired - fortressLevel}
-                          </span>
-                        </div>
-                      )}
-                      {turretSlotInfo.reason === 'insufficient_gold' && (
-                        <div class={styles.slotRequirement}>
-                          <span class={styles.slotRequirementLabel}>{t('tierEvolution.missingGold')}</span>
-                          <span class={styles.slotRequirementValue}>
-                            {(turretSlotInfo.slot.goldCost - baseGold.value).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+
+                  {!turretSlotInfo.canPurchase && turretSlotInfo.reason === 'level_too_low' && (
+                    <span class={styles.requirement}>
+                      {t('tierEvolution.missingLevels')} {turretSlotInfo.slot.levelRequired - fortressLevel}
+                    </span>
                   )}
+                  {!turretSlotInfo.canPurchase && turretSlotInfo.reason === 'insufficient_gold' && (
+                    <span class={styles.requirement}>
+                      {t('tierEvolution.missingGold')} {(turretSlotInfo.slot.goldCost - baseGold.value).toLocaleString()}
+                    </span>
+                  )}
+
                   <Button
-                    variant={turretSlotInfo.canPurchase ? "primary" : "secondary"}
+                    variant={turretSlotInfo.canPurchase ? 'primary' : 'secondary'}
                     size="sm"
+                    fullWidth
                     disabled={!turretSlotInfo.canPurchase || isPurchasing}
                     onClick={handlePurchaseTurretSlot}
-                    aria-label={t('tierEvolution.purchaseTurretSlot', { amount: turretSlotInfo.slot.goldCost })}
                   >
-                    {isPurchasing ? t('tierEvolution.purchasing') : turretSlotInfo.canPurchase ? t('tierEvolution.purchase') : t('tierEvolution.unavailable')}
+                    {isPurchasing
+                      ? t('tierEvolution.purchasing')
+                      : turretSlotInfo.canPurchase
+                        ? t('tierEvolution.purchase')
+                        : t('tierEvolution.unavailable')}
                   </Button>
                 </div>
               ) : (
-                <span class={styles.slotMaxed}>{t('tierEvolution.maxed')}</span>
+                <div class={styles.slotMaxed}>{t('tierEvolution.maxed')}</div>
               )}
             </div>
           </div>
@@ -444,22 +402,17 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
         {/* Upcoming Unlocks */}
         {!isMaxLevel && upcomingUnlocks.length > 0 && (
           <div class={styles.unlocksSection}>
-            <h3 class={styles.unlocksSectionTitle}>{t('tierEvolution.upcomingUnlocks')}</h3>
+            <h3 class={styles.sectionTitle}>{t('tierEvolution.upcomingUnlocks')}</h3>
             <div class={styles.unlocksList}>
               {upcomingUnlocks.map(({ level, rewards }) => (
-                <div key={level} class={styles.unlockItem}>
-                  <div class={styles.unlockLevel}>
-                    <span class={styles.unlockLevelLabel}>{t('tierEvolution.levelLabel')}</span>
-                    <span class={styles.unlockLevelValue}>{level}</span>
-                  </div>
+                <div key={level} class={styles.unlockRow}>
+                  <span class={styles.unlockLevel}>{level}</span>
                   <div class={styles.unlockRewards}>
                     {rewards.map((reward, idx) => (
-                      <div key={idx} class={styles.unlockReward}>
-                        <span class={styles.unlockRewardIcon}>
-                          {REWARD_ICONS[reward.type] || '🎁'}
-                        </span>
-                        <span class={styles.unlockRewardText}>{translateRewardDescription(reward.description, t)}</span>
-                      </div>
+                      <span key={idx} class={styles.unlockReward}>
+                        <span class={styles.rewardIcon}>{getRewardIcon(reward.type, 20)}</span>
+                        {translateRewardDescription(reward.description, t)}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -468,11 +421,11 @@ export function TierEvolutionModal({ isOpen, onClose, fortressLevel }: TierEvolu
           </div>
         )}
 
-        {/* Max level message */}
+        {/* Max level celebration */}
         {isMaxLevel && (
-          <div class={styles.maxLevelMessage}>
-            <span class={styles.maxLevelIcon}>🏆</span>
-            <span class={styles.maxLevelText}>
+          <div class={styles.maxLevelCelebration}>
+            <span class={styles.celebrationIcon}>🏆</span>
+            <span class={styles.celebrationText}>
               {t('tierEvolution.maxLevelMessage')}
             </span>
           </div>

@@ -23,6 +23,8 @@ import { consumeEnergy } from './energy.js';
 import { ENERGY_ERROR_CODES } from '@arcade/protocol';
 import { getUnlockedPillarsForUser } from './pillarUnlocks.js';
 import { updateLifetimeStats } from './achievements.js';
+import { batchUpdateMissionProgress } from './missions.js';
+import { awardWaveStatPoints, awardLevelUpStatPoints } from './stat-points.js';
 
 /** Simulation tick rate - 30Hz provides smooth gameplay while being computationally manageable */
 const TICK_HZ = 30;
@@ -677,6 +679,33 @@ export async function submitSegment(
 
   // Generate next segment audit ticks
   const nextSegmentAuditTicks = generateSegmentAuditTicks(SEGMENT_SIZE, TICK_HZ);
+
+  // Update mission progress (non-blocking, runs in background)
+  const wavesCompleted = computedEndWave - startWave;
+  const materialsCount = Object.values(materialsEarned).reduce((sum, amt) => sum + amt, 0);
+  batchUpdateMissionProgress(userId, [
+    { type: 'complete_waves', amount: wavesCompleted },
+    { type: 'earn_gold', amount: goldEarned },
+    { type: 'collect_materials', amount: materialsCount },
+  ]).catch((err) => {
+    // Log but don't fail the segment submission
+    console.error('Failed to update mission progress:', err);
+  });
+
+  // Award stat points for waves completed (non-blocking)
+  if (wavesCompleted > 0) {
+    awardWaveStatPoints(userId, wavesCompleted).catch((err) => {
+      console.error('Failed to award wave stat points:', err);
+    });
+  }
+
+  // Award stat points for level ups (non-blocking)
+  const levelsGained = result.newProgression.level - progression.level;
+  if (levelsGained > 0) {
+    awardLevelUpStatPoints(userId, levelsGained).catch((err) => {
+      console.error('Failed to award level-up stat points:', err);
+    });
+  }
 
   // Generate new session token with extended expiry for continued gameplay
   const newSessionToken = await createSessionToken({

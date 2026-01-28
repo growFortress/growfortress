@@ -25,7 +25,8 @@ import {
 import { resizeImageToBase64 } from '../../utils/image.js';
 import { showSuccessToast } from '../../state/ui.signals.js';
 import { Button } from '../shared/Button.js';
-import { DustIcon } from '../icons/index.js';
+import { DustIcon, DamageIcon, ArmorIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './GuildPanel.module.css';
 
 const ACCESS_MODES: { value: GuildAccessMode; label: string; description: string }[] = [
@@ -39,12 +40,27 @@ interface GuildInfoTabProps {
   onRefresh: () => void;
 }
 
-// Structure display info
-const STRUCTURE_INFO: Record<GuildStructureType, { name: string; icon: string; bonusLabel: string }> = {
-  kwatera: { name: 'Kwatera', icon: '🏠', bonusLabel: 'Pojemność' },
-  skarbiec: { name: 'Skarbiec', icon: '💰', bonusLabel: 'Gold Boost' },
-  akademia: { name: 'Akademia', icon: '📚', bonusLabel: 'XP Boost' },
-  zbrojownia: { name: 'Zbrojownia', icon: '⚔️', bonusLabel: 'Stat Boost' },
+// Structure display info - using SVG for zbrojownia
+function getStructureIcon(structureType: GuildStructureType, size: number = 24): ComponentChildren {
+  switch (structureType) {
+    case 'zbrojownia':
+      return <DamageIcon size={size} />;
+    case 'kwatera':
+      return '🏠';
+    case 'skarbiec':
+      return '💰';
+    case 'akademia':
+      return '📚';
+    default:
+      return '🏛️';
+  }
+}
+
+const STRUCTURE_INFO: Record<GuildStructureType, { name: string; bonusLabel: string }> = {
+  kwatera: { name: 'Kwatera', bonusLabel: 'Pojemność' },
+  skarbiec: { name: 'Skarbiec', bonusLabel: 'Gold Boost' },
+  akademia: { name: 'Akademia', bonusLabel: 'XP Boost' },
+  zbrojownia: { name: 'Zbrojownia', bonusLabel: 'Stat Boost' },
 };
 
 export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
@@ -362,7 +378,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
               color: 'var(--color-text-muted)',
               fontSize: '24px'
             }}>
-              🛡️
+              <ArmorIcon size={24} />
             </div>
           )}
           <span style={{ color: 'var(--color-text-muted)' }}>
@@ -478,7 +494,7 @@ export function GuildInfoTab({ onRefresh }: GuildInfoTabProps) {
             return (
               <div key={structure.type} class={styles.structureCard}>
                 <div class={styles.structureHeader}>
-                  <span class={styles.structureIcon}>{info.icon}</span>
+                  <span class={styles.structureIcon}>{getStructureIcon(structure.type as GuildStructureType, 24)}</span>
                   <span class={styles.structureName}>{info.name}</span>
                   <span class={styles.structureLevel}>Lv.{structure.level}/{structure.maxLevel}</span>
                 </div>

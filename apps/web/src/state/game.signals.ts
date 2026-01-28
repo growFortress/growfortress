@@ -65,6 +65,7 @@ export interface GameStateSnapshot {
   ended: boolean;
   currentPillar: PillarId;
   commanderLevel: number;
+  levelsGainedInSession: number;
   sessionXpEarned: number;
   xpAtSessionStart: number;
   // Crystal system (ancient artifacts)
@@ -82,6 +83,9 @@ export interface GameStateSnapshot {
 
 // Game phase
 export const gamePhase = signal<GamePhase>('idle');
+
+// Renderer ready (set after GameApp.init() completes)
+export const rendererReady = signal(false);
 
 // Force reset to hub (used when abandoning session from modal)
 export const forceResetToHub = signal(false);

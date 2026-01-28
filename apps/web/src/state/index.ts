@@ -53,6 +53,7 @@ export {
 // Game signals
 export {
   gamePhase,
+  rendererReady,
   forceResetToHub,
   gameSpeed,
   gameState,
@@ -1017,8 +1018,125 @@ export {
   formatStatNumber,
 } from './achievements.signals.js';
 
+// Daily Login Rewards signals
+export {
+  // State
+  dailyStatus,
+  dailyLoading,
+  dailyError,
+  dailyModalVisible,
+  claiming as dailyClaiming,
+  // Computed
+  canClaimDaily,
+  currentDay,
+  streak,
+  streakMultiplier,
+  daysUntilNextMilestone,
+  nextMilestone,
+  rewards as dailyRewards,
+  totalDaysClaimed,
+  // Actions
+  fetchDailyStatus,
+  claimDailyReward,
+  showDailyModal,
+  hideDailyModal,
+  resetDailyState,
+} from './daily.signals.js';
+
+// Weekly Missions signals
+export {
+  // State
+  missionsData,
+  missionsLoading,
+  missionsError,
+  missionsModalVisible,
+  claimingMission,
+  claimingAll as claimingAllMissions,
+  // Computed
+  missions,
+  unclaimedCount as missionsUnclaimedCount,
+  hasUnclaimedMissionRewards,
+  completedCount as missionsCompletedCount,
+  claimedCount as missionsClaimedCount,
+  weekKey,
+  timeUntilReset as missionsTimeUntilReset,
+  sortedMissions,
+  missionsByDifficulty,
+  // Actions
+  fetchMissions,
+  claimMissionReward,
+  claimAllMissions,
+  showMissionsModal,
+  hideMissionsModal,
+  resetMissionsState,
+  formatTimeUntilReset,
+  isMissionClaimable,
+  getMissionProgressText,
+} from './missions.signals.js';
+
+// Tutorial signals
+export {
+  // Types
+  type TutorialStepId,
+  type TutorialTip,
+  type TutorialCompletion,
+  type TutorialSignalName,
+  // State
+  tutorialProgress,
+  activeTutorialTip,
+  tutorialsEnabled,
+  tutorialPauseRequested,
+  lastGameAction,
+  // Actions
+  showTutorialTip,
+  dismissCurrentTip,
+  markTipCompleted,
+  isTipCompleted,
+  resetTutorialProgress,
+  recordGameAction,
+  completeInteractiveTip,
+  // Skip functionality
+  skipAllTutorials,
+  areTutorialsComplete,
+  getCompletedTutorialCount,
+  getTotalTutorialCount,
+} from './tutorial.signals.js';
+
+// Stat Points signals (free points earned from waves/levels)
+export {
+  // Raw state
+  totalStatPointsEarned,
+  totalStatPointsSpent,
+  fortressStatAllocations,
+  heroStatAllocations,
+  // Computed
+  availableStatPoints,
+  hasAvailableStatPoints,
+  // Getters
+  getHeroAllocations,
+  getFortressAllocation,
+  getHeroStatAllocation,
+  // Actions
+  updateStatPointsFromServer,
+  optimisticAllocateFortress,
+  optimisticAllocateHero,
+  resetStatPointsState,
+  // Simulation export
+  getStatPointDataForSimulation,
+} from './stat-points.signals.js';
+
+// Stat Points Modal
+export {
+  statPointsModalVisible,
+  showStatPointsModal,
+  hideStatPointsModal,
+} from '../components/modals/StatPointsModal.js';
+
 // Re-export types
 export type { LeaderboardEntry, GameEndState } from './ui.signals.js';
 export type { HubPreviewResponse, GuildPreviewResponse } from '@arcade/protocol';
 export type { EnergyStatus } from '@arcade/protocol';
 export type { GetPillarUnlocksResponse, PillarUnlockInfo, PillarUnlockId } from '@arcade/protocol';
+export type { DailyLoginStatusResponse, ClaimDailyRewardResponse } from '@arcade/protocol';
+export type { GetWeeklyMissionsResponse, MissionProgress, MissionType } from '@arcade/protocol';
+export type { StatPointsSummaryResponse, FortressStatAllocations, HeroStatAllocations } from '@arcade/protocol';

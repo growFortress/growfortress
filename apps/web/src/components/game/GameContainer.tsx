@@ -64,9 +64,10 @@ import {
   onboardingCompleted,
 } from '../../state/index.js';
 // Colony state is managed internally by ColonyTerminal
-import { getLeaderboard, upgradeHero, upgradeTurret } from '../../api/client.js';
+import { getLeaderboard, upgradeHero, upgradeTurret, completeOnboarding, getProfile } from '../../api/client.js';
+import { updateFromProfile } from '../../state/actions.js';
 import { ApiError } from '../../api/base.js';
-import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar, isFirstSession, isDirectedWave1Enabled } from '../../state/index.js';
+import { baseGold, baseDust, activeTurrets, hubTurrets, gamePhase, activeHeroes, hubHeroes, showErrorToast, resetBossRushState, forceResetToHub, currentPillar, isFirstSession, isDirectedWave1Enabled, rendererReady } from '../../state/index.js';
 import { fetchEnergy, hasEnergy } from '../../state/energy.signals.js';
 import { speedSettings } from '../../state/settings.signals.js';
 import { useAutoPlay } from '../../hooks/useAutoPlay.js';
@@ -105,6 +106,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     startBossRush,
     endBossRush,
     setGameSpeed,
+    healFortress,
     pauseForTutorial,
     resumeFromTutorial,
   } = useGameLoop(canvasRef, canvasReady);
@@ -124,10 +126,10 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
 
   // Auto-play integration for Boss Rush mode
   const handleAutoPlayHealFortress = useCallback((healPercent: number) => {
-    // The heal is already applied through the boss-rush signals
-    // This callback is just for any additional effects
+    // Actually heal the fortress in the simulation
+    healFortress(healPercent);
     console.log(`[AutoPlay] Healing fortress by ${healPercent * 100}%`);
-  }, []);
+  }, [healFortress]);
 
   const handleAutoPlayRerollRelics = useCallback(() => {
     // Reroll is handled through boss-rush signals
@@ -191,6 +193,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       gamePhase.value === 'idle' &&
       !onboardingCompleted.value &&
       canvasReady &&
+      rendererReady.value && // Wait for renderer to be fully initialized
       !sessionStarting &&
       !sessionRecoveryVisible &&
       !showOnboardingModal.value
@@ -204,20 +207,21 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       // Enable enhanced VFX for first session - creates impactful first impression
       isFirstSession.value = true;
 
+      // Complete onboarding immediately in background (prevents infinite auto-start loop)
+      completeOnboarding({
+        fortressClass: 'natural',
+        heroId: 'vanguard',
+        turretType: 'railgun',
+      })
+        .then(() => getProfile())
+        .then((profile) => updateFromProfile(profile))
+        .catch((err) => console.error('[GameContainer] Background onboarding error:', err));
+
       // Start the session immediately - let them play first, learn later
       handleStartSession();
-
-      // Show simplified onboarding after a short delay (5 seconds into gameplay)
-      const onboardingTimer = setTimeout(() => {
-        if (gamePhase.value === 'playing' && !onboardingCompleted.value) {
-          showOnboardingModal.value = true;
-        }
-      }, 5000);
-
-      return () => clearTimeout(onboardingTimer);
     }
     return undefined;
-  }, [gamePhase.value, onboardingCompleted.value, canvasReady, sessionStarting, sessionRecoveryVisible]);
+  }, [gamePhase.value, onboardingCompleted.value, canvasReady, rendererReady.value, sessionStarting, sessionRecoveryVisible]);
 
   const updateUiScale = useCallback((width: number, height: number) => {
     const baseWidth = 1920;
@@ -448,8 +452,11 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
     reset();
   };
 
-  const handleReturnToHub = () => {
+  const handleReturnToHub = async () => {
     reset();
+    // Refresh profile from server to ensure UI shows current data
+    // This is especially important for guests whose progress should persist
+    await onLoadProfile();
   };
 
   // Check if game is in playing state for side panel
@@ -479,6 +486,9 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
           <UpgradeModal onUpgrade={handleUpgrade} />
           <TurretPlacementModal onPlace={handleTurretPlace} />
         </div>
+
+        {/* Live Synergy HUD - inside game-area for proper positioning */}
+        <LiveSynergyHUD />
       </div>
 
       {/* Side panel - only during gameplay */}
@@ -519,10 +529,7 @@ export function GameContainer({ onLoadProfile, savedSession, onSessionResumeFail
       {/* Boss Rush HUD (eagerly loaded - visible during gameplay) */}
       <BossHealthBar />
       <BossRushHUD />
-      <BossRushShopPanel />
-
-      {/* Live Synergy HUD - shows active synergies and DPS breakdown */}
-      <LiveSynergyHUD />
+      <BossRushShopPanel onHealFortress={handleAutoPlayHealFortress} />
 
       {/* Colony Terminal (full-screen colony management) */}
       <ColonyTerminal />

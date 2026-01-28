@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 
-const MINIMUM_WIDTH = 1280;
+const MINIMUM_WIDTH = 1024;
 
 interface MinimumScreenSizeProps {
   children: any;
@@ -101,7 +101,7 @@ export function MinimumScreenSize({ children }: MinimumScreenSizeProps) {
                 color: "#7c3aed",
               }}
             >
-              Ekran za mały
+              Wersja mobilna wkrótce!
             </h1>
             <p
               style={{
@@ -110,16 +110,18 @@ export function MinimumScreenSize({ children }: MinimumScreenSizeProps) {
                 marginBottom: "0.5rem",
               }}
             >
-              Grow Fortress wymaga minimalnej szerokości ekranu{" "}
-              <strong>{MINIMUM_WIDTH}px</strong>.
+              Pracujemy nad specjalną wersją mobilną Grow Fortress z trybem
+              poziomym.
             </p>
             <p
               style={{
                 fontSize: "clamp(0.85rem, 3.2vw, 0.95rem)",
                 color: "#999",
+                marginTop: "0.5rem",
               }}
             >
-              Obecnie: <strong>{currentWidth}px</strong>
+              Twój ekran: <strong>{currentWidth}px</strong> (wymagane min.{" "}
+              <strong>{MINIMUM_WIDTH}px</strong>)
             </p>
             <p
               style={{
@@ -128,8 +130,7 @@ export function MinimumScreenSize({ children }: MinimumScreenSizeProps) {
                 marginTop: "1rem",
               }}
             >
-              Zwiększ rozmiar okna przeglądarki lub użyj urządzenia z większym
-              ekranem.
+              Tymczasem użyj laptopa lub komputera, aby zagrać w pełną wersję.
             </p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { signal, effect } from "@preact/signals";
+import { completeTutorial as apiCompleteTutorial } from "../api/tutorial.js";
 
 // Tutorial step identifiers
 export type TutorialStepId =
@@ -168,4 +169,64 @@ export function completeInteractiveTip(): void {
   }
   activeTutorialTip.value = null;
   tutorialPauseRequested.value = false;
+}
+
+// ============ Skip All Tutorials ============
+
+// All tutorial step IDs (17 total)
+const ALL_TUTORIAL_STEPS: TutorialStepId[] = [
+  "welcome_intro",
+  "fortress_auto_attack",
+  "fortress_health",
+  "gold_resource",
+  "bomb_skill",
+  "relic_selection",
+  "speed_controls",
+  "turret_targeting",
+  "militia_spawn",
+  "dust_resource",
+  "build_synergy",
+  "fortress_upgrades",
+  "hero_stat_upgrades",
+  "hero_tiers",
+  "fortress_unlocks",
+  "manual_control",
+  "hero_drag",
+];
+
+/**
+ * Skip all tutorials at once
+ * Marks all 17 steps as completed locally and notifies the server
+ */
+export async function skipAllTutorials(): Promise<void> {
+  // Mark all steps as completed locally
+  tutorialProgress.value = new Set(ALL_TUTORIAL_STEPS);
+  activeTutorialTip.value = null;
+  tutorialPauseRequested.value = false;
+
+  // Notify server (fire and forget - local progress is authoritative for UX)
+  apiCompleteTutorial().catch((err) => {
+    console.error("Failed to sync tutorial completion:", err);
+  });
+}
+
+/**
+ * Check if all tutorials have been completed
+ */
+export function areTutorialsComplete(): boolean {
+  return ALL_TUTORIAL_STEPS.every((step) => tutorialProgress.value.has(step));
+}
+
+/**
+ * Get the number of completed tutorial steps
+ */
+export function getCompletedTutorialCount(): number {
+  return ALL_TUTORIAL_STEPS.filter((step) => tutorialProgress.value.has(step)).length;
+}
+
+/**
+ * Get the total number of tutorial steps
+ */
+export function getTotalTutorialCount(): number {
+  return ALL_TUTORIAL_STEPS.length;
 }

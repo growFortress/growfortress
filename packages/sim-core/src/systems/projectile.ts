@@ -46,6 +46,7 @@ import {
   HOMING_MAX_TURN_RATE,
   PROJECTILE_CLASS_HIT_RADIUS,
   PROJECTILE_BASE_HIT_RADIUS,
+  PROJECTILE_MIN_LIFETIME,
 } from './constants.js';
 import { trackDamageHit, getArmorBreakMultiplier, type ComboTrigger } from './combos.js';
 import { hasHeroPassive } from '../data/heroes.js';
@@ -154,22 +155,40 @@ function rayIntersectsCircle(
 }
 
 /**
+ * Check if a projectile has lived long enough to be removed.
+ * Ensures projectiles are visible even at close range.
+ */
+function canRemoveProjectile(projectile: ActiveProjectile, state: GameState): boolean {
+  const lifetime = state.tick - projectile.spawnTick;
+  return lifetime >= PROJECTILE_MIN_LIFETIME;
+}
+
+/**
  * Update all projectiles - movement and collision
  *
  * Supports multiple trajectory types:
  * - Linear: straight line towards target (ray marching)
  * - Arc: parabolic trajectory with gravity (for artillery/fire)
  * - Homing: tracks target with turn rate limit (for lightning/tech)
+ *
+ * Manual shots (isManualShot=true):
+ * - Do not track enemies (no homing)
+ * - Fly to fixed target position
+ * - Check collision with any enemy along the path
  */
 export function updateProjectiles(
   state: GameState,
   _config: SimConfig
 ): void {
   const toRemove: number[] = [];
+  // Track projectiles that have dealt damage (to prevent double-damage during min lifetime)
+  const damageApplied = new Set<number>();
 
   for (const projectile of state.projectiles) {
-    // Find target enemy and update tracking position
-    const targetEnemy = state.enemies.find(e => e.id === projectile.targetEnemyId);
+    // Find target enemy and update tracking position (only for targeted shots)
+    const targetEnemy = projectile.targetEnemyId !== undefined
+      ? state.enemies.find(e => e.id === projectile.targetEnemyId)
+      : undefined;
 
     if (targetEnemy && targetEnemy.hp > 0) {
       projectile.targetX = targetEnemy.x;
@@ -197,9 +216,15 @@ export function updateProjectiles(
 
       // Check if projectile has fallen below target Y (ground level hit)
       if (newY >= projectile.targetY && currentVy > 0) {
-        // Landed near target area - apply damage to nearest enemy
-        applyProjectileDamage(projectile, state);
-        toRemove.push(projectile.id);
+        // Landed near target area - apply damage to nearest enemy (only once)
+        if (!damageApplied.has(projectile.id)) {
+          applyProjectileDamage(projectile, state);
+          damageApplied.add(projectile.id);
+        }
+        // Only remove if lived long enough for VFX to be visible
+        if (canRemoveProjectile(projectile, state)) {
+          toRemove.push(projectile.id);
+        }
         continue;
       }
     } else {
@@ -209,16 +234,21 @@ export function updateProjectiles(
       const distSq = FP.lengthSq2D(dx, dy);
 
       if (distSq === 0) {
-        applyProjectileDamage(projectile, state);
-        toRemove.push(projectile.id);
+        if (!damageApplied.has(projectile.id)) {
+          applyProjectileDamage(projectile, state);
+          damageApplied.add(projectile.id);
+        }
+        if (canRemoveProjectile(projectile, state)) {
+          toRemove.push(projectile.id);
+        }
         continue;
       }
 
       // Calculate direction to target
       let direction = FP.normalize2D(dx, dy);
 
-      // Apply homing behavior if present
-      const homingStrength = projectile.homingStrength ?? 0;
+      // Apply homing behavior if present (disabled for manual shots)
+      const homingStrength = projectile.isManualShot ? 0 : (projectile.homingStrength ?? 0);
       if (homingStrength > 0 && projectile.vx !== undefined && projectile.vy !== undefined) {
         // Current velocity direction
         const currentDir = FP.normalize2D(projectile.vx, projectile.vy);
@@ -252,28 +282,88 @@ export function updateProjectiles(
       ? FP.mul(PROJECTILE_BASE_HIT_RADIUS, FP.fromFloat(projectile.hitRadius))
       : PROJECTILE_BASE_HIT_RADIUS;
 
-    const enemyHitRadius = targetEnemy && targetEnemy.hp > 0
-      ? FP.add(targetEnemy.radius, projectileHitRadius)
-      : projectileHitRadius;
+    // Manual shots: check collision with any enemy along the path
+    if (projectile.isManualShot && projectile.targetEnemyId === undefined) {
+      let hitEnemy: Enemy | undefined;
+      let hitDistSq = Infinity;
 
-    // Check collision with target
-    const hitTarget = rayIntersectsCircle(
-      prevX, prevY,
-      newX, newY,
-      projectile.targetX, projectile.targetY,
-      enemyHitRadius
-    );
+      // Find the closest enemy that the ray intersects
+      for (const enemy of state.enemies) {
+        if (enemy.hp <= 0) continue;
 
-    if (hitTarget) {
-      applyProjectileDamage(projectile, state);
-      toRemove.push(projectile.id);
+        const hitRadius = FP.add(enemy.radius, projectileHitRadius);
+        if (rayIntersectsCircle(prevX, prevY, newX, newY, enemy.x, enemy.y, hitRadius)) {
+          // Calculate distance to determine which enemy is closest along the path
+          const dx = FP.sub(enemy.x, prevX);
+          const dy = FP.sub(enemy.y, prevY);
+          const distSq = FP.lengthSq2D(dx, dy);
+          if (distSq < hitDistSq) {
+            hitDistSq = distSq;
+            hitEnemy = enemy;
+          }
+        }
+      }
+
+      if (hitEnemy) {
+        // Hit an enemy - apply damage to this enemy (only once)
+        if (!damageApplied.has(projectile.id)) {
+          applyManualProjectileDamage(projectile, hitEnemy, state);
+          damageApplied.add(projectile.id);
+        }
+        // Only remove if lived long enough for VFX to be visible
+        if (canRemoveProjectile(projectile, state)) {
+          toRemove.push(projectile.id);
+        }
+      } else {
+        // No enemy hit - check if projectile reached target position
+        const dx = FP.sub(projectile.targetX, newX);
+        const dy = FP.sub(projectile.targetY, newY);
+        const distToTargetSq = FP.lengthSq2D(dx, dy);
+        const arrivalThresholdSq = FP.mul(projectile.speed, projectile.speed);
+
+        if (distToTargetSq <= arrivalThresholdSq) {
+          // Reached target without hitting anything (missed)
+          if (canRemoveProjectile(projectile, state)) {
+            toRemove.push(projectile.id);
+          }
+        } else {
+          // Still flying
+          projectile.x = newX;
+          projectile.y = newY;
+        }
+      }
     } else {
-      projectile.x = newX;
-      projectile.y = newY;
+      // Normal targeted shot - original logic
+      const enemyHitRadius = targetEnemy && targetEnemy.hp > 0
+        ? FP.add(targetEnemy.radius, projectileHitRadius)
+        : projectileHitRadius;
 
-      // Pierce mechanic
-      if (projectile.pierceCount !== undefined && projectile.pierceCount > 0) {
-        checkPierceCollisions(projectile, state);
+      // Check collision with target
+      const hitTarget = rayIntersectsCircle(
+        prevX, prevY,
+        newX, newY,
+        projectile.targetX, projectile.targetY,
+        enemyHitRadius
+      );
+
+      if (hitTarget) {
+        // Apply damage only once
+        if (!damageApplied.has(projectile.id)) {
+          applyProjectileDamage(projectile, state);
+          damageApplied.add(projectile.id);
+        }
+        // Only remove if lived long enough for VFX to be visible
+        if (canRemoveProjectile(projectile, state)) {
+          toRemove.push(projectile.id);
+        }
+      } else {
+        projectile.x = newX;
+        projectile.y = newY;
+
+        // Pierce mechanic
+        if (projectile.pierceCount !== undefined && projectile.pierceCount > 0) {
+          checkPierceCollisions(projectile, state);
+        }
       }
     }
 
@@ -507,6 +597,106 @@ function applyProjectileDamage(projectile: ActiveProjectile, state: GameState): 
         }
       }
     }
+  }
+}
+
+/**
+ * Apply damage from a manual (player-aimed) projectile to a specific enemy
+ * Similar to applyProjectileDamage but takes the enemy directly instead of looking up by targetEnemyId
+ */
+function applyManualProjectileDamage(projectile: ActiveProjectile, enemy: Enemy, state: GameState): void {
+  if (enemy.hp <= 0) return;
+
+  // Apply armor break multiplier from shatter combo (if active)
+  const armorMultiplier = getArmorBreakMultiplier(enemy);
+  const baseDamage = Math.floor(projectile.damage * armorMultiplier);
+
+  const damageDealt = Math.min(baseDamage, enemy.hp);
+  const wasAlive = enemy.hp > 0;
+  enemy.hp -= baseDamage;
+  enemy.hitFlashTicks = HIT_FLASH_TICKS;
+
+  // Check if enemy just died - emit death physics for visual ragdoll
+  if (wasAlive && enemy.hp <= 0 && projectile.class) {
+    // Create RNG for knockback spread using deterministic seed
+    const rngSeed = ((projectile.id * 2654435761) ^ (state.tick * 31337)) >>> 0;
+    let rngState = rngSeed;
+    const rng = () => {
+      rngState = (rngState * 1103515245 + 12345) >>> 0;
+      return (rngState % 10000) / 10000;
+    };
+
+    // Calculate knockback from projectile source to enemy
+    const knockback = calculateKnockback(
+      projectile.startX,
+      projectile.startY,
+      enemy.x,
+      enemy.y,
+      baseDamage,
+      projectile.class,
+      rng
+    );
+
+    // Emit death physics event
+    pendingDeathPhysics.push({
+      enemyId: enemy.id,
+      enemyType: enemy.type,
+      isElite: enemy.isElite ?? false,
+      x: enemy.x,
+      y: enemy.y,
+      kbX: knockback.kbX,
+      kbY: knockback.kbY,
+      spinForce: knockback.spinForce,
+      isBigKill: knockback.isBigKill,
+      sourceClass: projectile.class,
+      damage: baseDamage,
+    });
+  }
+
+  // Track damage hit for combo system
+  if (projectile.class) {
+    const comboTrigger = trackDamageHit(enemy, projectile.class, damageDealt, state);
+    if (comboTrigger) {
+      pendingComboTriggers.push(comboTrigger);
+    }
+  }
+
+  const attribution = getProjectileAttribution(projectile);
+  analytics.trackAttributedDamage(attribution, damageDealt);
+
+  // Apply lifesteal for hero projectiles
+  if (projectile.sourceType === 'hero') {
+    const hero = state.heroes.find(h => h.definitionId === projectile.sourceId);
+    if (hero) {
+      const stoneLifesteal = hero.infinityStone ? calculateHeroStoneLifesteal(hero.infinityStone) : 0;
+      const artifactLifesteal = calculateArtifactLifesteal(hero.equippedArtifact);
+      const totalLifesteal = stoneLifesteal + artifactLifesteal;
+
+      if (totalLifesteal > 0) {
+        const healAmount = Math.floor(damageDealt * totalLifesteal);
+        hero.currentHp = Math.min(hero.currentHp + healAmount, hero.maxHp);
+        analytics.trackHealing(String(projectile.sourceId), healAmount);
+      }
+
+      // Apply artifact on-hit effects
+      const rngSeed = ((projectile.id * 2654435761) ^ state.tick) >>> 0;
+      const rngValue = (rngSeed % 10000) / 10000;
+      const onHitEffect = getArtifactOnHitEffect(hero.equippedArtifact, rngValue);
+      if (onHitEffect) {
+        const artifactAttribution: DamageAttribution = {
+          ownerType: 'hero',
+          ownerId: hero.definitionId,
+          mechanicType: 'artifact',
+          mechanicId: hero.equippedArtifact || 'unknown_artifact',
+        };
+        applyEffectToEnemy(onHitEffect, enemy, state, artifactAttribution);
+      }
+    }
+  }
+
+  // Apply additional effects
+  for (const effect of projectile.effects) {
+    applyEffectToEnemy(effect, enemy, state, attribution);
   }
 }
 
@@ -761,6 +951,43 @@ export function createHeroProjectile(
     effects: [],
     spawnTick: state.tick,
     class: heroClass,
+  };
+
+  state.projectiles.push(projectile);
+}
+
+/**
+ * Create a manual (player-aimed) projectile from hero attack
+ * Unlike normal projectiles, these:
+ * - Have no targetEnemyId (fly to fixed position)
+ * - Are marked isManualShot (no homing, collision checks all enemies)
+ */
+export function createManualHeroProjectile(
+  hero: ActiveHero,
+  targetX: number,
+  targetY: number,
+  state: GameState,
+  heroClass: FortressClass,
+  damage: number
+): void {
+  const projectile: ActiveProjectile = {
+    id: state.nextProjectileId++,
+    type: getProjectileTypeForClass(heroClass),
+    sourceType: 'hero',
+    sourceId: hero.definitionId,
+    // No targetEnemyId - this is a manual shot
+    x: hero.x,
+    y: hero.y,
+    startX: hero.x,
+    startY: hero.y,
+    targetX,
+    targetY,
+    speed: PROJECTILE_BASE_SPEED,
+    damage: damage,
+    effects: [],
+    spawnTick: state.tick,
+    class: heroClass,
+    isManualShot: true,
   };
 
   state.projectiles.push(projectile);

@@ -2,41 +2,52 @@ import { gamePhase, displayGold, gameState } from '../../state/index.js';
 import { spawnMilitiaFn } from '../../state/gameActions.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { FP } from '@arcade/sim-core';
-import { GoldIcon } from '../icons/index.js';
+import { GoldIcon, MilitiaIcon, InfantryIcon, MarksmanIcon, ShieldBearerIcon } from '../icons/index.js';
 import styles from './MilitiaSpawnPanel.module.css';
+import type { ComponentType } from 'preact';
+
+type MilitiaType = 'infantry' | 'archer' | 'shield_bearer';
+
+interface MilitiaDefinition {
+  nameKey: string;
+  IconComponent: ComponentType<{ size?: number; className?: string }>;
+  hp: number;
+  damage: number;
+  cost: number;
+  durationSeconds: number;
+  descriptionKey: string;
+}
 
 // Militia type definitions (sci-fi themed)
-const MILITIA_TYPES = {
+const MILITIA_TYPES: Record<MilitiaType, MilitiaDefinition> = {
   infantry: {
     nameKey: 'game:militia.infantry.name',
-    icon: '🤖',
+    IconComponent: InfantryIcon,
     hp: 50,
     damage: 15,
-    cost: 10,  // Reduced from 30
+    cost: 10,
     durationSeconds: 10,
     descriptionKey: 'game:militia.infantry.description',
   },
   archer: {
     nameKey: 'game:militia.archer.name',
-    icon: '🎯',
+    IconComponent: MarksmanIcon,
     hp: 30,
     damage: 20,
-    cost: 15,  // Reduced from 40
+    cost: 15,
     durationSeconds: 10,
     descriptionKey: 'game:militia.archer.description',
   },
   shield_bearer: {
     nameKey: 'game:militia.shieldBearer.name',
-    icon: '🦾',
+    IconComponent: ShieldBearerIcon,
     hp: 100,
     damage: 5,
-    cost: 20,  // Reduced from 60
+    cost: 20,
     durationSeconds: 15,
     descriptionKey: 'game:militia.shieldBearer.description',
   },
-} as const;
-
-type MilitiaType = keyof typeof MILITIA_TYPES;
+};
 
 // Fortress spawn position
 const FORTRESS_SPAWN_X = FP.fromInt(3);
@@ -87,9 +98,11 @@ export function MilitiaSpawnPanel() {
   const atMaxCount = militiaCount >= maxMilitiaCount;
 
   return (
-    <div class={styles.panel}>
+    <div class={styles.panel} data-tutorial="militia-panel">
       <div class={styles.header}>
-        <span class={styles.icon}>🤖</span>
+        <span class={styles.icon}>
+          <MilitiaIcon size={24} />
+        </span>
         <span class={styles.title}>{t('militia.title')}</span>
         <span class={styles.militiaCounter}>
           {militiaCount}/{maxMilitiaCount}
@@ -105,6 +118,8 @@ export function MilitiaSpawnPanel() {
           const cooldownRemaining = onCooldown ? Math.ceil((cooldown - currentTick) / 30) : 0;
           const isDisabled = !canAfford || atMaxCount || onCooldown;
 
+          const IconComponent = militia.IconComponent;
+
           return (
             <button
               key={type}
@@ -113,7 +128,9 @@ export function MilitiaSpawnPanel() {
               disabled={isDisabled}
               title={t(militia.descriptionKey)}
             >
-              <span class={styles.militiaIcon}>{militia.icon}</span>
+              <span class={styles.militiaIcon}>
+                <IconComponent size={36} />
+              </span>
               <div class={styles.militiaInfo}>
                 <span class={styles.militiaName}>{t(militia.nameKey)}</span>
                 <div class={styles.militiaStats}>

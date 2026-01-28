@@ -3,7 +3,17 @@ import { showColonyScene, colonySceneVisible } from '../../state/idle.signals.js
 import { autoPlaySettings, speedSettings, toggleAutoPlay, cycleSpeedMultiplier, setAutoPlayPreset } from '../../state/settings.signals.js';
 import { Button } from '../shared/Button.js';
 import { Tooltip } from '../shared/Tooltip.js';
-import { Icon } from '../icons/Icon.js';
+import {
+  HeroIcon,
+  MaterialsIcon,
+  ArtifactIcon,
+  GatheringIcon,
+  BossRushIcon,
+  CrystalTrialIcon,
+  DamageIcon,
+  ArmorIcon,
+  SpeedIcon,
+} from '../icons/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './Controls.module.css';
 
@@ -34,7 +44,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={() => { heroRecruitmentModalVisible.value = true; }}
                   aria-label={t('controls.heroesAria')}
                 >
-                  <Icon name="hero" size={16} style={{ marginRight: '6px' }} /> {t('controls.heroesLabel')}
+                  <HeroIcon size={22} /> <span style={{ marginLeft: '6px' }}>{t('controls.heroesLabel')}</span>
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.collectedMaterials')} position="top">
@@ -44,7 +54,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={showMaterialsModal}
                   aria-label={t('controls.materialsAria')}
                 >
-                  <Icon name="materials" size={16} style={{ marginRight: '6px' }} /> {t('controls.materialsLabel')}
+                  <MaterialsIcon size={22} /> <span style={{ marginLeft: '6px' }}>{t('controls.materialsLabel')}</span>
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.artifactsItems')} position="top">
@@ -54,7 +64,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={showArtifactsModal}
                   aria-label={t('controls.artifactsAria')}
                 >
-                  <Icon name="artifact" size={16} style={{ marginRight: '6px' }} /> {t('controls.artifactsLabel')}
+                  <ArtifactIcon size={22} /> <span style={{ marginLeft: '6px' }}>{t('controls.artifactsLabel')}</span>
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.claimOfflineRewards')} position="top">
@@ -64,7 +74,7 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={showColonyScene}
                   aria-label={t('controls.gatheringAria') + (hasPendingRewards.value ? t('controls.pendingRewards') : '')}
                 >
-                  <Icon name="gathering" size={16} style={{ marginRight: '6px' }} /> {t('controls.gatheringLabel')}
+                  <GatheringIcon size={22} /> <span style={{ marginLeft: '6px' }}>{t('controls.gatheringLabel')}</span>
                   {hasPendingRewards.value && <span aria-hidden="true" style={{ marginLeft: '4px', color: '#4ade80' }}>●</span>}
                 </Button>
               </Tooltip>
@@ -95,19 +105,18 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                   onClick={openBossRushSetup}
                   aria-label={t('controls.bossRushLabel')}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>👹</span> {t('controls.bossRushLabel')}
+                  <BossRushIcon size={22} /> <span style={{ marginLeft: '4px' }}>{t('controls.bossRushLabel')}</span>
                 </Button>
               </Tooltip>
               <Tooltip content={t('controls.comingSoon')} position="top">
                 <Button
                   variant="skill"
                   size="sm"
-                  disabled={true}
-                  aria-label={t('controls.pillarChallengeComingSoon')}
-                  style={{ opacity: 0.6 }}
+                  disabled
+                  aria-label={`${t('controls.pillarChallengeLabel')} - ${t('controls.comingSoon')}`}
                 >
-                  <span aria-hidden="true" style={{ marginRight: '4px', fontSize: '1em' }}>🌀</span> {t('controls.pillarChallengeLabel')}
-                  <span style={{ marginLeft: '4px', fontSize: '0.65em', background: 'rgba(251, 191, 36, 0.3)', padding: '1px 4px', borderRadius: '3px', color: '#fbbf24' }}>{t('controls.soonBadge')}</span>
+                  <CrystalTrialIcon size={22} /> <span style={{ marginLeft: '4px' }}>{t('controls.pillarChallengeLabel')}</span>
+                  <span class={styles.soonBadge}>{t('controls.soonBadge')}</span>
                 </Button>
               </Tooltip>
             </div>
@@ -155,14 +164,14 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
                 class={`${styles.presetButton} ${autoPlaySettings.value.relicPriority === 'damage' ? styles.activePreset : ''}`}
                 onClick={() => setAutoPlayPreset('damage')}
               >
-                ⚔️
+                <DamageIcon size={20} />
               </button>
               <button
                 type="button"
                 class={`${styles.presetButton} ${autoPlaySettings.value.relicPriority === 'defense' ? styles.activePreset : ''}`}
                 onClick={() => setAutoPlayPreset('defense')}
               >
-                🛡️
+                <ArmorIcon size={20} />
               </button>
               <button
                 type="button"
@@ -188,12 +197,13 @@ export function Controls({ onStartClick, onEndSessionClick: _onEndSessionClick, 
               onClick={cycleSpeedMultiplier}
               aria-label={`Change speed (currently ${speedSettings.value.speedMultiplier}x)`}
             >
-              <span class={styles.speedIcon}>⚡</span>
+              <SpeedIcon size={18} className={styles.speedIcon} />
               <span class={styles.speedLabel}>{speedSettings.value.speedMultiplier}x</span>
             </button>
           </Tooltip>
         </div>
       )}
+
     </div>
   );
 }

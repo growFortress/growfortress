@@ -30,6 +30,7 @@ import {
   type TurretUpgrades,
   type ItemTierUpgrade,
   type StatUpgradeConfig,
+  type HeroStatUpgradeConfig,
   createDefaultPlayerPowerData,
   createDefaultStatUpgrades,
   getNextItemTier,
@@ -39,6 +40,7 @@ import {
   TURRET_STAT_UPGRADES,
   ITEM_TIER_CONFIG,
   getUpgradeCost,
+  getHeroUpgradeCost,
   calculateTotalPower,
   calculateQuickTotalPower,
   type TierMaps,
@@ -127,6 +129,15 @@ function findStatConfig(
   stat: string
 ): StatUpgradeConfig | undefined {
   return configs.find(c => c.stat === stat);
+}
+
+/**
+ * Find hero stat config by stat name (uses HeroStatUpgradeConfig with exponential cost)
+ */
+function findHeroStatConfig(
+  stat: string
+): HeroStatUpgradeConfig | undefined {
+  return HERO_STAT_UPGRADES.find(c => c.stat === stat);
 }
 
 // ============================================================================
@@ -402,8 +413,8 @@ export async function upgradeHeroStat(
   heroId: string,
   stat: PowerHeroUpgradableStat
 ): Promise<PowerUpgradeResponse> {
-  // Find stat config
-  const config = findStatConfig(HERO_STAT_UPGRADES, stat);
+  // Find hero stat config (uses exponential cost, no max level)
+  const config = findHeroStatConfig(stat);
   if (!config) {
     return {
       success: false,
@@ -441,20 +452,10 @@ export async function upgradeHeroStat(
   // Get current level
   const currentLevel = heroUpgrade.statUpgrades[stat] || 0;
 
-  // Check max level
-  if (currentLevel >= config.maxLevel) {
-    return {
-      success: false,
-      newLevel: currentLevel,
-      goldSpent: 0,
-      newGold: inventory.gold,
-      newTotalPower: calculateQuickTotalPower(powerData, commanderLevel),
-      error: 'Max level reached',
-    };
-  }
+  // No max level check - hero upgrades are unlimited with exponential cost
 
-  // Calculate cost
-  const cost = getUpgradeCost(config, currentLevel);
+  // Calculate cost using exponential formula
+  const cost = getHeroUpgradeCost(config, currentLevel);
 
   // Check gold
   if (inventory.gold < cost) {

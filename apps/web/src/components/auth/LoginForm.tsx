@@ -2,10 +2,11 @@ import { useState, useId } from 'preact/hooks';
 import { authLoading } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
+import { UserIcon, LockIcon, EyeIcon, EyeOffIcon, CheckIcon } from './AuthIcons.js';
 import styles from './AuthScreen.module.css';
 
 interface LoginFormProps {
-  onSubmit: (username: string, password: string) => Promise<void>;
+  onSubmit: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   onForgotPassword: () => void;
   error?: string | null;
 }
@@ -15,6 +16,7 @@ export function LoginForm({ onSubmit, onForgotPassword, error }: LoginFormProps)
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [touched, setTouched] = useState({ username: false, password: false });
   const loading = authLoading.value;
 
@@ -25,7 +27,7 @@ export function LoginForm({ onSubmit, onForgotPassword, error }: LoginFormProps)
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    await onSubmit(username, password);
+    await onSubmit(username, password, rememberMe);
   };
 
   return (
@@ -51,7 +53,9 @@ export function LoginForm({ onSubmit, onForgotPassword, error }: LoginFormProps)
         <label htmlFor={usernameId} class={styles.srOnly}>
           {t('login.username')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">👤</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <UserIcon size={18} />
+        </span>
         <input
           id={usernameId}
           type="text"
@@ -65,7 +69,9 @@ export function LoginForm({ onSubmit, onForgotPassword, error }: LoginFormProps)
           onBlur={() => setTouched({ ...touched, username: true })}
         />
         {touched.username && username.length >= 3 && (
-          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">✓</span>
+          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">
+            <CheckIcon size={14} />
+          </span>
         )}
       </div>
 
@@ -73,7 +79,9 @@ export function LoginForm({ onSubmit, onForgotPassword, error }: LoginFormProps)
         <label htmlFor={passwordId} class={styles.srOnly}>
           {t('login.password')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">🔒</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <LockIcon size={18} />
+        </span>
         <input
           id={passwordId}
           type={showPassword ? 'text' : 'password'}
@@ -87,7 +95,9 @@ export function LoginForm({ onSubmit, onForgotPassword, error }: LoginFormProps)
           onBlur={() => setTouched({ ...touched, password: true })}
         />
         {touched.password && password.length >= 6 && (
-          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">✓</span>
+          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">
+            <CheckIcon size={14} />
+          </span>
         )}
         <button
           type="button"
@@ -96,12 +106,21 @@ export function LoginForm({ onSubmit, onForgotPassword, error }: LoginFormProps)
           aria-label={showPassword ? 'Hide password' : 'Show password'}
           tabIndex={-1}
         >
-          {showPassword ? '👁️' : '👁️‍🗨️'}
+          {showPassword ? <EyeIcon size={20} /> : <EyeOffIcon size={20} />}
         </button>
         <div class={styles.forgotPasswordLink} onClick={onForgotPassword}>
           {t('login.forgotPassword')}
         </div>
       </div>
+
+      <label class={styles.rememberMe}>
+        <input
+          type="checkbox"
+          checked={rememberMe}
+          onChange={(e) => setRememberMe((e.target as HTMLInputElement).checked)}
+        />
+        <span>{t('login.rememberMe')}</span>
+      </label>
 
       <Button
         variant="primary"

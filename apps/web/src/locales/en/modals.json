@@ -489,6 +489,68 @@
       "tech": "Technology"
     }
   },
+  "bossRushSetup": {
+    "title": "Boss Rush",
+    "descriptionLine1": "Face powerful bosses in an endless gauntlet.",
+    "descriptionLine2": "Each boss is stronger than the last. How far can you go?",
+    "bestScore": "BEST SCORE",
+    "loading": "Loading...",
+    "bestDamage": "{{damage}} damage",
+    "bestBosses": "{{count}} bosses",
+    "noScores": "No scores yet. Start your first run!",
+    "sequenceTitle": "Boss Sequence ({{count}} bosses)",
+    "cycleNote": "Sequence repeats with increased difficulty.",
+    "milestonesTitle": "MILESTONES",
+    "milestoneCount": "{{count}} bosses",
+    "cancel": "Cancel",
+    "start": "Start Boss Rush"
+  },
+  "bossRushEnd": {
+    "ariaLabel": "Boss Rush game over screen",
+    "gameOver": "GAME OVER",
+    "fortressDestroyed": "Your fortress has been destroyed.",
+    "totalDamage": "Total Damage",
+    "newBest": "NEW BEST!",
+    "bossesKilled": "Bosses Killed",
+    "bossesKilledValue": "{{count}} (Cycle {{cycle}})",
+    "timeSurvived": "Time Survived",
+    "damageTimeline": "Damage Timeline",
+    "timeline": {
+      "boss": "Boss",
+      "damage": "Damage",
+      "status": "Status",
+      "killed": "Killed",
+      "notKilled": "Escaped"
+    },
+    "runStats": {
+      "title": "Run Stats",
+      "relicsCollected": "Relics Collected",
+      "synergiesActivated": "Synergies Activated",
+      "bestSingleHit": "Best Single Hit",
+      "goldSpent": "Gold Spent",
+      "hpHealed": "HP Healed",
+      "relicRerolls": "Relic Rerolls",
+      "collectedRelics": "Collected Relics"
+    },
+    "achievements": "Achievements",
+    "achievementLabel": "{{count}} Bosses Defeated",
+    "rewardsTitle": "Rewards",
+    "rewardGold": "🪙 {{amount}} Gold",
+    "rewardDust": "✨ {{amount}} Dust",
+    "rewardXp": "⭐ {{amount}} XP",
+    "levelUp": "🎉 Level Up! Now level {{level}}",
+    "leaderboardRank": "Leaderboard Rank: #{{rank}}",
+    "autoRestart": {
+      "countdown": "Auto-restart in {{seconds}}s",
+      "cancel": "Cancel",
+      "toggle": "Auto-restart",
+      "on": "ON",
+      "off": "OFF",
+      "noEnergy": "(no energy)"
+    },
+    "menu": "Menu",
+    "playAgain": "Play Again"
+  },
   "statistics": {
     "title": "Statistics Dashboard",
     "ariaLabel": "Statistics Dashboard",

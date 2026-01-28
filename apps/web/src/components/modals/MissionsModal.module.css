@@ -1,0 +1,230 @@
+/* Weekly Missions Modal Styles */
+
+.modalContent {
+  min-width: 420px;
+  max-width: 520px;
+  max-height: 80vh;
+}
+
+/* Reset Timer */
+.resetTimer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-60);
+}
+
+.resetIcon {
+  font-size: 16px;
+}
+
+/* Claim All Button */
+.claimAllBtn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--color-success) 0%, #006600 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 24px;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  margin-bottom: 16px;
+}
+
+.claimAllBtn:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-success) 40%, transparent);
+}
+
+.claimAllBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Missions List */
+.missionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Mission Card */
+.missionCard {
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--difficulty-color, var(--color-neutral));
+  border-radius: var(--radius-md);
+  padding: 14px;
+  transition: var(--transition-interactive-normal);
+}
+
+.missionCard:hover {
+  background: var(--color-bg-elevated);
+}
+
+.missionCard.completed:not(.claimed) {
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-success) 30%, transparent);
+  border-color: var(--color-success);
+}
+
+.missionCard.claimed {
+  opacity: 0.6;
+}
+
+/* Mission Header */
+.missionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.missionIcon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 4px var(--difficulty-color));
+}
+
+.missionInfo {
+  flex: 1;
+}
+
+.missionName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.missionDescription {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+}
+
+.difficultyBadge {
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--difficulty-color) 20%, transparent);
+  border: 1px solid var(--difficulty-color);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--difficulty-color);
+  letter-spacing: 0.5px;
+}
+
+/* Progress Bar */
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--difficulty-color) 0%, color-mix(in srgb, var(--difficulty-color) 80%, white) 100%);
+  border-radius: var(--radius-xs);
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-60);
+  min-width: 70px;
+  text-align: right;
+}
+
+/* Rewards */
+.rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.reward {
+  padding: 4px 8px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+/* Mission Action */
+.missionAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.claimBtn {
+  background: linear-gradient(135deg, var(--color-success) 0%, #006600 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+}
+
+.claimBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 50%, transparent);
+}
+
+.claimBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.claimedStatus {
+  color: var(--color-success);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inProgressStatus {
+  color: var(--color-text-60);
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-60);
+  font-family: var(--font-body);
+  font-size: 14px;
+}

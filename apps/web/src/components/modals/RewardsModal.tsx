@@ -1,6 +1,7 @@
 import { signal, type Signal } from '@preact/signals';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBulkRewards, claimBulkReward } from '../../api/client.js';
+import { DustIcon } from '../icons/index.js';
 import styles from './RewardsModal.module.css';
 
 export const rewardsModalVisible: Signal<boolean> = signal(false);
@@ -70,7 +71,7 @@ export function RewardsModal() {
                     <p class={styles.rewardDesc}>{reward.description}</p>
                     <div class={styles.rewardBadge}>
                       {reward.type === 'GOLD' ? '🪙' :
-                       reward.type === 'DUST' ? '💨' :
+                       reward.type === 'DUST' ? <DustIcon size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '2px' }} /> :
                        reward.type === 'SIGILS' ? '🔯' : '🎁'}
                       {reward.value} {reward.type}
                     </div>

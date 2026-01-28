@@ -23,6 +23,8 @@ import {
 import { fetchEnergy } from "../../state/energy.signals.js";
 import { fetchPillarUnlocks } from "../../state/pillarUnlocks.signals.js";
 import { checkIdleRewards } from "../../state/idle.signals.js";
+import { isFirstSession } from "../../state/game.signals.js";
+import { getStatPointsSummary } from "../../api/stat-points.js";
 import type { IStateHydrator, HydrateProfileOptions } from "./types.js";
 
 // =============================================================================
@@ -94,10 +96,15 @@ class StateHydrator implements IStateHydrator {
     // Fetch pillar unlocks
     fetchPillarUnlocks();
 
-    // Check for idle rewards (only for returning players, skip on session resume)
-    if (profile.onboardingCompleted && !options.skipIdleRewards) {
+    // Check for idle rewards (only for returning players, skip on session resume and first session)
+    if (profile.onboardingCompleted && !options.skipIdleRewards && !isFirstSession.value) {
       checkIdleRewards();
     }
+
+    // Fetch stat points (free points earned from waves/levels)
+    getStatPointsSummary().catch((err) => {
+      console.error('[StatPoints] Failed to fetch stat points:', err);
+    });
   }
 
   /**

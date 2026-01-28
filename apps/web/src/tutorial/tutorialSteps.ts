@@ -49,7 +49,8 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
   },
   relic_selection: {
     id: "relic_selection",
-    position: "center",
+    highlightRef: "relic-choice",
+    position: "bottom",
     autoDismissMs: 0, // Don't auto-dismiss during choice modal
   },
   speed_controls: {
@@ -110,7 +111,8 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
     id: "fortress_unlocks",
     highlightRef: "fortress-tier",
     position: "left",
-    autoDismissMs: 9000,
+    autoDismissMs: 0,
+    completion: { type: "click" },
   },
   manual_control: {
     id: "manual_control",
@@ -123,7 +125,8 @@ export const TUTORIAL_STEP_CONFIGS: Record<TutorialStepId, TutorialStepConfig> =
     id: "hero_drag",
     highlightRef: "game-canvas",
     position: "center",
-    autoDismissMs: 9000,
+    autoDismissMs: 0,
+    completion: { type: "click" },
   },
 };
 
@@ -326,59 +329,40 @@ export const TUTORIAL_STEPS: Record<TutorialStepId, TutorialTip> = {
     autoDismissMs: 10000,
   },
   fortress_upgrades: {
-    id: "fortress_upgrades",
+    ...TUTORIAL_STEP_CONFIGS.fortress_upgrades,
     title: "Ulepszenia Twierdzy",
     description:
       "Wydawaj zloto, aby na stale wzmocnic HP, obrazenia i pancerz twierdzy.",
-    highlightRef: "fortress-upgrades",
-    position: "left",
-    autoDismissMs: 9000,
   },
   hero_stat_upgrades: {
-    id: "hero_stat_upgrades",
+    ...TUTORIAL_STEP_CONFIGS.hero_stat_upgrades,
     title: "Ulepszenia statystyk bohatera",
     description:
       "Ulepszaj HP i obrazenia bohatera za zloto, aby byl silniejszy miedzy runami.",
-    highlightRef: "hero-stat-upgrades",
-    position: "right",
-    autoDismissMs: 9000,
   },
   hero_tiers: {
-    id: "hero_tiers",
+    ...TUTORIAL_STEP_CONFIGS.hero_tiers,
     title: "Tiery bohatera",
     description:
       "Ulepsz tier bohatera, aby odblokowac nowe umiejetnosci i wieksze mnozniki.",
-    highlightRef: "hero-tier-upgrade",
-    position: "bottom",
-    autoDismissMs: 9000,
   },
   fortress_unlocks: {
-    id: "fortress_unlocks",
+    ...TUTORIAL_STEP_CONFIGS.fortress_unlocks,
     title: "Tiery i odblokowania",
     description:
       "Wyzszy poziom twierdzy odblokowuje nowe sloty i funkcje. Sprawdz postep tierow.",
-    highlightRef: "fortress-tier",
-    position: "left",
-    autoDismissMs: 9000,
   },
-
   manual_control: {
-    id: "manual_control",
+    ...TUTORIAL_STEP_CONFIGS.manual_control,
     title: "Manualna kontrola",
     description:
-      "Kliknij bohatera, aby przejÄ…Ä‡ kontrolÄ™. Ruch: WASD, strzaÅ‚: PPM, wyjÅ›cie: Esc.",
-    highlightRef: "game-canvas",
-    position: "center",
-    autoDismissMs: 9000,
+      "Kliknij bohatera, aby przejąć kontrolę. Ruch: WASD, strzał: PPM, wyjście: Esc.",
   },
   hero_drag: {
-    id: "hero_drag",
-    title: "Przesuwanie bohaterÃ³w",
+    ...TUTORIAL_STEP_CONFIGS.hero_drag,
+    title: "Przesuwanie bohaterów",
     description:
-      "MoÅ¼esz przeciÄ…gnÄ…Ä‡ bohatera na polu bitwy, aby zmieniÄ‡ jego pozycjÄ™.",
-    highlightRef: "game-canvas",
-    position: "center",
-    autoDismissMs: 9000,
+      "Możesz przeciągnąć bohatera na polu bitwy, aby zmienić jego pozycję.",
   },
 };
 

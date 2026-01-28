@@ -87,6 +87,17 @@ const MAX_CRACKS = 15;
 const CRACK_LIFETIME = 3000; // 3 seconds
 const FLICKER_DURATION = 200; // 200ms
 
+// Fortress animation constants
+const FORTRESS_ANIM = {
+  corePulseSpeed: 2,          // Core breathing speed
+  ringRotationSpeed: 0.3,     // Ring rotation speed (radians/sec)
+  particleOrbitSpeed: 1.5,    // Energy particle orbit speed
+  shieldPulseSpeed: 1,        // Shield breathing speed
+  energyFlowSpeed: 2,         // Energy flow in conduits
+  particleCount: 6,           // Number of orbiting particles
+  conduitFlowCount: 4,        // Energy dots per conduit
+};
+
 /**
  * EnvironmentRenderer handles all static background rendering:
  * - Night sky with stars (theme-dependent)
@@ -121,6 +132,9 @@ export class EnvironmentRenderer {
 
   // Animation time for tier 3 effects
   private animTime = 0;
+
+  // Fortress HP for shield effects (0-1)
+  private fortressHpPercent = 1;
 
   // Preview mode (static terrain, no dynamic effects)
   private previewMode = false;
@@ -247,6 +261,13 @@ export class EnvironmentRenderer {
    */
   public getFortressTier(): number {
     return this.currentFortressTier;
+  }
+
+  /**
+   * Update fortress HP for shield effects. Value should be 0-1.
+   */
+  public setFortressHp(hpPercent: number): void {
+    this.fortressHpPercent = Math.max(0, Math.min(1, hpPercent));
   }
 
   /**
@@ -384,8 +405,181 @@ export class EnvironmentRenderer {
       // Update and draw light flicker
       this.updateLightFlicker(deltaMs);
       this.drawLightFlicker(g);
+
+      // Draw fortress animated effects (particles, shield, etc.) - every frame
+      this.drawFortressAnimatedEffects(g);
     } catch {
       // Silently fail if context is invalid
+    }
+  }
+
+  /**
+   * Draw fortress animated effects (shield, particles, energy flow) on effects layer.
+   * This is called every frame for smooth animations.
+   */
+  private drawFortressAnimatedEffects(g: Graphics): void {
+    const colors = CLASS_COLORS[this.currentFortressClass] || CLASS_COLORS.natural;
+    const x = fpXToScreen(FP.fromInt(FORTRESS_POSITION_X), this.width) + 50;
+    const pathTop = this.height * PATH_TOP_PERCENT;
+    const pathBottom = pathTop + this.height * PATH_HEIGHT_PERCENT;
+    const pathCenterY = (pathTop + pathBottom) / 2;
+
+    const towerWidth = 70;
+    const towerHeight = 160;
+    const baseY = pathCenterY + 50;
+
+    // Calculate key positions (same as in drawTeslaTower)
+    const platformHeight = 12;
+    const baseHeight = towerHeight * 0.25;
+    const baseTop = baseY - platformHeight / 2;
+    const columnBottom = baseTop - baseHeight;
+    const columnTop = columnBottom - towerHeight * 0.45;
+    const columnWidth = towerWidth * 0.15;
+    const electrodeTop = columnTop - 20;
+    const toroidY = electrodeTop - 25;
+    const toroidRadiusX = towerWidth * 0.35;
+    const toroidRadiusY = 18;
+
+    // Draw animated elements only (not the static structure)
+    // These will layer on top of the static graphics
+
+    // 1. Energy conduit flow animation
+    this.drawConduitFlowOnly(g, x, columnBottom, columnTop, columnWidth, colors);
+
+    // 2. Orbiting energy particles
+    this.drawEnergyParticles(g, x, toroidY, toroidRadiusX + 20, toroidRadiusY + 12, colors);
+
+    // 3. Core pulse glow (additive layer)
+    const corePulse = 0.85 + Math.sin(this.animTime * FORTRESS_ANIM.corePulseSpeed) * 0.15;
+    const pulseGlowRadius = 12 * corePulse;
+    g.circle(x, toroidY, pulseGlowRadius).fill({ color: colors.core, alpha: 0.15 * corePulse });
+
+    // 4. Spike top pulse
+    const spikeHeight = 15 + this.currentFortressTier * 3;
+    const spikeY = toroidY - toroidRadiusY - spikeHeight;
+    g.circle(x, spikeY, 4 * corePulse).fill({ color: colors.glow, alpha: 0.3 * corePulse });
+
+    // 5. Class-specific animated effects
+    this.drawClassAnimatedEffects(g, x, baseY, toroidY, toroidRadiusX, toroidRadiusY, colors);
+  }
+
+  /**
+   * Draw only the animated flow dots in conduits (not the pipe structure)
+   */
+  private drawConduitFlowOnly(
+    g: Graphics,
+    x: number,
+    columnBottom: number,
+    columnTop: number,
+    columnWidth: number,
+    colors: { primary: number; secondary: number; glow: number; core: number }
+  ): void {
+    const conduitOffset = columnWidth * 0.8;
+    const conduitHeight = columnBottom - columnTop;
+
+    for (const side of [-1, 1]) {
+      const cx = x + side * conduitOffset;
+
+      // Energy flow dots only
+      const flowCount = FORTRESS_ANIM.conduitFlowCount;
+      for (let i = 0; i < flowCount; i++) {
+        const t = ((i / flowCount) + this.animTime * FORTRESS_ANIM.energyFlowSpeed * 0.1) % 1;
+        const flowY = columnBottom - t * conduitHeight;
+        const flowX = cx + side * 8 * Math.sin(t * Math.PI);
+
+        g.circle(flowX, flowY, 2).fill({ color: colors.glow, alpha: 0.7 });
+        g.circle(flowX, flowY, 4).fill({ color: colors.core, alpha: 0.2 });
+      }
+    }
+  }
+
+  /**
+   * Draw class-specific animated effects (not static decorations)
+   */
+  private drawClassAnimatedEffects(
+    g: Graphics,
+    x: number,
+    _baseY: number,
+    toroidY: number,
+    toroidRadiusX: number,
+    toroidRadiusY: number,
+    colors: { primary: number; secondary: number; glow: number; core: number }
+  ): void {
+    switch (this.currentFortressClass) {
+      case 'natural':
+        // Floating spores
+        for (let s = 0; s < 6; s++) {
+          const angle = (s / 6) * Math.PI * 2 + this.animTime * 0.5;
+          const dist = 35 + Math.sin(this.animTime + s * 1.5) * 8;
+          const sx = x + Math.cos(angle) * dist;
+          const sy = toroidY + Math.sin(this.animTime * 0.8 + s) * 15;
+          g.circle(sx, sy, 1.5).fill({ color: colors.glow, alpha: 0.5 });
+        }
+        break;
+
+      case 'fire':
+        // Rising embers
+        for (let e = 0; e < 8; e++) {
+          const emberPhase = (this.animTime * 0.5 + e * 0.25) % 1;
+          const emberX = x + Math.sin(e * 2.7) * 20 + Math.sin(this.animTime + e) * 5;
+          const emberY = toroidY - toroidRadiusY - 20 - emberPhase * 30;
+          const emberSize = 1.5 * (1 - emberPhase);
+          g.circle(emberX, emberY, emberSize).fill({
+            color: emberPhase < 0.5 ? colors.core : colors.secondary,
+            alpha: (1 - emberPhase) * 0.8
+          });
+        }
+        break;
+
+      case 'ice':
+        // Falling snowflakes
+        for (let f = 0; f < 5; f++) {
+          const snowPhase = (this.animTime * 0.3 + f * 0.2) % 1;
+          const snowX = x + Math.sin(f * 3.1 + this.animTime * 0.5) * 30;
+          const snowY = toroidY - 40 + snowPhase * 80;
+          g.circle(snowX, snowY, 1).fill({ color: 0xffffff, alpha: (1 - snowPhase) * 0.5 });
+        }
+        break;
+
+      case 'void':
+        // Particles drawn into fortress
+        for (let p = 0; p < 6; p++) {
+          const pPhase = (this.animTime * 0.3 + p * 0.17) % 1;
+          const pAngle = (p / 6) * Math.PI * 2;
+          const pDist = 50 * (1 - pPhase);
+          const px = x + Math.cos(pAngle) * pDist;
+          const py = toroidY + Math.sin(pAngle) * pDist * 0.4;
+          g.circle(px, py, 1.5 * (1 - pPhase)).fill({ color: colors.glow, alpha: pPhase * 0.6 });
+        }
+        break;
+
+      case 'plasma':
+        // Expanding wave rings
+        for (let w = 0; w < 2; w++) {
+          const wavePhase = (this.animTime * 0.5 + w * 0.5) % 1;
+          const waveRadius = toroidRadiusX * (1 + wavePhase * 0.6);
+          g.ellipse(x, toroidY, waveRadius, toroidRadiusY * (1 + wavePhase * 0.4)).stroke({
+            width: 2,
+            color: w % 2 === 0 ? colors.primary : colors.secondary,
+            alpha: (1 - wavePhase) * 0.25,
+          });
+        }
+        break;
+
+      case 'lightning':
+        // Random sparks
+        const seed = Math.floor(this.animTime * 10);
+        if (seed % 3 === 0) {
+          const sparkX = x + ((seed * 17) % 60) - 30;
+          const sparkY = toroidY + ((seed * 13) % 40) - 20;
+          g.circle(sparkX, sparkY, 2).fill({ color: 0xffffff, alpha: 0.8 });
+        }
+        break;
+
+      case 'tech':
+        // Scanning lines on holographic panels
+        // (minimal, tech decorations are mostly static)
+        break;
     }
   }
 
@@ -581,57 +775,12 @@ export class EnvironmentRenderer {
 
   /**
    * Rysuje niebo z gwiazdami (theme-dependent)
+   * NOTE: CosmicBackground now handles the main sky rendering (gradient, stars, nebulae).
+   * This method only draws theme-specific decorations on top.
    */
   private drawSky(g: Graphics): void {
-    const { width, height } = this;
-    const sky = this.currentTheme.sky;
-
-    // Gradient tła - od ciemniejszego na górze do jaśniejszego na dole
-    g.rect(0, 0, width, height).fill({ color: sky.top });
-
-    // Dolna część nieba - jaśniejsza (gradient effect)
-    g.rect(0, height * 0.6, width, height * 0.4).fill({
-      color: sky.bottom,
-      alpha: 0.5,
-    });
-
-    // Gwiazdy - deterministycznie rozmieszczone (seed oparty na pozycji)
-    // Pozycje zaokrąglone do pełnych pikseli, żeby uniknąć migotania z powodu antyaliasingu
-    const starCount = sky.starCount;
-    for (let i = 0; i < starCount; i++) {
-      // Pseudo-losowe pozycje oparte na indeksie
-      const seedX = ((i * 7919) % 1000) / 1000; // Prime number for distribution
-      const seedY = ((i * 6271) % 1000) / 1000;
-      const seedSize = ((i * 3571) % 100) / 100;
-      const seedAlpha = ((i * 2341) % 100) / 100;
-
-      // Zaokrąglamy pozycje do pełnych pikseli, żeby uniknąć sub-pikselowego renderowania
-      const x = Math.round(seedX * width);
-      const y = Math.round(seedY * height * 0.7); // Gwiazdy tylko w górnej części
-      // Minimalny rozmiar 1px, żeby uniknąć migotania przy bardzo małych kółkach
-      const size = 1 + seedSize * 1.5;
-      const alpha = 0.3 + seedAlpha * 0.7;
-
-      g.circle(x, y, size).fill({ color: sky.stars, alpha });
-    }
-
-    // Chmury/mgła w tle
-    const cloudCount = sky.cloudCount;
-    for (let i = 0; i < cloudCount; i++) {
-      const seedX = ((i * 4523) % 1000) / 1000;
-      const seedY = ((i * 8761) % 1000) / 1000;
-      const cloudWidth = 150 + ((i * 3217) % 200);
-
-      const x = seedX * width;
-      const y = height * 0.1 + seedY * height * 0.5;
-
-      g.ellipse(x, y, cloudWidth, 20).fill({
-        color: sky.clouds,
-        alpha: sky.cloudAlpha,
-      });
-    }
-
-    // Theme-specific sky decorations
+    // NOTE: Background gradient, stars, and clouds are now rendered by CosmicBackground.
+    // We only draw theme-specific decorations here.
     this.drawThemeSkyDecorations(g);
   }
 
@@ -980,6 +1129,7 @@ export class EnvironmentRenderer {
   /**
    * Rysuje Wieżę Tesli - główna struktura twierdzy
    * Adaptuje kolory do klasy twierdzy, różnice wizualne zależą od tieru
+   * ENHANCED: Animacje, tarcza, konduit energetyczny, dekoracje klasowe
    */
   private drawTeslaTower(g: Graphics, fortressClass: FortressClass, tier: number): void {
     const colors = CLASS_COLORS[fortressClass] || CLASS_COLORS.natural;
@@ -992,18 +1142,41 @@ export class EnvironmentRenderer {
     const towerHeight = 160;
     const baseY = pathCenterY + 50;
 
+    // Animation pulse values
+    const corePulse = 0.85 + Math.sin(this.animTime * FORTRESS_ANIM.corePulseSpeed) * 0.15;
+    const ringPulse = 0.9 + Math.sin(this.animTime * FORTRESS_ANIM.corePulseSpeed * 0.7) * 0.1;
+
+    // === SHIELD BUBBLE (drawn first, behind everything) ===
+    this.drawShieldBubble(g, x, pathCenterY - 30, towerWidth + 60, towerHeight + 40, colors, this.fortressHpPercent);
+
     // === 1. PLATFORMA / FUNDAMENT ===
     const platformWidth = towerWidth + 40;
     const platformHeight = 12;
+
     // Ciemna metalowa platforma
     g.roundRect(x - platformWidth / 2, baseY - platformHeight / 2, platformWidth, platformHeight, 3)
       .fill({ color: THEME.deck.plate })
       .stroke({ width: 2, color: THEME.deck.edge });
+
     // Linie na platformie
     g.rect(x - platformWidth / 2 + 10, baseY - 1, platformWidth - 20, 2).fill({
       color: THEME.deck.line,
       alpha: 0.5,
     });
+
+    // Mechaniczne detale - śruby/nity na platformie
+    const boltPositions = [-platformWidth/2 + 5, platformWidth/2 - 5];
+    for (const bx of boltPositions) {
+      g.circle(x + bx, baseY - 2, 2).fill({ color: THEME.deck.edge });
+      g.circle(x + bx, baseY + 2, 2).fill({ color: THEME.deck.edge });
+    }
+
+    // Kratki wentylacyjne
+    const ventWidth = 15;
+    const ventX = x - platformWidth / 2 + 20;
+    for (let vy = 0; vy < 3; vy++) {
+      g.rect(ventX, baseY - 3 + vy * 2, ventWidth, 1).fill({ color: 0x000000, alpha: 0.6 });
+    }
 
     // === 2. PODSTAWA (trapezoid rozszerzający się w dół) ===
     const baseHeight = towerHeight * 0.25;
@@ -1036,7 +1209,10 @@ export class EnvironmentRenderer {
       .fill({ color: THEME.bridge.body })
       .stroke({ width: 1, color: THEME.deck.edge });
 
-    // Pierścienie cewek (ilość zależy od tieru: 2, 3, 4)
+    // === ENERGY CONDUITS (kable energetyczne po bokach kolumny) ===
+    this.drawEnergyConduits(g, x, columnBottom, columnTop, columnWidth, colors);
+
+    // Pierścienie cewek (ilość zależy od tieru: 2, 3, 4) - ANIMATED
     const ringCount = tier + 1;
     const ringSpacing = (columnBottom - columnTop) / (ringCount + 1);
     const ringWidth = towerWidth * 0.35;
@@ -1044,14 +1220,18 @@ export class EnvironmentRenderer {
 
     for (let i = 1; i <= ringCount; i++) {
       const ringY = columnBottom - i * ringSpacing;
-      // Zewnętrzny pierścień (ciemniejszy)
-      g.ellipse(x, ringY, ringWidth / 2, ringHeight / 2)
-        .fill({ color: colors.primary, alpha: 0.6 })
+      const ringPhaseOffset = i * 0.5; // Different phase for each ring
+      const individualPulse = 0.9 + Math.sin(this.animTime * FORTRESS_ANIM.corePulseSpeed + ringPhaseOffset) * 0.1;
+
+      // Zewnętrzny pierścień (ciemniejszy) - with subtle pulse
+      g.ellipse(x, ringY, (ringWidth / 2) * individualPulse, (ringHeight / 2) * individualPulse)
+        .fill({ color: colors.primary, alpha: 0.6 * ringPulse })
         .stroke({ width: 2, color: colors.secondary });
-      // Wewnętrzny glow
-      g.ellipse(x, ringY, ringWidth / 2 - 4, ringHeight / 2 - 2).fill({
+
+      // Wewnętrzny glow - pulsing
+      g.ellipse(x, ringY, (ringWidth / 2 - 4) * individualPulse, (ringHeight / 2 - 2) * individualPulse).fill({
         color: colors.glow,
-        alpha: 0.3,
+        alpha: 0.3 * individualPulse,
       });
     }
 
@@ -1069,14 +1249,14 @@ export class EnvironmentRenderer {
     const toroidRadiusX = towerWidth * 0.35;
     const toroidRadiusY = 18;
 
-    // Zewnętrzny glow (efekt świecenia)
-    g.ellipse(x, toroidY, toroidRadiusX + 8, toroidRadiusY + 6).fill({
+    // Zewnętrzny glow (efekt świecenia) - PULSING
+    g.ellipse(x, toroidY, (toroidRadiusX + 8) * corePulse, (toroidRadiusY + 6) * corePulse).fill({
       color: colors.glow,
-      alpha: 0.15,
+      alpha: 0.15 * corePulse,
     });
-    g.ellipse(x, toroidY, toroidRadiusX + 4, toroidRadiusY + 3).fill({
+    g.ellipse(x, toroidY, (toroidRadiusX + 4) * corePulse, (toroidRadiusY + 3) * corePulse).fill({
       color: colors.glow,
-      alpha: 0.25,
+      alpha: 0.25 * corePulse,
     });
 
     // Główny toroid
@@ -1091,13 +1271,19 @@ export class EnvironmentRenderer {
       alpha: 0.5,
     });
 
-    // === 6. RDZEŃ ENERGETYCZNY (pulsujący punkt w środku) ===
-    const coreRadius = 8;
-    // Glow rdzenia
-    g.circle(x, toroidY, coreRadius + 4).fill({ color: colors.core, alpha: 0.4 });
-    g.circle(x, toroidY, coreRadius + 2).fill({ color: colors.core, alpha: 0.6 });
+    // === 6. RDZEŃ ENERGETYCZNY (pulsujący punkt w środku) - ANIMATED ===
+    const baseCoreRadius = 8;
+    const coreRadius = baseCoreRadius * corePulse;
+
+    // Glow rdzenia - pulsing
+    g.circle(x, toroidY, coreRadius + 6).fill({ color: colors.core, alpha: 0.2 * corePulse });
+    g.circle(x, toroidY, coreRadius + 4).fill({ color: colors.core, alpha: 0.4 * corePulse });
+    g.circle(x, toroidY, coreRadius + 2).fill({ color: colors.core, alpha: 0.6 * corePulse });
     // Rdzeń
     g.circle(x, toroidY, coreRadius).fill({ color: colors.core });
+
+    // === ORBITING ENERGY PARTICLES ===
+    this.drawEnergyParticles(g, x, toroidY, toroidRadiusX + 20, toroidRadiusY + 12, colors);
 
     // === 7. SZCZYT / ELEKTRODA GÓRNA ===
     const spikeHeight = 15 + tier * 3;
@@ -1108,12 +1294,10 @@ export class EnvironmentRenderer {
       .fill({ color: colors.secondary })
       .stroke({ width: 1, color: colors.glow });
 
-    // Świecący punkt na szczycie
-    g.circle(x, toroidY - toroidRadiusY - spikeHeight, 3).fill({ color: colors.core });
-    g.circle(x, toroidY - toroidRadiusY - spikeHeight, 5).fill({
-      color: colors.glow,
-      alpha: 0.4,
-    });
+    // Świecący punkt na szczycie - PULSING
+    const spikeY = toroidY - toroidRadiusY - spikeHeight;
+    g.circle(x, spikeY, 3 * corePulse).fill({ color: colors.core });
+    g.circle(x, spikeY, 6 * corePulse).fill({ color: colors.glow, alpha: 0.4 * corePulse });
 
     // === 8. EFEKTY ZALEŻNE OD TIERU ===
     if (tier >= 2) {
@@ -1126,28 +1310,34 @@ export class EnvironmentRenderer {
       g.rect(x - baseTopWidth / 2 - panelWidth - 2, panelY, panelWidth, panelHeight)
         .fill({ color: THEME.bridge.body })
         .stroke({ width: 1, color: colors.primary, alpha: 0.6 });
-      // Światełka na panelu
+      // Światełka na panelu - ANIMATED
+      let lightIndex = 0;
       for (let ly = panelY + 5; ly < panelY + panelHeight - 5; ly += 12) {
+        const lightPulse = 0.5 + Math.sin(this.animTime * 2 + lightIndex * 0.7) * 0.5;
         g.circle(x - baseTopWidth / 2 - panelWidth / 2 - 2, ly, 2).fill({
           color: colors.glow,
-          alpha: 0.7,
+          alpha: 0.4 + 0.5 * lightPulse,
         });
+        lightIndex++;
       }
 
       // Prawy panel
       g.rect(x + baseTopWidth / 2 + 2, panelY, panelWidth, panelHeight)
         .fill({ color: THEME.bridge.body })
         .stroke({ width: 1, color: colors.primary, alpha: 0.6 });
+      lightIndex = 0;
       for (let ly = panelY + 5; ly < panelY + panelHeight - 5; ly += 12) {
+        const lightPulse = 0.5 + Math.sin(this.animTime * 2 + lightIndex * 0.7 + Math.PI) * 0.5;
         g.circle(x + baseTopWidth / 2 + panelWidth / 2 + 2, ly, 2).fill({
           color: colors.glow,
-          alpha: 0.7,
+          alpha: 0.4 + 0.5 * lightPulse,
         });
+        lightIndex++;
       }
     }
 
     if (tier >= 3) {
-      // Tier 3: Łuki energetyczne z toroidu
+      // Tier 3: Łuki energetyczne z toroidu - ANIMATED
       const arcCount = 4;
       const arcRadius = toroidRadiusX + 15;
 
@@ -1162,23 +1352,609 @@ export class EnvironmentRenderer {
           toroidY + Math.sin(angle) * toroidRadiusY * 0.8,
         )
           .lineTo(arcX, arcY)
-          .stroke({ width: 2, color: colors.glow, alpha: 0.6 });
+          .stroke({ width: 2, color: colors.glow, alpha: 0.6 * corePulse });
 
-        // Punkt końcowy
-        g.circle(arcX, arcY, 3).fill({ color: colors.core, alpha: 0.8 });
+        // Punkt końcowy - pulsing
+        g.circle(arcX, arcY, 3 * corePulse).fill({ color: colors.core, alpha: 0.8 });
       }
 
       // Dodatkowy pierścień glow wokół toroidu
       g.ellipse(x, toroidY, toroidRadiusX + 12, toroidRadiusY + 8).stroke({
         width: 2,
         color: colors.glow,
-        alpha: 0.3,
+        alpha: 0.3 * corePulse,
       });
     }
 
-    // === 9. ŚWIATŁA STATUSU (na podstawie) ===
-    g.circle(x - baseBottomWidth / 2 + 8, baseTop - 8, 3).fill({ color: 0x00ff00 }); // Zielone - status OK
-    g.circle(x + baseBottomWidth / 2 - 8, baseTop - 8, 3).fill({ color: colors.glow }); // Kolor klasy
+    // === 9. ŚWIATŁA STATUSU (na podstawie) - HP-based ===
+    const statusColor = this.fortressHpPercent > 0.5 ? 0x00ff00 : (this.fortressHpPercent > 0.25 ? 0xffaa00 : 0xff2222);
+    const statusPulse = this.fortressHpPercent < 0.5 ? 0.5 + Math.sin(this.animTime * 4) * 0.5 : 1;
+    g.circle(x - baseBottomWidth / 2 + 8, baseTop - 8, 3).fill({ color: statusColor, alpha: statusPulse });
+    g.circle(x + baseBottomWidth / 2 - 8, baseTop - 8, 3).fill({ color: colors.glow });
+
+    // === 10. CLASS-SPECIFIC DECORATIONS ===
+    this.drawClassDecorations(g, x, baseY, baseTop, baseHeight, columnBottom, columnTop, toroidY, toroidRadiusX, toroidRadiusY, spikeY, fortressClass, colors, tier);
+
+    // === HOLOGRAPHIC STATUS RING (above platform) ===
+    if (tier >= 2) {
+      this.drawHolographicRing(g, x, baseTop + 5, baseBottomWidth + 20, colors);
+    }
+  }
+
+  /**
+   * Draw protective shield bubble around the fortress
+   */
+  private drawShieldBubble(
+    g: Graphics,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    hpPercent: number
+  ): void {
+    // Shield visibility based on HP
+    const baseAlpha = hpPercent > 0.75 ? 0.08 : (hpPercent > 0.5 ? 0.06 : (hpPercent > 0.25 ? 0.04 : 0.02));
+    const flickerIntensity = hpPercent < 0.5 ? (1 - hpPercent) * 0.3 : 0;
+    const flicker = Math.sin(this.animTime * (8 + flickerIntensity * 10)) * flickerIntensity;
+
+    const shieldPulse = 0.95 + Math.sin(this.animTime * FORTRESS_ANIM.shieldPulseSpeed) * 0.05;
+    const effectiveAlpha = Math.max(0, baseAlpha + flicker) * shieldPulse;
+
+    // Outer glow
+    g.ellipse(x, y, width * 0.6 * shieldPulse, height * 0.55 * shieldPulse).fill({
+      color: colors.glow,
+      alpha: effectiveAlpha * 0.5,
+    });
+
+    // Main shield bubble
+    g.ellipse(x, y, width * 0.5 * shieldPulse, height * 0.5 * shieldPulse).fill({
+      color: colors.primary,
+      alpha: effectiveAlpha,
+    });
+
+    // Shield edge
+    g.ellipse(x, y, width * 0.5 * shieldPulse, height * 0.5 * shieldPulse).stroke({
+      width: 1,
+      color: colors.glow,
+      alpha: effectiveAlpha * 2,
+    });
+
+    // Hexagonal pattern overlay (subtle)
+    if (hpPercent > 0.25) {
+      const hexSize = 12;
+      const hexAlpha = effectiveAlpha * 0.5;
+      for (let hx = -3; hx <= 3; hx++) {
+        for (let hy = -2; hy <= 2; hy++) {
+          const offsetX = (hy % 2) * hexSize * 0.5;
+          const px = x + hx * hexSize + offsetX;
+          const py = y + hy * hexSize * 0.866;
+          // Check if inside shield ellipse
+          const dx = (px - x) / (width * 0.45);
+          const dy = (py - y) / (height * 0.45);
+          if (dx * dx + dy * dy < 1) {
+            g.circle(px, py, 1).fill({ color: colors.glow, alpha: hexAlpha });
+          }
+        }
+      }
+    }
+
+    // Damage warning effect (when HP < 25%)
+    if (hpPercent < 0.25) {
+      const warningPulse = 0.5 + Math.sin(this.animTime * 6) * 0.5;
+      g.ellipse(x, y, width * 0.52, height * 0.52).stroke({
+        width: 2,
+        color: 0xff2222,
+        alpha: 0.3 * warningPulse,
+      });
+    }
+  }
+
+  /**
+   * Draw orbiting energy particles around the toroid
+   */
+  private drawEnergyParticles(
+    g: Graphics,
+    x: number,
+    y: number,
+    orbitX: number,
+    orbitY: number,
+    colors: { primary: number; secondary: number; glow: number; core: number }
+  ): void {
+    const particleCount = FORTRESS_ANIM.particleCount;
+
+    for (let i = 0; i < particleCount; i++) {
+      const baseAngle = (i / particleCount) * Math.PI * 2;
+      const angle = baseAngle + this.animTime * FORTRESS_ANIM.particleOrbitSpeed;
+
+      // Vertical oscillation
+      const vertOffset = Math.sin(this.animTime * 2 + i * 1.2) * 5;
+
+      const px = x + Math.cos(angle) * orbitX;
+      const py = y + Math.sin(angle) * orbitY * 0.3 + vertOffset;
+
+      // Particle size varies with position (closer = larger)
+      const depthFactor = 0.5 + Math.sin(angle) * 0.5; // 0 at back, 1 at front
+      const particleSize = 2 + depthFactor * 2;
+      const particleAlpha = 0.4 + depthFactor * 0.4;
+
+      // Glow
+      g.circle(px, py, particleSize + 2).fill({ color: colors.glow, alpha: particleAlpha * 0.3 });
+      // Core
+      g.circle(px, py, particleSize).fill({ color: colors.core, alpha: particleAlpha });
+    }
+  }
+
+  /**
+   * Draw energy conduits (cables) running along the column
+   */
+  private drawEnergyConduits(
+    g: Graphics,
+    x: number,
+    columnBottom: number,
+    columnTop: number,
+    columnWidth: number,
+    colors: { primary: number; secondary: number; glow: number; core: number }
+  ): void {
+    const conduitOffset = columnWidth * 0.8;
+    const conduitHeight = columnBottom - columnTop;
+
+    // Left and right conduits
+    for (const side of [-1, 1]) {
+      const cx = x + side * conduitOffset;
+
+      // Conduit pipe (darker)
+      g.moveTo(cx, columnBottom)
+        .quadraticCurveTo(cx + side * 8, (columnBottom + columnTop) / 2, cx, columnTop)
+        .stroke({ width: 3, color: THEME.deck.plate });
+
+      // Conduit highlight
+      g.moveTo(cx, columnBottom)
+        .quadraticCurveTo(cx + side * 8, (columnBottom + columnTop) / 2, cx, columnTop)
+        .stroke({ width: 1, color: colors.primary, alpha: 0.4 });
+
+      // Energy flow dots
+      const flowCount = FORTRESS_ANIM.conduitFlowCount;
+      for (let i = 0; i < flowCount; i++) {
+        const t = ((i / flowCount) + this.animTime * FORTRESS_ANIM.energyFlowSpeed * 0.1) % 1;
+        const flowY = columnBottom - t * conduitHeight;
+        const flowX = cx + side * 8 * Math.sin(t * Math.PI); // Curve offset
+
+        g.circle(flowX, flowY, 2).fill({ color: colors.glow, alpha: 0.6 });
+        g.circle(flowX, flowY, 3).fill({ color: colors.core, alpha: 0.3 });
+      }
+    }
+  }
+
+  /**
+   * Draw holographic status ring above the platform
+   */
+  private drawHolographicRing(
+    g: Graphics,
+    x: number,
+    y: number,
+    width: number,
+    colors: { primary: number; secondary: number; glow: number; core: number }
+  ): void {
+    const ringRadius = width * 0.5;
+    const rotation = this.animTime * 0.2;
+
+    // Main ring
+    g.ellipse(x, y, ringRadius, 4).stroke({
+      width: 1,
+      color: colors.glow,
+      alpha: 0.2,
+    });
+
+    // Data bars (rotating around the ring)
+    const barCount = 16;
+    for (let i = 0; i < barCount; i++) {
+      const angle = (i / barCount) * Math.PI * 2 + rotation;
+      const barX = x + Math.cos(angle) * ringRadius;
+      const barY = y + Math.sin(angle) * 4;
+
+      // Pseudo-random height based on position and time
+      const seed = (i * 7919 + Math.floor(this.animTime * 3)) % 100;
+      const barHeight = 3 + (seed / 100) * 6;
+
+      g.rect(barX - 1, barY - barHeight, 2, barHeight).fill({
+        color: colors.glow,
+        alpha: 0.3 + (seed / 100) * 0.3,
+      });
+    }
+  }
+
+  /**
+   * Draw class-specific visual decorations
+   */
+  private drawClassDecorations(
+    g: Graphics,
+    x: number,
+    baseY: number,
+    baseTop: number,
+    baseHeight: number,
+    columnBottom: number,
+    columnTop: number,
+    toroidY: number,
+    toroidRadiusX: number,
+    toroidRadiusY: number,
+    spikeY: number,
+    fortressClass: FortressClass,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    switch (fortressClass) {
+      case 'natural':
+        this.drawNaturalDecorations(g, x, baseTop, baseHeight, columnBottom, columnTop, colors, tier);
+        break;
+      case 'ice':
+        this.drawIceDecorations(g, x, baseY, baseTop, baseHeight, colors, tier);
+        break;
+      case 'fire':
+        this.drawFireDecorations(g, x, toroidY, toroidRadiusY, spikeY, colors, tier);
+        break;
+      case 'lightning':
+        this.drawLightningDecorations(g, x, columnBottom, columnTop, toroidY, colors, tier);
+        break;
+      case 'tech':
+        this.drawTechDecorations(g, x, baseTop, baseHeight, toroidY, toroidRadiusX, colors, tier);
+        break;
+      case 'void':
+        this.drawVoidDecorations(g, x, baseY, toroidY, toroidRadiusX, colors, tier);
+        break;
+      case 'plasma':
+        this.drawPlasmaDecorations(g, x, toroidY, toroidRadiusX, toroidRadiusY, colors, tier);
+        break;
+    }
+  }
+
+  /** Natural class: vines, leaves, spores */
+  private drawNaturalDecorations(
+    g: Graphics,
+    x: number,
+    _baseTop: number,
+    _baseHeight: number,
+    columnBottom: number,
+    columnTop: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    // Vines climbing the column
+    const vineCount = 1 + tier;
+    for (let v = 0; v < vineCount; v++) {
+      const side = v % 2 === 0 ? -1 : 1;
+      const vineStartY = columnBottom - 5;
+      const vineEndY = columnTop + 20;
+      const vineX = x + side * 8;
+
+      // Vine curve
+      g.moveTo(vineX, vineStartY)
+        .quadraticCurveTo(
+          vineX + side * 12 * Math.sin(this.animTime * 0.3 + v),
+          (vineStartY + vineEndY) / 2,
+          vineX + side * 5,
+          vineEndY
+        )
+        .stroke({ width: 2, color: 0x1a5f1a, alpha: 0.8 });
+
+      // Leaves
+      const leafCount = 2 + tier;
+      for (let l = 0; l < leafCount; l++) {
+        const t = (l + 1) / (leafCount + 1);
+        const leafY = vineStartY - t * (vineStartY - vineEndY);
+        const leafX = vineX + side * (6 + Math.sin(t * Math.PI) * 6);
+        const leafSize = 3 + Math.sin(this.animTime + l) * 0.5;
+
+        g.ellipse(leafX + side * leafSize, leafY, leafSize, leafSize * 0.5)
+          .fill({ color: colors.primary, alpha: 0.7 });
+      }
+    }
+
+    // Floating spores/pollen
+    if (tier >= 2) {
+      for (let s = 0; s < 4 + tier * 2; s++) {
+        const angle = (s / 8) * Math.PI * 2 + this.animTime * 0.5;
+        const dist = 30 + Math.sin(this.animTime + s * 1.5) * 10;
+        const sx = x + Math.cos(angle) * dist;
+        const sy = columnTop - 30 + Math.sin(this.animTime * 0.8 + s) * 20;
+
+        g.circle(sx, sy, 1.5).fill({ color: colors.glow, alpha: 0.5 });
+      }
+    }
+  }
+
+  /** Ice class: crystals, frost effect */
+  private drawIceDecorations(
+    g: Graphics,
+    x: number,
+    _baseY: number,
+    baseTop: number,
+    _baseHeight: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    // Ice crystals growing from base
+    const crystalCount = 2 + tier;
+    for (let c = 0; c < crystalCount; c++) {
+      const side = c % 2 === 0 ? -1 : 1;
+      const crystalX = x + side * (25 + c * 8);
+      const crystalHeight = 12 + (c % 3) * 5;
+      const crystalWidth = 4 + (c % 2) * 2;
+
+      // Crystal shape (pointed)
+      g.moveTo(crystalX, baseTop)
+        .lineTo(crystalX - crystalWidth / 2, baseTop)
+        .lineTo(crystalX, baseTop - crystalHeight)
+        .lineTo(crystalX + crystalWidth / 2, baseTop)
+        .closePath()
+        .fill({ color: colors.secondary, alpha: 0.6 })
+        .stroke({ width: 1, color: colors.glow, alpha: 0.8 });
+
+      // Crystal inner glow
+      g.moveTo(crystalX, baseTop - 2)
+        .lineTo(crystalX, baseTop - crystalHeight + 3)
+        .stroke({ width: 1, color: 0xffffff, alpha: 0.3 });
+    }
+
+    // Frost particles
+    if (tier >= 2) {
+      for (let f = 0; f < 6; f++) {
+        const fx = x + (Math.sin(f * 2.3 + this.animTime * 0.3) * 40);
+        const fy = baseTop - 10 - f * 15 - Math.sin(this.animTime + f) * 5;
+
+        // Snowflake shape (simplified)
+        const frostSize = 2;
+        g.circle(fx, fy, frostSize).fill({ color: 0xffffff, alpha: 0.4 });
+      }
+    }
+  }
+
+  /** Fire class: flames, embers */
+  private drawFireDecorations(
+    g: Graphics,
+    x: number,
+    _toroidY: number,
+    _toroidRadiusY: number,
+    spikeY: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    // Flames at the top
+    const flameCount = 3 + tier;
+    for (let f = 0; f < flameCount; f++) {
+      const flameX = x + (f - flameCount / 2) * 8;
+      const flameHeight = 10 + Math.sin(this.animTime * 3 + f * 1.2) * 5;
+      const flameWidth = 4 + Math.sin(this.animTime * 4 + f) * 1;
+
+      // Flame shape
+      g.moveTo(flameX, spikeY + 5)
+        .quadraticCurveTo(flameX - flameWidth, spikeY - flameHeight / 2, flameX, spikeY - flameHeight)
+        .quadraticCurveTo(flameX + flameWidth, spikeY - flameHeight / 2, flameX, spikeY + 5)
+        .fill({ color: colors.secondary, alpha: 0.7 });
+
+      // Inner flame (brighter)
+      g.moveTo(flameX, spikeY + 3)
+        .quadraticCurveTo(flameX - flameWidth * 0.5, spikeY - flameHeight * 0.3, flameX, spikeY - flameHeight * 0.6)
+        .quadraticCurveTo(flameX + flameWidth * 0.5, spikeY - flameHeight * 0.3, flameX, spikeY + 3)
+        .fill({ color: colors.core, alpha: 0.8 });
+    }
+
+    // Rising embers
+    if (tier >= 2) {
+      for (let e = 0; e < 5 + tier * 2; e++) {
+        const emberPhase = (this.animTime * 0.5 + e * 0.3) % 1;
+        const emberX = x + Math.sin(e * 2.7) * 25 + Math.sin(this.animTime + e) * 5;
+        const emberY = spikeY - emberPhase * 40;
+        const emberSize = 1.5 * (1 - emberPhase);
+
+        g.circle(emberX, emberY, emberSize).fill({
+          color: emberPhase < 0.5 ? colors.core : colors.secondary,
+          alpha: (1 - emberPhase) * 0.8
+        });
+      }
+    }
+  }
+
+  /** Lightning class: electric arcs, sparks */
+  private drawLightningDecorations(
+    g: Graphics,
+    x: number,
+    columnBottom: number,
+    columnTop: number,
+    toroidY: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    // Random electric arcs
+    const arcCount = 1 + tier;
+    const seed = Math.floor(this.animTime * 8);
+
+    for (let a = 0; a < arcCount; a++) {
+      // Only show arc intermittently
+      if ((seed + a) % 3 !== 0) continue;
+
+      const startY = columnTop + (columnBottom - columnTop) * ((a + 1) / (arcCount + 1));
+      const side = ((seed + a) % 2) * 2 - 1;
+
+      // Jagged lightning bolt
+      g.moveTo(x, startY);
+      let currentX = x;
+      let currentY = startY;
+      const segments = 3;
+      for (let s = 0; s < segments; s++) {
+        const nextX = currentX + side * (5 + Math.random() * 10);
+        const nextY = currentY - 5 - Math.random() * 5;
+        g.lineTo(nextX, nextY);
+        currentX = nextX;
+        currentY = nextY;
+      }
+      g.stroke({ width: 2, color: colors.glow, alpha: 0.8 });
+
+      // Glow effect
+      g.circle(currentX, currentY, 3).fill({ color: colors.core, alpha: 0.6 });
+    }
+
+    // Static sparks
+    if (tier >= 2) {
+      for (let s = 0; s < 4; s++) {
+        if ((seed + s) % 4 !== 0) continue;
+        const sparkX = x + (Math.sin(s * 3.1) * 30);
+        const sparkY = toroidY + (Math.cos(s * 2.7) * 20);
+
+        g.circle(sparkX, sparkY, 2).fill({ color: 0xffffff, alpha: 0.8 });
+      }
+    }
+  }
+
+  /** Tech class: holographic panels, circuit patterns */
+  private drawTechDecorations(
+    g: Graphics,
+    x: number,
+    baseTop: number,
+    baseHeight: number,
+    toroidY: number,
+    toroidRadiusX: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    // Holographic data panels
+    const panelWidth = 20;
+    const panelHeight = 15;
+
+    for (const side of [-1, 1]) {
+      const panelX = x + side * (toroidRadiusX + 25);
+      const panelY = toroidY;
+
+      // Panel frame
+      g.rect(panelX - panelWidth / 2, panelY - panelHeight / 2, panelWidth, panelHeight)
+        .stroke({ width: 1, color: colors.glow, alpha: 0.4 });
+
+      // Scanning line
+      const scanY = panelY - panelHeight / 2 + (this.animTime % 1) * panelHeight;
+      g.moveTo(panelX - panelWidth / 2 + 2, scanY)
+        .lineTo(panelX + panelWidth / 2 - 2, scanY)
+        .stroke({ width: 1, color: colors.core, alpha: 0.6 });
+
+      // Data dots
+      for (let dy = 0; dy < 3; dy++) {
+        for (let dx = 0; dx < 4; dx++) {
+          const dotX = panelX - panelWidth / 2 + 4 + dx * 4;
+          const dotY = panelY - panelHeight / 2 + 4 + dy * 4;
+          const dotOn = ((dx + dy + Math.floor(this.animTime * 4)) % 3) === 0;
+          if (dotOn) {
+            g.circle(dotX, dotY, 1).fill({ color: colors.glow, alpha: 0.7 });
+          }
+        }
+      }
+    }
+
+    // Circuit pattern on base (tier 2+)
+    if (tier >= 2) {
+      const circuitY = baseTop - baseHeight / 2;
+      g.moveTo(x - 15, circuitY)
+        .lineTo(x - 10, circuitY)
+        .lineTo(x - 10, circuitY - 5)
+        .lineTo(x + 10, circuitY - 5)
+        .lineTo(x + 10, circuitY)
+        .lineTo(x + 15, circuitY)
+        .stroke({ width: 1, color: colors.glow, alpha: 0.3 });
+    }
+  }
+
+  /** Void class: dark tendrils, vortex effect */
+  private drawVoidDecorations(
+    g: Graphics,
+    x: number,
+    baseY: number,
+    toroidY: number,
+    _toroidRadiusX: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    // Dark tendrils from base
+    const tendrilCount = 2 + tier;
+    for (let t = 0; t < tendrilCount; t++) {
+      const angle = (t / tendrilCount) * Math.PI - Math.PI / 2 + Math.sin(this.animTime * 0.5 + t) * 0.2;
+      const tendrilLength = 30 + tier * 10;
+
+      const startX = x + Math.cos(angle + Math.PI / 2) * 20;
+      const startY = baseY - 10;
+      const endX = startX + Math.cos(angle) * tendrilLength;
+      const endY = startY + Math.sin(angle) * tendrilLength * 0.5 - 10;
+
+      // Tendril curve
+      g.moveTo(startX, startY)
+        .quadraticCurveTo(
+          (startX + endX) / 2 + Math.sin(this.animTime + t) * 10,
+          (startY + endY) / 2,
+          endX,
+          endY
+        )
+        .stroke({ width: 3, color: colors.primary, alpha: 0.5 });
+
+      // Tendril tip glow
+      g.circle(endX, endY, 3).fill({ color: colors.glow, alpha: 0.4 });
+    }
+
+    // Particles being drawn INTO the fortress (reverse)
+    if (tier >= 2) {
+      for (let p = 0; p < 4 + tier * 2; p++) {
+        const pPhase = (this.animTime * 0.3 + p * 0.2) % 1;
+        const pAngle = (p / 8) * Math.PI * 2;
+        const pDist = 60 * (1 - pPhase);
+
+        const px = x + Math.cos(pAngle) * pDist;
+        const py = toroidY + Math.sin(pAngle) * pDist * 0.4;
+        const pSize = 1.5 * (1 - pPhase);
+
+        g.circle(px, py, pSize).fill({ color: colors.glow, alpha: pPhase * 0.6 });
+      }
+    }
+  }
+
+  /** Plasma class: energy waves, unstable orbs */
+  private drawPlasmaDecorations(
+    g: Graphics,
+    x: number,
+    toroidY: number,
+    toroidRadiusX: number,
+    toroidRadiusY: number,
+    colors: { primary: number; secondary: number; glow: number; core: number },
+    tier: number
+  ): void {
+    // Expanding energy waves
+    const waveCount = 2 + tier;
+    for (let w = 0; w < waveCount; w++) {
+      const wavePhase = (this.animTime * 0.5 + w * (1 / waveCount)) % 1;
+      const waveRadius = toroidRadiusX * (1 + wavePhase * 0.8);
+      const waveAlpha = (1 - wavePhase) * 0.3;
+
+      g.ellipse(x, toroidY, waveRadius, toroidRadiusY * (1 + wavePhase * 0.5)).stroke({
+        width: 2,
+        color: w % 2 === 0 ? colors.primary : colors.secondary,
+        alpha: waveAlpha,
+      });
+    }
+
+    // Unstable plasma orbs orbiting
+    if (tier >= 2) {
+      const orbCount = 3;
+      for (let o = 0; o < orbCount; o++) {
+        const orbAngle = (o / orbCount) * Math.PI * 2 + this.animTime * 1.5;
+        const orbDist = toroidRadiusX + 25;
+        const orbX = x + Math.cos(orbAngle) * orbDist;
+        const orbY = toroidY + Math.sin(orbAngle) * toroidRadiusY * 0.8;
+
+        // Unstable size variation
+        const orbSize = 4 + Math.sin(this.animTime * 4 + o * 2) * 1.5;
+
+        // Color alternating between primary and secondary
+        const orbColor = Math.sin(this.animTime * 3 + o) > 0 ? colors.primary : colors.secondary;
+
+        g.circle(orbX, orbY, orbSize + 2).fill({ color: colors.glow, alpha: 0.3 });
+        g.circle(orbX, orbY, orbSize).fill({ color: orbColor, alpha: 0.8 });
+      }
+    }
   }
 
   /**

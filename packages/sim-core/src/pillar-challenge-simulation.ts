@@ -268,6 +268,7 @@ export function createPillarChallengeGameState(
     fortressLastAttackTick: 0,
     fortressClass: config.fortressClass,
     commanderLevel: config.commanderLevel,
+    levelsGainedInSession: 0,
     sessionXpEarned: 0,
     xpAtSessionStart: getTotalXpForLevel(config.commanderLevel),
     enemies: [],

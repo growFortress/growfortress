@@ -22,6 +22,7 @@ export interface GameEndState {
   dustEarned: number;
   relics: string[];
   sessionXpEarned: number;
+  statPointsEarned: number;
 }
 
 export interface AnalyticsSnapshot {
@@ -320,6 +321,7 @@ export interface LevelUpNotification {
   level: number;
   goldReward: number;
   dustReward: number;
+  statPointsReward: number;
 }
 
 export const levelUpNotifications = signal<LevelUpNotification[]>([]);
@@ -329,7 +331,12 @@ let levelUpNotificationId = 0;
 /**
  * Queue a level-up notification.
  */
-export function queueLevelUpNotification(level: number, goldReward: number, dustReward: number): void {
+export function queueLevelUpNotification(
+  level: number,
+  goldReward: number,
+  dustReward: number,
+  statPointsReward: number
+): void {
   levelUpNotifications.value = [
     ...levelUpNotifications.value,
     {
@@ -337,6 +344,7 @@ export function queueLevelUpNotification(level: number, goldReward: number, dust
       level,
       goldReward,
       dustReward,
+      statPointsReward,
     },
   ];
 }

@@ -3,6 +3,12 @@ import type { GameState, ActiveProjectile, FortressClass, ProjectileType } from 
 import { FP } from '@arcade/sim-core';
 import { fpXToScreen, fpYToScreen } from '../CoordinateSystem.js';
 import { graphicsSettings } from '../../state/settings.signals.js';
+import {
+  bossRushActive,
+  bossPosition,
+  bossProjectiles,
+  type BossProjectile,
+} from '../../state/boss-rush.signals.js';
 
 // --- CLASS COLORS (7 classes) ---
 const CLASS_COLORS: Record<FortressClass, { primary: number; secondary: number; glow: number; core: number }> = {
@@ -41,7 +47,7 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
-// --- PROJECTILE VISUAL CONFIG (compact, refined design) ---
+// --- PROJECTILE VISUAL CONFIG (larger, more visible effects) ---
 const PROJECTILE_CONFIG: Record<ProjectileType, {
   size: number;
   trailLength: number;
@@ -52,13 +58,13 @@ const PROJECTILE_CONFIG: Record<ProjectileType, {
   pulseSpeed: number;
   glowLayers: number;
 }> = {
-  physical: { size: 4, trailLength: 6, shape: 'circle', emissionRate: 4, motionBlur: 1.2, ghostCount: 2, pulseSpeed: 3, glowLayers: 1 },
-  icicle: { size: 5, trailLength: 8, shape: 'spike', emissionRate: 5, motionBlur: 1.5, ghostCount: 2, pulseSpeed: 2, glowLayers: 1 },
-  fireball: { size: 6, trailLength: 10, shape: 'circle', emissionRate: 8, motionBlur: 1.4, ghostCount: 3, pulseSpeed: 5, glowLayers: 2 },
-  bolt: { size: 3, trailLength: 12, shape: 'bolt', emissionRate: 6, motionBlur: 2.0, ghostCount: 3, pulseSpeed: 8, glowLayers: 1 },
-  laser: { size: 2, trailLength: 14, shape: 'bolt', emissionRate: 5, motionBlur: 2.5, ghostCount: 3, pulseSpeed: 4, glowLayers: 1 },
-  plasma_beam: { size: 5, trailLength: 12, shape: 'plasma', emissionRate: 10, motionBlur: 2.0, ghostCount: 4, pulseSpeed: 10, glowLayers: 2 },
-  void_slash: { size: 8, trailLength: 8, shape: 'slash', emissionRate: 8, motionBlur: 1.8, ghostCount: 3, pulseSpeed: 6, glowLayers: 2 },
+  physical: { size: 8, trailLength: 10, shape: 'circle', emissionRate: 6, motionBlur: 1.2, ghostCount: 3, pulseSpeed: 3, glowLayers: 2 },
+  icicle: { size: 10, trailLength: 12, shape: 'spike', emissionRate: 7, motionBlur: 1.5, ghostCount: 3, pulseSpeed: 2, glowLayers: 2 },
+  fireball: { size: 12, trailLength: 14, shape: 'circle', emissionRate: 10, motionBlur: 1.4, ghostCount: 4, pulseSpeed: 5, glowLayers: 3 },
+  bolt: { size: 6, trailLength: 16, shape: 'bolt', emissionRate: 8, motionBlur: 2.0, ghostCount: 4, pulseSpeed: 8, glowLayers: 2 },
+  laser: { size: 5, trailLength: 18, shape: 'bolt', emissionRate: 7, motionBlur: 2.5, ghostCount: 4, pulseSpeed: 4, glowLayers: 2 },
+  plasma_beam: { size: 10, trailLength: 16, shape: 'plasma', emissionRate: 12, motionBlur: 2.0, ghostCount: 5, pulseSpeed: 10, glowLayers: 3 },
+  void_slash: { size: 14, trailLength: 12, shape: 'slash', emissionRate: 10, motionBlur: 1.8, ghostCount: 4, pulseSpeed: 6, glowLayers: 3 },
 };
 
 // Map FortressClass to ProjectileType (7 classes)
@@ -999,5 +1005,149 @@ export class ProjectileSystem {
       glowLayers,
       emissionRate,
     };
+  }
+
+  // ============================================================================
+  // BOSS RUSH PROJECTILE RENDERING
+  // ============================================================================
+
+  /**
+   * Render boss projectiles with arc trajectory in Boss Rush mode.
+   * Called separately from regular projectile update.
+   */
+  public renderBossProjectiles(
+    viewWidth: number,
+    viewHeight: number,
+    fortressScreenX: number
+  ): void {
+    if (!bossRushActive.value || !bossPosition.value) return;
+
+    const g = this.graphics;
+    const projectiles = bossProjectiles.value;
+
+    // Convert boss position from fixed-point to screen coordinates
+    const bossScreenX = fpXToScreen(FP.fromFloat(bossPosition.value.x), viewWidth);
+    const bossScreenY = fpYToScreen(FP.fromFloat(bossPosition.value.y), viewHeight);
+
+    for (const proj of projectiles) {
+      this.drawBossProjectile(
+        g,
+        proj,
+        bossScreenX,
+        bossScreenY,
+        fortressScreenX,
+        viewHeight * 0.5, // Fortress Y (center)
+        viewWidth,
+        viewHeight
+      );
+    }
+  }
+
+  /**
+   * Draw a single boss projectile with parabolic arc trajectory.
+   * Creates a large, menacing fireball-like projectile.
+   */
+  private drawBossProjectile(
+    g: Graphics,
+    proj: BossProjectile,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    _viewWidth: number,
+    viewHeight: number
+  ): void {
+    const progress = proj.progress;
+
+    // Parabolic arc trajectory
+    // At progress=0.5 (apex), arc reaches maximum height
+    const arcHeight = viewHeight * 0.15; // 15% of screen height
+    const arcOffset = -4 * arcHeight * progress * (1 - progress);
+
+    // Linear interpolation for X and Y base position
+    const x = startX + (endX - startX) * progress;
+    const baseY = startY + (endY - startY) * progress;
+    const y = baseY + arcOffset; // Subtract because Y goes down
+
+    // Boss projectile uses fire-like colors (ominous red/orange)
+    const colors = {
+      primary: 0xcc0000,   // Dark red
+      secondary: 0xff4400, // Orange-red
+      glow: 0xff6600,      // Orange glow
+      core: 0xffaa00,      // Yellow-orange core
+    };
+
+    // Size based on progress (gets slightly larger as it approaches)
+    const baseSize = 18;
+    const size = baseSize * (0.8 + progress * 0.4);
+
+    // Pulsing effect
+    const pulse = 0.9 + Math.sin(this.time * 0.01 + proj.id) * 0.1;
+
+    // Outer fiery aura (large, scary)
+    g.circle(x, y, size * 2.5 * pulse)
+      .fill({ color: colors.glow, alpha: 0.1 * pulse });
+
+    g.circle(x, y, size * 1.8 * pulse)
+      .fill({ color: colors.secondary, alpha: 0.2 * pulse });
+
+    // Fire trail effect (behind the projectile)
+    const trailCount = 8;
+    for (let i = 1; i <= trailCount; i++) {
+      const trailProgress = progress - i * 0.015;
+      if (trailProgress < 0) continue;
+
+      const trailArcOffset = -4 * arcHeight * trailProgress * (1 - trailProgress);
+      const trailX = startX + (endX - startX) * trailProgress;
+      const trailBaseY = startY + (endY - startY) * trailProgress;
+      const trailY = trailBaseY + trailArcOffset;
+
+      const trailAlpha = (1 - i / trailCount) * 0.4;
+      const trailSize = size * (1 - i / trailCount * 0.5);
+
+      // Ember/smoke trail
+      g.circle(trailX, trailY, trailSize)
+        .fill({ color: i % 2 === 0 ? colors.primary : colors.secondary, alpha: trailAlpha });
+    }
+
+    // Main fireball body (layered for depth)
+    g.circle(x, y, size * 1.2)
+      .fill({ color: colors.primary });
+
+    g.circle(x, y, size * 0.9)
+      .fill({ color: colors.secondary });
+
+    g.circle(x, y, size * 0.5)
+      .fill({ color: colors.core });
+
+    // White hot center
+    g.circle(x, y, size * 0.25)
+      .fill({ color: 0xffffff, alpha: 0.95 });
+
+    // Sparks around the fireball
+    const sparkCount = 4;
+    for (let i = 0; i < sparkCount; i++) {
+      const sparkAngle = (this.time * 0.005 + proj.id * 0.1) + (Math.PI * 2 * i) / sparkCount;
+      const sparkDist = size * 1.1;
+      const sparkX = x + Math.cos(sparkAngle) * sparkDist;
+      const sparkY = y + Math.sin(sparkAngle) * sparkDist;
+      const sparkSize = 3 + Math.sin(this.time * 0.02 + i) * 1.5;
+
+      g.circle(sparkX, sparkY, sparkSize)
+        .fill({ color: colors.glow, alpha: 0.7 });
+    }
+
+    // Impact warning - draw target marker when close to hitting
+    if (progress > 0.7) {
+      const warningAlpha = (progress - 0.7) / 0.3 * 0.5;
+      const warningPulse = 1 + Math.sin(this.time * 0.03) * 0.2;
+
+      // Target circle at impact point
+      g.circle(endX, endY, 20 * warningPulse)
+        .stroke({ width: 2, color: 0xff0000, alpha: warningAlpha });
+
+      g.circle(endX, endY, 30 * warningPulse)
+        .stroke({ width: 1, color: 0xff0000, alpha: warningAlpha * 0.5 });
+    }
   }
 }

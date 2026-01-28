@@ -84,7 +84,7 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
     select: {
       preferredCurrency: true,
       purchaseLimits: true,
-      purchases: {
+      shopPurchases: {
         where: { status: 'COMPLETED', productType: 'DUST' },
         select: { productId: true },
         distinct: ['productId'],
@@ -105,7 +105,7 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
   }
 
   // Check first-purchase bonus availability for dust packages
-  const purchasedSet = new Set((userData?.purchases ?? []).map((p: { productId: string }) => p.productId));
+  const purchasedSet = new Set((userData?.shopPurchases ?? []).map((p) => p.productId));
   const firstPurchaseBonusAvailable: Record<string, boolean> = {};
   for (const pkg of SHOP_DUST_PACKAGES) {
     firstPurchaseBonusAvailable[pkg.id] = !purchasedSet.has(pkg.id);
@@ -113,7 +113,7 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
 
   // Check if starter pack is available
   const starterPackPurchased = purchaseLimits.some(
-    (l) => l.productId === 'starter_pack' && l.purchaseCount > 0
+    (l: { productId: string; purchaseCount: number }) => l.productId === 'starter_pack' && l.purchaseCount > 0
   );
 
   // Get user's unlocked heroes for premium hero availability
@@ -121,7 +121,7 @@ export async function getShopOverview(userId: string): Promise<GetShopResponse> 
 
   // Check if battle pass is purchased
   const battlePassPurchased = purchaseLimits.some(
-    (l) => l.productId === BATTLE_PASS.id && l.purchaseCount > 0
+    (l: { productId: string; purchaseCount: number }) => l.productId === BATTLE_PASS.id && l.purchaseCount > 0
   );
 
   // Build featured products list

@@ -62,11 +62,11 @@ export function Header(_props: HeaderProps) {
               <span class={styles.groupLabel}>{t('header.resourcesLabel')}</span>
               <div class={styles.resourceGroup}>
                 <div class={styles.resource} aria-label={t('header.resourceGold', { amount: displayGold.value })}>
-                  <GoldIcon size={22} className={styles.resourceIcon} />
+                  <GoldIcon size={28} className={styles.resourceIcon} />
                   <span class={`${styles.resourceValue} ${styles.gold}`}>{displayGold.value}</span>
                 </div>
                 <div class={styles.resource} aria-label={t('header.resourceDust', { amount: displayDust.value })}>
-                  <DustIcon size={22} className={styles.resourceIcon} />
+                  <DustIcon size={28} className={styles.resourceIcon} />
                   <span class={`${styles.resourceValue} ${styles.dust}`}>{displayDust.value}</span>
                 </div>
                 {/* Energy bar */}
@@ -112,7 +112,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => showPillarUnlockModal()}
                   aria-label={t('header.worldExploration')}
                 >
-                  <Icon name="globe" size={18} />
+                  <Icon name="globe" size={22} />
                 </button>
               </Tooltip>
 
@@ -125,7 +125,7 @@ export function Header(_props: HeaderProps) {
                     ? t('header.pvpArenaWithChallenges', { count: pvpPendingChallenges.value })
                     : t('header.pvpArena')}
                 >
-                  <Icon name="crossed-swords" size={18} />
+                  <Icon name="crossed-swords" size={22} />
                   {pvpPendingChallenges.value > 0 && (
                     <span class={styles.badge} aria-hidden="true">
                       {pvpPendingChallenges.value}
@@ -141,7 +141,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openLeaderboardModal()}
                   aria-label={hasUnclaimedRewards.value ? t('header.leaderboardsWithRewards') : t('common:navigation.leaderboards')}
                 >
-                  <Icon name="trophy" size={18} />
+                  <Icon name="trophy" size={22} />
                   {hasUnclaimedRewards.value && (
                     <span class={styles.dotBadge} aria-label={t('header.rewardsToClaim')} />
                   )}
@@ -155,7 +155,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openStatisticsDashboard()}
                   aria-label={t('common:navigation.statistics')}
                 >
-                  <Icon name="chart" size={18} />
+                  <Icon name="chart" size={22} />
                 </button>
               </Tooltip>
 
@@ -168,7 +168,7 @@ export function Header(_props: HeaderProps) {
                     ? t('header.achievementsWithRewards')
                     : t('common:navigation.achievements')}
                 >
-                  <Icon name="medal" size={18} />
+                  <Icon name="medal" size={22} />
                   {hasUnclaimedAchievements.value && (
                     <span class={styles.dotBadge} aria-label={t('header.rewardsToClaim')} />
                   )}
@@ -182,7 +182,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openGuildPanel()}
                   aria-label={t('header.openGuildPanel')}
                 >
-                  <Icon name="castle" size={18} />
+                  <Icon name="castle" size={22} />
                   {hasNewInvitations.value && !isInGuild.value && (
                     <span class={styles.dotBadge} aria-label={t('header.newInvitations')} />
                   )}
@@ -196,7 +196,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => openMessagesModal()}
                   aria-label={hasUnreadMessages.value ? t('header.messagesWithUnread', { count: unreadCounts.value.total }) : t('common:navigation.messages')}
                 >
-                  <Icon name="envelope" size={18} />
+                  <Icon name="envelope" size={22} />
                   {hasUnreadMessages.value && (
                     <span class={styles.badge} aria-hidden="true">
                       {unreadCounts.value.total > 99 ? '99+' : unreadCounts.value.total}
@@ -212,7 +212,7 @@ export function Header(_props: HeaderProps) {
                   onClick={() => showShopModal()}
                   aria-label={t('common:navigation.shop')}
                 >
-                  <Icon name="cart" size={18} />
+                  <Icon name="cart" size={22} />
                 </button>
               </Tooltip>
 
@@ -223,7 +223,7 @@ export function Header(_props: HeaderProps) {
                   onClick={openSettingsMenu}
                   aria-label={t('common:navigation.settings')}
                 >
-                  <Icon name="settings" size={18} />
+                  <Icon name="settings" size={22} />
                 </button>
               </Tooltip>
             </div>

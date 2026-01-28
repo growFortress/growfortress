@@ -8,3 +8,4 @@ export { SkillCard } from './SkillCard.js';
 export { UpgradeSection } from './UpgradeSection.js';
 export { TierPreviewModal } from './TierPreviewModal.js';
 export { ArtifactPickerModal } from './ArtifactPickerModal.js';
+export { WorksWithSection } from './WorksWithSection.js';

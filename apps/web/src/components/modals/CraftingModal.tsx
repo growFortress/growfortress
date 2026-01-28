@@ -17,7 +17,8 @@ import { baseGold, playerMaterials } from '../../state/index.js';
 import { craftArtifact } from '../../api/client.js';
 import { Modal } from '../shared/Modal.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
-import { GoldIcon } from '../icons/index.js';
+import { GoldIcon, DamageIcon, ArmorIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './CraftingModal.module.css';
 
 // State signals
@@ -26,15 +27,25 @@ const selectedArtifactId = signal<string | null>(null);
 const crafting = signal<string | null>(null);
 const craftSuccess = signal<string | null>(null);
 
-// Slot icons
-const SLOT_ICONS: Record<string, string> = {
-  weapon: '⚔️',
-  armor: '🛡️',
-  accessory: '💍',
-  gadget: '🔧',
-  book: '📖',
-  special: '⭐',
-};
+// Slot icons - using SVG for weapon and armor
+function getSlotIcon(slot: string, size: number = 20): ComponentChildren {
+  switch (slot) {
+    case 'weapon':
+      return <DamageIcon size={size} />;
+    case 'armor':
+      return <ArmorIcon size={size} />;
+    case 'accessory':
+      return '💍';
+    case 'gadget':
+      return '🔧';
+    case 'book':
+      return '📖';
+    case 'special':
+      return '⭐';
+    default:
+      return '📦';
+  }
+}
 
 // Material icons
 const MATERIAL_ICONS: Record<string, string> = {
@@ -57,14 +68,14 @@ const MATERIAL_ICONS: Record<string, string> = {
 };
 
 // Slot filters config
-const SLOT_FILTERS: { value: ArtifactSlot | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '📦' },
-  { value: 'weapon', label: 'Weapon', icon: '⚔️' },
-  { value: 'armor', label: 'Armor', icon: '🛡️' },
-  { value: 'accessory', label: 'Accessory', icon: '💍' },
-  { value: 'gadget', label: 'Gadget', icon: '🔧' },
-  { value: 'book', label: 'Book', icon: '📖' },
-  { value: 'special', label: 'Special', icon: '⭐' },
+const SLOT_FILTERS: { value: ArtifactSlot | 'all'; label: string; slot?: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'weapon', label: 'Weapon', slot: 'weapon' },
+  { value: 'armor', label: 'Armor', slot: 'armor' },
+  { value: 'accessory', label: 'Accessory', slot: 'accessory' },
+  { value: 'gadget', label: 'Gadget', slot: 'gadget' },
+  { value: 'book', label: 'Book', slot: 'book' },
+  { value: 'special', label: 'Special', slot: 'special' },
 ];
 
 // Material name formatting
@@ -227,7 +238,9 @@ export function CraftingModal() {
             class={`${styles.filterBtn} ${slotFilter === f.value ? styles.active : ''}`}
             onClick={() => (activeSlotFilter.value = f.value)}
           >
-            <span class={styles.filterIcon}>{f.icon}</span>
+            <span class={styles.filterIcon}>
+              {f.value === 'all' ? '📦' : getSlotIcon(f.slot || f.value, 18)}
+            </span>
             <span class={styles.filterLabel}>{f.label}</span>
           </button>
         ))}
@@ -253,7 +266,7 @@ export function CraftingModal() {
                   aria-selected={isSelected}
                 >
                   <span class={styles.recipeListIcon}>
-                    {SLOT_ICONS[artifact.slot] || '📦'}
+                    {getSlotIcon(artifact.slot, 20)}
                   </span>
                   <div class={styles.recipeListInfo}>
                     <span class={styles.recipeListName}>
@@ -331,7 +344,7 @@ function RecipeDetailView({
       {/* Header with large icon */}
       <div class={`${styles.detailHeader} ${styles[artifact.rarity]}`}>
         <span class={styles.artifactIconLarge}>
-          {SLOT_ICONS[artifact.slot] || '📦'}
+          {getSlotIcon(artifact.slot, 48)}
         </span>
         <div class={styles.detailHeaderInfo}>
           <h3 class={styles.artifactName}>{artifactName}</h3>

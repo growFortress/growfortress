@@ -15,8 +15,7 @@ import { getClassById } from '../data/classes.js';
 import { HERO_PHYSICS } from '../physics.js';
 import { calculateHeroArtifactHealthBonus } from './artifacts.js';
 import { getFormationPosition } from './helpers.js';
-import { getHeroPowerMultipliers } from './apply-power-upgrades.js';
-import { createDefaultPlayerPowerData, type PlayerPowerData } from '../data/power-upgrades.js';
+import type { PlayerPowerData } from '../data/power-upgrades.js';
 import { calculateWeaknessStatPenalty } from './weakness.js';
 
 /**
@@ -31,7 +30,7 @@ import { calculateWeaknessStatPenalty } from './weakness.js';
 export function initializeHeroes(
   heroIds: string[],
   fortressX: number,
-  powerData?: PlayerPowerData,
+  _powerData?: PlayerPowerData, // Hero power upgrades applied during combat, not at init
   heroTiers?: Record<string, number>,
   equippedArtifacts?: Record<string, string>,
   guildStatBoost?: number
@@ -39,8 +38,7 @@ export function initializeHeroes(
   const heroes: ActiveHero[] = [];
   const heroCount = heroIds.filter(id => getHeroById(id)).length;
 
-  // Use default power data if none provided
-  const effectivePowerData = powerData || createDefaultPlayerPowerData();
+  // Hero power upgrades (damage, attackSpeed, range, critChance) are applied during combat
   const effectiveHeroTiers = heroTiers || {};
   const guildBoost = 1 + (guildStatBoost ?? 0);
 
@@ -59,10 +57,9 @@ export function initializeHeroes(
     // Calculate base stats for this tier
     const tierStats = calculateHeroStats(heroDef, tier, 1);
 
-    // Apply power upgrades to hero stats (multiplicative with tier bonus)
-    const powerMultipliers = getHeroPowerMultipliers(effectivePowerData, heroId);
-    // Apply guild stat boost to HP
-    let modifiedHp = Math.floor(tierStats.hp * powerMultipliers.hpMultiplier * guildBoost);
+    // Note: Hero power upgrades (damage, attackSpeed, range, critChance) are applied during combat
+    // HP is no longer upgradeable - use base tier stats with guild boost
+    let modifiedHp = Math.floor(tierStats.hp * guildBoost);
 
     // Apply artifact bonuses
     const artifactId = equippedArtifacts?.[heroId];

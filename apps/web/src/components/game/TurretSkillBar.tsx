@@ -3,24 +3,36 @@ import { getTurretById } from '@arcade/sim-core';
 import { activeTurrets, gamePhase } from '../../state/index.js';
 import { setTurretTargeting, activateOvercharge } from '../../state/gameActions.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { RailgunIcon, ArtilleryIcon, ArcIcon, CryoIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './TurretSkillBar.module.css';
 
-// Turret icons (matching actual turret types)
-const TURRET_ICONS: Record<string, string> = {
-  railgun: '🎯',
-  artillery: '💣',
-  arc: '🔷',
-  cryo: '❄️',
-  // Legacy IDs (fallback)
-  arrow: '🏹',
-  cannon: '💣',
-  sniper: '🎯',
-  tesla: '⚡',
-  frost: '❄️',
-  flame: '🔥',
-  support: '✨',
-  poison: '☠️',
-};
+// Turret icon components - using SVG matching game models
+function getTurretIcon(turretId: string, size: number = 24): ComponentChildren {
+  switch (turretId) {
+    case 'railgun':
+    case 'arrow': // Legacy
+    case 'sniper': // Legacy
+      return <RailgunIcon size={size} />;
+    case 'artillery':
+    case 'cannon': // Legacy
+      return <ArtilleryIcon size={size} />;
+    case 'arc':
+    case 'tesla': // Legacy
+      return <ArcIcon size={size} />;
+    case 'cryo':
+    case 'frost': // Legacy
+      return <CryoIcon size={size} />;
+    case 'flame':
+      return '🔥';
+    case 'support':
+      return '✨';
+    case 'poison':
+      return '☠️';
+    default:
+      return '🗼';
+  }
+}
 
 // Targeting mode short labels
 const TARGETING_LABEL_KEYS: Record<TurretTargetingMode, string> = {
@@ -45,7 +57,7 @@ export function TurretSkillBar({ compact = false }: TurretSkillBarProps) {
   }
 
   return (
-    <div class={`${styles.container} ${compact ? styles.compact : ''}`}>
+    <div class={`${styles.container} ${compact ? styles.compact : ''}`} data-tutorial="turret-targeting">
       {!compact && (
         <div class={styles.header}>
           <span class={styles.title}>Wieżyczki</span>
@@ -70,7 +82,7 @@ function TurretCard({ turret, compact }: TurretCardProps) {
   const turretDef = getTurretById(turret.definitionId as 'arrow' | 'cannon' | 'sniper' | 'tesla' | 'frost' | 'flame' | 'support' | 'poison');
   if (!turretDef) return null;
 
-  const turretIcon = TURRET_ICONS[turret.definitionId] || '🗼';
+  const turretIcon = getTurretIcon(turret.definitionId, 24);
 
   // Overcharge state
   const overchargeCooldown = turret.overchargeCooldownTick || 0;

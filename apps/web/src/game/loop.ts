@@ -56,7 +56,8 @@ export class GameLoop {
   pause(): void {
     if (!this.running || this.paused) return;
     this.paused = true;
-    this.cancelFrame();
+    // Don't cancel RAF - keep rendering the paused state
+    // The tick function will skip game.step() but still render
   }
 
   resume(): void {
@@ -65,7 +66,7 @@ export class GameLoop {
     if (this.pausedForExternal) return;
     this.paused = false;
     this.lastTime = performance.now(); // Reset to avoid large delta
-    this.tick(this.lastTime);
+    // RAF loop is already running (continues during pause), just unpause
   }
 
   /** Pause from external source (tutorial, modal, etc.) - blocks visibility resume */
@@ -98,7 +99,16 @@ export class GameLoop {
   }
 
   private tick = (currentTime: number): void => {
-    if (!this.running || this.paused) return;
+    if (!this.running) return;
+
+    // Always continue RAF loop for rendering, even when paused
+    this.rafId = requestAnimationFrame(this.tick);
+
+    // When paused, just render current state without advancing simulation
+    if (this.paused) {
+      this.render(0);
+      return;
+    }
 
     const delta = currentTime - this.lastTime;
     this.lastTime = currentTime;
@@ -132,8 +142,6 @@ export class GameLoop {
     // Interpolation alpha for smooth rendering
     const alpha = this.accumulator / TICK_MS;
     this.render(alpha);
-
-    this.rafId = requestAnimationFrame(this.tick);
   };
 
   /** Get current tick from game (if available) */

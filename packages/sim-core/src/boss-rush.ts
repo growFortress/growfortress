@@ -63,8 +63,21 @@ export interface BossRushConfig {
   /** Boss damage multiplier */
   bossDamageMultiplier: number;
 
-  /** Boss speed reduction (0.5 = half speed) */
+  /** Boss speed reduction (0.5 = half speed) - unused in stationary mode */
   bossSpeedMultiplier: number;
+
+  // ============================================================================
+  // STATIONARY BOSS MODE
+  // ============================================================================
+
+  /** Boss spawn X position in fixed-point (distance from left edge) */
+  bossSpawnX?: number;
+
+  /** Boss attack cooldown in ticks (default: 60 = 2 seconds at 30Hz) */
+  bossAttackCooldownTicks?: number;
+
+  /** Boss projectile travel time in ticks (default: 45 = 1.5 seconds at 30Hz) */
+  bossProjectileTravelTicks?: number;
 }
 
 /** Default Boss Rush configuration */
@@ -73,9 +86,13 @@ export const DEFAULT_BOSS_RUSH_CONFIG: BossRushConfig = {
   intermissionTicks: 300, // 10 seconds at 30Hz (extended for relic/shop selection)
   scalingPerBoss: 1.10, // +10% per boss
   cycleScaling: 2.0, // 2x per cycle
-  bossHpMultiplier: 5.0, // Bosses have 5x HP compared to base archetype
-  bossDamageMultiplier: 2.0, // Bosses deal 2x damage
-  bossSpeedMultiplier: 0.5, // Bosses move at half speed
+  bossHpMultiplier: 8.0, // Bosses have 8x HP (increased - stationary target)
+  bossDamageMultiplier: 1.5, // Bosses deal 1.5x damage (reduced - ranged attacks)
+  bossSpeedMultiplier: 0.5, // Unused in stationary mode
+  // Stationary boss settings
+  bossSpawnX: FP.fromInt(35), // 35 units from left (near right edge of 40-unit field)
+  bossAttackCooldownTicks: 60, // 2 seconds between attacks
+  bossProjectileTravelTicks: 45, // 1.5 seconds travel time
 };
 
 // ============================================================================

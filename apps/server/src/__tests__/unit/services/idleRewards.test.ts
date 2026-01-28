@@ -110,6 +110,7 @@ describe('Idle Rewards Service', () => {
         ...createMockUser(),
         lastIdleClaimAt: fourHoursAgo,
         progression: createMockProgression({ level: 10 }),
+        colonyProgress: createMockColonyProgress({ colonyLevels: { farm: 1, mine: 0, market: 0, factory: 0 } }),
       });
 
       const result = await calculatePendingIdleRewards('user-123');
@@ -124,6 +125,7 @@ describe('Idle Rewards Service', () => {
         ...createMockUser(),
         lastIdleClaimAt: fourHoursAgo,
         progression: createMockProgression({ level: 1 }),
+        colonyProgress: createMockColonyProgress({ colonyLevels: { farm: 1, mine: 0, market: 0, factory: 0 } }),
       });
       const level1Result = await calculatePendingIdleRewards('user-123');
 
@@ -131,6 +133,7 @@ describe('Idle Rewards Service', () => {
         ...createMockUser(),
         lastIdleClaimAt: fourHoursAgo,
         progression: createMockProgression({ level: 50 }),
+        colonyProgress: createMockColonyProgress({ colonyLevels: { farm: 1, mine: 0, market: 0, factory: 0 } }),
       });
       const level50Result = await calculatePendingIdleRewards('user-123');
 
@@ -187,6 +190,7 @@ describe('Idle Rewards Service', () => {
         ...createMockUser(),
         lastIdleClaimAt: fourHoursAgo,
         progression: createMockProgression({ level: 10 }),
+        colonyProgress: createMockColonyProgress({ colonyLevels: { farm: 1, mine: 0, market: 0, factory: 0 } }),
       });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
@@ -215,6 +219,7 @@ describe('Idle Rewards Service', () => {
         ...createMockUser(),
         lastIdleClaimAt: fourHoursAgo,
         progression: createMockProgression({ level: 10 }),
+        colonyProgress: createMockColonyProgress({ colonyLevels: { farm: 1, mine: 0, market: 0, factory: 0 } }),
       });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
@@ -244,6 +249,7 @@ describe('Idle Rewards Service', () => {
         ...createMockUser(),
         lastIdleClaimAt: fourHoursAgo,
         progression: createMockProgression({ level: 20 }),
+        colonyProgress: createMockColonyProgress({ colonyLevels: { farm: 1, mine: 0, market: 0, factory: 0 } }),
       });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
@@ -273,6 +279,7 @@ describe('Idle Rewards Service', () => {
         ...createMockUser(),
         lastIdleClaimAt: fourHoursAgo,
         progression: createMockProgression({ level: 10 }),
+        colonyProgress: createMockColonyProgress({ colonyLevels: { farm: 1, mine: 0, market: 0, factory: 0 } }),
       });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {

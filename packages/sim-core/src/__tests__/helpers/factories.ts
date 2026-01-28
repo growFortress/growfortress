@@ -34,6 +34,7 @@ export function createGameState(overrides: Partial<GameState> = {}): GameState {
     fortressLastAttackTick: 0,
     fortressClass: 'natural',
     commanderLevel: 1,
+    levelsGainedInSession: 0,
     sessionXpEarned: 0,
     xpAtSessionStart: 0,
     enemies: [],

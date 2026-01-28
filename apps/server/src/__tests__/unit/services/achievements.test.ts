@@ -214,9 +214,9 @@ describe('Achievements Service', () => {
 
       const result = await getAchievements('user-123');
 
-      expect(result.categoryProgress.combat.completed).toBe(2); // enemy_slayer tiers claimed
-      expect(result.categoryProgress.progression.completed).toBe(1); // wave_warrior tier claimed
-      expect(result.categoryProgress.combat.total).toBeGreaterThan(0);
+      expect(result.categoryProgress.combat?.completed).toBe(2); // enemy_slayer tiers claimed
+      expect(result.categoryProgress.progression?.completed).toBe(1); // wave_warrior tier claimed
+      expect(result.categoryProgress.combat?.total).toBeGreaterThan(0);
     });
 
     it('should detect unclaimed rewards correctly', async () => {
@@ -813,7 +813,7 @@ describe('Achievements Service', () => {
         'pvpBattles', 'pvpVictories', 'guildBattles', 'bossRushCycles', 'pillarChallengesCompleted',
         'materialsCollected', 'relicsChosen', 'skillsActivated', 'damageDealt', 'criticalHits',
         'guildDonations', 'towerRaceWaves', 'crystalFragments', 'masteryPoints', 'synergiesTriggered',
-        'commanderLevel', 'prestigeCount',
+        'commanderLevel', 'prestigeCount', 'tutorialsCompleted',
       ];
 
       for (const def of ACHIEVEMENT_DEFINITIONS) {

@@ -5,11 +5,12 @@ import { RegisterForm } from './RegisterForm.js';
 import { ForgotPasswordForm } from './ForgotPasswordForm.js';
 import { ResetPasswordForm } from './ResetPasswordForm.js';
 import { AuthBackgroundBattle } from './AuthBackgroundBattle.js';
+import { FortressIcon, HeroIcon, GuildIcon, ChartIcon, BuildingIcon } from './AuthIcons.js';
 import { forgotPassword, resetPassword } from '../../api/client.js';
 import styles from './AuthScreen.module.css';
 
 interface AuthScreenProps {
-  onLogin: (username: string, password: string) => Promise<void>;
+  onLogin: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   onRegister: (username: string, password: string, email?: string) => Promise<void>;
   onGuestLogin: () => Promise<void>;
 }
@@ -113,15 +114,21 @@ export function AuthScreen({ onLogin, onRegister, onGuestLogin }: AuthScreenProp
           {/* Feature highlights */}
           <div class={styles.heroFeatures}>
             <div class={styles.heroFeature}>
-              <span class={styles.heroFeatureIcon}>&#x1F3F0;</span>
+              <span class={styles.heroFeatureIcon}>
+                <FortressIcon size={18} />
+              </span>
               <span>{t('features.build', { defaultValue: 'Build & upgrade your fortress' })}</span>
             </div>
             <div class={styles.heroFeature}>
-              <span class={styles.heroFeatureIcon}>&#x2694;</span>
+              <span class={styles.heroFeatureIcon}>
+                <HeroIcon size={18} />
+              </span>
               <span>{t('features.heroes', { defaultValue: 'Collect powerful heroes' })}</span>
             </div>
             <div class={styles.heroFeature}>
-              <span class={styles.heroFeatureIcon}>&#x1F91D;</span>
+              <span class={styles.heroFeatureIcon}>
+                <GuildIcon size={18} />
+              </span>
               <span>{t('features.guilds', { defaultValue: 'Join guilds & compete' })}</span>
             </div>
           </div>
@@ -217,7 +224,9 @@ export function AuthScreen({ onLogin, onRegister, onGuestLogin }: AuthScreenProp
           {/* Compact footer */}
           <div class={styles.footerInfo}>
             <div class={styles.analyticsInfo}>
-              <span class={styles.analyticsIcon}>&#128202;</span>
+              <span class={styles.analyticsIcon}>
+                <ChartIcon size={14} />
+              </span>
               <span class={styles.analyticsText}>
                 <button
                   type="button"
@@ -230,7 +239,9 @@ export function AuthScreen({ onLogin, onRegister, onGuestLogin }: AuthScreenProp
             </div>
 
             <div class={styles.studioInfo}>
-              <span class={styles.studioIcon}>&#127970;</span>
+              <span class={styles.studioIcon}>
+                <BuildingIcon size={14} />
+              </span>
               <span class={styles.studioText}>
                 <a
                   href={`/company/index-${language === 'pl' ? 'pl' : 'en'}.html`}

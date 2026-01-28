@@ -19,7 +19,7 @@ import {
   refillEnergyAction,
 } from '../../state/energy.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
-import { DustIcon } from '../icons/index.js';
+import { DustIcon, EnergyIcon } from '../icons/index.js';
 import styles from './EnergyBar.module.css';
 
 interface EnergyBarProps {
@@ -50,7 +50,7 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
     <div class={containerClasses} title={t('energy.title')}>
       {/* Icon and count */}
       <div class={styles.iconSection}>
-        <span class={styles.icon}>🔋</span>
+        <EnergyIcon size={compact ? 20 : 30} className={styles.icon} />
         <div class={styles.values}>
           <span class={styles.energyCount}>
             {currentEnergy.value}/{maxEnergy.value}
@@ -60,6 +60,8 @@ export function EnergyBar({ className = '', compact = false }: EnergyBarProps) {
             <span class={styles.regenTime}>{t('energy.regenIn', { time: regenText })}</span>
           )}
         </div>
+        {/* Show label in compact mode to match other resources */}
+        {compact && <span class={styles.energyLabel}>{t('common:resources.energy')}</span>}
       </div>
 
       {/* Progress bar - smaller in compact mode */}

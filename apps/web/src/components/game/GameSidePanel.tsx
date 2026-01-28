@@ -8,7 +8,6 @@ import {
 } from "../../state/index.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
 import { EnergyBar } from "./EnergyBar.js";
-import { LevelBar } from "./LevelBar.js";
 import { PillarDisplay } from "./PillarDisplay.js";
 import { HeroSkillBar } from "./HeroSkillBar.js";
 import { TurretSkillBar } from "./TurretSkillBar.js";
@@ -61,17 +60,16 @@ export function GameSidePanel({ onSpeedChange, onMenuClick }: GameSidePanelProps
       <section class={styles.resourcesSection}>
         <h3 class={styles.sectionTitle}>{t("game:sidePanel.resources")}</h3>
         <div class={styles.resourcesList}>
-          <div class={styles.resourceItem}>
+          <div class={styles.resourceItem} data-tutorial="gold-display">
             <GoldIcon size={20} className={styles.resourceIcon} />
             <span class={styles.resourceValue}>{displayGold.value}</span>
             <span class={styles.resourceLabel}>{t("common:resources.gold")}</span>
           </div>
-          <div class={styles.resourceItem}>
+          <div class={styles.resourceItem} data-tutorial="dust-display">
             <DustIcon size={22} className={styles.resourceIcon} />
             <span class={styles.resourceValue}>{displayDust.value}</span>
             <span class={styles.resourceLabel}>{t("common:resources.dust")}</span>
           </div>
-          <LevelBar compact />
           <EnergyBar compact />
         </div>
       </section>

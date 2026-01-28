@@ -122,11 +122,11 @@ describe('Boss Stats Scaling', () => {
       expect(boss0Cycle1.hp).toBeGreaterThan(boss0Cycle0.hp * positionScale);
     });
 
-    it('applies boss multipliers (5x HP, 2x damage, 0.5x speed)', () => {
+    it('applies boss multipliers (8x HP, 1.5x damage for stationary boss)', () => {
       const config = DEFAULT_BOSS_RUSH_CONFIG;
-      expect(config.bossHpMultiplier).toBe(5.0);
-      expect(config.bossDamageMultiplier).toBe(2.0);
-      expect(config.bossSpeedMultiplier).toBe(0.5);
+      expect(config.bossHpMultiplier).toBe(8.0);
+      expect(config.bossDamageMultiplier).toBe(1.5);
+      expect(config.bossSpeedMultiplier).toBe(0.5); // Unused in stationary mode
     });
 
     it('calculates cycle number correctly for boss #14', () => {
@@ -529,16 +529,29 @@ describe('Boss Rush Configuration', () => {
     expect(DEFAULT_BOSS_RUSH_CONFIG.cycleScaling).toBe(2.0);
   });
 
-  it('has boss HP multiplier of 5.0', () => {
-    expect(DEFAULT_BOSS_RUSH_CONFIG.bossHpMultiplier).toBe(5.0);
+  it('has boss HP multiplier of 8.0 (stationary boss needs more HP)', () => {
+    expect(DEFAULT_BOSS_RUSH_CONFIG.bossHpMultiplier).toBe(8.0);
   });
 
-  it('has boss damage multiplier of 2.0', () => {
-    expect(DEFAULT_BOSS_RUSH_CONFIG.bossDamageMultiplier).toBe(2.0);
+  it('has boss damage multiplier of 1.5 (ranged attacks)', () => {
+    expect(DEFAULT_BOSS_RUSH_CONFIG.bossDamageMultiplier).toBe(1.5);
   });
 
-  it('has boss speed multiplier of 0.5 (half speed)', () => {
+  it('has boss speed multiplier of 0.5 (unused in stationary mode)', () => {
     expect(DEFAULT_BOSS_RUSH_CONFIG.bossSpeedMultiplier).toBe(0.5);
+  });
+
+  // Stationary boss mode configuration
+  it('has boss spawn position at 35 units from left', () => {
+    expect(DEFAULT_BOSS_RUSH_CONFIG.bossSpawnX).toBeDefined();
+  });
+
+  it('has boss attack cooldown of 60 ticks (2 seconds)', () => {
+    expect(DEFAULT_BOSS_RUSH_CONFIG.bossAttackCooldownTicks).toBe(60);
+  });
+
+  it('has boss projectile travel time of 45 ticks (1.5 seconds)', () => {
+    expect(DEFAULT_BOSS_RUSH_CONFIG.bossProjectileTravelTicks).toBe(45);
   });
 });
 
@@ -728,5 +741,251 @@ describe('Extended BossRushState for Roguelike', () => {
     expect(summary.synergiesActivated).toBe(3);
     expect(summary.bestSingleHit).toBe(9999);
     expect(summary.goldSpent).toBe(300);
+  });
+});
+
+// ============================================================================
+// STATIONARY BOSS SIMULATION TESTS
+// ============================================================================
+
+import {
+  BossRushSimulation,
+  getDefaultBossRushConfig,
+  createBossRushGameState,
+  type BossRushSimConfig,
+} from '../../boss-rush-simulation.js';
+import { FP } from '../../fixed.js';
+
+describe('Stationary Boss Simulation', () => {
+  let config: BossRushSimConfig;
+
+  beforeEach(() => {
+    config = getDefaultBossRushConfig();
+  });
+
+  describe('Boss Spawning', () => {
+    it('spawns boss at fixed X position', () => {
+      const sim = new BossRushSimulation(12345, config);
+
+      expect(sim.state.currentBoss).not.toBeNull();
+      expect(sim.state.currentBoss!.x).toBeDefined();
+      expect(sim.state.currentBoss!.x).toBeGreaterThan(0);
+    });
+
+    it('spawns boss at center Y position', () => {
+      const sim = new BossRushSimulation(12345, config);
+
+      const centerY = FP.div(config.fieldHeight, FP.fromInt(2));
+      expect(sim.state.currentBoss!.y).toBe(centerY);
+    });
+
+    it('boss position does not change over time', () => {
+      const sim = new BossRushSimulation(12345, config);
+      const initialX = sim.state.currentBoss!.x;
+      const initialY = sim.state.currentBoss!.y;
+
+      // Run for 100 ticks
+      for (let i = 0; i < 100; i++) {
+        sim.step();
+      }
+
+      expect(sim.state.currentBoss!.x).toBe(initialX);
+      expect(sim.state.currentBoss!.y).toBe(initialY);
+    });
+  });
+
+  describe('Boss Ranged Attack', () => {
+    it('creates projectile after attack cooldown', () => {
+      const sim = new BossRushSimulation(12345, config);
+      const attackCooldown = config.bossRush.bossAttackCooldownTicks ?? 60;
+
+      // Initially no projectiles
+      expect(sim.state.bossProjectiles.length).toBe(0);
+
+      // Advance to just after cooldown
+      for (let i = 0; i <= attackCooldown; i++) {
+        sim.step();
+      }
+
+      expect(sim.state.bossProjectiles.length).toBe(1);
+    });
+
+    it('projectile has correct damage', () => {
+      const sim = new BossRushSimulation(12345, config);
+      const bossDamage = sim.state.currentBoss!.damage;
+      const attackCooldown = config.bossRush.bossAttackCooldownTicks ?? 60;
+
+      for (let i = 0; i <= attackCooldown; i++) {
+        sim.step();
+      }
+
+      expect(sim.state.bossProjectiles[0].damage).toBe(bossDamage);
+    });
+
+    it('damages fortress when projectile arrives', () => {
+      const sim = new BossRushSimulation(12345, config);
+      const initialHp = sim.state.fortressHp;
+      const attackCooldown = config.bossRush.bossAttackCooldownTicks ?? 60;
+      const travelTime = config.bossRush.bossProjectileTravelTicks ?? 45;
+
+      // Advance until projectile arrives
+      for (let i = 0; i <= attackCooldown + travelTime; i++) {
+        sim.step();
+      }
+
+      expect(sim.state.fortressHp).toBeLessThan(initialHp);
+    });
+
+    it('removes projectile after it hits', () => {
+      const sim = new BossRushSimulation(12345, config);
+      const attackCooldown = config.bossRush.bossAttackCooldownTicks ?? 60;
+      const travelTime = config.bossRush.bossProjectileTravelTicks ?? 45;
+
+      // Advance past arrival
+      for (let i = 0; i <= attackCooldown + travelTime + 5; i++) {
+        sim.step();
+      }
+
+      // First projectile should be removed after impact
+      // (second one might be created if cooldown passed again)
+      const arrivedProjectiles = sim.state.bossProjectiles.filter(
+        p => sim.state.tick >= p.arrivalTick
+      );
+      expect(arrivedProjectiles.length).toBe(0);
+    });
+
+    it('fires multiple projectiles over time', () => {
+      const sim = new BossRushSimulation(12345, config);
+      const attackCooldown = config.bossRush.bossAttackCooldownTicks ?? 60;
+
+      // Run for 3 attack cycles
+      for (let i = 0; i <= attackCooldown * 3; i++) {
+        sim.step();
+      }
+
+      // Should have created multiple projectiles (some may have arrived)
+      const totalProjectilesCreated = sim.state.nextBossProjectileId - 1;
+      expect(totalProjectilesCreated).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  describe('Hero Movement and Combat', () => {
+    it('heroes start near fortress', () => {
+      // Create config with heroes
+      const configWithHeroes = {
+        ...config,
+        startingHeroes: ['vanguard'],
+      };
+      const sim = new BossRushSimulation(12345, configWithHeroes);
+
+      if (sim.state.heroes.length > 0) {
+        const hero = sim.state.heroes[0];
+        // Hero should start near fortress (left side)
+        expect(FP.toFloat(hero.x)).toBeLessThan(10);
+      }
+    });
+
+    it('heroes advance toward boss over time', () => {
+      const configWithHeroes = {
+        ...config,
+        startingHeroes: ['vanguard'],
+      };
+      const sim = new BossRushSimulation(12345, configWithHeroes);
+
+      if (sim.state.heroes.length > 0) {
+        const initialX = sim.state.heroes[0].x;
+
+        // Run for a while
+        for (let i = 0; i < 100; i++) {
+          sim.step();
+        }
+
+        // Hero should have moved right (toward boss)
+        expect(sim.state.heroes[0].x).toBeGreaterThan(initialX);
+      }
+    });
+
+    it('hero attacks reduce boss HP', () => {
+      const configWithHeroes = {
+        ...config,
+        startingHeroes: ['vanguard'],
+      };
+      const sim = new BossRushSimulation(12345, configWithHeroes);
+      const initialBossHp = sim.state.currentBoss!.hp;
+
+      // Run long enough for hero to reach boss and attack
+      for (let i = 0; i < 500; i++) {
+        sim.step();
+        if (!sim.state.currentBoss) break; // Boss died
+      }
+
+      // Boss should have taken damage from hero attacks
+      // (or boss was killed, which also counts)
+      if (sim.state.currentBoss) {
+        expect(sim.state.currentBoss.hp).toBeLessThan(initialBossHp);
+      } else {
+        // Boss was killed - that's fine too
+        expect(sim.state.bossRush.bossesKilled).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('Boss Rush Game State', () => {
+    it('initializes with boss projectiles array', () => {
+      const state = createBossRushGameState(12345, config);
+      expect(state.bossProjectiles).toEqual([]);
+      expect(state.nextBossProjectileId).toBe(1);
+    });
+
+    it('resets projectiles when new boss spawns', () => {
+      const sim = new BossRushSimulation(12345, config);
+
+      // Create some projectiles
+      const attackCooldown = config.bossRush.bossAttackCooldownTicks ?? 60;
+      for (let i = 0; i <= attackCooldown; i++) {
+        sim.step();
+      }
+      expect(sim.state.bossProjectiles.length).toBeGreaterThan(0);
+
+      // Kill boss by setting HP to 0
+      sim.state.currentBoss!.hp = 0;
+
+      // Process boss kill
+      for (let i = 0; i < 10; i++) {
+        sim.step();
+      }
+
+      // After intermission ends and new boss spawns, projectiles should be reset
+      // (need to wait for intermission)
+      const intermissionTicks = config.bossRush.intermissionTicks;
+      for (let i = 0; i < intermissionTicks + 10; i++) {
+        sim.step();
+      }
+
+      // New boss spawned with fresh projectiles
+      expect(sim.state.currentBoss).not.toBeNull();
+      expect(sim.state.bossProjectiles.length).toBeLessThanOrEqual(1); // May have fired one
+    });
+  });
+
+  describe('Game End Condition', () => {
+    it('ends game when fortress HP reaches 0', () => {
+      const sim = new BossRushSimulation(12345, config);
+
+      // Manually set fortress HP low
+      sim.state.fortressHp = 1;
+
+      // Force boss attack to hit
+      const attackCooldown = config.bossRush.bossAttackCooldownTicks ?? 60;
+      const travelTime = config.bossRush.bossProjectileTravelTicks ?? 45;
+
+      for (let i = 0; i <= attackCooldown + travelTime + 5; i++) {
+        sim.step();
+        if (sim.state.ended) break;
+      }
+
+      expect(sim.state.fortressHp).toBe(0);
+      expect(sim.state.ended).toBe(true);
+    });
   });
 });

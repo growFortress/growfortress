@@ -33,7 +33,7 @@ function secureRandomFloat(): number {
 /**
  * Idle Rewards Configuration
  * Balance: ~6 materials per 8h at level 1, ~10 at level 50
- * Dust: Premium currency - reduced rates
+ * Dust: Premium currency - reduced rates (only with active colonies)
  */
 const IDLE_CONFIG = {
   maxAccrualHours: 8,
@@ -43,9 +43,9 @@ const IDLE_CONFIG = {
   baseDropsPerHour: 0.75,      // ~6 materials at level 1 for 8h
   levelScalingPerLevel: 0.03,  // +0.24/8h per level
 
-  // Dust rewards (premium currency - reduced rates)
-  baseDustPerHour: 1,          // 8 dust for full 8h at level 1 (premium)
-  dustLevelScaling: 0.05,      // +0.05 dust/hour per level (premium)
+  // Dust rewards (premium currency - heavily reduced, requires active colonies)
+  baseDustPerHour: 0.25,       // 2 dust for full 8h at level 1 (premium)
+  dustLevelScaling: 0.02,      // +0.02 dust/hour per level (premium)
 
   // Rarity weights for idle drops (no common materials in idle)
   rarityWeights: {
@@ -275,13 +275,6 @@ export async function calculatePendingIdleRewards(userId: string): Promise<Pendi
   const canClaim = minutesSinceLastClaim >= IDLE_CONFIG.minClaimIntervalMinutes && cappedHours > 0;
   const minutesUntilNextClaim = Math.max(0, IDLE_CONFIG.minClaimIntervalMinutes - minutesSinceLastClaim);
 
-  // Generate pending materials based on time offline
-  const pendingMaterials = generateIdleDrops(cappedHours, user.progression.level);
-
-  // Calculate bonus dust (scales with level)
-  const dustPerHour = IDLE_CONFIG.baseDustPerHour + (user.progression.level - 1) * IDLE_CONFIG.dustLevelScaling;
-  const pendingDust = Math.floor(cappedHours * dustPerHour);
-
   // Colony gold calculation
   const colonyLevels = user.colonyProgress
     ? parseColonyLevels(user.colonyProgress.colonyLevels)
@@ -290,6 +283,27 @@ export async function calculatePendingIdleRewards(userId: string): Promise<Pendi
   const fortressLevel = user.progression.level;  // Use commander level as fortress level
   const pendingGold = calculateColonyGold(colonies, cappedHours, fortressLevel);
   const totalGoldPerHour = calculateTotalGoldPerHour(colonies, fortressLevel);
+
+  // Check if player has at least one active (unlocked AND level > 0) colony
+  const hasActiveColony = COLONY_DEFINITIONS.some(def => {
+    const level = colonyLevels[def.id] || 0;
+    const unlocked = user.progression!.level >= def.unlockLevel;
+    return unlocked && level > 0;
+  });
+
+  // Materials and dust ONLY awarded if player has active colonies
+  // This prevents rewards when all buildings are locked or at level 0
+  let pendingMaterials: Record<string, number> = {};
+  let pendingDust = 0;
+
+  if (hasActiveColony) {
+    // Generate pending materials based on time offline
+    pendingMaterials = generateIdleDrops(cappedHours, user.progression.level);
+
+    // Calculate bonus dust (scales with level)
+    const dustPerHour = IDLE_CONFIG.baseDustPerHour + (user.progression.level - 1) * IDLE_CONFIG.dustLevelScaling;
+    pendingDust = Math.floor(cappedHours * dustPerHour);
+  }
 
   // Get available gold for canUpgrade calculations
   const availableGold = (user.inventory?.gold || 0) + pendingGold;

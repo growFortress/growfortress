@@ -22,6 +22,7 @@ import {
 } from '../../api/pvp.js';
 import { OpponentsList } from './OpponentsList.js';
 import { ChallengesList } from './ChallengesList.js';
+import { DamageIcon, CritMultiplierIcon } from '../icons/index.js';
 import styles from './PvpPanel.module.css';
 
 export function PvpPanel() {
@@ -76,7 +77,7 @@ export function PvpPanel() {
         {/* Header */}
         <div class={styles.header}>
           <div class={styles.headerContent}>
-            <div class={styles.headerIcon}>⚔️</div>
+            <DamageIcon size={24} className={styles.headerIcon} />
             <div class={styles.headerText}>
               <h2 class={styles.title}>PVP Arena</h2>
               <span class={styles.subtitle}>Walcz z innymi graczami</span>
@@ -99,7 +100,7 @@ export function PvpPanel() {
             </div>
           </div>
           <div class={`${styles.statCard} ${styles.statCardLosses}`}>
-            <div class={styles.statIcon}>💀</div>
+            <CritMultiplierIcon size={24} className={styles.statIcon} />
             <div class={styles.statContent}>
               <span class={styles.statValue}>{losses}</span>
               <span class={styles.statLabel}>Przegrane</span>

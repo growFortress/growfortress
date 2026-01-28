@@ -500,6 +500,68 @@
       "tech": "Technologia"
     }
   },
+  "bossRushSetup": {
+    "title": "Boss Rush",
+    "descriptionLine1": "Zmierz się z potężnymi bossami w nieskończonym wyzwaniu.",
+    "descriptionLine2": "Każdy boss jest silniejszy od poprzedniego. Jak daleko zajdziesz?",
+    "bestScore": "NAJLEPSZY WYNIK",
+    "loading": "Ładowanie...",
+    "bestDamage": "{{damage}} obrażeń",
+    "bestBosses": "{{count}} bossów",
+    "noScores": "Brak wyników. Rozpocznij swój pierwszy run!",
+    "sequenceTitle": "Sekwencja Bossów ({{count}} bossów)",
+    "cycleNote": "Sekwencja powtarza się ze zwiększoną trudnością.",
+    "milestonesTitle": "KAMIENIE MILOWE",
+    "milestoneCount": "{{count}} bossów",
+    "cancel": "Anuluj",
+    "start": "Rozpocznij Boss Rush"
+  },
+  "bossRushEnd": {
+    "ariaLabel": "Ekran końca Boss Rush",
+    "gameOver": "KONIEC GRY",
+    "fortressDestroyed": "Twoja twierdza została zniszczona.",
+    "totalDamage": "Łączne Obrażenia",
+    "newBest": "NOWY REKORD!",
+    "bossesKilled": "Zabici Bossowie",
+    "bossesKilledValue": "{{count}} (Cykl {{cycle}})",
+    "timeSurvived": "Czas Przetrwania",
+    "damageTimeline": "Oś Czasu Obrażeń",
+    "timeline": {
+      "boss": "Boss",
+      "damage": "Obrażenia",
+      "status": "Status",
+      "killed": "Zabity",
+      "notKilled": "Uciekł"
+    },
+    "runStats": {
+      "title": "Statystyki Runu",
+      "relicsCollected": "Zebrane Relikty",
+      "synergiesActivated": "Aktywne Synergie",
+      "bestSingleHit": "Najlepszy Cios",
+      "goldSpent": "Wydane Złoto",
+      "hpHealed": "Uleczone HP",
+      "relicRerolls": "Przerzuty Reliktów",
+      "collectedRelics": "Zebrane Relikty"
+    },
+    "achievements": "Osiągnięcia",
+    "achievementLabel": "{{count}} Bossów Pokonanych",
+    "rewardsTitle": "Nagrody",
+    "rewardGold": "🪙 {{amount}} Złota",
+    "rewardDust": "✨ {{amount}} Pyłu",
+    "rewardXp": "⭐ {{amount}} XP",
+    "levelUp": "🎉 Awans! Teraz poziom {{level}}",
+    "leaderboardRank": "Pozycja w rankingu: #{{rank}}",
+    "autoRestart": {
+      "countdown": "Auto-restart za {{seconds}}s",
+      "cancel": "Anuluj",
+      "toggle": "Auto-restart",
+      "on": "WŁ",
+      "off": "WYŁ",
+      "noEnergy": "(brak energii)"
+    },
+    "menu": "Menu",
+    "playAgain": "Zagraj Ponownie"
+  },
   "statistics": {
     "title": "Panel Statystyk",
     "ariaLabel": "Panel Statystyk",

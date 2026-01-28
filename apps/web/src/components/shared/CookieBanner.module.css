@@ -1,51 +1,53 @@
 .banner {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  bottom: 16px;
   transform: translateX(-50%);
-  width: min(92vw, 720px);
-  background: var(--color-bg-panel);
-  border: var(--border-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg), var(--glow-primary);
-  padding: 16px 20px;
+  width: min(90vw, 500px);
+  background: rgba(10, 14, 20, 0.95);
+  border: 1px solid var(--color-primary-30);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 10px 14px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 12px;
-  text-align: center;
-  z-index: var(--z-modal-backdrop);
+  text-align: left;
+  z-index: 800; /* Below modals and tutorial */
+  backdrop-filter: blur(8px);
 }
 
 .text {
-  font-size: 13px;
-  line-height: 1.6;
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--color-text-60);
 }
 
 .actions {
   display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .primary,
 .secondary {
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition: var(--transition-interactive-normal);
+  white-space: nowrap;
 }
 
 .primary {
   background: var(--color-primary);
   color: var(--color-bg);
   border: none;
-  box-shadow: var(--shadow-sm), var(--glow-primary);
 }
 
 .primary:hover {
@@ -60,8 +62,7 @@
 
 .secondary:hover {
   color: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: var(--glow-primary);
+  border-color: var(--color-primary-60);
 }
 
 .primary:focus-visible,
@@ -70,18 +71,28 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .banner {
     bottom: 12px;
-    padding: 14px 16px;
+    flex-direction: column;
+    text-align: center;
+    padding: 10px 12px;
+    gap: 8px;
   }
 
   .text {
-    font-size: 12px;
+    font-size: 11px;
   }
 
-  .primary,
-  .secondary {
+  .actions {
     width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Backdrop-filter fallback for unsupported browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .banner {
+    background: rgba(10, 14, 20, 0.98);
   }
 }

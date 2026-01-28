@@ -1,5 +1,5 @@
 import { useTranslation } from '../../../i18n/useTranslation.js';
-import { DustIcon } from '../../icons/index.js';
+import { XpIcon, HpIcon, DamageIcon, SpeedIcon } from '../../icons/index.js';
 import styles from './HeroStatsCard.module.css';
 import cardStyles from './cards.module.css';
 
@@ -25,28 +25,28 @@ export function HeroStatsCard({ currentHp, maxHp, damage, attackSpeed, level, xp
       <div class={styles.statsGrid}>
         {/* HP */}
         <div class={cardStyles.statBox}>
-          <span class={cardStyles.statIcon}>❤️</span>
+          <HpIcon size={20} className={cardStyles.statIcon} />
           <span class={cardStyles.statLabel}>{t('heroDetails.statsShort.hp')}</span>
           <span class={cardStyles.statValue}>{currentHp}/{maxHp}</span>
         </div>
 
         {/* Damage */}
         <div class={cardStyles.statBox}>
-          <span class={cardStyles.statIcon}>⚔️</span>
+          <DamageIcon size={20} className={cardStyles.statIcon} />
           <span class={cardStyles.statLabel}>{t('heroDetails.statsShort.damage')}</span>
           <span class={cardStyles.statValue}>{damage}</span>
         </div>
 
         {/* Attack Speed */}
         <div class={cardStyles.statBox}>
-          <span class={cardStyles.statIcon}>⚡</span>
+          <SpeedIcon size={20} className={cardStyles.statIcon} />
           <span class={cardStyles.statLabel}>{t('heroDetails.statsShort.attackSpeed')}</span>
           <span class={cardStyles.statValue}>{attackSpeed.toFixed(2)}</span>
         </div>
 
         {/* XP */}
         <div class={cardStyles.statBox}>
-          <DustIcon size={16} className={cardStyles.statIcon} />
+          <XpIcon size={20} className={cardStyles.statIcon} />
           <span class={cardStyles.statLabel}>{t('resources.xp')}</span>
           <span class={cardStyles.statValue}>{xp}</span>
         </div>

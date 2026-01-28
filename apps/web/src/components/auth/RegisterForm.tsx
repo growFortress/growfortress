@@ -3,6 +3,7 @@ import { authLoading } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator.js';
+import { UserIcon, LockIcon, EmailIcon, EyeIcon, EyeOffIcon, CheckIcon } from './AuthIcons.js';
 import styles from './AuthScreen.module.css';
 
 interface RegisterFormProps {
@@ -55,7 +56,9 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
         <label htmlFor={usernameId} class={styles.srOnly}>
           {t('register.usernamePlaceholder')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">👤</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <UserIcon size={18} />
+        </span>
         <input
           id={usernameId}
           type="text"
@@ -72,7 +75,9 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
           onBlur={() => setTouched({ ...touched, username: true })}
         />
         {touched.username && username.length >= 3 && username.length <= 20 && (
-          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">✓</span>
+          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">
+            <CheckIcon size={14} />
+          </span>
         )}
         <span id={usernameHintId} class={styles.srOnly}>
           {t('register.usernameHint')}
@@ -83,7 +88,9 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
         <label htmlFor={emailId} class={styles.srOnly}>
           {t('register.email')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">📧</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <EmailIcon size={18} />
+        </span>
         <input
           id={emailId}
           type="email"
@@ -94,7 +101,9 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
           onBlur={() => setTouched({ ...touched, email: true })}
         />
         {touched.email && email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
-          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">✓</span>
+          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">
+            <CheckIcon size={14} />
+          </span>
         )}
       </div>
 
@@ -102,7 +111,9 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
         <label htmlFor={passwordId} class={styles.srOnly}>
           {t('register.passwordPlaceholder')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">🔒</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <LockIcon size={18} />
+        </span>
         <input
           id={passwordId}
           type={showPassword ? 'text' : 'password'}
@@ -118,7 +129,9 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
           onBlur={() => setTouched({ ...touched, password: true })}
         />
         {touched.password && password.length >= 6 && (
-          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">✓</span>
+          <span class={`${styles.validationIcon} ${styles.valid}`} aria-hidden="true">
+            <CheckIcon size={14} />
+          </span>
         )}
         <button
           type="button"
@@ -127,7 +140,7 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
           aria-label={showPassword ? 'Hide password' : 'Show password'}
           tabIndex={-1}
         >
-          {showPassword ? '👁️' : '👁️‍🗨️'}
+          {showPassword ? <EyeIcon size={20} /> : <EyeOffIcon size={20} />}
         </button>
         <span id={passwordHintId} class={styles.srOnly}>
           {t('register.passwordHint')}

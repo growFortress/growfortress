@@ -3,6 +3,7 @@ import { useRef, useEffect } from 'preact/hooks';
 import { activeSynergies, selectedFortressClass, activeHeroes, showSynergyToast } from '../../state/index.js';
 import { getActiveSynergiesForHeroes, getHeroById } from '@arcade/sim-core';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { SpeedIcon } from '../icons/index.js';
 import styles from './SynergyPanel.module.css';
 
 // Class colors
@@ -126,7 +127,8 @@ export function SynergyPanel({ compact = false }: SynergyPanelProps) {
       {!compact && activeHeroSynergies.length > 0 && (
         <div class={styles.heroSynergiesSection}>
           <div class={styles.heroSynergiesHeader}>
-            ⚡ {t('synergyPanel.activeHeroSynergies', { defaultValue: 'Hero Combos' })}
+            <SpeedIcon size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+            {t('synergyPanel.activeHeroSynergies', { defaultValue: 'Hero Combos' })}
           </div>
           {activeHeroSynergies.map(synergy => (
             <div key={synergy.id} class={styles.heroSynergyActive}>

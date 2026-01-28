@@ -20,8 +20,10 @@ import {
 } from '../../state/idle.signals';
 import { baseGold, baseDust } from '../../state/profile.signals';
 import { formatNumber } from '../../utils/formatters';
-import { ScanLines, GlitchText } from './effects';
+import { GlitchText } from './effects';
 import { BuildingCard } from './BuildingCard';
+import { GoldIcon } from '../icons/GoldIcon';
+import { DustIcon } from '../icons/DustIcon';
 import styles from './ColonyTerminal.module.css';
 
 export function ColonyTerminal() {
@@ -72,11 +74,11 @@ export function ColonyTerminal() {
 
             <div className={styles.resources}>
               <div className={styles.resourceItem}>
-                <span className={styles.icon}>&#129689;</span>
+                <GoldIcon size={18} />
                 <span className={styles.value}>{formatNumber(baseGold.value)}</span>
               </div>
               <div className={styles.resourceItem}>
-                <span className={styles.icon}>&#128142;</span>
+                <DustIcon size={18} />
                 <span className={styles.value}>{formatNumber(baseDust.value)}</span>
               </div>
             </div>
@@ -156,9 +158,6 @@ export function ColonyTerminal() {
               ))}
             </div>
           )}
-
-          {/* CRT Effect */}
-          <ScanLines />
         </motion.div>
       )}
     </AnimatePresence>

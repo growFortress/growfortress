@@ -1,11 +1,10 @@
 import type { JSX } from 'preact';
-import type { FortressClass, HeroDefinition, HeroWeakness } from '@arcade/sim-core';
+import type { FortressClass, HeroDefinition } from '@arcade/sim-core';
 import { getHeroTags } from '@arcade/sim-core';
 import { HeroAvatar } from '../../shared/HeroAvatar.js';
 import { TagList } from '../../common/TagBadge.js';
 import { useTranslation } from '../../../i18n/useTranslation.js';
 import styles from './HeroIdentityCard.module.css';
-import cardStyles from './cards.module.css';
 
 // Class colors (7 classes)
 const CLASS_COLORS: Record<FortressClass, string> = {
@@ -18,16 +17,6 @@ const CLASS_COLORS: Record<FortressClass, string> = {
   plasma: '#00ffff',
 };
 
-// Class icons
-const CLASS_ICONS: Record<FortressClass, string> = {
-  natural: '🌿',
-  ice: '❄️',
-  fire: '🔥',
-  lightning: '⚡',
-  tech: '🔧',
-  void: '🌀',
-  plasma: '⚛️',
-};
 
 // Tier colors
 const TIER_COLORS = {
@@ -40,17 +29,14 @@ interface HeroIdentityCardProps {
   heroDefinition: HeroDefinition;
   currentTier: 1 | 2 | 3;
   level: number;
-  weaknesses?: HeroWeakness[];
   power?: number;
 }
 
-export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesses = [], power }: HeroIdentityCardProps) {
+export function HeroIdentityCard({ heroDefinition, currentTier, level, power }: HeroIdentityCardProps) {
   const { t } = useTranslation(['common', 'data']);
   const classColor = CLASS_COLORS[heroDefinition.class];
-  const classIcon = CLASS_ICONS[heroDefinition.class];
   const tierColor = TIER_COLORS[currentTier];
   const tierDef = heroDefinition.tiers[currentTier - 1];
-  const roleKey = heroDefinition.role === 'crowd_control' ? 'control' : heroDefinition.role;
 
   return (
     <div
@@ -65,24 +51,6 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
 
       {/* Hero Name */}
       <h2 class={styles.heroName}>{heroDefinition.name}</h2>
-
-      {/* Badges Row */}
-      <div class={styles.badgesRow}>
-        <span
-          class={`${cardStyles.badge} ${cardStyles.classBadge}`}
-          style={{ '--class-color': classColor } as JSX.CSSProperties}
-        >
-          {classIcon} {t(`elements.${heroDefinition.class}`).toUpperCase()}
-        </span>
-        <span class={`${cardStyles.badge} ${cardStyles.roleBadge}`}>
-          {t(`roles.${roleKey}`).toUpperCase()}
-        </span>
-      </div>
-
-      {/* Rarity Badge */}
-      <span class={`${cardStyles.badge} ${cardStyles.rarityBadge} ${cardStyles[heroDefinition.rarity]}`}>
-        {t(`rarity.${heroDefinition.rarity}`).toUpperCase()}
-      </span>
 
       {/* Synergy Tags */}
       <div class={styles.tagsRow}>
@@ -113,25 +81,6 @@ export function HeroIdentityCard({ heroDefinition, currentTier, level, weaknesse
           <span class={styles.powerIcon}>💪</span>
           <span class={styles.powerLabel}>{t('heroDetails.power')}</span>
           <span class={styles.powerValue}>{power.toLocaleString()}</span>
-        </div>
-      )}
-
-      {/* Weaknesses Section */}
-      {weaknesses.length > 0 && (
-        <div class={styles.weaknessSection}>
-          <div class={styles.weaknessHeader}>⚠️ {t('heroDetails.weaknesses').toUpperCase()}</div>
-          <div class={styles.weaknessList}>
-            {weaknesses.map((weakness) => (
-              <div key={weakness.id} class={styles.weaknessItem}>
-                <span class={styles.weaknessName}>
-                  {t(`data:weaknesses.${weakness.id}.name`, { defaultValue: weakness.name })}
-                </span>
-                <span class={styles.weaknessDesc}>
-                  {t(`data:weaknesses.${weakness.id}.description`, { defaultValue: weakness.description })}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       )}
     </div>

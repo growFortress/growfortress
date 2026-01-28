@@ -15,9 +15,10 @@ interface TierTabsProps {
   currentTier: 1 | 2 | 3;
   selectedTier: 1 | 2 | 3;
   onTierSelect: (tier: 1 | 2 | 3) => void;
+  compact?: boolean;
 }
 
-export function TierTabs({ tiers, currentTier, selectedTier, onTierSelect }: TierTabsProps) {
+export function TierTabs({ tiers, currentTier, selectedTier, onTierSelect, compact = false }: TierTabsProps) {
   const { t } = useTranslation('common');
   return (
     <div class={styles.tabsContainer}>
@@ -41,7 +42,7 @@ export function TierTabs({ tiers, currentTier, selectedTier, onTierSelect }: Tie
             disabled={false} // Allow viewing locked tiers
           >
             <span class={styles.tierBadge}>T{tier.tier}</span>
-            <span class={styles.tierName}>{tier.name}</span>
+            {!compact && <span class={styles.tierName}>{tier.name}</span>}
             {isCurrent && <span class={styles.currentBadge}>{t('heroDetails.currentBadge')}</span>}
             {isLocked && <span class={styles.lockIcon}>🔒</span>}
           </button>

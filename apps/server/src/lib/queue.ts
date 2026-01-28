@@ -156,6 +156,29 @@ export function createWorker<T>(
 }
 
 /**
+ * Clean failed jobs from all queues
+ * @param gracePeriodMs - Only clean jobs older than this (default: 0 = all failed jobs)
+ */
+export async function cleanFailedJobs(gracePeriodMs: number = 0): Promise<number> {
+  const queues = [
+    leaderboardQueue,
+    cleanupQueue,
+    metricsQueue,
+    playerLeaderboardQueue,
+    guildWeeklyQueue,
+  ];
+
+  let totalCleaned = 0;
+  for (const queue of queues) {
+    const cleaned = await queue.clean(gracePeriodMs, 1000, 'failed');
+    totalCleaned += cleaned.length;
+  }
+
+  console.log(`[Queue] Cleaned ${totalCleaned} failed jobs from all queues`);
+  return totalCleaned;
+}
+
+/**
  * Get queue metrics for all queues
  */
 export async function getQueueMetrics() {

@@ -144,15 +144,15 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
   {
     id: 'chain-lightning',
     name: 'Chain Lightning',
-    description: '+40% chain chance, +2 chains',
+    description: '+35% chain chance, +2 chains',
     category: 'build_defining',
     rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      chainChance: 0.4,
+      chainChance: 0.35,    // Nerfed from 0.4
       chainCount: 2,
-      chainDamagePercent: 0.6,
+      chainDamagePercent: 0.5,  // Nerfed from 0.6
     },
     synergies: [],
   },
@@ -189,28 +189,28 @@ const BUILD_DEFINING_RELICS: ExtendedRelicDef[] = [
   {
     id: 'executioner',
     name: 'Executioner',
-    description: 'Execute enemies below 15% HP for +200% damage',
+    description: 'Execute enemies below 12% HP for +150% damage',
     category: 'build_defining',
     rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      executeThreshold: 0.15,
-      executeBonusDamage: 2.0,  // +200% = 3x total
+      executeThreshold: 0.12,     // Nerfed from 0.15 - harder to trigger
+      executeBonusDamage: 1.5,    // Nerfed from 2.0 - 2.5x total instead of 3x
     },
     synergies: [],
   },
   {
     id: 'glass-cannon',
     name: 'Glass Cannon',
-    description: '+60% damage, -50% max HP (high risk, high reward)',
+    description: '+50% damage, -40% max HP (high risk, high reward)',
     category: 'build_defining',
     rarity: 'legendary',
     isBuildDefining: true,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageBonus: 0.6,      // +60% (nerfed from +100%, lifesteal doesn't fully compensate)
-      maxHpBonus: -0.5,      // -50% (increased from -40%)
+      damageBonus: 0.5,      // Nerfed from 0.6 - more balanced risk/reward
+      maxHpBonus: -0.4,      // Reduced penalty from -0.5 to compensate
     },
     synergies: [],
   },
@@ -224,39 +224,39 @@ const STANDARD_RELICS: ExtendedRelicDef[] = [
   {
     id: 'iron-hide',
     name: 'Iron Hide',
-    description: '+25% max HP',
+    description: '+30% max HP',
     category: 'standard',
     rarity: 'common',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      maxHpBonus: 0.25,
+      maxHpBonus: 0.30,  // Buffed from 0.25 - tank builds need help vs buffed enemies
     },
     synergies: [],
   },
   {
     id: 'sharpened-blades',
     name: 'Sharpened Blades',
-    description: '+20% damage',
+    description: '+25% damage',
     category: 'standard',
     rarity: 'common',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageBonus: 0.2,
+      damageBonus: 0.25,  // Buffed from 0.2 - common relics need value
     },
     synergies: [],
   },
   {
     id: 'swift-strikes',
     name: 'Swift Strikes',
-    description: '+15% attack speed',
+    description: '+20% attack speed',
     category: 'standard',
     rarity: 'common',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      attackSpeedBonus: 0.15,
+      attackSpeedBonus: 0.20,  // Buffed from 0.15 - more impactful
     },
     synergies: [],
   },
@@ -277,13 +277,13 @@ const STANDARD_RELICS: ExtendedRelicDef[] = [
   {
     id: 'elite-hunter',
     name: 'Elite Hunter',
-    description: '+50% damage to elite enemies',
+    description: '+60% damage to elite enemies',
     category: 'standard',
     rarity: 'rare',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      eliteDamageBonus: 0.5,
+      eliteDamageBonus: 0.6,  // Buffed from 0.5 - elites are now tougher
     },
     synergies: [],
   },
@@ -356,15 +356,15 @@ const CLASS_RELICS: ExtendedRelicDef[] = [
   {
     id: 'fire-fury',
     name: 'Fire Fury',
-    description: 'Fire class: +30% damage, +5% crit chance',
+    description: 'Fire class: +25% damage, +8% crit chance',
     category: 'class',
     rarity: 'rare',
     isBuildDefining: false,
     requirements: { fortressClass: 'fire' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageBonus: 0.3,
-      critChance: 0.05,
+      damageBonus: 0.25,   // Nerfed from 0.3 - fire already has high DPS
+      critChance: 0.08,    // Buffed from 0.05 - compensates damage nerf
     },
     synergies: ['fire'],
   },
@@ -378,15 +378,15 @@ const PILLAR_RELICS: ExtendedRelicDef[] = [
   {
     id: 'cosmos-blessing',
     name: 'Cosmos Blessing',
-    description: 'Cosmos Pillar: +40% damage, +20% drop rates',
+    description: 'Cosmos Pillar: +35% damage, +15% drop rates',
     category: 'pillar',
     rarity: 'epic',
     isBuildDefining: false,
     requirements: { pillarId: 'cosmos' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageBonus: 0.4,
-      dropRateBonus: 0.2,  // Luck now affects drops, not combat
+      damageBonus: 0.35,     // Nerfed from 0.4
+      dropRateBonus: 0.15,   // Nerfed from 0.2
     },
     synergies: [],
   },
@@ -408,15 +408,15 @@ const PILLAR_RELICS: ExtendedRelicDef[] = [
   {
     id: 'magic-arts',
     name: 'Magic Arts',
-    description: 'Magic Pillar: +50% damage, 20% cooldown reduction',
+    description: 'Magic Pillar: +40% damage, 15% cooldown reduction',
     category: 'pillar',
     rarity: 'epic',
     isBuildDefining: false,
     requirements: { pillarId: 'magic' },
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      damageBonus: 0.5,
-      cooldownReduction: 0.2,
+      damageBonus: 0.4,        // Nerfed from 0.5 - was too strong
+      cooldownReduction: 0.15, // Nerfed from 0.2
     },
     synergies: [],
   },
@@ -478,13 +478,13 @@ const ECONOMY_RELICS: ExtendedRelicDef[] = [
   {
     id: 'gold-rush',
     name: 'Gold Rush',
-    description: '+30% gold from all sources',
+    description: '+25% gold from all sources',
     category: 'economy',
     rarity: 'rare',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      goldBonus: 0.3,  // Reduced from 0.5 for economy balance
+      goldBonus: 0.25,  // Nerfed from 0.3 - economy already tight after enemy nerfs
     },
     synergies: [],
   },
@@ -544,18 +544,18 @@ const CURSED_RELICS: ExtendedRelicDef[] = [
   {
     id: 'greedy-goblin',
     name: 'Greedy Goblin',
-    description: '+100% gold, -15% damage',
+    description: '+75% gold, -20% damage',
     category: 'cursed',
     rarity: 'rare',
     isBuildDefining: false,
     modifiers: {
       ...DEFAULT_MODIFIERS,
-      goldBonus: 1.0,
+      goldBonus: 0.75,  // Nerfed from 1.0 - too strong after economy nerfs
     },
     curse: {
       stat: 'damageBonus',
-      value: 0.85,  // Will be converted to -0.15 in applyCurse
-      description: '-15% damage',
+      value: 0.80,  // Increased penalty from 0.85 to 0.80 (-20% damage)
+      description: '-20% damage',
     },
     synergies: [],
   },

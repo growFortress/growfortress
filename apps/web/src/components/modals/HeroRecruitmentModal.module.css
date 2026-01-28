@@ -1,5 +1,18 @@
 /* Hero Recruitment Modal - Improved Layout */
 
+.recruitmentModal {
+  /* True fullscreen - bypass container centering */
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
 .modalBody {
   padding: 0 !important;
   overflow: hidden !important;
@@ -9,7 +22,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 0 32px 32px;
+  padding: 0 24px 24px;
 }
 
 /* Resource Bar */
@@ -126,7 +139,7 @@
 /* Hero Grid - larger cards */
 .heroGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
 }
 
@@ -149,6 +162,7 @@
   box-shadow: var(--shadow-md);
   transition: var(--transition-interactive-normal);
   min-height: 300px;
+  cursor: pointer;
 }
 
 .heroCard::before {

@@ -29,6 +29,7 @@
   "resources": {
     "gold": "Gold",
     "dust": "Dust",
+    "energy": "Energy",
     "crystals": "Crystals",
     "keys": "Keys",
     "xp": "XP"
@@ -173,6 +174,11 @@
       "hp": "Reinforced Walls",
       "damage": "Arsenal",
       "armor": "Armor"
+    },
+    "statUpgradeDescriptions": {
+      "hp": "Fortress HP",
+      "damage": "Fortress DMG",
+      "armor": "Fortress Armor"
     }
   },
   "heroDetails": {
@@ -185,7 +191,23 @@
     "statsShort": {
       "hp": "HP",
       "damage": "DMG",
-      "attackSpeed": "AS"
+      "attackSpeed": "AS",
+      "range": "RNG",
+      "critChance": "CRIT"
+    },
+    "statsDescriptions": {
+      "damage": "Base damage dealt per attack. Upgrades increase this multiplicatively.",
+      "attackSpeed": "Number of attacks per second. Higher = faster attacks.",
+      "range": "Maximum attack distance in game units.",
+      "critChance": "Chance to deal double damage on hit (max 75%)."
+    },
+    "details": "Details",
+    "detailStats": {
+      "maxHp": "Max HP",
+      "moveSpeed": "Move Speed",
+      "deployCooldown": "Deploy Cooldown",
+      "rarity": "Rarity",
+      "role": "Role"
     },
     "nextLevel": "To next level",
     "levelShort": "Lv",
@@ -351,7 +373,21 @@
     "guildLoadError": "Failed to load guild ranking",
     "members": "members",
     "wins": "W",
-    "losses": "L"
+    "losses": "L",
+    "weekPeriod": "{{start}} - {{end}}",
+    "resetsIn": "Resets in",
+    "availableRewards": "Available Rewards",
+    "top": "Top {{rank}}",
+    "place": "#{{rank}}",
+    "andMore": "and {{count}} more...",
+    "viewRewards": "View Rewards",
+    "hideRewards": "Hide Rewards",
+    "subTabs": {
+      "waves": "Waves",
+      "honor": "Honor",
+      "level": "Level",
+      "guildTrophies": "Trophies"
+    }
   },
   "shop": {
     "title": "Shop",
@@ -516,10 +552,12 @@
       "guild": "Guild"
     },
     "threads": "Threads",
-    "newMessage": "+ New",
+    "newMessage": "New",
     "loading": "Loading...",
-    "noMessages": "No messages",
-    "selectThread": "Select a thread to view messages",
+    "noMessages": "Empty Inbox",
+    "noMessagesHint": "Start a conversation with the + New button",
+    "selectThread": "Select Thread",
+    "selectThreadHint": "Choose a conversation from the list",
     "back": "Back",
     "writeMessage": "Write a message...",
     "send": "Send",
@@ -676,5 +714,29 @@
     "epic": "Epic",
     "legendary": "Legendary",
     "mythic": "Mythic"
+  },
+  "daily": {
+    "title": "Daily Rewards",
+    "ariaLabel": "Daily rewards modal",
+    "streak": "Streak",
+    "days": "days",
+    "bonus": "Bonus",
+    "nextMilestone": "Next milestone",
+    "daysUntil": "days until",
+    "dayStreak": "day streak",
+    "day": "Day",
+    "claimed": "Claimed",
+    "claim": "Claim Reward",
+    "claiming": "Claiming..."
+  },
+  "missions": {
+    "title": "Weekly Missions",
+    "ariaLabel": "Weekly missions modal",
+    "resetIn": "Resets in",
+    "claiming": "Claiming...",
+    "claimAll": "Claim All",
+    "claimed": "Claimed",
+    "claim": "Claim",
+    "loading": "Loading missions..."
   }
 }

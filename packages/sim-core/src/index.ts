@@ -484,6 +484,7 @@ export {
 export {
   // Config types
   type StatUpgradeConfig,
+  type HeroStatUpgradeConfig,
   type ItemTierConfig,
   // Config constants
   FORTRESS_STAT_UPGRADES,
@@ -493,6 +494,7 @@ export {
   POWER_WEIGHTS,
   // Helper functions
   getUpgradeCost,
+  getHeroUpgradeCost,
   getStatMultiplier,
   getStatBonusPercent,
   getFortressStatConfig,
@@ -500,7 +502,9 @@ export {
   getTurretStatConfig,
   getItemUpgradeCost,
   getTotalSpentOnStat,
+  getTotalSpentOnHeroStat,
   getAffordableLevels,
+  getAffordableHeroLevels,
 } from './data/power-config.js';
 
 export {
@@ -908,3 +912,38 @@ export {
   type ColonyMilestone,
   type ColonyMilestoneReward,
 } from './data/milestones-colony.js';
+
+// Free Stat Points System (separate from gold-based power upgrades)
+export {
+  // Earning config
+  STAT_POINTS_PER_WAVE,
+  STAT_POINTS_PER_LEVEL_UP,
+  // Bonus configs
+  FORTRESS_STAT_POINT_BONUSES,
+  HERO_STAT_POINT_BONUSES,
+  // Helper functions
+  getFortressStatPointConfig,
+  getHeroStatPointConfig,
+  getStatPointBonus,
+  getStatPointBonusPercent,
+  canAllocateMorePoints,
+  getMaxPointsForStat,
+  calculateWaveStatPoints,
+  calculateLevelUpStatPoints,
+  getFortressStatPointBonuses,
+  getHeroStatPointBonuses,
+  // Types
+  type StatPointBonusConfig,
+} from './data/stat-points-config.js';
+
+// Stat Points Application (Simulation Integration)
+export {
+  applyFortressStatPointBonuses,
+  applyAllStatPointBonuses,
+  getHeroStatPointBonuses as getHeroStatPointMultipliers,
+  hasAnyStatPointAllocations,
+  calculateTotalStatPointsAllocated,
+  // Types
+  type StatPointAllocationData,
+  type HeroStatPointBonuses,
+} from './systems/apply-stat-points.js';

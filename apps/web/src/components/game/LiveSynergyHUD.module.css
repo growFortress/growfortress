@@ -2,20 +2,20 @@
  * Live Synergy HUD Styles
  */
 
+/* Sci-Fi HUD: Synergy container with gold holographic accent */
 .container {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 100;
   max-width: 320px;
-  background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(30, 30, 45, 0.95));
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: var(--hud-bg-solid);
+  border: 1px solid var(--color-gold-30);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  font-family: 'Inter', sans-serif;
-  transition: all 0.3s ease;
+  box-shadow: var(--holo-edge-gold), var(--elevation-2);
+  font-family: var(--font-body);
+  transition: max-height 0.3s ease, border-color 0.3s ease;
 }
 
 .container.expanded {
@@ -29,13 +29,13 @@
   gap: 8px;
   padding: 8px 12px;
   cursor: pointer;
-  background: rgba(255, 215, 0, 0.1);
-  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  background: var(--color-gold-20);
+  border-bottom: 1px solid var(--color-gold-30);
   transition: background 0.2s ease;
 }
 
 .summaryBar:hover {
-  background: rgba(255, 215, 0, 0.15);
+  background: var(--color-gold-30);
 }
 
 .summaryLeft {
@@ -46,14 +46,14 @@
 
 .synergyIcon {
   font-size: 16px;
-  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
+  color: var(--color-gold);
 }
 
 .synergyCount {
   font-size: 18px;
   font-weight: 700;
-  color: #ffd700;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  color: var(--color-gold);
+  text-shadow: 0 0 8px var(--color-gold-50);
 }
 
 .synergyLabel {
@@ -92,7 +92,7 @@
 }
 
 .expandButton:hover {
-  color: #ffd700;
+  color: var(--color-gold);
 }
 
 /* Expanded Content */
@@ -100,7 +100,7 @@
   max-height: 350px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
+  scrollbar-color: var(--color-gold-30) transparent;
 }
 
 .expandedContent::-webkit-scrollbar {
@@ -112,7 +112,7 @@
 }
 
 .expandedContent::-webkit-scrollbar-thumb {
-  background: rgba(255, 215, 0, 0.3);
+  background: var(--color-gold-30);
   border-radius: 3px;
 }
 
@@ -311,9 +311,15 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .container {
     max-width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 260px;
     top: 4px;
     right: 4px;
   }
@@ -332,16 +338,13 @@
   }
 }
 
-/* Animation for new synergies */
+/* Animation for new synergies - uses background instead of box-shadow for perf */
 @keyframes synergyPulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--synergy-color);
+  0%, 100% {
+    background: rgba(255, 255, 255, 0.05);
   }
   50% {
-    box-shadow: 0 0 12px 4px var(--synergy-color);
-  }
-  100% {
-    box-shadow: 0 0 0 0 var(--synergy-color);
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -351,79 +354,38 @@
 
 /* ============================================================================
    SHOWCASE MODE (Directed Wave 1 Experience)
+   Sci-Fi HUD: Static holographic glow, no infinite animations
    ============================================================================ */
 
-@keyframes showcaseBorderPulse {
-  0% {
-    border-color: rgba(255, 215, 0, 0.4);
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3), inset 0 0 4px rgba(255, 215, 0, 0.1);
-  }
-  50% {
-    border-color: rgba(255, 215, 0, 0.9);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 8px rgba(255, 215, 0, 0.2);
-  }
-  100% {
-    border-color: rgba(255, 215, 0, 0.4);
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3), inset 0 0 4px rgba(255, 215, 0, 0.1);
-  }
-}
-
-@keyframes showcaseScaleIn {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.02);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
+/* Showcase container: Enhanced static glow instead of infinite pulse */
 .container.showcase {
-  animation: showcaseBorderPulse 2s ease-in-out infinite, showcaseScaleIn 0.5s ease-out;
   border-width: 2px;
+  border-color: var(--color-gold-70);
   max-width: 360px;
+  box-shadow: 0 0 2px var(--color-gold),
+              0 0 8px var(--color-gold-50),
+              var(--elevation-2);
 }
 
 .container.showcase .summaryBar {
-  background: rgba(255, 215, 0, 0.2);
+  background: var(--color-gold-30);
 }
 
+/* No infinite bounce - static emphasis only */
 .container.showcase .synergyIcon {
-  animation: showcaseIconBounce 1s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px var(--color-gold-50));
 }
 
-@keyframes showcaseIconBounce {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-}
-
-/* Showcase mode: highlight "almost active" synergies more prominently */
+/* Showcase mode: highlight "almost active" synergies with static glow */
 .container.showcase .almostActiveItem {
   opacity: 1;
-  background: rgba(255, 215, 0, 0.1);
+  background: var(--color-gold-20);
   border-left-style: solid;
-  animation: almostActiveGlow 1.5s ease-in-out infinite;
-}
-
-@keyframes almostActiveGlow {
-  0%, 100% {
-    background: rgba(255, 215, 0, 0.05);
-  }
-  50% {
-    background: rgba(255, 215, 0, 0.15);
-  }
+  /* No infinite animation - static highlight */
 }
 
 .container.showcase .almostActiveNeeded {
-  color: rgba(255, 215, 0, 0.9);
+  color: var(--color-gold);
   font-weight: 500;
   font-style: normal;
 }
@@ -435,10 +397,10 @@
   justify-content: center;
   gap: 6px;
   padding: 4px 8px;
-  background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.2));
+  background: linear-gradient(90deg, var(--color-gold-20), var(--color-gold-30), var(--color-gold-20));
   font-size: 10px;
   font-weight: 600;
-  color: #ffd700;
+  color: var(--color-gold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }

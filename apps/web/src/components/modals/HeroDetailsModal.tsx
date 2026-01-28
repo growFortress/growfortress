@@ -1,19 +1,21 @@
-import type { JSX } from 'preact';
+import type { JSX, ComponentChildren } from 'preact';
 import type { FortressClass, HeroDefinition, ActiveHero } from '@arcade/sim-core';
 import { useState } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { DamageIcon, SpeedIcon, RangeIcon, CritChanceIcon } from '../icons/index.js';
+import { Tooltip } from '../shared/Tooltip.js';
 import {
   getHeroById,
   calculateHeroStats,
   calculateHeroPower,
   createDefaultStatUpgrades,
   HERO_STAT_UPGRADES,
-  getUpgradeCost,
+  getHeroUpgradeCost,
   getStatBonusPercent,
   getStatMultiplier,
   ARTIFACT_DEFINITIONS,
   applyArtifactBonusesToStats,
-  getHeroSynergies,
+  FP,
 } from '@arcade/sim-core';
 import {
   upgradeTarget,
@@ -37,13 +39,13 @@ import {
   type PowerStatUpgrades,
 } from '@arcade/protocol';
 import { Modal } from '../shared/Modal.js';
-import { GoldIcon } from '../icons/index.js';
 import {
   HeroIdentityCard,
   SkillCard,
   UpgradeSection,
   TierPreviewModal,
   ArtifactPickerModal,
+  WorksWithSection,
 } from './hero-details/index.js';
 import {
   getArtifactForHero,
@@ -80,19 +82,29 @@ const CLASS_COLORS: Record<FortressClass, string> = {
   plasma: '#00ffff',
 };
 
-// Stat icons
-const STAT_ICONS: Record<string, string> = {
-  hp: '❤️',
-  damage: '⚔️',
-};
+// Stat icon components
+function getStatIcon(statType?: 'damage' | 'attackSpeed' | 'range' | 'critChance', size: number = 24) {
+  switch (statType) {
+    case 'damage':
+      return <DamageIcon size={size} />;
+    case 'attackSpeed':
+      return <SpeedIcon size={size} />;
+    case 'range':
+      return <RangeIcon size={size} />;
+    case 'critChance':
+      return <CritChanceIcon size={size} />;
+    default:
+      return null;
+  }
+}
 
 // Inline stat row component
 interface HeroStatRowProps {
-  icon: string;
+  icon?: string | ComponentChildren;
   label: string;
   value: string | number;
   upgradeLevel?: number;
-  maxLevel?: number;
+  unlimitedUpgrade?: boolean; // No max level
   bonusPercent?: string;
   upgradeCost?: number;
   canAfford?: boolean;
@@ -100,60 +112,70 @@ interface HeroStatRowProps {
   isLoading?: boolean;
   nextValue?: number; // Value after next upgrade
   compareValue?: number; // Value from comparison hero
+  statType?: 'damage' | 'attackSpeed' | 'range' | 'critChance'; // For color variants
 }
 
 function HeroStatRow({
   icon,
-  label,
+  label: _label,
   value,
   upgradeLevel,
-  maxLevel,
+  unlimitedUpgrade,
   bonusPercent: _bonusPercent,
   upgradeCost,
   canAfford,
   onUpgrade,
   isLoading,
-  nextValue,
-  compareValue,
+  nextValue: _nextValue,
+  compareValue: _compareValue,
+  statType,
 }: HeroStatRowProps) {
   const { t } = useTranslation('common');
-  const hasUpgrade = upgradeLevel !== undefined && maxLevel !== undefined;
-  const isMaxed = hasUpgrade && upgradeLevel >= maxLevel;
-  const numValue = typeof value === 'number' ? value : parseFloat(value);
-  const delta = nextValue !== undefined && !isMaxed ? nextValue - numValue : undefined;
-  const compareDiff = compareValue !== undefined ? numValue - compareValue : undefined;
+  const hasUpgrade = upgradeLevel !== undefined && (unlimitedUpgrade || onUpgrade);
+
+  // For unlimited upgrades, show progress based on level (soft cap at 50 for visual)
+  const progressPercent = hasUpgrade && upgradeLevel !== undefined
+    ? Math.min((upgradeLevel / 50) * 100, 100)
+    : 50;
+
+  const statTypeClass = statType ? styles[`stat_${statType}`] : '';
+
+  // Use SVG icon if statType is provided, otherwise use provided icon
+  const iconElement = statType ? getStatIcon(statType, 24) : (typeof icon === 'string' ? icon : icon);
+
+  // Get tooltip content for the stat type
+  const tooltipContent = statType ? t(`heroDetails.statsDescriptions.${statType}`) : null;
 
   return (
-    <div class={styles.statRow}>
-      <span class={styles.statIcon}>{icon}</span>
-      <span class={styles.statLabel}>{label}</span>
-      <span class={styles.statValue}>{value}</span>
-      {/* Delta badge: shows what you gain after next upgrade */}
-      {delta !== undefined && delta > 0 && (
-        <span class={styles.deltaBadge}>+{Math.round(delta)}</span>
+    <div class={`${styles.statRow} ${statTypeClass}`}>
+      {tooltipContent ? (
+        <Tooltip
+          content={tooltipContent}
+          position="right"
+          size="sm"
+          title={t(`heroDetails.statsShort.${statType}`)}
+        >
+          <span class={styles.statIcon}>{iconElement}</span>
+        </Tooltip>
+      ) : (
+        <span class={styles.statIcon}>{iconElement}</span>
       )}
-      {/* Compare diff: shows difference vs comparison hero */}
-      {compareValue !== undefined && compareDiff !== undefined && (
-        <span class={`${styles.compareBadge} ${compareDiff > 0 ? styles.positive : compareDiff < 0 ? styles.negative : ''}`}>
-          {compareDiff > 0 ? '+' : ''}{Math.round(compareDiff)}
-        </span>
-      )}
-      {hasUpgrade && (
-        <>
-          <span class={styles.statLevel}>{t('labels.lv')} {upgradeLevel}{maxLevel !== Infinity && `/${maxLevel}`}</span>
-          {isMaxed ? (
-            <span class={styles.maxBadge}>{t('heroDetails.maxLabel')}</span>
-          ) : (
-            <button
-              class={styles.upgradeBtn}
-              disabled={!canAfford || isLoading}
-              onClick={onUpgrade}
-            >
-              {isLoading ? '...' : `${upgradeCost}`}
-              <GoldIcon size={16} className={styles.goldIcon} />
-            </button>
-          )}
-        </>
+      <div class={styles.statBarContainer}>
+        <div
+          class={styles.statBarFill}
+          style={{ width: `${progressPercent}%` }}
+        />
+        <span class={styles.statBarValue}>{value}</span>
+      </div>
+      {hasUpgrade && onUpgrade && (
+        <button
+          class={styles.statUpgradeBtn}
+          disabled={!canAfford || isLoading}
+          onClick={onUpgrade}
+          title={`${upgradeCost} gold`}
+        >
+          {isLoading ? '...' : '+'}
+        </button>
       )}
     </div>
   );
@@ -169,77 +191,6 @@ const CLASS_ICONS: Record<FortressClass, string> = {
   void: '🌀',
   plasma: '⚛️',
 };
-
-// Works With section - shows hero pair/trio synergies
-interface WorksWithSectionProps {
-  heroId: string;
-}
-
-function WorksWithSection({ heroId }: WorksWithSectionProps) {
-  const { t } = useTranslation(['common', 'data']);
-  const heroSynergies = getHeroSynergies(heroId);
-
-  if (heroSynergies.pairs.length === 0 && heroSynergies.trios.length === 0) {
-    return null;
-  }
-
-  const getHeroName = (id: string): string => {
-    const heroDef = getHeroById(id);
-    return heroDef ? t(`data:heroes.${id}.name`, { defaultValue: heroDef.name }) : id;
-  };
-
-  return (
-    <div class={styles.worksWithSection}>
-      <h4 class={styles.sectionTitle}>🤝 {t('heroDetails.worksWith', { defaultValue: 'Works With' })}</h4>
-
-      {/* Pair synergies */}
-      {heroSynergies.pairs.map(synergy => (
-        <div key={synergy.id} class={styles.synergyComboPair}>
-          <div class={styles.synergyComboHeader}>
-            <span class={styles.synergyComboIcon}>⚡</span>
-            <span class={styles.synergyComboName}>
-              {t(synergy.nameKey, { defaultValue: synergy.name })}
-            </span>
-          </div>
-          <div class={styles.synergyComboPartner}>
-            + {getHeroName(synergy.partner)}
-          </div>
-          <div class={styles.synergyComboDesc}>
-            {t(synergy.descriptionKey, { defaultValue: synergy.description })}
-          </div>
-          <div class={styles.synergyComboBonuses}>
-            {synergy.bonuses.map((bonus, i) => (
-              <span key={i} class={styles.synergyComboBonusTag}>{bonus}</span>
-            ))}
-          </div>
-        </div>
-      ))}
-
-      {/* Trio synergies */}
-      {heroSynergies.trios.map(synergy => (
-        <div key={synergy.id} class={styles.synergyComboTrio}>
-          <div class={styles.synergyComboHeader}>
-            <span class={styles.synergyComboIcon}>⭐</span>
-            <span class={styles.synergyComboName}>
-              {t(synergy.nameKey, { defaultValue: synergy.name })}
-            </span>
-          </div>
-          <div class={styles.synergyComboPartner}>
-            + {synergy.partners.map(p => getHeroName(p)).join(' + ')}
-          </div>
-          <div class={styles.synergyComboDesc}>
-            {t(synergy.descriptionKey, { defaultValue: synergy.description })}
-          </div>
-          <div class={styles.synergyComboBonuses}>
-            {synergy.bonuses.map((bonus, i) => (
-              <span key={i} class={styles.synergyComboBonusTag}>{bonus}</span>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 // Synergy section component
 interface SynergySectionProps {
@@ -389,6 +340,7 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
   const [equipmentLoading, setEquipmentLoading] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [compareHeroId, setCompareHeroId] = useState<string | null>(null);
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   const handleClose = () => {
     upgradePanelVisible.value = false;
@@ -515,60 +467,73 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
     }
   };
 
-  // Get upgrade configs for HP and Damage
-  const hpConfig = HERO_STAT_UPGRADES.find(c => c.stat === 'hp');
+  // Get upgrade configs for all 4 hero stats: damage, attackSpeed, range, critChance
   const dmgConfig = HERO_STAT_UPGRADES.find(c => c.stat === 'damage');
-  const hpLevel = heroUpgrades?.statUpgrades.hp || 0;
+  const asConfig = HERO_STAT_UPGRADES.find(c => c.stat === 'attackSpeed');
+  const rangeConfig = HERO_STAT_UPGRADES.find(c => c.stat === 'range');
+  const critConfig = HERO_STAT_UPGRADES.find(c => c.stat === 'critChance');
+
   const dmgLevel = heroUpgrades?.statUpgrades.damage || 0;
+  const asLevel = heroUpgrades?.statUpgrades.attackSpeed || 0;
+  const rangeLevel = heroUpgrades?.statUpgrades.range || 0;
+  const critLevel = heroUpgrades?.statUpgrades.critChance || 0;
 
   // Calculate upgraded stats (base stats * upgrade multiplier * guild bonus)
-  const hpMultiplier = hpConfig ? getStatMultiplier(hpConfig, hpLevel) : 1;
   const dmgMultiplier = dmgConfig ? getStatMultiplier(dmgConfig, dmgLevel) : 1;
-  const guildStatBoost = 1 + (guildBonuses.value?.statBoost ?? 0);
-  const upgradedHp = Math.floor(currentStats.hp * hpMultiplier * guildStatBoost);
-  const upgradedDamage = Math.floor(currentStats.damage * dmgMultiplier * guildStatBoost);
-  const upgradedAttackSpeed = currentStats.attackSpeed * guildStatBoost;
+  const asMultiplier = asConfig ? getStatMultiplier(asConfig, asLevel) : 1;
+  const rangeMultiplier = rangeConfig ? getStatMultiplier(rangeConfig, rangeLevel) : 1;
+  const critBonus = critConfig ? critLevel * critConfig.bonusPerLevel : 0;
 
-  // Calculate NEXT level stats for delta display
-  const nextHpLevel = hpLevel + 1;
-  const nextDmgLevel = dmgLevel + 1;
-  const nextHpMultiplier = hpConfig ? getStatMultiplier(hpConfig, nextHpLevel) : 1;
-  const nextDmgMultiplier = dmgConfig ? getStatMultiplier(dmgConfig, nextDmgLevel) : 1;
-  const nextUpgradedHp = hpConfig && hpLevel < hpConfig.maxLevel
-    ? Math.floor(currentStats.hp * nextHpMultiplier * guildStatBoost)
-    : undefined;
-  const nextUpgradedDamage = dmgConfig && dmgLevel < dmgConfig.maxLevel
-    ? Math.floor(currentStats.damage * nextDmgMultiplier * guildStatBoost)
-    : undefined;
+  const guildStatBoost = 1 + (guildBonuses.value?.statBoost ?? 0);
+  const upgradedDamage = Math.floor(currentStats.damage * dmgMultiplier * guildStatBoost);
+  const upgradedAttackSpeed = currentStats.attackSpeed * asMultiplier * guildStatBoost;
+  const upgradedRange = FP.toFloat(currentStats.range) * rangeMultiplier;
+  const upgradedCritChance = Math.min(critBonus * 100, 75); // Cap at 75%, display as %
+
+  // Calculate "next" values (what stats will be after upgrade)
+  const nextDmgMultiplier = dmgConfig ? getStatMultiplier(dmgConfig, dmgLevel + 1) : 1;
+  const nextAsMultiplier = asConfig ? getStatMultiplier(asConfig, asLevel + 1) : 1;
+  const nextRangeMultiplier = rangeConfig ? getStatMultiplier(rangeConfig, rangeLevel + 1) : 1;
+  const nextCritBonus = critConfig ? (critLevel + 1) * critConfig.bonusPerLevel : 0;
+
+  const nextUpgradedDamage = Math.floor(currentStats.damage * nextDmgMultiplier * guildStatBoost);
+  const nextUpgradedAttackSpeed = currentStats.attackSpeed * nextAsMultiplier * guildStatBoost;
+  const nextUpgradedRange = FP.toFloat(currentStats.range) * nextRangeMultiplier;
+  const nextUpgradedCritChance = Math.min(nextCritBonus * 100, 75);
 
   // Comparison hero data
   const otherHeroes = heroes.filter(h => h.definitionId !== hero.definitionId);
   const compareHero = compareHeroId ? heroes.find(h => h.definitionId === compareHeroId) : null;
   const compareHeroDef = compareHero ? getHeroById(compareHero.definitionId) : null;
-  
+
   // Calculate compare hero stats if in compare mode
-  let compareStats: { hp: number; damage: number; attackSpeed: number; power: number } | null = null;
+  let compareStats: { damage: number; attackSpeed: number; range: number; critChance: number; power: number } | null = null;
   if (compareMode && compareHero && compareHeroDef) {
     const compareEquippedArtifact = getArtifactForHero(compareHero.definitionId);
     const compareBaseStats = calculateHeroStats(compareHeroDef, compareHero.tier, compareHero.level);
     const compareCurrentStats = applyArtifactBonusesToStats(compareBaseStats, compareEquippedArtifact?.artifactId);
     const compareHeroUpgrades = powerState.value.heroUpgrades.find(h => h.heroId === compareHero.definitionId);
-    const compareHpLevel = compareHeroUpgrades?.statUpgrades.hp || 0;
     const compareDmgLevel = compareHeroUpgrades?.statUpgrades.damage || 0;
-    const compareHpMultiplier = hpConfig ? getStatMultiplier(hpConfig, compareHpLevel) : 1;
+    const compareAsLevel = compareHeroUpgrades?.statUpgrades.attackSpeed || 0;
+    const compareRangeLevel = compareHeroUpgrades?.statUpgrades.range || 0;
+    const compareCritLevel = compareHeroUpgrades?.statUpgrades.critChance || 0;
     const compareDmgMultiplier = dmgConfig ? getStatMultiplier(dmgConfig, compareDmgLevel) : 1;
-    
+    const compareAsMultiplier = asConfig ? getStatMultiplier(asConfig, compareAsLevel) : 1;
+    const compareRangeMultiplier = rangeConfig ? getStatMultiplier(rangeConfig, compareRangeLevel) : 1;
+    const compareCritBonus = critConfig ? compareCritLevel * critConfig.bonusPerLevel : 0;
+
     const comparePower = calculateHeroPower(
       compareHero.definitionId,
       compareHeroUpgrades?.statUpgrades || createDefaultStatUpgrades(),
       compareHero.tier,
       compareEquippedArtifact?.artifactId
     );
-    
+
     compareStats = {
-      hp: Math.floor(compareCurrentStats.hp * compareHpMultiplier * guildStatBoost),
       damage: Math.floor(compareCurrentStats.damage * compareDmgMultiplier * guildStatBoost),
-      attackSpeed: compareCurrentStats.attackSpeed * guildStatBoost,
+      attackSpeed: compareCurrentStats.attackSpeed * compareAsMultiplier * guildStatBoost,
+      range: FP.toFloat(compareCurrentStats.range) * compareRangeMultiplier,
+      critChance: Math.min(compareCritBonus * 100, 75),
       power: comparePower.totalPower,
     };
   }
@@ -659,7 +624,6 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
               heroDefinition={heroDef}
               currentTier={hero.tier}
               level={hero.level}
-              weaknesses={heroDef.weaknesses}
               power={heroPowerBreakdown.totalPower}
             />
           </div>
@@ -672,7 +636,6 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
                 heroDefinition={compareHeroDef}
                 currentTier={compareHero.tier}
                 level={compareHero.level}
-                weaknesses={compareHeroDef.weaknesses}
                 power={compareStats.power}
               />
             </div>
@@ -684,47 +647,74 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
             <div class={styles.section} data-tutorial="hero-stat-upgrades">
               <h4 class={styles.sectionTitle}>{t('heroDetails.stats')}</h4>
               <div class={styles.statList}>
-                {/* HP with upgrade */}
-                {hpConfig && (
-                  <HeroStatRow
-                    icon={STAT_ICONS.hp}
-                    label={t('heroDetails.statsShort.hp')}
-                    value={upgradedHp}
-                    upgradeLevel={hpLevel}
-                    maxLevel={hpConfig.maxLevel}
-                    bonusPercent={getStatBonusPercent(hpConfig, hpLevel).toFixed(1)}
-                    upgradeCost={getUpgradeCost(hpConfig, hpLevel)}
-                    canAfford={gold >= getUpgradeCost(hpConfig, hpLevel)}
-                    onUpgrade={() => handleStatUpgrade('hp')}
-                    isLoading={loadingStat === 'hp'}
-                    nextValue={nextUpgradedHp}
-                    compareValue={compareStats?.hp}
-                  />
-                )}
                 {/* Damage with upgrade */}
                 {dmgConfig && (
                   <HeroStatRow
-                    icon={STAT_ICONS.damage}
+                    statType="damage"
                     label={t('heroDetails.statsShort.damage')}
                     value={upgradedDamage}
                     upgradeLevel={dmgLevel}
-                    maxLevel={dmgConfig.maxLevel}
+                    unlimitedUpgrade
                     bonusPercent={getStatBonusPercent(dmgConfig, dmgLevel).toFixed(1)}
-                    upgradeCost={getUpgradeCost(dmgConfig, dmgLevel)}
-                    canAfford={gold >= getUpgradeCost(dmgConfig, dmgLevel)}
+                    upgradeCost={getHeroUpgradeCost(dmgConfig, dmgLevel)}
+                    canAfford={gold >= getHeroUpgradeCost(dmgConfig, dmgLevel)}
                     onUpgrade={() => handleStatUpgrade('damage')}
                     isLoading={loadingStat === 'damage'}
                     nextValue={nextUpgradedDamage}
                     compareValue={compareStats?.damage}
                   />
                 )}
-                {/* Attack Speed (no upgrade) */}
-                <HeroStatRow
-                  icon="⚡"
-                  label={t('heroDetails.statsShort.attackSpeed')}
-                  value={upgradedAttackSpeed.toFixed(2)}
-                  compareValue={compareStats?.attackSpeed}
-                />
+                {/* Attack Speed with upgrade */}
+                {asConfig && (
+                  <HeroStatRow
+                    statType="attackSpeed"
+                    label={t('heroDetails.statsShort.attackSpeed')}
+                    value={upgradedAttackSpeed.toFixed(2)}
+                    upgradeLevel={asLevel}
+                    unlimitedUpgrade
+                    bonusPercent={getStatBonusPercent(asConfig, asLevel).toFixed(1)}
+                    upgradeCost={getHeroUpgradeCost(asConfig, asLevel)}
+                    canAfford={gold >= getHeroUpgradeCost(asConfig, asLevel)}
+                    onUpgrade={() => handleStatUpgrade('attackSpeed')}
+                    isLoading={loadingStat === 'attackSpeed'}
+                    nextValue={nextUpgradedAttackSpeed}
+                    compareValue={compareStats?.attackSpeed}
+                  />
+                )}
+                {/* Range with upgrade */}
+                {rangeConfig && (
+                  <HeroStatRow
+                    statType="range"
+                    label={t('heroDetails.statsShort.range')}
+                    value={upgradedRange.toFixed(1)}
+                    upgradeLevel={rangeLevel}
+                    unlimitedUpgrade
+                    bonusPercent={getStatBonusPercent(rangeConfig, rangeLevel).toFixed(1)}
+                    upgradeCost={getHeroUpgradeCost(rangeConfig, rangeLevel)}
+                    canAfford={gold >= getHeroUpgradeCost(rangeConfig, rangeLevel)}
+                    onUpgrade={() => handleStatUpgrade('range')}
+                    isLoading={loadingStat === 'range'}
+                    nextValue={nextUpgradedRange}
+                    compareValue={compareStats?.range}
+                  />
+                )}
+                {/* Crit Chance with upgrade */}
+                {critConfig && (
+                  <HeroStatRow
+                    statType="critChance"
+                    label={t('heroDetails.statsShort.critChance')}
+                    value={`${upgradedCritChance.toFixed(1)}%`}
+                    upgradeLevel={critLevel}
+                    unlimitedUpgrade
+                    bonusPercent={getStatBonusPercent(critConfig, critLevel).toFixed(1)}
+                    upgradeCost={getHeroUpgradeCost(critConfig, critLevel)}
+                    canAfford={gold >= getHeroUpgradeCost(critConfig, critLevel)}
+                    onUpgrade={() => handleStatUpgrade('critChance')}
+                    isLoading={loadingStat === 'critChance'}
+                    nextValue={nextUpgradedCritChance}
+                    compareValue={compareStats?.critChance}
+                  />
+                )}
               </div>
               {/* XP Progress */}
               <div class={styles.xpRow}>
@@ -734,8 +724,41 @@ export function HeroDetailsModal({ onUpgrade }: HeroDetailsModalProps) {
                 </div>
                 <span class={styles.xpValue}>{hero.xp}/{xpForNextLevel}</span>
               </div>
+
+              {/* Collapsible Details Section */}
+              <button
+                class={styles.detailsToggle}
+                onClick={() => setDetailsExpanded(!detailsExpanded)}
+              >
+                <span class={styles.detailsArrow}>{detailsExpanded ? '▼' : '▶'}</span>
+                {t('heroDetails.details')}
+              </button>
+              {detailsExpanded && (
+                <div class={styles.detailsSection}>
+                  <div class={styles.detailRow}>
+                    <span class={styles.detailLabel}>{t('heroDetails.detailStats.maxHp')}</span>
+                    <span class={styles.detailValue}>{currentStats.hp}</span>
+                  </div>
+                  <div class={styles.detailRow}>
+                    <span class={styles.detailLabel}>{t('heroDetails.detailStats.moveSpeed')}</span>
+                    <span class={styles.detailValue}>{currentStats.moveSpeed}</span>
+                  </div>
+                  <div class={styles.detailRow}>
+                    <span class={styles.detailLabel}>{t('heroDetails.detailStats.deployCooldown')}</span>
+                    <span class={styles.detailValue}>{(heroDef.baseStats.deployCooldown / 30).toFixed(1)}s</span>
+                  </div>
+                  <div class={styles.detailRow}>
+                    <span class={styles.detailLabel}>{t('heroDetails.detailStats.rarity')}</span>
+                    <span class={styles.detailValue}>{t(`rarity.${heroDef.rarity}`)}</span>
+                  </div>
+                  <div class={styles.detailRow}>
+                    <span class={styles.detailLabel}>{t('heroDetails.detailStats.role')}</span>
+                    <span class={styles.detailValue}>{t(`roles.${heroDef.role === 'crowd_control' ? 'control' : heroDef.role}`)}</span>
+                  </div>
+                </div>
+              )}
             </div>
-            
+
             {/* Synergies Section */}
             <SynergySection heroDefinition={heroDef} />
 

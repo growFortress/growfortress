@@ -23,6 +23,8 @@ import { useState, useEffect, useCallback } from 'preact/hooks';
 import { Modal } from '../shared/Modal.js';
 import { getAccessToken } from '../../api/auth.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { DamageIcon, ArmorIcon, SpeedIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './ArtifactsModal.module.css';
 
 // Timeout for async operations (10 seconds)
@@ -45,25 +47,45 @@ const activeTab = signal<'artifacts' | 'items'>('artifacts');
 const selectedArtifactId = signal<string | null>(null);
 const selectedItemId = signal<string | null>(null);
 
-// Artifact slot icons
-const SLOT_ICONS: Record<string, string> = {
-  weapon: '⚔️',
-  armor: '🛡️',
-  accessory: '💍',
-  gadget: '🔧',
-  book: '📖',
-  special: '⭐',
-};
+// Artifact slot icons - using SVG for weapon and armor
+function getSlotIcon(slot: string, size: number = 20): ComponentChildren {
+  switch (slot) {
+    case 'weapon':
+      return <DamageIcon size={size} />;
+    case 'armor':
+      return <ArmorIcon size={size} />;
+    case 'accessory':
+      return '💍';
+    case 'gadget':
+      return '🔧';
+    case 'book':
+      return '📖';
+    case 'special':
+      return '⭐';
+    default:
+      return '📦';
+  }
+}
 
-// Item icons
-const ITEM_ICONS: Record<string, string> = {
-  health_potion: '🧪',
-  damage_boost: '⚡',
-  speed_elixir: '💨',
-  shield_charm: '🔮',
-  xp_tome: '📚',
-  crit_crystal: '💎',
-};
+// Item icons - using SVG for damage_boost and speed_elixir
+function getItemIcon(itemId: string, size: number = 20): ComponentChildren {
+  switch (itemId) {
+    case 'damage_boost':
+      return <DamageIcon size={size} />;
+    case 'speed_elixir':
+      return <SpeedIcon size={size} />;
+    case 'health_potion':
+      return '🧪';
+    case 'shield_charm':
+      return '🔮';
+    case 'xp_tome':
+      return '📚';
+    case 'crit_crystal':
+      return '💎';
+    default:
+      return '📦';
+  }
+}
 
 // API functions
 async function upgradeItem(itemId: string): Promise<{
@@ -251,7 +273,7 @@ export function ArtifactsModal() {
                   >
                     <span class={styles.equippedBadge}>✓</span>
                     <span class={styles.artifactIcon}>
-                      {SLOT_ICONS[artifact.definition.slot] || '📦'}
+                      {getSlotIcon(artifact.definition.slot, 24)}
                     </span>
                     <span class={styles.artifactName}>
                       {getArtifactName(
@@ -290,7 +312,7 @@ export function ArtifactsModal() {
                     aria-selected={selectedArtifact === artifact.id}
                   >
                     <span class={styles.artifactIcon}>
-                      {SLOT_ICONS[artifact.definition.slot] || '📦'}
+                      {getSlotIcon(artifact.definition.slot, 24)}
                     </span>
                     <span class={styles.artifactName}>
                       {getArtifactName(
@@ -392,7 +414,7 @@ function ItemCard({
       role="option"
       aria-selected={isSelected}
     >
-      <span class={styles.itemIcon}>{ITEM_ICONS[item.itemId] || '📦'}</span>
+      <span class={styles.itemIcon}>{getItemIcon(item.itemId, 24)}</span>
       <div class={styles.itemInfo}>
         <div class={styles.itemName}>{itemName}</div>
         <div class={styles.itemDesc}>{itemDesc}</div>

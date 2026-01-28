@@ -9,17 +9,29 @@ import {
 import { useTranslation } from '../../../i18n/useTranslation.js';
 import { unequippedArtifacts } from '../../../state/artifacts.signals.js';
 import { Button } from '../../shared/Button.js';
+import { DamageIcon, ArmorIcon } from '../../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './ArtifactPickerModal.module.css';
 
-// Artifact slot icons
-const SLOT_ICONS: Record<string, string> = {
-  weapon: '⚔️',
-  armor: '🛡️',
-  accessory: '💍',
-  gadget: '🔧',
-  book: '📖',
-  special: '⭐',
-};
+// Artifact slot icons - using SVG for weapon and armor, emoji for others
+function getSlotIcon(slot: string, size: number = 20): ComponentChildren {
+  switch (slot) {
+    case 'weapon':
+      return <DamageIcon size={size} />;
+    case 'armor':
+      return <ArmorIcon size={size} />;
+    case 'accessory':
+      return '💍';
+    case 'gadget':
+      return '🔧';
+    case 'book':
+      return '📖';
+    case 'special':
+      return '⭐';
+    default:
+      return '📦';
+  }
+}
 
 type FilterMode = 'compatible' | 'all';
 
@@ -242,7 +254,7 @@ function ArtifactOption({ artifact, isSelected, isCompatible, isHeroSpecific, on
       )}
 
       <span class={styles.artifactIcon}>
-        {SLOT_ICONS[definition.slot] || '📦'}
+        {getSlotIcon(definition.slot, 24)}
       </span>
       <div class={styles.artifactInfo}>
         <span class={styles.artifactName}>

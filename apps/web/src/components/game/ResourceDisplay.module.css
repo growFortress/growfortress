@@ -1,12 +1,12 @@
+/* Sci-Fi HUD: Resource display with solid background and holographic edge */
 .container {
   display: flex;
-  gap: 1.5rem;
-  padding: 0.75rem 1.25rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  gap: 2rem;
+  padding: 1rem 1.75rem;
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
+  border-radius: 14px;
+  box-shadow: var(--holo-edge-subtle), var(--elevation-1);
   pointer-events: auto;
   transition: all 0.2s ease;
 }
@@ -20,7 +20,7 @@
 .resource {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   font-family:
     "Outfit",
     -apple-system,
@@ -30,40 +30,39 @@
 }
 
 .icon {
-  font-size: 1.2rem;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 .value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 /* Compact mode for tighter spaces */
 .compact {
-  padding: 0.5rem 0.75rem;
-  gap: 1rem;
+  padding: 0.625rem 1rem;
+  gap: 1.25rem;
 }
 
 .compact .icon {
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 
 .compact .value {
-  font-size: 0.95rem;
+  font-size: 1.15rem;
 }
 
-/* Specific colors for resource types if needed via classes, 
-   but currently inline styles or global classes might be overkill.
-   Let's add subtle glows. */
-
+/* Resource type colors with glow */
 .resource:first-child .value {
-  color: #ffd700; /* Gold */
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 }
 
 .resource:last-child .value {
-  color: #b580ff; /* Dust (Purple-ish) */
+  color: #b580ff;
+  text-shadow: 0 0 8px rgba(181, 128, 255, 0.4);
 }

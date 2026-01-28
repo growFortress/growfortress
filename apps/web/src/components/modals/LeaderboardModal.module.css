@@ -723,6 +723,182 @@
   transform: none;
 }
 
+/* Week Info Banner */
+.weekInfoBanner {
+  margin: 0 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--color-primary-10), var(--color-bg-elevated));
+  border: 2px solid var(--color-primary-30);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.weekPeriod {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weekPeriodIcon {
+  font-size: 18px;
+}
+
+.weekPeriodText {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.weekResetTime {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-neutral);
+}
+
+.resetLabel {
+  font-size: 11px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.resetTime {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Rewards Preview Panel */
+.rewardsPreviewPanel {
+  margin: 12px 16px;
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-neutral);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.rewardsPreviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--color-bg-panel);
+  border-bottom: 1px solid var(--color-neutral);
+  cursor: pointer;
+  transition: var(--transition-interactive-fast);
+}
+
+.rewardsPreviewHeader:hover {
+  background: var(--color-primary-10);
+}
+
+.rewardsPreviewTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rewardsPreviewIcon {
+  font-size: 16px;
+}
+
+.rewardsPreviewToggle {
+  font-size: 12px;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rewardsPreviewToggleIcon {
+  transition: transform 0.2s ease;
+}
+
+.rewardsPreviewToggleIcon.expanded {
+  transform: rotate(180deg);
+}
+
+.rewardsPreviewContent {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.rewardsPreviewContent.expanded {
+  max-height: 500px;
+}
+
+.rewardTierRow {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-neutral-20);
+  gap: 12px;
+}
+
+.rewardTierRow:last-child {
+  border-bottom: none;
+}
+
+.rewardTierRow.highlighted {
+  background: var(--color-primary-10);
+}
+
+.tierRankBadge {
+  min-width: 60px;
+  padding: 4px 8px;
+  background: var(--tier-color, var(--color-neutral));
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-bg);
+  text-align: center;
+}
+
+.tierRankBadge.gold { --tier-color: #FFD700; color: #000; }
+.tierRankBadge.silver { --tier-color: #C0C0C0; color: #000; }
+.tierRankBadge.bronze { --tier-color: #CD7F32; color: #fff; }
+.tierRankBadge.elite { --tier-color: #00BFFF; }
+.tierRankBadge.veteran { --tier-color: #4169E1; }
+.tierRankBadge.default { --tier-color: var(--color-text-40); }
+
+.tierRewards {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tierRewardItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.tierRewardItem.gold { color: #FFD700; }
+.tierRewardItem.dust { color: #00BFFF; }
+
+.tierExclusiveItems {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 
 /* Responsive */
 @media (max-width: 600px) {

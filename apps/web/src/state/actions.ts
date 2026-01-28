@@ -6,6 +6,7 @@ import {
   getRewardsForLevel,
   LEVEL_UP_DUST_REWARD,
   LEVEL_UP_GOLD_REWARD,
+  STAT_POINTS_PER_LEVEL_UP,
 } from '@arcade/sim-core';
 import type { Game } from '../game/Game.js';
 import type { GameStateSnapshot } from './game.signals.js';
@@ -183,6 +184,7 @@ export function syncGameState(gameInstance: Game): void {
         ended: state.ended,
         currentPillar: state.currentPillar,
         commanderLevel: state.commanderLevel,
+        levelsGainedInSession: state.levelsGainedInSession,
         sessionXpEarned: state.sessionXpEarned,
         xpAtSessionStart: state.xpAtSessionStart,
         // Crystal system (ancient artifacts)
@@ -201,7 +203,7 @@ export function syncGameState(gameInstance: Game): void {
 
       if (previousCommanderLevel > 0 && state.commanderLevel > previousCommanderLevel) {
         for (let level = previousCommanderLevel + 1; level <= state.commanderLevel; level++) {
-          ui.queueLevelUpNotification(level, LEVEL_UP_GOLD_REWARD, LEVEL_UP_DUST_REWARD);
+          ui.queueLevelUpNotification(level, LEVEL_UP_GOLD_REWARD, LEVEL_UP_DUST_REWARD, STAT_POINTS_PER_LEVEL_UP);
           GameAnnouncements.levelUp(level);
         }
       }

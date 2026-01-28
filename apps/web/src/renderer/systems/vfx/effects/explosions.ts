@@ -1,6 +1,7 @@
 import type { Particle, StagedEffect, ClassColors, FortressClass } from '../types.js';
 import { ParticleFactory } from '../particleFactory.js';
 import type { ParticlePool } from '../particlePool.js';
+import type { TimeoutRegistry } from '../timeoutRegistry.js';
 import { CLASS_VFX_COLORS, CLASS_EXPLOSION_CONFIG } from '../config.js';
 import { filterManager } from '../../../effects/FilterManager.js';
 
@@ -14,7 +15,8 @@ export class ExplosionEffects {
     private particles: Particle[],
     private factory: ParticleFactory,
     private triggerScreenShake: (intensity: number, duration: number) => void,
-    private triggerLightingFlash: (x: number, y: number, color: number, radius: number) => void
+    private triggerLightingFlash: (x: number, y: number, color: number, radius: number) => void,
+    private timeoutRegistry: TimeoutRegistry
   ) {}
 
   /**
@@ -486,7 +488,7 @@ export class ExplosionEffects {
     // Triple shockwave rings
     for (let i = 0; i < 3; i++) {
       const delay = i * 50;
-      setTimeout(() => {
+      this.timeoutRegistry.setTimeout(() => {
         this.factory.shockwaveRings(x, y, colors.secondary, intensity * (1 - i * 0.2));
       }, delay);
     }

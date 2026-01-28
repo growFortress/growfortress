@@ -1,4 +1,5 @@
 import { useEffect, useRef, useMemo } from "preact/hooks";
+import { effect } from "@preact/signals";
 import {
   gameState,
   gamePhase,
@@ -66,28 +67,11 @@ export function useTutorialTriggers(): void {
   const hasTriggeredRelicTip = useRef(false);
   const hasTriggeredSynergyTip = useRef(false);
 
-  // Reset tracking when returning to idle
-  useEffect(() => {
-    if (gamePhase.value === "idle") {
-      triggeredThisSession.current.clear();
-      lastKillCount.current = 0;
-      hasShownFirstKillTip.current = false;
-      hasTriggeredFortressUpgradesTip.current = false;
-      hasTriggeredFortressUnlocksTip.current = false;
-      hasTriggeredManualTip.current = false;
-      hasTriggeredDragTip.current = false;
-      hasTriggeredRelicTip.current = false;
-      hasTriggeredSynergyTip.current = false;
-    }
-  }, [gamePhase.value]);
-
-  // Reset hero upgrade tips when closing the hero details panel
-  useEffect(() => {
-    if (!upgradePanelVisible.value) {
-      hasTriggeredHeroStatTip.current = false;
-      hasTriggeredHeroTierTip.current = false;
-    }
-  }, [upgradePanelVisible.value]);
+  // Timer refs for cleanup
+  const hubTimerRef = useRef<number | null>(null);
+  const heroUpgradeTimerRef = useRef<number | null>(null);
+  const dragTimerRef = useRef<number | null>(null);
+  const relicTimerRef = useRef<number | null>(null);
 
   /**
    * Helper: Try to show a tutorial tip if conditions are met.
@@ -119,243 +103,326 @@ export function useTutorialTriggers(): void {
     return true;
   };
 
+  // Reset tracking when returning to idle
+  useEffect(() => {
+    const dispose = effect(() => {
+      if (gamePhase.value === "idle") {
+        triggeredThisSession.current.clear();
+        lastKillCount.current = 0;
+        hasShownFirstKillTip.current = false;
+        hasTriggeredFortressUpgradesTip.current = false;
+        hasTriggeredFortressUnlocksTip.current = false;
+        hasTriggeredManualTip.current = false;
+        hasTriggeredDragTip.current = false;
+        hasTriggeredRelicTip.current = false;
+        hasTriggeredSynergyTip.current = false;
+      }
+    });
+    return dispose;
+  }, []);
+
+  // Reset hero upgrade tips when closing the hero details panel
+  useEffect(() => {
+    const dispose = effect(() => {
+      if (!upgradePanelVisible.value) {
+        hasTriggeredHeroStatTip.current = false;
+        hasTriggeredHeroTierTip.current = false;
+      }
+    });
+    return dispose;
+  }, []);
+
   // ============ WAVE-BASED TRIGGERS ============
+  // Using @preact/signals effect() to properly react to signal changes
 
   useEffect(() => {
-    const state = gameState.value;
-    const phase = gamePhase.value;
+    const dispose = effect(() => {
+      const state = gameState.value;
+      const phase = gamePhase.value;
 
-    if (!state || phase !== "playing") return;
+      if (!state || phase !== "playing") return;
 
-    // Don't trigger new tips if one is already showing
-    if (activeTutorialTip.value !== null) return;
+      // Don't trigger new tips if one is already showing
+      if (activeTutorialTip.value !== null) return;
 
-    const wave = state.wave;
-    const tick = state.tick;
-    const kills = state.kills;
+      const wave = state.wave;
+      const tick = state.tick;
+      const kills = state.kills;
 
-    // ============ WAVE 1 SEQUENCE ============
-    if (wave === 1) {
-      // Step 1: Welcome intro at start
-      if (tick >= WAVE_1_WELCOME_TICK && isSequenceReady("welcome_intro", WAVE_1_SEQUENCE)) {
-        if (tryShowTip("welcome_intro")) return;
-      }
+      // ============ WAVE 1 SEQUENCE ============
+      if (wave === 1) {
+        // Step 1: Welcome intro at start
+        if (tick >= WAVE_1_WELCOME_TICK && isSequenceReady("welcome_intro", WAVE_1_SEQUENCE)) {
+          if (tryShowTip("welcome_intro")) return;
+        }
 
-      // Step 2: Fortress auto-attack after 2 seconds
-      if (tick >= WAVE_1_FORTRESS_TICK && isSequenceReady("fortress_auto_attack", WAVE_1_SEQUENCE)) {
-        if (tryShowTip("fortress_auto_attack")) return;
-      }
+        // Step 2: Fortress auto-attack after 2 seconds
+        if (tick >= WAVE_1_FORTRESS_TICK && isSequenceReady("fortress_auto_attack", WAVE_1_SEQUENCE)) {
+          if (tryShowTip("fortress_auto_attack")) return;
+        }
 
-      // Step 3: Fortress health - show after fortress tip
-      if (tick >= WAVE_1_FORTRESS_TICK + 30 && isSequenceReady("fortress_health", WAVE_1_SEQUENCE)) {
-        if (tryShowTip("fortress_health")) return;
-      }
+        // Step 3: Fortress health - show after fortress tip
+        if (tick >= WAVE_1_FORTRESS_TICK + 30 && isSequenceReady("fortress_health", WAVE_1_SEQUENCE)) {
+          if (tryShowTip("fortress_health")) return;
+        }
 
-      // Step 4: Gold resource - after first kill
-      if (kills > lastKillCount.current && !hasShownFirstKillTip.current) {
-        lastKillCount.current = kills;
-        if (isSequenceReady("gold_resource", WAVE_1_SEQUENCE)) {
-          hasShownFirstKillTip.current = true;
-          if (tryShowTip("gold_resource")) return;
+        // Step 4: Gold resource - after first kill
+        if (kills > lastKillCount.current && !hasShownFirstKillTip.current) {
+          lastKillCount.current = kills;
+          if (isSequenceReady("gold_resource", WAVE_1_SEQUENCE)) {
+            hasShownFirstKillTip.current = true;
+            if (tryShowTip("gold_resource")) return;
+          }
+        }
+
+        // Step 5: Bomb skill - after 5 seconds
+        if (tick >= WAVE_1_SKILL_TICK && isSequenceReady("bomb_skill", WAVE_1_SEQUENCE)) {
+          if (tryShowTip("bomb_skill")) return;
         }
       }
 
-      // Step 5: Bomb skill - after 5 seconds
-      if (tick >= WAVE_1_SKILL_TICK && isSequenceReady("bomb_skill", WAVE_1_SEQUENCE)) {
-        if (tryShowTip("bomb_skill")) return;
+      // ============ WAVE 2 ============
+      if (wave === 2) {
+        // Speed controls
+        if (tick >= WAVE_2_SPEED_TICK && !isTipCompleted("speed_controls")) {
+          if (tryShowTip("speed_controls")) return;
+        }
+
+        // Turret targeting
+        if (tick >= WAVE_2_TURRET_TICK && isTipCompleted("speed_controls") && !isTipCompleted("turret_targeting")) {
+          if (tryShowTip("turret_targeting")) return;
+        }
       }
-    }
 
-    // ============ WAVE 2 ============
-    if (wave === 2) {
-      // Speed controls
-      if (tick >= WAVE_2_SPEED_TICK && !isTipCompleted("speed_controls")) {
-        if (tryShowTip("speed_controls")) return;
+      // ============ WAVE 3+ ============
+      if (wave === 3) {
+        // Militia spawn
+        if (tick >= WAVE_3_MILITIA_TICK && !isTipCompleted("militia_spawn")) {
+          if (tryShowTip("militia_spawn")) return;
+        }
       }
+    });
 
-      // Turret targeting
-      if (tick >= WAVE_2_TURRET_TICK && isTipCompleted("speed_controls") && !isTipCompleted("turret_targeting")) {
-        if (tryShowTip("turret_targeting")) return;
-      }
-    }
-
-    // ============ WAVE 3+ ============
-    if (wave === 3) {
-      // Militia spawn
-      if (tick >= WAVE_3_MILITIA_TICK && !isTipCompleted("militia_spawn")) {
-        if (tryShowTip("militia_spawn")) return;
-      }
-    }
-
-    // ============ WAVE 5 END (dust resource) ============
-    // This is triggered by relic selection, see below
-
-  }, [gameState.value?.wave, gameState.value?.tick, gameState.value?.kills, gamePhase.value, tutorialSteps]);
+    return dispose;
+  }, [tutorialSteps]);
 
   // ============ HUB TIPS ============
 
   useEffect(() => {
-    if (gamePhase.value !== "idle") return;
-    if (!hubInitialized.value || !selectedFortressClass.value) return;
-    if (activeTutorialTip.value !== null) return;
+    const dispose = effect(() => {
+      if (gamePhase.value !== "idle") return;
+      if (!hubInitialized.value || !selectedFortressClass.value) return;
+      if (activeTutorialTip.value !== null) return;
 
-    // Fortress upgrades tip
-    if (!hasTriggeredFortressUpgradesTip.current && !isTipCompleted("fortress_upgrades")) {
-      hasTriggeredFortressUpgradesTip.current = true;
-      const timer = setTimeout(() => {
-        if (!activeTutorialTip.value && !isTipCompleted("fortress_upgrades")) {
-          showTutorialTip(tutorialSteps.fortress_upgrades);
-        }
-      }, 800);
-      return () => clearTimeout(timer);
-    }
+      // Clear any existing timer
+      if (hubTimerRef.current) {
+        clearTimeout(hubTimerRef.current);
+        hubTimerRef.current = null;
+      }
 
-    // Fortress unlocks tip (after fortress_upgrades completed)
-    if (
-      !hasTriggeredFortressUnlocksTip.current &&
-      isTipCompleted("fortress_upgrades") &&
-      !isTipCompleted("fortress_unlocks")
-    ) {
-      hasTriggeredFortressUnlocksTip.current = true;
-      const timer = setTimeout(() => {
-        if (!activeTutorialTip.value && !isTipCompleted("fortress_unlocks")) {
-          showTutorialTip(tutorialSteps.fortress_unlocks);
-        }
-      }, 800);
-      return () => clearTimeout(timer);
-    }
+      // Fortress upgrades tip
+      if (!hasTriggeredFortressUpgradesTip.current && !isTipCompleted("fortress_upgrades")) {
+        hasTriggeredFortressUpgradesTip.current = true;
+        hubTimerRef.current = window.setTimeout(() => {
+          if (!activeTutorialTip.value && !isTipCompleted("fortress_upgrades")) {
+            showTutorialTip(tutorialSteps.fortress_upgrades);
+          }
+        }, 800);
+        return;
+      }
 
-    return undefined;
-  }, [gamePhase.value, hubInitialized.value, selectedFortressClass.value, tutorialSteps, tutorialProgress.value]);
+      // Fortress unlocks tip (after fortress_upgrades completed)
+      if (
+        !hasTriggeredFortressUnlocksTip.current &&
+        isTipCompleted("fortress_upgrades") &&
+        !isTipCompleted("fortress_unlocks")
+      ) {
+        hasTriggeredFortressUnlocksTip.current = true;
+        hubTimerRef.current = window.setTimeout(() => {
+          if (!activeTutorialTip.value && !isTipCompleted("fortress_unlocks")) {
+            showTutorialTip(tutorialSteps.fortress_unlocks);
+          }
+        }, 800);
+      }
+    });
+
+    return () => {
+      dispose();
+      if (hubTimerRef.current) {
+        clearTimeout(hubTimerRef.current);
+      }
+    };
+  }, [tutorialSteps]);
 
   // ============ MANUAL CONTROL TIP ============
 
   useEffect(() => {
-    if (gamePhase.value !== "playing") return;
-    if (!manualControlHeroId.value || hasTriggeredManualTip.current) return;
-    if (activeTutorialTip.value !== null) return;
+    const dispose = effect(() => {
+      if (gamePhase.value !== "playing") return;
+      if (!manualControlHeroId.value || hasTriggeredManualTip.current) return;
+      if (activeTutorialTip.value !== null) return;
 
-    hasTriggeredManualTip.current = true;
+      hasTriggeredManualTip.current = true;
 
-    if (!isTipCompleted("manual_control")) {
-      showTutorialTip(tutorialSteps.manual_control);
-    } else if (!isTipCompleted("hero_drag")) {
-      showTutorialTip(tutorialSteps.hero_drag);
-      hasTriggeredDragTip.current = true;
-    }
-  }, [manualControlHeroId.value, gamePhase.value, tutorialSteps]);
+      if (!isTipCompleted("manual_control")) {
+        showTutorialTip(tutorialSteps.manual_control);
+      } else if (!isTipCompleted("hero_drag")) {
+        showTutorialTip(tutorialSteps.hero_drag);
+        hasTriggeredDragTip.current = true;
+      }
+    });
+
+    return dispose;
+  }, [tutorialSteps]);
 
   // ============ HERO UPGRADE TIPS ============
 
   useEffect(() => {
-    const target = upgradeTarget.value;
-    if (!upgradePanelVisible.value || target?.type !== "hero") return;
-    if (activeTutorialTip.value !== null) return;
+    const dispose = effect(() => {
+      const target = upgradeTarget.value;
+      if (!upgradePanelVisible.value || target?.type !== "hero") return;
+      if (activeTutorialTip.value !== null) return;
 
-    if (!hasTriggeredHeroStatTip.current && !isTipCompleted("hero_stat_upgrades")) {
-      hasTriggeredHeroStatTip.current = true;
-      const timer = setTimeout(() => {
-        if (!activeTutorialTip.value && !isTipCompleted("hero_stat_upgrades")) {
-          showTutorialTip(tutorialSteps.hero_stat_upgrades);
-        }
-      }, 400);
-      return () => clearTimeout(timer);
-    }
+      // Clear any existing timer
+      if (heroUpgradeTimerRef.current) {
+        clearTimeout(heroUpgradeTimerRef.current);
+        heroUpgradeTimerRef.current = null;
+      }
 
-    if (
-      !hasTriggeredHeroTierTip.current &&
-      isTipCompleted("hero_stat_upgrades") &&
-      !isTipCompleted("hero_tiers")
-    ) {
-      hasTriggeredHeroTierTip.current = true;
-      const timer = setTimeout(() => {
-        if (!activeTutorialTip.value && !isTipCompleted("hero_tiers")) {
-          showTutorialTip(tutorialSteps.hero_tiers);
-        }
-      }, 400);
-      return () => clearTimeout(timer);
-    }
+      if (!hasTriggeredHeroStatTip.current && !isTipCompleted("hero_stat_upgrades")) {
+        hasTriggeredHeroStatTip.current = true;
+        heroUpgradeTimerRef.current = window.setTimeout(() => {
+          if (!activeTutorialTip.value && !isTipCompleted("hero_stat_upgrades")) {
+            showTutorialTip(tutorialSteps.hero_stat_upgrades);
+          }
+        }, 400);
+        return;
+      }
 
-    return undefined;
-  }, [upgradePanelVisible.value, upgradeTarget.value, tutorialSteps, tutorialProgress.value]);
+      if (
+        !hasTriggeredHeroTierTip.current &&
+        isTipCompleted("hero_stat_upgrades") &&
+        !isTipCompleted("hero_tiers")
+      ) {
+        hasTriggeredHeroTierTip.current = true;
+        heroUpgradeTimerRef.current = window.setTimeout(() => {
+          if (!activeTutorialTip.value && !isTipCompleted("hero_tiers")) {
+            showTutorialTip(tutorialSteps.hero_tiers);
+          }
+        }, 400);
+      }
+    });
+
+    return () => {
+      dispose();
+      if (heroUpgradeTimerRef.current) {
+        clearTimeout(heroUpgradeTimerRef.current);
+      }
+    };
+  }, [tutorialSteps]);
 
   // ============ HERO DRAG TIP ============
 
   useEffect(() => {
-    if (gamePhase.value !== "playing") return;
-    if (!commandSelectedHeroId.value || hasTriggeredDragTip.current) return;
-    if (activeTutorialTip.value !== null) return;
+    const dispose = effect(() => {
+      if (gamePhase.value !== "playing") return;
+      if (!commandSelectedHeroId.value || hasTriggeredDragTip.current) return;
+      if (activeTutorialTip.value !== null) return;
 
-    hasTriggeredDragTip.current = true;
+      hasTriggeredDragTip.current = true;
 
-    if (!isTipCompleted("hero_drag")) {
-      const timer = setTimeout(() => {
-        if (!activeTutorialTip.value && !isTipCompleted("hero_drag")) {
-          showTutorialTip(tutorialSteps.hero_drag);
+      if (!isTipCompleted("hero_drag")) {
+        // Clear any existing timer
+        if (dragTimerRef.current) {
+          clearTimeout(dragTimerRef.current);
         }
-      }, 800);
-      return () => clearTimeout(timer);
-    }
+        dragTimerRef.current = window.setTimeout(() => {
+          if (!activeTutorialTip.value && !isTipCompleted("hero_drag")) {
+            showTutorialTip(tutorialSteps.hero_drag);
+          }
+        }, 800);
+      }
+    });
 
-    return undefined;
-  }, [commandSelectedHeroId.value, gamePhase.value, tutorialSteps]);
+    return () => {
+      dispose();
+      if (dragTimerRef.current) {
+        clearTimeout(dragTimerRef.current);
+      }
+    };
+  }, [tutorialSteps]);
 
   // Drag tip after manual control was completed
   useEffect(() => {
-    if (gamePhase.value !== "playing") return;
-    if (hasTriggeredDragTip.current) return;
-    if (!tutorialProgress.value.has("manual_control")) return;
-    if (isTipCompleted("hero_drag") || activeTutorialTip.value) return;
+    const dispose = effect(() => {
+      if (gamePhase.value !== "playing") return;
+      if (hasTriggeredDragTip.current) return;
+      if (!tutorialProgress.value.has("manual_control")) return;
+      if (isTipCompleted("hero_drag") || activeTutorialTip.value) return;
 
-    hasTriggeredDragTip.current = true;
-    showTutorialTip(tutorialSteps.hero_drag);
-  }, [tutorialProgress.value, gamePhase.value, tutorialSteps]);
+      hasTriggeredDragTip.current = true;
+      showTutorialTip(tutorialSteps.hero_drag);
+    });
+
+    return dispose;
+  }, [tutorialSteps]);
 
   // ============ RELIC SELECTION TRIGGER ============
 
   useEffect(() => {
-    if (!showChoiceModal.value) {
-      // Modal just closed - check for synergy tip
-      if (hasTriggeredRelicTip.current && !hasTriggeredSynergyTip.current) {
-        hasTriggeredSynergyTip.current = true;
-
-        if (!isTipCompleted("build_synergy")) {
-          const timer = setTimeout(() => {
-            if (!activeTutorialTip.value && !isTipCompleted("build_synergy")) {
-              showTutorialTip(tutorialSteps.build_synergy);
-            }
-          }, 2000);
-          return () => clearTimeout(timer);
-        }
+    const dispose = effect(() => {
+      // Clear any existing timer
+      if (relicTimerRef.current) {
+        clearTimeout(relicTimerRef.current);
+        relicTimerRef.current = null;
       }
-      return undefined;
-    }
 
-    // Modal is open
-    if (!hasTriggeredRelicTip.current) {
-      hasTriggeredRelicTip.current = true;
+      if (!showChoiceModal.value) {
+        // Modal just closed - check for synergy tip
+        if (hasTriggeredRelicTip.current && !hasTriggeredSynergyTip.current) {
+          hasTriggeredSynergyTip.current = true;
 
-      if (!isTipCompleted("relic_selection")) {
-        const timer = setTimeout(() => {
-          if (!activeTutorialTip.value && !isTipCompleted("relic_selection")) {
-            showTutorialTip(tutorialSteps.relic_selection);
+          if (!isTipCompleted("build_synergy")) {
+            relicTimerRef.current = window.setTimeout(() => {
+              if (!activeTutorialTip.value && !isTipCompleted("build_synergy")) {
+                showTutorialTip(tutorialSteps.build_synergy);
+              }
+            }, 2000);
           }
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-    }
-
-    // Show dust_resource tip on wave 5's first relic choice
-    const state = gameState.value;
-    if (state && state.wave === 5 && !isTipCompleted("dust_resource")) {
-      const timer = setTimeout(() => {
-        if (!activeTutorialTip.value && !isTipCompleted("dust_resource")) {
-          showTutorialTip(tutorialSteps.dust_resource);
         }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
+        return;
+      }
 
-    return undefined;
-  }, [showChoiceModal.value, tutorialSteps, gameState.value?.wave]);
+      // Modal is open
+      if (!hasTriggeredRelicTip.current) {
+        hasTriggeredRelicTip.current = true;
+
+        if (!isTipCompleted("relic_selection")) {
+          relicTimerRef.current = window.setTimeout(() => {
+            if (!activeTutorialTip.value && !isTipCompleted("relic_selection")) {
+              showTutorialTip(tutorialSteps.relic_selection);
+            }
+          }, 500);
+          return;
+        }
+      }
+
+      // Show dust_resource tip on wave 2's relic choice (right after first relic)
+      const state = gameState.value;
+      if (state && state.wave === 2 && !isTipCompleted("dust_resource")) {
+        relicTimerRef.current = window.setTimeout(() => {
+          if (!activeTutorialTip.value && !isTipCompleted("dust_resource")) {
+            showTutorialTip(tutorialSteps.dust_resource);
+          }
+        }, 1500);
+      }
+    });
+
+    return () => {
+      dispose();
+      if (relicTimerRef.current) {
+        clearTimeout(relicTimerRef.current);
+      }
+    };
+  }, [tutorialSteps]);
 }

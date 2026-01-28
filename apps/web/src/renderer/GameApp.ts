@@ -2,11 +2,10 @@ import { Application, Container } from "pixi.js";
 import { CRTFilter } from "pixi-filters";
 import { GameScene, type HubState } from "./scenes/GameScene.js";
 import { filterManager, FilterManager } from "./effects/FilterManager.js";
-import { assetManager } from "./managers/AssetManager.js";
 import { logger } from "../utils/logger.js";
 
 // =============================================================================
-// WebGPU Detection & Renderer Info
+// Renderer Info
 // =============================================================================
 
 export type RendererType = "webgpu" | "webgl2" | "webgl" | "unknown";
@@ -18,29 +17,6 @@ export interface RendererInfo {
   maxTextureSize: number;
   vendor: string;
   renderer: string;
-}
-
-/**
- * Detect if WebGPU is available in the browser (with timeout)
- */
-async function isWebGPUAvailable(): Promise<boolean> {
-  if (!navigator.gpu) {
-    return false;
-  }
-
-  try {
-    // Add timeout to prevent hanging on WebGPU detection
-    const timeout = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), 2000),
-    );
-    const adapter = await Promise.race([
-      navigator.gpu.requestAdapter(),
-      timeout,
-    ]);
-    return adapter !== null;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -194,23 +170,7 @@ export class GameApp {
 
   async init() {
     logger.debug("[GameApp] Starting initialization...");
-
-    // Check WebGPU availability
-    const webgpuAvailable = await isWebGPUAvailable();
-    logger.debug(`[GameApp] WebGPU available: ${webgpuAvailable}`);
-
-    // Initialize with preference for WebGPU if available
     logger.debug("[GameApp] Initializing PixiJS Application...");
-
-    // Preload game assets with progress logging
-    logger.debug("[GameApp] Loading game assets...");
-    await assetManager.loadGameAssets((progress) => {
-      if (progress.loaded % 5 === 0 || progress.loaded === progress.total) {
-        logger.debug(`[GameApp] Asset loading: ${progress.loaded}/${progress.total}`);
-      }
-    });
-    const stats = assetManager.getStats();
-    logger.debug(`[GameApp] Assets loaded: ${stats.loaded}, failed: ${stats.failed}`);
 
     const resizeTarget = this.canvas.parentElement ?? window;
     const initOptions = {
@@ -222,30 +182,12 @@ export class GameApp {
       resolution: window.devicePixelRatio || 1,
     };
 
-    try {
-      await this.app.init({
-        ...initOptions,
-        // PixiJS 8 prefers WebGPU automatically if available
-        // But we can explicitly set preference here
-        preference: webgpuAvailable ? "webgpu" : "webgl",
-      });
-    } catch (error) {
-      if (webgpuAvailable) {
-        logger.warn(
-          "[GameApp] WebGPU init failed, falling back to WebGL:",
-          error,
-        );
-        this.app.destroy(true, { children: true, texture: true });
-        this.app = new Application();
-        this.stage = this.app.stage;
-        await this.app.init({
-          ...initOptions,
-          preference: "webgl",
-        });
-      } else {
-        throw error;
-      }
-    }
+    // Force WebGL mode - custom Mesh shaders with WGSL have bind group layout
+    // issues in PixiJS v8. WebGL with GLSL works reliably.
+    await this.app.init({
+      ...initOptions,
+      preference: "webgl",
+    });
 
     logger.debug("[GameApp] PixiJS Application initialized");
 

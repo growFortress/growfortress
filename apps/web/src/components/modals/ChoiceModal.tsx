@@ -62,7 +62,7 @@ export function ChoiceModal({ onSelect }: ChoiceModalProps) {
       closeOnBackdropClick={false}
       showCloseButton={false}
     >
-      <div class="choice-options">
+      <div class="choice-options" data-tutorial="relic-choice">
         {choiceOptions.value.map((relicId, index) => {
           const relic = getRelicById(relicId) as ExtendedRelicDef | undefined;
           if (!relic) return null;

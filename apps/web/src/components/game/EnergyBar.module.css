@@ -1,13 +1,13 @@
+/* Sci-Fi HUD: Solid background with holographic edge */
 .container {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  gap: var(--hud-spacing-sm);
+  padding: var(--hud-spacing-sm) var(--hud-spacing-md);
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
+  border-radius: calc(12px * var(--hud-scale));
+  box-shadow: var(--holo-edge-subtle), var(--elevation-1);
   pointer-events: auto;
   transition: all 0.2s ease;
 }
@@ -44,7 +44,7 @@
   font-family: "Outfit", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem;
   font-weight: 600;
-  color: hsl(60, 100%, 55%);
+  color: var(--color-energy-bright);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
@@ -81,9 +81,9 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: hsl(60, 100%, 55%);
+  color: var(--color-energy-bright);
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid hsl(60, 100%, 55%);
+  border: 1px solid var(--color-energy-bright);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -91,8 +91,8 @@
 }
 
 .refillButton:hover:not(:disabled) {
-  background: hsla(60, 100%, 55%, 0.15);
-  box-shadow: 0 0 10px hsla(60, 100%, 55%, 0.3);
+  background: var(--color-energy-15);
+  box-shadow: 0 0 10px var(--color-energy-30);
   transform: scale(1.02);
 }
 
@@ -131,20 +131,20 @@
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  color: hsl(140, 70%, 50%);
+  color: var(--color-positive);
   padding: 4px 8px;
-  background: hsla(140, 70%, 50%, 0.15);
-  border: 1px solid hsla(140, 70%, 50%, 0.3);
+  background: var(--color-positive-20);
+  border: 1px solid var(--color-positive-30);
   border-radius: var(--radius-sm);
 }
 
-/* No energy warning */
+/* No energy warning - limited pulse (3 cycles, not infinite) */
 .noEnergy .energyCount {
   color: var(--color-accent);
-  animation: pulse 1s ease-in-out infinite;
+  animation: energyPulse 1s ease-in-out 3;
 }
 
-@keyframes pulse {
+@keyframes energyPulse {
   0%, 100% {
     opacity: 1;
   }
@@ -153,47 +153,88 @@
   }
 }
 
-/* Compact variant for smaller spaces */
+/* Compact variant for smaller spaces (e.g., in side panel resources) */
 .compact {
-  padding: 8px 12px;
-  gap: 10px;
+  padding: var(--hud-spacing-sm) var(--hud-spacing-md);
+  gap: var(--hud-spacing-sm);
   background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
+  border-radius: calc(8px * var(--hud-scale));
   border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  backdrop-filter: none;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .compact .iconSection {
-  min-width: auto;
-  gap: 0.375rem;
+  min-width: 0;
+  gap: var(--hud-spacing-sm);
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
 .compact .icon {
-  font-size: 1rem;
+  font-size: var(--hud-icon-sm);
+  width: var(--hud-icon-sm);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.compact .values {
+  gap: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .compact .energyCount {
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-size: var(--hud-font-lg);
+  font-weight: 700;
+  color: var(--color-energy-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.compact .regenTime {
+  display: none; /* Hide in compact mode */
 }
 
 .compact .barSection {
-  min-width: 50px;
-  max-width: 70px;
-  flex: 0 0 auto;
+  display: none; /* Hide progress bar in compact mode */
 }
 
-.compact .refillButton {
-  padding: 4px 8px;
-  font-size: 10px;
+.compact .refillSection {
+  display: none; /* Hide refill in compact mode - too crowded */
 }
 
-.compact .fullBadge {
-  font-size: 9px;
-  padding: 3px 6px;
+.energyLabel {
+  font-size: var(--hud-font-xs);
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Hide energy label on smaller screens */
+@media (max-width: 1279px) {
+  .energyLabel {
+    display: none;
+  }
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .noEnergy .energyCount {
     animation: none;
+  }
+}
+
+/* Legacy fallback - now using Sci-Fi HUD as primary */
+@supports not (--hud-bg-solid: rgba(0,0,0,1)) {
+  .container {
+    background: rgba(10, 10, 18, 0.98);
+    border: 1px solid rgba(0, 229, 255, 0.3);
   }
 }

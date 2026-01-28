@@ -86,12 +86,12 @@ describe('Shop Service', () => {
   const createMockUserData = (overrides: {
     preferredCurrency?: string | null;
     purchaseLimits?: Array<{ productId: string; purchaseCount: number }>;
-    purchases?: Array<{ productId: string }>;
+    shopPurchases?: Array<{ productId: string }>;
     unlockedHeroIds?: string[];
   } = {}) => ({
     preferredCurrency: overrides.preferredCurrency ?? 'PLN',
     purchaseLimits: overrides.purchaseLimits ?? [],
-    purchases: overrides.purchases ?? [],
+    shopPurchases: overrides.shopPurchases ?? [],
     inventory: {
       unlockedHeroIds: overrides.unlockedHeroIds ?? ['vanguard'],
     },
@@ -124,7 +124,7 @@ describe('Shop Service', () => {
 
     it('tracks first purchase bonus availability', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(createMockUserData({
-        purchases: [{ productId: 'dust_small' }],
+        shopPurchases: [{ productId: 'dust_small' }],
       }));
 
       const result = await getShopOverview('user-123');

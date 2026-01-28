@@ -45,6 +45,31 @@ interface AuthResult {
 }
 
 /**
+ * Check if a username is available
+ */
+export async function checkUsernameAvailability(
+  username: string,
+): Promise<{ available: boolean; reason?: string }> {
+  // Validate format first
+  if (username.length < 3) {
+    return { available: false, reason: "TOO_SHORT" };
+  }
+  if (username.length > 20) {
+    return { available: false, reason: "TOO_LONG" };
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    return { available: false, reason: "INVALID_FORMAT" };
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+    select: { id: true },
+  });
+
+  return { available: !existingUser };
+}
+
+/**
  * Register a new user
  */
 export async function registerUser(

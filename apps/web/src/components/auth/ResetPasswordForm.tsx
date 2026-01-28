@@ -2,6 +2,7 @@ import { useState, useId } from 'preact/hooks';
 import { authLoading } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
+import { LockIcon, EyeIcon, EyeOffIcon } from './AuthIcons.js';
 import styles from './AuthScreen.module.css';
 
 interface ResetPasswordFormProps {
@@ -68,7 +69,9 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
         <label htmlFor={passwordId} class={styles.srOnly}>
           {t('resetPassword.password')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">🔒</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <LockIcon size={18} />
+        </span>
         <input
           id={passwordId}
           type={showPassword ? 'text' : 'password'}
@@ -86,7 +89,7 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
           aria-label={showPassword ? 'Hide password' : 'Show password'}
           tabIndex={-1}
         >
-          {showPassword ? '👁️' : '👁️‍🗨️'}
+          {showPassword ? <EyeIcon size={20} /> : <EyeOffIcon size={20} />}
         </button>
       </div>
 
@@ -94,7 +97,9 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
         <label htmlFor={confirmPasswordId} class={styles.srOnly}>
           {t('resetPassword.confirmPassword')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">🔒</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <LockIcon size={18} />
+        </span>
         <input
           id={confirmPasswordId}
           type={showConfirmPassword ? 'text' : 'password'}
@@ -112,7 +117,7 @@ export function ResetPasswordForm({ token: _token, onSubmit, onBack, error }: Re
           aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
           tabIndex={-1}
         >
-          {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+          {showConfirmPassword ? <EyeIcon size={20} /> : <EyeOffIcon size={20} />}
         </button>
       </div>
 

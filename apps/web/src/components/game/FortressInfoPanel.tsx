@@ -4,8 +4,6 @@ import { useState, useMemo, useCallback, useEffect } from 'preact/hooks';
 import {
   calculateTotalHpBonus,
   calculateTotalDamageBonus,
-  calculateFortressPower,
-  createDefaultStatUpgrades,
   getFortressTier,
   getFortressTierName,
   getStatBonusPercent,
@@ -45,7 +43,7 @@ import { Button } from '../shared/Button.js';
 import { announce } from '../shared/ScreenReaderAnnouncer.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { guildBonuses } from '../../state/guild.signals.js';
-import { GoldIcon } from '../icons/index.js';
+import { GoldIcon, HpIcon, DamageIcon, ArmorIcon } from '../icons/index.js';
 import styles from './FortressInfoPanel.module.css';
 
 // Class colors
@@ -59,12 +57,19 @@ const CLASS_COLORS: Record<FortressClass, string> = {
   plasma: '#00ffff',
 };
 
-// Stat icons
-const STAT_ICONS: Record<string, string> = {
-  hp: '❤️',
-  damage: '⚔️',
-  armor: '🛡️',
-};
+// Stat icon components
+function getStatIcon(stat: string, size: number = 28) {
+  switch (stat) {
+    case 'hp':
+      return <HpIcon size={size} />;
+    case 'damage':
+      return <DamageIcon size={size} />;
+    case 'armor':
+      return <ArmorIcon size={size} />;
+    default:
+      return <span>📊</span>;
+  }
+}
 
 // Fixed point base (1.0)
 const FP_BASE = 16384;
@@ -140,16 +145,6 @@ export function FortressInfoPanel() {
   }, [authenticated]);
 
   // Memoized calculations
-  const fortressPower = useMemo(() => {
-    const fortressUpgrades = {
-      ...createDefaultStatUpgrades(),
-      hp: state.fortressUpgrades.hp || 0,
-      damage: state.fortressUpgrades.damage || 0,
-      armor: state.fortressUpgrades.armor || 0,
-    };
-    return calculateFortressPower(fortressUpgrades, fortressLevel).totalPower;
-  }, [state.fortressUpgrades, fortressLevel]);
-
   const fortressStats = useMemo(() => {
     // Get base values from server config
     const serverBaseHp = gameConfig.value.fortressBaseHp;
@@ -394,13 +389,6 @@ export function FortressInfoPanel() {
                 <span class={styles.tierArrow}>→</span>
               </button>
             </div>
-            <div class={styles.powerBadge}>
-              <span class={styles.powerLabel}>{t('fortressPanel.power')}</span>
-              <div class={styles.powerValueWrapper}>
-                <span class={styles.powerIcon}>💪</span>
-                <span class={styles.powerValue}>{fortressPower.toLocaleString()}</span>
-              </div>
-            </div>
           </div>
 
           <div class={styles.fortressActions}>
@@ -448,11 +436,16 @@ export function FortressInfoPanel() {
 
             const upgradeName = t(`fortressPanel.statUpgrades.${config.stat}`, { defaultValue: config.name });
 
+            const upgradeDescription = t(`fortressPanel.statUpgradeDescriptions.${config.stat}`);
+
             return (
               <div key={config.stat} class={styles.upgradeCard}>
                 <div class={styles.upgradeCardHeader}>
-                  <span class={styles.upgradeIcon}>{STAT_ICONS[config.stat] || '📊'}</span>
-                  <span class={styles.upgradeName}>{upgradeName}</span>
+                  <span class={styles.upgradeIcon}>{getStatIcon(config.stat, 32)}</span>
+                  <div class={styles.upgradeNameGroup}>
+                    <span class={styles.upgradeName}>{upgradeName}</span>
+                    <span class={styles.upgradeDescription}>{upgradeDescription}</span>
+                  </div>
                   <span class={styles.upgradeLevel}>
                     {hasMaxLevel ? `${currentLevel}/${config.maxLevel}` : `Lv ${currentLevel}`}
                   </span>
@@ -485,7 +478,7 @@ export function FortressInfoPanel() {
                       class={canAfford ? styles.affordableBtn : ''}
                       aria-label={t('fortressPanel.upgradeFor', { name: upgradeName, cost })}
                     >
-                      {cost} <GoldIcon size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '2px' }} />
+                      {cost} <GoldIcon size={20} style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '4px' }} />
                     </Button>
                   )}
                 </div>

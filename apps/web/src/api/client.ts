@@ -98,6 +98,25 @@ export async function forgotPassword(
   });
 }
 
+// Check username availability
+export interface UsernameAvailabilityResponse {
+  available: boolean;
+  reason?: "TOO_SHORT" | "TOO_LONG" | "INVALID_FORMAT";
+}
+
+export async function checkUsernameAvailability(
+  username: string,
+): Promise<UsernameAvailabilityResponse> {
+  return request<UsernameAvailabilityResponse>(
+    `/v1/auth/check-username/${encodeURIComponent(username)}`,
+    {
+      method: "GET",
+      skipAuth: true,
+      skipAuthRefresh: true,
+    },
+  );
+}
+
 // Guest session - creates a temporary account for playing without registration
 export interface GuestSessionResponse {
   accessToken: string;

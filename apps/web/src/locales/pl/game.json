@@ -24,7 +24,8 @@
     "fightPlayers": "Walcz z innymi graczami!",
     "pvpArena": "PvP Arena - Walcz z innymi graczami",
     "pendingChallenges": ", {{count}} oczekujących wyzwań",
-    "pillarChallengeLabel": "Wyzwanie Filarów",
+    "pillarChallengeLabel": "Próba Kryształów",
+    "pillarChallengeTooltip": "Pokonaj wyzwania i zdobywaj fragmenty kryształów!",
     "soonBadge": "WKRÓTCE",
     "endSession": "Zakończ sesję gry",
     "endLabel": "Zakończ",
@@ -200,7 +201,36 @@
     "bossCount": "Boss {{current}}/7",
     "nextBossIn": "NASTĘPNY BOSS ZA {{count}}...",
     "details": "Szczegóły",
-    "hide": "Ukryj"
+    "hide": "Ukryj",
+    "hud": {
+      "dmg": "OBR",
+      "bossesLabel": "Bossów",
+      "totalDamage": "ŁĄCZNE OBRAŻENIA",
+      "bossesKilled": "ZABICI BOSSOWIE",
+      "cycle": "Cykl {{cycle}}",
+      "damageBreakdown": "PODZIAŁ OBRAŻEŃ",
+      "milestones": "KAMIENIE MILOWE",
+      "bossesCount": "{{count}} Bossów"
+    },
+    "shop": {
+      "title": "Sklep",
+      "closeAriaLabel": "Zamknij sklep",
+      "close": "Zamknij Sklep",
+      "sections": {
+        "healing": "Leczenie",
+        "powerUps": "Wzmocnienia",
+        "utility": "Narzędzia"
+      },
+      "items": {
+        "healPercent": "Przywróć {{percent}}% HP",
+        "reroll": "Nowe opcje reliktów",
+        "boostStats": "Wzmocnij statystyki",
+        "damage": "Obrażenia",
+        "attackSpeed": "Szybkość Ataku",
+        "critChance": "Szansa Kryt.",
+        "statBoost": "+{{percent}}% {{stat}}"
+      }
+    }
   },
   "tutorial": {
     "yourFortress": "Twoja Twierdza",
@@ -282,6 +312,7 @@
     "dismiss": "Rozumiem",
     "tryIt": "Spróbuj!",
     "skip": "Pomiń",
+    "skipAll": "Pomiń Wszystkie Samouczki",
     "completed": "Świetnie!"
   },
   "unlock": {
@@ -457,25 +488,58 @@
     }
   },
   "endScreen": {
-    "victory": "Zwycięstwo!",
-    "defeat": "Porażka",
-    "waveReached": "Dotarłeś do fali {{wave}}",
-    "victoryMessage": "Doskonale wykonane! Kontynuuj w tym tempie!",
-    "defeatMessage": "Walczyłeś dzielnie! Następnym razem będzie jeszcze lepiej!",
-    "enemies": "Wrogowie",
+    "sessionComplete": "Sesja zakończona",
+    "sessionMessage": "Świetny wynik! Gotowy na kolejną?",
+    "wave": "Fala",
+    "kills": "Zabici",
     "elites": "Elity",
     "relics": "Relikty",
-    "weeklyRank": "Ranking tygodniowy",
-    "totalRank": "Ranking ogólny",
-    "rankLabel": "Miejsce #{{rank}}",
-    "noRank": "Brak rankingu",
-    "noRankingYet": "Ukończ więcej rozgrywek, aby zobaczyć swój ranking!",
+    "weeklyRank": "Tydzień",
+    "totalRank": "Ogólny",
     "top10": "Top 10!",
-    "newBest": "Nowy rekord osobisty!",
-    "loadingRank": "Ładowanie rankingu...",
-    "rankingError": "Nie udało się załadować rankingu",
+    "loadingRank": "Ładowanie...",
+    "rankingError": "Nie udało się załadować",
     "returnToHub": "Wróć do bazy",
-    "playAgain": "Zagraj ponownie",
-    "autoTransition": "Powrót do hubu za {{seconds}}s..."
+    "playAgain": "Zagraj ponownie"
+  },
+  "statPoints": {
+    "title": "Darmowe Punkty Statystyk",
+    "indicatorAria": "{{count}} darmowych punktów statystyk dostępnych",
+    "freePoints": "Darmowe Punkty",
+    "available": "Dostępne",
+    "earned": "Zdobyte",
+    "spent": "Wydane",
+    "fortress": "Twierdza",
+    "heroes": "Bohaterowie",
+    "selectHero": "Wybierz bohatera, aby przydzielić punkty",
+    "allocate": "Przydziel",
+    "reset": "Resetuj",
+    "resetConfirm": "Zresetować wszystkie alokacje? Punkty zostaną zwrócone.",
+    "resetYes": "Tak, Resetuj",
+    "resetNo": "Anuluj",
+    "maxReached": "MAX",
+    "max": "Max",
+    "perPoint": "za punkt",
+    "free": "ZA DARMO",
+    "removeSingle": "Usuń 1 punkt",
+    "addSingle": "Dodaj 1 punkt",
+    "addBatch": "Dodaj {{count}} punktów",
+    "addMax": "Dodaj maksymalną liczbę punktów",
+    "stats": {
+      "hp": "Zdrowie",
+      "hpDesc": "Zwiększa maksymalne zdrowie",
+      "damage": "Obrażenia",
+      "damageDesc": "Zwiększa zadawane obrażenia",
+      "armor": "Pancerz",
+      "armorDesc": "Zmniejsza otrzymywane obrażenia",
+      "attackSpeed": "Szybkość Ataku",
+      "attackSpeedDesc": "Zwiększa częstotliwość ataku",
+      "critChance": "Szansa Krytyczna",
+      "critChanceDesc": "Zwiększa szansę na trafienie krytyczne"
+    },
+    "errors": {
+      "allocateFailed": "Nie udało się przydzielić punktów statystyk",
+      "resetFailed": "Nie udało się zresetować punktów statystyk"
+    }
   }
 }

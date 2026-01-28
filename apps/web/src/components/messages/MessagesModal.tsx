@@ -35,6 +35,72 @@ import { acceptInvitation, declineInvitation } from '../../api/guild.js';
 import styles from './MessagesModal.module.css';
 
 // ============================================================================
+// ICON COMPONENTS
+// ============================================================================
+
+function MessagesIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M8 10h8" />
+      <path d="M8 14h4" />
+    </svg>
+  );
+}
+
+function ComposeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+function SendIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </svg>
+  );
+}
+
+function BackIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  );
+}
+
+function EmptyInboxIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="10" y="20" width="60" height="45" rx="4" />
+      <path d="M10 30h60" />
+      <path d="M10 30l15 15h30l15-15" />
+      <circle cx="40" cy="52" r="8" strokeDasharray="4 2" />
+      <path d="M37 52h6" />
+    </svg>
+  );
+}
+
+function SelectThreadIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="8" y="15" width="30" height="50" rx="3" />
+      <path d="M14 25h18" />
+      <path d="M14 32h14" />
+      <path d="M14 39h18" />
+      <path d="M14 46h10" />
+      <path d="M45 35h27" strokeWidth="2" />
+      <path d="M60 25l12 10-12 10" strokeWidth="2" />
+    </svg>
+  );
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -141,14 +207,20 @@ function ThreadList({ onSelectThread, t, locale }: ThreadListProps) {
   const selected = selectedThreadId.value;
 
   if (loading && threadList.length === 0) {
-    return <div class={styles.loading}>{t('messages.loading')}</div>;
+    return (
+      <div class={styles.loading}>
+        <div class={styles.loadingSpinner} />
+        <span>{t('messages.loading')}</span>
+      </div>
+    );
   }
 
   if (threadList.length === 0) {
     return (
       <div class={styles.emptyState}>
-        <div class={styles.emptyIcon}>📭</div>
-        <div>{t('messages.noMessages')}</div>
+        <EmptyInboxIcon className={styles.emptyIcon} />
+        <h3 class={styles.emptyTitle}>{t('messages.noMessages')}</h3>
+        <p class={styles.emptyDescription}>{t('messages.noMessagesHint')}</p>
       </div>
     );
   }
@@ -210,14 +282,20 @@ function ThreadView({ onBack, t, locale }: ThreadViewProps) {
   }, [thread?.messages]);
 
   if (loading) {
-    return <div class={styles.loading}>{t('messages.loading')}</div>;
+    return (
+      <div class={styles.loading}>
+        <div class={styles.loadingSpinner} />
+        <span>{t('messages.loading')}</span>
+      </div>
+    );
   }
 
   if (!thread) {
     return (
       <div class={styles.emptyState}>
-        <div class={styles.emptyIcon}>📬</div>
-        <div>{t('messages.selectThread')}</div>
+        <SelectThreadIcon className={styles.emptyIcon} />
+        <h3 class={styles.emptyTitle}>{t('messages.selectThread')}</h3>
+        <p class={styles.emptyDescription}>{t('messages.selectThreadHint')}</p>
       </div>
     );
   }
@@ -266,13 +344,14 @@ function ThreadView({ onBack, t, locale }: ThreadViewProps) {
   return (
     <div class={styles.threadView}>
       <div class={styles.threadViewHeader}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <button class={styles.backBtn} onClick={onBack} aria-label={t('messages.back')}>
-            ←
-          </button>
-          <div>
-            <h3 class={styles.threadViewSubject}>{thread.subject}</h3>
-            <div class={styles.threadViewParticipants}>{participants}</div>
+        <button class={styles.backBtn} onClick={onBack} aria-label={t('messages.back')}>
+          <BackIcon className={styles.backBtnIcon} />
+        </button>
+        <div>
+          <h3 class={styles.threadViewSubject}>{thread.subject}</h3>
+          <div class={styles.threadViewParticipants}>
+            <span class={styles.participantDot} />
+            {participants}
           </div>
         </div>
       </div>
@@ -341,6 +420,7 @@ function ThreadView({ onBack, t, locale }: ThreadViewProps) {
               class={styles.sendBtn}
               disabled={!replyText.trim() || sending}
             >
+              <SendIcon className={styles.sendBtnIcon} />
               {sending ? '...' : t('messages.send')}
             </button>
           </form>
@@ -442,7 +522,10 @@ function ComposeModal({ t }: ComposeModalProps) {
   return (
     <div class={styles.overlay} onClick={(e) => e.target === e.currentTarget && closeComposeModal()}>
       <div class={styles.composeModal}>
-        <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>{t('messages.compose.title')}</h2>
+        <div class={styles.composeHeader}>
+          <ComposeIcon className={styles.composeIcon} />
+          <h2 class={styles.composeTitle}>{t('messages.compose.title')}</h2>
+        </div>
 
         <form class={styles.composeForm} onSubmit={handleSubmit}>
           <div class={styles.formGroup}>
@@ -528,6 +611,7 @@ function ComposeModal({ t }: ComposeModalProps) {
               class={styles.sendBtn}
               disabled={loading}
             >
+              <SendIcon className={styles.sendBtnIcon} />
               {loading ? t('messages.compose.sending') : t('messages.compose.send')}
             </button>
           </div>
@@ -573,9 +657,10 @@ export function MessagesModal() {
       <div class={styles.modal}>
         <div class={styles.header}>
           <h2 class={styles.title}>
+            <MessagesIcon className={styles.titleIcon} />
             <span>{t('messages.title')}</span>
             {counts.total > 0 && (
-              <span class={styles.tabBadge}>{counts.total > 99 ? '99+' : counts.total}</span>
+              <span class={styles.titleBadge}>{counts.total > 99 ? '99+' : counts.total}</span>
             )}
           </h2>
           <button class={styles.closeBtn} onClick={closeMessagesModal} aria-label={t('messages.close')}>
@@ -601,10 +686,11 @@ export function MessagesModal() {
         <div class={styles.content}>
           <div class={`${styles.threadList} ${mobileShowThread ? styles.threadListHidden : ''}`}>
             <div class={styles.listHeader}>
-              <span style={{ color: 'var(--color-text-dim)', fontSize: '0.85rem' }}>
+              <span class={styles.listHeaderLabel}>
                 {t('messages.threads')}
               </span>
               <button class={styles.composeBtn} onClick={() => openComposeModal()}>
+                <ComposeIcon className={styles.composeBtnIcon} />
                 {t('messages.newMessage')}
               </button>
             </div>

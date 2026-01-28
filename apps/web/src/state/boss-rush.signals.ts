@@ -287,6 +287,11 @@ export function resetBossRushState(): void {
   bossRushBestSingleHit.value = 0;
   bossRushTotalHealing.value = 0;
   showBossRushShop.value = false;
+
+  // Reset stationary boss state
+  bossPosition.value = null;
+  bossProjectiles.value = [];
+  bossRushHeroPositions.value = [];
 }
 
 /** Initialize Boss Rush session */
@@ -486,6 +491,39 @@ export const bossRushTotalHealing = signal(0);
 export const showBossRushShop = signal(false);
 
 // ============================================================================
+// STATIONARY BOSS STATE (Boss position & projectiles)
+// ============================================================================
+
+/** Boss projectile in flight toward fortress */
+export interface BossProjectile {
+  id: number;
+  damage: number;
+  spawnTick: number;
+  arrivalTick: number;
+  /** Progress 0-1 for rendering interpolation */
+  progress: number;
+}
+
+/** Boss position (fixed-point converted to float for rendering) */
+export const bossPosition = signal<{ x: number; y: number } | null>(null);
+
+/** Boss projectiles currently in flight */
+export const bossProjectiles = signal<BossProjectile[]>([]);
+
+/** Hero positions for Boss Rush (advancing toward boss) */
+export interface BossRushHeroPosition {
+  heroId: string;
+  x: number;
+  y: number;
+  visualX: number; // Interpolated for smooth rendering
+  visualY: number;
+  inRange: boolean; // Whether hero is in attack range of boss
+}
+
+/** Hero positions during Boss Rush */
+export const bossRushHeroPositions = signal<BossRushHeroPosition[]>([]);
+
+// ============================================================================
 // ROGUELIKE COMPUTED VALUES
 // ============================================================================
 
@@ -576,5 +614,66 @@ export function openBossRushShop(): void {
 
 export function closeBossRushShop(): void {
   showBossRushShop.value = false;
+}
+
+// ============================================================================
+// STATIONARY BOSS ACTIONS
+// ============================================================================
+
+/** Update boss position (called when boss spawns) */
+export function updateBossPosition(x: number, y: number): void {
+  bossPosition.value = { x, y };
+}
+
+/** Clear boss position (called when boss dies) */
+export function clearBossPosition(): void {
+  bossPosition.value = null;
+}
+
+/** Add a boss projectile in flight */
+export function addBossProjectile(projectile: Omit<BossProjectile, 'progress'>): void {
+  bossProjectiles.value = [
+    ...bossProjectiles.value,
+    { ...projectile, progress: 0 },
+  ];
+}
+
+/** Update projectile progress (0-1) based on current tick */
+export function updateBossProjectiles(currentTick: number): void {
+  bossProjectiles.value = bossProjectiles.value.map(proj => {
+    const totalTicks = proj.arrivalTick - proj.spawnTick;
+    const elapsedTicks = currentTick - proj.spawnTick;
+    const progress = Math.min(1, elapsedTicks / totalTicks);
+    return { ...proj, progress };
+  });
+}
+
+/** Remove projectile after it hits fortress */
+export function removeBossProjectile(id: number): void {
+  bossProjectiles.value = bossProjectiles.value.filter(p => p.id !== id);
+}
+
+/** Clear all projectiles (called on boss death or session end) */
+export function clearBossProjectiles(): void {
+  bossProjectiles.value = [];
+}
+
+/** Update hero positions during Boss Rush */
+export function updateBossRushHeroPositions(positions: BossRushHeroPosition[]): void {
+  bossRushHeroPositions.value = positions;
+}
+
+/** Interpolate hero visual positions for smooth rendering */
+export function interpolateBossRushHeroPositions(lerpFactor: number = 0.15): void {
+  bossRushHeroPositions.value = bossRushHeroPositions.value.map(hero => ({
+    ...hero,
+    visualX: hero.visualX + (hero.x - hero.visualX) * lerpFactor,
+    visualY: hero.visualY + (hero.y - hero.visualY) * lerpFactor,
+  }));
+}
+
+/** Clear hero positions (called on session end) */
+export function clearBossRushHeroPositions(): void {
+  bossRushHeroPositions.value = [];
 }
 

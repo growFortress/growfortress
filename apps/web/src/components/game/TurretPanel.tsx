@@ -17,6 +17,8 @@ import {
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { getMaxTurretSlots, TURRET_SLOT_UNLOCKS } from '@arcade/sim-core';
 import { Tooltip } from '../shared/Tooltip.js';
+import { RailgunIcon, ArtilleryIcon, ArcIcon, CryoIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './TurretPanel.module.css';
 
 // Turret name translation keys
@@ -32,18 +34,25 @@ const TURRET_NAME_KEYS: Record<string, string> = {
   frost: 'turretPanel.frostTower',
 };
 
-// Turret icons
-const TURRET_ICONS: Record<string, string> = {
-  railgun: '🎯', // target (precision)
-  artillery: '💣', // bomb
-  arc: '🔷', // diamond (arc energy)
-  cryo: '❄️', // snowflake
-  // Legacy
-  arrow: '🏹', // bow and arrow
-  cannon: '💣', // bomb
-  tesla: '⚡', // lightning
-  frost: '❄️', // snowflake
-};
+// Turret icon components - using SVG matching game models
+function getTurretIcon(turretId: string, size: number = 24): ComponentChildren {
+  switch (turretId) {
+    case 'railgun':
+    case 'arrow': // Legacy
+      return <RailgunIcon size={size} />;
+    case 'artillery':
+    case 'cannon': // Legacy
+      return <ArtilleryIcon size={size} />;
+    case 'arc':
+    case 'tesla': // Legacy
+      return <ArcIcon size={size} />;
+    case 'cryo':
+    case 'frost': // Legacy
+      return <CryoIcon size={size} />;
+    default:
+      return '🗼';
+  }
+}
 
 // Class colors (7 classes)
 const CLASS_COLORS: Record<FortressClass, string> = {
@@ -126,7 +135,7 @@ export function TurretPanel({ compact = false }: TurretPanelProps) {
 
     const nameKey = TURRET_NAME_KEYS[turret.definitionId];
     const name = nameKey ? t(nameKey) : turret.definitionId;
-    const icon = TURRET_ICONS[turret.definitionId] || '🗼';
+    const icon = getTurretIcon(turret.definitionId, 24);
     const classColor = CLASS_COLORS[turret.currentClass];
     const isSynergy = fortressClass && turret.currentClass === fortressClass;
 

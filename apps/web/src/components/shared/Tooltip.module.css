@@ -255,11 +255,11 @@
 
 /* Variant: Warning */
 .variantWarning {
-  border-color: hsl(45, 90%, 55%, 0.4);
+  border-color: var(--color-skill-50);
 }
 
 .variantWarning .title {
-  color: hsl(45, 90%, 55%);
+  color: var(--color-skill);
 }
 
 /* Variant: Error */
@@ -273,11 +273,11 @@
 
 /* Variant: Success */
 .variantSuccess {
-  border-color: hsl(140, 70%, 45%, 0.4);
+  border-color: var(--color-positive-50);
 }
 
 .variantSuccess .title {
-  color: hsl(140, 70%, 45%);
+  color: var(--color-positive);
 }
 
 /* Keyboard shortcut badge */
@@ -342,5 +342,12 @@
   .tooltip {
     border-width: 2px;
     border-color: var(--color-text);
+  }
+}
+
+/* Backdrop-filter fallback for unsupported browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .tooltip {
+    background: var(--glass-bg-fallback, rgba(10, 10, 18, 0.98));
   }
 }

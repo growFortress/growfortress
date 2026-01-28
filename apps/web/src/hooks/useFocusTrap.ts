@@ -22,12 +22,23 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
 ): RefObject<T> {
   const containerRef = useRef<T>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const hasInitialFocusRef = useRef(false);
+  const onEscapeRef = useRef(options.onEscape);
+
+  // Keep onEscape ref updated without causing effect re-runs
+  onEscapeRef.current = options.onEscape;
 
   useEffect(() => {
-    if (!isActive || !containerRef.current) return;
+    if (!isActive || !containerRef.current) {
+      // Reset initial focus flag when trap becomes inactive
+      hasInitialFocusRef.current = false;
+      return;
+    }
 
-    // Store the currently focused element to restore later
-    previousFocusRef.current = document.activeElement as HTMLElement;
+    // Store the currently focused element to restore later (only on first activation)
+    if (!hasInitialFocusRef.current) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+    }
 
     const container = containerRef.current;
 
@@ -46,30 +57,33 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
         .filter(el => el.offsetParent !== null); // Filter out hidden elements
     };
 
-    // Focus initial element
-    const focusInitial = () => {
-      if (options.initialFocus?.current) {
-        options.initialFocus.current.focus();
-      } else {
-        const focusable = getFocusableElements();
-        if (focusable.length > 0) {
-          focusable[0].focus();
+    // Focus initial element (only on first activation, not on re-renders)
+    if (!hasInitialFocusRef.current) {
+      const focusInitial = () => {
+        if (options.initialFocus?.current) {
+          options.initialFocus.current.focus();
         } else {
-          // If no focusable elements, make container focusable and focus it
-          container.setAttribute('tabindex', '-1');
-          container.focus();
+          const focusable = getFocusableElements();
+          if (focusable.length > 0) {
+            focusable[0].focus();
+          } else {
+            // If no focusable elements, make container focusable and focus it
+            container.setAttribute('tabindex', '-1');
+            container.focus();
+          }
         }
-      }
-    };
+      };
 
-    // Small delay to ensure DOM is ready
-    requestAnimationFrame(focusInitial);
+      // Small delay to ensure DOM is ready
+      requestAnimationFrame(focusInitial);
+      hasInitialFocusRef.current = true;
+    }
 
     // Handle keyboard navigation
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && options.onEscape) {
+      if (event.key === 'Escape' && onEscapeRef.current) {
         event.preventDefault();
-        options.onEscape();
+        onEscapeRef.current();
         return;
       }
 
@@ -100,13 +114,15 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
     return () => {
       container.removeEventListener('keydown', handleKeyDown);
 
-      // Restore focus to previous element
-      const returnTarget = options.returnFocus?.current || previousFocusRef.current;
-      if (returnTarget && typeof returnTarget.focus === 'function') {
-        returnTarget.focus();
+      // Restore focus to previous element (only when fully deactivating)
+      if (!isActive) {
+        const returnTarget = options.returnFocus?.current || previousFocusRef.current;
+        if (returnTarget && typeof returnTarget.focus === 'function') {
+          returnTarget.focus();
+        }
       }
     };
-  }, [isActive, options.onEscape]);
+  }, [isActive]); // Only depend on isActive, use refs for callbacks
 
   return containerRef;
 }

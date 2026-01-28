@@ -4,6 +4,8 @@
  */
 import { useEffect, useCallback, useState } from 'preact/hooks';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { DamageIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import {
   showGuildPanel,
   closeGuildPanel,
@@ -50,7 +52,7 @@ type TabType = 'info' | 'members' | 'treasury' | 'battles' | 'roster' | 'tower-r
 interface NavItem {
   id: TabType;
   label: string;
-  icon: string;
+  icon: string | ComponentChildren;
   officerOnly?: boolean;
   badge?: number;
 }
@@ -159,7 +161,7 @@ export function GuildPanel() {
     { id: 'members', label: t('guild.tabs.members'), icon: '👥' },
     { id: 'chat', label: 'Chat', icon: '💬' },
     { id: 'treasury', label: t('guild.tabs.treasury'), icon: '💰' },
-    { id: 'battles', label: t('guild.tabs.battles'), icon: '⚔️' },
+    { id: 'battles', label: t('guild.tabs.battles'), icon: <DamageIcon size={18} /> },
     { id: 'trophies', label: 'Trofea', icon: '🏆' },
     { id: 'tower-race', label: t('guild.tabs.race'), icon: '🗼' },
     { id: 'medals', label: 'Medale', icon: '🥇' },

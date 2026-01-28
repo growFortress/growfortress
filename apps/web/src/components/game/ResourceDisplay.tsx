@@ -13,11 +13,11 @@ export function ResourceDisplay({ className = '', compact = false }: ResourceDis
   return (
     <div class={`${styles.container} ${className} ${compact ? styles.compact : ''}`}>
       <div class={styles.resource} title={t('resources.gold')}>
-        <span class={styles.icon}><GoldIcon size={22} /></span>
+        <span class={styles.icon}><GoldIcon size={32} /></span>
         <span class={styles.value}>{displayGold.value}</span>
       </div>
       <div class={styles.resource} title={t('resources.dust')}>
-        <span class={styles.icon}><DustIcon size={22} /></span>
+        <span class={styles.icon}><DustIcon size={32} /></span>
         <span class={styles.value}>{displayDust.value}</span>
       </div>
     </div>

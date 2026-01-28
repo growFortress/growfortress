@@ -93,6 +93,11 @@
   font-weight: 600;
 }
 
+.rewardStats {
+  color: #4ade80;
+  font-weight: 600;
+}
+
 .dismissHint {
   position: absolute;
   bottom: 2px;

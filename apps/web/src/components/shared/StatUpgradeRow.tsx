@@ -3,20 +3,42 @@ import {
   getStatBonusPercent,
   type StatUpgradeConfig,
 } from '@arcade/sim-core';
-import { GoldIcon } from '../icons/index.js';
+import { 
+  GoldIcon, 
+  HpIcon, 
+  DamageIcon, 
+  SpeedIcon, 
+  RangeIcon, 
+  CritChanceIcon, 
+  CritMultiplierIcon, 
+  ArmorIcon, 
+  DodgeIcon 
+} from '../icons/index.js';
 import styles from './StatUpgradeRow.module.css';
 
-// Stat icons
-const STAT_ICONS: Record<string, string> = {
-  hp: '❤️',
-  damage: '⚔️',
-  attackSpeed: '⚡',
-  range: '🎯',
-  critChance: '💥',
-  critMultiplier: '💀',
-  armor: '🛡️',
-  dodge: '💨',
-};
+// Stat icon components mapping
+function getStatIcon(stat: string, size: number = 24, className: string = '') {
+  switch (stat) {
+    case 'hp':
+      return <HpIcon size={size} className={className} />;
+    case 'damage':
+      return <DamageIcon size={size} className={className} />;
+    case 'attackSpeed':
+      return <SpeedIcon size={size} className={className} />;
+    case 'range':
+      return <RangeIcon size={size} className={className} />;
+    case 'critChance':
+      return <CritChanceIcon size={size} className={className} />;
+    case 'critMultiplier':
+      return <CritMultiplierIcon size={size} className={className} />;
+    case 'armor':
+      return <ArmorIcon size={size} className={className} />;
+    case 'dodge':
+      return <DodgeIcon size={size} className={className} />;
+    default:
+      return <span>📊</span>;
+  }
+}
 
 interface StatUpgradeRowProps {
   config: StatUpgradeConfig;
@@ -36,7 +58,7 @@ export function StatUpgradeRow({ config, currentLevel, gold, onUpgrade, isLoadin
   return (
     <div class={styles.statRow}>
       <div class={styles.statInfo}>
-        <span class={styles.statIcon}>{STAT_ICONS[config.stat] || '📊'}</span>
+        <span class={styles.statIcon}>{getStatIcon(config.stat, 24, styles.statIcon)}</span>
         <div class={styles.statDetails}>
           <span class={styles.statName}>{config.name}</span>
           <span class={styles.statDesc}>{config.description}</span>

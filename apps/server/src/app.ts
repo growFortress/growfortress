@@ -50,6 +50,10 @@ import referralRoutes from "./routes/referrals.js";
 import gachaRoutes from "./routes/gacha.js";
 import expeditionRoutes from "./routes/expedition.js";
 import achievementsRoutes from "./routes/achievements.js";
+import dailyRoutes from "./routes/daily.js";
+import missionsRoutes from "./routes/missions.js";
+import tutorialRoutes from "./routes/tutorial.js";
+import statPointsRoutes from "./routes/stat-points.js";
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -186,6 +190,10 @@ export async function buildApp() {
   await fastify.register(gachaRoutes);
   await fastify.register(expeditionRoutes);
   await fastify.register(achievementsRoutes);
+  await fastify.register(dailyRoutes);
+  await fastify.register(missionsRoutes);
+  await fastify.register(tutorialRoutes);
+  await fastify.register(statPointsRoutes);
 
   // Admin routes (separate auth system)
   await fastify.register(adminRoutes, { prefix: "/admin" });

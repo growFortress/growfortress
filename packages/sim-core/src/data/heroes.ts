@@ -279,8 +279,8 @@ const UNIT_SCOUT: HeroDefinition = {
   role: 'dps',
   rarity: 'common',
   baseStats: {
-    hp: 180,
-    damage: 28,
+    hp: 200,          // Buffed from 180 (+11%)
+    damage: 30,       // Buffed from 28 (+7%)
     attackSpeed: 1.4,
     range: FP.fromInt(8),
     moveSpeed: FP.fromFloat(0.16),
@@ -593,7 +593,7 @@ const UNIT_VANGUARD: HeroDefinition = {
     {
       tier: 2,
       name: 'Unit-0 "Vanguard" Mk.II',
-      statMultiplier: 1.4,
+      statMultiplier: 1.5,  // Buffed from 1.4 - tank needs better scaling
       skills: [
         {
           id: 'dual_barrier',
@@ -627,7 +627,7 @@ const UNIT_VANGUARD: HeroDefinition = {
     {
       tier: 3,
       name: 'Unit-0 "Vanguard" APEX',
-      statMultiplier: 1.8,
+      statMultiplier: 2.0,  // Buffed from 1.8 - main tank needs strong T3
       skills: [
         {
           id: 'kinetic_hammer',
@@ -808,8 +808,12 @@ const UNIT_FROST: HeroDefinition = {
   role: 'crowd_control',
   rarity: 'common',
   baseStats: {
-    hp: 170, damage: 28, attackSpeed: 1.8, range: FP.fromInt(12),
-    moveSpeed: FP.fromFloat(0.16), deployCooldown: 210
+    hp: 190,          // Buffed from 170 (+12%)
+    damage: 30,       // Buffed from 28 (+7%)
+    attackSpeed: 1.8,
+    range: FP.fromInt(12),
+    moveSpeed: FP.fromFloat(0.16),
+    deployCooldown: 210
   },
   colors: { primary: 0x00bfff, secondary: 0xe0ffff, glow: 0xadd8e6 },
   shape: 'triangle',
@@ -817,8 +821,8 @@ const UNIT_FROST: HeroDefinition = {
     {
       id: 'no_powers',
       name: 'Brak Mocy',
-      description: '-30% max HP',
-      effect: { type: 'stat_penalty', stat: 'maxHpMultiplier', amount: 0.70 }
+      description: '-20% max HP',  // Reduced from -30%
+      effect: { type: 'stat_penalty', stat: 'maxHpMultiplier', amount: 0.80 }  // Changed from 0.70
     }
   ],
   tiers: [
@@ -1053,8 +1057,8 @@ const UNIT_OMEGA: HeroDefinition = {
   role: 'assassin',
   rarity: 'legendary', // Exclusive legendary - costs only dust
   baseStats: {
-    hp: 220,
-    damage: 45,
+    hp: 280,          // Buffed from 220 (+27%) - legendary assassin needs survivability
+    damage: 48,       // Buffed from 45 (+7%)
     attackSpeed: 1.1,
     range: FP.fromInt(7),
     moveSpeed: FP.fromFloat(0.17),
@@ -1103,7 +1107,7 @@ const UNIT_OMEGA: HeroDefinition = {
     {
       tier: 2,
       name: 'Unit-X "Omega" Mk.II',
-      statMultiplier: 1.7,
+      statMultiplier: 1.6,  // Reduced from 1.7 - smoother progression curve
       skills: [
         {
           id: 'void_slash',
@@ -1135,7 +1139,7 @@ const UNIT_OMEGA: HeroDefinition = {
     {
       tier: 3,
       name: 'Unit-X "Omega" APEX',
-      statMultiplier: 2.3,
+      statMultiplier: 2.1,  // Reduced from 2.3 - prevent power creep at endgame
       skills: [
         {
           id: 'death_mark',
@@ -1586,8 +1590,8 @@ const UNIT_PYRO: HeroDefinition = {
   role: 'dps',
   rarity: 'starter',
   baseStats: {
-    hp: 260,
-    damage: 28,
+    hp: 280,          // Buffed from 260 (+8%)
+    damage: 32,       // Buffed from 28 (+14%) - comparable to Storm
     attackSpeed: 1.0,
     range: FP.fromInt(6),
     moveSpeed: FP.fromFloat(0.13),
@@ -1785,13 +1789,13 @@ export function getHeroUnlockCost(heroId: string): { gold: number; dust: number 
 
   // Special exclusive heroes (available from level 1 with special pricing)
   if (heroId === 'spectre') {
-    return { gold: 25000, dust: 0 }; // Exclusive rare - gold only
+    return { gold: 20000, dust: 0 }; // Exclusive rare - gold only (reduced from 25k)
   }
   if (heroId === 'omega') {
-    return { gold: 50000, dust: 50 }; // Legendary exclusive - expensive
+    return { gold: 35000, dust: 35 }; // Legendary exclusive (reduced from 50k+50)
   }
   if (heroId === 'scout') {
-    return { gold: 7500, dust: 0 }; // Early game hero - available from level 1, gold only
+    return { gold: 3500, dust: 0 }; // Early game hero - affordable (reduced from 7500)
   }
 
   switch (hero.rarity) {

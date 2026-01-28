@@ -17,7 +17,8 @@ import {
 } from '../../state/index.js';
 import { unlockTurret } from '../../api/client.js';
 import { Modal } from '../shared/Modal.js';
-import { GoldIcon } from '../icons/index.js';
+import { GoldIcon, RailgunIcon, ArtilleryIcon, ArcIcon, CryoIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './TurretPlacementModal.module.css';
 
 // Turret role description translation keys
@@ -40,13 +41,21 @@ const CLASS_COLORS: Record<FortressClass, string> = {
   plasma: '#00ffff',
 };
 
-// Turret icons (simplified: 4 turrets)
-const TURRET_ICONS: Record<TurretType, string> = {
-  railgun: '🎯', // target (precision)
-  artillery: '\u{1F4A3}', // bomb
-  arc: '\u{1F537}', // diamond (arc energy)
-  cryo: '\u2744\uFE0F', // snowflake
-};
+// Turret icon components - using SVG matching game models
+function getTurretIcon(turretType: TurretType, size: number = 48): ComponentChildren {
+  switch (turretType) {
+    case 'railgun':
+      return <RailgunIcon size={size} />;
+    case 'artillery':
+      return <ArtilleryIcon size={size} />;
+    case 'arc':
+      return <ArcIcon size={size} />;
+    case 'cryo':
+      return <CryoIcon size={size} />;
+    default:
+      return '🗼';
+  }
+}
 
 interface TurretPlacementModalProps {
   onPlace: (turretType: TurretType, slotIndex: number) => void;
@@ -159,7 +168,7 @@ export function TurretPlacementModal({ onPlace }: TurretPlacementModalProps) {
 
         <div class={styles.turretGrid}>
           {TURRET_DEFINITIONS.map((turret) => {
-            const icon = TURRET_ICONS[turret.id];
+            const icon = getTurretIcon(turret.id as TurretType, 48);
             const roleKey = ROLE_KEYS[turret.role];
             const roleDesc = roleKey ? t(roleKey) : turret.role;
             const baseCost = TURRET_UNLOCK_COST.gold;

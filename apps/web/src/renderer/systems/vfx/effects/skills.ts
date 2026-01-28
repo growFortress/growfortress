@@ -1,6 +1,7 @@
 import type { Particle } from '../types.js';
 import type { ParticleFactory } from '../particleFactory.js';
 import type { ParticlePool } from '../particlePool.js';
+import type { TimeoutRegistry } from '../timeoutRegistry.js';
 import { CLASS_VFX_COLORS, SKILL_COLORS } from '../config.js';
 
 /**
@@ -13,7 +14,8 @@ export class SkillEffects {
     private particles: Particle[],
     private factory: ParticleFactory,
     private triggerScreenShake: (intensity: number, duration: number) => void,
-    _triggerLightingFlash: (x: number, y: number, color: number, radius: number) => void
+    _triggerLightingFlash: (x: number, y: number, color: number, radius: number) => void,
+    private timeoutRegistry: TimeoutRegistry
   ) {}
 
   // ============================================================
@@ -210,7 +212,7 @@ export class SkillEffects {
     for (let i = 0; i < 5; i++) {
       const strikeX = x + (Math.random() - 0.5) * 150;
       const strikeY = y + (Math.random() - 0.5) * 80;
-      setTimeout(() => {
+      this.timeoutRegistry.setTimeout(() => {
         this.spawnLightningStrike(strikeX, strikeY, 1.2);
       }, i * 80);
     }
@@ -366,7 +368,7 @@ export class SkillEffects {
     for (let m = 0; m < Math.min(targets.length, 6); m++) {
       const target = targets[m] || targets[0];
 
-      setTimeout(() => {
+      this.timeoutRegistry.setTimeout(() => {
         this.factory.flash({ x: startX, y: startY, color: colors.secondary, size: 10 });
         this.spawnMissileTrail(startX, startY, target.x, target.y, colors);
       }, m * 100);
@@ -1267,7 +1269,7 @@ export class SkillEffects {
 
     // Secondary explosions at burn targets
     for (const target of targets) {
-      setTimeout(() => {
+      this.timeoutRegistry.setTimeout(() => {
         this.factory.flash({ x: target.x, y: target.y, color: colors.glow, size: 40 });
 
         // Small explosion at each target
@@ -1559,7 +1561,7 @@ export class SkillEffects {
       this.particles.push(spike);
 
       // Spike shatter delayed
-      setTimeout(() => {
+      this.timeoutRegistry.setTimeout(() => {
         for (let j = 0; j < 5; j++) {
           const shard = this.pool.acquire();
           shard.x = spikeX;

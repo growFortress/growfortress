@@ -1,13 +1,16 @@
 /**
  * LeaderboardModal - Main modal component for leaderboard system
  */
-import { useEffect, useCallback, useRef } from 'preact/hooks';
+import { useEffect, useCallback, useRef, useState } from 'preact/hooks';
 import { openHubPreview } from '../../state/hubPreview.signals.js';
 import { Modal } from '../shared/Modal.js';
 import { GuildTag } from '../shared/GuildTag.js';
 import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
 import { useTranslation, currentLanguage } from '../../i18n/useTranslation.js';
+import { DamageIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import type { PlayerLeaderboardEntry, PlayerLeaderboardCategory, AvailableReward, ExclusiveItem, GuildLeaderboardEntry } from '@arcade/protocol';
+import { WAVES_REWARD_TIERS, HONOR_REWARD_TIERS, type RewardTier } from '@arcade/sim-core';
 import { getGuildLeaderboard } from '../../api/guild.js';
 import {
   showLeaderboardModal,
@@ -39,6 +42,7 @@ import {
   setGuildLeaderboardData,
   setGuildTrophyLeaderboardData,
   setLeaderboardData,
+  formattedTimeUntilReset,
   type MainTab,
   type SubTab,
 } from '../../state/leaderboard.signals.js';
@@ -62,18 +66,36 @@ const MAIN_TABS: { id: MainTab; labelKey: string; icon: string }[] = [
   { id: 'guild', labelKey: 'leaderboard.tabs.guild', icon: '🏰' },
 ];
 
-const SUB_TABS: Record<MainTab, { id: SubTab; labelKey: string; icon: string }[]> = {
+// Helper to get sub tab icon
+function getSubTabIcon(tabId: string, size: number = 18): ComponentChildren {
+  if (tabId.includes('honor')) {
+    return <DamageIcon size={size} />;
+  }
+  switch (tabId) {
+    case 'totalWaves':
+    case 'weeklyWaves':
+      return '🌊';
+    case 'level':
+      return '⭐';
+    case 'guildTrophies':
+      return '🏆';
+    default:
+      return '📊';
+  }
+}
+
+const SUB_TABS: Record<MainTab, { id: SubTab; labelKey: string; icon?: string }[]> = {
   permanent: [
     { id: 'totalWaves', labelKey: 'leaderboard.subTabs.waves', icon: '🌊' },
-    { id: 'honor', labelKey: 'leaderboard.subTabs.honor', icon: '⚔️' },
+    { id: 'honor', labelKey: 'leaderboard.subTabs.honor' },
     { id: 'level', labelKey: 'leaderboard.subTabs.level', icon: '⭐' },
   ],
   weekly: [
     { id: 'weeklyWaves', labelKey: 'leaderboard.subTabs.waves', icon: '🌊' },
-    { id: 'weeklyHonor', labelKey: 'leaderboard.subTabs.honor', icon: '⚔️' },
+    { id: 'weeklyHonor', labelKey: 'leaderboard.subTabs.honor' },
   ],
   guild: [
-    { id: 'guildHonor', labelKey: 'leaderboard.subTabs.honor', icon: '⚔️' },
+    { id: 'guildHonor', labelKey: 'leaderboard.subTabs.honor' },
     { id: 'guildTrophies', labelKey: 'leaderboard.subTabs.guildTrophies', icon: '🏆' },
   ],
 };
@@ -113,6 +135,44 @@ export function LeaderboardModal() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [showRewardsPreview, setShowRewardsPreview] = useState(false);
+
+  // Get week dates from weekKey (format: YYYY-Www)
+  const getWeekDates = useCallback((weekKey: string) => {
+    if (!weekKey) return { start: '', end: '' };
+    const match = weekKey.match(/^(\d{4})-W(\d{2})$/);
+    if (!match) return { start: '', end: '' };
+
+    const year = parseInt(match[1], 10);
+    const weekNum = parseInt(match[2], 10);
+
+    // Get first day of the year
+    const jan1 = new Date(year, 0, 1);
+    // Get the day of week for jan 1 (0=Sun, 1=Mon, etc)
+    const jan1Day = jan1.getDay();
+    // Calculate days to add to get to the Monday of week 1
+    const daysToMonday = jan1Day <= 1 ? 1 - jan1Day : 8 - jan1Day;
+    const week1Monday = new Date(year, 0, 1 + daysToMonday);
+
+    // Calculate the Monday of the target week
+    const mondayOfWeek = new Date(week1Monday);
+    mondayOfWeek.setDate(week1Monday.getDate() + (weekNum - 1) * 7);
+
+    // Calculate Sunday
+    const sundayOfWeek = new Date(mondayOfWeek);
+    sundayOfWeek.setDate(mondayOfWeek.getDate() + 6);
+
+    const formatDate = (date: Date) => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      return `${day}.${month}`;
+    };
+
+    return {
+      start: formatDate(mondayOfWeek),
+      end: formatDate(sundayOfWeek),
+    };
+  }, []);
 
   // Load initial data when modal opens or tab/search changes
   const loadData = useCallback((append = false) => {
@@ -300,12 +360,33 @@ export function LeaderboardModal() {
               class={`${styles.subTab} ${subTab === tab.id ? styles.active : ''}`}
               onClick={() => handleSubTabChange(tab.id)}
             >
-              <span class={styles.subTabIcon}>{tab.icon}</span>
+              <span class={styles.subTabIcon}>
+                {tab.icon ? tab.icon : getSubTabIcon(tab.id, 18)}
+              </span>
               {t(tab.labelKey)}
             </button>
           ))}
         </div>
 
+        {/* Week Info Banner (for weekly leaderboards) */}
+        {mainTab === 'weekly' && (
+          <WeekInfoBanner
+            weekDates={getWeekDates(week)}
+            timeUntilReset={formattedTimeUntilReset.value}
+            t={t}
+          />
+        )}
+
+        {/* Rewards Preview Panel (for weekly leaderboards) */}
+        {mainTab === 'weekly' && (
+          <RewardsPreviewPanel
+            category={subTab === 'weeklyHonor' ? 'honor' : 'waves'}
+            userRank={userRank?.rank ?? null}
+            isOpen={showRewardsPreview}
+            onToggle={() => setShowRewardsPreview(!showRewardsPreview)}
+            t={t}
+          />
+        )}
 
         {/* Rewards Panel (if has unclaimed rewards) */}
         {hasRewards && (
@@ -717,7 +798,7 @@ interface RewardCardProps {
 
 function RewardCard({ reward, onClaim, t }: RewardCardProps) {
   const categoryLabel = reward.category === 'waves' ? t('leaderboard.subTabs.waves') : t('leaderboard.subTabs.honor');
-  const categoryIcon = reward.category === 'waves' ? '🌊' : '⚔️';
+  const categoryIcon = reward.category === 'waves' ? '🌊' : <DamageIcon size={18} />;
 
   // Get exclusive items info
   const exclusiveItemsInfo = reward.itemIds
@@ -763,6 +844,140 @@ function RewardCard({ reward, onClaim, t }: RewardCardProps) {
       >
         {t('leaderboard.claimReward')}
       </button>
+    </div>
+  );
+}
+
+// ============================================================================
+// WEEK INFO BANNER
+// ============================================================================
+
+interface WeekInfoBannerProps {
+  weekDates: { start: string; end: string };
+  timeUntilReset: string;
+  t: (key: string, params?: Record<string, unknown>) => string;
+}
+
+function WeekInfoBanner({ weekDates, timeUntilReset, t }: WeekInfoBannerProps) {
+  if (!weekDates.start || !weekDates.end) return null;
+
+  return (
+    <div class={styles.weekInfoBanner}>
+      <div class={styles.weekPeriod}>
+        <span class={styles.weekPeriodIcon}>📅</span>
+        <span class={styles.weekPeriodText}>
+          {t('leaderboard.weekPeriod', { start: weekDates.start, end: weekDates.end })}
+        </span>
+      </div>
+      {timeUntilReset && (
+        <div class={styles.weekResetTime}>
+          <span class={styles.resetLabel}>{t('leaderboard.resetsIn')}</span>
+          <span class={styles.resetTime}>{timeUntilReset}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// REWARDS PREVIEW PANEL
+// ============================================================================
+
+interface RewardsPreviewPanelProps {
+  category: 'waves' | 'honor';
+  userRank: number | null;
+  isOpen: boolean;
+  onToggle: () => void;
+  t: (key: string, params?: Record<string, unknown>) => string;
+}
+
+function RewardsPreviewPanel({ category, userRank, isOpen, onToggle, t }: RewardsPreviewPanelProps) {
+  const tiers = category === 'waves' ? WAVES_REWARD_TIERS : HONOR_REWARD_TIERS;
+
+  const getTierLabel = (tier: RewardTier): string => {
+    if (tier.maxRank === 1) return '#1';
+    if (tier.maxRank === 2) return '#2';
+    if (tier.maxRank === 3) return '#3';
+    // For ranges, show "Top X"
+    return t('leaderboard.top', { rank: tier.maxRank });
+  };
+
+  const getTierBadgeClass = (tier: RewardTier): string => {
+    if (tier.maxRank === 1) return styles.gold;
+    if (tier.maxRank === 2) return styles.silver;
+    if (tier.maxRank === 3) return styles.bronze;
+    if (tier.maxRank <= 10) return styles.elite;
+    if (tier.maxRank <= 25) return styles.veteran;
+    return styles.default;
+  };
+
+  const isUserInTier = (tier: RewardTier, prevMaxRank: number): boolean => {
+    if (!userRank) return false;
+    return userRank > prevMaxRank && userRank <= tier.maxRank;
+  };
+
+  return (
+    <div class={styles.rewardsPreviewPanel}>
+      <div class={styles.rewardsPreviewHeader} onClick={onToggle}>
+        <div class={styles.rewardsPreviewTitle}>
+          <span class={styles.rewardsPreviewIcon}>🏆</span>
+          {t('leaderboard.availableRewards')}
+        </div>
+        <div class={styles.rewardsPreviewToggle}>
+          {isOpen ? t('leaderboard.hideRewards') : t('leaderboard.viewRewards')}
+          <span class={`${styles.rewardsPreviewToggleIcon} ${isOpen ? styles.expanded : ''}`}>▼</span>
+        </div>
+      </div>
+      <div class={`${styles.rewardsPreviewContent} ${isOpen ? styles.expanded : ''}`}>
+        {tiers.map((tier, index) => {
+          const prevMaxRank = index > 0 ? tiers[index - 1].maxRank : 0;
+          const isHighlighted = isUserInTier(tier, prevMaxRank);
+          const exclusiveItems = tier.items
+            .map((id) => getExclusiveItemById(id))
+            .filter((item): item is ExclusiveItem => item !== undefined);
+
+          return (
+            <div
+              key={tier.maxRank}
+              class={`${styles.rewardTierRow} ${isHighlighted ? styles.highlighted : ''}`}
+            >
+              <div class={`${styles.tierRankBadge} ${getTierBadgeClass(tier)}`}>
+                {getTierLabel(tier)}
+              </div>
+              <div class={styles.tierRewards}>
+                {tier.gold > 0 && (
+                  <span class={`${styles.tierRewardItem} ${styles.gold}`}>
+                    🪙 {tier.gold.toLocaleString()}
+                  </span>
+                )}
+                {tier.dust > 0 && (
+                  <span class={`${styles.tierRewardItem} ${styles.dust}`}>
+                    💎 {tier.dust.toLocaleString()}
+                  </span>
+                )}
+                {exclusiveItems.length > 0 && (
+                  <div class={styles.tierExclusiveItems}>
+                    {exclusiveItems.slice(0, 2).map((item) => (
+                      <span
+                        key={item.id}
+                        class={`${styles.exclusiveTag} ${styles[item.rarity]}`}
+                        title={currentLanguage.value === 'pl' ? item.polishName : item.name}
+                      >
+                        {item.icon} {currentLanguage.value === 'pl' ? item.polishName : item.name}
+                      </span>
+                    ))}
+                    {exclusiveItems.length > 2 && (
+                      <span class={styles.exclusiveTag}>
+                        {t('leaderboard.andMore', { count: exclusiveItems.length - 2 })}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

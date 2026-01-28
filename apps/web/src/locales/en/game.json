@@ -24,7 +24,8 @@
     "fightPlayers": "Fight other players!",
     "pvpArena": "PvP Arena - Fight other players",
     "pendingChallenges": ", {{count}} pending challenges",
-    "pillarChallengeLabel": "Pillar Challenge",
+    "pillarChallengeLabel": "Crystal Trial",
+    "pillarChallengeTooltip": "Complete challenges and collect crystal fragments!",
     "soonBadge": "SOON",
     "endSession": "End game session",
     "endLabel": "End",
@@ -200,7 +201,36 @@
     "bossCount": "Boss {{current}}/7",
     "nextBossIn": "NEXT BOSS IN {{count}}...",
     "details": "Details",
-    "hide": "Hide"
+    "hide": "Hide",
+    "hud": {
+      "dmg": "DMG",
+      "bossesLabel": "Bosses",
+      "totalDamage": "TOTAL DAMAGE",
+      "bossesKilled": "BOSSES KILLED",
+      "cycle": "Cycle {{cycle}}",
+      "damageBreakdown": "DAMAGE BREAKDOWN",
+      "milestones": "MILESTONES",
+      "bossesCount": "{{count}} Bosses"
+    },
+    "shop": {
+      "title": "Shop",
+      "closeAriaLabel": "Close shop",
+      "close": "Close Shop",
+      "sections": {
+        "healing": "Healing",
+        "powerUps": "Power-Ups",
+        "utility": "Utility"
+      },
+      "items": {
+        "healPercent": "Restore {{percent}}% HP",
+        "reroll": "Get new relic options",
+        "boostStats": "Boost your stats",
+        "damage": "Damage",
+        "attackSpeed": "Attack Speed",
+        "critChance": "Crit Chance",
+        "statBoost": "+{{percent}}% {{stat}}"
+      }
+    }
   },
   "tutorial": {
     "yourFortress": "Your Fortress",
@@ -282,6 +312,7 @@
     "dismiss": "Got it",
     "tryIt": "Try it!",
     "skip": "Skip for now",
+    "skipAll": "Skip All Tutorials",
     "completed": "Nice!"
   },
   "unlock": {
@@ -457,25 +488,58 @@
     }
   },
   "endScreen": {
-    "victory": "Victory!",
-    "defeat": "Defeat",
-    "waveReached": "You reached wave {{wave}}",
-    "victoryMessage": "Outstanding performance! Keep pushing forward!",
-    "defeatMessage": "You fought well! Next time will be even better!",
-    "enemies": "Enemies",
+    "sessionComplete": "Session Complete",
+    "sessionMessage": "Great run! Ready for another?",
+    "wave": "Wave",
+    "kills": "Kills",
     "elites": "Elites",
     "relics": "Relics",
-    "weeklyRank": "Weekly Rank",
-    "totalRank": "Overall Rank",
-    "rankLabel": "Rank #{{rank}}",
-    "noRank": "Not ranked yet",
-    "noRankingYet": "Complete more runs to see your ranking!",
+    "weeklyRank": "Weekly",
+    "totalRank": "Overall",
     "top10": "Top 10!",
-    "newBest": "New personal best!",
-    "loadingRank": "Loading ranking...",
-    "rankingError": "Failed to load ranking",
+    "loadingRank": "Loading...",
+    "rankingError": "Could not load ranking",
     "returnToHub": "Return to Hub",
-    "playAgain": "Play Again",
-    "autoTransition": "Returning to hub in {{seconds}}s..."
+    "playAgain": "Play Again"
+  },
+  "statPoints": {
+    "title": "Free Stat Points",
+    "indicatorAria": "{{count}} free stat points available",
+    "freePoints": "Free Points",
+    "available": "Available",
+    "earned": "Earned",
+    "spent": "Spent",
+    "fortress": "Fortress",
+    "heroes": "Heroes",
+    "selectHero": "Select a hero to allocate points",
+    "allocate": "Allocate",
+    "reset": "Reset",
+    "resetConfirm": "Reset all allocations? Points will be refunded.",
+    "resetYes": "Yes, Reset",
+    "resetNo": "Cancel",
+    "maxReached": "MAX",
+    "max": "Max",
+    "perPoint": "per point",
+    "free": "FREE",
+    "removeSingle": "Remove 1 point",
+    "addSingle": "Add 1 point",
+    "addBatch": "Add {{count}} points",
+    "addMax": "Add maximum points",
+    "stats": {
+      "hp": "Health",
+      "hpDesc": "Increases maximum health",
+      "damage": "Damage",
+      "damageDesc": "Increases damage dealt",
+      "armor": "Armor",
+      "armorDesc": "Reduces incoming damage",
+      "attackSpeed": "Attack Speed",
+      "attackSpeedDesc": "Increases attack rate",
+      "critChance": "Critical Chance",
+      "critChanceDesc": "Increases critical hit chance"
+    },
+    "errors": {
+      "allocateFailed": "Failed to allocate stat points",
+      "resetFailed": "Failed to reset stat points"
+    }
   }
 }

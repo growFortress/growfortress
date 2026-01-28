@@ -9,6 +9,7 @@ import {
 } from '../../state/index.js';
 import { Button } from '../shared/Button.js';
 import { GoldIcon } from '../icons/index.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import styles from './BossRushShopPanel.module.css';
 
 /** Item type icons */
@@ -19,24 +20,21 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 /** Get item description based on type */
-function getItemDescription(item: BossRushShopItem): string {
+function getItemDescription(item: BossRushShopItem, t: (key: string, params?: Record<string, unknown>) => string): string {
   switch (item.type) {
     case 'heal':
-      return `Restore ${Math.round((item.effect.healPercent || 0) * 100)}% HP`;
+      return t('bossRush.shop.items.healPercent', { percent: Math.round((item.effect.healPercent || 0) * 100) });
     case 'reroll':
-      return 'Get new relic options';
+      return t('bossRush.shop.items.reroll');
     case 'stat_boost':
       if (item.effect.statBonus) {
         const { stat, value } = item.effect.statBonus;
         const percent = Math.round(value * 100);
-        const statNames: Record<string, string> = {
-          damageBonus: 'Damage',
-          attackSpeedBonus: 'Attack Speed',
-          critChance: 'Crit Chance',
-        };
-        return `+${percent}% ${statNames[stat] || stat}`;
+        const statKey = stat === 'damageBonus' ? 'damage' : stat === 'attackSpeedBonus' ? 'attackSpeed' : 'critChance';
+        const statName = t(`bossRush.shop.items.${statKey}`);
+        return t('bossRush.shop.items.statBoost', { percent, stat: statName });
       }
-      return 'Boost your stats';
+      return t('bossRush.shop.items.boostStats');
     default:
       return '';
   }
@@ -47,11 +45,12 @@ interface ShopItemProps {
   onPurchase: (item: BossRushShopItem) => void;
   disabled: boolean;
   purchaseCount: number;
+  t: (key: string, params?: Record<string, unknown>) => string;
 }
 
-function ShopItem({ item, onPurchase, disabled, purchaseCount }: ShopItemProps) {
+function ShopItem({ item, onPurchase, disabled, purchaseCount, t }: ShopItemProps) {
   const icon = TYPE_ICONS[item.type] || '📦';
-  const description = getItemDescription(item);
+  const description = getItemDescription(item, t);
   const canAfford = bossRushAvailableGold.value >= item.cost;
 
   return (
@@ -85,6 +84,8 @@ export interface BossRushShopPanelProps {
 }
 
 export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushShopPanelProps) {
+  const { t } = useTranslation('game');
+
   if (!showBossRushShop.value) {
     return null;
   }
@@ -124,7 +125,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
   return (
     <div class={styles.panel}>
       <div class={styles.header}>
-        <h3 class={styles.title}>🏪 Shop</h3>
+        <h3 class={styles.title}>🏪 {t('bossRush.shop.title')}</h3>
         <div class={styles.gold}>
           <GoldIcon size={18} className={styles.goldIcon} />
           <span class={styles.goldAmount}>{formatDamage(availableGold)}</span>
@@ -133,7 +134,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
           type="button"
           class={styles.closeButton}
           onClick={closeBossRushShop}
-          aria-label="Close shop"
+          aria-label={t('bossRush.shop.closeAriaLabel')}
         >
           ✕
         </button>
@@ -142,7 +143,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
       <div class={styles.content}>
         {/* Healing Section */}
         <div class={styles.section}>
-          <h4 class={styles.sectionTitle}>💚 Healing</h4>
+          <h4 class={styles.sectionTitle}>💚 {t('bossRush.shop.sections.healing')}</h4>
           <div class={styles.itemGrid}>
             {healItems.map(item => (
               <ShopItem
@@ -151,6 +152,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
                 onPurchase={handlePurchase}
                 disabled={false}
                 purchaseCount={purchases[item.id] || 0}
+                t={t}
               />
             ))}
           </div>
@@ -158,7 +160,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
 
         {/* Stat Boosts Section */}
         <div class={styles.section}>
-          <h4 class={styles.sectionTitle}>⚡ Power-Ups</h4>
+          <h4 class={styles.sectionTitle}>⚡ {t('bossRush.shop.sections.powerUps')}</h4>
           <div class={styles.itemGrid}>
             {statItems.map(item => (
               <ShopItem
@@ -167,6 +169,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
                 onPurchase={handlePurchase}
                 disabled={false}
                 purchaseCount={purchases[item.id] || 0}
+                t={t}
               />
             ))}
           </div>
@@ -174,7 +177,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
 
         {/* Utility Section */}
         <div class={styles.section}>
-          <h4 class={styles.sectionTitle}>🎲 Utility</h4>
+          <h4 class={styles.sectionTitle}>🎲 {t('bossRush.shop.sections.utility')}</h4>
           <div class={styles.itemGrid}>
             {utilityItems.map(item => (
               <ShopItem
@@ -183,6 +186,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
                 onPurchase={handlePurchase}
                 disabled={false}
                 purchaseCount={purchases[item.id] || 0}
+                t={t}
               />
             ))}
           </div>
@@ -191,7 +195,7 @@ export function BossRushShopPanel({ onRerollRelics, onHealFortress }: BossRushSh
 
       <div class={styles.footer}>
         <Button variant="secondary" size="sm" onClick={closeBossRushShop}>
-          Close Shop
+          {t('bossRush.shop.close')}
         </Button>
       </div>
     </div>

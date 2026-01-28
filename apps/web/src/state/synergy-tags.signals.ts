@@ -8,9 +8,6 @@
 import { signal, computed } from '@preact/signals';
 import {
   calculateActiveTagSynergies,
-  getActiveSynergiesOnly,
-  calculateTotalSynergyBonuses,
-  getAlmostActiveSynergies,
   getHeroTags,
   getTurretTags,
   getTagById,
@@ -60,35 +57,34 @@ export const allTagSynergies = computed<ActiveTagSynergy[]>(() => {
 
 /**
  * Only active tag synergies (for display)
+ * Reuses allTagSynergies to avoid duplicate computation
  */
 export const activeTagSynergies = computed<ActiveTagSynergy[]>(() => {
-  return getActiveSynergiesOnly(
-    currentHeroIds.value,
-    currentTurretIds.value,
-    activePerks.value
-  );
+  return allTagSynergies.value.filter(s => s.isActive);
 });
 
 /**
  * Synergies that are almost active (need 1 more unit)
+ * Reuses allTagSynergies to avoid duplicate computation
  */
 export const almostActiveSynergies = computed<ActiveTagSynergy[]>(() => {
-  return getAlmostActiveSynergies(
-    currentHeroIds.value,
-    currentTurretIds.value,
-    activePerks.value
+  return allTagSynergies.value.filter(
+    s => !s.isActive && s.count === s.synergy.requiredCount - 1
   );
 });
 
 /**
  * Total bonuses from all active synergies
+ * Reuses activeTagSynergies to avoid duplicate computation
  */
 export const totalSynergyBonuses = computed<Record<string, number>>(() => {
-  return calculateTotalSynergyBonuses(
-    currentHeroIds.value,
-    currentTurretIds.value,
-    activePerks.value
-  );
+  const bonuses: Record<string, number> = {};
+  for (const { synergy } of activeTagSynergies.value) {
+    for (const bonus of synergy.bonuses) {
+      bonuses[bonus.stat] = (bonuses[bonus.stat] || 0) + bonus.value;
+    }
+  }
+  return bonuses;
 });
 
 // ============================================================================

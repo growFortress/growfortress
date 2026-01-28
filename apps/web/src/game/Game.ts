@@ -64,6 +64,14 @@ import {
   manualControlHeroId,
   manualMoveInput,
 } from "../state/index.js";
+import {
+  updateBossPosition,
+  clearBossPosition,
+  addBossProjectile,
+  updateBossProjectiles,
+  removeBossProjectile,
+  clearBossProjectiles,
+} from "../state/boss-rush.signals.js";
 import { recordGameAction } from "../state/tutorial.signals.js";
 
 /** Options for starting an endless session */
@@ -146,6 +154,16 @@ export class Game {
   private lastFortressHp = 0;
   private lastLevel = 0;
   private lastManualInput = { x: 0, y: 0 };
+
+  // Stationary boss ranged attack state
+  private bossLastAttackTick = 0;
+  private bossProjectileIdCounter = 1;
+  private localBossProjectiles: Array<{
+    id: number;
+    damage: number;
+    spawnTick: number;
+    arrivalTick: number;
+  }> = [];
   private lastManualHeroId: string | null = null;
 
   constructor(callbacks: GameCallbacks) {
@@ -874,13 +892,39 @@ export class Game {
     this.simulation.setEvents([...this.events]);
   }
 
+  /** Trigger a manual attack toward a world position (player-aimed shooting) */
+  triggerManualHeroAttack(heroId: string, targetX: number, targetY: number): void {
+    if (!this.simulation || this.phase !== "playing") return;
+
+    const state = this.simulation.state;
+
+    const hero = state.heroes.find((h) => h.definitionId === heroId);
+    if (!hero) return;
+
+    // Hero must be in manual control mode
+    if (!hero.isManualControlled) return;
+
+    const event: GameEvent = {
+      type: "HERO_COMMAND",
+      tick: state.tick,
+      heroId,
+      commandType: "manual_attack",
+      targetX,
+      targetY,
+    };
+
+    this.events.push(event);
+    this.simulation.setEvents([...this.events]);
+  }
+
   /** Activate a fortress skill at a target location */
   activateFortressSkill(
     skillId: string,
     targetX: number,
     targetY: number,
   ): void {
-    if (!this.simulation || this.phase !== "playing") return;
+    // Allow skills in both normal gameplay and Boss Rush mode
+    if (!this.simulation || (this.phase !== "playing" && this.phase !== "boss_rush")) return;
 
     const state = this.simulation.state;
 
@@ -1287,6 +1331,17 @@ export class Game {
     return this.bossRushState;
   }
 
+  /** Heal fortress by a percentage of max HP (for Boss Rush shop) */
+  healFortress(healPercent: number): void {
+    if (!this.simulation) return;
+
+    const state = this.simulation.state;
+    const healAmount = Math.floor(state.fortressMaxHp * healPercent);
+    state.fortressHp = Math.min(state.fortressHp + healAmount, state.fortressMaxHp);
+
+    logger.debug(`Boss Rush: Healed fortress by ${healPercent * 100}% (${healAmount} HP)`);
+  }
+
   /** Start a new Boss Rush session */
   async startBossRushSession(
     options: SessionStartOptions = {},
@@ -1326,6 +1381,9 @@ export class Game {
         slotIndex: index + 1,
         class: fortressClass,
       }));
+
+      // Boss Rush uses higher fortress HP - boss attacks from range
+      config.fortressBaseHp = 1000;
 
       // Boss Rush uses a special config - no waves, just boss spawning
       config.startingWave = 0;
@@ -1373,28 +1431,29 @@ export class Game {
     const spawnX = FP.fromInt(35); // Near right edge
     const laneY = FP.fromInt(6); // Center lane (lane 1)
 
+    // Stationary boss mode: boss stays at fixed position and fires ranged attacks
     const bossEnemy: Enemy = {
       id: state.nextEnemyId++,
       type: bossStats.type,
       hp: bossStats.hp,
       maxHp: bossStats.hp,
 
-      // Position (fixed-point)
+      // Position (fixed-point) - stationary at right side
       x: spawnX,
       y: laneY,
 
-      // Physics (fixed-point)
-      vx: FP.mul(bossStats.speed, FP.fromInt(-1)), // Moving left toward fortress
+      // Physics (fixed-point) - STATIONARY: no movement
+      vx: 0, // Boss does not move
       vy: 0,
-      speed: bossStats.speed,
-      baseSpeed: bossStats.speed, // Store original speed for effect recovery
+      speed: 0, // No movement speed
+      baseSpeed: 0,
       radius: ENEMY_PHYSICS.defaultRadius,
       mass: ENEMY_PHYSICS.defaultMass,
 
       damage: bossStats.damage,
       isElite: false, // Bosses are treated as special, not elite
       hitFlashTicks: 0,
-      lastAttackTick: 0,
+      lastAttackTick: state.tick, // Start attack timer
 
       // Lane info
       lane: 1, // Center lane
@@ -1402,8 +1461,8 @@ export class Game {
       canSwitchLane: false, // Bosses don't switch lanes
       laneSwitchCooldown: 0,
 
-      // Pathfinding variation - bosses move steadily
-      laneChangeSpeed: 0.6,
+      // Pathfinding variation - stationary boss
+      laneChangeSpeed: 0,
       pathDrift: 0,
       laneChangeDelay: 0,
 
@@ -1413,6 +1472,12 @@ export class Game {
       // Status effects
       activeEffects: [],
     };
+
+    // Update boss position signal for rendering
+    updateBossPosition(FP.toFloat(spawnX), FP.toFloat(laneY));
+
+    // Clear any existing projectiles from previous boss
+    clearBossProjectiles();
 
     state.enemies.push(bossEnemy);
     this.bossEntityId = bossEnemy.id;
@@ -1438,6 +1503,70 @@ export class Game {
     logger.debug(
       `Boss Rush: Spawned ${bossStats.name} (Cycle ${bossStats.cycle + 1}, Boss ${(bossStats.bossIndex % 7) + 1}/7)`,
     );
+
+    // Initialize boss attack timer
+    this.bossLastAttackTick = state.tick;
+    this.localBossProjectiles = [];
+  }
+
+  /**
+   * Update boss ranged attacks - stationary boss fires projectiles at fortress.
+   * This replaces the old melee attack system where boss moved toward fortress.
+   */
+  private updateBossRangedAttacks(state: GameState): void {
+    if (!this.bossEntityId || !this.currentBossStats) return;
+
+    const bossEnemy = state.enemies.find((e) => e.id === this.bossEntityId);
+    if (!bossEnemy || bossEnemy.hp <= 0) return;
+
+    // Attack cooldown: 60 ticks = 2 seconds at 30Hz
+    const attackCooldown = DEFAULT_BOSS_RUSH_CONFIG.bossAttackCooldownTicks ?? 60;
+    // Projectile travel time: 45 ticks = 1.5 seconds
+    const travelTicks = DEFAULT_BOSS_RUSH_CONFIG.bossProjectileTravelTicks ?? 45;
+
+    // Check if boss should fire a new projectile
+    if (state.tick - this.bossLastAttackTick >= attackCooldown) {
+      const projectile = {
+        id: this.bossProjectileIdCounter++,
+        damage: bossEnemy.damage,
+        spawnTick: state.tick,
+        arrivalTick: state.tick + travelTicks,
+      };
+
+      this.localBossProjectiles.push(projectile);
+      addBossProjectile(projectile);
+      this.bossLastAttackTick = state.tick;
+
+      // Play attack sound
+      audioManager.playSfx("enemy_attack");
+    }
+
+    // Update projectile progress for rendering
+    updateBossProjectiles(state.tick);
+
+    // Check for projectile arrivals and deal damage
+    const arrivedProjectiles: number[] = [];
+    for (const proj of this.localBossProjectiles) {
+      if (state.tick >= proj.arrivalTick) {
+        // Projectile hits fortress
+        state.fortressHp = Math.max(0, state.fortressHp - proj.damage);
+        arrivedProjectiles.push(proj.id);
+
+        // Remove from signals
+        removeBossProjectile(proj.id);
+
+        // Play impact sound
+        audioManager.playSfx("fortress_hit");
+      }
+    }
+
+    // Remove arrived projectiles from local tracking
+    if (arrivedProjectiles.length > 0) {
+      const removeSet = new Set(arrivedProjectiles);
+      this.localBossProjectiles = this.localBossProjectiles.filter(
+        (p) => !removeSet.has(p.id)
+      );
+    }
   }
 
   /** Advance the Boss Rush simulation by one tick */
@@ -1466,6 +1595,9 @@ export class Game {
 
     // Step simulation
     this.simulation.step();
+
+    // === STATIONARY BOSS RANGED ATTACK SYSTEM ===
+    this.updateBossRangedAttacks(state);
 
     // Track damage dealt to boss
     if (this.bossEntityId !== null) {
@@ -1543,6 +1675,12 @@ export class Game {
     this.bossEntityId = null;
     this.currentBossStats = null;
 
+    // Clear boss position and projectiles for stationary boss mode
+    clearBossPosition();
+    clearBossProjectiles();
+    this.localBossProjectiles = [];
+    this.bossLastAttackTick = 0;
+
     logger.debug(
       `Boss Rush: Boss killed! Total damage: ${this.bossRushState.totalDamageDealt}, Bosses killed: ${this.bossRushState.bossesKilled}`,
     );
@@ -1604,6 +1742,12 @@ export class Game {
         rejectReason: "Failed to submit results",
       });
     }
+
+    // Clear boss position and projectiles
+    clearBossPosition();
+    clearBossProjectiles();
+    this.localBossProjectiles = [];
+    this.bossLastAttackTick = 0;
 
     this.phase = "ended";
     this.callbacks.onStateChange();

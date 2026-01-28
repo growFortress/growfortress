@@ -95,7 +95,7 @@ describe('Power Upgrades Service', () => {
       mockPrisma.inventory.findUnique.mockResolvedValue(null);
       mockPrisma.progression.findUnique.mockResolvedValue(null);
 
-      const result = await upgradeHeroStat(userId, 'storm', 'hp');
+      const result = await upgradeHeroStat(userId, 'storm', 'damage');
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Inventory not found');
@@ -108,7 +108,7 @@ describe('Power Upgrades Service', () => {
       mockPrisma.inventory.update.mockResolvedValue(createMockInventory({ gold: 9000 }));
       mockPrisma.powerUpgrades.upsert.mockResolvedValue(createMockPowerUpgrades());
 
-      const result = await upgradeHeroStat(userId, 'storm', 'hp');
+      const result = await upgradeHeroStat(userId, 'storm', 'damage');
 
       expect(result.success).toBe(true);
       expect(result.newLevel).toBe(1);

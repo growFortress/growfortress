@@ -157,6 +157,18 @@ model User {
   // Expedition System (Offline wave progress)
   expeditionProgress ExpeditionProgress?
 
+  // Daily Login System
+  dailyLoginProgress DailyLoginProgress?
+
+  // Tutorial Completion
+  tutorialCompletedAt DateTime?
+
+  // Weekly Missions
+  missionProgress PlayerMissionProgress[]
+
+  // Free Stat Points System
+  statPoints StatPoints?
+
   @@index([referredById])
   @@index([banned])
 }
@@ -2052,4 +2064,88 @@ model ExpeditionProgress {
   updatedAt       DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// DAILY LOGIN REWARDS SYSTEM
+// ============================================================================
+
+model DailyLoginProgress {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  currentDay       Int       @default(1)  // 1-7 in cycle
+  streak           Int       @default(0)  // Consecutive days logged in
+  lastClaimAt      DateTime?
+  totalDaysClaimed Int       @default(0)
+  updatedAt        DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================================================
+// WEEKLY MISSIONS SYSTEM
+// ============================================================================
+
+model WeeklyMission {
+  id              String   @id @default(cuid())
+  weekKey         String   // YYYY-Www format (ISO week)
+  missionDefId    String   // Reference to mission definition ID
+  targetValue     Int
+  rewardGold      Int      @default(0)
+  rewardDust      Int      @default(0)
+  rewardMaterials Json     @default("{}")
+  createdAt       DateTime @default(now())
+
+  progress PlayerMissionProgress[]
+
+  @@unique([weekKey, missionDefId])
+  @@index([weekKey])
+}
+
+model PlayerMissionProgress {
+  id              String        @id @default(cuid())
+  userId          String
+  missionId       String
+  currentProgress Int           @default(0)
+  completed       Boolean       @default(false)
+  completedAt     DateTime?
+  claimed         Boolean       @default(false)
+  claimedAt       DateTime?
+
+  mission WeeklyMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionId])
+  @@index([userId])
+  @@index([missionId])
+}
+
+// ============================================================================
+// FREE STAT POINTS SYSTEM
+// ============================================================================
+
+// Free stat points earned through gameplay (waves + level ups)
+// Separate from gold-based power upgrades
+model StatPoints {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+
+  // Point tracking
+  totalEarned     Int      @default(0) // Total points ever earned
+  totalSpent      Int      @default(0) // Total points allocated
+
+  // Fortress allocations (JSON: { hp: 5, damage: 10, armor: 3 })
+  fortressAllocations Json @default("{}")
+
+  // Hero allocations (JSON: [{ heroId: "storm", allocations: { damage: 10 }}])
+  heroAllocations     Json @default("[]")
+
+  version         Int      @default(1)
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

@@ -56,7 +56,8 @@ import {
   calculateTotalArtifactDamageMultiplier,
   hasArtifactPassive,
 } from './artifacts.js';
-import { createHeroProjectile } from './projectile.js';
+import { createHeroProjectile, createManualHeroProjectile } from './projectile.js';
+import { getHeroStatPointBonuses } from './apply-stat-points.js';
 import {
   findClosestEnemy2D,
   applySkillEffects,
@@ -433,13 +434,20 @@ function performHeroAttack(
   // Attack if ready
   const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
 
+  // Get free stat point bonuses for this hero
+  const statPointBonuses = config.statPointData
+    ? getHeroStatPointBonuses(config.statPointData.heroAllocations, hero.definitionId)
+    : { damageBonus: 0, attackSpeedBonus: 0, critChanceBonus: 0 };
+
   // Apply stat penalties from weaknesses (e.g., -20% move speed for Iron Sentinel)
   const attackSpeedPenalty = calculateWeaknessStatPenalty(heroDef.weaknesses, 'attackSpeedMultiplier');
   // Apply guild stat boost to attack speed
   const guildBoost = 1 + (config.guildStatBoost ?? 0);
   const stormForgeBonus = getStormForgeAttackSpeedBonus(state, hero);
+  // Apply free stat point attack speed bonus
+  const statPointAttackSpeedBonus = 1 + statPointBonuses.attackSpeedBonus;
   const effectiveAttackSpeed =
-    stats.attackSpeed * attackSpeedPenalty * guildBoost * (1 + stormForgeBonus);
+    stats.attackSpeed * attackSpeedPenalty * guildBoost * (1 + stormForgeBonus) * statPointAttackSpeedBonus;
   const attackInterval = Math.floor(HERO_BASE_ATTACK_INTERVAL / effectiveAttackSpeed);
 
   if (state.tick - hero.lastAttackTick >= attackInterval) {
@@ -520,6 +528,19 @@ function performHeroAttack(
     for (const buff of hero.buffs) {
       if (buff.stat === 'damageBonus') {
         finalDamage = Math.floor(finalDamage * (1 + buff.amount));
+      }
+    }
+
+    // Free stat point damage bonus
+    if (statPointBonuses.damageBonus > 0) {
+      finalDamage = Math.floor(finalDamage * (1 + statPointBonuses.damageBonus));
+    }
+
+    // Free stat point crit chance (hero-specific crit)
+    if (statPointBonuses.critChanceBonus > 0) {
+      const critRoll = rng.nextFloat();
+      if (critRoll < statPointBonuses.critChanceBonus) {
+        finalDamage = Math.floor(finalDamage * 1.5); // 1.5x crit multiplier
       }
     }
 
@@ -614,6 +635,114 @@ function performHeroAttack(
 }
 
 /**
+ * Perform a manual (player-aimed) hero attack toward a world position
+ * The projectile flies to the target position, hitting the first enemy along the path
+ *
+ * Key differences from AI attack:
+ * - Target is a world position, not an enemy
+ * - Projectile doesn't track/home to enemies
+ * - Collision checks any enemy along the projectile path
+ */
+function performManualHeroAttack(
+  hero: ActiveHero,
+  state: GameState,
+  config: SimConfig,
+  rng: Xorshift32
+): void {
+  // Must have a manual attack target pending
+  if (!hero.manualAttackTarget || !hero.manualAttackPending) {
+    return;
+  }
+
+  const heroDef = getHeroById(hero.definitionId);
+  if (!heroDef) {
+    hero.manualAttackPending = false;
+    hero.manualAttackTarget = undefined;
+    return;
+  }
+
+  const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
+
+  // Get free stat point bonuses for this hero
+  const statPointBonuses = config.statPointData
+    ? getHeroStatPointBonuses(config.statPointData.heroAllocations, hero.definitionId)
+    : { damageBonus: 0, attackSpeedBonus: 0, critChanceBonus: 0 };
+
+  // Check attack cooldown
+  const guildBoost = 1 + (config.guildStatBoost ?? 0);
+  const stormForgeBonus = getStormForgeAttackSpeedBonus(state, hero);
+  // Apply free stat point attack speed bonus
+  const statPointAttackSpeedBonus = 1 + statPointBonuses.attackSpeedBonus;
+  const effectiveAttackSpeed = stats.attackSpeed * guildBoost * (1 + stormForgeBonus) * statPointAttackSpeedBonus;
+  const attackInterval = Math.floor(HERO_BASE_ATTACK_INTERVAL / effectiveAttackSpeed);
+
+  if (state.tick - hero.lastAttackTick < attackInterval) {
+    // Still on cooldown - keep the pending attack, it will fire when ready
+    return;
+  }
+
+  // Ready to fire - update attack tick
+  hero.lastAttackTick = state.tick;
+
+  // Calculate damage with all bonuses (same as normal attack)
+  let finalDamage = stats.damage;
+
+  // Crystal bonus (Power Crystal = +50% damage)
+  if (hero.infinityStone) {
+    const stoneBonus = calculateHeroStoneDamageBonus(hero.infinityStone);
+    finalDamage = Math.floor(finalDamage * stoneBonus);
+  }
+
+  // Artifact bonus
+  const artifactBonus = calculateTotalArtifactDamageMultiplier(hero, heroDef.class);
+  finalDamage = Math.floor(finalDamage * artifactBonus);
+
+  // Buff bonuses (from items)
+  for (const buff of hero.buffs) {
+    if (buff.stat === 'damageBonus') {
+      finalDamage = Math.floor(finalDamage * (1 + buff.amount));
+    }
+  }
+
+  // Free stat point damage bonus
+  if (statPointBonuses.damageBonus > 0) {
+    finalDamage = Math.floor(finalDamage * (1 + statPointBonuses.damageBonus));
+  }
+
+  // Free stat point crit chance (hero-specific crit)
+  if (statPointBonuses.critChanceBonus > 0) {
+    const critRoll = rng.nextFloat();
+    if (critRoll < statPointBonuses.critChanceBonus) {
+      finalDamage = Math.floor(finalDamage * 1.5); // 1.5x crit multiplier
+    }
+  }
+
+  // Apply global damage bonus (includes guild stat boost, synergies, etc.)
+  if (state.modifiers.damageBonus > 0) {
+    finalDamage = Math.floor(finalDamage * (1 + state.modifiers.damageBonus));
+  }
+
+  // Ebony Blade curse: costs 1% HP per attack
+  if (hasArtifactPassive(hero.equippedArtifact, 'blood curse')) {
+    hero.currentHp = Math.max(1, hero.currentHp - hero.maxHp * 0.01);
+  }
+
+  // Create manual projectile toward target position
+  createManualHeroProjectile(
+    hero,
+    hero.manualAttackTarget.x,
+    hero.manualAttackTarget.y,
+    state,
+    heroDef.class,
+    finalDamage
+  );
+
+  // Clear pending attack (it was consumed)
+  hero.manualAttackPending = false;
+  hero.manualAttackTarget = undefined;
+}
+
+/**
  * Hero in combat - attacking enemies
  */
 function updateHeroCombat(
@@ -653,8 +782,16 @@ function updateHeroCombat(
     return;
   }
 
-  // Perform attack using shared logic
-  performHeroAttack(hero, state, config, rng, attackRange, isManualControlled);
+  // Manual control: player aims and shoots via right-click, no AI auto-attack
+  if (isManualControlled) {
+    // Process pending manual attack if any
+    if (hero.manualAttackPending) {
+      performManualHeroAttack(hero, state, config, rng);
+    }
+  } else {
+    // AI-controlled: use normal attack logic
+    performHeroAttack(hero, state, config, rng, attackRange);
+  }
 
   // Check and use skills
   useHeroSkills(hero, state, config, rng, enemiesInRange);
@@ -673,6 +810,12 @@ function updateHeroCommandedState(
   if (!heroDef) return;
 
   const isManualControlled = hero.isManualControlled === true;
+
+  // Process manual attack if pending (player right-clicked to shoot)
+  if (isManualControlled && hero.manualAttackPending) {
+    performManualHeroAttack(hero, state, config, rng);
+  }
+
   const stats = calculateHeroStats(heroDef, hero.tier, hero.level);
   const attackRange = isManualControlled
     ? FP.add(stats.range, MANUAL_ATTACK_RANGE_BONUS)
@@ -730,7 +873,10 @@ function updateHeroCommandedState(
     return;
   }
 
-  performHeroAttack(hero, state, config, rng, attackRange);
+  // Manual control: player aims and shoots, no AI auto-attack
+  if (!isManualControlled) {
+    performHeroAttack(hero, state, config, rng, attackRange);
+  }
   useHeroSkills(hero, state, config, rng, enemiesInRange);
 }
 

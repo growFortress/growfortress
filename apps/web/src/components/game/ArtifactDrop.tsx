@@ -1,6 +1,8 @@
 import { getArtifactById } from '@arcade/sim-core';
 import { recentArtifactDrops } from '../../state/artifacts.signals.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
+import { DamageIcon, ArmorIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './ArtifactDrop.module.css';
 
 // Rarity colors (matching game theme)
@@ -19,15 +21,25 @@ const RARITY_GLOW: Record<string, string> = {
   legendary: '0 0 30px #ffd700, 0 0 60px #ffd70060, 0 0 90px #ffd70030',
 };
 
-// Artifact slot icons
-const SLOT_ICONS: Record<string, string> = {
-  weapon: '⚔️',
-  armor: '🛡️',
-  accessory: '💍',
-  gadget: '🔧',
-  book: '📖',
-  special: '✨',
-};
+// Artifact slot icons - using SVG for weapon and armor
+function getSlotIcon(slot: string, size: number = 24): ComponentChildren {
+  switch (slot) {
+    case 'weapon':
+      return <DamageIcon size={size} />;
+    case 'armor':
+      return <ArmorIcon size={size} />;
+    case 'accessory':
+      return '💍';
+    case 'gadget':
+      return '🔧';
+    case 'book':
+      return '📖';
+    case 'special':
+      return '✨';
+    default:
+      return '📦';
+  }
+}
 
 export function ArtifactDrop() {
   const { t } = useTranslation('game');
@@ -45,7 +57,7 @@ export function ArtifactDrop() {
 
         const color = RARITY_COLORS[artifact.rarity] || '#808080';
         const glow = RARITY_GLOW[artifact.rarity] || RARITY_GLOW.common;
-        const slotIcon = SLOT_ICONS[artifact.slot] || '📦';
+        const slotIcon = getSlotIcon(artifact.slot, 24);
 
         return (
           <div

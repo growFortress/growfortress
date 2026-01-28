@@ -162,14 +162,16 @@ describe('getHeroPowerMultipliers', () => {
 
     const result = getHeroPowerMultipliers(powerData, 'storm');
 
-    expect(result.hpMultiplier).toBe(1.0);
     expect(result.damageMultiplier).toBe(1.0);
+    expect(result.attackSpeedMultiplier).toBe(1.0);
+    expect(result.rangeMultiplier).toBe(1.0);
+    expect(result.critChanceBonus).toBe(0);
   });
 
   it('returns upgraded multipliers for existing hero', () => {
     const heroUpgrades = createEmptyStats();
-    heroUpgrades.hp = 5;
     heroUpgrades.damage = 10;
+    heroUpgrades.attackSpeed = 5;
 
     const powerData = createTestPowerData({
       heroUpgrades: [{ heroId: 'storm', statUpgrades: heroUpgrades }],
@@ -177,8 +179,8 @@ describe('getHeroPowerMultipliers', () => {
 
     const result = getHeroPowerMultipliers(powerData, 'storm');
 
-    expect(result.hpMultiplier).toBeGreaterThan(1.0);
     expect(result.damageMultiplier).toBeGreaterThan(1.0);
+    expect(result.attackSpeedMultiplier).toBeGreaterThan(1.0);
   });
 
   it('returns base multipliers for non-upgraded hero', () => {
@@ -188,8 +190,8 @@ describe('getHeroPowerMultipliers', () => {
 
     const result = getHeroPowerMultipliers(powerData, 'storm');
 
-    expect(result.hpMultiplier).toBe(1.0);
     expect(result.damageMultiplier).toBe(1.0);
+    expect(result.attackSpeedMultiplier).toBe(1.0);
   });
 
 });

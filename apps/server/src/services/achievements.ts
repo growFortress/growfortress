@@ -64,6 +64,7 @@ function createDefaultLifetimeStats(): LifetimeStats {
     synergiesTriggered: 0,
     commanderLevel: 1,
     prestigeCount: 0,
+    tutorialsCompleted: 0,
   };
 }
 

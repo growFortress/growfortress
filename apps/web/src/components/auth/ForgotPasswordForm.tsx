@@ -2,6 +2,7 @@ import { useState, useId } from 'preact/hooks';
 import { authLoading } from '../../state/index.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
 import { Button } from '../shared/Button.js';
+import { EmailIcon } from './AuthIcons.js';
 import styles from './AuthScreen.module.css';
 
 interface ForgotPasswordFormProps {
@@ -58,7 +59,9 @@ export function ForgotPasswordForm({ onSubmit, onBack, error }: ForgotPasswordFo
         <label htmlFor={emailId} class={styles.srOnly}>
           {t('forgotPassword.email')}
         </label>
-        <span class={styles.inputIcon} aria-hidden="true">📧</span>
+        <span class={styles.inputIcon} aria-hidden="true">
+          <EmailIcon size={18} />
+        </span>
         <input
           id={emailId}
           type="email"

@@ -1,0 +1,108 @@
+/* Works With Section - Hero Pair/Trio Synergies */
+.worksWithSection {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.sectionTitle {
+  margin: 0 0 8px 0;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-primary-30), transparent);
+}
+
+.synergyComboPair,
+.synergyComboTrio {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-primary);
+  margin-top: 10px;
+  transition: var(--transition-interactive-normal);
+}
+
+.synergyComboPair:hover,
+.synergyComboTrio:hover {
+  background: rgba(0, 0, 0, 0.35);
+  transform: translateX(4px);
+  box-shadow: 0 0 15px var(--color-primary-20);
+}
+
+.synergyComboTrio {
+  border-left-color: #ffd700;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.25) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.synergyComboTrio:hover {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+.synergyComboHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.synergyComboIcon {
+  font-size: 16px;
+}
+
+.synergyComboName {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-text);
+  letter-spacing: 0.5px;
+}
+
+.synergyComboPartner {
+  font-size: 12px;
+  color: var(--color-primary);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.synergyComboDesc {
+  font-size: 11px;
+  color: var(--color-text-60);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.synergyComboBonuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.synergyComboBonusTag {
+  font-size: 10px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, var(--color-success-10), var(--color-success-20));
+  border: 1px solid var(--color-success-40);
+  border-radius: var(--radius-xs);
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .synergyComboPair:hover,
+  .synergyComboTrio:hover {
+    transform: none;
+  }
+}

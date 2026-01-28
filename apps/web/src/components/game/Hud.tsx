@@ -8,15 +8,19 @@ import {
   fortressHp,
   fortressMaxHp,
   fortressHpPercent,
+  unifiedLevel,
+  unifiedXpProgress,
+  hasAvailableStatPoints,
 } from "../../state/index.js";
 import { colonySceneVisible } from "../../state/idle.signals.js";
 import { useTranslation } from "../../i18n/useTranslation.js";
-import { WaveProgress } from "./WaveProgress.js";
 import { FortressInfoPanel } from "./FortressInfoPanel.js";
 import {
   hasUnclaimedRewards,
   showRewardsModal,
 } from "../modals/RewardsModal.js";
+import { StatPointsIndicator } from "./StatPointsIndicator.js";
+import { showStatPointsModal } from "../modals/StatPointsModal.js";
 import styles from "./Hud.module.css";
 
 export function Hud() {
@@ -49,26 +53,43 @@ export function Hud() {
       {/* ===== GAMEPLAY HUD - TOP BAR ===== */}
       {isPlaying && (
         <div class={styles.gameTopBar}>
-          {/* Wave Panel - Left */}
-          <div class={styles.wavePanel}>
-            <div class={styles.waveInfo}>
-              <span class={styles.waveLabel}>{t("hud.wave")}</span>
-              <span class={styles.waveNumber}>{waveDisplay}</span>
-            </div>
-            <div class={styles.waveProgressBar}>
-              <WaveProgress />
-            </div>
+          {/* Wave Section */}
+          <div class={styles.waveSection}>
+            <span class={styles.waveLabel}>{t("hud.wave")}</span>
+            <span class={styles.waveNumber}>{waveDisplay}</span>
           </div>
 
-          {/* HP Panel - Right */}
-          <div class={styles.hpPanel}>
-            <div class={styles.hpBarTrack}>
-              <div
-                class={`${styles.hpBarFill} ${getHpClass()}`}
-                style={{ width: `${hpPercent}%` }}
-              />
+          <div class={styles.barDivider} />
+
+          {/* HP Section */}
+          <div class={styles.hpSection} data-tutorial="fortress-health">
+            <div class={styles.hpBarWrapper}>
+              <div class={styles.hpBarTrack}>
+                <div
+                  class={`${styles.hpBarFill} ${getHpClass()}`}
+                  style={{ width: `${hpPercent}%` }}
+                />
+              </div>
             </div>
-            <span class={styles.hpText}>{hpValue}/{hpMax}</span>
+            <span class={styles.hpText}>{hpValue}<span class={styles.hpSep}>/</span>{hpMax}</span>
+          </div>
+
+          <div class={styles.barDivider} />
+
+          {/* Level Section */}
+          <div class={styles.levelSection}>
+            <div class={styles.levelBadge}>
+              <span class={styles.levelNum}>{unifiedLevel.value}</span>
+            </div>
+            <div class={styles.levelInfo}>
+              <span class={styles.levelLabel}>LEVEL</span>
+              <div class={styles.xpTrack}>
+                <div
+                  class={styles.xpFill}
+                  style={{ width: `${unifiedXpProgress.value}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -91,6 +112,10 @@ export function Hud() {
               <span class={styles.rewardLabel}>{t("hud.rewards")}</span>
               <div class={styles.rewardBadge} />
             </button>
+          )}
+
+          {showHubUI && hasAvailableStatPoints.value && (
+            <StatPointsIndicator onClick={showStatPointsModal} />
           )}
         </div>
       )}

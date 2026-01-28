@@ -10,9 +10,9 @@ export function CookieBanner() {
   const [visible, setVisible] = useState(false);
   const [delayComplete, setDelayComplete] = useState(false);
 
-  // Delay showing banner to avoid cluttering initial load
+  // Delay showing banner to avoid cluttering initial load (1 minute)
   useEffect(() => {
-    const timer = setTimeout(() => setDelayComplete(true), 3000);
+    const timer = setTimeout(() => setDelayComplete(true), 60000);
     return () => clearTimeout(timer);
   }, []);
 

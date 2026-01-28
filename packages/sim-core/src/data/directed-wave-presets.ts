@@ -114,18 +114,6 @@ export const DIRECTED_WAVE_1_EVENTS: ScriptedEvent[] = [
     },
   },
 
-  // Slow motion for elite spawn (around tick 450 = ~15s)
-  {
-    id: 'elite_spawn_slowmo',
-    triggerType: 'tick',
-    triggerValue: 450,
-    event: 'slow_motion',
-    data: {
-      duration: 45,  // ~1.5s of slow-mo
-      factor: 0.3,   // 30% speed
-    },
-  },
-
   // Dramatic finish for last enemy
   {
     id: 'last_enemy_dramatic',

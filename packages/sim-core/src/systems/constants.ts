@@ -17,14 +17,17 @@ export const HERO_ATTACK_RANGE_BASE = FP.fromInt(3);
 /** Fixed-point base (16384 = 1.0) */
 export const FP_BASE = 16384;
 
-/** Ticks between hero attacks at base speed */
-export const HERO_BASE_ATTACK_INTERVAL = 24;
+/** Ticks between hero attacks at base speed (lower = faster shooting) */
+export const HERO_BASE_ATTACK_INTERVAL = 15;
 
 /** Turret base attack interval multiplier */
 export const TURRET_ATTACK_INTERVAL_BASE = 30;
 
-/** Projectile base speed (units per tick) - 1.0 = travels 30 units/sec at 30Hz */
-export const PROJECTILE_BASE_SPEED = FP.fromFloat(1.0);
+/** Projectile base speed (units per tick) - 0.6 = travels 18 units/sec at 30Hz (slower for visibility) */
+export const PROJECTILE_BASE_SPEED = FP.fromFloat(0.6);
+
+/** Minimum projectile lifetime in ticks - ensures projectiles are visible even at close range */
+export const PROJECTILE_MIN_LIFETIME = 8;
 
 /** Pierce collision radius - how close projectile must be to hit an enemy */
 export const PIERCE_HIT_RADIUS = FP.fromFloat(0.8);

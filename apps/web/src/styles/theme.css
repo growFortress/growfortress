@@ -14,6 +14,9 @@
   --color-primary-30: rgba(0, 229, 255, 0.3);
   --color-primary-20: rgba(0, 229, 255, 0.2);
   --color-primary-10: rgba(0, 229, 255, 0.1);
+  --color-primary-05: rgba(0, 229, 255, 0.05);
+  --color-primary-15: rgba(0, 229, 255, 0.15);
+  --color-primary-25: rgba(0, 229, 255, 0.25);
 
   /* 1b. SECONDARY: Muted teal - For secondary actions */
   --color-secondary: #5a8a9a;
@@ -22,6 +25,8 @@
   --color-secondary-50: rgba(90, 138, 154, 0.5);
   --color-secondary-30: rgba(90, 138, 154, 0.3);
   --color-secondary-20: rgba(90, 138, 154, 0.2);
+  --color-secondary-15: rgba(90, 138, 154, 0.15);
+  --color-secondary-10: rgba(90, 138, 154, 0.1);
 
   /* 2. ACCENT: Red - Danger, important actions */
   --color-accent: #ff2a2a;
@@ -45,6 +50,7 @@
   --color-text-60: rgba(255, 255, 255, 0.75);
   --color-text-50: rgba(255, 255, 255, 0.65);
   --color-text-40: rgba(255, 255, 255, 0.6);
+  --color-text-30: rgba(255, 255, 255, 0.45);
 
   /* 5. NEUTRAL: Cyan-tinted gray */
   --color-neutral: #4a5a6a;
@@ -84,6 +90,14 @@
   --color-positive-30: rgba(74, 222, 128, 0.3);
   --color-positive-20: rgba(74, 222, 128, 0.2);
 
+  /* 11. ENERGY: Yellow - for energy/stamina resources */
+  --color-energy: #e6e600;
+  --color-energy-bright: hsl(60, 100%, 55%);
+  --color-energy-70: rgba(230, 230, 0, 0.7);
+  --color-energy-50: rgba(230, 230, 0, 0.5);
+  --color-energy-30: rgba(230, 230, 0, 0.3);
+  --color-energy-15: rgba(230, 230, 0, 0.15);
+
   /* =========================
      SEMANTIC ALIASES
      ========================= */
@@ -97,8 +111,15 @@
   --color-economy: var(--color-gold);
   --color-crafting: var(--color-dust);
 
+  /* Rarity colors for items/relics */
+  --color-rarity-common: #606060;
+  --color-rarity-rare: #0088ff;
+  --color-rarity-epic: #9900cc;
+  --color-rarity-legendary: var(--color-gold);
+
   /* Legacy aliases for compatibility */
   --color-bg-deep: var(--color-bg);
+  --color-bg-base: var(--color-bg);
   --color-bg-panel-border: var(--color-neutral);
   --color-accent-primary: var(--color-primary);
   --color-accent-secondary: var(--color-accent);
@@ -111,6 +132,7 @@
      ========================= */
   --font-display: "Orbitron", system-ui, sans-serif;
   --font-body: "Outfit", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 
   /* =========================
      SINGLE LINE STYLE (3px Bold Cartoon)
@@ -145,6 +167,11 @@
      GAME UI SIZES (Responsive)
      Uses clamp() for smooth scaling
      ========================= */
+  /* Side panel width for game UI */
+  --game-side-panel-width: 360px;
+  --game-side-panel-width-tablet: 320px;
+  --game-side-panel-width-mobile: 300px;
+
   /* HubOverlay click areas - synced with Pixi SIZES */
   --hub-hero-size: clamp(50px, 6vmin, 80px);
   /* Turret slot: matches Pixi slotSize (60px) - use square for hex alignment */
@@ -278,6 +305,32 @@
   --stagger-delay: 40ms;
 
   /* =========================
+     BREAKPOINTS SYSTEM
+     Standardized responsive design breakpoints
+     ========================= */
+  /*
+   * OFFICIAL BREAKPOINTS (use in @media queries):
+   *
+   * --bp-ultrawide: 1600px  - Ultra-wide monitors (21:9+)
+   * --bp-desktop:   1400px  - Large desktop
+   * --bp-laptop:    1280px  - Standard laptop / small desktop
+   * --bp-tablet-lg: 1024px  - Large tablet / small laptop
+   * --bp-tablet:    768px   - Standard tablet
+   * --bp-mobile-lg: 600px   - Large mobile / small tablet
+   * --bp-mobile:    480px   - Standard mobile
+   * --bp-mobile-sm: 360px   - Small mobile
+   *
+   * USAGE EXAMPLE:
+   * @media (max-width: 768px) { ... }  // Tablet and below
+   * @media (max-width: 480px) { ... }  // Mobile only
+   *
+   * ASPECT RATIO BREAKPOINTS:
+   * @media (min-aspect-ratio: 2/1)   // Ultra-wide (21:9+)
+   * @media (max-aspect-ratio: 3/4)   // Portrait / tall screens
+   * @media (max-height: 500px)       // Short screens (mobile landscape)
+   */
+
+  /* =========================
      Z-INDEX LAYERING SYSTEM
      Organized stacking context
      ========================= */
@@ -389,3 +442,170 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* =========================
+   BACKDROP-FILTER FALLBACKS
+   Graceful degradation for browsers without support
+   ========================= */
+
+/*
+ * For browsers that don't support backdrop-filter,
+ * we provide solid/more opaque backgrounds as fallback.
+ *
+ * Usage in component CSS:
+ * 1. Always set a solid background first (fallback)
+ * 2. Use @supports to add backdrop-filter enhancement
+ *
+ * Example:
+ * .panel {
+ *   background: rgba(10, 10, 18, 0.98);  // Fallback - more opaque
+ * }
+ * @supports (backdrop-filter: blur(1px)) {
+ *   .panel {
+ *     background: rgba(18, 18, 31, 0.85);  // With blur - can be less opaque
+ *     backdrop-filter: blur(16px);
+ *   }
+ * }
+ */
+
+/* Glassmorphism fallback values */
+:root {
+  /* Fallback backgrounds (more opaque, no blur needed) */
+  --glass-bg-fallback: rgba(10, 10, 18, 0.98);
+  --glass-bg-light-fallback: rgba(20, 20, 35, 0.95);
+  --glass-bg-dark-fallback: rgba(5, 5, 12, 0.98);
+}
+
+/* =========================
+   SCI-FI HUD SYSTEM
+   Solid panels with holographic edges
+   ========================= */
+:root {
+  /* HUD Solid Backgrounds - No blur, high readability */
+  --hud-bg-solid: rgba(8, 12, 20, 0.98);
+  --hud-bg-elevated: rgba(12, 18, 28, 0.98);
+  --hud-bg-surface: rgba(16, 22, 32, 0.95);
+
+  /* Holographic Edge System - More visible glow */
+  --holo-edge-primary: 0 0 2px var(--color-primary),
+                       0 0 8px var(--color-primary-50),
+                       0 0 16px rgba(0, 229, 255, 0.2),
+                       inset 0 0 2px var(--color-primary-30);
+  --holo-edge-gold: 0 0 2px var(--color-gold),
+                    0 0 8px var(--color-gold-50);
+  --holo-edge-subtle: 0 0 2px rgba(255, 255, 255, 0.4);
+
+  /* HUD Borders - more visible */
+  --hud-border: 1px solid rgba(0, 229, 255, 0.5);
+  --hud-border-active: 2px solid var(--color-primary);
+
+  /* Scanline Texture - Retro-tech overlay */
+  --hud-scanline: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 255, 255, 0.03) 2px,
+    rgba(0, 255, 255, 0.03) 4px
+  );
+
+  /* Corner Bracket dimensions - more visible */
+  --hud-corner-size: 24px;
+  --hud-corner-width: 3px;
+
+  /* Corner glow for visibility */
+  --hud-corner-glow: drop-shadow(0 0 4px var(--color-primary))
+                     drop-shadow(0 0 8px var(--color-primary-50));
+
+  /* =========================
+     RESPONSIVE HUD SCALING SYSTEM
+     Single source of truth for HUD responsiveness
+     Desktop: 1440px+, Laptop: 1024-1440px, Tablet: 768-1024px
+     ========================= */
+
+  /* Scale factors - modified by breakpoint media queries */
+  --hud-scale: 1;
+  --text-scale: 1;
+  --spacing-scale: 1;
+
+  /* Scaled typography */
+  --hud-font-xs: calc(9px * var(--text-scale));
+  --hud-font-sm: calc(11px * var(--text-scale));
+  --hud-font-md: calc(14px * var(--text-scale));
+  --hud-font-lg: calc(18px * var(--text-scale));
+  --hud-font-xl: calc(24px * var(--text-scale));
+  --hud-font-2xl: calc(28px * var(--text-scale));
+  --hud-font-display: calc(32px * var(--text-scale));
+
+  /* Scaled spacing */
+  --hud-spacing-xs: calc(4px * var(--spacing-scale));
+  --hud-spacing-sm: calc(8px * var(--spacing-scale));
+  --hud-spacing-md: calc(12px * var(--spacing-scale));
+  --hud-spacing-lg: calc(16px * var(--spacing-scale));
+  --hud-spacing-xl: calc(24px * var(--spacing-scale));
+  --hud-spacing-2xl: calc(32px * var(--spacing-scale));
+
+  /* Scaled HUD elements */
+  --hud-button-size: calc(44px * var(--hud-scale));
+  --hud-button-size-sm: calc(36px * var(--hud-scale));
+  --hud-button-size-lg: calc(56px * var(--hud-scale));
+  --hud-icon-xs: calc(14px * var(--hud-scale));
+  --hud-icon-sm: calc(18px * var(--hud-scale));
+  --hud-icon-md: calc(24px * var(--hud-scale));
+  --hud-icon-lg: calc(32px * var(--hud-scale));
+
+  /* Scaled bars (HP, XP, etc.) */
+  --hud-bar-height: calc(20px * var(--hud-scale));
+  --hud-bar-height-sm: calc(10px * var(--hud-scale));
+  --hud-bar-width: calc(200px * var(--hud-scale));
+  --hud-bar-width-min: 100px;
+
+  /* Scaled corner brackets */
+  --hud-corner-size-scaled: calc(24px * var(--hud-scale));
+  --hud-corner-width-scaled: calc(3px * var(--hud-scale));
+
+  /* Sidebar panel width */
+  --panel-sidebar-width: 360px;
+  --panel-sidebar-min: 260px;
+
+  /* Scaled border radius */
+  --hud-radius-sm: calc(6px * var(--hud-scale));
+  --hud-radius-md: calc(10px * var(--hud-scale));
+  --hud-radius-lg: calc(14px * var(--hud-scale));
+}
+
+/* =========================
+   RESPONSIVE BREAKPOINTS
+   HUD scale factors for different screen sizes
+   ========================= */
+
+/* Desktop 1440px+ - Full scale (base) */
+@media (min-width: 1440px) {
+  :root {
+    --hud-scale: 1;
+    --text-scale: 1;
+    --spacing-scale: 1;
+    --panel-sidebar-width: 360px;
+  }
+}
+
+/* Large Laptop 1280-1440px */
+@media (max-width: 1439px) and (min-width: 1280px) {
+  :root {
+    --hud-scale: 0.92;
+    --text-scale: 0.94;
+    --spacing-scale: 0.9;
+    --panel-sidebar-width: 340px;
+  }
+}
+
+/* Small Laptop 1024-1280px (minimum supported width) */
+@media (max-width: 1279px) and (min-width: 1024px) {
+  :root {
+    --hud-scale: 0.82;
+    --text-scale: 0.85;
+    --spacing-scale: 0.8;
+    --panel-sidebar-width: 300px;
+  }
+}
+
+/* Below 1024px - Mobile version (separate project) */

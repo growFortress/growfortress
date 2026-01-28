@@ -69,7 +69,10 @@ interface IconProps {
   'aria-label'?: string;
 }
 
-const ICONS: Record<IconName, string> = {
+// Custom detailed icons use multiple paths for richer visuals
+type IconDefinition = string | { paths: string[]; fillRule?: 'evenodd' | 'nonzero' };
+
+const ICONS: Record<IconName, IconDefinition> = {
   heart: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
   'heart-broken': 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35zM12 6l-2 4h4l-2 6',
   sword: 'M6.92 5L5 7l5 5-1.5 1.5 1.42 1.42L11.5 13.5l2.5 2.5-1.5 1.5 1.42 1.42 1.58-1.58 2.5 2.5 1.42-1.42L17 16l.92-.92 2.12.88L21 12l-5-5-.92.92L5 2l-.08 3.04 1.88 2.08L6.92 5zM17 8.5L15.5 10 14 8.5 15.5 7 17 8.5z',
@@ -78,7 +81,16 @@ const ICONS: Record<IconName, string> = {
   crystal: 'M12 2l-5.5 9L12 22l5.5-11L12 2zm0 4.5L14.5 11 12 17.5 9.5 11 12 6.5z',
   dust: 'M12 5.5A1.5 1.5 0 0013.5 4 1.5 1.5 0 0012 2.5 1.5 1.5 0 0010.5 4 1.5 1.5 0 0012 5.5zM6 8a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2zm12 0a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2zm-6 6a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3zm-8 4a1.5 1.5 0 001.5-1.5A1.5 1.5 0 004 15a1.5 1.5 0 00-1.5 1.5A1.5 1.5 0 004 18zm16 0a1.5 1.5 0 001.5-1.5A1.5 1.5 0 0020 15a1.5 1.5 0 00-1.5 1.5A1.5 1.5 0 0020 18zm-8 4a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2z',
   upgrade: 'M7 14l5-5 5 5H7z',
-  settings: 'M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
+  // Settings - Arcane mechanical gear with inner detail
+  settings: {
+    paths: [
+      // Main gear with ornate teeth
+      'M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z',
+      // Outer arcane ring
+      'M12 8.4c-1.98 0-3.6 1.62-3.6 3.6s1.62 3.6 3.6 3.6 3.6-1.62 3.6-3.6-1.62-3.6-3.6-3.6zm0 5.6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z'
+    ],
+    fillRule: 'evenodd'
+  },
   close: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z',
   'chevron-right': 'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z',
   'chevron-down': 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z',
@@ -86,7 +98,20 @@ const ICONS: Record<IconName, string> = {
   play: 'M8 5v14l11-7L8 5z',
   pause: 'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
   stop: 'M6 6h12v12H6z',
-  trophy: 'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z',
+  // Trophy - Champion's ornate chalice with laurels
+  trophy: {
+    paths: [
+      // Main cup body
+      'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z',
+      // Winner star emblem on cup
+      'M12 6l1 2 2.2.3-1.6 1.6.4 2.2-2-1-2 1 .4-2.2-1.6-1.6 2.2-.3 1-2z',
+      // Laurel leaves left
+      'M6 19c1 1 2.5.5 3 0-.5-.5-2-1-3 0z',
+      // Laurel leaves right
+      'M18 19c-1 1-2.5.5-3 0 .5-.5 2-1 3 0z'
+    ],
+    fillRule: 'evenodd'
+  },
   star: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z',
   bolt: 'M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z',
   fire: 'M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z',
@@ -107,20 +132,95 @@ const ICONS: Record<IconName, string> = {
   refresh: 'M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
   'arrow-up': 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z',
   'arrow-down': 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z',
-  // Daily Quests - Clipboard with checkmarks
-  'daily-quests': 'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8zm2-6l-4-4 1.41-1.41L10 8.17l4.59-4.59L16 5l-6 6z',
-  // Globe - World exploration
-  'globe': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
-  // Crossed Swords - PvP Arena
-  'crossed-swords': 'M6.2 3.01L2 4.5l4.5 4.5-1 1L3 9.5l-.5 2L6 10l1.5.5L6 14l1.5 1.5 3.5-3.5-1-1 1-1 4.5 4.5 2-.5-.5-2.5L15 10l.5-1.5L19 10l2.5-1.5-1-4.5-4.5 1-1 .5L10.5 1l-4 2 .5 1.5L5 6l1.5 1.5-.3-4.49zM12 10.5L10.5 12l-1-1L11 9.5l1 1zm2-2L12.5 10l-1-1L13 7.5l1 1z',
-  // Chart - Statistics
-  'chart': 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z',
-  // Castle - Guild
-  'castle': 'M21 9V7l-2-1V3h-2v2h-2V3h-2v2h-2V3H9v2H7V3H5v3L3 7v2l2 1v11h6v-5h2v5h6V10l2-1zM7 18v-6h2v2h2v-2h2v2h2v-2h2v6H7zm12-10l-7-3-7 3h14z',
-  // Envelope - Messages
-  'envelope': 'M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z',
-  // Cart - Shop
-  'cart': 'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z',
+  // Daily Quests - Scroll with quest star markers
+  'daily-quests': {
+    paths: [
+      // Main scroll body
+      'M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z',
+      // Quest markers - small stars
+      'M9 11l.5 1 1.1.2-.8.7.2 1.1-1-.5-1 .5.2-1.1-.8-.7 1.1-.2.5-1z',
+      'M9 15l.5 1 1.1.2-.8.7.2 1.1-1-.5-1 .5.2-1.1-.8-.7 1.1-.2.5-1z',
+      // Progress bars
+      'M12 12h4v1h-4zM12 16h4v1h-4z'
+    ],
+    fillRule: 'evenodd'
+  },
+  // Globe - Magic portal/dimensional orb with swirling energy
+  'globe': {
+    paths: [
+      // Outer mystical ring
+      'M12 1C5.92 1 1 5.92 1 12s4.92 11 11 11 11-4.92 11-11S18.08 1 12 1zm0 20c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-4.03 9-9 9z',
+      // Inner swirl pattern - dimensional rift
+      'M12 5c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z',
+      // Central portal core with star
+      'M12 8l1.5 3 3.5.5-2.5 2.5.5 3.5-3-1.5-3 1.5.5-3.5L7 11.5l3.5-.5L12 8z'
+    ],
+    fillRule: 'evenodd'
+  },
+  // Crossed Swords - Epic battle swords with shield emblem
+  'crossed-swords': {
+    paths: [
+      // Left sword
+      'M4.5 2L2 4.5l7 7-1.5 1.5L6 11.5 4.5 13l2 2 1.5-1.5 1.5 1.5 7-7L19 5.5 16.5 3l-7 7L8 8.5l1.5-1.5-5-5z',
+      // Right sword
+      'M19.5 2L22 4.5l-7 7 1.5 1.5 1.5-1.5 1.5 1.5-2 2-1.5-1.5-1.5 1.5-7-7L5 5.5 7.5 3l7 7 1.5-1.5-1.5-1.5 5-5z',
+      // Center shield emblem
+      'M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'
+    ],
+    fillRule: 'evenodd'
+  },
+  // Chart - Crystal growth/power stats with glowing bars
+  'chart': {
+    paths: [
+      // Frame with rounded corners
+      'M4 3C2.9 3 2 3.9 2 5v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H4zm0 2h16v14H4V5z',
+      // Rising crystal bars with pointed tops
+      'M6 17v-5l1.5-2L9 12v5H6zm4.5 0V9l1.5-2 1.5 2v8h-3zm4.5 0v-3l1.5-2 1.5 2v3h-3z',
+      // Sparkle accent on tallest bar
+      'M12 6l.5 1 1 .2-.8.7.2 1-.9-.5-.9.5.2-1-.8-.7 1-.2.5-1z'
+    ],
+    fillRule: 'evenodd'
+  },
+  // Castle - Fantasy fortress with towers and banner
+  'castle': {
+    paths: [
+      // Main castle structure with crenellations
+      'M21 10l-2-1V6h-1V4h-2v2h-1V4h-2v2h-2V4h-2v2H8V4H6v2H5V4H3v5L1 10v2h2v9h18v-9h2v-2h-2zM7 19v-4h3v4H7zm7 0v-4h3v4h-3z',
+      // Central tower
+      'M12 2l-2 2v2h4V4l-2-2z',
+      // Banner flag
+      'M12 5v3l3-1.5L12 5z',
+      // Windows
+      'M8 12h2v2H8zm6 0h2v2h-2z'
+    ],
+    fillRule: 'evenodd'
+  },
+  // Envelope - Sealed magical letter with wax seal
+  'envelope': {
+    paths: [
+      // Letter body with fold
+      'M2 6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6zm2 0l8 5 8-5H4z',
+      // Wax seal with star
+      'M12 11a3 3 0 100 6 3 3 0 000-6zm0 1.5l.6 1.2 1.3.2-.9.9.2 1.3-1.2-.6-1.2.6.2-1.3-.9-.9 1.3-.2.6-1.2z'
+    ],
+    fillRule: 'evenodd'
+  },
+  // Cart - Treasure chest with gems
+  'cart': {
+    paths: [
+      // Chest body
+      'M3 10v9c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-9H3z',
+      // Chest lid with curve
+      'M3 10V8c0-2.2 1.8-4 4-4h10c2.2 0 4 1.8 4 4v2H3z',
+      // Chest latch/lock
+      'M10 11h4v3h-4z',
+      // Gems peeking out
+      'M7 8l1.5-2 1.5 2H7zm7 0l1.5-2 1.5 2h-3z',
+      // Keyhole
+      'M12 12.5a1 1 0 100 2 1 1 0 000-2z'
+    ],
+    fillRule: 'evenodd'
+  },
   // Hero - Character silhouette with cape
   'hero': 'M12 2C9.24 2 7 4.24 7 7s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm-7 8v2h14v-2c0-2.66-4.67-4-7-4s-7 1.34-7 4zm2.78-1c1-.7 2.97-1 4.22-1s3.22.3 4.22 1H7.78zM3 14l1-1 3 3v6H4v-5l-1-3zm18 0l-1-1-3 3v6h3v-5l1-3z',
   // Materials - 3D Box/Crate
@@ -129,8 +229,22 @@ const ICONS: Record<IconName, string> = {
   'artifact': 'M12 2l-5.5 9L12 22l5.5-11L12 2zm0 3.84L14.93 11H9.07L12 5.84zM9.07 13h5.86L12 18.56 9.07 13zm1.97-2l.96-3.1.96 3.1h-1.92z',
   // Gathering - Factory/Production
   'gathering': 'M22 22H2v-2h20v2zM10 2H4v6h6V2zm-2 4H6V4h2v2zm6-4v6h6V2h-6zm4 4h-2V4h2v2zm-6 8V8H6v6h6zm-2-4H8v2h2v-2zm8 4v-6h-6v6h6zm-2-4h-2v2h2v-2zM4 20h4v-4H4v4zm10 0h4v-4h-4v4z',
-  // Medal - Achievement icon
-  'medal': 'M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V22l4-2 4 2v-7.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+  // Medal - Heroic achievement medal with flowing ribbons
+  'medal': {
+    paths: [
+      // Medal disc
+      'M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V22l4-2 4 2v-7.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z',
+      // Inner circle
+      'M12 4c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z',
+      // Star emblem on medal
+      'M12 5.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.2-2.4 1.2.5-2.6-1.9-1.8 2.6-.4 1.2-2.4z',
+      // Left ribbon
+      'M7 15l-2 5 3-1 1 2 1-4',
+      // Right ribbon
+      'M17 15l2 5-3-1-1 2-1-4'
+    ],
+    fillRule: 'evenodd'
+  },
 };
 
 export function Icon({
@@ -141,12 +255,17 @@ export function Icon({
   style,
   'aria-label': ariaLabel,
 }: IconProps) {
-  const pathData = ICONS[name];
+  const iconDef = ICONS[name];
 
-  if (!pathData) {
+  if (!iconDef) {
     console.warn(`Icon "${name}" not found`);
     return null;
   }
+
+  // Handle both simple string paths and complex multi-path definitions
+  const isMultiPath = typeof iconDef === 'object';
+  const paths = isMultiPath ? iconDef.paths : [iconDef];
+  const fillRule = isMultiPath ? iconDef.fillRule : undefined;
 
   return (
     <svg
@@ -161,7 +280,9 @@ export function Icon({
       aria-label={ariaLabel}
       aria-hidden={!ariaLabel}
     >
-      <path d={pathData} />
+      {paths.map((d, i) => (
+        <path key={i} d={d} fill-rule={fillRule} />
+      ))}
     </svg>
   );
 }

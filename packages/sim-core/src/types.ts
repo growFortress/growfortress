@@ -238,6 +238,10 @@ export interface ActiveHero {
   isCommanded?: boolean;                      // Whether hero is executing a command
   isManualControlled?: boolean;               // Player direct control toggle
 
+  // Manual attack system (player-aimed shooting)
+  manualAttackTarget?: { x: number; y: number };  // World position to shoot at (fixed-point)
+  manualAttackPending?: boolean;                   // True = attack queued, waiting for cooldown
+
   // Shield system (temporary HP that absorbs damage)
   shieldAmount?: number;       // Current shield HP
   shieldExpiresTick?: number;  // When shield expires
@@ -250,6 +254,8 @@ export interface ActiveHero {
   // Arena-specific modifiers (precomputed for deterministic PvP)
   arenaDamageMultiplier?: number;
   arenaAttackSpeedMultiplier?: number;
+  arenaRangeMultiplier?: number;
+  arenaCritChanceBonus?: number;
   arenaArmor?: number;  // Armor for damage reduction in arena battles
 }
 
@@ -974,6 +980,12 @@ export interface SimConfig {
   // Guild stat boost (0-0.20 = 0-20% HP/damage bonus for fortress and heroes)
   guildStatBoost?: number;
 
+  // Free stat points data (player-allocated bonuses)
+  statPointData?: {
+    fortressAllocations: Record<string, number>;
+    heroAllocations: Array<{ heroId: string; allocations: Record<string, number> }>;
+  };
+
   // NEW: Unlocked pillars (dust-gated progression)
   // If provided, only these pillars can be accessed during the session
   // If undefined, all pillars are available (legacy/endless mode)
@@ -1012,6 +1024,7 @@ export interface GameState {
   fortressLastAttackTick: number;
   fortressClass: FortressClass;   // Selected fortress class
   commanderLevel: number;         // Player's commander level (persisted, for unlocks)
+  levelsGainedInSession: number;  // How many times the player leveled up during this session
   sessionXpEarned: number;        // Total XP earned in this session (will be added to progression)
   xpAtSessionStart: number;       // XP threshold at initial commander level (for progress calculation)
 
@@ -1146,12 +1159,12 @@ export interface ActiveProjectile {
   type: ProjectileType;
   sourceType: 'fortress' | 'hero' | 'turret';
   sourceId: number | string;
-  targetEnemyId: number;
+  targetEnemyId?: number; // Optional - undefined for manual shots that target a position
   x: number;              // Current position (fixed-point)
   y: number;
   startX: number;         // Starting position
   startY: number;
-  targetX: number;        // Target position (enemy position at fire time)
+  targetX: number;        // Target position (enemy position at fire time, or world position for manual)
   targetY: number;
   speed: number;          // Units per tick
   damage: number;
@@ -1160,6 +1173,7 @@ export interface ActiveProjectile {
   class: FortressClass;   // For visual styling
   skillId?: string;       // Skill ID that fired this projectile (for special effects)
   isChained?: boolean;    // True if this is a chain projectile (prevents infinite chaining)
+  isManualShot?: boolean; // True if player-aimed shot (no homing, hits first enemy in path)
   pierceCount?: number;   // How many additional enemies this projectile can pierce through
   hitEnemyIds?: number[]; // Track which enemies have already been hit (for pierce)
 

@@ -32,6 +32,7 @@ import {
   setCommandTarget,
   cancelCommand,
   gamePhase,
+  rendererReady,
   manualControlHeroId,
   setManualControlHero,
   setManualMoveInput,
@@ -114,6 +115,8 @@ interface UseGameLoopReturn {
   setTurretTargeting: (slotIndex: number, mode: 'closest_to_fortress' | 'weakest' | 'strongest' | 'nearest_to_turret' | 'fastest') => void;
   activateOvercharge: (slotIndex: number) => void;
   spawnMilitia: (militiaType: 'infantry' | 'archer' | 'shield_bearer', x: number, y: number, count?: number) => void;
+  // Boss Rush shop methods
+  healFortress: (healPercent: number) => void;
   // Tutorial pause methods
   pauseForTutorial: () => void;
   resumeFromTutorial: () => void;
@@ -165,6 +168,9 @@ export function useGameLoop(
         resetTimeControl(); // Reset slow motion when game ends
 
         const state = game.getState();
+        // Calculate stat points earned: +1 per wave, +4 per level up
+        const statPointsFromWaves = state ? state.wavesCleared : 0;
+        const statPointsFromLevels = state ? state.levelsGainedInSession * 4 : 0;
         const endState: GameEndState | null = state
           ? {
               wavesCleared: state.wavesCleared,
@@ -174,6 +180,7 @@ export function useGameLoop(
               dustEarned: state.dustEarned,
               relics: state.relics.map((r) => r.id),
               sessionXpEarned: state.sessionXpEarned,
+              statPointsEarned: statPointsFromWaves + statPointsFromLevels,
             }
           : null;
         showEndScreenWithStats(won, endState);
@@ -241,7 +248,6 @@ export function useGameLoop(
     gameRef.current = game;
 
     const manualKeys = { up: false, down: false, left: false, right: false };
-    const MANUAL_AIM_MAX_DISTANCE = 4;
 
     const isTypingTarget = (target: EventTarget | null): boolean => {
       const element = target as HTMLElement | null;
@@ -305,12 +311,13 @@ export function useGameLoop(
     const triggerManualAttackAt = (worldX: number, worldY: number) => {
       const heroId = manualControlHeroId.value;
       if (!heroId) return;
-      const enemyId = getClosestEnemy(worldX, worldY, MANUAL_AIM_MAX_DISTANCE);
-      if (enemyId === null) {
-        triggerManualAttackNearest();
-        return;
-      }
-      game.setHeroFocusTarget(heroId, enemyId);
+
+      // Clamp target to field bounds
+      const clampedX = Math.max(0, Math.min(worldX, 40));
+      const clampedY = Math.max(0, Math.min(worldY, 15));
+
+      // Fire a projectile toward the clicked position
+      game.triggerManualHeroAttack(heroId, FP.fromFloat(clampedX), FP.fromFloat(clampedY));
     };
 
     const triggerManualAttackNearest = () => {
@@ -556,6 +563,7 @@ export function useGameLoop(
         if (destroyed) return;
 
         logger.debug('[GameLoop] Renderer initialized successfully');
+        rendererReady.value = true;
 
         // Set up hero click handler for hub mode
         renderer.setOnHeroClick((heroId: string) => {
@@ -662,6 +670,7 @@ export function useGameLoop(
 
     return () => {
       destroyed = true;
+      rendererReady.value = false;
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleWindowBlur);
@@ -808,6 +817,13 @@ export function useGameLoop(
     game.spawnMilitia(militiaType, x, y, count);
   }, []);
 
+  // Boss Rush shop methods
+  const healFortress = useCallback((healPercent: number): void => {
+    const game = gameRef.current;
+    if (!game) return;
+    game.healFortress(healPercent);
+  }, []);
+
   // Tutorial pause methods
   const pauseForTutorial = useCallback((): void => {
     const loop = loopRef.current;
@@ -838,6 +854,8 @@ export function useGameLoop(
     setTurretTargeting,
     activateOvercharge,
     spawnMilitia,
+    // Boss Rush shop methods
+    healFortress,
     // Tutorial pause methods
     pauseForTutorial,
     resumeFromTutorial,

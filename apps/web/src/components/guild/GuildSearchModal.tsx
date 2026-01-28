@@ -31,6 +31,7 @@ import { Modal } from '../shared/Modal.js';
 import { Spinner } from '../shared/Spinner.js';
 import { GuildTag } from '../shared/GuildTag.js';
 import { OnlineStatusIndicator } from '../shared/OnlineStatusIndicator.js';
+import { DamageIcon } from '../icons/index.js';
 import styles from './GuildSearchModal.module.css';
 
 interface GuildSearchModalProps {
@@ -520,7 +521,7 @@ function GuildDetails({ guild, onBack, loading, onSuccess, t }: GuildDetailsProp
                   <OnlineStatusIndicator isOnline={member.isOnline} />
                 </span>
                 <span class={styles.memberRole}>
-                  {member.role === 'LEADER' ? '👑' : member.role === 'OFFICER' ? '⚔️' : ''}
+                  {member.role === 'LEADER' ? '👑' : member.role === 'OFFICER' ? <DamageIcon size={16} /> : ''}
                 </span>
               </div>
             ))}

@@ -24,6 +24,7 @@ import {
   POWER_WEIGHTS,
   getStatMultiplier,
   type StatUpgradeConfig,
+  type HeroStatUpgradeConfig,
 } from '../data/power-config.js';
 
 import { getHeroById } from '../data/heroes.js';
@@ -40,7 +41,7 @@ import { calculateTotalHpBonus, calculateTotalDamageBonus } from '../data/fortre
  */
 function calculateUpgradeMultiplier(
   upgrades: StatUpgrades,
-  configs: StatUpgradeConfig[]
+  configs: (StatUpgradeConfig | HeroStatUpgradeConfig)[]
 ): number {
   let multiplier = 1.0;
 

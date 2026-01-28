@@ -51,7 +51,7 @@ export type UpgradableStat =
 
 // Simplified stat types - fewer upgrades for easier progression
 export type FortressUpgradableStat = 'hp' | 'damage' | 'armor';
-export type HeroUpgradableStat = 'hp' | 'damage';
+export type HeroUpgradableStat = 'damage' | 'attackSpeed' | 'range' | 'critChance';
 export type TurretUpgradableStat = 'damage' | 'attackSpeed';
 
 // ============================================================================

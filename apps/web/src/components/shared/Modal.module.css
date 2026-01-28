@@ -312,3 +312,24 @@
     padding-right: 16px;
   }
 }
+
+/* Backdrop-filter fallback for unsupported browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .backdrop {
+    background: rgba(0, 0, 0, 0.95);
+  }
+
+  .modal {
+    background: var(--glass-bg-fallback, rgba(10, 10, 18, 0.98));
+  }
+
+  /* Disable blur animations since they won't work */
+  @keyframes backdropEnter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes backdropExit {
+    to { opacity: 0; }
+  }
+}

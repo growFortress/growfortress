@@ -23,28 +23,28 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   // Base enemies
   runner: {
     type: 'runner',
-    baseHp: 29,
-    baseSpeed: 2.33,  // Increased from 1.94 (previously 2.2)
-    baseDamage: 8,
-    goldReward: 1,  // Reduced from 2 for economy balance
+    baseHp: 60,       // Buffed from 29 (~2x) - no longer "fragile"
+    baseSpeed: 2.33,
+    baseDamage: 10,   // Buffed from 8 (+25%)
+    goldReward: 1,
     dustReward: 1,
-    description: 'Fast but fragile',
+    description: 'Fast basic enemy',
   },
   bruiser: {
     type: 'bruiser',
-    baseHp: 144,
-    baseSpeed: 0.84,  // Increased from 0.70 (previously 0.8)
-    baseDamage: 21,
-    goldReward: 5,  // Reduced from 7 for economy balance
+    baseHp: 200,      // Buffed from 144 (+39%)
+    baseSpeed: 0.84,
+    baseDamage: 28,   // Buffed from 21 (+33%)
+    goldReward: 3,    // Reduced from 5 (-40%)
     dustReward: 2,
     description: 'Slow and tanky',
   },
   leech: {
     type: 'leech',
-    baseHp: 58,
-    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
-    baseDamage: 5,
-    goldReward: 4,  // Reduced from 5 for economy balance
+    baseHp: 85,       // Buffed from 58 (+47%)
+    baseSpeed: 1.69,
+    baseDamage: 8,    // Buffed from 5 (+60%)
+    goldReward: 2,    // Reduced from 4 (-50%)
     dustReward: 1,
     description: 'Heals on hit',
   },
@@ -52,28 +52,28 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   // Streets Pillar enemies
   gangster: {
     type: 'gangster',
-    baseHp: 36,
-    baseSpeed: 1.90,  // Increased from 1.58 (previously 1.8)
-    baseDamage: 11,
-    goldReward: 3,  // Reduced from 4 for economy balance
+    baseHp: 80,       // Buffed from 36 (~2.2x)
+    baseSpeed: 1.90,
+    baseDamage: 14,   // Buffed from 11 (+27%)
+    goldReward: 2,    // Reduced from 3 for economy balance
     dustReward: 1,
     description: 'Armed street criminal',
   },
   thug: {
     type: 'thug',
-    baseHp: 86,
-    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
-    baseDamage: 18,
-    goldReward: 4,  // Reduced from 6 for economy balance
+    baseHp: 120,      // Buffed from 86 (+40%)
+    baseSpeed: 1.27,
+    baseDamage: 24,   // Buffed from 18 (+33%)
+    goldReward: 3,    // Reduced from 4 (-25%)
     dustReward: 1,
     description: 'Tough street enforcer',
   },
   mafia_boss: {
     type: 'mafia_boss',
-    baseHp: 431,
-    baseSpeed: 0.68,  // Increased from 0.57 (previously 0.65)
-    baseDamage: 36,
-    goldReward: 18,  // Reduced from 25 for economy balance
+    baseHp: 580,      // Buffed from 431 (+35%)
+    baseSpeed: 0.68,
+    baseDamage: 48,   // Buffed from 36 (+33%)
+    goldReward: 12,   // Reduced from 18 (-33%)
     dustReward: 5,
     description: 'Crime lord with bodyguards',
   },
@@ -81,28 +81,28 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   // Science Pillar enemies
   robot: {
     type: 'robot',
-    baseHp: 65,
-    baseSpeed: 1.48,  // Increased from 1.23 (previously 1.4)
-    baseDamage: 15,
-    goldReward: 4,  // Reduced from 5 for economy balance
+    baseHp: 95,       // Buffed from 65 (+46%)
+    baseSpeed: 1.48,
+    baseDamage: 20,   // Buffed from 15 (+33%)
+    goldReward: 3,    // Reduced from 4 (-25%)
     dustReward: 1,
     description: 'Mechanical soldier',
   },
   drone: {
     type: 'drone',
-    baseHp: 21,
-    baseSpeed: 2.53,  // Increased from 2.11 (previously 2.4)
-    baseDamage: 8,
-    goldReward: 2,  // Reduced from 3 for economy balance
+    baseHp: 40,       // Buffed from 21 (+90%) - still fast but not glass
+    baseSpeed: 2.20,  // Reduced from 2.53 (-13%) - slightly easier to hit
+    baseDamage: 10,   // Buffed from 8 (+25%)
+    goldReward: 1,    // Reduced from 2 (-50%)
     dustReward: 1,
     description: 'Fast flying unit',
   },
   ai_core: {
     type: 'ai_core',
-    baseHp: 719,
-    baseSpeed: 0.42,  // Increased from 0.35 (previously 0.4)
-    baseDamage: 44,
-    goldReward: 28,  // Reduced from 40 for economy balance
+    baseHp: 950,      // Buffed from 719 (+32%)
+    baseSpeed: 0.42,
+    baseDamage: 58,   // Buffed from 44 (+32%)
+    goldReward: 18,   // Reduced from 28 (-36%)
     dustReward: 8,
     description: 'Central AI consciousness',
   },
@@ -110,19 +110,19 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   // Mutants Pillar enemies
   sentinel: {
     type: 'sentinel',
-    baseHp: 288,
-    baseSpeed: 1.06,  // Increased from 0.88 (previously 1.0)
-    baseDamage: 29,
-    goldReward: 9,  // Reduced from 12 for economy balance
+    baseHp: 400,      // Buffed from 288 (+39%)
+    baseSpeed: 1.06,
+    baseDamage: 40,   // Buffed from 29 (+38%)
+    goldReward: 6,    // Reduced from 9 (-33%)
     dustReward: 3,
     description: 'Mutant-hunting robot',
   },
   mutant_hunter: {
     type: 'mutant_hunter',
-    baseHp: 115,
-    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
-    baseDamage: 21,
-    goldReward: 5,  // Reduced from 7 for economy balance
+    baseHp: 160,      // Buffed from 115 (+39%)
+    baseSpeed: 1.69,
+    baseDamage: 28,   // Buffed from 21 (+33%)
+    goldReward: 3,    // Reduced from 5 (-40%)
     dustReward: 2,
     description: 'Human mutant hunter',
   },
@@ -130,28 +130,28 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   // Cosmos Pillar enemies
   kree_soldier: {
     type: 'kree_soldier',
-    baseHp: 100,
-    baseSpeed: 1.48,  // Increased from 1.23 (previously 1.4)
-    baseDamage: 18,
-    goldReward: 5,  // Reduced from 7 for economy balance
+    baseHp: 140,      // Buffed from 100 (+40%)
+    baseSpeed: 1.48,
+    baseDamage: 25,   // Buffed from 18 (+39%)
+    goldReward: 3,    // Reduced from 5 (-40%)
     dustReward: 2,
     description: 'Kree Empire warrior',
   },
   skrull: {
     type: 'skrull',
-    baseHp: 73,
-    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
-    baseDamage: 15,
-    goldReward: 4,  // Reduced from 6 for economy balance
+    baseHp: 105,      // Buffed from 73 (+44%)
+    baseSpeed: 1.69,
+    baseDamage: 20,   // Buffed from 15 (+33%)
+    goldReward: 2,    // Reduced from 4 (-50%)
     dustReward: 1,
     description: 'Shape-shifting alien',
   },
   cosmic_beast: {
     type: 'cosmic_beast',
-    baseHp: 575,
-    baseSpeed: 0.84,  // Increased from 0.70 (previously 0.8)
-    baseDamage: 50,
-    goldReward: 21,  // Reduced from 30 for economy balance
+    baseHp: 800,      // Buffed from 575 (+39%)
+    baseSpeed: 0.84,
+    baseDamage: 68,   // Buffed from 50 (+36%)
+    goldReward: 14,   // Reduced from 21 (-33%)
     dustReward: 6,
     description: 'Massive space creature',
   },
@@ -159,28 +159,28 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   // Magic Pillar enemies
   demon: {
     type: 'demon',
-    baseHp: 130,
-    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
-    baseDamage: 26,
-    goldReward: 6,  // Reduced from 9 for economy balance
+    baseHp: 180,      // Buffed from 130 (+38%)
+    baseSpeed: 1.27,
+    baseDamage: 35,   // Buffed from 26 (+35%)
+    goldReward: 4,    // Reduced from 6 (-33%)
     dustReward: 2,
     description: 'Hellish entity',
   },
   sorcerer: {
     type: 'sorcerer',
-    baseHp: 58,
-    baseSpeed: 1.06,  // Increased from 0.88 (previously 1.0)
-    baseDamage: 36,
-    goldReward: 7,  // Reduced from 10 for economy balance
+    baseHp: 85,       // Buffed from 58 (+47%)
+    baseSpeed: 1.06,
+    baseDamage: 48,   // Buffed from 36 (+33%)
+    goldReward: 5,    // Reduced from 7 (-29%)
     dustReward: 3,
     description: 'Dark magic user',
   },
   dimensional_being: {
     type: 'dimensional_being',
-    baseHp: 863,
-    baseSpeed: 0.53,  // Increased from 0.44 (previously 0.5)
-    baseDamage: 58,
-    goldReward: 35,  // Reduced from 50 for economy balance
+    baseHp: 1150,     // Buffed from 863 (+33%)
+    baseSpeed: 0.53,
+    baseDamage: 78,   // Buffed from 58 (+34%)
+    goldReward: 22,   // Reduced from 35 (-37%)
     dustReward: 10,
     description: 'Entity from another dimension',
   },
@@ -188,28 +188,28 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
   // Gods Pillar enemies
   einherjar: {
     type: 'einherjar',
-    baseHp: 173,
-    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
-    baseDamage: 31,
-    goldReward: 9,  // Reduced from 12 for economy balance
+    baseHp: 240,      // Buffed from 173 (+39%)
+    baseSpeed: 1.27,
+    baseDamage: 42,   // Buffed from 31 (+35%)
+    goldReward: 6,    // Reduced from 9 (-33%)
     dustReward: 3,
     description: 'Fallen warrior of Valhalla',
   },
   titan: {
     type: 'titan',
-    baseHp: 1150,
-    baseSpeed: 0.37,  // Increased from 0.31 (previously 0.35)
-    baseDamage: 73,
-    goldReward: 42,  // Reduced from 60 for economy balance
+    baseHp: 1550,     // Buffed from 1150 (+35%)
+    baseSpeed: 0.37,
+    baseDamage: 98,   // Buffed from 73 (+34%)
+    goldReward: 28,   // Reduced from 42 (-33%)
     dustReward: 13,
     description: 'Primordial giant',
   },
   god: {
     type: 'god',
-    baseHp: 1438,
-    baseSpeed: 0.84,  // Increased from 0.70 (previously 0.8)
-    baseDamage: 86,
-    goldReward: 70,  // Reduced from 100 for economy balance
+    baseHp: 1950,     // Buffed from 1438 (+36%)
+    baseSpeed: 0.84,
+    baseDamage: 115,  // Buffed from 86 (+34%)
+    goldReward: 45,   // Reduced from 70 (-36%)
     dustReward: 25,
     description: 'Divine being of immense power',
   },
@@ -220,46 +220,46 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
 
   catapult: {
     type: 'catapult',
-    baseHp: 100,
-    baseSpeed: 0.68,  // Increased from 0.57 (previously 0.65)
-    baseDamage: 50,
-    goldReward: 11,  // Reduced from 15 for economy balance
+    baseHp: 140,      // Buffed from 100 (+40%)
+    baseSpeed: 0.68,
+    baseDamage: 68,   // Buffed from 50 (+36%)
+    goldReward: 7,    // Reduced from 11 (-36%)
     dustReward: 3,
     description: 'Ranged siege unit - attacks fortress/turrets from distance',
   },
   sapper: {
     type: 'sapper',
-    baseHp: 56,
-    baseSpeed: 2.33,  // Increased from 1.94 (previously 2.2)
-    baseDamage: 10,
-    goldReward: 7,  // Reduced from 10 for economy balance
+    baseHp: 80,       // Buffed from 56 (+43%)
+    baseSpeed: 2.00,  // Reduced from 2.33 (-14%) - easier to hit
+    baseDamage: 14,   // Buffed from 10 (+40%)
+    goldReward: 5,    // Reduced from 7 (-29%)
     dustReward: 2,
     description: 'Targets walls - plants bombs that deal massive damage',
   },
   healer: {
     type: 'healer',
-    baseHp: 44,
-    baseSpeed: 1.27,  // Increased from 1.06 (previously 1.2)
-    baseDamage: 6,
-    goldReward: 8,  // Reduced from 12 for economy balance
+    baseHp: 65,       // Buffed from 44 (+48%)
+    baseSpeed: 1.27,
+    baseDamage: 8,    // Buffed from 6 (+33%)
+    goldReward: 5,    // Reduced from 8 (-38%)
     dustReward: 2,
     description: 'Heals nearby enemies over time',
   },
   shielder: {
     type: 'shielder',
-    baseHp: 75,
-    baseSpeed: 1.06,  // Increased from 0.88 (previously 1.0)
-    baseDamage: 13,
-    goldReward: 10,  // Reduced from 14 for economy balance
+    baseHp: 110,      // Buffed from 75 (+47%)
+    baseSpeed: 1.06,
+    baseDamage: 18,   // Buffed from 13 (+38%)
+    goldReward: 6,    // Reduced from 10 (-40%)
     dustReward: 3,
     description: 'Creates damage-absorbing shield for nearby enemies',
   },
   teleporter: {
     type: 'teleporter',
-    baseHp: 38,
-    baseSpeed: 1.69,  // Increased from 1.41 (previously 1.6)
-    baseDamage: 15,
-    goldReward: 6,  // Reduced from 8 for economy balance
+    baseHp: 55,       // Buffed from 38 (+45%)
+    baseSpeed: 1.69,
+    baseDamage: 20,   // Buffed from 15 (+33%)
+    goldReward: 4,    // Reduced from 6 (-33%)
     dustReward: 2,
     description: 'Randomly teleports between lanes',
   },
@@ -270,26 +270,26 @@ export const ENEMY_ARCHETYPES: Record<EnemyType, EnemyArchetype> = {
 
   scatterer: {
     type: 'scatterer',
-    baseHp: 72,
+    baseHp: 100,      // Buffed from 72 (+39%)
     baseSpeed: 1.48,
-    baseDamage: 14,
-    goldReward: 6,
+    baseDamage: 19,   // Buffed from 14 (+36%)
+    goldReward: 4,    // Reduced from 6 (-33%)
     dustReward: 2,
     description: 'Spreads out, resists splash and chain damage',
-    splashResistance: 0.5,  // -50% splash damage
-    chainResistance: 0.3,   // -30% chain chance
-    spreadBehavior: true,   // Avoids grouping
+    splashResistance: 0.5,
+    chainResistance: 0.3,
+    spreadBehavior: true,
   },
   lone_wolf: {
     type: 'lone_wolf',
-    baseHp: 288,  // +100% HP (elite enemy)
+    baseHp: 400,      // Buffed from 288 (+39%)
     baseSpeed: 1.06,
-    baseDamage: 28,
-    goldReward: 12,
+    baseDamage: 38,   // Buffed from 28 (+36%)
+    goldReward: 8,    // Reduced from 12 (-33%)
     dustReward: 4,
     description: 'Elite loner - immune to chains, heavily resists splash',
-    splashResistance: 0.75, // -75% splash damage
-    chainResistance: 1.0,   // -100% chain chance (immune)
+    splashResistance: 0.75,
+    chainResistance: 1.0,
     spreadBehavior: true,
   },
 };
@@ -488,14 +488,15 @@ export function getEnemyStats(
   const effectiveWave = ((wave - 1) % 100) + 1;
 
   // Scale HP and damage by effective wave within cycle
-  // Early waves (1-30) get +3% bonus for better challenge progression
-  const earlyWaveBonus = effectiveWave <= 30 ? 0.03 : 0;
-  const waveScale = 1 + (effectiveWave - 1) * (0.12 + earlyWaveBonus);
-  // Wave 1: 1.0x, Wave 10: 2.35x (was 2.08x), Wave 30: 5.35x
+  // Early waves (1-40) get +5% bonus for better challenge progression
+  // Base scaling: +15% per wave (buffed from 12%)
+  const earlyWaveBonus = effectiveWave <= 40 ? 0.05 : 0;
+  const waveScale = 1 + (effectiveWave - 1) * (0.15 + earlyWaveBonus);
+  // Wave 1: 1.0x, Wave 10: 2.80x, Wave 30: 6.80x, Wave 50: 8.35x
 
-  // Cycle scaling: exponential 1.6^cycle (reduced from 2x for better balance)
-  // Cycle 0: 1x, Cycle 1: 1.6x, Cycle 2: 2.56x, Cycle 3: 4.1x
-  const cycleScale = Math.pow(1.6, cycle);
+  // Cycle scaling: exponential 1.7^cycle (buffed from 1.6x)
+  // Cycle 0: 1x, Cycle 1: 1.7x, Cycle 2: 2.89x, Cycle 3: 4.9x
+  const cycleScale = Math.pow(1.7, cycle);
 
   // Combined scaling
   const totalScale = waveScale * cycleScale;
@@ -513,7 +514,7 @@ export function getEnemyStats(
 
 /**
  * Get rewards for killing enemy
- * Rewards scale with wave number and cycle
+ * Rewards scale with wave number and cycle (conservative scaling vs difficulty)
  */
 export function getEnemyRewards(
   type: EnemyType,
@@ -524,19 +525,19 @@ export function getEnemyRewards(
 ): { gold: number; dust: number } {
   const archetype = ENEMY_ARCHETYPES[type];
 
-  // Elite enemies give 2.5x rewards (balanced for economy)
-  const eliteMult = isElite ? 2.5 : 1;
+  // Elite enemies give 2x rewards (reduced from 2.5x for economy balance)
+  const eliteMult = isElite ? 2.0 : 1;
 
   // Endless mode: calculate cycle and effective wave
   const cycle = Math.floor((wave - 1) / 100);
   const effectiveWave = ((wave - 1) % 100) + 1;
 
-  // Wave scaling: 5% per wave (vs 12% for difficulty - still conservative)
-  const waveMultiplier = 1 + (effectiveWave - 1) * 0.05;
+  // Wave scaling: 3% per wave (reduced from 5% - rewards grow slower than difficulty)
+  const waveMultiplier = 1 + (effectiveWave - 1) * 0.03;
 
-  // Cycle scaling: exponential 1.4^cycle (vs 1.6^cycle for difficulty)
-  // Cycle 0: 1x, Cycle 1: 1.4x, Cycle 2: 1.96x, Cycle 3: 2.74x
-  const cycleMultiplier = Math.pow(1.4, cycle);
+  // Cycle scaling: exponential 1.3^cycle (reduced from 1.4^cycle)
+  // Cycle 0: 1x, Cycle 1: 1.3x, Cycle 2: 1.69x, Cycle 3: 2.2x
+  const cycleMultiplier = Math.pow(1.3, cycle);
 
   return {
     gold: Math.floor(archetype.goldReward * eliteMult * goldMult * waveMultiplier * cycleMultiplier),

@@ -10,7 +10,7 @@ import {
 } from '../../state/index.js';
 import { getArtifactById } from '@arcade/sim-core';
 import { getUserId } from '../../api/auth.js';
-import { DustIcon } from '../icons/index.js';
+import { DustIcon, DamageIcon } from '../icons/index.js';
 import styles from './PvpBattleResult.module.css';
 
 export function PvpBattleResult() {
@@ -137,7 +137,7 @@ export function PvpBattleResult() {
                 <span class={styles.rewardValue}>+{rewards.gold}</span>
               </div>
               <div class={styles.rewardItem}>
-                <span class={styles.rewardIcon}>⚔️</span>
+                <DamageIcon size={18} className={styles.rewardIcon} />
                 <span class={styles.rewardLabel}>Honor:</span>
                 <span class={`${styles.rewardValue} ${
                   rewards.honorChange > 0 ? styles.honorGain :

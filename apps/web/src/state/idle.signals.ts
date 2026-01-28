@@ -70,14 +70,11 @@ export const totalPendingMaterials = computed(() => {
  * Fetch pending idle rewards from server
  */
 export async function checkIdleRewards(): Promise<void> {
-  console.log('[idle.signals] checkIdleRewards called');
   idleRewardsLoading.value = true;
   idleRewardsError.value = null;
 
   try {
-    console.log('[idle.signals] Fetching pending idle rewards...');
     const response = await getPendingIdleRewards();
-    console.log('[idle.signals] Got response:', response);
     idleRewardsState.value = response;
   } catch (error) {
     console.error('[idle.signals] Error fetching idle rewards:', error);
@@ -85,7 +82,6 @@ export async function checkIdleRewards(): Promise<void> {
     idleRewardsState.value = null;
   } finally {
     idleRewardsLoading.value = false;
-    console.log('[idle.signals] Loading complete, state:', idleRewardsState.value, 'error:', idleRewardsError.value);
   }
 }
 

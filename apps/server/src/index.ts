@@ -3,7 +3,7 @@ import { buildApp } from './app.js';
 import { config } from './config.js';
 import { prisma } from './lib/prisma.js';
 import { redis } from './lib/redis.js';
-import { initializeJobs } from './lib/queue.js';
+import { initializeJobs, cleanFailedJobs } from './lib/queue.js';
 import { createLeaderboardWorker } from './jobs/leaderboardSnapshot.js';
 import { createCleanupWorker } from './jobs/cleanupExpiredRuns.js';
 import { createMetricsWorker } from './jobs/metricsJob.js';
@@ -23,6 +23,9 @@ async function main() {
   const metricsWorker = createMetricsWorker();
   const weeklyPlayerResetWorker = createWeeklyPlayerResetWorker();
   const weeklyGuildResetWorker = createWeeklyGuildResetWorker();
+
+  // Clean old failed jobs from previous runs
+  await cleanFailedJobs();
 
   // Initialize recurring jobs
   await initializeJobs();

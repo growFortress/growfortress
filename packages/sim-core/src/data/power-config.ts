@@ -1,8 +1,9 @@
 /**
  * Power Upgrades Configuration
  *
- * Koszty ulepszeń (liniowe skalowanie) i bonusy statystyk.
- * Formuła kosztu: cost = baseCost + (currentLevel × costPerLevel)
+ * Koszty ulepszeń i bonusy statystyk.
+ * Formuła kosztu (hero): cost = baseCost × costMultiplier^level (wykładnicza)
+ * Formuła kosztu (fortress/turret): cost = baseCost + (currentLevel × costPerLevel) (liniowa)
  * Formuła bonusu: multiplier = (1 + bonusPerLevel)^level
  */
 
@@ -18,14 +19,29 @@ import type {
 // STAT UPGRADE CONFIGURATION
 // ============================================================================
 
+/**
+ * Konfiguracja ulepszenia statystyki (liniowe koszty - fortress/turret)
+ */
 export interface StatUpgradeConfig {
   stat: UpgradableStat;
   name: string;
   description: string;
   bonusPerLevel: number;   // np. 0.05 = +5% per level
-  maxLevel: number;
+  maxLevel: number;        // Limit poziomów (Infinity = bez limitu)
   baseCost: number;        // Koszt pierwszego ulepszenia
-  costPerLevel: number;    // Dodatkowy koszt za każdy level
+  costPerLevel: number;    // Dodatkowy koszt za każdy level (liniowe)
+}
+
+/**
+ * Konfiguracja ulepszenia statystyki bohatera (wykładnicze koszty, bez limitu)
+ */
+export interface HeroStatUpgradeConfig {
+  stat: HeroUpgradableStat;
+  name: string;
+  description: string;
+  bonusPerLevel: number;   // np. 0.05 = +5% per level
+  baseCost: number;        // Koszt pierwszego ulepszenia
+  costMultiplier: number;  // Mnożnik kosztu za każdy level (wykładnicze)
 }
 
 // ============================================================================
@@ -36,54 +52,68 @@ export const FORTRESS_STAT_UPGRADES: StatUpgradeConfig[] = [
   {
     stat: 'hp',
     name: 'Wzmocnione Mury',
-    description: '+5% HP twierdzy za level',
-    bonusPerLevel: 0.05,
-    maxLevel: Infinity,
-    baseCost: 60,
-    costPerLevel: 45,
+    description: '+6% HP twierdzy za level',
+    bonusPerLevel: 0.06,
+    maxLevel: 50,
+    baseCost: 80,
+    costPerLevel: 55,
   },
   {
     stat: 'damage',
     name: 'Arsenał',
     description: '+4% obrażeń twierdzy za level',
     bonusPerLevel: 0.04,
-    maxLevel: Infinity,
-    baseCost: 90,
-    costPerLevel: 60,
+    maxLevel: 50,
+    baseCost: 100,
+    costPerLevel: 70,
   },
   {
     stat: 'armor',
     name: 'Pancerz',
-    description: '+3% redukcji obrażeń za level',
-    bonusPerLevel: 0.03,
-    maxLevel: Infinity,
-    baseCost: 120,
-    costPerLevel: 75,
+    description: '+4% redukcji obrażeń za level',
+    bonusPerLevel: 0.04,
+    maxLevel: 40,
+    baseCost: 150,
+    costPerLevel: 90,
   },
 ];
 
 // ============================================================================
-// HERO STAT UPGRADES (Simplified: 2 stats only)
+// HERO STAT UPGRADES (4 stats, exponential cost, no level cap)
 // ============================================================================
 
-export const HERO_STAT_UPGRADES: StatUpgradeConfig[] = [
-  {
-    stat: 'hp',
-    name: 'Wytrzymałość',
-    description: '+10% HP bohatera za level',
-    bonusPerLevel: 0.10,
-    maxLevel: Infinity,
-    baseCost: 15,
-    costPerLevel: 10,
-  },
+export const HERO_STAT_UPGRADES: HeroStatUpgradeConfig[] = [
   {
     stat: 'damage',
     name: 'Siła Ataku',
-    description: '+10% obrażeń bohatera za level',
-    bonusPerLevel: 0.10,
-    maxLevel: Infinity,
-    baseCost: 25,
-    costPerLevel: 15,
+    description: '+5% obrażeń za level',
+    bonusPerLevel: 0.05,
+    baseCost: 50,
+    costMultiplier: 1.15,
+  },
+  {
+    stat: 'attackSpeed',
+    name: 'Szybkość Ataku',
+    description: '+3% attack speed za level',
+    bonusPerLevel: 0.03,
+    baseCost: 60,
+    costMultiplier: 1.15,
+  },
+  {
+    stat: 'range',
+    name: 'Zasięg',
+    description: '+2% zasięgu za level',
+    bonusPerLevel: 0.02,
+    baseCost: 80,
+    costMultiplier: 1.18,
+  },
+  {
+    stat: 'critChance',
+    name: 'Szansa na Krytyka',
+    description: '+1% crit chance za level',
+    bonusPerLevel: 0.01,
+    baseCost: 100,
+    costMultiplier: 1.20,
   },
 ];
 
@@ -95,20 +125,20 @@ export const TURRET_STAT_UPGRADES: StatUpgradeConfig[] = [
   {
     stat: 'damage',
     name: 'Ulepszony Kaliber',
-    description: '+3% obrażeń wieżyczki za level',
-    bonusPerLevel: 0.03,
-    maxLevel: 20,
-    baseCost: 40,
-    costPerLevel: 25,
+    description: '+4% obrażeń wieżyczki za level',
+    bonusPerLevel: 0.04,
+    maxLevel: 25,
+    baseCost: 50,
+    costPerLevel: 30,
   },
   {
     stat: 'attackSpeed',
     name: 'Mechanizm Szybkostrzelny',
-    description: '+2.5% szybkości ataku wieżyczki za level',
-    bonusPerLevel: 0.025,
-    maxLevel: 20,
-    baseCost: 60,
-    costPerLevel: 35,
+    description: '+3% szybkości ataku wieżyczki za level',
+    bonusPerLevel: 0.03,
+    maxLevel: 25,
+    baseCost: 70,
+    costPerLevel: 40,
   },
 ];
 
@@ -119,9 +149,9 @@ export const TURRET_STAT_UPGRADES: StatUpgradeConfig[] = [
 export interface ItemTierConfig {
   tier: ItemTier;
   name: string;
-  effectMultiplier: number;  // Mnożnik efektu itemu
-  upgradeCost: number | null; // null = max tier (nie można ulepszyć dalej)
-  color: number;             // Kolor dla UI
+  effectMultiplier: number;
+  upgradeCost: number | null;
+  color: number;
 }
 
 export const ITEM_TIER_CONFIG: Record<ItemTier, ItemTierConfig> = {
@@ -129,36 +159,36 @@ export const ITEM_TIER_CONFIG: Record<ItemTier, ItemTierConfig> = {
     tier: 'common',
     name: 'Zwykły',
     effectMultiplier: 1.0,
-    upgradeCost: 800,      // Rebalanced from 500
-    color: 0x9d9d9d, // Gray
+    upgradeCost: 800,
+    color: 0x9d9d9d,
   },
   uncommon: {
     tier: 'uncommon',
     name: 'Niezwykły',
-    effectMultiplier: 1.15, // Rebalanced from 1.25
-    upgradeCost: 1750,      // Rebalanced from 1000
-    color: 0x1eff00, // Green
+    effectMultiplier: 1.15,
+    upgradeCost: 1750,
+    color: 0x1eff00,
   },
   rare: {
     tier: 'rare',
     name: 'Rzadki',
-    effectMultiplier: 1.35, // Rebalanced from 1.5
-    upgradeCost: 4000,      // Rebalanced from 2500
-    color: 0x0070dd, // Blue
+    effectMultiplier: 1.35,
+    upgradeCost: 4000,
+    color: 0x0070dd,
   },
   epic: {
     tier: 'epic',
     name: 'Epicki',
-    effectMultiplier: 1.6,  // Rebalanced from 2.0
-    upgradeCost: 8000,      // Rebalanced from 5000
-    color: 0xa335ee, // Purple
+    effectMultiplier: 1.6,
+    upgradeCost: 8000,
+    color: 0xa335ee,
   },
   legendary: {
     tier: 'legendary',
     name: 'Legendarny',
-    effectMultiplier: 2.0,  // Rebalanced from 3.0
-    upgradeCost: null, // Max tier
-    color: 0xff8000, // Orange
+    effectMultiplier: 2.0,
+    upgradeCost: null,
+    color: 0xff8000,
   },
 };
 
@@ -166,17 +196,14 @@ export const ITEM_TIER_CONFIG: Record<ItemTier, ItemTierConfig> = {
 // POWER WEIGHTS (for Power Level calculation)
 // ============================================================================
 
-/**
- * Wagi statystyk do kalkulacji Power Level
- * Wyższe wagi = większy wpływ na Power
- * Simplified: only hp, damage, armor, attackSpeed used
- */
 export const POWER_WEIGHTS = {
-  // Stat weights (simplified)
+  // Stat weights
   hp: 0.5,
   damage: 1.0,
   armor: 0.5,
   attackSpeed: 0.8,
+  range: 0.6,
+  critChance: 0.7,
 
   // Base power per entity type
   fortressBase: 100,
@@ -184,7 +211,7 @@ export const POWER_WEIGHTS = {
   turretBase: 30,
 
   // Item tier power bonus
-  itemTierBase: 50, // Power per tier level (0-4)
+  itemTierBase: 50,
 } as const;
 
 // ============================================================================
@@ -192,19 +219,26 @@ export const POWER_WEIGHTS = {
 // ============================================================================
 
 /**
- * Oblicza koszt ulepszenia (liniowe skalowanie)
+ * Oblicza koszt ulepszenia (liniowe skalowanie - dla fortress/turret)
  */
 export function getUpgradeCost(config: StatUpgradeConfig, currentLevel: number): number {
   if (currentLevel >= config.maxLevel) {
-    return Infinity; // Nie można ulepszyć dalej
+    return Infinity;
   }
   return config.baseCost + currentLevel * config.costPerLevel;
 }
 
 /**
+ * Oblicza koszt ulepszenia bohatera (wykładnicze skalowanie - bez limitu)
+ */
+export function getHeroUpgradeCost(config: HeroStatUpgradeConfig, currentLevel: number): number {
+  return Math.floor(config.baseCost * Math.pow(config.costMultiplier, currentLevel));
+}
+
+/**
  * Oblicza mnożnik statystyki z poziomu ulepszenia (multiplikatywny)
  */
-export function getStatMultiplier(config: StatUpgradeConfig, level: number): number {
+export function getStatMultiplier(config: StatUpgradeConfig | HeroStatUpgradeConfig, level: number): number {
   if (level <= 0) return 1.0;
   return Math.pow(1 + config.bonusPerLevel, level);
 }
@@ -212,7 +246,7 @@ export function getStatMultiplier(config: StatUpgradeConfig, level: number): num
 /**
  * Oblicza łączny bonus (procentowy) z poziomu ulepszenia
  */
-export function getStatBonusPercent(config: StatUpgradeConfig, level: number): number {
+export function getStatBonusPercent(config: StatUpgradeConfig | HeroStatUpgradeConfig, level: number): number {
   return (getStatMultiplier(config, level) - 1) * 100;
 }
 
@@ -226,7 +260,7 @@ export function getFortressStatConfig(stat: FortressUpgradableStat): StatUpgrade
 /**
  * Pobiera konfigurację ulepszenia dla bohatera
  */
-export function getHeroStatConfig(stat: HeroUpgradableStat): StatUpgradeConfig | undefined {
+export function getHeroStatConfig(stat: HeroUpgradableStat): HeroStatUpgradeConfig | undefined {
   return HERO_STAT_UPGRADES.find(c => c.stat === stat);
 }
 
@@ -245,7 +279,7 @@ export function getItemUpgradeCost(currentTier: ItemTier): number | null {
 }
 
 /**
- * Oblicza łączny koszt wszystkich dotychczasowych ulepszeń danego statu
+ * Oblicza łączny koszt wszystkich dotychczasowych ulepszeń danego statu (liniowe)
  */
 export function getTotalSpentOnStat(config: StatUpgradeConfig, currentLevel: number): number {
   let total = 0;
@@ -256,7 +290,18 @@ export function getTotalSpentOnStat(config: StatUpgradeConfig, currentLevel: num
 }
 
 /**
- * Oblicza ile poziomów można kupić za daną ilość golda
+ * Oblicza łączny koszt wszystkich ulepszeń bohatera (wykładnicze)
+ */
+export function getTotalSpentOnHeroStat(config: HeroStatUpgradeConfig, currentLevel: number): number {
+  let total = 0;
+  for (let i = 0; i < currentLevel; i++) {
+    total += getHeroUpgradeCost(config, i);
+  }
+  return total;
+}
+
+/**
+ * Oblicza ile poziomów można kupić za daną ilość golda (liniowe - fortress/turret)
  */
 export function getAffordableLevels(
   config: StatUpgradeConfig,
@@ -269,6 +314,33 @@ export function getAffordableLevels(
 
   while (level < config.maxLevel) {
     const cost = getUpgradeCost(config, level);
+    if (remainingGold >= cost) {
+      remainingGold -= cost;
+      level++;
+      levels++;
+    } else {
+      break;
+    }
+  }
+
+  return levels;
+}
+
+/**
+ * Oblicza ile poziomów bohatera można kupić za daną ilość golda (wykładnicze)
+ */
+export function getAffordableHeroLevels(
+  config: HeroStatUpgradeConfig,
+  currentLevel: number,
+  availableGold: number,
+  maxLevels: number = 100 // Limit do zapobiegania nieskończonej pętli
+): number {
+  let levels = 0;
+  let remainingGold = availableGold;
+  let level = currentLevel;
+
+  while (levels < maxLevels) {
+    const cost = getHeroUpgradeCost(config, level);
     if (remainingGold >= cost) {
       remainingGold -= cost;
       level++;

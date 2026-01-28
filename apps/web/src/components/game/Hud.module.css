@@ -16,31 +16,60 @@
 }
 
 /* ============================================
-   GAME TOP BAR - Wave, HP, Resources
+   GAME TOP BAR - Unified Design
    ============================================ */
+/* Sci-Fi HUD: Solid background with holographic edges and corner brackets */
 .gameTopBar {
   position: fixed;
-  top: 16px;
-  left: 16px;
+  top: 12px;
+  left: 12px;
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 10px 20px;
-  background: rgba(0, 15, 30, 0.92);
-  border: 1px solid rgba(0, 200, 255, 0.3);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 200, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  gap: 0;
+  padding: 0;
+  background: var(--hud-scanline), var(--hud-bg-solid);
+  border: var(--hud-border);
+  border-radius: 8px;
+  box-shadow: var(--holo-edge-primary), var(--elevation-2);
   z-index: var(--z-hud, 10);
   pointer-events: auto;
-  animation: slideDown 0.4s var(--ease-spring) forwards;
+  animation: topBarSlideIn 0.3s ease-out forwards;
+  max-width: calc(100vw - 24px); /* Prevent overflow */
 }
 
-@keyframes slideDown {
+/* Corner brackets - Dead Space style with glow */
+.gameTopBar::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: var(--hud-corner-size, 24px);
+  height: var(--hud-corner-size, 24px);
+  border-top: var(--hud-corner-width, 3px) solid var(--color-primary);
+  border-left: var(--hud-corner-width, 3px) solid var(--color-primary);
+  filter: var(--hud-corner-glow);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.gameTopBar::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: var(--hud-corner-size, 24px);
+  height: var(--hud-corner-size, 24px);
+  border-bottom: var(--hud-corner-width, 3px) solid var(--color-primary);
+  border-right: var(--hud-corner-width, 3px) solid var(--color-primary);
+  filter: var(--hud-corner-glow);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes topBarSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-15px);
   }
   to {
     opacity: 1;
@@ -48,93 +77,211 @@
   }
 }
 
-/* Wave Panel */
-.wavePanel {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* Divider between sections */
+.barDivider {
+  width: 1px;
+  height: calc(36px * var(--hud-scale));
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--color-secondary-30),
+    transparent
+  );
 }
 
-.waveInfo {
+/* ===== WAVE SECTION ===== */
+.waveSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  padding: var(--hud-spacing-md) var(--hud-spacing-xl);
+  min-width: calc(80px * var(--hud-scale));
 }
 
-.waveProgressBar {
-  width: 140px;
+.waveSection .waveLabel {
+  font-family: var(--font-display);
+  font-size: var(--hud-font-xs);
+  font-weight: 700;
+  color: rgba(100, 180, 220, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  line-height: 1;
 }
 
-/* HP Panel - to the right of wave */
-.hpPanel {
+.waveSection .waveNumber {
+  font-family: var(--font-display);
+  font-size: var(--hud-font-display);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 2px 12px var(--color-primary-30);
+}
+
+/* ===== HP SECTION ===== */
+.hpSection {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--hud-spacing-md);
+  padding: var(--hud-spacing-md) var(--hud-spacing-xl);
 }
 
 .hpBarWrapper {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
 }
 
 .hpBarTrack {
-  width: 220px;
-  height: 24px;
+  width: calc(200px * var(--hud-scale));
+  height: calc(20px * var(--hud-scale));
   background: rgba(0, 0, 0, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border-radius: calc(12px * var(--hud-scale));
+  border: 1px solid rgba(255, 255, 255, 0.15);
   overflow: hidden;
-  position: relative;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 .hpBarFill {
   height: 100%;
-  border-radius: 10px;
-  transition: width 0.3s ease, background 0.3s ease;
+  border-radius: 8px;
+  transition: width 0.3s ease;
   position: relative;
 }
 
 .hpBarFill::after {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
-  border-radius: 10px 10px 0 0;
+  top: 1px;
+  left: 2px;
+  right: 2px;
+  height: 6px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+  border-radius: 6px 6px 0 0;
 }
 
 .hpHealthy {
-  background: linear-gradient(90deg, #22c55e, #4ade80);
-  box-shadow: 0 0 20px rgba(74, 222, 128, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(
+    180deg,
+    var(--color-positive) 0%,
+    #22c55e 50%,
+    #16a34a 100%
+  );
+  box-shadow: 0 0 12px var(--color-positive-50);
 }
 
 .hpDamaged {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(
+    180deg,
+    var(--color-gold) 0%,
+    var(--color-skill) 50%,
+    #d97706 100%
+  );
+  box-shadow: 0 0 12px var(--color-gold-50);
 }
 
 .hpCritical {
-  background: linear-gradient(90deg, #dc2626, #ef4444);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  animation: hpPulse 0.8s ease-in-out infinite;
+  background: linear-gradient(
+    180deg,
+    var(--color-accent) 0%,
+    #dc2626 50%,
+    #b91c1c 100%
+  );
+  box-shadow: 0 0 15px var(--color-accent-60);
+  animation: criticalPulse 0.6s ease-in-out infinite;
 }
 
-@keyframes hpPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
-  50% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.9); }
+@keyframes criticalPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .hpText {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--hud-font-md);
   font-weight: 700;
-  color: var(--color-text);
+  color: #fff;
+  white-space: nowrap;
+  min-width: calc(60px * var(--hud-scale));
   text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hpSep {
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 1px;
+  font-weight: 400;
+}
+
+/* ===== LEVEL SECTION ===== */
+.levelSection {
+  display: flex;
+  align-items: center;
+  gap: var(--hud-spacing-sm);
+  padding: var(--hud-spacing-sm) var(--hud-spacing-md);
+}
+
+.levelBadge {
+  width: calc(32px * var(--hud-scale));
+  height: calc(32px * var(--hud-scale));
+  background: linear-gradient(
+    135deg,
+    var(--color-gold) 0%,
+    var(--color-skill) 50%,
+    #d97706 100%
+  );
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 2px 8px var(--color-skill-50),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+}
+
+.levelNum {
+  font-family: var(--font-display);
+  font-size: var(--hud-font-lg);
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.levelInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: calc(70px * var(--hud-scale));
+}
+
+.levelInfo .levelLabel {
+  font-family: var(--font-display);
+  font-size: var(--hud-font-xs);
+  font-weight: 600;
+  color: rgba(251, 191, 36, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  line-height: 1;
+}
+
+.xpTrack {
+  width: 100%;
+  height: calc(5px * var(--hud-scale));
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.xpFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-skill), var(--color-gold));
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--color-gold-50);
+  transition: width 0.3s ease;
 }
 
 /* Resources Panel */
@@ -182,37 +329,37 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
   pointer-events: auto;
-  padding: 10px 18px;
-  min-width: 90px;
-  height: 56px;
+  padding: var(--hud-spacing-md) var(--hud-spacing-xl);
+  min-width: calc(100px * var(--hud-scale));
+  height: calc(64px * var(--hud-scale));
   box-sizing: border-box;
-  background: rgba(0, 20, 40, 0.85);
-  border: 1px solid rgba(0, 200, 255, 0.25);
-  border-radius: 12px;
-  box-shadow: var(--elevation-2);
+  background: rgba(0, 20, 40, 0.9);
+  border: 1px solid var(--color-primary-35);
+  border-radius: calc(12px * var(--hud-scale));
+  box-shadow: var(--holo-edge-primary), var(--elevation-2);
   position: relative;
   overflow: hidden;
-  margin-right: 24px;
+  margin-right: var(--hud-spacing-xl);
 }
 
 .waveLabel {
   font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-50);
+  font-size: var(--hud-font-sm);
+  font-weight: 700;
+  color: var(--color-text-60);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
 }
 
 .waveNumber {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: var(--hud-font-2xl);
   font-weight: 700;
   color: var(--color-primary);
-  text-shadow: 0 0 15px var(--color-primary-50);
-  letter-spacing: 1px;
+  text-shadow: 0 0 18px var(--color-primary-60);
+  letter-spacing: 2px;
   line-height: 1;
   transition: transform 0.3s var(--ease-spring);
   will-change: transform, contents;
@@ -229,6 +376,7 @@
 /* ============================================
    RIGHT GAME PANEL - Buttons only
    ============================================ */
+/* Sci-Fi HUD: Right panel with holographic edges */
 .rightGamePanel {
   position: fixed;
   top: 16px;
@@ -237,41 +385,68 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  background: rgba(0, 15, 30, 0.9);
-  border: 1px solid rgba(0, 200, 255, 0.25);
+  background: var(--hud-scanline), var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: 12px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--elevation-2);
+  box-shadow: var(--holo-edge-primary), var(--elevation-2);
   z-index: var(--z-hud, 10);
   pointer-events: auto;
   animation: panelFadeIn 0.4s var(--ease-spring) forwards;
 }
 
+/* Corner brackets for right panel - with glow */
+.rightGamePanel::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: var(--hud-corner-size, 24px);
+  height: var(--hud-corner-size, 24px);
+  border-top: var(--hud-corner-width, 3px) solid var(--color-primary);
+  border-left: var(--hud-corner-width, 3px) solid var(--color-primary);
+  filter: var(--hud-corner-glow);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.rightGamePanel::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: var(--hud-corner-size, 24px);
+  height: var(--hud-corner-size, 24px);
+  border-bottom: var(--hud-corner-width, 3px) solid var(--color-primary);
+  border-right: var(--hud-corner-width, 3px) solid var(--color-primary);
+  filter: var(--hud-corner-glow);
+  pointer-events: none;
+  z-index: 10;
+}
+
 .gameButtons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
 .gameButtons button {
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 20px;
   transition: all 0.2s ease;
 }
 
 .gameButtons button:hover {
-  background: rgba(0, 200, 255, 0.15);
-  border-color: rgba(0, 200, 255, 0.5);
+  background: rgba(0, 200, 255, 0.2);
+  border-color: rgba(0, 200, 255, 0.6);
   transform: scale(1.1);
 }
 
@@ -287,6 +462,7 @@
 /* ============================================
    SKILLS PANEL - Bottom Center
    ============================================ */
+/* Sci-Fi HUD: Skills panel with holographic edges and corner brackets */
 .skillsPanel {
   position: fixed;
   bottom: 24px;
@@ -298,14 +474,41 @@
   gap: 10px;
   padding: 14px 20px;
   pointer-events: auto;
-  background: rgba(0, 15, 30, 0.92);
-  border: 1px solid rgba(0, 200, 255, 0.3);
+  background: var(--hud-scanline), var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: 16px;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 200, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    var(--holo-edge-primary),
+    0 -4px 20px rgba(0, 0, 0, 0.4);
   z-index: var(--z-hud, 10);
   animation: slideUp 0.4s var(--ease-spring) forwards;
+}
+
+/* Corner brackets for skills panel */
+.skillsPanel::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: var(--hud-corner-size, 16px);
+  height: var(--hud-corner-size, 16px);
+  border-top: var(--hud-corner-width, 2px) solid var(--color-primary);
+  border-left: var(--hud-corner-width, 2px) solid var(--color-primary);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.skillsPanel::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: var(--hud-corner-size, 16px);
+  height: var(--hud-corner-size, 16px);
+  border-bottom: var(--hud-corner-width, 2px) solid var(--color-primary);
+  border-right: var(--hud-corner-width, 2px) solid var(--color-primary);
+  pointer-events: none;
+  z-index: 1;
 }
 
 @keyframes slideUp {
@@ -325,7 +528,7 @@
   align-items: flex-start;
 }
 
-/* Panel - Glassmorphic */
+/* Panel - Sci-Fi HUD style */
 .panel {
   padding: 12px 16px;
   display: flex;
@@ -333,13 +536,11 @@
   gap: 8px;
   pointer-events: auto;
 
-  /* Glassmorphism */
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  /* Sci-Fi HUD: Solid background with holographic edge */
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--elevation-2);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  box-shadow: var(--holo-edge-subtle), var(--elevation-2);
 
   /* Entrance animation */
   animation: panelFadeIn 0.4s var(--ease-spring) forwards;
@@ -421,7 +622,7 @@
   pointer-events: auto;
 }
 
-/* Skills Section - Glassmorphic */
+/* Skills Section - Sci-Fi HUD style */
 .skillsSection {
   display: flex;
   flex-direction: column;
@@ -429,13 +630,11 @@
   padding: 10px 14px;
   pointer-events: auto;
 
-  /* Glassmorphism */
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  /* Sci-Fi HUD: Solid background with holographic edge */
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--elevation-2);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  box-shadow: var(--holo-edge-subtle), var(--elevation-2);
 }
 
 .skillsHeader {
@@ -455,7 +654,7 @@
   align-items: flex-start;
 }
 
-/* Stats Button - Glassmorphic */
+/* Stats Button - Sci-Fi HUD style */
 .statsButton {
   position: absolute;
   top: 1rem;
@@ -470,13 +669,11 @@
   font-size: 1.5rem;
   pointer-events: auto;
 
-  /* Glassmorphism */
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  /* Sci-Fi HUD: Solid background with holographic edge */
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: var(--radius-full);
-  box-shadow: var(--elevation-2);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  box-shadow: var(--holo-edge-primary), var(--elevation-2);
 
   color: var(--color-primary);
   transition: all 0.3s var(--ease-spring);
@@ -484,7 +681,9 @@
 
 .statsButton:hover {
   transform: scale(1.1) rotate(5deg);
-  box-shadow: var(--elevation-2), 0 0 20px var(--color-primary-40);
+  box-shadow:
+    var(--elevation-2),
+    0 0 20px var(--color-primary-40);
   border-color: var(--color-primary-40);
 }
 
@@ -507,7 +706,7 @@
   gap: 16px;
 }
 
-/* Fortress Button - Enhanced */
+/* Fortress Button - Sci-Fi HUD style */
 .fortressButton {
   pointer-events: auto;
   display: flex;
@@ -519,22 +718,25 @@
   position: relative;
   overflow: hidden;
 
-  /* Glassmorphism with accent */
-  background: linear-gradient(135deg, var(--color-primary-15), var(--color-primary-10));
-  border: 1px solid var(--color-primary-40);
+  /* Sci-Fi HUD: Solid elevated background with holographic edge */
+  background: var(--hud-bg-elevated);
+  border: var(--hud-border-active);
   border-radius: var(--radius-md);
-  box-shadow: var(--elevation-2);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow: var(--holo-edge-primary), var(--elevation-2);
 
   transition: all 0.3s var(--ease-spring);
 }
 
 .fortressButton::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
   transform: translateX(-100%);
   transition: transform 0.5s ease;
 }
@@ -545,7 +747,9 @@
 
 .fortressButton:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: var(--elevation-3), 0 0 25px var(--color-primary-40);
+  box-shadow:
+    var(--elevation-3),
+    0 0 25px var(--color-primary-40);
   border-color: var(--color-primary);
 }
 
@@ -569,7 +773,7 @@
   text-shadow: 0 0 10px var(--color-primary-30);
 }
 
-/* Power Button - Enhanced */
+/* Power Button - Sci-Fi HUD style */
 .powerButton {
   pointer-events: auto;
   display: flex;
@@ -581,22 +785,26 @@
   position: relative;
   overflow: hidden;
 
-  /* Glassmorphism */
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  /* Sci-Fi HUD: Solid background with holographic edge */
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--elevation-2);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow: var(--holo-edge-subtle), var(--elevation-2);
 
   transition: all 0.3s var(--ease-spring);
 }
 
 .powerButton:hover {
-  background: linear-gradient(135deg, var(--color-secondary-15), var(--color-secondary-10));
+  background: linear-gradient(
+    135deg,
+    var(--color-secondary-15),
+    var(--color-secondary-10)
+  );
   border-color: var(--color-secondary-50);
   transform: translateY(-3px) scale(1.02);
-  box-shadow: var(--elevation-2), 0 0 20px var(--color-secondary-30);
+  box-shadow:
+    var(--elevation-2),
+    0 0 20px var(--color-secondary-30);
 }
 
 .powerIcon {
@@ -668,7 +876,8 @@
 }
 
 @keyframes rewardPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -678,17 +887,28 @@
   }
 }
 
-/* Tablet breakpoint */
-@media (max-width: 1200px) {
-  .hud {
-    flex-wrap: wrap;
-    gap: 10px;
-    padding-right: 24px;
+/* ========== RESPONSIVE LAYOUT RULES ========== */
+/* Sizing is handled by CSS variables in theme.css */
+/* Minimum supported width: 1024px (tablets use mobile version) */
+
+/* Large laptop (1280-1440px) */
+@media (max-width: 1439px) and (min-width: 1280px) {
+  .centerPanels {
+    order: 10;
+    width: 100%;
+    justify-content: center;
   }
 
-  .waveDisplay {
-    height: 42px;
-    margin-right: 20px;
+  .sidePanel {
+    order: 10;
+  }
+}
+
+/* Small laptop (1024-1280px) */
+@media (max-width: 1279px) and (min-width: 1024px) {
+  .hud {
+    flex-wrap: wrap;
+    gap: var(--hud-spacing-sm);
   }
 
   .centerPanels {
@@ -700,192 +920,11 @@
   .sidePanel {
     order: 10;
   }
-
-  .rightGamePanel {
-    top: 12px;
-    right: 12px;
-  }
-
-  .pillarSection {
-    top: 140px;
-    right: 12px;
-  }
-
-  .skillsSectionBottomLeft {
-    bottom: 16px;
-    left: 16px;
-  }
-}
-
-/* Mobile breakpoint */
-@media (max-width: 768px) {
-  .hud {
-    top: 70px;
-    padding: 0 12px;
-    gap: 8px;
-  }
-
-  .leftSection {
-    gap: 10px;
-  }
-
-  .waveDisplay {
-    padding: 6px 10px;
-    min-width: 70px;
-    height: 38px;
-    margin-right: 16px;
-  }
-
-  .waveLabel {
-    font-size: 10px;
-  }
-
-  .waveNumber {
-    font-size: 22px;
-  }
-
-  .centerPanels {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .skillsSection {
-    padding: 8px 10px;
-  }
-
-  .skillsRow {
-    gap: 8px;
-  }
-
-  .statsButton {
-    width: 44px;
-    height: 44px;
-    font-size: 1.3rem;
-    top: 0.5rem;
-    right: 10px;
-  }
-
-  .panel.right {
-    padding: 10px 14px;
-    gap: 14px;
-  }
-
-  .statItem {
-    font-size: 14px;
-    padding: 4px 8px;
-  }
-
-  .rightGamePanel {
-    top: 8px;
-    right: 8px;
-    padding: 8px;
-    gap: 8px;
-  }
-
-  .pillarSection {
-    top: 120px;
-    right: 8px;
-  }
-
-  .gameButtons {
-    gap: 4px;
-  }
-
-  .gameButtons button {
-    width: 34px;
-    height: 34px;
-    font-size: 14px;
-  }
-
-  .skillsSectionBottomLeft {
-    bottom: 12px;
-    left: 12px;
-    padding: 8px 10px;
-  }
-}
-
-/* Small mobile breakpoint */
-@media (max-width: 480px) {
-  .hud {
-    top: 60px;
-    padding: 0 8px;
-  }
-
-  .waveDisplay {
-    padding: 4px 6px;
-    min-width: 60px;
-    height: 34px;
-    margin-right: 8px;
-  }
-
-  .waveNumber {
-    font-size: 18px;
-  }
-
-  .skillsSection {
-    padding: 6px 8px;
-  }
-
-  .skillsRow {
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .statsButton {
-    width: 38px;
-    height: 38px;
-    font-size: 1.1rem;
-  }
-
-  .rightGamePanel {
-    top: 6px;
-    right: 6px;
-    padding: 6px;
-    gap: 6px;
-  }
-
-  .pillarSection {
-    top: 110px;
-    right: 6px;
-  }
-
-  .gameResources {
-    gap: 4px;
-  }
-
-  .resourceItem {
-    padding: 2px 4px;
-    gap: 4px;
-  }
-
-  .resourceIcon {
-    font-size: 12px;
-  }
-
-  .resourceValue {
-    font-size: 12px;
-  }
-
-  .gameButtons {
-    gap: 3px;
-  }
-
-  .gameButtons button {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
-
-  .skillsSectionBottomLeft {
-    bottom: 8px;
-    left: 8px;
-    padding: 6px 8px;
-  }
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+  .gameTopBar,
   .panel,
   .statsButton,
   .fortressButton,
@@ -900,7 +939,24 @@
     transform: none;
   }
 
-  .rewardBadge {
+  .rewardBadge,
+  .hpCritical {
     animation: none;
+  }
+}
+
+/* Legacy fallback - now using Sci-Fi HUD as primary */
+/* Keeping this for graceful degradation if CSS variables fail */
+@supports not (--hud-bg-solid: rgba(0, 0, 0, 1)) {
+  .gameTopBar,
+  .rightGamePanel,
+  .skillsPanel,
+  .panel,
+  .skillsSection,
+  .statsButton,
+  .fortressButton,
+  .powerButton {
+    background: rgba(10, 10, 18, 0.98);
+    border: 1px solid rgba(0, 229, 255, 0.3);
   }
 }

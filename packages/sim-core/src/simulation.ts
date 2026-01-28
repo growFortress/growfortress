@@ -57,6 +57,7 @@ import { TURRET_SLOTS } from './data/turrets.js';
 import { getPillarForWave } from './data/pillars.js';
 import { analytics } from './analytics.js';
 import { applyFortressPowerUpgrades } from './systems/apply-power-upgrades.js';
+import { applyAllStatPointBonuses } from './systems/apply-stat-points.js';
 import {
   calculateTotalHpBonus,
   calculateTotalDamageBonus,
@@ -200,6 +201,11 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     );
   }
 
+  // Apply free stat point bonuses (after power upgrades)
+  if (config.statPointData) {
+    baseModifiers = applyAllStatPointBonuses(baseModifiers, config.statPointData);
+  }
+
   // Apply commander level HP bonus (fixed-point: 16384 = 1.0)
   const hpBonus = calculateTotalHpBonus(config.commanderLevel);
   // Apply power upgrade HP bonus (additive: 0.15 = 15%)
@@ -263,6 +269,7 @@ export function createInitialState(seed: number, config: SimConfig): GameState {
     fortressLastAttackTick: 0,
     fortressClass: config.fortressClass,
     commanderLevel: config.commanderLevel,
+    levelsGainedInSession: 0,
     sessionXpEarned: 0,
     xpAtSessionStart: getTotalXpForLevel(config.commanderLevel),
     enemies: [],
@@ -2026,6 +2033,7 @@ export class Simulation {
         this.state.dustEarned += dustReward;
         this.state.segmentGoldEarned += goldReward;
         this.state.segmentDustEarned += dustReward;
+        this.state.levelsGainedInSession += levelsGained;
 
         analytics.trackEconomy('earn', 'gold', goldReward);
         analytics.trackEconomy('earn', 'dust', dustReward);

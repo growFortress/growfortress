@@ -11,7 +11,6 @@ import {
   createMockInventory,
   createMockPlayerAchievements,
   createMockPlayerAchievementsWithProgress,
-  createDefaultLifetimeStats,
 } from '../../mocks/prisma.js';
 
 // Import test setup (mocks prisma, redis, config)

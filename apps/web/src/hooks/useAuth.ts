@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "../i18n/useTranslation.js";
 
 export interface UseAuthResult {
-  handleLogin: (username: string, password: string) => Promise<void>;
+  handleLogin: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   handleRegister: (username: string, password: string) => Promise<void>;
   handleGuestLogin: () => Promise<void>;
   handleLogout: () => Promise<void>;
@@ -30,11 +30,18 @@ export function useAuth(
 ): UseAuthResult {
   const { t } = useTranslation(["auth"]);
 
-  const handleLogin = useCallback(async (username: string, password: string): Promise<void> => {
+  const handleLogin = useCallback(async (username: string, password: string, rememberMe?: boolean): Promise<void> => {
     authLoading.value = true;
     authError.value = null;
 
     try {
+      // Store preference for session persistence
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        localStorage.removeItem("rememberMe");
+      }
+
       await login({ username, password });
       onAuthSuccess();
     } catch (error) {
@@ -100,6 +107,7 @@ export function useAuth(
     await logout();
     isAuthSignal.value = false;
     clearGuestMode();
+    localStorage.removeItem("rememberMe");
   }, []);
 
   return {

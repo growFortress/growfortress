@@ -159,7 +159,7 @@ function validateHeroCommand(
     heroId?: string;
     targetX?: number;
     targetY?: number;
-    commandType?: 'move' | 'focus' | 'retreat';
+    commandType?: 'move' | 'focus' | 'retreat' | 'manual_attack';
     targetEnemyId?: number;
   },
   state: GameState
@@ -197,6 +197,23 @@ function validateHeroCommand(
       if (!hero) {
         return { valid: false, reason: 'Hero not found' };
       }
+    }
+  }
+
+  // For 'manual_attack' command, hero must exist and be in manual control, target position required
+  if (commandType === 'manual_attack') {
+    if (!event.heroId) {
+      return { valid: false, reason: 'Hero ID required for manual attack' };
+    }
+    const hero = state.heroes.find(h => h.definitionId === event.heroId);
+    if (!hero) {
+      return { valid: false, reason: 'Hero not found' };
+    }
+    if (!hero.isManualControlled) {
+      return { valid: false, reason: 'Hero must be in manual control mode' };
+    }
+    if (event.targetX === undefined || event.targetY === undefined) {
+      return { valid: false, reason: 'Target position required for manual attack' };
     }
   }
 
@@ -380,7 +397,7 @@ function applyHeroCommand(
     heroId?: string;
     targetX?: number;
     targetY?: number;
-    commandType?: 'move' | 'focus' | 'retreat';
+    commandType?: 'move' | 'focus' | 'retreat' | 'manual_attack';
     targetEnemyId?: number;
   },
   state: GameState
@@ -418,6 +435,18 @@ function applyHeroCommand(
       for (const hero of state.heroes) {
         hero.focusTargetId = event.targetEnemyId;
       }
+      return true;
+    }
+
+    case 'manual_attack': {
+      // Queue a manual attack at target position
+      if (!event.heroId) return false;
+      const hero = state.heroes.find(h => h.definitionId === event.heroId);
+      if (!hero) return false;
+      if (event.targetX === undefined || event.targetY === undefined) return false;
+
+      hero.manualAttackTarget = { x: event.targetX, y: event.targetY };
+      hero.manualAttackPending = true;
       return true;
     }
 

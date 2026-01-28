@@ -69,16 +69,17 @@ export function applyFortressPowerUpgrades(
 /**
  * Calculate hero stat multipliers from power upgrades
  * Returns multipliers to apply to hero base stats
+ *
+ * Hero stats: damage, attackSpeed, range, critChance (no HP)
  */
 export function getHeroPowerMultipliers(
   powerData: PlayerPowerData,
   heroId: string
 ): {
-  hpMultiplier: number;
   damageMultiplier: number;
   attackSpeedMultiplier: number;
+  rangeMultiplier: number;
   critChanceBonus: number;
-  critDamageBonus: number;
 } {
   const heroUpgrade = powerData.heroUpgrades.find(h => h.heroId === heroId);
   const upgrades = heroUpgrade?.statUpgrades || {
@@ -92,11 +93,10 @@ export function getHeroPowerMultipliers(
     dodge: 0,
   };
 
-  let hpMultiplier = 1.0;
   let damageMultiplier = 1.0;
   let attackSpeedMultiplier = 1.0;
+  let rangeMultiplier = 1.0;
   let critChanceBonus = 0;
-  let critDamageBonus = 0;
 
   for (const config of HERO_STAT_UPGRADES) {
     const level = upgrades[config.stat] || 0;
@@ -105,30 +105,27 @@ export function getHeroPowerMultipliers(
     const multiplier = getStatMultiplier(config, level);
 
     switch (config.stat) {
-      case 'hp':
-        hpMultiplier *= multiplier;
-        break;
       case 'damage':
         damageMultiplier *= multiplier;
         break;
       case 'attackSpeed':
         attackSpeedMultiplier *= multiplier;
         break;
-      case 'critChance':
-        critChanceBonus += level * config.bonusPerLevel;
+      case 'range':
+        rangeMultiplier *= multiplier;
         break;
-      case 'critMultiplier':
-        critDamageBonus += level * config.bonusPerLevel;
+      case 'critChance':
+        // Additive: +1% per level
+        critChanceBonus += level * config.bonusPerLevel;
         break;
     }
   }
 
   return {
-    hpMultiplier,
     damageMultiplier,
     attackSpeedMultiplier,
-    critChanceBonus: Math.min(critChanceBonus, 0.5), // Cap at 50% bonus
-    critDamageBonus,
+    rangeMultiplier,
+    critChanceBonus: Math.min(critChanceBonus, 0.75), // Cap at 75% bonus (hard cap)
   };
 }
 

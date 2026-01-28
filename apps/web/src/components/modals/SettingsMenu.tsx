@@ -622,7 +622,7 @@ export function SettingsMenu({ onLogout }: SettingsMenuProps) {
             </div>
 
             {/* Referral Section */}
-            <div class={styles.accountSection}>
+            <div class={`${styles.accountSection} ${styles.referralSection}`}>
               <div class={styles.sectionHeader}>
                 <span class={styles.sectionIcon}>🔗</span>
                 <span class={styles.sectionTitle}>{t("settings.account.referralTitle")}</span>

@@ -27,6 +27,7 @@ import { Spinner } from '../shared/Spinner.js';
 import { Button } from '../shared/Button.js';
 import { GuildTag } from '../shared/GuildTag.js';
 import { ArenaReplay } from './ArenaReplay.js';
+import { ArmorIcon } from '../icons/index.js';
 import { AttackModal } from './AttackModal.js';
 import styles from './GuildPanel.module.css';
 
@@ -245,7 +246,7 @@ function ShieldSection({ guildId, onRefresh }: ShieldSectionProps) {
       {status.isActive ? (
         <>
           <div class={styles.shieldActive}>
-            <span class={styles.shieldIcon}>🛡️</span>
+            <ArmorIcon size={20} className={styles.shieldIcon} />
             <span>Tarcza aktywna</span>
           </div>
           <span class={styles.shieldTimer}>

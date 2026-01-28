@@ -2,13 +2,13 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: calc(100% - 420px);
-  padding: 32px;
+  right: var(--panel-sidebar-width);
+  padding: var(--hud-spacing-xl);
   box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 24px;
+  gap: var(--hud-spacing-lg);
   pointer-events: none;
   z-index: 10;
 }
@@ -21,24 +21,26 @@
 .navContainer {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: var(--hud-spacing-xl);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .navGroup {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 56px;
-  padding: 10px 18px;
-  background: rgba(0, 20, 40, 0.85);
-  border: 1px solid rgba(0, 200, 255, 0.25);
-  border-radius: 12px;
+  gap: var(--hud-spacing-sm);
+  min-height: var(--hud-button-size-lg);
+  padding: var(--hud-spacing-md) var(--hud-spacing-lg);
+  background: rgba(0, 20, 40, 0.9);
+  border: 1px solid var(--color-primary-30);
+  border-radius: calc(12px * var(--hud-scale));
   pointer-events: auto;
   box-sizing: border-box;
 }
 
 .navGroup[data-group="management"] {
-  border-color: rgba(0, 200, 255, 0.3);
+  border-color: var(--color-primary-30);
 }
 
 .navGroup[data-group="modes"] {
@@ -53,49 +55,81 @@
   pointer-events: auto;
 }
 
-/* Primary CTA - Enhanced START button with pulse animation */
+/* Primary CTA - START button with static holographic glow (no infinite pulse) */
 .mainAction button {
-  min-height: 56px;
-  padding: 12px 56px;
-  font-size: 20px;
-  background: linear-gradient(135deg, var(--color-primary-20) 0%, var(--color-primary-10) 100%);
-  box-shadow:
-    var(--shadow-md),
-    0 0 25px var(--color-primary-40);
-  animation: primaryPulse 2s ease-in-out infinite;
+  min-height: var(--hud-button-size-lg);
+  padding: var(--hud-spacing-md) calc(60px * var(--hud-scale));
+  font-size: var(--hud-font-xl);
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: var(--hud-bg-elevated);
+  border: var(--hud-border-active);
+  box-shadow: var(--holo-edge-primary), var(--shadow-md);
+  /* No infinite animation - static holographic glow for readability */
 }
 
-@keyframes primaryPulse {
+/* Pulse only on focus for accessibility feedback */
+.mainAction button:focus-visible {
+  animation: focusPulse 1s ease-in-out 2;
+  outline: none;
+}
+
+@keyframes focusPulse {
   0%, 100% {
-    box-shadow:
-      var(--shadow-md),
-      0 0 20px var(--color-primary-30);
+    box-shadow: var(--holo-edge-primary), var(--shadow-md);
   }
   50% {
-    box-shadow:
-      var(--shadow-md),
-      0 0 35px var(--color-primary-50);
+    box-shadow: var(--holo-edge-primary), var(--shadow-md), 0 0 25px var(--color-primary-50);
   }
 }
 
 .mainAction button:hover {
-  animation: none;
-  box-shadow:
-    var(--shadow-lg),
-    0 0 40px var(--color-primary-60);
+  box-shadow: var(--holo-edge-primary), var(--shadow-lg), 0 0 30px var(--color-primary-40);
   transform: scale(1.05);
 }
 
 .groupLabel {
-  font-size: 0.65rem;
+  font-size: var(--hud-font-xs);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.2em;
+  color: var(--color-primary);
   position: absolute;
-  top: -8px;
-  left: 12px;
-  background: rgba(0, 20, 40, 0.95);
-  padding: 0 6px;
+  top: calc(-11px * var(--hud-scale));
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(0, 20, 40, 0.98) 0%, rgba(0, 30, 50, 0.95) 100%);
+  padding: var(--hud-spacing-xs) var(--hud-spacing-md);
+  border: 1px solid var(--color-primary-40);
+  border-radius: 4px;
+  z-index: 1;
+  text-shadow: 0 0 8px var(--color-primary-50);
+  box-shadow:
+    0 0 6px var(--color-primary-30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+/* Decorative lines extending from label */
+.groupLabel::before,
+.groupLabel::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-primary-50), transparent);
+}
+
+.groupLabel::before {
+  right: 100%;
+  margin-right: 4px;
+  background: linear-gradient(90deg, transparent, var(--color-primary-50));
+}
+
+.groupLabel::after {
+  left: 100%;
+  margin-left: 4px;
 }
 
 .navGroupWrapper {
@@ -111,25 +145,25 @@
   z-index: 20;
 }
 
+/* Sci-Fi HUD: Menu button with solid background */
 .menuButton {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: rgba(0, 15, 30, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--holo-edge-subtle), var(--elevation-1);
 }
 
 .menuButton:hover {
   background: rgba(0, 30, 60, 0.95);
-  border-color: rgba(0, 200, 255, 0.4);
+  border-color: var(--color-primary-40);
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
+  box-shadow: 0 0 20px var(--color-primary-20);
 }
 
 .menuIcon {
@@ -166,109 +200,14 @@
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
-/* ========== RESPONSIVE BREAKPOINTS ========== */
+/* ========== RESPONSIVE VISIBILITY RULES ========== */
+/* Scaling is handled by CSS variables in theme.css */
+/* Minimum supported width: 1024px (tablets use mobile version) */
 
-/* Tablet: side panel smaller */
-@media (max-width: 1024px) {
-  .controls {
-    width: calc(100% - 320px);
-    padding: 24px;
-    gap: 16px;
-  }
-
-  .navContainer {
-    gap: 20px;
-  }
-
-  .navGroup {
-    min-height: 42px;
-    gap: 6px;
-    padding: 6px 10px;
-  }
-
-  .mainAction button {
-    min-height: 42px;
-    padding: 6px 40px;
-  }
-}
-
-/* Small tablet / Large phone */
-@media (max-width: 768px) {
-  .controls {
-    width: 100%;
-    padding: 16px;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .navContainer {
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .navGroup {
-    min-height: 38px;
-    gap: 4px;
-    padding: 5px 8px;
-    border-radius: 8px;
-  }
-
-  .navGroup[data-group="modes"] {
-    padding: 5px 8px;
-  }
-
-  .mainAction button {
-    min-height: 38px;
-    padding: 5px 32px;
-    font-size: 16px;
-  }
-
+/* Small laptop (1024-1280px) */
+@media (max-width: 1279px) and (min-width: 1024px) {
   .groupLabel {
-    font-size: 0.55rem;
-    top: -6px;
-    left: 8px;
-    padding: 0 4px;
-  }
-
-  .endButtonWrapper {
-    bottom: 16px;
-    right: 16px;
-  }
-}
-
-/* Phone */
-@media (max-width: 480px) {
-  .controls {
-    padding: 12px 8px;
-    gap: 8px;
-  }
-
-  .navContainer {
-    gap: 8px;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .navGroup {
-    min-height: 34px;
-    gap: 3px;
-    padding: 4px 6px;
-  }
-
-  .navGroup[data-group="modes"] {
-    padding: 4px 6px;
-  }
-
-  .mainAction button {
-    min-height: 34px;
-    padding: 4px 24px;
-    font-size: 14px;
-  }
-
-  .endButtonWrapper {
-    bottom: 12px;
-    right: 12px;
+    display: none;
   }
 }
 
@@ -279,7 +218,7 @@
   }
 }
 
-/* ========== AUTO-PLAY CONTROLS ========== */
+/* ========== AUTO-PLAY CONTROLS - Sci-Fi HUD style ========== */
 .autoPlayControls {
   position: fixed;
   bottom: 24px;
@@ -287,12 +226,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(0, 15, 30, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--hud-bg-solid);
+  border: var(--hud-border);
   border-radius: 12px;
   padding: 8px 12px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--holo-edge-subtle), var(--elevation-1);
   z-index: 20;
   pointer-events: auto;
 }
@@ -315,11 +253,16 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.autoPlayButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .autoPlayButton.active {
-  background: linear-gradient(135deg, rgba(0, 180, 255, 0.3), rgba(0, 120, 200, 0.3));
-  border-color: rgba(0, 200, 255, 0.5);
+  background: linear-gradient(135deg, var(--color-primary-30), rgba(0, 120, 200, 0.3));
+  border-color: var(--color-primary-50);
   color: var(--color-text);
-  box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
+  box-shadow: 0 0 10px var(--color-primary-30);
 }
 
 .autoPlayIcon {
@@ -363,10 +306,15 @@
   transform: scale(1.1);
 }
 
+.presetButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .presetButton.activePreset {
-  background: rgba(0, 180, 255, 0.25);
-  border-color: rgba(0, 200, 255, 0.5);
-  box-shadow: 0 0 8px rgba(0, 200, 255, 0.3);
+  background: var(--color-primary-25);
+  border-color: var(--color-primary-50);
+  box-shadow: 0 0 8px var(--color-primary-30);
 }
 
 .speedButton {
@@ -386,6 +334,11 @@
 .speedButton:hover {
   background: rgba(50, 50, 80, 0.9);
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+.speedButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .speedButton.active {
@@ -458,5 +411,29 @@
 
   .autoPlayPresets {
     display: none;
+  }
+}
+
+/* Coming Soon Badge */
+.soonBadge {
+  margin-left: 8px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #000;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Legacy fallback - now using Sci-Fi HUD as primary */
+@supports not (--hud-bg-solid: rgba(0,0,0,1)) {
+  .menuButton,
+  .autoPlayControls {
+    background: rgba(10, 10, 18, 0.98);
+    border: 1px solid rgba(0, 229, 255, 0.3);
   }
 }

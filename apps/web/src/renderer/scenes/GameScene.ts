@@ -1,4 +1,4 @@
-import { Application, Container } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import type {
   GameState,
   EnemyType,
@@ -23,6 +23,12 @@ import {
 } from "../effects/ParallaxBackground.js";
 import { fpXToScreen, fpYToScreen } from "../CoordinateSystem.js";
 import { lastSkillTargetPositions, currentPillar } from "../../state/index.js";
+import {
+  bossRushActive,
+  bossPosition,
+  bossHp,
+  bossMaxHp,
+} from "../../state/boss-rush.signals.js";
 
 // Import extracted components
 import { EnvironmentRenderer, themeManager } from "./environment/index.js";
@@ -87,6 +93,9 @@ export class GameScene {
   private isPreviewMode = false;
   private previewStaticTerrain = false;
 
+  // Boss Rush rendering
+  private bossGraphics: Graphics;
+
   constructor(_app: Application, options: GameSceneOptions = {}) {
     this.container = new Container();
     this.container.interactiveChildren = true;
@@ -128,6 +137,10 @@ export class GameScene {
     // Projectile System (above entities)
     this.projectileSystem = new ProjectileSystem();
     this.container.addChild(this.projectileSystem.container);
+
+    // Boss Graphics for stationary Boss Rush boss
+    this.bossGraphics = new Graphics();
+    this.container.addChild(this.bossGraphics);
 
     // Scene Effects (VFX + Lighting)
     this.effects = new SceneEffects();
@@ -264,6 +277,7 @@ export class GameScene {
       // Track fortress class and tier changes
       const newTier = state.commanderLevel < 10 ? 1 : state.commanderLevel < 25 ? 2 : 3;
       this.environment.setFortressState(state.fortressClass, newTier);
+      this.environment.setFortressHp(hpPercent);
 
       // Update environment (static + dynamic layers)
       const hasActiveEnemies = state.enemies && state.enemies.length > 0;
@@ -285,6 +299,18 @@ export class GameScene {
       this.militiaSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
       this.heroSystem.update(state, this.width, this.height, this.effects.vfx, renderAlpha);
       this.projectileSystem.update(state, this.width, this.height, renderAlpha, deltaMs);
+
+      // Boss Rush: Render stationary boss and its projectiles
+      if (bossRushActive.value) {
+        this.renderStationaryBoss(state.tick);
+        // Fortress is at ~5 fixed-point units from left (about 12.5% of field)
+        const fortressScreenX = fpXToScreen(FP.fromInt(5), this.width);
+        this.projectileSystem.renderBossProjectiles(
+          this.width,
+          this.height,
+          fortressScreenX
+        );
+      }
 
       // Process death physics events and spawn ragdolls
       this.processDeathPhysics(state);
@@ -373,10 +399,19 @@ export class GameScene {
     // Update environment renderer theme
     this.environment.setTheme(pillarId, force);
 
-    // Update parallax background with theme config
+    // Update parallax background with pillar-based cosmic config
     if (this.parallax) {
-      const theme = themeManager.getThemeForPillar(pillarId);
-      this.parallax.setTheme(theme.parallax);
+      // CosmicBackground supports setThemeByPillar for full cosmic effects
+      // The setTheme method also works (auto-detects pillar from colors)
+      const parallax = this.parallax as ParallaxBackground & {
+        setThemeByPillar?: (pillarId: PillarId) => void;
+      };
+      if (parallax.setThemeByPillar) {
+        parallax.setThemeByPillar(pillarId);
+      } else {
+        const theme = themeManager.getThemeForPillar(pillarId);
+        parallax.setTheme(theme.parallax);
+      }
     }
   }
 
@@ -640,5 +675,93 @@ export class GameScene {
     if (deathEvents.length >= 3) {
       this.effects.triggerMultiKillEffects(deathEvents.length);
     }
+  }
+
+  /**
+   * Render stationary boss for Boss Rush mode.
+   * Boss is positioned at a fixed location (right side of arena)
+   * and only performs attack animations.
+   */
+  private renderStationaryBoss(currentTick: number): void {
+    this.bossGraphics.clear();
+
+    const pos = bossPosition.value;
+    if (!pos) return;
+
+    // Convert fixed-point coordinates to screen space
+    const screenX = fpXToScreen(FP.fromFloat(pos.x), this.width);
+    const screenY = fpYToScreen(FP.fromFloat(pos.y), this.height);
+
+    // Boss size based on HP (visual indicator of boss tier)
+    const hp = bossHp.value;
+    const maxHp = bossMaxHp.value;
+    const hpPercent = maxHp > 0 ? hp / maxHp : 1;
+
+    // Base size scales with boss tier (indicated by max HP)
+    const baseSize = Math.min(80, 40 + Math.log10(maxHp + 1) * 10);
+    const size = baseSize * (0.8 + hpPercent * 0.2); // Shrink slightly as damaged
+
+    // Color based on HP - red when low, orange when mid, yellow when full
+    const r = Math.floor(255);
+    const g = Math.floor(100 + hpPercent * 155);
+    const b = Math.floor(50 * hpPercent);
+    const bossColor = (r << 16) | (g << 8) | b;
+
+    // Draw boss body (menacing shape)
+    this.bossGraphics.beginFill(bossColor, 0.9);
+
+    // Main body - octagon for intimidating look
+    const sides = 8;
+    const points: number[] = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
+      points.push(screenX + Math.cos(angle) * size);
+      points.push(screenY + Math.sin(angle) * size);
+    }
+    this.bossGraphics.drawPolygon(points);
+    this.bossGraphics.endFill();
+
+    // Inner glow/core
+    this.bossGraphics.beginFill(0xffffff, 0.3);
+    this.bossGraphics.drawCircle(screenX, screenY, size * 0.4);
+    this.bossGraphics.endFill();
+
+    // Pulsing attack indicator (when about to fire)
+    const attackCooldown = 60; // Should match config
+    const ticksSinceLastAttack = currentTick % attackCooldown;
+    const chargeProgress = ticksSinceLastAttack / attackCooldown;
+
+    if (chargeProgress > 0.7) {
+      // Charging up for next attack
+      const chargeIntensity = (chargeProgress - 0.7) / 0.3;
+      this.bossGraphics.lineStyle(3 + chargeIntensity * 4, 0xff4400, chargeIntensity);
+      this.bossGraphics.drawCircle(screenX, screenY, size + 10 + chargeIntensity * 15);
+      this.bossGraphics.lineStyle(0);
+    }
+
+    // HP bar above boss
+    const barWidth = size * 2;
+    const barHeight = 8;
+    const barY = screenY - size - 20;
+
+    // Background
+    this.bossGraphics.beginFill(0x333333, 0.8);
+    this.bossGraphics.drawRect(screenX - barWidth / 2, barY, barWidth, barHeight);
+    this.bossGraphics.endFill();
+
+    // HP fill
+    this.bossGraphics.beginFill(hpPercent > 0.3 ? 0x44ff44 : 0xff4444, 0.9);
+    this.bossGraphics.drawRect(
+      screenX - barWidth / 2,
+      barY,
+      barWidth * hpPercent,
+      barHeight
+    );
+    this.bossGraphics.endFill();
+
+    // Border
+    this.bossGraphics.lineStyle(1, 0xffffff, 0.5);
+    this.bossGraphics.drawRect(screenX - barWidth / 2, barY, barWidth, barHeight);
+    this.bossGraphics.lineStyle(0);
   }
 }

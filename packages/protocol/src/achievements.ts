@@ -34,6 +34,7 @@ export const AchievementIdSchema = z.enum([
   'dedicated_player',    // Complete runs
   'level_up',            // Reach commander levels
   'prestige_master',     // Prestige count
+  'tutorial_complete',   // Complete all tutorial steps
 
   // Collection Category
   'hero_collector',      // Unlock heroes
@@ -148,6 +149,7 @@ export const LifetimeStatsSchema = z.object({
   synergiesTriggered: z.number().int().min(0).default(0),
   commanderLevel: z.number().int().min(1).default(1),
   prestigeCount: z.number().int().min(0).default(0),
+  tutorialsCompleted: z.number().int().min(0).default(0),
 });
 
 export type LifetimeStats = z.infer<typeof LifetimeStatsSchema>;
@@ -368,6 +370,17 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
       { tier: 2, target: 3, dustReward: 35, goldReward: 1000, materialReward: { rarity: 'rare', count: 1 }, titleReward: null },
       { tier: 3, target: 5, dustReward: 50, goldReward: 2000, materialReward: { rarity: 'epic', count: 1 }, titleReward: 'Eternal' },
       { tier: 4, target: 10, dustReward: 75, goldReward: 4000, materialReward: { rarity: 'legendary', count: 1 }, titleReward: 'Transcendent' },
+    ],
+  },
+  {
+    id: 'tutorial_complete',
+    category: 'progression',
+    name: 'Tutorial Master',
+    description: 'Complete all tutorial steps',
+    icon: 'graduation-cap',
+    statKey: 'tutorialsCompleted',
+    tiers: [
+      { tier: 1, target: 17, dustReward: 25, goldReward: 500, materialReward: null, titleReward: 'Tutorial Master' },
     ],
   },
 

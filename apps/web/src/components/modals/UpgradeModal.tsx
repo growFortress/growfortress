@@ -30,7 +30,8 @@ import { StatUpgradeRow } from '../shared/StatUpgradeRow.js';
 import { Modal } from '../shared/Modal.js';
 import { getAccessToken } from '../../api/auth.js';
 import { useTranslation } from '../../i18n/useTranslation.js';
-import { DustIcon, GoldIcon } from '../icons/index.js';
+import { DustIcon, GoldIcon, DamageIcon, SpeedIcon, RangeIcon, RailgunIcon, ArtilleryIcon, ArcIcon, CryoIcon } from '../icons/index.js';
+import type { ComponentChildren } from 'preact';
 import styles from './UpgradeModal.module.css';
 
 // Timeout for async operations (10 seconds)
@@ -48,28 +49,40 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: 
   ]);
 }
 
+// Turret icon components - using SVG matching game models
+function getTurretIcon(turretId: string, size: number = 64): ComponentChildren {
+  switch (turretId) {
+    case 'railgun':
+      return <RailgunIcon size={size} />;
+    case 'artillery':
+      return <ArtilleryIcon size={size} />;
+    case 'arc':
+      return <ArcIcon size={size} />;
+    case 'cryo':
+      return <CryoIcon size={size} />;
+    default:
+      return '🗼';
+  }
+}
+
 // Turret names and info (4 turrets)
-const TURRET_INFO: Record<string, { icon: string; nameKey: string; roleKey: string; descriptionKey: string }> = {
+const TURRET_INFO: Record<string, { nameKey: string; roleKey: string; descriptionKey: string }> = {
   railgun: {
-    icon: '🎯',
     nameKey: 'upgradeModal.turrets.railgun.name',
     roleKey: 'upgradeModal.turrets.railgun.role',
     descriptionKey: 'upgradeModal.turrets.railgun.description',
   },
   artillery: {
-    icon: '💣',
     nameKey: 'upgradeModal.turrets.artillery.name',
     roleKey: 'upgradeModal.turrets.artillery.role',
     descriptionKey: 'upgradeModal.turrets.artillery.description',
   },
   arc: {
-    icon: '🔷',
     nameKey: 'upgradeModal.turrets.arc.name',
     roleKey: 'upgradeModal.turrets.arc.role',
     descriptionKey: 'upgradeModal.turrets.arc.description',
   },
   cryo: {
-    icon: '❄️',
     nameKey: 'upgradeModal.turrets.cryo.name',
     roleKey: 'upgradeModal.turrets.cryo.role',
     descriptionKey: 'upgradeModal.turrets.cryo.description',
@@ -209,7 +222,7 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
             {/* Hero Section - Big turret display */}
             <div class={styles.heroSection}>
               <div class={styles.turretVisual}>
-                <span class={styles.turretIcon}>{info.icon}</span>
+                {getTurretIcon(turret.definitionId, 64)}
               </div>
 
               <div class={styles.turretInfo}>
@@ -222,17 +235,17 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
                 {turretDef?.baseStats && (
                   <div class={styles.baseStats}>
                     <div class={styles.baseStat}>
-                      <span class={styles.baseStatIcon}>⚔️</span>
+                      <DamageIcon size={18} className={styles.baseStatIcon} />
                       <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.damage / 16384)}</span>
                       <span>{t('upgradeModal.stats.damageShort')}</span>
                     </div>
                     <div class={styles.baseStat}>
-                      <span class={styles.baseStatIcon}>⚡</span>
+                      <SpeedIcon size={18} className={styles.baseStatIcon} />
                       <span class={styles.baseStatValue}>{(turretDef.baseStats.attackSpeed / 16384).toFixed(1)}</span>
                       <span>{t('upgradeModal.stats.attackSpeedShort')}</span>
                     </div>
                     <div class={styles.baseStat}>
-                      <span class={styles.baseStatIcon}>🎯</span>
+                      <RangeIcon size={18} className={styles.baseStatIcon} />
                       <span class={styles.baseStatValue}>{Math.round(turretDef.baseStats.range / 16384)}</span>
                       <span>{t('upgradeModal.stats.range')}</span>
                     </div>
@@ -270,12 +283,12 @@ export function UpgradeModal({ onUpgrade }: UpgradeModalProps) {
 
                   <div class={styles.upgradePreview}>
                     <div class={styles.upgradeBonus}>
-                      <span class={styles.upgradeBonusIcon}>⚔️</span>
+                      <DamageIcon size={18} className={styles.upgradeBonusIcon} />
                       <span class={styles.upgradeBonusText}>{t('upgradeModal.bonuses.damage')}</span>
                       <span class={styles.upgradeBonusValue}>+25%</span>
                     </div>
                     <div class={styles.upgradeBonus}>
-                      <span class={styles.upgradeBonusIcon}>⚡</span>
+                      <SpeedIcon size={18} className={styles.upgradeBonusIcon} />
                       <span class={styles.upgradeBonusText}>{t('upgradeModal.bonuses.attackSpeed')}</span>
                       <span class={styles.upgradeBonusValue}>+15%</span>
                     </div>

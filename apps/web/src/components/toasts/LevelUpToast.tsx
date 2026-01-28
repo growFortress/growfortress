@@ -41,6 +41,7 @@ export function LevelUpToast() {
           <div class={styles.rewards}>
             <span class={styles.rewardDust}>+{current.dustReward} Dust</span>
             <span class={styles.rewardGold}>+{current.goldReward} Gold</span>
+            <span class={styles.rewardStats}>+{current.statPointsReward} SP</span>
           </div>
         </div>
         <div class={styles.dismissHint}>Kliknij aby zamknąć</div>

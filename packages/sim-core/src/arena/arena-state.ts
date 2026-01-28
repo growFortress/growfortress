@@ -206,9 +206,8 @@ function applyArenaHeroMultipliers(
       : {
           damageMultiplier: 1,
           attackSpeedMultiplier: 1,
-          hpMultiplier: 1,
+          rangeMultiplier: 1,
           critChanceBonus: 0,
-          critDamageBonus: 0,
         };
 
     const artifactDamageMultiplier = heroDef
@@ -223,6 +222,8 @@ function applyArenaHeroMultipliers(
       powerMultipliers.damageMultiplier * artifactDamageMultiplier;
     hero.arenaAttackSpeedMultiplier =
       powerMultipliers.attackSpeedMultiplier * artifactAttackSpeedMultiplier;
+    hero.arenaRangeMultiplier = powerMultipliers.rangeMultiplier;
+    hero.arenaCritChanceBonus = powerMultipliers.critChanceBonus;
 
     // Calculate hero armor based on tier
     // Tier 1: 10, Tier 2: 25, Tier 3: 40, plus bonuses from build

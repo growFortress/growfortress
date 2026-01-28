@@ -30,7 +30,7 @@ export type ItemTier = z.infer<typeof ItemTierSchema>;
 export const FortressUpgradableStatSchema = z.enum(['hp', 'damage', 'armor']);
 export type FortressUpgradableStat = z.infer<typeof FortressUpgradableStatSchema>;
 
-export const HeroUpgradableStatSchema = z.enum(['hp', 'damage']);
+export const HeroUpgradableStatSchema = z.enum(['damage', 'attackSpeed', 'range', 'critChance']);
 export type HeroUpgradableStat = z.infer<typeof HeroUpgradableStatSchema>;
 
 export const TurretUpgradableStatSchema = z.enum(['damage', 'attackSpeed']);

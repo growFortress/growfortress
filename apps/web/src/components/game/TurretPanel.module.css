@@ -76,10 +76,11 @@
 .turretSlot.filled:hover {
   background: var(--color-bg-elevated);
   transform: scale(var(--hover-scale));
-  box-shadow: var(--shadow-sm), 0 0 12px var(--turret-color, var(--color-primary));
+  /* Fixed: Single box-shadow declaration using color-mix */
   box-shadow: var(--shadow-sm), 0 0 12px color-mix(in srgb, var(--turret-color) 40%, transparent);
 }
 
+/* Synergy slot: Static holographic glow (no infinite animation) */
 .turretSlot.synergy {
   box-shadow: 0 0 8px var(--turret-color);
 }
@@ -90,10 +91,16 @@
   inset: -2px;
   border: var(--border-width) solid var(--turret-color);
   border-radius: calc(var(--radius-sm) + 2px);
-  animation: pulse 2s infinite;
+  /* Static glow - no infinite pulse */
+  opacity: 0.8;
 }
 
-@keyframes pulse {
+/* Pulse only on active (clicked/focused) state */
+.turretSlot.synergy:focus-visible::after {
+  animation: slotPulse 0.6s ease-out 2;
+}
+
+@keyframes slotPulse {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
@@ -174,17 +181,14 @@
   border-radius: var(--radius-sm);
 }
 
+/* Synergy badge: Static glow (no infinite animation) */
 .synergyBadge {
   position: absolute;
   top: 2px;
   left: 2px;
   font-size: 10px;
-  animation: glow 1s infinite alternate;
-}
-
-@keyframes glow {
-  from { filter: drop-shadow(0 0 2px var(--color-primary)); }
-  to { filter: drop-shadow(0 0 6px var(--color-primary)); }
+  /* Static subtle glow */
+  filter: drop-shadow(0 0 4px var(--color-primary));
 }
 
 .killsCounter {

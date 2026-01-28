@@ -20,6 +20,7 @@ import { IdleRewardsModal } from "../modals/IdleRewardsModal.js";
 import { AchievementsModal } from "../modals/AchievementsModal.js";
 import { PillarUnlockModal } from "../modals/PillarUnlockModal.js";
 import { GuestRegistrationModal } from "../modals/GuestRegistrationModal.js";
+import { StatPointsModal } from "../modals/StatPointsModal.js";
 import { AdminBroadcastPanel, AdminModerationPanel } from "../admin/index.js";
 import {
   pillarUnlockModalVisible,
@@ -71,6 +72,7 @@ export function ModalLayer({
         onClose={closePillarUnlockModal}
       />
       <GuestRegistrationModal />
+      <StatPointsModal />
       <AdminBroadcastPanel />
       <AdminModerationPanel />
     </>

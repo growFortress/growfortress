@@ -44,6 +44,16 @@ import {
 // ============================================================================
 
 /**
+ * Boss projectile in flight toward fortress
+ */
+export interface BossProjectile {
+  id: number;
+  damage: number;
+  spawnTick: number;
+  arrivalTick: number; // When it hits fortress
+}
+
+/**
  * Boss Rush game state for simulation
  */
 export interface BossRushGameState {
@@ -60,13 +70,20 @@ export interface BossRushGameState {
   // Boss Rush specific
   bossRush: BossRushState;
 
-  // Current boss (the enemy)
+  // Current boss (the enemy) - stationary at fixed position
   currentBoss: {
     hp: number;
     maxHp: number;
     damage: number;
     lastAttackTick: number;
+    // Stationary boss position (fixed-point)
+    x: number;
+    y: number;
   } | null;
+
+  // Boss projectiles in flight
+  bossProjectiles: BossProjectile[];
+  nextBossProjectileId: number;
 
   // Heroes and turrets
   heroes: ActiveHero[];
@@ -118,7 +135,7 @@ export interface BossRushSimConfig {
 export function getDefaultBossRushConfig(): BossRushSimConfig {
   return {
     tickHz: 30,
-    fortressBaseHp: 200,
+    fortressBaseHp: 1000,
     fortressBaseDamage: 10,
     fortressAttackInterval: 15,
     fieldWidth: FP.fromInt(40),
@@ -209,6 +226,10 @@ export function createBossRushGameState(
     bossRush: createBossRushState(),
     currentBoss: null,
 
+    // Boss projectiles
+    bossProjectiles: [],
+    nextBossProjectileId: 1,
+
     heroes,
     turrets,
     projectiles: [],
@@ -266,14 +287,19 @@ export function computeBossRushCheckpointHash(state: BossRushGameState): number 
   appendNumber(data, state.bossRush.goldEarned);
   appendNumber(data, state.bossRush.dustEarned);
 
-  // Current boss
+  // Current boss (including position for stationary boss mode)
   appendBool(data, state.currentBoss !== null);
   if (state.currentBoss) {
     appendNumber(data, state.currentBoss.hp);
     appendNumber(data, state.currentBoss.maxHp);
     appendNumber(data, state.currentBoss.damage);
     appendNumber(data, state.currentBoss.lastAttackTick);
+    appendNumber(data, state.currentBoss.x);
+    appendNumber(data, state.currentBoss.y);
   }
+
+  // Boss projectiles count
+  appendNumber(data, state.bossProjectiles?.length ?? 0);
 
   // Heroes (simplified - just count and total HP)
   appendNumber(data, state.heroes.length);
@@ -390,6 +416,7 @@ export class BossRushSimulation {
 
     // Update game state
     this.updateBossRush();
+    this.updateHeroes();      // Heroes advance and attack boss
     this.updateBossAttack();
     this.updateFortressAttack();
 
@@ -601,7 +628,7 @@ export class BossRushSimulation {
   }
 
   /**
-   * Spawn the next boss
+   * Spawn the next boss at fixed position (stationary boss mode)
    */
   private spawnNextBoss(): void {
     const bossStats = getBossRushBossStats(
@@ -609,33 +636,144 @@ export class BossRushSimulation {
       this.config.bossRush
     );
 
+    // Boss spawns at fixed position on right side of field
+    const spawnX = this.config.bossRush.bossSpawnX ?? FP.fromInt(35);
+    const spawnY = FP.div(this.config.fieldHeight, FP.fromInt(2)); // Center vertically
+
     this.state.currentBoss = {
       hp: bossStats.hp,
       maxHp: bossStats.hp,
       damage: bossStats.damage,
       lastAttackTick: this.state.tick,
+      // Stationary position
+      x: spawnX,
+      y: spawnY,
     };
+
+    // Reset boss projectiles for new boss
+    this.state.bossProjectiles = [];
+
+    // Reset heroes to starting position for new boss fight
+    this.resetHeroPositions();
 
     this.state.bossRush.currentBossMaxHp = bossStats.hp;
   }
 
   /**
-   * Update boss attack on fortress
+   * Reset heroes to starting positions (near fortress)
+   */
+  private resetHeroPositions(): void {
+    const startX = FP.add(this.config.fortressX, FP.fromInt(3)); // 3 units from fortress
+    const centerY = FP.div(this.config.fieldHeight, FP.fromInt(2));
+
+    for (let i = 0; i < this.state.heroes.length; i++) {
+      const hero = this.state.heroes[i];
+      hero.x = startX;
+      // Spread heroes vertically
+      const yOffset = FP.fromFloat((i - (this.state.heroes.length - 1) / 2) * 2);
+      hero.y = FP.add(centerY, yOffset);
+      hero.vx = 0;
+      hero.vy = 0;
+    }
+  }
+
+  /**
+   * Update boss ranged attack on fortress (stationary boss mode)
+   * Boss fires projectiles that travel toward fortress over time
    */
   private updateBossAttack(): void {
     if (!this.state.currentBoss || this.state.bossRush.inIntermission) return;
 
-    // Boss attacks every second (30 ticks)
-    const attackInterval = 30;
-    if (this.state.tick - this.state.currentBoss.lastAttackTick >= attackInterval) {
-      this.state.fortressHp -= this.state.currentBoss.damage;
-      this.state.currentBoss.lastAttackTick = this.state.tick;
+    const attackCooldown = this.config.bossRush.bossAttackCooldownTicks ?? 60;
+    const travelTicks = this.config.bossRush.bossProjectileTravelTicks ?? 45;
 
-      if (this.state.fortressHp <= 0) {
-        this.state.fortressHp = 0;
-        // Don't end yet - let end condition check handle it
+    // Check if boss can fire new projectile
+    if (this.state.tick - this.state.currentBoss.lastAttackTick >= attackCooldown) {
+      // Create projectile
+      this.state.bossProjectiles.push({
+        id: this.state.nextBossProjectileId++,
+        damage: this.state.currentBoss.damage,
+        spawnTick: this.state.tick,
+        arrivalTick: this.state.tick + travelTicks,
+      });
+
+      this.state.currentBoss.lastAttackTick = this.state.tick;
+    }
+
+    // Update projectiles - check for arrivals
+    this.updateBossProjectiles();
+  }
+
+  /**
+   * Update boss projectiles and apply damage when they arrive
+   */
+  private updateBossProjectiles(): void {
+    const toRemove: number[] = [];
+
+    for (const proj of this.state.bossProjectiles) {
+      if (this.state.tick >= proj.arrivalTick) {
+        // Projectile hits fortress
+        this.state.fortressHp -= proj.damage;
+        toRemove.push(proj.id);
+
+        if (this.state.fortressHp <= 0) {
+          this.state.fortressHp = 0;
+        }
       }
     }
+
+    // Remove arrived projectiles
+    if (toRemove.length > 0) {
+      const removeSet = new Set(toRemove);
+      this.state.bossProjectiles = this.state.bossProjectiles.filter(
+        p => !removeSet.has(p.id)
+      );
+    }
+  }
+
+  /**
+   * Update heroes - move toward boss and attack when in range
+   */
+  private updateHeroes(): void {
+    if (!this.state.currentBoss || this.state.bossRush.inIntermission) return;
+
+    const bossX = this.state.currentBoss.x;
+    // Hero attack range and movement speed (fixed-point)
+    const heroAttackRange = FP.fromInt(5); // 5 units attack range
+    const heroMoveSpeed = FP.fromFloat(0.1); // 0.1 units per tick (~3 units/sec)
+    const heroAttackInterval = 30; // Attack every second (30 ticks at 30Hz)
+
+    for (const hero of this.state.heroes) {
+      if (hero.currentHp <= 0) continue; // Skip dead heroes
+
+      // Calculate distance to boss (horizontal only for simplicity)
+      const dx = FP.sub(bossX, hero.x);
+      const distToBoss = FP.abs(dx);
+
+      if (distToBoss > heroAttackRange) {
+        // Move toward boss
+        hero.x = FP.add(hero.x, heroMoveSpeed);
+      } else {
+        // In range - attack boss
+        if (this.state.tick - hero.lastAttackTick >= heroAttackInterval) {
+          const damage = this.calculateHeroDamage(hero);
+          this.damageCurrentBoss(damage);
+          hero.lastAttackTick = this.state.tick;
+        }
+      }
+    }
+  }
+
+  /**
+   * Calculate hero damage based on hero stats and modifiers
+   */
+  private calculateHeroDamage(hero: ActiveHero): number {
+    // Base damage scales with hero level, tier, and commander level
+    const tierMultiplier = 1 + (hero.tier - 1) * 0.3; // Tier 2: +30%, Tier 3: +60%
+    const levelMultiplier = 1 + hero.level * 0.05; // +5% per level
+    const baseDamage = 15 + this.state.commanderLevel * 2;
+    const damageBonus = 1 + this.state.modifiers.damageBonus;
+    return Math.floor(baseDamage * tierMultiplier * levelMultiplier * damageBonus);
   }
 
   /**

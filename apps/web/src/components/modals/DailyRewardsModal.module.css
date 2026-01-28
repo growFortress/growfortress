@@ -1,0 +1,198 @@
+/* Daily Rewards Modal Styles */
+
+.modalContent {
+  min-width: 400px;
+  max-width: 480px;
+}
+
+/* Streak Header */
+.streakHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--color-bg) 0%, #2a1a1a 100%);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  border: var(--border-width) solid var(--color-warning, #ff6600);
+}
+
+.streakInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.streakIcon {
+  font-size: 32px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.streakText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.streakLabel {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.streakValue {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-warning, #ff6600);
+}
+
+.multiplierBadge {
+  padding: 6px 12px;
+  background: var(--color-success);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+}
+
+/* Milestone Info */
+.milestoneInfo {
+  text-align: center;
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-60);
+  margin-bottom: 16px;
+}
+
+/* Calendar Grid */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* Day 7 spans 2 columns for emphasis */
+.calendar > *:nth-child(7) {
+  grid-column: span 2;
+}
+
+.dayCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-neutral);
+  border-radius: var(--radius-md);
+  transition: var(--transition-interactive-normal);
+  position: relative;
+}
+
+.dayCard.current {
+  border-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-bg) 0%, rgba(0, 170, 255, 0.1) 100%);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.dayCard.claimed {
+  opacity: 0.6;
+  background: var(--color-bg-elevated);
+}
+
+.dayCard.bonus {
+  border-color: var(--color-gold, #ffd700);
+  background: linear-gradient(135deg, var(--color-bg) 0%, rgba(255, 215, 0, 0.1) 100%);
+}
+
+.dayNumber {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rewardIcon {
+  font-size: 24px;
+}
+
+.rewardList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.rewardItem {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.claimedBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  background: var(--color-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: white;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.claimBtn {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark, #005577) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 48px;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition-interactive-normal);
+  box-shadow: var(--shadow-md), 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.claimBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg), 0 0 30px color-mix(in srgb, var(--color-primary) 50%, transparent);
+}
+
+.claimBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}

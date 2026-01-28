@@ -1201,6 +1201,61 @@ export {
   type GachaErrorCode,
 } from "./gacha.js";
 
+// Daily Login Rewards
+export {
+  // Constants
+  DAILY_REWARD_CYCLE_LENGTH,
+  STREAK_BONUSES,
+  DAILY_REWARD_CONFIG,
+  DAILY_ERROR_CODES,
+  // Schemas
+  DailyRewardSchema,
+  DailyLoginStatusResponseSchema,
+  ClaimDailyRewardResponseSchema,
+  // Helper functions
+  getStreakMultiplier,
+  getNextStreakMilestone,
+  getDailyReward,
+  isSameUTCDay,
+  isConsecutiveDay,
+  calculateCurrentDay,
+  // Types
+  type DailyReward,
+  type DailyLoginStatusResponse,
+  type ClaimDailyRewardResponse,
+  type DailyErrorCode,
+} from "./daily.js";
+
+// Weekly Missions
+export {
+  // Constants
+  WEEKLY_MISSION_POOL,
+  MISSIONS_PER_WEEK,
+  MISSION_DISTRIBUTION,
+  MISSION_ERROR_CODES,
+  // Schemas
+  MissionTypeSchema,
+  MissionDefinitionSchema,
+  MissionProgressSchema,
+  GetWeeklyMissionsResponseSchema,
+  ClaimMissionRewardRequestSchema,
+  ClaimMissionRewardResponseSchema,
+  // Helper functions
+  getMissionById,
+  getMissionsByDifficulty,
+  selectMissionsForWeek,
+  getCurrentWeekKey,
+  getTimeUntilWeekReset,
+  // Types
+  type MissionType,
+  type MissionDefinition,
+  type MissionProgress,
+  type GetWeeklyMissionsResponse,
+  type ClaimMissionRewardRequest,
+  type ClaimMissionRewardResponse,
+  type MissionErrorCode,
+} from "./missions.js";
+
 // Battle Pass
 export {
   // Configuration
@@ -1243,3 +1298,39 @@ export {
   type BattlePassPointSource,
   type BattlePassErrorCode,
 } from "./battlepass.js";
+
+// Free Stat Points System
+export {
+  // Shared schemas
+  StatPointTargetSchema,
+  HeroStatAllocationSchema,
+  PlayerStatPointsSchema,
+  // Request schemas
+  AllocateStatPointsRequestSchema,
+  ResetStatPointsRequestSchema,
+  // Response schemas
+  StatPointsSummaryResponseSchema,
+  AllocateStatPointsResponseSchema,
+  ResetStatPointsResponseSchema,
+  AwardStatPointsResponseSchema,
+  // Info schemas
+  StatPointAllocationInfoSchema,
+  AvailableStatAllocationsResponseSchema,
+  // Error codes
+  STAT_POINTS_ERROR_CODES,
+  // Types
+  type StatPointTarget,
+  type FortressStatAllocations,
+  type HeroStatAllocations,
+  type HeroStatAllocation,
+  type PlayerStatPoints,
+  type AllocateStatPointsRequest,
+  type ResetStatPointsRequest,
+  type StatPointsSummaryResponse,
+  type AllocateStatPointsResponse,
+  type ResetStatPointsResponse,
+  type AwardStatPointsResponse,
+  type StatPointAllocationInfo,
+  type AvailableStatAllocationsResponse,
+  type StatPointsErrorCode,
+} from "./stat-points.js";
