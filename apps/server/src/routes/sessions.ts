@@ -58,6 +58,12 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       body = SegmentSubmitRequestSchema.parse(request.body);
     } catch (error) {
+      request.log.warn({
+        sessionId,
+        userId: request.userId,
+        validationError: error instanceof Error ? error.message : 'Unknown',
+        body: request.body,
+      }, 'Segment schema validation failed');
       return reply.status(400).send({ error: 'Invalid request body' });
     }
 
@@ -85,6 +91,13 @@ const sessionsRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     if (!result.verified) {
+      request.log.warn({
+        sessionId,
+        userId: request.userId,
+        rejectReason: result.rejectReason,
+        startWave: body.startWave,
+        endWave: body.endWave,
+      }, 'Segment verification failed');
       return reply.status(400).send({
         verified: false,
         reason: result.rejectReason,
