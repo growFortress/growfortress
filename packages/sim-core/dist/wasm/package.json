@@ -1,0 +1,15 @@
+{
+  "name": "fixed-math",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "fixed_math_bg.wasm",
+    "fixed_math.js",
+    "fixed_math.d.ts"
+  ],
+  "main": "fixed_math.js",
+  "types": "fixed_math.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

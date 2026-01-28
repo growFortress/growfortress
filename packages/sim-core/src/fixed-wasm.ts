@@ -50,10 +50,7 @@ async function loadWasm(): Promise<WasmModule | null> {
       try {
         // Try to import WASM module (path relative to dist/ after build)
         // wasm-pack generates: fixed_math.js and fixed_math_bg.wasm
-        // Use dynamic path construction to prevent Rollup from statically analyzing
-        const wasmPath = '../dist/wasm/fixed_math' + '.js';
-        // @ts-ignore - WASM module may not exist at compile time, runtime fallback handles this
-        const wasmImport = await import(/* @vite-ignore */ wasmPath);
+        const wasmImport = await import('../dist/wasm/fixed_math.js');
 
         // The module has a default export that initializes the WASM binary
         // We need to call it to actually load the .wasm file
